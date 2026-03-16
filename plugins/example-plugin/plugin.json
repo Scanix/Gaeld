@@ -1,0 +1,10 @@
+{
+    "name": "Example Plugin",
+    "slug": "example-plugin",
+    "version": "1.0.0",
+    "description": "An example plugin demonstrating the Gäld plugin system.",
+    "author": "Gäld Community",
+    "provider": "Plugins\\ExamplePlugin\\ExamplePluginServiceProvider",
+    "enabled": true,
+    "requires": []
+}

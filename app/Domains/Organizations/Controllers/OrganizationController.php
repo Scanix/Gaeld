@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Domains\Organizations\Controllers;
+
+use App\Domains\Organizations\Actions\CreateOrganizationAction;
+use App\Domains\Organizations\Models\Organization;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class OrganizationController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $organizations = $request->user()->organizations()->get();
+
+        return Inertia::render('Organizations/Index', [
+            'organizations' => $organizations,
+        ]);
+    }
+
+    public function show(Organization $organization): Response
+    {
+        $this->authorize('view', $organization);
+
+        return Inertia::render('Organizations/Show', [
+            'organization' => $organization->load('users'),
+        ]);
+    }
+
+    public function store(Request $request, CreateOrganizationAction $action): RedirectResponse
+    {
+        $this->authorize('create', Organization::class);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'legal_name' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:10',
+            'canton' => 'nullable|string|size:2',
+            'vat_number' => 'nullable|string|max:50',
+            'currency' => 'string|size:3',
+            'locale' => 'string|in:en,fr,de,it,rm',
+        ]);
+
+        $org = $action->execute($request->user(), $validated);
+
+        return redirect()->route('organizations.show', $org)
+            ->with('success', 'Organization created.');
+    }
+
+    public function update(Request $request, Organization $organization): RedirectResponse
+    {
+        $this->authorize('update', $organization);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'legal_name' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:10',
+            'canton' => 'nullable|string|size:2',
+            'vat_number' => 'nullable|string|max:50',
+            'currency' => 'string|size:3',
+            'locale' => 'string|in:en,fr,de,it,rm',
+        ]);
+
+        $organization->update($validated);
+
+        return redirect()->route('organizations.show', $organization)
+            ->with('success', 'Organization updated.');
+    }
+}

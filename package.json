@@ -1,0 +1,32 @@
+{
+    "name": "gaeld-app",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "@inertiajs/vue3": "^2.3.18",
+        "@vitejs/plugin-vue": "^6.0.5",
+        "autoprefixer": "^10.4",
+        "axios": "^1.7",
+        "laravel-vite-plugin": "^2.1.0",
+        "postcss": "^8.4",
+        "tailwindcss": "^4.2.1",
+        "vite": "^7.3.1",
+        "vue": "^3.5.30"
+    },
+    "dependencies": {
+        "@vee-validate/zod": "^4.15.1",
+        "chart.js": "^4.5.1",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "lucide-vue-next": "^0.577.0",
+        "radix-vue": "^1.9.17",
+        "tailwind-merge": "^3.5.0",
+        "vee-validate": "^4.15.1",
+        "vue-chartjs": "^5.3.3",
+        "zod": "^3.25.76"
+    }
+}

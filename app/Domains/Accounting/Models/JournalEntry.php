@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Domains\Accounting\Models;
+
+use App\Domains\Organizations\Models\Organization;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class JournalEntry extends Model
+{
+    use HasFactory, HasUuids;
+
+    protected $fillable = [
+        'organization_id',
+        'date',
+        'reference',
+        'description',
+        'is_posted',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'date' => 'date',
+            'is_posted' => 'boolean',
+        ];
+    }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function lines(): HasMany
+    {
+        return $this->hasMany(TransactionLine::class);
+    }
+
+    public function isBalanced(): bool
+    {
+        $totals = $this->lines()->selectRaw('SUM(debit) as total_debit, SUM(credit) as total_credit')->first();
+
+        return bccomp($totals->total_debit ?? '0', $totals->total_credit ?? '0', 2) === 0;
+    }
+
+    public function totalDebit(): float
+    {
+        return (float) $this->lines()->sum('debit');
+    }
+
+    public function totalCredit(): float
+    {
+        return (float) $this->lines()->sum('credit');
+    }
+}
