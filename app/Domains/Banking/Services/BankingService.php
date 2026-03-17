@@ -40,14 +40,4 @@ class BankingService
             return $this->ledgerService->postBankTransaction($transaction, $contraAccountCode);
         });
     }
-
-    /**
-     * Reconcile a bank transaction.
-     */
-    public function reconcile(BankTransaction $transaction): BankTransaction
-    {
-        $transaction->update(['is_reconciled' => true]);
-
-        return $transaction;
-    }
 }

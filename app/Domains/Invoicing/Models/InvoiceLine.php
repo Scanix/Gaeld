@@ -43,7 +43,7 @@ class InvoiceLine extends Model
         return $this->belongsTo(VatRate::class);
     }
 
-    public function calculateAmount(): void
+    public function calculateAndSave(): void
     {
         $this->amount = bcmul($this->quantity, $this->unit_price, 2);
 

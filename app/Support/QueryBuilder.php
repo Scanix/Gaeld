@@ -5,6 +5,13 @@ namespace App\Support;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
+/**
+ * Shared infrastructure for building filterable, sortable, and searchable
+ * Eloquent queries from HTTP request parameters.
+ *
+ * Lives in App\Support (not a Domain) because it is a generic query utility
+ * with no domain-specific logic — it is consumed across all domains.
+ */
 class QueryBuilder
 {
     private Builder $query;

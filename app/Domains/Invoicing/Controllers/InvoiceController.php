@@ -116,7 +116,7 @@ class InvoiceController extends Controller
 
     public function recordPayment(Request $request, Invoice $invoice, RecordPaymentAction $action): RedirectResponse
     {
-        $this->authorize('view', $invoice);
+        $this->authorize('update', $invoice);
 
         $dto = RecordPaymentData::fromRequest($request);
 

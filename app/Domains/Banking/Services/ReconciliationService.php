@@ -7,7 +7,7 @@ use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Expenses\Models\Expense;
-use App\Domains\Invoicing\Actions\RecordPaymentAction;
+use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Services\FeatureFlag;
 use Illuminate\Support\Collection;
@@ -17,7 +17,7 @@ class ReconciliationService
 {
     public function __construct(
         private LedgerService $ledgerService,
-        private RecordPaymentAction $recordPaymentAction,
+        private InvoiceService $invoiceService,
     ) {}
 
     // ──────────────────────────────────────────────────────────────
@@ -68,9 +68,8 @@ class ReconciliationService
                 ['account_id' => $arAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => "Payment for invoice {$invoice->number}"],
             ]);
 
-            // Update bank account balance
-            $newBalance = bcadd((string) $bankAccount->balance, (string) $amount, 2);
-            $bankAccount->update(['balance' => $newBalance]);
+            // Update bank account balance via LedgerService
+            $this->ledgerService->updateBankAccountBalance($bankAccount, (string) $amount, true);
 
             $transaction->update([
                 'journal_entry_id' => $journalEntry->id,
@@ -124,9 +123,8 @@ class ReconciliationService
                 ['account_id' => $bankLedgerAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => 'Bank withdrawal'],
             ]);
 
-            // Update bank account balance
-            $newBalance = bcsub((string) $bankAccount->balance, (string) $amount, 2);
-            $bankAccount->update(['balance' => $newBalance]);
+            // Update bank account balance via LedgerService
+            $this->ledgerService->updateBankAccountBalance($bankAccount, (string) $amount, false);
 
             $transaction->update([
                 'journal_entry_id' => $journalEntry->id,
@@ -347,7 +345,7 @@ class ReconciliationService
             $paymentAmount = min($amount, $amountDue);
 
             if ($paymentAmount > 0) {
-                $this->recordPaymentAction->execute($invoice, [
+                $this->invoiceService->recordPayment($invoice, [
                     'amount' => $paymentAmount,
                     'payment_date' => $transaction->date->toDateString(),
                     'payment_method' => 'bank',
@@ -388,6 +386,25 @@ class ReconciliationService
     // ──────────────────────────────────────────────────────────────
     //  CE: Basic Suggestions (backward compatible)
     // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Get reconciliation suggestions for a paginated collection of transactions.
+     *
+     * @param  iterable<BankTransaction>  $transactions
+     * @return array<int, array{invoices: \Illuminate\Support\Collection, expenses: \Illuminate\Support\Collection, matches: \Illuminate\Support\Collection}>
+     */
+    public function getSuggestionsForTransactions(iterable $transactions): array
+    {
+        $suggestions = [];
+
+        foreach ($transactions as $transaction) {
+            if (! $transaction->is_reconciled) {
+                $suggestions[$transaction->id] = $this->getSuggestions($transaction);
+            }
+        }
+
+        return $suggestions;
+    }
 
     /**
      * Get basic reconciliation suggestions for a bank transaction.

@@ -24,6 +24,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/.desloppify
 *Zone.Identifier
 .DS_Store
 /bootstrap/cache/packages.php

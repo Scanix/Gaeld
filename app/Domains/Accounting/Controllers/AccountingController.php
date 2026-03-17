@@ -14,6 +14,8 @@ class AccountingController extends Controller
 {
     public function chartOfAccounts(Request $request): Response
     {
+        $this->authorize('viewAny', Account::class);
+
         $accounts = Account::orderBy('code')->get();
 
         return Inertia::render('Accounting/ChartOfAccounts', [
@@ -23,6 +25,8 @@ class AccountingController extends Controller
 
     public function journalEntries(Request $request): Response
     {
+        $this->authorize('viewAny', JournalEntry::class);
+
         $entries = JournalEntry::with('lines.account')
             ->orderByDesc('date')
             ->paginate(20);

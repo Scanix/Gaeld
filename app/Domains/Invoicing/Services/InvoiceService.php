@@ -15,18 +15,6 @@ class InvoiceService
     ) {}
 
     /**
-     * Finalize and post an invoice to the ledger.
-     *
-     * Delegates to LedgerService::postInvoice() which handles:
-     *   Debit  1100 Accounts Receivable
-     *   Credit 3000 Revenue from Services
-     */
-    public function finalizeInvoice(Invoice $invoice): Invoice
-    {
-        return $this->ledgerService->postInvoice($invoice);
-    }
-
-    /**
      * Record a payment for an invoice with full payment tracking.
      *
      * Creates an InvoicePayment record and posts to ledger:

@@ -35,7 +35,7 @@ class DuplicateInvoiceAction
                 'sort_order' => $line->sort_order ?? $index,
             ]);
 
-            $newLine->calculateAmount();
+            $newLine->calculateAndSave();
         }
 
         $newInvoice->recalculate();

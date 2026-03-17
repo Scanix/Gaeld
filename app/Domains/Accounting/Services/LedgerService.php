@@ -259,12 +259,7 @@ class LedgerService
 
             $transaction->update(['journal_entry_id' => $journalEntry->id]);
 
-            // Update bank account balance
-            $newBalance = $isDeposit
-                ? bcadd((string) $bankAccount->balance, (string) $amount, 2)
-                : bcsub((string) $bankAccount->balance, (string) $amount, 2);
-
-            $bankAccount->update(['balance' => $newBalance]);
+            $this->updateBankAccountBalance($bankAccount, (string) $amount, $isDeposit);
 
             return $transaction->fresh(['journalEntry.lines', 'bankAccount']);
         });
@@ -286,9 +281,9 @@ class LedgerService
      * @param  int          $accountId  The account's primary key
      * @param  string|null  $fromDate   Start date (inclusive, Y-m-d)
      * @param  string|null  $toDate     End date (inclusive, Y-m-d)
-     * @return float  The calculated balance
+     * @return string  The calculated balance (bcmath-compatible string, 2 decimal places)
      */
-    public function accountBalance(int $accountId, ?string $fromDate = null, ?string $toDate = null): float
+    public function accountBalance(int $accountId, ?string $fromDate = null, ?string $toDate = null): string
     {
         $account = Account::findOrFail($accountId);
         $cacheKey = "account_balance:{$accountId}:{$fromDate}:{$toDate}";
@@ -306,12 +301,12 @@ class LedgerService
                     }
                 });
 
-            $debits = (clone $query)->sum('debit');
-            $credits = (clone $query)->sum('credit');
+            $debits = (string) (clone $query)->sum('debit');
+            $credits = (string) (clone $query)->sum('credit');
 
             return $this->isDebitNormalAccount($account->type)
-                ? (float) bcsub($debits, $credits, 2)
-                : (float) bcsub($credits, $debits, 2);
+                ? bcsub($debits, $credits, 2)
+                : bcsub($credits, $debits, 2);
         });
     }
 
@@ -331,23 +326,35 @@ class LedgerService
         $orgTag = "org:{$organizationId}:ledger";
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $asOfDate) {
-            $accounts = Account::where('organization_id', $organizationId)
-                ->where('is_active', true)
-                ->orderBy('code')
-                ->get();
+            $query = Account::where('accounts.organization_id', $organizationId)
+                ->where('accounts.is_active', true)
+                ->leftJoin('transaction_lines', 'transaction_lines.account_id', '=', 'accounts.id')
+                ->leftJoin('journal_entries', function ($join) use ($asOfDate) {
+                    $join->on('journal_entries.id', '=', 'transaction_lines.journal_entry_id')
+                        ->where('journal_entries.is_posted', true);
+                    if ($asOfDate) {
+                        $join->where('journal_entries.date', '<=', $asOfDate);
+                    }
+                })
+                ->groupBy('accounts.id', 'accounts.code', 'accounts.name', 'accounts.type')
+                ->orderBy('accounts.code')
+                ->selectRaw('accounts.id, accounts.code, accounts.name, accounts.type, COALESCE(SUM(transaction_lines.debit), 0) as total_debit, COALESCE(SUM(transaction_lines.credit), 0) as total_credit');
 
             $balances = [];
 
-            foreach ($accounts as $account) {
-                $balance = $this->accountBalance($account->id, null, $asOfDate);
+            foreach ($query->get() as $row) {
+                $isDebitNormal = $this->isDebitNormalAccount($row->type);
+                $balance = $isDebitNormal
+                    ? bcsub((string) $row->total_debit, (string) $row->total_credit, 2)
+                    : bcsub((string) $row->total_credit, (string) $row->total_debit, 2);
 
-                if ($balance != 0) {
+                if (bccomp($balance, '0', 2) !== 0) {
                     $balances[] = [
-                        'account_code' => $account->code,
-                        'account_name' => $account->name,
-                        'account_type' => $account->type,
-                        'debit' => $balance > 0 && $this->isDebitNormalAccount($account->type) ? $balance : 0,
-                        'credit' => $balance > 0 && ! $this->isDebitNormalAccount($account->type) ? $balance : 0,
+                        'account_code' => $row->code,
+                        'account_name' => $row->name,
+                        'account_type' => $row->type,
+                        'debit' => $isDebitNormal && bccomp($balance, '0', 2) > 0 ? (float) $balance : 0,
+                        'credit' => ! $isDebitNormal && bccomp($balance, '0', 2) > 0 ? (float) $balance : 0,
                     ];
                 }
             }
@@ -365,6 +372,21 @@ class LedgerService
     {
         Cache::tags(["org:{$organizationId}:ledger"])->flush();
         Cache::tags(["org:{$organizationId}:reports"])->flush();
+    }
+
+    /**
+     * Update a bank account's denormalized balance field.
+     *
+     * This is the single authoritative path for balance mutations.
+     * Deposits add to balance; withdrawals subtract.
+     */
+    public function updateBankAccountBalance(\App\Domains\Banking\Models\BankAccount $bankAccount, string $amount, bool $isDeposit): void
+    {
+        $newBalance = $isDeposit
+            ? bcadd((string) $bankAccount->balance, $amount, 2)
+            : bcsub((string) $bankAccount->balance, $amount, 2);
+
+        $bankAccount->update(['balance' => $newBalance]);
     }
 
     // ──────────────────────────────────────────────────────────────

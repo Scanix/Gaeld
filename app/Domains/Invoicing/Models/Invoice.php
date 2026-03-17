@@ -51,12 +51,7 @@ class Invoice extends Model
         ];
     }
 
-    // Kept for backward compatibility
-    public const STATUS_DRAFT = 'draft';
-    public const STATUS_SENT = 'sent';
-    public const STATUS_PAID = 'paid';
-    public const STATUS_OVERDUE = 'overdue';
-    public const STATUS_CANCELLED = 'cancelled';
+    // STATUS_* constants removed — use InvoiceStatus enum: InvoiceStatus::Draft, ::Sent, ::Paid, ::Overdue, ::Cancelled
 
     public function organization(): BelongsTo
     {

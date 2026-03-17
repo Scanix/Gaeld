@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @deprecated Use \App\Domains\Contacts\Models\Customer instead.
+ *             This model remains for legacy migration compatibility only.
+ *             New code should use the Contacts domain.
+ */
 class Client extends Model
 {
     use BelongsToOrganization, HasFactory, SoftDeletes;

@@ -2,14 +2,14 @@
 
 namespace App\Domains\Invoicing\Actions;
 
+use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Invoicing\Services\InvoiceService;
 
 class FinalizeInvoiceAction
 {
     public function __construct(
-        private InvoiceService $invoiceService,
+        private LedgerService $ledgerService,
     ) {}
 
     public function execute(Invoice $invoice): Invoice
@@ -18,6 +18,6 @@ class FinalizeInvoiceAction
             throw new \DomainException('Only draft invoices can be finalized.');
         }
 
-        return $this->invoiceService->finalizeInvoice($invoice);
+        return $this->ledgerService->postInvoice($invoice);
     }
 }

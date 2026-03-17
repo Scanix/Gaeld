@@ -37,7 +37,7 @@ class UpdateInvoiceAction
                 'sort_order' => $lineData['sort_order'] ?? $index,
             ]);
 
-            $line->calculateAmount();
+            $line->calculateAndSave();
         }
 
         $invoice->recalculate();

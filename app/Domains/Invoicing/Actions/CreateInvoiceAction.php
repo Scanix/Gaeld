@@ -2,9 +2,9 @@
 
 namespace App\Domains\Invoicing\Actions;
 
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
-use App\Domains\Invoicing\Services\InvoiceService;
 
 class CreateInvoiceAction
 {
@@ -14,7 +14,7 @@ class CreateInvoiceAction
             'organization_id' => $data['organization_id'],
             'client_id' => $data['client_id'],
             'number' => $data['number'],
-            'status' => Invoice::STATUS_DRAFT,
+            'status' => InvoiceStatus::Draft->value,
             'issue_date' => $data['issue_date'],
             'due_date' => $data['due_date'],
             'currency' => $data['currency'] ?? 'CHF',
@@ -35,7 +35,7 @@ class CreateInvoiceAction
                 'sort_order' => $lineData['sort_order'] ?? $index,
             ]);
 
-            $line->calculateAmount();
+            $line->calculateAndSave();
         }
 
         $invoice->recalculate();

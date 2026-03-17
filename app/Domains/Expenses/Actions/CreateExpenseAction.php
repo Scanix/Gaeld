@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Actions;
 
+use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 
 class CreateExpenseAction
@@ -18,7 +19,7 @@ class CreateExpenseAction
             'date' => $data['date'],
             'vendor' => $data['vendor'] ?? null,
             'receipt_path' => $data['receipt_path'] ?? null,
-            'status' => Expense::STATUS_PENDING,
+            'status' => ExpenseStatus::Pending->value,
             'currency' => $data['currency'] ?? 'CHF',
         ]);
     }

@@ -66,13 +66,7 @@ class ReconciliationController extends Controller
 
         $transactions = $transactionsQuery->paginate(30);
 
-        // Get suggestions for each unreconciled transaction
-        $suggestions = [];
-        foreach ($transactions->items() as $transaction) {
-            if (! $transaction->is_reconciled) {
-                $suggestions[$transaction->id] = $this->reconciliationService->getSuggestions($transaction);
-            }
-        }
+        $suggestions = $this->reconciliationService->getSuggestionsForTransactions($transactions->items());
 
         return Inertia::render('Banking/ReconciliationShow', [
             'bankAccount' => $bankAccount->load('ledgerAccount'),
@@ -98,6 +92,9 @@ class ReconciliationController extends Controller
 
         $file = $request->file('camt_file');
         $xml = file_get_contents($file->getRealPath());
+        if ($xml === false) {
+            return redirect()->back()->with('error', 'Could not read the uploaded file.');
+        }
         $filename = $file->getClientOriginalName();
 
         try {
