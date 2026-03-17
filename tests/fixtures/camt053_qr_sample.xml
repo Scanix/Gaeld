@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.02">
+  <BkToCstmrStmt>
+    <Stmt>
+      <Id>STMT-QR-2026-001</Id>
+      <CreDtTm>2026-04-01T10:00:00+01:00</CreDtTm>
+      <Acct>
+        <Id>
+          <IBAN>CH93 0076 2011 6238 5295 7</IBAN>
+        </Id>
+      </Acct>
+      <!-- Entry 1: Payment with structured QR reference -->
+      <Ntry>
+        <Amt Ccy="CHF">1500.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <BookgDt><Dt>2026-04-01</Dt></BookgDt>
+        <ValDt><Dt>2026-04-01</Dt></ValDt>
+        <NtryDtls>
+          <TxDtls>
+            <Refs>
+              <EndToEndId>QR-PAY-001</EndToEndId>
+            </Refs>
+            <Amt Ccy="CHF">1500.00</Amt>
+            <RltdPties>
+              <Dbtr><Nm>Helvetia GmbH</Nm></Dbtr>
+            </RltdPties>
+            <RmtInf>
+              <Strd>
+                <CdtrRefInf>
+                  <Ref>210000000003139471430009017</Ref>
+                </CdtrRefInf>
+              </Strd>
+            </RmtInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+      <!-- Entry 2: Payment with QR reference in unstructured text -->
+      <Ntry>
+        <Amt Ccy="CHF">2500.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <BookgDt><Dt>2026-04-02</Dt></BookgDt>
+        <ValDt><Dt>2026-04-02</Dt></ValDt>
+        <NtryDtls>
+          <TxDtls>
+            <Refs>
+              <EndToEndId>QR-PAY-002</EndToEndId>
+            </Refs>
+            <Amt Ccy="CHF">2500.00</Amt>
+            <RltdPties>
+              <Dbtr><Nm>Alpine Solutions AG</Nm></Dbtr>
+            </RltdPties>
+            <RmtInf>
+              <Ustrd>Payment 000000000000000000000000026 for services</Ustrd>
+            </RmtInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+      <!-- Entry 3: Payment without QR reference (regular) -->
+      <Ntry>
+        <Amt Ccy="CHF">750.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <BookgDt><Dt>2026-04-03</Dt></BookgDt>
+        <ValDt><Dt>2026-04-03</Dt></ValDt>
+        <NtryDtls>
+          <TxDtls>
+            <Refs>
+              <EndToEndId>INV-2026-099</EndToEndId>
+            </Refs>
+            <Amt Ccy="CHF">750.00</Amt>
+            <RltdPties>
+              <Dbtr><Nm>Zurich Tech SA</Nm></Dbtr>
+            </RltdPties>
+            <RmtInf>
+              <Ustrd>Invoice payment INV-2026-099</Ustrd>
+            </RmtInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+    </Stmt>
+  </BkToCstmrStmt>
+</Document>

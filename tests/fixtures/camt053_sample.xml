@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.02">
+  <BkToCstmrStmt>
+    <Stmt>
+      <Id>STMT-2026-001</Id>
+      <CreDtTm>2026-03-15T10:00:00+01:00</CreDtTm>
+      <Acct>
+        <Id>
+          <IBAN>CH93 0076 2011 6238 5295 7</IBAN>
+        </Id>
+      </Acct>
+      <Ntry>
+        <Amt Ccy="CHF">5000.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <BookgDt><Dt>2026-03-10</Dt></BookgDt>
+        <ValDt><Dt>2026-03-10</Dt></ValDt>
+        <NtryDtls>
+          <TxDtls>
+            <Refs>
+              <EndToEndId>INV-2026-001</EndToEndId>
+            </Refs>
+            <Amt Ccy="CHF">5000.00</Amt>
+            <RltdPties>
+              <Dbtr><Nm>Acme AG</Nm></Dbtr>
+            </RltdPties>
+            <RmtInf>
+              <Ustrd>Payment for invoice INV-2026-001</Ustrd>
+            </RmtInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="CHF">200.00</Amt>
+        <CdtDbtInd>DBIT</CdtDbtInd>
+        <BookgDt><Dt>2026-03-12</Dt></BookgDt>
+        <ValDt><Dt>2026-03-12</Dt></ValDt>
+        <NtryDtls>
+          <TxDtls>
+            <Refs>
+              <EndToEndId>EXP-GITHUB</EndToEndId>
+            </Refs>
+            <Amt Ccy="CHF">200.00</Amt>
+            <RltdPties>
+              <Cdtr><Nm>GitHub Inc</Nm></Cdtr>
+            </RltdPties>
+            <RmtInf>
+              <Ustrd>GitHub Pro subscription</Ustrd>
+            </RmtInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="CHF">1500.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <BookgDt><Dt>2026-03-14</Dt></BookgDt>
+        <ValDt><Dt>2026-03-14</Dt></ValDt>
+        <AcctSvcrRef>REF-003</AcctSvcrRef>
+        <AddtlNtryInf>Wire transfer from client</AddtlNtryInf>
+      </Ntry>
+    </Stmt>
+  </BkToCstmrStmt>
+</Document>

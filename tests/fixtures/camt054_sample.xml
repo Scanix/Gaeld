@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.02">
+  <BkToCstmrDbtCdtNtfctn>
+    <Ntfctn>
+      <Id>NOTIF-2026-001</Id>
+      <CreDtTm>2026-03-15T14:30:00+01:00</CreDtTm>
+      <Acct>
+        <Id>
+          <IBAN>CH93 0076 2011 6238 5295 7</IBAN>
+        </Id>
+      </Acct>
+      <Ntry>
+        <Amt Ccy="CHF">3200.50</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <BookgDt><Dt>2026-03-15</Dt></BookgDt>
+        <ValDt><Dt>2026-03-15</Dt></ValDt>
+        <NtryDtls>
+          <TxDtls>
+            <Refs>
+              <EndToEndId>INV-2026-005</EndToEndId>
+              <AcctSvcrRef>SVCR-REF-001</AcctSvcrRef>
+            </Refs>
+            <Amt Ccy="CHF">3200.50</Amt>
+            <RltdPties>
+              <Dbtr><Nm>Swiss Corp SA</Nm></Dbtr>
+            </RltdPties>
+            <RmtInf>
+              <Ustrd>Payment ref INV-2026-005</Ustrd>
+            </RmtInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="CHF">89.90</Amt>
+        <CdtDbtInd>DBIT</CdtDbtInd>
+        <BookgDt><Dt>2026-03-15</Dt></BookgDt>
+        <ValDt><Dt>2026-03-15</Dt></ValDt>
+        <NtryDtls>
+          <TxDtls>
+            <Refs>
+              <EndToEndId>NOTPROVIDED</EndToEndId>
+              <PmtInfId>PMT-INFO-001</PmtInfId>
+            </Refs>
+            <Amt Ccy="CHF">89.90</Amt>
+            <RltdPties>
+              <Cdtr><Nm>Office Depot</Nm></Cdtr>
+            </RltdPties>
+            <AddtlTxInf>Office supplies purchase</AddtlTxInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+    </Ntfctn>
+  </BkToCstmrDbtCdtNtfctn>
+</Document>
