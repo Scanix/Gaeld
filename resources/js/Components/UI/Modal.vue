@@ -1,12 +1,15 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { X } from 'lucide-vue-next'
 import Button from './Button.vue'
 
 const props = defineProps({
   open: Boolean,
+  show: Boolean,
   title: String,
 })
+
+const isOpen = computed(() => props.open || props.show)
 
 const emit = defineEmits(['close'])
 
@@ -16,7 +19,7 @@ function onKeydown(e) {
   if (e.key === 'Escape') emit('close')
 }
 
-watch(() => props.open, (val) => {
+watch(isOpen, (val) => {
   if (val) {
     document.addEventListener('keydown', onKeydown)
     document.body.style.overflow = 'hidden'
@@ -35,7 +38,7 @@ onBeforeUnmount(() => {
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="fixed inset-0 bg-black/50" @click="$emit('close')" />
         <div
           ref="dialogRef"

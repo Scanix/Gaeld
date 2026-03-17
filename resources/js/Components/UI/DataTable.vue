@@ -1,13 +1,18 @@
 <script setup>
-import { Link } from '@inertiajs/vue3'
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { Link, router } from '@inertiajs/vue3'
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown, Search, X } from 'lucide-vue-next'
 import Button from './Button.vue'
+import Badge from './Badge.vue'
+import { useTranslations } from '@/lib/useTranslations'
+import { ref, computed, watch } from 'vue'
 
-defineProps({
+const { t } = useTranslations()
+
+const props = defineProps({
   columns: {
     type: Array,
     required: true,
-    // Each column: { key: string, label: string, class?: string, format?: Function }
+    // Each column: { key: string, label: string, class?: string, format?: Function, sortable?: boolean }
   },
   rows: {
     type: Array,
@@ -20,18 +25,121 @@ defineProps({
   },
   emptyMessage: {
     type: String,
-    default: 'No records found.',
+    default: null,
   },
   rowLink: {
     type: Function,
     default: null,
     // (row) => '/invoices/123'
   },
+  // Sorting support (server-side)
+  sort: {
+    type: String,
+    default: null,
+  },
+  direction: {
+    type: String,
+    default: 'asc',
+  },
+  // Search support (server-side)
+  searchable: {
+    type: Boolean,
+    default: false,
+  },
+  searchValue: {
+    type: String,
+    default: '',
+  },
+  searchPlaceholder: {
+    type: String,
+    default: null,
+  },
+  // Filter support (server-side, provided as active filters + available options)
+  filters: {
+    type: Array,
+    default: () => [],
+    // Each: { key: string, label: string, value: string|null, options: [{ value: string, label: string }] }
+  },
 })
+
+const emit = defineEmits(['sort', 'search', 'filter'])
+
+const localSearch = ref(props.searchValue || '')
+let searchTimeout = null
+
+watch(() => props.searchValue, (val) => {
+  localSearch.value = val || ''
+})
+
+function handleSort(column) {
+  if (!column.sortable) return
+  const newDirection = (props.sort === column.key && props.direction === 'asc') ? 'desc' : 'asc'
+  emit('sort', { sort: column.key, direction: newDirection })
+}
+
+function handleSearch() {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    emit('search', localSearch.value)
+  }, 300)
+}
+
+function clearSearch() {
+  localSearch.value = ''
+  emit('search', '')
+}
+
+function handleFilter(key, value) {
+  emit('filter', { key, value })
+}
+
+function getSortIcon(column) {
+  if (!column.sortable) return null
+  if (props.sort !== column.key) return 'unsorted'
+  return props.direction === 'asc' ? 'asc' : 'desc'
+}
+
+const hasToolbar = computed(() => props.searchable || props.filters.length > 0)
 </script>
 
 <template>
   <div class="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
+    <!-- Toolbar: Search + Filters -->
+    <div v-if="hasToolbar" class="flex flex-wrap items-center gap-3 border-b border-[hsl(var(--border))] px-4 py-3">
+      <!-- Search -->
+      <div v-if="searchable" class="relative flex-1 min-w-[200px] max-w-sm">
+        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
+        <input
+          v-model="localSearch"
+          type="text"
+          :placeholder="searchPlaceholder ?? t('search')"
+          class="h-9 w-full rounded-md border border-[hsl(var(--input))] bg-transparent pl-9 pr-9 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))] focus:ring-1 focus:ring-[hsl(var(--ring))]"
+          @input="handleSearch"
+        />
+        <button
+          v-if="localSearch"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+          @click="clearSearch"
+        >
+          <X class="h-4 w-4" />
+        </button>
+      </div>
+
+      <!-- Filter dropdowns -->
+      <div v-for="filter in filters" :key="filter.key" class="flex items-center gap-1">
+        <select
+          :value="filter.value ?? ''"
+          class="h-9 rounded-md border border-[hsl(var(--input))] bg-transparent px-3 text-sm text-[hsl(var(--foreground))] outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
+          @change="handleFilter(filter.key, $event.target.value)"
+        >
+          <option value="">{{ filter.label }}</option>
+          <option v-for="opt in filter.options" :key="opt.value" :value="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
     <div class="overflow-auto">
       <table class="w-full text-sm">
         <thead>
@@ -39,9 +147,19 @@ defineProps({
             <th
               v-for="col in columns"
               :key="col.key"
-              :class="['px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]', col.class]"
+              :class="[
+                'px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]',
+                col.class,
+                col.sortable ? 'cursor-pointer select-none hover:text-[hsl(var(--foreground))]' : '',
+              ]"
+              @click="handleSort(col)"
             >
-              {{ col.label }}
+              <span class="inline-flex items-center gap-1">
+                {{ col.label }}
+                <ArrowUp v-if="getSortIcon(col) === 'asc'" class="h-3.5 w-3.5" />
+                <ArrowDown v-else-if="getSortIcon(col) === 'desc'" class="h-3.5 w-3.5" />
+                <ArrowUpDown v-else-if="getSortIcon(col) === 'unsorted'" class="h-3.5 w-3.5 opacity-40" />
+              </span>
             </th>
           </tr>
         </thead>
@@ -68,7 +186,7 @@ defineProps({
           </tr>
           <tr v-if="rows.length === 0">
             <td :colspan="columns.length" class="px-4 py-8 text-center text-[hsl(var(--muted-foreground))]">
-              {{ emptyMessage }}
+              {{ emptyMessage ?? t('no_records') }}
             </td>
           </tr>
         </tbody>
@@ -77,7 +195,7 @@ defineProps({
 
     <div v-if="pagination && pagination.last_page > 1" class="flex items-center justify-between border-t border-[hsl(var(--border))] px-4 py-3">
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
-        Page {{ pagination.current_page }} of {{ pagination.last_page }}
+        {{ t('page_of', { current: pagination.current_page, last: pagination.last_page }) }}
       </p>
       <div class="flex gap-1">
         <Button

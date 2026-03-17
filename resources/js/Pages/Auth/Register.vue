@@ -4,6 +4,9 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
+import { useTranslations } from '@/lib/useTranslations'
+
+const { t } = useTranslations()
 
 const form = useForm({
   name: '',
@@ -28,8 +31,8 @@ function submit() {
         <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-xl font-bold">
           G
         </div>
-        <h1 class="mt-4 text-2xl font-bold">Create your account</h1>
-        <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">Start managing your finances with Gäld</p>
+        <h1 class="mt-4 text-2xl font-bold">{{ t('create_account') }}</h1>
+        <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{{ t('start_managing') }}</p>
       </div>
 
       <Card>
@@ -38,7 +41,7 @@ function submit() {
             <FormInput
               id="name"
               v-model="form.name"
-              label="Full Name"
+              :label="t('full_name')"
               placeholder="Max Muster"
               :error="form.errors.name"
               required
@@ -48,7 +51,7 @@ function submit() {
               id="email"
               v-model="form.email"
               type="email"
-              label="Email"
+              :label="t('email')"
               placeholder="you@example.com"
               :error="form.errors.email"
               required
@@ -58,7 +61,7 @@ function submit() {
               id="password"
               v-model="form.password"
               type="password"
-              label="Password"
+              :label="t('password')"
               :error="form.errors.password"
               required
             />
@@ -67,21 +70,21 @@ function submit() {
               id="password_confirmation"
               v-model="form.password_confirmation"
               type="password"
-              label="Confirm Password"
+              :label="t('confirm_password')"
               required
             />
 
             <Button type="submit" class="w-full" :disabled="form.processing">
-              Create account
+              {{ t('create_account_btn') }}
             </Button>
           </form>
         </CardContent>
       </Card>
 
       <p class="mt-4 text-center text-sm text-[hsl(var(--muted-foreground))]">
-        Already have an account?
+        {{ t('have_account') }}
         <Link href="/login" class="font-medium text-[hsl(var(--primary))] hover:underline">
-          Sign in
+          {{ t('sign_in') }}
         </Link>
       </p>
     </div>

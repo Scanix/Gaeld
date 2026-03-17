@@ -8,12 +8,15 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
   clients: { type: Array, default: () => [] },
   vatRates: { type: Array, default: () => [] },
 })
+
+const { t } = useTranslations()
 
 const form = useForm({
   client_id: '',
@@ -42,16 +45,16 @@ function submit() {
 
 const clientOptions = props.clients.map(c => ({ value: c.id, label: c.name }))
 const vatOptions = [
-  { value: '', label: 'No VAT' },
+  { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
 ]
 </script>
 
 <template>
-  <AppLayout title="Create Invoice" help-page="invoices">
+  <AppLayout :title="t('create_invoice')" help-page="invoices">
     <Card class="max-w-3xl">
       <CardHeader>
-        <CardTitle>New Invoice</CardTitle>
+        <CardTitle>{{ t('new_invoice') }}</CardTitle>
       </CardHeader>
       <CardContent>
         <form class="space-y-6" @submit.prevent="submit">
@@ -59,16 +62,16 @@ const vatOptions = [
             <FormSelect
               id="client_id"
               v-model="form.client_id"
-              label="Client"
+              :label="t('client')"
               :options="clientOptions"
-              placeholder="Select a client"
+              :placeholder="t('select_client')"
               :error="form.errors.client_id"
               required
             />
             <FormInput
               id="number"
               v-model="form.number"
-              label="Invoice Number"
+              :label="t('invoice_number')"
               placeholder="INV-001"
               :error="form.errors.number"
               required
@@ -77,7 +80,7 @@ const vatOptions = [
               id="issue_date"
               v-model="form.issue_date"
               type="date"
-              label="Issue Date"
+              :label="t('issue_date')"
               :error="form.errors.issue_date"
               required
             />
@@ -85,7 +88,7 @@ const vatOptions = [
               id="due_date"
               v-model="form.due_date"
               type="date"
-              label="Due Date"
+              :label="t('due_date')"
               :error="form.errors.due_date"
               required
             />
@@ -93,7 +96,7 @@ const vatOptions = [
 
           <!-- Line items -->
           <div>
-            <h3 class="mb-3 text-sm font-medium">Line Items</h3>
+            <h3 class="mb-3 text-sm font-medium">{{ t('line_items') }}</h3>
             <div class="space-y-3">
               <div
                 v-for="(line, i) in form.lines"
@@ -104,7 +107,7 @@ const vatOptions = [
                   <FormInput
                     :id="`line-desc-${i}`"
                     v-model="line.description"
-                    label="Description"
+                    :label="t('description')"
                     :error="form.errors[`lines.${i}.description`]"
                     required
                   />
@@ -114,7 +117,7 @@ const vatOptions = [
                     :id="`line-qty-${i}`"
                     v-model="line.quantity"
                     type="number"
-                    label="Qty"
+                    :label="t('qty')"
                     :error="form.errors[`lines.${i}.quantity`]"
                     required
                   />
@@ -124,7 +127,7 @@ const vatOptions = [
                     :id="`line-price-${i}`"
                     v-model="line.unit_price"
                     type="number"
-                    label="Unit Price"
+                    :label="t('unit_price')"
                     :error="form.errors[`lines.${i}.unit_price`]"
                     required
                   />
@@ -133,7 +136,7 @@ const vatOptions = [
                   <FormSelect
                     :id="`line-vat-${i}`"
                     v-model="line.vat_rate_id"
-                    label="VAT"
+                    :label="t('vat')"
                     :options="vatOptions"
                   />
                 </div>
@@ -153,13 +156,13 @@ const vatOptions = [
 
             <Button type="button" variant="outline" size="sm" class="mt-3" @click="addLine">
               <Plus class="mr-1 h-4 w-4" />
-              Add Line
+              {{ t('add_line') }}
             </Button>
           </div>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="notes" class="mb-1 block text-sm font-medium">Notes</label>
+              <label for="notes" class="mb-1 block text-sm font-medium">{{ t('notes') }}</label>
               <textarea
                 id="notes"
                 v-model="form.notes"
@@ -170,14 +173,14 @@ const vatOptions = [
             <FormInput
               id="payment_terms"
               v-model="form.payment_terms"
-              label="Payment Terms"
+              :label="t('payment_terms')"
               placeholder="Net 30"
             />
           </div>
 
           <div class="flex justify-end gap-3">
-            <Button as="a" href="/invoices" variant="outline">Cancel</Button>
-            <Button type="submit" :disabled="form.processing">Create Invoice</Button>
+            <Button as="a" href="/invoices" variant="outline">{{ t('cancel') }}</Button>
+            <Button type="submit" :disabled="form.processing">{{ t('create_invoice') }}</Button>
           </div>
         </form>
       </CardContent>

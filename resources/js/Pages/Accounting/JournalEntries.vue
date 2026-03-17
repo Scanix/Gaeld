@@ -7,25 +7,29 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { useTranslations } from '@/lib/useTranslations'
+import { computed } from 'vue'
 
 defineProps({ entries: Object })
 
-const columns = [
-  { key: 'date', label: 'Date', format: v => formatDate(v) },
-  { key: 'reference', label: 'Reference' },
-  { key: 'description', label: 'Description' },
-  { key: 'is_posted', label: 'Status' },
-]
+const { t } = useTranslations()
+
+const columns = computed(() => [
+  { key: 'date', label: t('date'), format: v => formatDate(v) },
+  { key: 'reference', label: t('reference') },
+  { key: 'description', label: t('description') },
+  { key: 'is_posted', label: t('status') },
+])
 </script>
 
 <template>
-  <AppLayout title="Journal Entries" help-page="accounting-basics">
+  <AppLayout :title="t('journal_entries')" help-page="accounting-basics">
     <Card>
-      <CardHeader><CardTitle>Journal Entries</CardTitle></CardHeader>
+      <CardHeader><CardTitle>{{ t('journal_entries') }}</CardTitle></CardHeader>
       <CardContent>
         <DataTable :columns="columns" :rows="entries">
           <template #cell-is_posted="{ value }">
-            <Badge :variant="value ? 'success' : 'warning'">{{ value ? 'Posted' : 'Draft' }}</Badge>
+            <Badge :variant="value ? 'success' : 'warning'">{{ value ? t('posted') : t('draft') }}</Badge>
           </template>
         </DataTable>
 
@@ -35,9 +39,9 @@ const columns = [
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b text-left text-muted-foreground">
-                <th class="pb-1">Account</th>
-                <th class="pb-1 text-right">Debit</th>
-                <th class="pb-1 text-right">Credit</th>
+                <th class="pb-1">{{ t('account') }}</th>
+                <th class="pb-1 text-right">{{ t('debit') }}</th>
+                <th class="pb-1 text-right">{{ t('credit') }}</th>
               </tr>
             </thead>
             <tbody>

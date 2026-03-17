@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import {
   LayoutDashboard,
@@ -11,27 +10,43 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  ArrowLeftRight,
+  Users,
+  X,
 } from 'lucide-vue-next'
+import { useTranslations } from '@/lib/useTranslations'
 
-const collapsed = ref(false)
+const { t } = useTranslations()
+
+const props = defineProps({
+  collapsed: { type: Boolean, default: false },
+  mobileOpen: { type: Boolean, default: false },
+})
+
+const emit = defineEmits(['update:collapsed', 'closeMobile'])
 
 const page = usePage()
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Invoices', href: '/invoices', icon: FileText },
-  { name: 'Expenses', href: '/expenses', icon: Receipt },
-  { name: 'Accounting', href: '/accounting/chart-of-accounts', icon: BookOpen, children: [
-    { name: 'Chart of Accounts', href: '/accounting/chart-of-accounts' },
-    { name: 'Journal Entries', href: '/accounting/journal-entries' },
-    { name: 'Trial Balance', href: '/accounting/trial-balance' },
+  { key: 'dashboard', href: '/', icon: LayoutDashboard },
+  { key: 'invoices', href: '/invoices', icon: FileText },
+  { key: 'expenses', href: '/expenses', icon: Receipt },
+  { key: 'contacts', href: '/customers', icon: Users, children: [
+    { key: 'customers', href: '/customers' },
+    { key: 'suppliers', href: '/suppliers' },
   ]},
-  { name: 'Reports', href: '/reports/profit-and-loss', icon: BarChart3, children: [
-    { name: 'Profit & Loss', href: '/reports/profit-and-loss' },
-    { name: 'Balance Sheet', href: '/reports/balance-sheet' },
+  { key: 'accounting', href: '/accounting/chart-of-accounts', icon: BookOpen, children: [
+    { key: 'chart_of_accounts', href: '/accounting/chart-of-accounts' },
+    { key: 'journal_entries', href: '/accounting/journal-entries' },
+    { key: 'trial_balance', href: '/accounting/trial-balance' },
   ]},
-  { name: 'Banking', href: '/banking', icon: Landmark },
-  { name: 'Organization', href: '/organizations', icon: Building2 },
+  { key: 'reports', href: '/reports/profit-and-loss', icon: BarChart3, children: [
+    { key: 'profit_and_loss', href: '/reports/profit-and-loss' },
+    { key: 'balance_sheet', href: '/reports/balance-sheet' },
+  ]},
+  { key: 'banking', href: '/banking', icon: Landmark },
+  { key: 'reconciliation', href: '/reconciliation', icon: ArrowLeftRight },
+  { key: 'organization', href: '/organizations', icon: Building2 },
 ]
 
 function isActive(href) {
@@ -49,25 +64,41 @@ function isGroupActive(item) {
 </script>
 
 <template>
+  <!-- Mobile backdrop -->
+  <Transition name="fade">
+    <div
+      v-if="mobileOpen"
+      class="fixed inset-0 z-30 bg-black/50 lg:hidden"
+      @click="emit('closeMobile')"
+    />
+  </Transition>
+
   <aside
     :class="[
-      'fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar))] transition-all duration-200',
-      collapsed ? 'w-16' : 'w-60',
+      'fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar))] transition-all duration-200 w-60',
+      collapsed ? 'lg:w-16' : 'lg:w-60',
+      mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
     ]"
   >
-    <!-- Logo -->
-    <div class="flex h-14 items-center border-b border-[hsl(var(--sidebar-border))] px-4">
-      <Link href="/" class="flex items-center gap-2">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-sm font-bold">
+    <!-- Logo + mobile close -->
+    <div class="flex h-14 items-center justify-between border-b border-[hsl(var(--sidebar-border))] px-4">
+      <Link href="/" class="flex min-w-0 items-center gap-2">
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-sm font-bold">
           G
         </div>
-        <span v-if="!collapsed" class="text-lg font-semibold text-[hsl(var(--sidebar-foreground))]">Gäld</span>
+        <span v-if="!collapsed" class="truncate text-lg font-semibold text-[hsl(var(--sidebar-foreground))]">Gäld</span>
       </Link>
+      <button
+        class="ml-2 rounded p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] lg:hidden"
+        @click="emit('closeMobile')"
+      >
+        <X class="h-5 w-5" />
+      </button>
     </div>
 
     <!-- Navigation -->
     <nav class="flex-1 overflow-y-auto p-3 space-y-1">
-      <template v-for="item in navigation" :key="item.name">
+      <template v-for="item in navigation" :key="item.key">
         <div v-if="item.children">
           <Link
             :href="item.href"
@@ -79,12 +110,12 @@ function isGroupActive(item) {
             ]"
           >
             <component :is="item.icon" class="h-4 w-4 shrink-0" />
-            <span v-if="!collapsed">{{ item.name }}</span>
+            <span v-if="!collapsed">{{ t(item.key) }}</span>
           </Link>
           <div v-if="!collapsed && isGroupActive(item)" class="ml-7 mt-1 space-y-1">
             <Link
               v-for="child in item.children"
-              :key="child.name"
+              :key="child.key"
               :href="child.href"
               :class="[
                 'block rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
@@ -93,7 +124,7 @@ function isGroupActive(item) {
                   : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--sidebar-foreground))]',
               ]"
             >
-              {{ child.name }}
+              {{ t(child.key) }}
             </Link>
           </div>
         </div>
@@ -109,16 +140,16 @@ function isGroupActive(item) {
           ]"
         >
           <component :is="item.icon" class="h-4 w-4 shrink-0" />
-          <span v-if="!collapsed">{{ item.name }}</span>
+          <span v-if="!collapsed">{{ t(item.key) }}</span>
         </Link>
       </template>
     </nav>
 
-    <!-- Collapse toggle -->
-    <div class="border-t border-[hsl(var(--sidebar-border))] p-3">
+    <!-- Collapse toggle (desktop only) -->
+    <div class="hidden border-t border-[hsl(var(--sidebar-border))] p-3 lg:block">
       <button
         class="flex w-full items-center justify-center rounded-lg p-2 text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
-        @click="collapsed = !collapsed"
+        @click="emit('update:collapsed', !collapsed)"
       >
         <ChevronLeft v-if="!collapsed" class="h-4 w-4" />
         <ChevronRight v-else class="h-4 w-4" />
@@ -126,3 +157,14 @@ function isGroupActive(item) {
     </div>
   </aside>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

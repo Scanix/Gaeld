@@ -6,8 +6,12 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
+import { useTranslations } from '@/lib/useTranslations'
+import { computed } from 'vue'
 
 defineProps({ accounts: Array })
+
+const { t } = useTranslations()
 
 const typeVariant = {
   asset: 'info',
@@ -17,18 +21,18 @@ const typeVariant = {
   expense: 'destructive',
 }
 
-const columns = [
-  { key: 'code', label: 'Code' },
-  { key: 'name', label: 'Name' },
-  { key: 'type', label: 'Type' },
-  { key: 'is_active', label: 'Active', format: v => v ? 'Yes' : 'No' },
-]
+const columns = computed(() => [
+  { key: 'code', label: t('code') },
+  { key: 'name', label: t('name') },
+  { key: 'type', label: t('type') },
+  { key: 'is_active', label: t('active'), format: v => v ? t('yes') : t('no') },
+])
 </script>
 
 <template>
-  <AppLayout title="Chart of Accounts" help-page="accounting-basics">
+  <AppLayout :title="t('chart_of_accounts')" help-page="accounting-basics">
     <Card>
-      <CardHeader><CardTitle>Chart of Accounts</CardTitle></CardHeader>
+      <CardHeader><CardTitle>{{ t('chart_of_accounts') }}</CardTitle></CardHeader>
       <CardContent>
         <DataTable :columns="columns" :rows="accounts">
           <template #cell-type="{ value }">

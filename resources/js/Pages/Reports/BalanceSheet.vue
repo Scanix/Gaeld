@@ -9,7 +9,8 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Button from '@/Components/UI/Button.vue'
 import { formatCurrency } from '@/lib/utils'
-import { ref } from 'vue'
+import { useTranslations } from '@/lib/useTranslations'
+import { ref, computed } from 'vue'
 
 const props = defineProps({ report: Object })
 
@@ -19,24 +20,26 @@ function applyFilter() {
   router.get('/reports/balance-sheet', { as_of_date: asOfDate.value }, { preserveState: true })
 }
 
-const accountColumns = [
-  { key: 'code', label: 'Code' },
-  { key: 'name', label: 'Account' },
-  { key: 'balance', label: 'Balance', format: v => formatCurrency(v) },
-]
+const { t } = useTranslations()
 
-const sections = [
-  { key: 'assets', title: 'Assets' },
-  { key: 'liabilities', title: 'Liabilities' },
-  { key: 'equity', title: 'Equity' },
-]
+const accountColumns = computed(() => [
+  { key: 'code', label: t('code') },
+  { key: 'name', label: t('account') },
+  { key: 'balance', label: t('balance'), format: v => formatCurrency(v) },
+])
+
+const sections = computed(() => [
+  { key: 'assets', title: t('assets') },
+  { key: 'liabilities', title: t('liabilities') },
+  { key: 'equity', title: t('equity') },
+])
 </script>
 
 <template>
-  <AppLayout title="Balance Sheet" help-page="reports">
+  <AppLayout :title="t('balance_sheet')" help-page="reports">
     <div class="mb-6 flex items-end gap-4">
-      <FormInput id="as_of_date" v-model="asOfDate" type="date" label="As of Date" />
-      <Button @click="applyFilter">Apply</Button>
+      <FormInput id="as_of_date" v-model="asOfDate" type="date" :label="t('as_of_date')" />
+      <Button @click="applyFilter">{{ t('apply') }}</Button>
     </div>
 
     <div class="space-y-6">
@@ -48,9 +51,9 @@ const sections = [
             :columns="accountColumns"
             :rows="report[section.key].accounts"
           />
-          <p v-else class="text-sm text-muted-foreground">No {{ section.title.toLowerCase() }} entries.</p>
+          <p v-else class="text-sm text-muted-foreground">{{ t('no_section_entries', { section: section.title.toLowerCase() }) }}</p>
           <div class="mt-4 flex justify-between border-t pt-3 text-sm font-semibold">
-            <span>Total {{ section.title }}</span>
+            <span>{{ t('total_section', { section: section.title }) }}</span>
             <span>{{ formatCurrency(report[section.key]?.total ?? 0) }}</span>
           </div>
         </CardContent>

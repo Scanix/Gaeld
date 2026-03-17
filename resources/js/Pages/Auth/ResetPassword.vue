@@ -4,6 +4,9 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
+import { useTranslations } from '@/lib/useTranslations'
+
+const { t } = useTranslations()
 
 const props = defineProps({
   email: String,
@@ -30,7 +33,7 @@ function submit() {
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
-        <h1 class="text-2xl font-bold">Set new password</h1>
+        <h1 class="text-2xl font-bold">{{ t('set_new_password') }}</h1>
       </div>
 
       <Card>
@@ -40,7 +43,7 @@ function submit() {
               id="email"
               v-model="form.email"
               type="email"
-              label="Email"
+              :label="t('email')"
               :error="form.errors.email"
               required
             />
@@ -49,7 +52,7 @@ function submit() {
               id="password"
               v-model="form.password"
               type="password"
-              label="New Password"
+              :label="t('new_password')"
               :error="form.errors.password"
               required
             />
@@ -58,12 +61,12 @@ function submit() {
               id="password_confirmation"
               v-model="form.password_confirmation"
               type="password"
-              label="Confirm Password"
+              :label="t('confirm_password')"
               required
             />
 
             <Button type="submit" class="w-full" :disabled="form.processing">
-              Reset password
+              {{ t('reset_password_btn') }}
             </Button>
           </form>
         </CardContent>

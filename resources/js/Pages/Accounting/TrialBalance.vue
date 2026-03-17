@@ -9,6 +9,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Button from '@/Components/UI/Button.vue'
 import { formatCurrency } from '@/lib/utils'
+import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -18,34 +19,36 @@ const props = defineProps({
 
 const date = ref(props.asOfDate)
 
+const { t } = useTranslations()
+
 function applyFilter() {
   router.get('/accounting/trial-balance', { as_of_date: date.value }, { preserveState: true })
 }
 
-const columns = [
-  { key: 'code', label: 'Code' },
-  { key: 'name', label: 'Account' },
-  { key: 'debit', label: 'Debit', format: v => v > 0 ? formatCurrency(v) : '' },
-  { key: 'credit', label: 'Credit', format: v => v > 0 ? formatCurrency(v) : '' },
-]
+const columns = computed(() => [
+  { key: 'code', label: t('code') },
+  { key: 'name', label: t('account') },
+  { key: 'debit', label: t('debit'), format: v => v > 0 ? formatCurrency(v) : '' },
+  { key: 'credit', label: t('credit'), format: v => v > 0 ? formatCurrency(v) : '' },
+])
 
 const totalDebit = computed(() => (props.balances || []).reduce((s, b) => s + (b.debit || 0), 0))
 const totalCredit = computed(() => (props.balances || []).reduce((s, b) => s + (b.credit || 0), 0))
 </script>
 
 <template>
-  <AppLayout title="Trial Balance" help-page="accounting-basics">
+  <AppLayout :title="t('trial_balance')" help-page="accounting-basics">
     <div class="mb-6 flex items-end gap-4">
-      <FormInput id="as_of_date" v-model="date" type="date" label="As of Date" />
-      <Button @click="applyFilter">Apply</Button>
+      <FormInput id="as_of_date" v-model="date" type="date" :label="t('as_of_date')" />
+      <Button @click="applyFilter">{{ t('apply') }}</Button>
     </div>
 
     <Card>
-      <CardHeader><CardTitle>Trial Balance</CardTitle></CardHeader>
+      <CardHeader><CardTitle>{{ t('trial_balance') }}</CardTitle></CardHeader>
       <CardContent>
         <DataTable :columns="columns" :rows="balances || []" />
         <div class="mt-4 flex justify-between border-t pt-3 text-sm font-semibold">
-          <span>Totals</span>
+          <span>{{ t('totals') }}</span>
           <div class="flex gap-12">
             <span>{{ formatCurrency(totalDebit) }}</span>
             <span>{{ formatCurrency(totalCredit) }}</span>

@@ -10,7 +10,8 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import { Plus, Landmark } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { useTranslations } from '@/lib/useTranslations'
+import { ref, computed } from 'vue'
 
 defineProps({ bankAccounts: { type: Array, default: () => [] } })
 
@@ -28,20 +29,22 @@ function submit() {
   })
 }
 
-const columns = [
-  { key: 'name', label: 'Account Name' },
-  { key: 'iban', label: 'IBAN', format: v => v || '—' },
-  { key: 'bank_name', label: 'Bank', format: v => v || '—' },
-  { key: 'currency', label: 'Currency' },
-  { key: 'ledger_account', label: 'Ledger Account', format: (v) => v ? `${v.code} — ${v.name}` : '—' },
-]
+const { t } = useTranslations()
+
+const columns = computed(() => [
+  { key: 'name', label: t('account_name') },
+  { key: 'iban', label: t('iban'), format: v => v || '—' },
+  { key: 'bank_name', label: t('bank'), format: v => v || '—' },
+  { key: 'currency', label: t('currency') },
+  { key: 'ledger_account', label: t('ledger_account'), format: (v) => v ? `${v.code} — ${v.name}` : '—' },
+])
 </script>
 
 <template>
-  <AppLayout title="Banking">
+  <AppLayout :title="t('banking')">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-semibold">Bank Accounts</h2>
-      <Button @click="showModal = true"><Plus class="mr-2 h-4 w-4" /> Add Account</Button>
+      <h2 class="text-xl font-semibold">{{ t('bank_accounts') }}</h2>
+      <Button @click="showModal = true"><Plus class="mr-2 h-4 w-4" /> {{ t('add_account') }}</Button>
     </div>
 
     <Card v-if="bankAccounts.length">
@@ -53,19 +56,19 @@ const columns = [
     <Card v-else>
       <CardContent class="flex flex-col items-center justify-center py-12">
         <Landmark class="mb-4 h-12 w-12 text-muted-foreground" />
-        <p class="mb-4 text-muted-foreground">No bank accounts connected yet.</p>
-        <Button @click="showModal = true">Add Your First Account</Button>
+        <p class="mb-4 text-muted-foreground">{{ t('no_bank_accounts') }}</p>
+        <Button @click="showModal = true">{{ t('add_first_account') }}</Button>
       </CardContent>
     </Card>
 
-    <Modal :show="showModal" @close="showModal = false" title="Add Bank Account">
+    <Modal :show="showModal" @close="showModal = false" :title="t('add_bank_account')">
       <form class="space-y-4" @submit.prevent="submit">
-        <FormInput id="name" v-model="form.name" label="Account Name" :error="form.errors.name" required />
-        <FormInput id="iban" v-model="form.iban" label="IBAN" :error="form.errors.iban" />
-        <FormInput id="bank_name" v-model="form.bank_name" label="Bank Name" :error="form.errors.bank_name" />
+        <FormInput id="name" v-model="form.name" :label="t('account_name')" :error="form.errors.name" required />
+        <FormInput id="iban" v-model="form.iban" :label="t('iban')" :error="form.errors.iban" />
+        <FormInput id="bank_name" v-model="form.bank_name" :label="t('bank_name')" :error="form.errors.bank_name" />
         <div class="flex justify-end gap-3">
-          <Button variant="outline" @click="showModal = false">Cancel</Button>
-          <Button type="submit" :disabled="form.processing">Create</Button>
+          <Button variant="outline" @click="showModal = false">{{ t('cancel') }}</Button>
+          <Button type="submit" :disabled="form.processing">{{ t('create') }}</Button>
         </div>
       </form>
     </Modal>

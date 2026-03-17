@@ -8,6 +8,7 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import { useTranslations } from '@/lib/useTranslations'
 
 const props = defineProps({
   vatRates: { type: Array, default: () => [] },
@@ -28,29 +29,31 @@ function submit() {
   form.post('/expenses')
 }
 
+const { t } = useTranslations()
+
 const categoryOptions = [
-  'Office Supplies',
-  'Travel',
-  'Software',
-  'Professional Services',
-  'Marketing',
-  'Rent',
-  'Utilities',
-  'Insurance',
-  'Other',
+  { value: 'Office Supplies', label: t('cat_office_supplies') },
+  { value: 'Travel', label: t('cat_travel') },
+  { value: 'Software', label: t('cat_software') },
+  { value: 'Professional Services', label: t('cat_professional_services') },
+  { value: 'Marketing', label: t('cat_marketing') },
+  { value: 'Rent', label: t('cat_rent') },
+  { value: 'Utilities', label: t('cat_utilities') },
+  { value: 'Insurance', label: t('cat_insurance') },
+  { value: 'Other', label: t('cat_other') },
 ]
 
 const vatOptions = [
-  { value: '', label: 'No VAT' },
+  { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
 ]
 </script>
 
 <template>
-  <AppLayout title="Create Expense" help-page="expenses">
+  <AppLayout :title="t('create_expense')" help-page="expenses">
     <Card class="max-w-2xl">
       <CardHeader>
-        <CardTitle>New Expense</CardTitle>
+        <CardTitle>{{ t('new_expense') }}</CardTitle>
       </CardHeader>
       <CardContent>
         <form class="space-y-4" @submit.prevent="submit">
@@ -58,16 +61,16 @@ const vatOptions = [
             <FormSelect
               id="category"
               v-model="form.category"
-              label="Category"
+              :label="t('category')"
               :options="categoryOptions"
-              placeholder="Select category"
+              :placeholder="t('select_category')"
               :error="form.errors.category"
               required
             />
             <FormInput
               id="vendor"
               v-model="form.vendor"
-              label="Vendor"
+              :label="t('vendor')"
               placeholder="e.g. Digitec"
               :error="form.errors.vendor"
             />
@@ -75,7 +78,7 @@ const vatOptions = [
               id="amount"
               v-model="form.amount"
               type="number"
-              label="Amount"
+              :label="t('amount')"
               :error="form.errors.amount"
               required
             />
@@ -83,27 +86,27 @@ const vatOptions = [
               id="date"
               v-model="form.date"
               type="date"
-              label="Date"
+              :label="t('date')"
               :error="form.errors.date"
               required
             />
             <FormSelect
               id="vat_rate_id"
               v-model="form.vat_rate_id"
-              label="VAT Rate"
+              :label="t('vat_rate')"
               :options="vatOptions"
             />
             <FormInput
               id="vat_amount"
               v-model="form.vat_amount"
               type="number"
-              label="VAT Amount"
+              :label="t('vat_amount')"
               :error="form.errors.vat_amount"
             />
           </div>
 
           <div>
-            <label for="description" class="mb-1 block text-sm font-medium">Description</label>
+            <label for="description" class="mb-1 block text-sm font-medium">{{ t('description') }}</label>
             <textarea
               id="description"
               v-model="form.description"
@@ -113,8 +116,8 @@ const vatOptions = [
           </div>
 
           <div class="flex justify-end gap-3">
-            <Button as="a" href="/expenses" variant="outline">Cancel</Button>
-            <Button type="submit" :disabled="form.processing">Create Expense</Button>
+            <Button as="a" href="/expenses" variant="outline">{{ t('cancel') }}</Button>
+            <Button type="submit" :disabled="form.processing">{{ t('create_expense') }}</Button>
           </div>
         </form>
       </CardContent>

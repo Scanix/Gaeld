@@ -7,6 +7,9 @@ import CardHeader from '@/Components/UI/CardHeader.vue'
 import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
+import { useTranslations } from '@/lib/useTranslations'
+
+const { t } = useTranslations()
 
 const form = useForm({
   email: '',
@@ -30,8 +33,8 @@ function submit() {
         <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-xl font-bold">
           G
         </div>
-        <h1 class="mt-4 text-2xl font-bold">Welcome to Gäld</h1>
-        <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">Sign in to your account</p>
+        <h1 class="mt-4 text-2xl font-bold">{{ t('welcome') }}</h1>
+        <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{{ t('sign_in_account') }}</p>
       </div>
 
       <Card>
@@ -41,7 +44,7 @@ function submit() {
               id="email"
               v-model="form.email"
               type="email"
-              label="Email"
+              :label="t('email')"
               placeholder="you@example.com"
               :error="form.errors.email"
               required
@@ -51,7 +54,7 @@ function submit() {
               id="password"
               v-model="form.password"
               type="password"
-              label="Password"
+              :label="t('password')"
               :error="form.errors.password"
               required
             />
@@ -59,24 +62,24 @@ function submit() {
             <div class="flex items-center justify-between">
               <label class="flex items-center gap-2 text-sm">
                 <input v-model="form.remember" type="checkbox" class="h-4 w-4 rounded border-[hsl(var(--input))]">
-                Remember me
+                {{ t('remember_me') }}
               </label>
               <Link href="/forgot-password" class="text-sm text-[hsl(var(--primary))] hover:underline">
-                Forgot password?
+                {{ t('forgot_password') }}
               </Link>
             </div>
 
             <Button type="submit" class="w-full" :disabled="form.processing">
-              Sign in
+              {{ t('sign_in') }}
             </Button>
           </form>
         </CardContent>
       </Card>
 
       <p class="mt-4 text-center text-sm text-[hsl(var(--muted-foreground))]">
-        Don't have an account?
+        {{ t('no_account') }}
         <Link href="/register" class="font-medium text-[hsl(var(--primary))] hover:underline">
-          Create one
+          {{ t('create_one') }}
         </Link>
       </p>
     </div>
