@@ -36,6 +36,14 @@ docker-compose exec app php artisan gaeld:install --demo
 
 Visit `http://localhost:8080` to access the application.
 
+### Running Tests
+
+Tests run against the PostgreSQL `testing` database (automatically created by the container on first start). Always run tests **inside** the container:
+
+```bash
+docker compose exec laravel.test php artisan test
+```
+
 ### Default Demo Credentials
 
 After seeding:
