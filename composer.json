@@ -6,10 +6,13 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "laravel/framework": "^12.54",
         "inertiajs/inertia-laravel": "^2.0",
+        "laravel/framework": "^12.54",
         "laravel/sanctum": "^4.0",
+        "laravel/scout": "^11.0",
         "laravel/tinker": "^2.9",
+        "sprain/swiss-qr-bill": "^5.3",
+        "tecnickcom/tcpdf": "^6.11",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
