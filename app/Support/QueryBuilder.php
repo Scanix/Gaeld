@@ -1,0 +1,144 @@
+<?php
+
+namespace App\Support;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+
+class QueryBuilder
+{
+    private Builder $query;
+    private Request $request;
+    private array $allowedSorts = [];
+    private array $allowedFilters = [];
+    private array $searchColumns = [];
+    private string $defaultSort = 'created_at';
+    private string $defaultDirection = 'desc';
+
+    public function __construct(Builder $query, Request $request)
+    {
+        $this->query = $query;
+        $this->request = $request;
+    }
+
+    public static function for(Builder $query, Request $request): static
+    {
+        return new static($query, $request);
+    }
+
+    /**
+     * Define which columns can be sorted by.
+     *
+     * @param array<string> $columns
+     */
+    public function allowedSorts(array $columns, string $default = 'created_at', string $defaultDirection = 'desc'): static
+    {
+        $this->allowedSorts = $columns;
+        $this->defaultSort = $default;
+        $this->defaultDirection = $defaultDirection;
+
+        return $this;
+    }
+
+    /**
+     * Define which columns can be filtered (exact match).
+     *
+     * @param array<string> $columns
+     */
+    public function allowedFilters(array $columns): static
+    {
+        $this->allowedFilters = $columns;
+
+        return $this;
+    }
+
+    /**
+     * Define which columns are searched via LIKE.
+     *
+     * @param array<string> $columns
+     */
+    public function searchable(array $columns): static
+    {
+        $this->searchColumns = $columns;
+
+        return $this;
+    }
+
+    /**
+     * Apply sorting, filtering, search from request and return the builder.
+     */
+    public function apply(): Builder
+    {
+        $this->applyFilters();
+        $this->applySearch();
+        $this->applySorting();
+
+        return $this->query;
+    }
+
+    private function applyFilters(): void
+    {
+        foreach ($this->allowedFilters as $filter) {
+            $value = $this->request->input("filter.$filter");
+
+            if ($value !== null && $value !== '') {
+                $this->query->where($filter, $value);
+            }
+        }
+    }
+
+    private function applySearch(): void
+    {
+        $search = $this->request->input('search');
+
+        if (empty($search) || empty($this->searchColumns)) {
+            return;
+        }
+
+        $search = trim($search);
+        $likeOperator = $this->likeOperator();
+
+        $this->query->where(function (Builder $q) use ($search, $likeOperator) {
+            foreach ($this->searchColumns as $column) {
+                if (str_contains($column, '.')) {
+                    // Relation search: e.g. 'client.name'
+                    [$relation, $field] = explode('.', $column, 2);
+                    $q->orWhereHas($relation, function (Builder $rq) use ($field, $search, $likeOperator) {
+                        $rq->where($field, $likeOperator, "%{$search}%");
+                    });
+                } else {
+                    $q->orWhere($column, $likeOperator, "%{$search}%");
+                }
+            }
+        });
+    }
+
+    private function applySorting(): void
+    {
+        $sort = $this->request->input('sort', $this->defaultSort);
+        $direction = $this->request->input('direction', $this->defaultDirection);
+
+        // Validate sort column against allowed list; reset direction to default if column is rejected
+        if (! in_array($sort, $this->allowedSorts, true)) {
+            $sort = $this->defaultSort;
+            $direction = $this->defaultDirection;
+        }
+
+        // Validate direction
+        $direction = in_array(strtolower($direction), ['asc', 'desc'], true)
+            ? strtolower($direction)
+            : $this->defaultDirection;
+
+        $this->query->orderBy($sort, $direction);
+    }
+
+    /**
+     * Use case-insensitive LIKE: ilike for PostgreSQL, like for others.
+     */
+    private function likeOperator(): string
+    {
+        return $this->query->getQuery()->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+    }
+}
