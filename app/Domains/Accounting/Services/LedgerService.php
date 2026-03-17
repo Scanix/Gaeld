@@ -8,8 +8,11 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -134,7 +137,7 @@ class LedgerService
      */
     public function postInvoice(Invoice $invoice): Invoice
     {
-        if ($invoice->status !== Invoice::STATUS_DRAFT) {
+        if ($invoice->status !== InvoiceStatus::Draft) {
             throw new \DomainException('Only draft invoices can be posted.');
         }
 
@@ -154,7 +157,7 @@ class LedgerService
             ]);
 
             $invoice->update([
-                'status' => Invoice::STATUS_SENT,
+                'status' => InvoiceStatus::Sent->value,
                 'journal_entry_id' => $journalEntry->id,
             ]);
 
@@ -178,7 +181,7 @@ class LedgerService
      */
     public function postExpense(Expense $expense, string $expenseAccountCode, string $bankAccountCode = '1020'): Expense
     {
-        if ($expense->status === Expense::STATUS_POSTED) {
+        if ($expense->status === ExpenseStatus::Posted) {
             throw new \DomainException('Expense is already posted.');
         }
 
@@ -198,7 +201,7 @@ class LedgerService
             ]);
 
             $expense->update([
-                'status' => Expense::STATUS_POSTED,
+                'status' => ExpenseStatus::Posted->value,
                 'journal_entry_id' => $journalEntry->id,
             ]);
 
@@ -278,6 +281,8 @@ class LedgerService
      * Liability, equity, and revenue accounts return credit-normal (credits − debits).
      * Only posted entries are included.
      *
+     * Results are cached per account + date range (tag: org:{orgId}:ledger).
+     *
      * @param  int          $accountId  The account's primary key
      * @param  string|null  $fromDate   Start date (inclusive, Y-m-d)
      * @param  string|null  $toDate     End date (inclusive, Y-m-d)
@@ -286,32 +291,35 @@ class LedgerService
     public function accountBalance(int $accountId, ?string $fromDate = null, ?string $toDate = null): float
     {
         $account = Account::findOrFail($accountId);
+        $cacheKey = "account_balance:{$accountId}:{$fromDate}:{$toDate}";
+        $orgTag = "org:{$account->organization_id}:ledger";
 
-        $query = TransactionLine::where('account_id', $accountId)
-            ->whereHas('journalEntry', function ($q) use ($fromDate, $toDate) {
-                $q->where('is_posted', true);
-                if ($fromDate) {
-                    $q->where('date', '>=', $fromDate);
-                }
-                if ($toDate) {
-                    $q->where('date', '<=', $toDate);
-                }
-            });
+        return Cache::tags([$orgTag])->remember($cacheKey, now()->addHour(), function () use ($accountId, $account, $fromDate, $toDate) {
+            $query = TransactionLine::where('account_id', $accountId)
+                ->whereHas('journalEntry', function ($q) use ($fromDate, $toDate) {
+                    $q->where('is_posted', true);
+                    if ($fromDate) {
+                        $q->where('date', '>=', $fromDate);
+                    }
+                    if ($toDate) {
+                        $q->where('date', '<=', $toDate);
+                    }
+                });
 
-        $debits = (clone $query)->sum('debit');
-        $credits = (clone $query)->sum('credit');
+            $debits = (clone $query)->sum('debit');
+            $credits = (clone $query)->sum('credit');
 
-        return $this->isDebitNormalAccount($account->type)
-            ? (float) bcsub($debits, $credits, 2)
-            : (float) bcsub($credits, $debits, 2);
+            return $this->isDebitNormalAccount($account->type)
+                ? (float) bcsub($debits, $credits, 2)
+                : (float) bcsub($credits, $debits, 2);
+        });
     }
 
     /**
      * Get trial balance for an organization.
      *
      * Returns all accounts with non-zero posted balances, ordered by code.
-     * Each entry contains the account code, name, type, and its debit or
-     * credit balance depending on the account's normal balance direction.
+     * Results cached per organization (tag: org:{orgId}:ledger).
      *
      * @param  string       $organizationId  UUID of the organization
      * @param  string|null  $asOfDate        Cut-off date (inclusive)
@@ -319,28 +327,44 @@ class LedgerService
      */
     public function trialBalance(string $organizationId, ?string $asOfDate = null): array
     {
-        $accounts = Account::where('organization_id', $organizationId)
-            ->where('is_active', true)
-            ->orderBy('code')
-            ->get();
+        $cacheKey = "trial_balance:{$organizationId}:{$asOfDate}";
+        $orgTag = "org:{$organizationId}:ledger";
 
-        $balances = [];
+        return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $asOfDate) {
+            $accounts = Account::where('organization_id', $organizationId)
+                ->where('is_active', true)
+                ->orderBy('code')
+                ->get();
 
-        foreach ($accounts as $account) {
-            $balance = $this->accountBalance($account->id, null, $asOfDate);
+            $balances = [];
 
-            if ($balance != 0) {
-                $balances[] = [
-                    'account_code' => $account->code,
-                    'account_name' => $account->name,
-                    'account_type' => $account->type,
-                    'debit' => $balance > 0 && $this->isDebitNormalAccount($account->type) ? $balance : 0,
-                    'credit' => $balance > 0 && ! $this->isDebitNormalAccount($account->type) ? $balance : 0,
-                ];
+            foreach ($accounts as $account) {
+                $balance = $this->accountBalance($account->id, null, $asOfDate);
+
+                if ($balance != 0) {
+                    $balances[] = [
+                        'account_code' => $account->code,
+                        'account_name' => $account->name,
+                        'account_type' => $account->type,
+                        'debit' => $balance > 0 && $this->isDebitNormalAccount($account->type) ? $balance : 0,
+                        'credit' => $balance > 0 && ! $this->isDebitNormalAccount($account->type) ? $balance : 0,
+                    ];
+                }
             }
-        }
 
-        return $balances;
+            return $balances;
+        });
+    }
+
+    /**
+     * Flush all cached ledger data for an organization.
+     *
+     * Must be called after any journal entry mutation to maintain consistency.
+     */
+    public function flushCache(string $organizationId): void
+    {
+        Cache::tags(["org:{$organizationId}:ledger"])->flush();
+        Cache::tags(["org:{$organizationId}:reports"])->flush();
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -416,6 +440,11 @@ class LedgerService
                     'credit' => $line['credit'] ?? 0,
                     'description' => $line['description'] ?? null,
                 ]);
+            }
+
+            // Flush cached balances so reports reflect the new entry immediately
+            if ($isPosted) {
+                $this->flushCache($organizationId);
             }
 
             return $journalEntry->load('lines.account');

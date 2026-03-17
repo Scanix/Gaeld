@@ -3,17 +3,21 @@
 namespace App\Domains\Invoicing\Models;
 
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Contacts\Models\Customer;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Invoice extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;
 
     protected $fillable = [
         'organization_id',
@@ -29,6 +33,10 @@ class Invoice extends Model
         'currency',
         'notes',
         'payment_terms',
+        'qr_reference',
+        'qr_type',
+        'qr_iban',
+        'customer_id',
     ];
 
     protected function casts(): array
@@ -39,9 +47,11 @@ class Invoice extends Model
             'subtotal' => 'decimal:2',
             'vat_amount' => 'decimal:2',
             'total' => 'decimal:2',
+            'status' => InvoiceStatus::class,
         ];
     }
 
+    // Kept for backward compatibility
     public const STATUS_DRAFT = 'draft';
     public const STATUS_SENT = 'sent';
     public const STATUS_PAID = 'paid';
@@ -58,6 +68,11 @@ class Invoice extends Model
         return $this->belongsTo(Client::class);
     }
 
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
     public function journalEntry(): BelongsTo
     {
         return $this->belongsTo(JournalEntry::class);
@@ -66,6 +81,48 @@ class Invoice extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(InvoiceLine::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(InvoicePayment::class);
+    }
+
+    public function amountPaid(): string
+    {
+        return (string) $this->payments()->sum('amount');
+    }
+
+    public function amountDue(): string
+    {
+        return bcsub((string) $this->total, $this->amountPaid(), 2);
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return bccomp($this->amountDue(), '0', 2) <= 0;
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Scout
+    // ──────────────────────────────────────────────────────────────
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'organization_id' => $this->organization_id,
+            'number' => $this->number ?? '',
+            'status' => $this->status?->value ?? '',
+            'client_name' => $this->client?->name ?? '',
+            'total' => (float) $this->total,
+            'currency' => $this->currency,
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return ! $this->trashed();
     }
 
     public function recalculate(): void

@@ -15,12 +15,9 @@ class BankingController extends Controller
 {
     public function index(Request $request): Response
     {
-        $orgId = $request->user()->resolveCurrentOrganization()?->id;
-        abort_if(! $orgId, 403, 'No organization found.');
         $this->authorize('viewAny', BankAccount::class);
 
-        $bankAccounts = BankAccount::where('organization_id', $orgId)
-            ->with('ledgerAccount')
+        $bankAccounts = BankAccount::with('ledgerAccount')
             ->orderBy('name')
             ->get();
 
@@ -55,8 +52,6 @@ class BankingController extends Controller
             'account_id' => 'nullable|exists:accounts,id',
             'currency' => 'string|size:3',
         ]);
-
-        $validated['organization_id'] = $request->user()->resolveCurrentOrganization()->id;
 
         $bankAccount = $action->execute($validated);
 

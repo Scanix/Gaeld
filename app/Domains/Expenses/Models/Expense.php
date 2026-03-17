@@ -4,16 +4,20 @@ namespace App\Domains\Expenses\Models;
 
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Expense extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;
 
     protected $fillable = [
         'organization_id',
@@ -28,6 +32,7 @@ class Expense extends Model
         'receipt_path',
         'status',
         'currency',
+        'supplier_id',
     ];
 
     protected function casts(): array
@@ -36,9 +41,11 @@ class Expense extends Model
             'date' => 'date',
             'amount' => 'decimal:2',
             'vat_amount' => 'decimal:2',
+            'status' => ExpenseStatus::class,
         ];
     }
 
+    // Kept for backward compatibility
     public const STATUS_PENDING = 'pending';
     public const STATUS_APPROVED = 'approved';
     public const STATUS_POSTED = 'posted';
@@ -56,5 +63,32 @@ class Expense extends Model
     public function vatRate(): BelongsTo
     {
         return $this->belongsTo(VatRate::class);
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Scout
+    // ──────────────────────────────────────────────────────────────
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'organization_id' => $this->organization_id,
+            'description' => $this->description ?? '',
+            'vendor' => $this->vendor ?? '',
+            'category' => $this->category,
+            'amount' => (float) $this->amount,
+            'status' => $this->status?->value ?? '',
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return ! $this->trashed();
     }
 }

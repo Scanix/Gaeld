@@ -24,11 +24,11 @@ class ExpensePolicy
 
     public function update(User $user, Expense $expense): bool
     {
-        return $this->view($user, $expense) && $expense->status !== Expense::STATUS_POSTED;
+        return $this->view($user, $expense) && $expense->status->isEditable();
     }
 
     public function delete(User $user, Expense $expense): bool
     {
-        return $this->view($user, $expense) && $expense->status === Expense::STATUS_PENDING;
+        return $this->view($user, $expense) && $expense->status->isDeletable();
     }
 }

@@ -24,11 +24,11 @@ class InvoicePolicy
 
     public function update(User $user, Invoice $invoice): bool
     {
-        return $this->view($user, $invoice) && $invoice->status === Invoice::STATUS_DRAFT;
+        return $this->view($user, $invoice) && $invoice->status->isEditable();
     }
 
     public function delete(User $user, Invoice $invoice): bool
     {
-        return $this->view($user, $invoice) && $invoice->status === Invoice::STATUS_DRAFT;
+        return $this->view($user, $invoice) && $invoice->status->isDeletable();
     }
 }

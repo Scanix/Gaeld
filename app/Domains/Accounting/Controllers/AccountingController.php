@@ -14,12 +14,7 @@ class AccountingController extends Controller
 {
     public function chartOfAccounts(Request $request): Response
     {
-        $orgId = $request->user()->resolveCurrentOrganization()?->id;
-        abort_if(!$orgId, 403, 'No organization found.');
-
-        $accounts = Account::where('organization_id', $orgId)
-            ->orderBy('code')
-            ->get();
+        $accounts = Account::orderBy('code')->get();
 
         return Inertia::render('Accounting/ChartOfAccounts', [
             'accounts' => $accounts,
@@ -28,11 +23,7 @@ class AccountingController extends Controller
 
     public function journalEntries(Request $request): Response
     {
-        $orgId = $request->user()->resolveCurrentOrganization()?->id;
-        abort_if(!$orgId, 403, 'No organization found.');
-
-        $entries = JournalEntry::where('organization_id', $orgId)
-            ->with('lines.account')
+        $entries = JournalEntry::with('lines.account')
             ->orderByDesc('date')
             ->paginate(20);
 
@@ -43,8 +34,7 @@ class AccountingController extends Controller
 
     public function trialBalance(Request $request, LedgerService $ledgerService): Response
     {
-        $orgId = $request->user()->resolveCurrentOrganization()?->id;
-        abort_if(!$orgId, 403, 'No organization found.');
+        $orgId = app('current_organization')->id;
         $asOfDate = $request->input('as_of_date', now()->toDateString());
 
         $balances = $ledgerService->trialBalance($orgId, $asOfDate);

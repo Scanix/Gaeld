@@ -25,6 +25,7 @@ class Organization extends Model
         'canton',
         'country',
         'vat_number',
+        'qr_iban',
         'currency',
         'fiscal_year_start',
         'locale',

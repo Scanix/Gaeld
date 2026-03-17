@@ -73,4 +73,12 @@ class OrganizationController extends Controller
         return redirect()->route('organizations.show', $organization)
             ->with('success', 'Organization updated.');
     }
+
+    public function switchOrganization(Request $request, Organization $organization): RedirectResponse
+    {
+        $request->user()->switchOrganization($organization);
+
+        return redirect()->route('dashboard')
+            ->with('success', "Switched to {$organization->name}.");
+    }
 }

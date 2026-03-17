@@ -41,6 +41,26 @@ class User extends Authenticatable
 
     public function resolveCurrentOrganization(): ?Organization
     {
+        $sessionOrgId = session('current_organization_id');
+
+        if ($sessionOrgId) {
+            $org = $this->organizations()->where('organizations.id', $sessionOrgId)->first();
+            if ($org) {
+                return $org;
+            }
+            // Stale session value — clear it
+            session()->forget('current_organization_id');
+        }
+
         return $this->organizations()->first();
+    }
+
+    public function switchOrganization(Organization $organization): void
+    {
+        if (! $this->organizations()->where('organizations.id', $organization->id)->exists()) {
+            abort(403, 'You do not belong to this organization.');
+        }
+
+        session(['current_organization_id' => $organization->id]);
     }
 }

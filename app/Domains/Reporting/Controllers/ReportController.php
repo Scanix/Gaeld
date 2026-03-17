@@ -12,8 +12,7 @@ class ReportController extends Controller
 {
     public function profitAndLoss(Request $request, ReportingService $reportingService): Response
     {
-        $orgId = $request->user()->resolveCurrentOrganization()?->id;
-        abort_if(!$orgId, 403, 'No organization found.');
+        $orgId = app('current_organization')->id;
         $from = $request->input('from', now()->startOfYear()->toDateString());
         $to = $request->input('to', now()->toDateString());
 
@@ -26,8 +25,7 @@ class ReportController extends Controller
 
     public function balanceSheet(Request $request, ReportingService $reportingService): Response
     {
-        $orgId = $request->user()->resolveCurrentOrganization()?->id;
-        abort_if(!$orgId, 403, 'No organization found.');
+        $orgId = app('current_organization')->id;
         $asOfDate = $request->input('as_of_date', now()->toDateString());
 
         $report = $reportingService->balanceSheet($orgId, $asOfDate);
