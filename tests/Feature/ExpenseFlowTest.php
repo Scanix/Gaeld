@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
+use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Organizations\Models\Organization;
@@ -16,68 +18,109 @@ class ExpenseFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_complete_expense_flow(): void
+    private Organization $org;
+    private User $user;
+
+    protected function setUp(): void
     {
-        // Setup
-        $user = User::factory()->create();
-        $org = Organization::create([
+        parent::setUp();
+
+        $this->user = User::factory()->create();
+        $this->org = Organization::create([
             'name' => 'Test GmbH',
             'currency' => 'CHF',
         ]);
-        $org->users()->attach($user->id, ['role' => 'owner']);
+        $this->org->users()->attach($this->user->id, ['role' => 'owner']);
 
-        $expenseAccount = Account::create([
-            'organization_id' => $org->id,
+        Account::create([
+            'organization_id' => $this->org->id,
             'code' => '6530',
             'name' => 'Software and Subscriptions',
             'type' => Account::TYPE_EXPENSE,
         ]);
 
-        $bank = Account::create([
-            'organization_id' => $org->id,
+        Account::create([
+            'organization_id' => $this->org->id,
             'code' => '1020',
             'name' => 'Bank',
             'type' => Account::TYPE_ASSET,
         ]);
+    }
 
-        $vatRate = VatRate::create([
-            'organization_id' => $org->id,
-            'name' => 'Standard',
-            'rate' => 8.10,
-            'code' => 'NORMAL',
-            'is_default' => true,
-        ]);
-
-        // 1. Create expense
+    private function createExpense(array $overrides = []): Expense
+    {
         $action = new CreateExpenseAction();
-        $expense = $action->execute([
-            'organization_id' => $org->id,
-            'vat_rate_id' => $vatRate->id,
+
+        return $action->execute(array_merge([
+            'organization_id' => $this->org->id,
             'category' => 'Software and Subscriptions',
             'description' => 'Adobe Creative Cloud',
             'amount' => 700.00,
             'vat_amount' => 56.70,
             'date' => '2026-03-16',
             'vendor' => 'Adobe Inc.',
-        ]);
+        ], $overrides));
+    }
 
-        $this->assertEquals(Expense::STATUS_PENDING, $expense->status);
+    public function test_complete_expense_flow_with_approval(): void
+    {
+        // 1. Create expense
+        $expense = $this->createExpense();
+        $this->assertEquals(ExpenseStatus::Pending, $expense->status);
         $this->assertEquals('700.00', $expense->amount);
 
-        // 2. Post expense to ledger
+        // 2. Approve expense
+        $approveAction = new ApproveExpenseAction();
+        $expense = $approveAction->execute($expense);
+        $this->assertEquals(ExpenseStatus::Approved, $expense->status);
+
+        // 3. Post expense to ledger
         $expenseService = app(ExpenseService::class);
         $expense = $expenseService->postExpense($expense, '6530');
 
-        $this->assertEquals(Expense::STATUS_POSTED, $expense->status);
+        $this->assertEquals(ExpenseStatus::Posted, $expense->status);
         $this->assertNotNull($expense->journal_entry_id);
         $this->assertTrue($expense->journalEntry->isBalanced());
 
         // Verify ledger entries
         $lines = $expense->journalEntry->lines;
         $this->assertCount(2, $lines);
+    }
 
-        $debitLine = $lines->firstWhere('account_id', $expenseAccount->id);
-        $creditLine = $lines->firstWhere('account_id', $bank->id);
+    public function test_complete_expense_flow(): void
+    {
+        $vatRate = VatRate::create([
+            'organization_id' => $this->org->id,
+            'name' => 'Standard',
+            'rate' => 8.10,
+            'code' => 'NORMAL',
+            'is_default' => true,
+        ]);
+
+        $expense = $this->createExpense(['vat_rate_id' => $vatRate->id]);
+
+        $this->assertEquals(ExpenseStatus::Pending, $expense->status);
+
+        // Post expense to ledger (direct — skips approval in service layer)
+        $expenseService = app(ExpenseService::class);
+        $expense = $expenseService->postExpense($expense, '6530');
+
+        $this->assertEquals(ExpenseStatus::Posted, $expense->status);
+        $this->assertNotNull($expense->journal_entry_id);
+        $this->assertTrue($expense->journalEntry->isBalanced());
+
+        $lines = $expense->journalEntry->lines;
+        $this->assertCount(2, $lines);
+
+        $expenseAccountId = Account::where('code', '6530')
+            ->where('organization_id', $this->org->id)
+            ->value('id');
+        $bankAccountId = Account::where('code', '1020')
+            ->where('organization_id', $this->org->id)
+            ->value('id');
+
+        $debitLine = $lines->firstWhere('account_id', $expenseAccountId);
+        $creditLine = $lines->firstWhere('account_id', $bankAccountId);
 
         $this->assertEquals('700.00', $debitLine->debit);
         $this->assertEquals('700.00', $creditLine->credit);
@@ -85,33 +128,12 @@ class ExpenseFlowTest extends TestCase
 
     public function test_cannot_post_already_posted_expense(): void
     {
-        $user = User::factory()->create();
-        $org = Organization::create([
-            'name' => 'Test GmbH',
-            'currency' => 'CHF',
-        ]);
-        $org->users()->attach($user->id, ['role' => 'owner']);
-
-        Account::create([
-            'organization_id' => $org->id,
-            'code' => '6530',
-            'name' => 'Software',
-            'type' => Account::TYPE_EXPENSE,
-        ]);
-
-        Account::create([
-            'organization_id' => $org->id,
-            'code' => '1020',
-            'name' => 'Bank',
-            'type' => Account::TYPE_ASSET,
-        ]);
-
-        $action = new CreateExpenseAction();
-        $expense = $action->execute([
-            'organization_id' => $org->id,
+        $expense = $this->createExpense([
             'category' => 'Software',
             'amount' => 100.00,
-            'date' => '2026-03-16',
+            'vat_amount' => null,
+            'vendor' => null,
+            'description' => null,
         ]);
 
         $expenseService = app(ExpenseService::class);

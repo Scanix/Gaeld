@@ -7,7 +7,9 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Client;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
@@ -98,7 +100,7 @@ class LedgerServiceTest extends TestCase
             'organization_id' => $this->organization->id,
             'client_id' => $client->id,
             'number' => 'INV-2026-001',
-            'status' => Invoice::STATUS_DRAFT,
+            'status' => InvoiceStatus::Draft,
             'issue_date' => '2026-03-16',
             'due_date' => '2026-04-15',
             'subtotal' => 5000.00,
@@ -109,7 +111,7 @@ class LedgerServiceTest extends TestCase
 
         $result = $this->ledgerService->postInvoice($invoice);
 
-        $this->assertEquals(Invoice::STATUS_SENT, $result->status);
+        $this->assertEquals(InvoiceStatus::Sent, $result->status);
         $this->assertNotNull($result->journal_entry_id);
         $this->assertTrue($result->journalEntry->isBalanced());
     }
@@ -124,13 +126,13 @@ class LedgerServiceTest extends TestCase
             'vat_amount' => 0,
             'date' => '2026-03-10',
             'vendor' => 'GitHub',
-            'status' => Expense::STATUS_PENDING,
+            'status' => ExpenseStatus::Pending,
             'currency' => 'CHF',
         ]);
 
         $result = $this->ledgerService->postExpense($expense, '6530');
 
-        $this->assertEquals(Expense::STATUS_POSTED, $result->status);
+        $this->assertEquals(ExpenseStatus::Posted, $result->status);
         $this->assertNotNull($result->journal_entry_id);
         $this->assertTrue($result->journalEntry->isBalanced());
     }

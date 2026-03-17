@@ -43,27 +43,28 @@ class FeatureFlagTest extends TestCase
         $flags = FeatureFlag::all();
 
         $this->assertArrayHasKey('bank_sync', $flags);
+        $this->assertArrayHasKey('bank_import', $flags);
+        $this->assertArrayHasKey('auto_reconciliation', $flags);
         $this->assertArrayHasKey('saas', $flags);
         $this->assertArrayHasKey('automation', $flags);
         $this->assertArrayHasKey('multi_currency', $flags);
         $this->assertArrayHasKey('api_access', $flags);
     }
 
-    public function test_feature_middleware_blocks_disabled_feature(): void
+    public function test_bank_import_enabled_by_default(): void
     {
-        config(['features.bank_sync' => false]);
-
-        $user = \App\Domains\Users\Models\User::factory()->create();
-
-        $response = $this->actingAs($user)->get('/banking');
-
-        $response->assertForbidden();
+        $this->assertTrue(FeatureFlag::enabled('bank_import'));
     }
 
-    public function test_feature_middleware_allows_enabled_feature(): void
+    public function test_auto_reconciliation_disabled_by_default(): void
     {
-        config(['features.bank_sync' => true]);
+        $this->assertFalse(FeatureFlag::enabled('auto_reconciliation'));
+        $this->assertTrue(FeatureFlag::disabled('auto_reconciliation'));
+    }
 
+    public function test_banking_accessible_in_ce_without_feature_flag(): void
+    {
+        // Banking is CE — no feature flag needed
         $user = \App\Domains\Users\Models\User::factory()->create();
         $org = \App\Domains\Organizations\Models\Organization::create([
             'name' => 'Test Org',
@@ -73,7 +74,51 @@ class FeatureFlagTest extends TestCase
 
         $response = $this->actingAs($user)->get('/banking');
 
-        // Should not be 403 when enabled (may be 200 or redirect depending on view setup)
         $response->assertStatus(200);
+    }
+
+    public function test_auto_reconcile_route_blocked_when_disabled(): void
+    {
+        config(['features.auto_reconciliation' => false]);
+
+        $user = \App\Domains\Users\Models\User::factory()->create();
+        $org = \App\Domains\Organizations\Models\Organization::create([
+            'name' => 'Test Org',
+            'currency' => 'CHF',
+        ]);
+        $org->users()->attach($user->id, ['role' => 'owner']);
+        $bankAccount = \App\Domains\Banking\Models\BankAccount::create([
+            'organization_id' => $org->id,
+            'name' => 'Test',
+            'currency' => 'CHF',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->post("/reconciliation/{$bankAccount->id}/auto");
+
+        $response->assertForbidden();
+    }
+
+    public function test_auto_reconcile_route_allowed_when_enabled(): void
+    {
+        config(['features.auto_reconciliation' => true]);
+
+        $user = \App\Domains\Users\Models\User::factory()->create();
+        $org = \App\Domains\Organizations\Models\Organization::create([
+            'name' => 'Test Org',
+            'currency' => 'CHF',
+        ]);
+        $org->users()->attach($user->id, ['role' => 'owner']);
+        $bankAccount = \App\Domains\Banking\Models\BankAccount::create([
+            'organization_id' => $org->id,
+            'name' => 'Test',
+            'currency' => 'CHF',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->post("/reconciliation/{$bankAccount->id}/auto");
+
+        // Should not be 403 — may redirect or return success depending on data
+        $this->assertNotEquals(403, $response->getStatusCode());
     }
 }
