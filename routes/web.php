@@ -2,6 +2,9 @@
 
 use App\Domains\Accounting\Controllers\AccountingController;
 use App\Domains\Banking\Controllers\BankingController;
+use App\Domains\Banking\Controllers\ReconciliationController;
+use App\Domains\Contacts\Controllers\CustomerController;
+use App\Domains\Contacts\Controllers\SupplierController;
 use App\Domains\Expenses\Controllers\ExpenseController;
 use App\Domains\Invoicing\Controllers\InvoiceController;
 use App\Domains\Organizations\Controllers\OrganizationController;
@@ -38,7 +41,7 @@ Route::middleware('guest')->group(function () {
 });
 
 // Authenticated routes
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'org'])->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -49,31 +52,59 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/accounting/trial-balance', [AccountingController::class, 'trialBalance'])->name('accounting.trial-balance');
 
     // Invoices
-    Route::resource('invoices', InvoiceController::class)->except(['edit', 'update', 'destroy']);
+    Route::resource('invoices', InvoiceController::class);
     Route::post('/invoices/{invoice}/finalize', [InvoiceController::class, 'finalize'])->name('invoices.finalize');
     Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment'])->name('invoices.payment');
+    Route::post('/invoices/{invoice}/duplicate', [InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
+    Route::get('/invoices/{invoice}/qr-pdf', [InvoiceController::class, 'downloadQrPdf'])->name('invoices.qr-pdf');
 
     // Expenses
-    Route::resource('expenses', ExpenseController::class)->except(['edit', 'update', 'destroy']);
+    Route::resource('expenses', ExpenseController::class);
+    Route::post('/expenses/{expense}/approve', [ExpenseController::class, 'approve'])->name('expenses.approve');
     Route::post('/expenses/{expense}/post', [ExpenseController::class, 'post'])->name('expenses.post');
+    Route::delete('/expenses/{expense}/receipt', [ExpenseController::class, 'removeReceipt'])->name('expenses.receipt.remove');
 
     // Reports
     Route::get('/reports/profit-and-loss', [ReportController::class, 'profitAndLoss'])->name('reports.pnl');
     Route::get('/reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('reports.balance-sheet');
 
-    // Banking (feature-flagged)
+    // Banking (CE — core banking features)
+    Route::get('/banking', [BankingController::class, 'index'])->name('banking.index');
+    Route::get('/banking/{bankAccount}', [BankingController::class, 'show'])->name('banking.show');
+    Route::post('/banking', [BankingController::class, 'store'])->name('banking.store');
+    Route::post('/banking/{bankAccount}/transactions', [BankingController::class, 'recordTransaction'])->name('banking.transactions.store');
+
+    // Reconciliation (CE — manual reconciliation + CAMT import)
+    Route::get('/reconciliation', [ReconciliationController::class, 'index'])->name('reconciliation.index');
+    Route::get('/reconciliation/{bankAccount}', [ReconciliationController::class, 'show'])->name('reconciliation.show');
+    Route::post('/reconciliation/{bankAccount}/import', [ReconciliationController::class, 'import'])->name('reconciliation.import');
+    Route::post('/reconciliation/transactions/{transaction}/invoice', [ReconciliationController::class, 'reconcileInvoice'])->name('reconciliation.invoice');
+    Route::post('/reconciliation/transactions/{transaction}/expense', [ReconciliationController::class, 'reconcileExpense'])->name('reconciliation.expense');
+    Route::post('/reconciliation/transactions/{transaction}/manual', [ReconciliationController::class, 'reconcileManual'])->name('reconciliation.manual');
+    Route::post('/reconciliation/matches/{match}/confirm', [ReconciliationController::class, 'confirmMatch'])->name('reconciliation.confirm');
+
+    // Auto-reconciliation (EE only)
+    Route::middleware('feature:auto_reconciliation')->group(function () {
+        Route::post('/reconciliation/{bankAccount}/auto', [ReconciliationController::class, 'autoReconcile'])->name('reconciliation.auto');
+    });
+
+    // Bank sync (EE only)
     Route::middleware('feature:bank_sync')->group(function () {
-        Route::get('/banking', [BankingController::class, 'index'])->name('banking.index');
-        Route::get('/banking/{bankAccount}', [BankingController::class, 'show'])->name('banking.show');
-        Route::post('/banking', [BankingController::class, 'store'])->name('banking.store');
-        Route::post('/banking/{bankAccount}/transactions', [BankingController::class, 'recordTransaction'])->name('banking.transactions.store');
+        // Future: bank API sync routes
     });
 
     // Organizations
     Route::resource('organizations', OrganizationController::class)->only(['index', 'show', 'store', 'update']);
+    Route::post('/organizations/{organization}/switch', [OrganizationController::class, 'switchOrganization'])->name('organizations.switch');
 
     // User profile
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
+
+    // Contacts — Customers (CE)
+    Route::resource('customers', CustomerController::class);
+
+    // Contacts — Suppliers (CE)
+    Route::resource('suppliers', SupplierController::class);
 });

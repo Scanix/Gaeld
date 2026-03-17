@@ -12,9 +12,9 @@ use Illuminate\Database\Seeder;
  */
 class SwissChartOfAccountsSeeder extends Seeder
 {
-    public function run(): void
+    public function run(?Organization $organization = null): void
     {
-        $organization = Organization::first();
+        $organization = $organization ?? Organization::first();
 
         if (! $organization) {
             return;
