@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Domains\Invoicing\Jobs;
 
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Bus\Queueable;

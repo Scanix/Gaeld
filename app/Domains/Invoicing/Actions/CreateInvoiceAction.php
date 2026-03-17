@@ -5,12 +5,14 @@ namespace App\Domains\Invoicing\Actions;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
+use Illuminate\Support\Facades\DB;
 
 class CreateInvoiceAction
 {
     public function execute(array $data, array $lines): Invoice
     {
-        $invoice = Invoice::create([
+        return DB::transaction(function () use ($data, $lines) {
+            $invoice = Invoice::create([
             'organization_id' => $data['organization_id'],
             'client_id' => $data['client_id'],
             'number' => $data['number'],
@@ -38,8 +40,9 @@ class CreateInvoiceAction
             $line->calculateAndSave();
         }
 
-        $invoice->recalculate();
+            $invoice->recalculate();
 
-        return $invoice->load('lines');
+            return $invoice->load('lines');
+        });
     }
 }

@@ -152,8 +152,8 @@ class LedgerService
                 'reference' => $invoice->number,
                 'description' => "Invoice {$invoice->number} — " . ($invoice->client->name ?? 'N/A'),
             ], [
-                ['account_id' => $ar->id, 'debit' => (float) $invoice->total, 'credit' => 0, 'description' => 'Accounts Receivable'],
-                ['account_id' => $revenue->id, 'debit' => 0, 'credit' => (float) $invoice->total, 'description' => 'Revenue'],
+                ['account_id' => $ar->id, 'debit' => $invoice->total, 'credit' => 0, 'description' => 'Accounts Receivable'],
+                ['account_id' => $revenue->id, 'debit' => 0, 'credit' => $invoice->total, 'description' => 'Revenue'],
             ]);
 
             $invoice->update([
@@ -196,8 +196,8 @@ class LedgerService
                 'reference' => 'EXP-' . $expense->id,
                 'description' => $expense->description ?? $expense->category,
             ], [
-                ['account_id' => $expenseAccount->id, 'debit' => (float) $expense->amount, 'credit' => 0, 'description' => $expense->description],
-                ['account_id' => $bankAccount->id, 'debit' => 0, 'credit' => (float) $expense->amount, 'description' => 'Payment from bank'],
+                ['account_id' => $expenseAccount->id, 'debit' => $expense->amount, 'credit' => 0, 'description' => $expense->description],
+                ['account_id' => $bankAccount->id, 'debit' => 0, 'credit' => $expense->amount, 'description' => 'Payment from bank'],
             ]);
 
             $expense->update([
@@ -238,7 +238,8 @@ class LedgerService
             }
 
             $contraAccount = $this->resolveAccount($orgId, $contraAccountCode);
-            $amount = abs((float) $transaction->amount);
+            $rawAmount = (string) $transaction->amount;
+            $amount = bccomp($rawAmount, '0', 2) < 0 ? bcmul($rawAmount, '-1', 2) : $rawAmount;
             $isDeposit = $transaction->type === BankTransaction::TYPE_CREDIT;
 
             $lines = $isDeposit
@@ -353,8 +354,8 @@ class LedgerService
                         'account_code' => $row->code,
                         'account_name' => $row->name,
                         'account_type' => $row->type,
-                        'debit' => $isDebitNormal && bccomp($balance, '0', 2) > 0 ? (float) $balance : 0,
-                        'credit' => ! $isDebitNormal && bccomp($balance, '0', 2) > 0 ? (float) $balance : 0,
+                        'debit' => $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
+                        'credit' => ! $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
                     ];
                 }
             }

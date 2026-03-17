@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Domains\Reporting\Jobs;
 
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Reporting\Services\ReportingService;

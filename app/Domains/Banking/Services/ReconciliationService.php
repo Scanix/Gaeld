@@ -12,6 +12,7 @@ use App\Domains\Invoicing\Models\Invoice;
 use App\Services\FeatureFlag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ReconciliationService
 {
@@ -19,6 +20,11 @@ class ReconciliationService
         private LedgerService $ledgerService,
         private InvoiceService $invoiceService,
     ) {}
+
+    private function absoluteAmount(string $value): string
+    {
+        return bccomp($value, '0', 2) < 0 ? bcmul($value, '-1', 2) : $value;
+    }
 
     // ──────────────────────────────────────────────────────────────
     //  CE: Manual Reconciliation
@@ -45,7 +51,7 @@ class ReconciliationService
             }
 
             $arAccount = $this->ledgerService->resolveAccount($orgId, '1100');
-            $amount = abs((float) $transaction->amount);
+            $amount = $this->absoluteAmount((string) $transaction->amount);
 
             $reference = 'REC-' . ($transaction->reference ?? $transaction->id);
 
@@ -102,7 +108,7 @@ class ReconciliationService
             }
 
             $expenseAccount = $this->ledgerService->resolveAccount($orgId, $expenseAccountCode);
-            $amount = abs((float) $transaction->amount);
+            $amount = $this->absoluteAmount((string) $transaction->amount);
 
             $reference = 'REC-' . ($transaction->reference ?? $transaction->id);
 
@@ -178,7 +184,7 @@ class ReconciliationService
     public function findMatches(BankTransaction $transaction): Collection
     {
         $orgId = $transaction->bankAccount->organization_id;
-        $amount = abs((float) $transaction->amount);
+        $amount = $this->absoluteAmount((string) $transaction->amount);
 
         // Only match credit transactions to invoices
         if ($transaction->type !== BankTransaction::TYPE_CREDIT) {
@@ -240,7 +246,7 @@ class ReconciliationService
      * Match by exact amount AND client name.
      * Confidence: 90
      */
-    private function matchByAmountAndClient(string $orgId, BankTransaction $transaction, float $amount): Collection
+    private function matchByAmountAndClient(string $orgId, BankTransaction $transaction, string $amount): Collection
     {
         if (! $transaction->debtor_name) {
             return collect();
@@ -249,8 +255,8 @@ class ReconciliationService
         $invoices = Invoice::where('organization_id', $orgId)
             ->whereIn('status', ['sent', 'overdue'])
             ->whereBetween('total', [
-                bcsub((string) $amount, '0.05', 2),
-                bcadd((string) $amount, '0.05', 2),
+                bcsub($amount, '0.05', 2),
+                bcadd($amount, '0.05', 2),
             ])
             ->with('client')
             ->get();
@@ -273,14 +279,14 @@ class ReconciliationService
      * Match by amount OR reference (fallback).
      * Confidence: 70
      */
-    private function matchByHeuristics(string $orgId, BankTransaction $transaction, float $amount): Collection
+    private function matchByHeuristics(string $orgId, BankTransaction $transaction, string $amount): Collection
     {
         $query = Invoice::where('organization_id', $orgId)
             ->whereIn('status', ['sent', 'overdue'])
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('total', [
-                    bcsub((string) $amount, '0.05', 2),
-                    bcadd((string) $amount, '0.05', 2),
+                    bcsub($amount, '0.05', 2),
+                    bcadd($amount, '0.05', 2),
                 ]);
 
                 if ($transaction->reference) {
@@ -340,11 +346,11 @@ class ReconciliationService
 
         return DB::transaction(function () use ($match, $transaction, $invoice) {
             // Record payment through the standard pipeline
-            $amount = abs((float) $transaction->amount);
-            $amountDue = (float) $invoice->amountDue();
-            $paymentAmount = min($amount, $amountDue);
+            $amount = $this->absoluteAmount((string) $transaction->amount);
+            $amountDue = $invoice->amountDue();
+            $paymentAmount = bccomp($amount, $amountDue, 2) <= 0 ? $amount : $amountDue;
 
-            if ($paymentAmount > 0) {
+            if (bccomp($paymentAmount, '0', 2) > 0) {
                 $this->invoiceService->recordPayment($invoice, [
                     'amount' => $paymentAmount,
                     'payment_date' => $transaction->date->toDateString(),
@@ -416,7 +422,7 @@ class ReconciliationService
     public function getSuggestions(BankTransaction $transaction): array
     {
         $orgId = $transaction->bankAccount->organization_id;
-        $amount = abs((float) $transaction->amount);
+        $amount = $this->absoluteAmount((string) $transaction->amount);
 
         // Use the matching engine for invoices
         $matches = $this->findMatches($transaction);
@@ -440,7 +446,7 @@ class ReconciliationService
         ];
     }
 
-    private function suggestExpenses(string $orgId, BankTransaction $transaction, float $amount): Collection
+    private function suggestExpenses(string $orgId, BankTransaction $transaction, string $amount): Collection
     {
         if ($transaction->type !== BankTransaction::TYPE_DEBIT) {
             return collect();
@@ -450,8 +456,8 @@ class ReconciliationService
             ->whereIn('status', ['pending', 'approved'])
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('amount', [
-                    bcsub((string) $amount, '0.05', 2),
-                    bcadd((string) $amount, '0.05', 2),
+                    bcsub($amount, '0.05', 2),
+                    bcadd($amount, '0.05', 2),
                 ]);
 
                 if ($transaction->creditor_name) {
@@ -465,7 +471,7 @@ class ReconciliationService
         return $results->map(function ($expense) use ($amount, $transaction) {
             $score = 0;
 
-            if (bccomp((string) $expense->amount, (string) $amount, 2) === 0) {
+            if (bccomp((string) $expense->amount, $amount, 2) === 0) {
                 $score += 50;
             }
 
@@ -523,15 +529,18 @@ class ReconciliationService
                     $matched++;
 
                     continue;
-                } catch (\Exception) {
-                    // Skip failed reconciliations silently
+                } catch (\Exception $e) {
+                    Log::debug('Auto-reconcile: skipped match', [
+                        'transaction_id' => $transaction->id,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
 
             // Auto-reconcile expenses with high confidence
             if ($transaction->type === BankTransaction::TYPE_DEBIT) {
                 $orgId = $bankAccount->organization_id;
-                $amount = abs((float) $transaction->amount);
+                $amount = $this->absoluteAmount((string) $transaction->amount);
                 $expenseSuggestions = $this->suggestExpenses($orgId, $transaction, $amount);
                 $bestExpense = $expenseSuggestions->first();
 
@@ -541,8 +550,11 @@ class ReconciliationService
                         $matched++;
 
                         continue;
-                    } catch (\Exception) {
-                        // Skip failed reconciliations silently
+                    } catch (\Exception $e) {
+                        Log::debug('Auto-reconcile: skipped expense match', [
+                            'transaction_id' => $transaction->id,
+                            'error' => $e->getMessage(),
+                        ]);
                     }
                 }
             }

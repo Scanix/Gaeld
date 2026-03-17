@@ -38,6 +38,8 @@ class AccountingController extends Controller
 
     public function trialBalance(Request $request, LedgerService $ledgerService): Response
     {
+        $this->authorize('viewAny', Account::class);
+
         $orgId = app('current_organization')->id;
         $asOfDate = $request->input('as_of_date', now()->toDateString());
 

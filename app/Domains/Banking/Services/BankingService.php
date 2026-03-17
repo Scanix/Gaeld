@@ -25,7 +25,8 @@ class BankingService
         string $contraAccountCode,
     ): BankTransaction {
         return DB::transaction(function () use ($bankAccount, $data, $contraAccountCode) {
-            $amount = abs((float) $data['amount']);
+            $rawAmount = (string) ($data['amount'] ?? '0');
+            $amount = bccomp($rawAmount, '0', 2) < 0 ? bcmul($rawAmount, '-1', 2) : $rawAmount;
             $type = $data['type'] ?? BankTransaction::TYPE_CREDIT;
 
             $transaction = BankTransaction::create([

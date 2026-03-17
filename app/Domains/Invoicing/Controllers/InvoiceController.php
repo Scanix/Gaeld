@@ -12,7 +12,7 @@ use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
 use App\Domains\Accounting\Models\VatRate;
@@ -43,7 +43,7 @@ class InvoiceController extends Controller
     public function create(Request $request): Response
     {
         return Inertia::render('Invoices/Create', [
-            'clients' => Client::orderBy('name')->get(),
+            'clients' => Customer::orderBy('name')->get(),
             'vatRates' => VatRate::where('is_active', true)->get(),
         ]);
     }
@@ -77,7 +77,7 @@ class InvoiceController extends Controller
 
         return Inertia::render('Invoices/Edit', [
             'invoice' => $invoice->load('lines.vatRate'),
-            'clients' => Client::orderBy('name')->get(),
+            'clients' => Customer::orderBy('name')->get(),
             'vatRates' => VatRate::where('is_active', true)->get(),
         ]);
     }

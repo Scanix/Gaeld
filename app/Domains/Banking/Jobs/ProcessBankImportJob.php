@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Domains\Banking\Jobs;
 
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Services\RuleEngineService;

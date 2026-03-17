@@ -26,7 +26,7 @@ class InvoiceService
      */
     public function recordPayment(Invoice $invoice, array $data): InvoicePayment
     {
-        $amount = (float) $data['amount'];
+        $amount = (string) $data['amount'];
         $paymentDate = $data['payment_date'] ?? now()->toDateString();
         $paymentMethod = $data['payment_method'] ?? 'bank';
         $reference = $data['reference'] ?? null;

@@ -8,6 +8,7 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
+use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Client;
@@ -288,7 +289,7 @@ class DemoDataSeeder extends Seeder
             'vat_amount' => 56.70,
             'date' => now()->subDays(15),
             'vendor' => 'Adobe Inc.',
-            'status' => Expense::STATUS_PENDING,
+            'status' => ExpenseStatus::Pending->value,
             'currency' => 'CHF',
         ]);
 
@@ -303,7 +304,7 @@ class DemoDataSeeder extends Seeder
             'vat_amount' => 12.15,
             'date' => now()->subDays(5),
             'vendor' => 'Office World',
-            'status' => Expense::STATUS_PENDING,
+            'status' => ExpenseStatus::Pending->value,
             'currency' => 'CHF',
         ]);
 
@@ -318,7 +319,7 @@ class DemoDataSeeder extends Seeder
             'vat_amount' => 7.13,
             'date' => now()->subDays(2),
             'vendor' => 'SBB CFF FFS',
-            'status' => Expense::STATUS_PENDING,
+            'status' => ExpenseStatus::Pending->value,
             'currency' => 'CHF',
         ]);
 
@@ -332,7 +333,7 @@ class DemoDataSeeder extends Seeder
             'vat_amount' => 36.45,
             'date' => now()->subDays(3),
             'vendor' => 'Fischer & Partner Rechtsanwälte',
-            'status' => Expense::STATUS_PENDING,
+            'status' => ExpenseStatus::Pending->value,
             'currency' => 'CHF',
         ]);
 
@@ -504,7 +505,7 @@ class DemoDataSeeder extends Seeder
             'vat_amount' => 25.92,
             'date' => now()->subDays(7),
             'vendor' => 'SBB CFF FFS',
-            'status' => Expense::STATUS_PENDING,
+            'status' => ExpenseStatus::Pending->value,
             'currency' => 'CHF',
         ]);
 

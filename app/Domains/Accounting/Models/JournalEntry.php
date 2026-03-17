@@ -47,13 +47,13 @@ class JournalEntry extends Model
         return bccomp($totals->total_debit ?? '0', $totals->total_credit ?? '0', 2) === 0;
     }
 
-    public function totalDebit(): float
+    public function totalDebit(): string
     {
-        return (float) $this->lines()->sum('debit');
+        return (string) $this->lines()->sum('debit');
     }
 
-    public function totalCredit(): float
+    public function totalCredit(): string
     {
-        return (float) $this->lines()->sum('credit');
+        return (string) $this->lines()->sum('credit');
     }
 }

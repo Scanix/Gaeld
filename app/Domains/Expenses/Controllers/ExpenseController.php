@@ -43,6 +43,8 @@ class ExpenseController extends Controller
 
     public function store(Request $request, CreateExpenseAction $action): RedirectResponse
     {
+        $this->authorize('create', Expense::class);
+
         $validated = $request->validate([
             'category' => 'required|string|max:100',
             'description' => 'nullable|string',
@@ -54,8 +56,6 @@ class ExpenseController extends Controller
             'currency' => 'string|size:3',
             'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
-
-        $this->authorize('create', Expense::class);
 
         if ($request->hasFile('receipt')) {
             $validated['receipt_path'] = $request->file('receipt')->store(

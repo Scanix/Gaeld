@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Models;
 
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,6 +28,7 @@ class Account extends Model
     {
         return [
             'is_active' => 'boolean',
+            'type' => AccountType::class,
         ];
     }
 
@@ -65,7 +67,7 @@ class Account extends Model
         $credits = (string) $this->transactionLines()->sum('credit');
 
         return match ($this->type) {
-            self::TYPE_ASSET, self::TYPE_EXPENSE => bcsub($debits, $credits, 2),
+            AccountType::Asset, AccountType::Expense => bcsub($debits, $credits, 2),
             default => bcsub($credits, $debits, 2),
         };
     }

@@ -45,11 +45,6 @@ class Expense extends Model
         ];
     }
 
-    // Kept for backward compatibility
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_APPROVED = 'approved';
-    public const STATUS_POSTED = 'posted';
-
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);

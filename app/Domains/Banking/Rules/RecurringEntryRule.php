@@ -44,7 +44,8 @@ class RecurringEntryRule extends BaseRule
         $orgId = $transaction->bankAccount->organization_id;
         $lookback = now()->subMonths(self::LOOKBACK_MONTHS);
 
-        $absAmount = abs((float) $transaction->amount);
+        $rawAmount = (string) $transaction->amount;
+        $absAmount = bccomp($rawAmount, '0', 2) < 0 ? bcmul($rawAmount, '-1', 2) : $rawAmount;
 
         // DEBIT amounts are stored as negative values; compare against negative range
         $count = BankTransaction::whereHas('bankAccount', fn ($q) => $q->where('organization_id', $orgId))
@@ -53,8 +54,8 @@ class RecurringEntryRule extends BaseRule
             ->where('date', '>=', $lookback)
             ->where('id', '!=', $transaction->id)
             ->whereBetween('amount', [
-                '-' . bcadd((string) $absAmount, '0.05', 2),
-                '-' . bcsub((string) $absAmount, '0.05', 2),
+                '-' . bcadd($absAmount, '0.05', 2),
+                '-' . bcsub($absAmount, '0.05', 2),
             ])
             ->count();
 
