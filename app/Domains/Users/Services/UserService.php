@@ -14,6 +14,7 @@ class UserService
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'locale' => $data['locale'] ?? 'en',
+            'email_verified_at' => $data['email_verified_at'] ?? null,
         ]);
     }
 

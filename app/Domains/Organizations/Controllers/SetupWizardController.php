@@ -2,24 +2,19 @@
 
 namespace App\Domains\Organizations\Controllers;
 
+use App\Domains\Organizations\Actions\CompleteSetupAction;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use App\Http\Controllers\Controller;
-use Database\Seeders\SwissChartOfAccountsSeeder;
-use Database\Seeders\SwissVatRatesSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SetupWizardController extends Controller
 {
     public function __construct(
-        private readonly SwissChartOfAccountsSeeder $chartOfAccountsSeeder,
-        private readonly SwissVatRatesSeeder $vatRatesSeeder,
+        private readonly CompleteSetupAction $completeSetupAction,
     ) {}
 
     public function index(): Response|RedirectResponse
@@ -53,34 +48,8 @@ class SetupWizardController extends Controller
             'locale' => 'required|string|in:en,fr,de,it,rm',
         ]);
 
-        DB::transaction(function () use ($validated) {
-            $user = User::create([
-                'name' => $validated['user_name'],
-                'email' => $validated['user_email'],
-                'password' => Hash::make($validated['user_password']),
-                'locale' => $validated['locale'],
-                'email_verified_at' => now(),
-            ]);
-
-            $org = Organization::create([
-                'name' => $validated['org_name'],
-                'legal_name' => $validated['org_legal_name'] ?? $validated['org_name'],
-                'address' => $validated['org_address'] ?? null,
-                'city' => $validated['org_city'] ?? null,
-                'postal_code' => $validated['org_postal_code'] ?? null,
-                'canton' => $validated['org_canton'] ?? null,
-                'currency' => $validated['currency'],
-                'locale' => $validated['locale'],
-            ]);
-
-            $org->users()->attach($user->id, ['role' => 'owner']);
-
-            // Seed default chart of accounts and VAT rates
-            $this->chartOfAccountsSeeder->run();
-            $this->vatRatesSeeder->run();
-
-            Auth::login($user);
-        });
+        $user = $this->completeSetupAction->execute($validated);
+        Auth::login($user);
 
         return redirect()->route('dashboard')
             ->with('success', 'Welcome to Gäld! Your organization has been set up.');

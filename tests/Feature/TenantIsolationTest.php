@@ -228,7 +228,7 @@ class TenantIsolationTest extends TestCase
         ]);
 
         $reconciliationService = app(\App\Domains\Banking\Services\ReconciliationService::class);
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestions = $reconciliationService->generateSuggestions($transaction);
 
         // Should only suggest Org A's invoice
         $invoiceNumbers = $suggestions['invoices']->pluck('number')->toArray();

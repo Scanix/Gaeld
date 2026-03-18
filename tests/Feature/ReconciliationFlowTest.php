@@ -295,7 +295,7 @@ class ReconciliationFlowTest extends TestCase
             'type' => BankTransaction::TYPE_CREDIT,
         ]);
 
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestions = $reconciliationService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
         $this->assertEquals('INV-MATCH', $suggestions['invoices']->first()->number);
@@ -332,7 +332,7 @@ class ReconciliationFlowTest extends TestCase
             'reference' => 'INV-REF-TEST', // Matching reference
         ]);
 
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestions = $reconciliationService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
         $this->assertEquals('INV-REF-TEST', $suggestions['invoices']->first()->number);

@@ -132,7 +132,7 @@ class SmartReconciliationTest extends TestCase
             'structured_reference' => '210000000003139471430009017',
         ]);
 
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestions = $reconciliationService->generateSuggestions($transaction);
 
         $this->assertCount(1, $suggestions['invoices']);
         $this->assertEquals(100, $suggestions['invoices']->first()->match_score);
@@ -184,12 +184,12 @@ class SmartReconciliationTest extends TestCase
             'debtor_name' => 'Alpine Solutions AG',
         ]);
 
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestions = $reconciliationService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
         $bestMatch = $suggestions['invoices']->first();
         $this->assertEquals(90, $bestMatch->match_score);
-        $this->assertEquals('amount_client', $bestMatch->match_type);
+        $this->assertEquals('amount_customer', $bestMatch->match_type);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -227,7 +227,7 @@ class SmartReconciliationTest extends TestCase
             'debtor_name' => 'Someone Else',
         ]);
 
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestions = $reconciliationService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
         $bestMatch = $suggestions['invoices']->first();
@@ -287,7 +287,7 @@ class SmartReconciliationTest extends TestCase
             'debtor_name' => 'Helvetia GmbH',
         ]);
 
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestions = $reconciliationService->generateSuggestions($transaction);
 
         // Only the QR match should be returned (QR returns early)
         $this->assertCount(1, $suggestions['invoices']);
@@ -332,7 +332,7 @@ class SmartReconciliationTest extends TestCase
         ]);
 
         // Create the match
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestions = $reconciliationService->generateSuggestions($transaction);
         $match = BankMatch::where('bank_transaction_id', $transaction->id)
             ->where('confidence', 100)
             ->first();
@@ -395,7 +395,7 @@ class SmartReconciliationTest extends TestCase
         ]);
 
         // Create and confirm match
-        $reconciliationService->getSuggestions($transaction);
+        $reconciliationService->generateSuggestions($transaction);
         $match = BankMatch::where('bank_transaction_id', $transaction->id)->first();
         $reconciliationService->confirmMatch($match);
 
@@ -410,7 +410,7 @@ class SmartReconciliationTest extends TestCase
         ]);
 
         // The invoice is now PAID, so no match should be found
-        $suggestions = $reconciliationService->getSuggestions($transaction2);
+        $suggestions = $reconciliationService->generateSuggestions($transaction2);
         $this->assertEmpty($suggestions['invoices']);
     }
 
@@ -549,7 +549,7 @@ class SmartReconciliationTest extends TestCase
             'type' => BankTransaction::TYPE_DEBIT,
         ]);
 
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestions = $reconciliationService->generateSuggestions($transaction);
 
         $this->assertEmpty($suggestions['invoices']);
     }

@@ -34,6 +34,23 @@ class OrganizationService
         });
     }
 
+    public function update(Organization $organization, array $data): Organization
+    {
+        $organization->update([
+            'name' => $data['name'],
+            'legal_name' => $data['legal_name'] ?? $data['name'],
+            'address' => $data['address'] ?? null,
+            'city' => $data['city'] ?? null,
+            'postal_code' => $data['postal_code'] ?? null,
+            'canton' => $data['canton'] ?? null,
+            'vat_number' => $data['vat_number'] ?? null,
+            'currency' => $data['currency'] ?? 'CHF',
+            'locale' => $data['locale'] ?? 'en',
+        ]);
+
+        return $organization;
+    }
+
     /**
      * Add a member to an organization.
      */
