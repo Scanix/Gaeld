@@ -149,7 +149,7 @@ class ExpenseController extends Controller
             ->with('success', 'Expense approved.');
     }
 
-    public function post(Expense $expense, Request $request, ExpenseService $service): RedirectResponse
+    public function postToLedger(Expense $expense, Request $request, ExpenseService $service): RedirectResponse
     {
         $this->authorize('update', $expense);
 

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Banking\Services;
 
+use App\Domains\Accounting\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\BaseRule;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
@@ -46,12 +47,12 @@ class RuleEngineService
      *
      * @return Collection<array{rule: BaseRule, confidence: int, applied: bool}>
      *
-     * @throws \DomainException in CE (feature flag disabled)
+     * @throws FeatureDisabledException in CE (feature flag disabled)
      */
     public function run(BankTransaction $transaction): Collection
     {
         if (FeatureFlag::disabled('rule_engine')) {
-            throw new \DomainException('The Rule Engine is an Enterprise Edition feature.');
+            throw new FeatureDisabledException('rule_engine');
         }
 
         if ($transaction->is_reconciled) {
@@ -95,12 +96,12 @@ class RuleEngineService
      *
      * @return array{processed: int, matched: int, applied: int}
      *
-     * @throws \DomainException in CE
+     * @throws FeatureDisabledException in CE
      */
     public function runForOrganization(string $organizationId): array
     {
         if (FeatureFlag::disabled('rule_engine')) {
-            throw new \DomainException('The Rule Engine is an Enterprise Edition feature.');
+            throw new FeatureDisabledException('rule_engine');
         }
 
         $transactions = BankTransaction::whereHas(

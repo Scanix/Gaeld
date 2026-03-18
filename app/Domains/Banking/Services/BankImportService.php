@@ -91,8 +91,7 @@ class BankImportService
         throw new \InvalidArgumentException('Unsupported CAMT format. Only CAMT.053 and CAMT.054 are supported.');
     }
 
-    /** @var Camt053Parser|Camt054Parser|null */
-    private $lastParser = null;
+    private Camt053Parser|Camt054Parser|null $activeParser = null;
 
     /**
      * @return CamtEntry[]
@@ -102,30 +101,30 @@ class BankImportService
         if ($format === BankImport::FORMAT_CAMT053) {
             $parser = new Camt053Parser();
             $parser->parse($xml);
-            $this->lastParser = $parser;
+            $this->activeParser = $parser;
 
             return $parser->getEntries();
         }
 
         $parser = new Camt054Parser();
         $parser->parse($xml);
-        $this->lastParser = $parser;
+        $this->activeParser = $parser;
 
         return $parser->getEntries();
     }
 
     private function getStatementId(string $format): ?string
     {
-        if (! $this->lastParser) {
+        if (! $this->activeParser) {
             return null;
         }
 
-        if ($format === BankImport::FORMAT_CAMT053 && $this->lastParser instanceof Camt053Parser) {
-            return $this->lastParser->getStatementId();
+        if ($format === BankImport::FORMAT_CAMT053 && $this->activeParser instanceof Camt053Parser) {
+            return $this->activeParser->getStatementId();
         }
 
-        if ($this->lastParser instanceof Camt054Parser) {
-            return $this->lastParser->getNotificationId();
+        if ($this->activeParser instanceof Camt054Parser) {
+            return $this->activeParser->getNotificationId();
         }
 
         return null;

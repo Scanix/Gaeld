@@ -4,7 +4,9 @@ namespace App\Domains\Banking\Services;
 
 use App\Domains\Accounting\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Domains\Banking\MatchConfidence;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
@@ -249,7 +251,7 @@ class ReconciliationService
 
         return [
             'invoice_id' => $invoice->id,
-            'confidence' => 100,
+            'confidence' => MatchConfidence::QR_REFERENCE,
             'match_type' => BankMatch::TYPE_QR_REFERENCE,
         ];
     }
@@ -282,7 +284,7 @@ class ReconciliationService
                 || str_contains(strtolower($invoice->client->name), strtolower($transaction->debtor_name));
         })->map(fn ($invoice) => [
             'invoice_id' => $invoice->id,
-            'confidence' => 90,
+            'confidence' => MatchConfidence::AMOUNT_AND_CLIENT,
             'match_type' => BankMatch::TYPE_AMOUNT_CLIENT,
         ])->values();
     }
@@ -313,7 +315,7 @@ class ReconciliationService
 
         return $query->map(fn ($invoice) => [
             'invoice_id' => $invoice->id,
-            'confidence' => 70,
+            'confidence' => MatchConfidence::HEURISTIC,
             'match_type' => BankMatch::TYPE_HEURISTIC,
         ])->values();
     }
@@ -518,12 +520,12 @@ class ReconciliationService
      *
      * @return array{matched: int, unmatched: int}
      *
-     * @throws \DomainException  When auto reconciliation feature is disabled
+     * @throws FeatureDisabledException  When auto reconciliation feature is disabled
      */
     public function autoReconcile(BankAccount $bankAccount): array
     {
         if (FeatureFlag::disabled('auto_reconciliation')) {
-            throw new \DomainException('Auto reconciliation is an Enterprise Edition feature.');
+            throw new FeatureDisabledException('auto_reconciliation');
         }
 
         $unreconciled = $bankAccount->transactions()

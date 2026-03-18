@@ -13,7 +13,7 @@ use App\Domains\Users\Controllers\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\DashboardController;
+use App\Domains\Reporting\Controllers\DashboardController;
 use App\Http\Controllers\SetupWizardController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,7 +61,7 @@ Route::middleware(['auth', 'verified', 'org'])->group(function () {
     // Expenses
     Route::resource('expenses', ExpenseController::class);
     Route::post('/expenses/{expense}/approve', [ExpenseController::class, 'approve'])->name('expenses.approve');
-    Route::post('/expenses/{expense}/post', [ExpenseController::class, 'post'])->name('expenses.post');
+    Route::post('/expenses/{expense}/post', [ExpenseController::class, 'postToLedger'])->name('expenses.post');
     Route::delete('/expenses/{expense}/receipt', [ExpenseController::class, 'removeReceipt'])->name('expenses.receipt.remove');
 
     // Reports
