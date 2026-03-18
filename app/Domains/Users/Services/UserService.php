@@ -2,19 +2,20 @@
 
 namespace App\Domains\Users\Services;
 
+use App\Domains\Users\DTOs\CreateUserData;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
-    public function create(array $data): User
+    public function create(CreateUserData $data): User
     {
         return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'locale' => $data['locale'] ?? 'en',
-            'email_verified_at' => $data['email_verified_at'] ?? null,
+            'name' => $data->name,
+            'email' => $data->email,
+            'password' => Hash::make($data->password),
+            'locale' => $data->locale,
+            'email_verified_at' => $data->emailVerifiedAt,
         ]);
     }
 

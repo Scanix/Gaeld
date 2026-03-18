@@ -3,6 +3,7 @@
 namespace App\Domains\Organizations\Controllers;
 
 use App\Domains\Organizations\Actions\CompleteSetupAction;
+use App\Domains\Organizations\DTOs\CompleteSetupData;
 use App\Domains\Organizations\Models\Organization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -48,7 +49,7 @@ class SetupWizardController extends Controller
             'locale' => 'required|string|in:en,fr,de,it,rm',
         ]);
 
-        $user = $this->completeSetupAction->execute($validated);
+        $user = $this->completeSetupAction->execute(CompleteSetupData::fromArray($validated));
         Auth::login($user);
 
         return redirect()->route('dashboard')

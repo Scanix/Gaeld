@@ -2,6 +2,8 @@
 
 namespace App\Domains\Organizations\Controllers;
 
+use App\Domains\Organizations\DTOs\CreateOrganizationData;
+use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\OrganizationService;
 use App\Http\Controllers\Controller;
@@ -46,7 +48,7 @@ class OrganizationController extends Controller
             'locale' => 'string|in:en,fr,de,it,rm',
         ]);
 
-        $org = $organizationService->create($request->user(), $validated);
+        $org = $organizationService->create($request->user(), CreateOrganizationData::fromArray($validated));
 
         return redirect()->route('organizations.show', $org)
             ->with('success', 'Organization created.');
@@ -68,7 +70,7 @@ class OrganizationController extends Controller
             'locale' => 'string|in:en,fr,de,it,rm',
         ]);
 
-        $organizationService->update($organization, $validated);
+        $organizationService->update($organization, UpdateOrganizationData::fromArray($validated));
 
         return redirect()->route('organizations.show', $organization)
             ->with('success', 'Organization updated.');

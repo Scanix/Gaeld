@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Domains\Organizations\DTOs\CreateOrganizationData;
 use App\Domains\Organizations\Services\OrganizationService;
 use App\Domains\Organizations\Services\OrganizationSetupService;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Users\DTOs\CreateUserData;
 use App\Domains\Users\Services\UserService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -64,21 +66,21 @@ class GaeldInstallCommand extends Command
             $adminName, $adminEmail, $adminPassword, $orgName, $currency, $locale
         ) {
             DB::transaction(function () use ($adminName, $adminEmail, $adminPassword, $orgName, $currency, $locale) {
-                $user = $this->userService->create([
-                    'name' => $adminName,
-                    'email' => $adminEmail,
-                    'password' => $adminPassword,
-                    'locale' => $locale,
-                    'email_verified_at' => now(),
-                ]);
+                $user = $this->userService->create(new CreateUserData(
+                    name: $adminName,
+                    email: $adminEmail,
+                    password: $adminPassword,
+                    locale: $locale,
+                    emailVerifiedAt: now(),
+                ));
 
-                $this->organizationService->create($user, [
-                    'name' => $orgName,
-                    'legal_name' => $orgName,
-                    'currency' => $currency,
-                    'locale' => $locale,
-                    'country' => 'CH',
-                ]);
+                $this->organizationService->create($user, new CreateOrganizationData(
+                    name: $orgName,
+                    legalName: $orgName,
+                    currency: $currency,
+                    locale: $locale,
+                    country: 'CH',
+                ));
             });
         });
 
