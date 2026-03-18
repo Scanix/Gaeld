@@ -14,8 +14,8 @@ class FinalizeInvoiceAction
 
     public function execute(Invoice $invoice): Invoice
     {
-        if ($invoice->status !== InvoiceStatus::Draft->value) {
-            throw new \DomainException("Only draft invoices can be finalized (current status: {$invoice->status}).");
+        if ($invoice->status !== InvoiceStatus::Draft) {
+            throw new \DomainException("Only draft invoices can be finalized (current status: {$invoice->status->value}).");
         }
 
         if ($invoice->lines()->count() === 0) {

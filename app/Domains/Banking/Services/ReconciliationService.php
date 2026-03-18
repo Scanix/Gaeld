@@ -231,7 +231,8 @@ class ReconciliationService
 
     /**
      * Match by exact QR reference (structured_reference ↔ invoice.qr_reference).
-     * Confidence: 100
+     *
+     * @return array{invoice_id: string, confidence: int, match_type: string}|null The match, or null if no QR reference match found
      */
     private function matchByQrReference(string $orgId, BankTransaction $transaction): ?array
     {
