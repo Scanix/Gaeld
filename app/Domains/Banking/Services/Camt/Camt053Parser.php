@@ -54,9 +54,9 @@ class Camt053Parser
         }
 
         // Extract statement-level metadata
-        $this->statementId = $this->xpathValue($xpath, "//{$prefix}BkToCstmrStmt/{$prefix}Stmt/{$prefix}Id", $prefix);
-        $this->creationDate = $this->xpathValue($xpath, "//{$prefix}BkToCstmrStmt/{$prefix}Stmt/{$prefix}CreDtTm", $prefix);
-        $this->iban = $this->xpathValue($xpath, "//{$prefix}BkToCstmrStmt/{$prefix}Stmt/{$prefix}Acct/{$prefix}Id/{$prefix}IBAN", $prefix);
+        $this->statementId = $this->xpathText($xpath, "//{$prefix}BkToCstmrStmt/{$prefix}Stmt/{$prefix}Id");
+        $this->creationDate = $this->xpathText($xpath, "//{$prefix}BkToCstmrStmt/{$prefix}Stmt/{$prefix}CreDtTm");
+        $this->iban = $this->xpathText($xpath, "//{$prefix}BkToCstmrStmt/{$prefix}Stmt/{$prefix}Acct/{$prefix}Id/{$prefix}IBAN");
 
         // Parse entries — each <Ntry> is a bank statement entry
         $entries = $xpath->query("//{$prefix}BkToCstmrStmt/{$prefix}Stmt/{$prefix}Ntry");
@@ -70,13 +70,13 @@ class Camt053Parser
 
     private function parseEntry(\DOMXPath $xpath, \DOMElement $entryNode, string $prefix): void
     {
-        $amount = $this->nodeValue($xpath, "{$prefix}Amt", $entryNode);
-        $currency = $this->nodeAttr($xpath, "{$prefix}Amt", $entryNode, 'Ccy');
-        $creditDebitIndicator = $this->nodeValue($xpath, "{$prefix}CdtDbtInd", $entryNode);
-        $bookingDate = $this->nodeValue($xpath, "{$prefix}BookgDt/{$prefix}Dt", $entryNode)
-            ?? $this->nodeValue($xpath, "{$prefix}BookgDt/{$prefix}DtTm", $entryNode);
-        $valueDate = $this->nodeValue($xpath, "{$prefix}ValDt/{$prefix}Dt", $entryNode)
-            ?? $this->nodeValue($xpath, "{$prefix}ValDt/{$prefix}DtTm", $entryNode);
+        $amount = $this->contextText($xpath, "{$prefix}Amt", $entryNode);
+        $currency = $this->contextAttr($xpath, "{$prefix}Amt", $entryNode, 'Ccy');
+        $creditDebitIndicator = $this->contextText($xpath, "{$prefix}CdtDbtInd", $entryNode);
+        $bookingDate = $this->contextText($xpath, "{$prefix}BookgDt/{$prefix}Dt", $entryNode)
+            ?? $this->contextText($xpath, "{$prefix}BookgDt/{$prefix}DtTm", $entryNode);
+        $valueDate = $this->contextText($xpath, "{$prefix}ValDt/{$prefix}Dt", $entryNode)
+            ?? $this->contextText($xpath, "{$prefix}ValDt/{$prefix}DtTm", $entryNode);
 
         if (! $amount || ! $creditDebitIndicator) {
             return;
@@ -100,9 +100,9 @@ class Camt053Parser
             }
         } else {
             // No transaction details — use entry-level info
-            $ref = $this->nodeValue($xpath, "{$prefix}AcctSvcrRef", $entryNode)
-                ?? $this->nodeValue($xpath, "{$prefix}NtryRef", $entryNode);
-            $desc = $this->nodeValue($xpath, "{$prefix}AddtlNtryInf", $entryNode);
+            $ref = $this->contextText($xpath, "{$prefix}AcctSvcrRef", $entryNode)
+                ?? $this->contextText($xpath, "{$prefix}NtryRef", $entryNode);
+            $desc = $this->contextText($xpath, "{$prefix}AddtlNtryInf", $entryNode);
 
             $this->entries[] = new CamtEntry(
                 date: $date,
@@ -121,10 +121,10 @@ class Camt053Parser
 
     private function parseTxDetail(\DOMXPath $xpath, \DOMElement $detail, string $prefix, string $date, string $fallbackAmount, ?string $fallbackCurrency, string $type): CamtEntry
     {
-        $txAmount = $this->nodeValue($xpath, "{$prefix}Amt", $detail) ?? $fallbackAmount;
-        $txCurrency = $this->nodeAttr($xpath, "{$prefix}Amt", $detail, 'Ccy') ?? $fallbackCurrency ?? 'CHF';
+        $txAmount = $this->contextText($xpath, "{$prefix}Amt", $detail) ?? $fallbackAmount;
+        $txCurrency = $this->contextAttr($xpath, "{$prefix}Amt", $detail, 'Ccy') ?? $fallbackCurrency ?? 'CHF';
 
-        $endToEndId = $this->nodeValue($xpath, "{$prefix}Refs/{$prefix}EndToEndId", $detail);
+        $endToEndId = $this->contextText($xpath, "{$prefix}Refs/{$prefix}EndToEndId", $detail);
 
         // Strip NOTPROVIDED end-to-end IDs
         if ($endToEndId && strtoupper($endToEndId) === 'NOTPROVIDED') {
@@ -132,20 +132,20 @@ class Camt053Parser
         }
 
         $ref = $endToEndId
-            ?? $this->nodeValue($xpath, "{$prefix}Refs/{$prefix}AcctSvcrRef", $detail)
-            ?? $this->nodeValue($xpath, "{$prefix}Refs/{$prefix}PmtInfId", $detail);
+            ?? $this->contextText($xpath, "{$prefix}Refs/{$prefix}AcctSvcrRef", $detail)
+            ?? $this->contextText($xpath, "{$prefix}Refs/{$prefix}PmtInfId", $detail);
 
-        $debtorName = $this->nodeValue($xpath, "{$prefix}RltdPties/{$prefix}Dbtr/{$prefix}Nm", $detail)
-            ?? $this->nodeValue($xpath, "{$prefix}RltdPties/{$prefix}Dbtr/{$prefix}Pty/{$prefix}Nm", $detail);
+        $debtorName = $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Dbtr/{$prefix}Nm", $detail)
+            ?? $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Dbtr/{$prefix}Pty/{$prefix}Nm", $detail);
 
-        $creditorName = $this->nodeValue($xpath, "{$prefix}RltdPties/{$prefix}Cdtr/{$prefix}Nm", $detail)
-            ?? $this->nodeValue($xpath, "{$prefix}RltdPties/{$prefix}Cdtr/{$prefix}Pty/{$prefix}Nm", $detail);
+        $creditorName = $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Cdtr/{$prefix}Nm", $detail)
+            ?? $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Cdtr/{$prefix}Pty/{$prefix}Nm", $detail);
 
-        $description = $this->nodeValue($xpath, "{$prefix}RmtInf/{$prefix}Ustrd", $detail)
-            ?? $this->nodeValue($xpath, "{$prefix}AddtlTxInf", $detail);
+        $description = $this->contextText($xpath, "{$prefix}RmtInf/{$prefix}Ustrd", $detail)
+            ?? $this->contextText($xpath, "{$prefix}AddtlTxInf", $detail);
 
         // Extract structured creditor reference (Swiss QR reference)
-        $structuredReference = $this->nodeValue($xpath, "{$prefix}RmtInf/{$prefix}Strd/{$prefix}CdtrRefInf/{$prefix}Ref", $detail);
+        $structuredReference = $this->contextText($xpath, "{$prefix}RmtInf/{$prefix}Strd/{$prefix}CdtrRefInf/{$prefix}Ref", $detail);
 
         // Normalize: strip whitespace from structured references
         if ($structuredReference) {
@@ -193,34 +193,4 @@ class Camt053Parser
         return $this->creationDate;
     }
 
-    // ──────────────────────────────────────────────────────────────
-    //  XML Helpers
-    // ──────────────────────────────────────────────────────────────
-
-    private function xpathValue(\DOMXPath $xpath, string $query, string $prefix): ?string
-    {
-        $nodes = $xpath->query($query);
-
-        return $nodes->length > 0 ? trim($nodes->item(0)->textContent) : null;
-    }
-
-    private function nodeValue(\DOMXPath $xpath, string $query, \DOMElement $context): ?string
-    {
-        $nodes = $xpath->query($query, $context);
-
-        return $nodes->length > 0 ? trim($nodes->item(0)->textContent) : null;
-    }
-
-    private function nodeAttr(\DOMXPath $xpath, string $query, \DOMElement $context, string $attr): ?string
-    {
-        $nodes = $xpath->query($query, $context);
-
-        if ($nodes->length === 0) {
-            return null;
-        }
-
-        $node = $nodes->item(0);
-
-        return ($node instanceof \DOMElement) ? ($node->getAttribute($attr) ?: null) : null;
-    }
 }

@@ -54,7 +54,7 @@ class LedgerService
      *
      * @param  string  $organizationId  UUID of the owning organization
      * @param  array{date: string, reference?: string, description?: string}  $entryData
-     * @param  array<array{account_id: string, debit: float, credit: float, description?: string}>  $lines
+     * @param  array<array{account_id: string, debit: string, credit: string, description?: string}>  $lines
      * @return JournalEntry  The posted journal entry with lines eager-loaded
      *
      * @throws UnbalancedEntryException  When SUM(debit) ≠ SUM(credit)
@@ -420,7 +420,7 @@ class LedgerService
      * Validate that all account IDs in the lines exist and belong to the organization.
      *
      * @param  string  $organizationId
-     * @param  array<array{account_id: int}>  $lines
+     * @param  array<array{account_id: string}>  $lines
      *
      * @throws \InvalidArgumentException  When an account is missing or belongs to another org
      */

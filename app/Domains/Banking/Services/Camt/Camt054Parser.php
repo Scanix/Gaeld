@@ -53,9 +53,9 @@ class Camt054Parser
         }
 
         // Notification-level metadata
-        $this->notificationId = $this->nodeText($xpath, "//{$prefix}BkToCstmrDbtCdtNtfctn/{$prefix}Ntfctn/{$prefix}Id");
-        $this->creationDate = $this->nodeText($xpath, "//{$prefix}BkToCstmrDbtCdtNtfctn/{$prefix}Ntfctn/{$prefix}CreDtTm");
-        $this->iban = $this->nodeText($xpath, "//{$prefix}BkToCstmrDbtCdtNtfctn/{$prefix}Ntfctn/{$prefix}Acct/{$prefix}Id/{$prefix}IBAN");
+        $this->notificationId = $this->xpathText($xpath, "//{$prefix}BkToCstmrDbtCdtNtfctn/{$prefix}Ntfctn/{$prefix}Id");
+        $this->creationDate = $this->xpathText($xpath, "//{$prefix}BkToCstmrDbtCdtNtfctn/{$prefix}Ntfctn/{$prefix}CreDtTm");
+        $this->iban = $this->xpathText($xpath, "//{$prefix}BkToCstmrDbtCdtNtfctn/{$prefix}Ntfctn/{$prefix}Acct/{$prefix}Id/{$prefix}IBAN");
 
         $entries = $xpath->query("//{$prefix}BkToCstmrDbtCdtNtfctn/{$prefix}Ntfctn/{$prefix}Ntry");
 
@@ -187,34 +187,4 @@ class Camt054Parser
         return $this->creationDate;
     }
 
-    // ──────────────────────────────────────────────────────────────
-    //  XML Helpers
-    // ──────────────────────────────────────────────────────────────
-
-    private function nodeText(\DOMXPath $xpath, string $query): ?string
-    {
-        $nodes = $xpath->query($query);
-
-        return $nodes->length > 0 ? trim($nodes->item(0)->textContent) : null;
-    }
-
-    private function contextText(\DOMXPath $xpath, string $query, \DOMElement $context): ?string
-    {
-        $nodes = $xpath->query($query, $context);
-
-        return $nodes->length > 0 ? trim($nodes->item(0)->textContent) : null;
-    }
-
-    private function contextAttr(\DOMXPath $xpath, string $query, \DOMElement $context, string $attr): ?string
-    {
-        $nodes = $xpath->query($query, $context);
-
-        if ($nodes->length === 0) {
-            return null;
-        }
-
-        $node = $nodes->item(0);
-
-        return ($node instanceof \DOMElement) ? ($node->getAttribute($attr) ?: null) : null;
-    }
 }

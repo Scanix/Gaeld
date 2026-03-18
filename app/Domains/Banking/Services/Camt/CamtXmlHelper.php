@@ -38,4 +38,31 @@ trait CamtXmlHelper
 
         return $doc;
     }
+
+    private function xpathText(\DOMXPath $xpath, string $query): ?string
+    {
+        $nodes = $xpath->query($query);
+
+        return $nodes->length > 0 ? trim($nodes->item(0)->textContent) : null;
+    }
+
+    private function contextText(\DOMXPath $xpath, string $query, \DOMElement $context): ?string
+    {
+        $nodes = $xpath->query($query, $context);
+
+        return $nodes->length > 0 ? trim($nodes->item(0)->textContent) : null;
+    }
+
+    private function contextAttr(\DOMXPath $xpath, string $query, \DOMElement $context, string $attr): ?string
+    {
+        $nodes = $xpath->query($query, $context);
+
+        if ($nodes->length === 0) {
+            return null;
+        }
+
+        $node = $nodes->item(0);
+
+        return ($node instanceof \DOMElement) ? ($node->getAttribute($attr) ?: null) : null;
+    }
 }

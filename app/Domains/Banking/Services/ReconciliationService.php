@@ -251,7 +251,7 @@ class ReconciliationService
 
         return [
             'invoice_id' => $invoice->id,
-            'confidence' => MatchConfidence::QR_REFERENCE,
+            'confidence' => MatchConfidence::QrReference->value,
             'match_type' => BankMatch::TYPE_QR_REFERENCE,
         ];
     }
@@ -285,7 +285,7 @@ class ReconciliationService
                 || str_contains(strtolower($contact->name), strtolower($transaction->debtor_name));
         })->map(fn ($invoice) => [
             'invoice_id' => $invoice->id,
-            'confidence' => MatchConfidence::AMOUNT_AND_CLIENT,
+            'confidence' => MatchConfidence::AmountAndCustomer->value,
             'match_type' => BankMatch::TYPE_AMOUNT_CLIENT,
         ])->values();
     }
@@ -316,7 +316,7 @@ class ReconciliationService
 
         return $query->map(fn ($invoice) => [
             'invoice_id' => $invoice->id,
-            'confidence' => MatchConfidence::HEURISTIC,
+            'confidence' => MatchConfidence::Heuristic->value,
             'match_type' => BankMatch::TYPE_HEURISTIC,
         ])->values();
     }
@@ -564,7 +564,7 @@ class ReconciliationService
                 $expenseSuggestions = $this->suggestExpenses($orgId, $transaction, $amount);
                 $bestExpense = $expenseSuggestions->first();
 
-                if ($bestExpense && $bestExpense->match_score >= MatchConfidence::AUTO_EXPENSE_THRESHOLD) {
+                if ($bestExpense && $bestExpense->match_score >= MatchConfidence::AutoExpenseThreshold->value) {
                     try {
                         $this->reconcileWithExpense($transaction, $bestExpense);
                         $matched++;
