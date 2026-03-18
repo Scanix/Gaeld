@@ -11,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Send an invoice notification email to the client.
+ * Send an invoice notification email to the customer.
  *
  * Idempotent: only sends for invoices in 'sent' status.
  * Dispatched from InvoiceService after an invoice is marked as sent.

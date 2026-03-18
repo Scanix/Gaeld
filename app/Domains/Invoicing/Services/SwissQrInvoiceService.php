@@ -77,18 +77,18 @@ class SwissQrInvoiceService
 
     private function setDebtorInfo(QrBill $qrBill, Invoice $invoice): void
     {
-        $client = $invoice->customer;
-        if (! $client) {
+        $customer = $invoice->customer;
+        if (! $customer) {
             return;
         }
 
         $debtorAddress = StructuredAddress::createWithStreet(
-            $client->name,
-            $client->address ?? '',
+            $customer->name,
+            $customer->address ?? '',
             null,
-            $client->postal_code ?? '',
-            $client->city ?? '',
-            $client->country ?? self::DEFAULT_COUNTRY,
+            $customer->postal_code ?? '',
+            $customer->city ?? '',
+            $customer->country ?? self::DEFAULT_COUNTRY,
         );
 
         $qrBill->setUltimateDebtor($debtorAddress);

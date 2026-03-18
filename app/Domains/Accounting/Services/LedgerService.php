@@ -2,7 +2,7 @@
 
 namespace App\Domains\Accounting\Services;
 
-use App\Domains\Accounting\ValueObjects\AccountCode;
+use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Exceptions\AlreadyPostedException;
 use App\Domains\Accounting\Exceptions\DuplicateReferenceException;

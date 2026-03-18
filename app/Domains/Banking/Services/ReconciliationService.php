@@ -2,12 +2,12 @@
 
 namespace App\Domains\Banking\Services;
 
-use App\Domains\Accounting\ValueObjects\AccountCode;
+use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
-use App\Domains\Banking\ValueObjects\MatchConfidence;
+use App\Domains\Banking\Enums\MatchConfidence;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
@@ -188,7 +188,7 @@ class ReconciliationService
      *
      * Priority order:
      *   1. QR reference match (confidence = 100)
-     *   2. Amount + client name match (confidence = 90)
+    *   2. Amount + customer name match (confidence = 90)
      *   3. Heuristic match (confidence = 70)
      *
      * Results are stored in the bank_matches table.
@@ -215,9 +215,9 @@ class ReconciliationService
             return $this->storeMatches($transaction, $matches);
         }
 
-        // Priority 2: Amount + client name match
-        $amountClientMatches = $this->matchByAmountAndClient($orgId, $transaction, $amount);
-        $matches = $matches->merge($amountClientMatches);
+        // Priority 2: Amount + customer name match
+        $amountCustomerMatches = $this->matchByAmountAndCustomer($orgId, $transaction, $amount);
+        $matches = $matches->merge($amountCustomerMatches);
 
         // Priority 3: Heuristic matching (amount or reference)
         $heuristicMatches = $this->matchByHeuristics($orgId, $transaction, $amount);
@@ -258,10 +258,10 @@ class ReconciliationService
     }
 
     /**
-     * Match by exact amount AND client name.
+    * Match by exact amount AND customer name.
      * Confidence: 90
      */
-    private function matchByAmountAndClient(string $orgId, BankTransaction $transaction, string $amount): Collection
+    private function matchByAmountAndCustomer(string $orgId, BankTransaction $transaction, string $amount): Collection
     {
         if (! $transaction->debtor_name) {
             return collect();
@@ -287,7 +287,7 @@ class ReconciliationService
         })->map(fn ($invoice) => [
             'invoice_id' => $invoice->id,
             'confidence' => MatchConfidence::AmountAndCustomer->value,
-            'match_type' => BankMatch::TYPE_AMOUNT_CLIENT,
+            'match_type' => BankMatch::TYPE_AMOUNT_CUSTOMER,
         ])->values();
     }
 

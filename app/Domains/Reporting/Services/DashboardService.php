@@ -2,7 +2,7 @@
 
 namespace App\Domains\Reporting\Services;
 
-use App\Domains\Accounting\ValueObjects\AccountCode;
+use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;

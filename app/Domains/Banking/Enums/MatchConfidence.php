@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\Banking\ValueObjects;
+namespace App\Domains\Banking\Enums;
 
 enum MatchConfidence: int
 {
@@ -9,6 +9,5 @@ enum MatchConfidence: int
     case AutoExpenseThreshold = 80;
     case Heuristic = 70;
 
-    /** Tolerance (±) for fuzzy amount matching, in base currency units. */
     public const AMOUNT_TOLERANCE = '0.05';
 }

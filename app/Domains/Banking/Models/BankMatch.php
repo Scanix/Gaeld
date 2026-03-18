@@ -28,7 +28,8 @@ class BankMatch extends Model
 
     public const TYPE_QR_REFERENCE = 'qr_reference';
 
-    public const TYPE_AMOUNT_CLIENT = 'amount_client';
+    public const TYPE_AMOUNT_CUSTOMER = 'amount_client';
+    public const TYPE_AMOUNT_CLIENT = self::TYPE_AMOUNT_CUSTOMER;
 
     public const TYPE_HEURISTIC = 'heuristic';
 
