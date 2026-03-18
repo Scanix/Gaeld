@@ -8,7 +8,7 @@ use App\Domains\Expenses\Actions\DeleteExpenseAction;
 use App\Domains\Expenses\Actions\UpdateExpenseAction;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Queries\ExpenseQuery;
-use App\Domains\Expenses\Services\ExpenseService;
+use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Models\VatRate;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -149,7 +149,7 @@ class ExpenseController extends Controller
             ->with('success', 'Expense approved.');
     }
 
-    public function postToLedger(Expense $expense, Request $request, ExpenseService $service): RedirectResponse
+    public function postToLedger(Expense $expense, Request $request, LedgerService $ledgerService): RedirectResponse
     {
         $this->authorize('update', $expense);
 
@@ -157,7 +157,7 @@ class ExpenseController extends Controller
             'expense_account_code' => 'required|string',
         ]);
 
-        $service->postExpense($expense, $validated['expense_account_code']);
+        $ledgerService->postExpense($expense, $validated['expense_account_code']);
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Expense posted to ledger.');
