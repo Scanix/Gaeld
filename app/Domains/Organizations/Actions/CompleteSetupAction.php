@@ -2,7 +2,7 @@
 
 namespace App\Domains\Organizations\Actions;
 
-use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Services\OrganizationService;
 use App\Domains\Organizations\Services\OrganizationSetupService;
 use App\Domains\Users\Models\User;
 use App\Domains\Users\Services\UserService;
@@ -12,6 +12,7 @@ class CompleteSetupAction
 {
     public function __construct(
         private readonly UserService $userService,
+        private readonly OrganizationService $organizationService,
         private readonly OrganizationSetupService $organizationSetupService,
     ) {}
 
@@ -26,7 +27,7 @@ class CompleteSetupAction
                 'email_verified_at' => now(),
             ]);
 
-            $organization = Organization::create([
+            $this->organizationService->create($user, [
                 'name' => $data['org_name'],
                 'legal_name' => $data['org_legal_name'] ?? $data['org_name'],
                 'address' => $data['org_address'] ?? null,
@@ -36,8 +37,6 @@ class CompleteSetupAction
                 'currency' => $data['currency'],
                 'locale' => $data['locale'],
             ]);
-
-            $organization->users()->attach($user->id, ['role' => 'owner']);
 
             $this->organizationSetupService->seedSwissDefaults();
 

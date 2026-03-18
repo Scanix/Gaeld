@@ -2,17 +2,19 @@
 
 namespace App\Console\Commands;
 
+use App\Domains\Organizations\Services\OrganizationService;
 use App\Domains\Organizations\Services\OrganizationSetupService;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
+use App\Domains\Users\Services\UserService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class GaeldInstallCommand extends Command
 {
     public function __construct(
+        private readonly UserService $userService,
+        private readonly OrganizationService $organizationService,
         private readonly OrganizationSetupService $organizationSetupService,
     ) {
         parent::__construct();
@@ -62,23 +64,21 @@ class GaeldInstallCommand extends Command
             $adminName, $adminEmail, $adminPassword, $orgName, $currency, $locale
         ) {
             DB::transaction(function () use ($adminName, $adminEmail, $adminPassword, $orgName, $currency, $locale) {
-                $user = User::create([
+                $user = $this->userService->create([
                     'name' => $adminName,
                     'email' => $adminEmail,
-                    'password' => Hash::make($adminPassword),
+                    'password' => $adminPassword,
                     'locale' => $locale,
                     'email_verified_at' => now(),
                 ]);
 
-                $org = Organization::create([
+                $this->organizationService->create($user, [
                     'name' => $orgName,
                     'legal_name' => $orgName,
                     'currency' => $currency,
                     'locale' => $locale,
                     'country' => 'CH',
                 ]);
-
-                $org->users()->attach($user->id, ['role' => 'owner']);
             });
         });
 
