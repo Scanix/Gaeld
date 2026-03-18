@@ -55,8 +55,11 @@ class Account extends Model
 
     public function balance(): string
     {
-        $debits = (string) $this->transactionLines()->sum('debit');
-        $credits = (string) $this->transactionLines()->sum('credit');
+        $query = $this->transactionLines()
+            ->whereHas('journalEntry', fn ($q) => $q->where('is_posted', true));
+
+        $debits = (string) (clone $query)->sum('debit');
+        $credits = (string) (clone $query)->sum('credit');
 
         return match ($this->type) {
             AccountType::Asset, AccountType::Expense => bcsub($debits, $credits, 2),

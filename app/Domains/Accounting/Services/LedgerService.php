@@ -160,7 +160,7 @@ class LedgerService
             $journalEntry = $this->postEntry($orgId, [
                 'date' => $invoice->issue_date->toDateString(),
                 'reference' => $invoice->number,
-                'description' => "Invoice {$invoice->number} — " . ($invoice->customer?->name ?? $invoice->client?->name ?? 'N/A'),
+                'description' => "Invoice {$invoice->number} — " . ($invoice->customer?->name ?? 'N/A'),
             ], [
                 ['account_id' => $ar->id, 'debit' => $invoice->total, 'credit' => 0, 'description' => 'Accounts Receivable'],
                 ['account_id' => $revenue->id, 'debit' => 0, 'credit' => $invoice->total, 'description' => 'Revenue'],
@@ -171,7 +171,7 @@ class LedgerService
                 'journal_entry_id' => $journalEntry->id,
             ]);
 
-            return $invoice->fresh(['lines', 'customer', 'client', 'journalEntry.lines']);
+            return $invoice->fresh(['lines', 'customer', 'journalEntry.lines']);
         });
     }
 

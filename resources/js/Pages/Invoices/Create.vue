@@ -12,7 +12,7 @@ import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
-  clients: { type: Array, default: () => [] },
+  customers: { type: Array, default: () => [] },
   vatRates: { type: Array, default: () => [] },
 })
 
@@ -43,7 +43,7 @@ function submit() {
   form.post('/invoices')
 }
 
-const clientOptions = props.clients.map(c => ({ value: c.id, label: c.name }))
+const clientOptions = props.customers.map(c => ({ value: c.id, label: c.name }))
 const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),

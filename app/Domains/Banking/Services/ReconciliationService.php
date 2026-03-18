@@ -272,11 +272,11 @@ class ReconciliationService
                 bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
                 bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
             ])
-            ->with(['customer', 'client'])
+            ->with(['customer'])
             ->get();
 
         return $invoices->filter(function ($invoice) use ($transaction) {
-            $contact = $invoice->customer ?? $invoice->client;
+            $contact = $invoice->customer;
             if (! $contact) {
                 return false;
             }
@@ -447,7 +447,7 @@ class ReconciliationService
 
         // Load invoice data for the matches
         $invoiceSuggestions = $matches->map(function ($match) {
-            $invoice = $match->invoice->load(['customer', 'client']);
+            $invoice = $match->invoice->load(['customer']);
             $invoice->match_score = $match->confidence;
             $invoice->match_type = $match->match_type;
             $invoice->match_id = $match->id;

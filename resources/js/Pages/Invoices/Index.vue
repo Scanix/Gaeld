@@ -64,7 +64,7 @@ function handleFilter({ key, value }) {
 
 const columns = computed(() => [
   { key: 'number', label: t('number'), sortable: true },
-  { key: 'client', label: t('client'), format: (v) => v?.name ?? '—' },
+  { key: 'customer', label: t('client'), format: (v) => v?.name ?? '—' },
   { key: 'issue_date', label: t('date'), format: (v) => formatDate(v), sortable: true },
   { key: 'due_date', label: t('due'), format: (v) => formatDate(v), sortable: true },
   { key: 'total', label: t('total'), class: 'text-right', format: (v) => formatCurrency(v), sortable: true },

@@ -43,7 +43,7 @@ class InvoiceController extends Controller
     public function create(Request $request): Response
     {
         return Inertia::render('Invoices/Create', [
-            'clients' => Customer::orderBy('name')->get(),
+            'customers' => Customer::orderBy('name')->get(),
             'vatRates' => VatRate::where('is_active', true)->get(),
         ]);
     }
@@ -67,7 +67,7 @@ class InvoiceController extends Controller
         $this->authorize('view', $invoice);
 
         return Inertia::render('Invoices/Show', [
-            'invoice' => $invoice->load(['customer', 'client', 'lines.vatRate', 'journalEntry.lines.account', 'payments.journalEntry']),
+            'invoice' => $invoice->load(['customer', 'lines.vatRate', 'journalEntry.lines.account', 'payments.journalEntry']),
         ]);
     }
 
@@ -77,7 +77,7 @@ class InvoiceController extends Controller
 
         return Inertia::render('Invoices/Edit', [
             'invoice' => $invoice->load('lines.vatRate'),
-            'clients' => Customer::orderBy('name')->get(),
+            'customers' => Customer::orderBy('name')->get(),
             'vatRates' => VatRate::where('is_active', true)->get(),
         ]);
     }

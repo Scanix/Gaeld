@@ -74,7 +74,7 @@ class GenerateQrInvoicePdfAction
         }
 
         // Client info (top left)
-        $client = $invoice->customer ?? $invoice->client;
+        $client = $invoice->customer;
         if ($client) {
             $tcpdf->SetXY(15, 45);
             $tcpdf->SetFont('Helvetica', 'B', 10);

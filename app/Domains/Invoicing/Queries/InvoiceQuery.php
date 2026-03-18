@@ -11,10 +11,10 @@ class InvoiceQuery
 {
     public static function list(Request $request, int $perPage = 20): LengthAwarePaginator
     {
-        return QueryBuilder::for(Invoice::with(['customer', 'client']), $request)
+        return QueryBuilder::for(Invoice::with(['customer']), $request)
             ->allowedSorts(['issue_date', 'due_date', 'total', 'number', 'status'], 'issue_date', 'desc')
             ->allowedFilters(['status'])
-            ->searchable(['number', 'client.name'])
+            ->searchable(['number', 'customer.name'])
             ->apply()
             ->paginate($perPage)
             ->withQueryString();

@@ -13,14 +13,14 @@ import { Plus, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
   invoice: Object,
-  clients: { type: Array, default: () => [] },
+  customers: { type: Array, default: () => [] },
   vatRates: { type: Array, default: () => [] },
 })
 
 const { t } = useTranslations()
 
 const form = useForm({
-  customer_id: props.invoice.customer_id ?? props.invoice.client_id ?? '',
+  customer_id: props.invoice.customer_id ?? '',
   number: props.invoice.number ?? '',
   issue_date: props.invoice.issue_date?.slice(0, 10) ?? '',
   due_date: props.invoice.due_date?.slice(0, 10) ?? '',
@@ -53,7 +53,7 @@ function submit() {
   form.put(`/invoices/${props.invoice.id}`)
 }
 
-const clientOptions = props.clients.map(c => ({ value: c.id, label: c.name }))
+const clientOptions = props.customers.map(c => ({ value: c.id, label: c.name }))
 const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),

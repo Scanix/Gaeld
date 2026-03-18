@@ -7,6 +7,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
+use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
@@ -22,7 +23,7 @@ class InvoiceFlowTest extends TestCase
 
     private Organization $org;
     private User $user;
-    private Customer $client;
+    private Customer $customer;
     private VatRate $vatRate;
 
     protected function setUp(): void
@@ -65,7 +66,7 @@ class InvoiceFlowTest extends TestCase
             'is_default' => true,
         ]);
 
-        $this->client = Customer::create([
+        $this->customer = Customer::create([
             'organization_id' => $this->org->id,
             'name' => 'Test Client AG',
         ]);
@@ -77,7 +78,7 @@ class InvoiceFlowTest extends TestCase
 
         return $action->execute(array_merge([
             'organization_id' => $this->org->id,
-            'customer_id' => $this->client->id,
+            'customer_id' => $this->customer->id,
             'number' => 'INV-2026-001',
             'issue_date' => '2026-03-16',
             'due_date' => '2026-04-15',
@@ -98,14 +99,15 @@ class InvoiceFlowTest extends TestCase
         $this->assertEquals('1500.00', $invoice->subtotal);
 
         // 2. Finalize invoice (posts to ledger)
-        $invoiceService = app(InvoiceService::class);
-        $invoice = $invoiceService->finalizeInvoice($invoice);
+        $finalizeAction = app(FinalizeInvoiceAction::class);
+        $invoice = $finalizeAction->execute($invoice);
 
         $this->assertEquals(InvoiceStatus::Sent, $invoice->status);
         $this->assertNotNull($invoice->journal_entry_id);
         $this->assertTrue($invoice->journalEntry->isBalanced());
 
         // 3. Record full payment
+        $invoiceService = app(InvoiceService::class);
         $payment = $invoiceService->recordPayment($invoice, [
             'amount' => (float) $invoice->total,
             'payment_date' => '2026-04-01',
@@ -122,13 +124,14 @@ class InvoiceFlowTest extends TestCase
     {
         $invoice = $this->createInvoice();
 
-        $invoiceService = app(InvoiceService::class);
-        $invoice = $invoiceService->finalizeInvoice($invoice);
+        $finalizeAction = app(FinalizeInvoiceAction::class);
+        $invoice = $finalizeAction->execute($invoice);
 
         // Pay half
         $total = (float) $invoice->total;
         $halfAmount = round($total / 2, 2);
 
+        $invoiceService = app(InvoiceService::class);
         $payment1 = $invoiceService->recordPayment($invoice, [
             'amount' => $halfAmount,
             'payment_date' => '2026-04-01',
@@ -162,7 +165,7 @@ class InvoiceFlowTest extends TestCase
 
         $this->assertEquals(InvoiceStatus::Draft, $duplicate->status);
         $this->assertNotEquals($invoice->id, $duplicate->id);
-        $this->assertEquals($invoice->client_id, $duplicate->client_id);
+        $this->assertEquals($invoice->customer_id, $duplicate->customer_id);
         $this->assertEquals($invoice->lines()->count(), $duplicate->lines()->count());
         $this->assertNull($duplicate->journal_entry_id);
     }

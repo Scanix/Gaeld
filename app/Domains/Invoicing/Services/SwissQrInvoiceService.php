@@ -40,7 +40,7 @@ class SwissQrInvoiceService
      */
     public function buildQrBill(Invoice $invoice, Organization $organization): QrBill
     {
-        $invoice->loadMissing(['customer', 'client']);
+        $invoice->loadMissing(['customer']);
 
         $qrBill = QrBill::create();
 
@@ -77,7 +77,7 @@ class SwissQrInvoiceService
 
     private function setDebtorInfo(QrBill $qrBill, Invoice $invoice): void
     {
-        $client = $invoice->customer ?? $invoice->client;
+        $client = $invoice->customer;
         if (! $client) {
             return;
         }

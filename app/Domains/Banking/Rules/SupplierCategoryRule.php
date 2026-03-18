@@ -37,10 +37,7 @@ class SupplierCategoryRule extends BaseRule
 
         return Supplier::where('organization_id', $orgId)
             ->whereNotNull('default_expense_category')
-            ->where(function ($q) use ($transaction) {
-                $q->where('name', 'ilike', '%' . $transaction->creditor_name . '%')
-                  ->orWhere($transaction->creditor_name, 'ilike', '%' . 'name' . '%');
-            })
+            ->where('name', 'ilike', '%' . $transaction->creditor_name . '%')
             ->exists();
     }
 
@@ -74,8 +71,5 @@ class SupplierCategoryRule extends BaseRule
 
         // Surface the suggestion via the transaction meta: attach supplier_id hint
         // This is surfaced to the reconciliation UI without auto-creating an expense.
-        $transaction->forceFill([
-            'creditor_name' => $transaction->creditor_name,
-        ])->save();
     }
 }
