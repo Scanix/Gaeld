@@ -5,14 +5,17 @@ namespace App\Domains\Accounting\Services;
 use App\Domains\Accounting\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Exceptions\AlreadyPostedException;
+use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
 use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -140,7 +143,7 @@ class LedgerService
     public function postInvoice(Invoice $invoice): Invoice
     {
         if ($invoice->status !== InvoiceStatus::Draft) {
-            throw new \DomainException('Only draft invoices can be posted.');
+            throw new InvalidInvoiceStateException('Only draft invoices can be posted.');
         }
 
         return DB::transaction(function () use ($invoice) {
@@ -152,7 +155,7 @@ class LedgerService
             $journalEntry = $this->postEntry($orgId, [
                 'date' => $invoice->issue_date->toDateString(),
                 'reference' => $invoice->number,
-                'description' => "Invoice {$invoice->number} — " . ($invoice->client->name ?? 'N/A'),
+                'description' => "Invoice {$invoice->number} — " . ($invoice->customer?->name ?? $invoice->client?->name ?? 'N/A'),
             ], [
                 ['account_id' => $ar->id, 'debit' => $invoice->total, 'credit' => 0, 'description' => 'Accounts Receivable'],
                 ['account_id' => $revenue->id, 'debit' => 0, 'credit' => $invoice->total, 'description' => 'Revenue'],
@@ -163,7 +166,7 @@ class LedgerService
                 'journal_entry_id' => $journalEntry->id,
             ]);
 
-            return $invoice->fresh(['lines', 'client', 'journalEntry.lines']);
+            return $invoice->fresh(['lines', 'customer', 'client', 'journalEntry.lines']);
         });
     }
 
@@ -184,7 +187,7 @@ class LedgerService
     public function postExpense(Expense $expense, string $expenseAccountCode, string $bankAccountCode = AccountCode::BANK_CASH): Expense
     {
         if ($expense->status === ExpenseStatus::Posted) {
-            throw new \DomainException('Expense is already posted.');
+            throw new \App\Domains\Expenses\Exceptions\InvalidExpenseStateException('Expense is already posted.');
         }
 
         return DB::transaction(function () use ($expense, $expenseAccountCode, $bankAccountCode) {
@@ -236,7 +239,7 @@ class LedgerService
 
             $bankLedgerAccount = $bankAccount->ledgerAccount;
             if (! $bankLedgerAccount) {
-                throw new \DomainException('Bank account is not linked to a ledger account.');
+                throw new UnlinkedBankAccountException();
             }
 
             $contraAccount = $this->resolveAccount($orgId, $contraAccountCode);
@@ -524,7 +527,7 @@ class LedgerService
         }
 
         if ($this->isDuplicateReference($organizationId, $reference)) {
-            throw new \DomainException(
+            throw new DuplicateReferenceException(
                 "A posted journal entry with reference '{$reference}' already exists in this organization."
             );
         }

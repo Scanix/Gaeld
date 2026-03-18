@@ -2,7 +2,7 @@
 
 namespace App\Domains\Expenses\Actions;
 
-use App\Domains\Expenses\Enums\ExpenseStatus;
+use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 
 class UpdateExpenseAction
@@ -10,7 +10,7 @@ class UpdateExpenseAction
     public function execute(Expense $expense, array $data): Expense
     {
         if (! $expense->status->isEditable()) {
-            throw new \DomainException('Posted expenses cannot be modified.');
+            throw new InvalidExpenseStateException('Posted expenses cannot be modified.');
         }
 
         $expense->update([

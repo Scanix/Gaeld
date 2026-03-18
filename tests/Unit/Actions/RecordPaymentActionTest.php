@@ -4,6 +4,8 @@ namespace Tests\Unit\Actions;
 
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
+use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Domains\Invoicing\Services\InvoiceService;
@@ -28,7 +30,7 @@ class RecordPaymentActionTest extends TestCase
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Draft);
 
-        $this->expectException(\DomainException::class);
+        $this->expectException(InvalidInvoiceStateException::class);
         $this->expectExceptionMessage('Payments can only be recorded for sent or overdue invoices.');
 
         $this->action->execute($invoice, ['amount' => '100.00']);
@@ -38,7 +40,7 @@ class RecordPaymentActionTest extends TestCase
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Paid);
 
-        $this->expectException(\DomainException::class);
+        $this->expectException(InvalidInvoiceStateException::class);
         $this->expectExceptionMessage('Payments can only be recorded for sent or overdue invoices.');
 
         $this->action->execute($invoice, ['amount' => '100.00']);
@@ -48,7 +50,7 @@ class RecordPaymentActionTest extends TestCase
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Cancelled);
 
-        $this->expectException(\DomainException::class);
+        $this->expectException(InvalidInvoiceStateException::class);
         $this->expectExceptionMessage('Payments can only be recorded for sent or overdue invoices.');
 
         $this->action->execute($invoice, ['amount' => '100.00']);
@@ -58,7 +60,7 @@ class RecordPaymentActionTest extends TestCase
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Sent, amountDue: '500.00');
 
-        $this->expectException(\DomainException::class);
+        $this->expectException(InvalidPaymentException::class);
         $this->expectExceptionMessage('exceeds amount due');
 
         $this->action->execute($invoice, ['amount' => '600.00']);

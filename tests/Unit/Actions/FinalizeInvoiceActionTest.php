@@ -5,6 +5,7 @@ namespace Tests\Unit\Actions;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Mockery;
@@ -28,7 +29,7 @@ class FinalizeInvoiceActionTest extends TestCase
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Sent);
 
-        $this->expectException(\DomainException::class);
+        $this->expectException(InvalidInvoiceStateException::class);
         $this->expectExceptionMessage('Only draft invoices can be finalized');
 
         $this->action->execute($invoice);
@@ -38,7 +39,7 @@ class FinalizeInvoiceActionTest extends TestCase
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Paid);
 
-        $this->expectException(\DomainException::class);
+        $this->expectException(InvalidInvoiceStateException::class);
         $this->expectExceptionMessage('Only draft invoices can be finalized');
 
         $this->action->execute($invoice);
@@ -48,7 +49,7 @@ class FinalizeInvoiceActionTest extends TestCase
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Cancelled);
 
-        $this->expectException(\DomainException::class);
+        $this->expectException(InvalidInvoiceStateException::class);
         $this->expectExceptionMessage('Only draft invoices can be finalized');
 
         $this->action->execute($invoice);
@@ -58,7 +59,7 @@ class FinalizeInvoiceActionTest extends TestCase
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Draft, lineCount: 0);
 
-        $this->expectException(\DomainException::class);
+        $this->expectException(InvalidInvoiceStateException::class);
         $this->expectExceptionMessage('Cannot finalize an invoice with no line items');
 
         $this->action->execute($invoice);
