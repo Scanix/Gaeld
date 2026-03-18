@@ -15,6 +15,7 @@ use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Services\FeatureFlag;
+use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -22,14 +23,42 @@ use Illuminate\Support\Str;
 
 class ReconciliationService
 {
+    private const REFERENCE_PREFIX_RECONCILIATION = 'REC-';
+
     public function __construct(
         private LedgerService $ledgerService,
         private InvoiceService $invoiceService,
     ) {}
 
-    private function absoluteAmount(string $value): string
+    /**
+     * Validate preconditions common to all reconciliation paths.
+     *
+     * @throws AlreadyReconciledException
+     * @throws UnlinkedBankAccountException
+     */
+    private function validateReconciliationPreconditions(BankTransaction $transaction, BankAccount $bankAccount): void
     {
-        return bccomp($value, '0', 2) < 0 ? bcmul($value, '-1', 2) : $value;
+        if (! $bankAccount->ledgerAccount) {
+            throw new UnlinkedBankAccountException();
+        }
+
+        if ($transaction->is_reconciled) {
+            throw new AlreadyReconciledException();
+        }
+    }
+
+    /**
+     * Build a unique reconciliation reference, appending a UUID suffix if the base reference already exists.
+     */
+    private function buildReconciliationReference(string $orgId, BankTransaction $transaction): string
+    {
+        $reference = self::REFERENCE_PREFIX_RECONCILIATION . ($transaction->reference ?? $transaction->id);
+
+        if ($this->ledgerService->isDuplicateReference($orgId, $reference)) {
+            $reference .= '-' . Str::uuid()->toString();
+        }
+
+        return $reference;
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -43,7 +72,7 @@ class ReconciliationService
      * and marks the transaction as reconciled.
      *
      * @throws AlreadyReconciledException  When transaction is already reconciled
-     * @throws \DomainException  When bank account is not linked to a ledger account
+     * @throws UnlinkedBankAccountException  When bank account is not linked to a ledger account
      */
     public function reconcileWithInvoice(
         BankTransaction $transaction,
@@ -54,36 +83,21 @@ class ReconciliationService
             $bankAccount = $transaction->bankAccount;
             $orgId = $bankAccount->organization_id;
 
-            $bankLedgerAccount = $bankAccount->ledgerAccount;
-            if (! $bankLedgerAccount) {
-                throw new UnlinkedBankAccountException();
-            }
+            $this->validateReconciliationPreconditions($transaction, $bankAccount);
 
             $arAccount = $this->ledgerService->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
-            $amount = $this->absoluteAmount((string) $transaction->amount);
-
-            $reference = 'REC-' . ($transaction->reference ?? $transaction->id);
-
-            // Skip if already reconciled
-            if ($transaction->is_reconciled) {
-                throw new AlreadyReconciledException();
-            }
-
-            // Guard against duplicate reconciliation
-            if ($this->ledgerService->isDuplicateReference($orgId, $reference)) {
-                $reference = $reference . '-' . Str::uuid()->toString();
-            }
+            $amount = Money::absoluteAmount((string) $transaction->amount);
+            $reference = $this->buildReconciliationReference($orgId, $transaction);
 
             $journalEntry = $this->ledgerService->postEntry($orgId, [
                 'date' => $transaction->date->toDateString(),
                 'reference' => $reference,
                 'description' => "Reconciliation: {$transaction->description} ↔ Invoice {$invoice->number}",
             ], [
-                ['account_id' => $bankLedgerAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => 'Bank deposit'],
+                ['account_id' => $bankAccount->ledgerAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => 'Bank deposit'],
                 ['account_id' => $arAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => "Payment for invoice {$invoice->number}"],
             ]);
 
-            // Update bank account balance via LedgerService
             $this->ledgerService->updateBankAccountBalance($bankAccount, (string) $amount, true);
 
             $transaction->update([
@@ -103,7 +117,7 @@ class ReconciliationService
      * and marks the transaction as reconciled.
      *
      * @throws AlreadyReconciledException  When transaction is already reconciled
-     * @throws \DomainException  When bank account is not linked to a ledger account
+     * @throws UnlinkedBankAccountException  When bank account is not linked to a ledger account
      */
     public function reconcileWithExpense(
         BankTransaction $transaction,
@@ -114,23 +128,11 @@ class ReconciliationService
             $bankAccount = $transaction->bankAccount;
             $orgId = $bankAccount->organization_id;
 
-            $bankLedgerAccount = $bankAccount->ledgerAccount;
-            if (! $bankLedgerAccount) {
-                throw new UnlinkedBankAccountException();
-            }
+            $this->validateReconciliationPreconditions($transaction, $bankAccount);
 
             $expenseAccount = $this->ledgerService->resolveAccount($orgId, $expenseAccountCode);
-            $amount = $this->absoluteAmount((string) $transaction->amount);
-
-            $reference = 'REC-' . ($transaction->reference ?? $transaction->id);
-
-            if ($transaction->is_reconciled) {
-                throw new AlreadyReconciledException();
-            }
-
-            if ($this->ledgerService->isDuplicateReference($orgId, $reference)) {
-                $reference = $reference . '-' . Str::uuid()->toString();
-            }
+            $amount = Money::absoluteAmount((string) $transaction->amount);
+            $reference = $this->buildReconciliationReference($orgId, $transaction);
 
             $journalEntry = $this->ledgerService->postEntry($orgId, [
                 'date' => $transaction->date->toDateString(),
@@ -138,10 +140,9 @@ class ReconciliationService
                 'description' => "Reconciliation: {$transaction->description} ↔ Expense {$expense->description}",
             ], [
                 ['account_id' => $expenseAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => $expense->description ?? 'Expense'],
-                ['account_id' => $bankLedgerAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => 'Bank withdrawal'],
+                ['account_id' => $bankAccount->ledgerAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => 'Bank withdrawal'],
             ]);
 
-            // Update bank account balance via LedgerService
             $this->ledgerService->updateBankAccountBalance($bankAccount, (string) $amount, false);
 
             $transaction->update([
@@ -158,7 +159,7 @@ class ReconciliationService
      * Manually reconcile a bank transaction with a contra account (no invoice/expense match).
      *
      * @throws AlreadyReconciledException  When transaction is already reconciled
-     * @throws \DomainException  When bank account has no linked ledger account
+     * @throws UnlinkedBankAccountException  When bank account has no linked ledger account
      */
     public function reconcileManual(
         BankTransaction $transaction,
@@ -166,11 +167,8 @@ class ReconciliationService
     ): BankTransaction {
         return DB::transaction(function () use ($transaction, $contraAccountCode) {
             $bankAccount = $transaction->bankAccount;
-            $orgId = $bankAccount->organization_id;
 
-            if ($transaction->is_reconciled) {
-                throw new AlreadyReconciledException();
-            }
+            $this->validateReconciliationPreconditions($transaction, $bankAccount);
 
             $result = $this->ledgerService->postBankTransaction($transaction, $contraAccountCode);
 
@@ -199,7 +197,7 @@ class ReconciliationService
     public function findMatches(BankTransaction $transaction): Collection
     {
         $orgId = $transaction->bankAccount->organization_id;
-        $amount = $this->absoluteAmount((string) $transaction->amount);
+        $amount = Money::absoluteAmount((string) $transaction->amount);
 
         // Only match credit transactions to invoices
         if ($transaction->type !== BankTransaction::TYPE_CREDIT) {
@@ -366,7 +364,7 @@ class ReconciliationService
 
         return DB::transaction(function () use ($match, $transaction, $invoice) {
             // Record payment through the standard pipeline
-            $amount = $this->absoluteAmount((string) $transaction->amount);
+            $amount = Money::absoluteAmount((string) $transaction->amount);
             $amountDue = $invoice->amountDue();
             $paymentAmount = bccomp($amount, $amountDue, 2) <= 0 ? $amount : $amountDue;
 
@@ -375,7 +373,7 @@ class ReconciliationService
                     'amount' => $paymentAmount,
                     'payment_date' => $transaction->date->toDateString(),
                     'payment_method' => 'bank',
-                    'reference' => 'REC-' . ($transaction->reference ?? $transaction->id),
+                    'reference' => self::REFERENCE_PREFIX_RECONCILIATION . ($transaction->reference ?? $transaction->id),
                 ]);
             }
 
@@ -442,7 +440,7 @@ class ReconciliationService
     public function getSuggestions(BankTransaction $transaction): array
     {
         $orgId = $transaction->bankAccount->organization_id;
-        $amount = $this->absoluteAmount((string) $transaction->amount);
+        $amount = Money::absoluteAmount((string) $transaction->amount);
 
         // Use the matching engine for invoices
         $matches = $this->findMatches($transaction);
@@ -562,7 +560,7 @@ class ReconciliationService
             // Auto-reconcile expenses with high confidence
             if ($transaction->type === BankTransaction::TYPE_DEBIT) {
                 $orgId = $bankAccount->organization_id;
-                $amount = $this->absoluteAmount((string) $transaction->amount);
+                $amount = Money::absoluteAmount((string) $transaction->amount);
                 $expenseSuggestions = $this->suggestExpenses($orgId, $transaction, $amount);
                 $bestExpense = $expenseSuggestions->first();
 

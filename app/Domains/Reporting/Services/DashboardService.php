@@ -6,7 +6,9 @@ use App\Domains\Accounting\AccountCode;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -22,12 +24,12 @@ class DashboardService
         $cashBalance = $this->cashBalance($organizationId);
 
         $unpaidInvoices = Invoice::where('organization_id', $organizationId)
-            ->whereIn('status', ['sent', 'overdue'])
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(total), 0) as total')
             ->first();
 
         $pendingExpenses = Expense::where('organization_id', $organizationId)
-            ->where('status', 'pending')
+            ->where('status', ExpenseStatus::Pending)
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
             ->first();
 
@@ -43,7 +45,7 @@ class DashboardService
                 'count' => (int) ($pendingExpenses->count ?? 0),
                 'total' => (float) ($pendingExpenses->total ?? 0),
             ],
-            'balance' => (float) bcsub((string) $totalRevenue, (string) $totalExpenses, 2),
+            'balance' => $totalRevenue - $totalExpenses,
             'recentTransactions' => $this->recentTransactions($organizationId),
             'monthlyData' => $this->monthlyBreakdown($organizationId, $year),
         ];
@@ -52,7 +54,7 @@ class DashboardService
     private function yearlyInvoiceTotal(string $organizationId, int $year): float
     {
         return (float) Invoice::where('organization_id', $organizationId)
-            ->where('status', 'paid')
+            ->where('status', InvoiceStatus::Paid)
             ->whereYear('issue_date', $year)
             ->sum('total');
     }
@@ -64,20 +66,20 @@ class DashboardService
             ->sum('amount');
     }
 
-    private function cashBalance(string $organizationId): float
+    private function cashBalance(string $organizationId): string
     {
         $bankAccount = Account::where('organization_id', $organizationId)
             ->where('code', AccountCode::BANK_CASH)
             ->first();
 
         if (! $bankAccount) {
-            return 0.0;
+            return '0.00';
         }
 
-        $debits = (float) TransactionLine::where('account_id', $bankAccount->id)->sum('debit');
-        $credits = (float) TransactionLine::where('account_id', $bankAccount->id)->sum('credit');
+        $debits = TransactionLine::where('account_id', $bankAccount->id)->sum('debit');
+        $credits = TransactionLine::where('account_id', $bankAccount->id)->sum('credit');
 
-        return (float) bcsub((string) $debits, (string) $credits, 2);
+        return bcsub((string) $debits, (string) $credits, 2);
     }
 
     private function recentTransactions(string $organizationId): Collection
@@ -108,7 +110,7 @@ class DashboardService
     {
         $monthlyData = collect(range(1, 12))->map(function ($month) use ($year, $organizationId) {
             $monthRevenue = (float) Invoice::where('organization_id', $organizationId)
-                ->where('status', 'paid')
+                ->where('status', InvoiceStatus::Paid)
                 ->whereYear('issue_date', $year)
                 ->whereMonth('issue_date', $month)
                 ->sum('total');
@@ -119,13 +121,13 @@ class DashboardService
                 ->sum('amount');
 
             $forecast = (float) Invoice::where('organization_id', $organizationId)
-                ->whereIn('status', ['sent', 'overdue'])
+                ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
                 ->whereYear('due_date', $year)
                 ->whereMonth('due_date', $month)
                 ->sum('total');
 
             $revenueItems = Invoice::where('organization_id', $organizationId)
-                ->where('status', 'paid')
+                ->where('status', InvoiceStatus::Paid)
                 ->whereYear('issue_date', $year)
                 ->whereMonth('issue_date', $month)
                 ->select('number', 'total')
@@ -140,7 +142,7 @@ class DashboardService
                 ->map(fn ($e) => $e->description . ': ' . number_format((float) $e->amount, 2, '.', "'"));
 
             $forecastItems = Invoice::where('organization_id', $organizationId)
-                ->whereIn('status', ['sent', 'overdue'])
+                ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
                 ->whereYear('due_date', $year)
                 ->whereMonth('due_date', $month)
                 ->select('number', 'total')

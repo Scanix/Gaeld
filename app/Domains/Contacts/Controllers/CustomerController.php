@@ -30,6 +30,8 @@ class CustomerController extends Controller
 
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Customer::class);
+
         return Inertia::render('Contacts/Customers/Index', [
             'customers' => CustomerQuery::list($request),
             'query' => [
@@ -43,11 +45,15 @@ class CustomerController extends Controller
 
     public function create(): Response
     {
+        $this->authorize('create', Customer::class);
+
         return Inertia::render('Contacts/Customers/Create');
     }
 
     public function store(Request $request, CreateCustomerAction $action): RedirectResponse
     {
+        $this->authorize('create', Customer::class);
+
         $validated = $request->validate(self::VALIDATION_RULES);
         $validated['organization_id'] = app('current_organization')->id;
 
@@ -59,6 +65,8 @@ class CustomerController extends Controller
 
     public function show(Customer $customer): Response
     {
+        $this->authorize('view', $customer);
+
         return Inertia::render('Contacts/Customers/Show', [
             'customer' => $customer->load('invoices'),
         ]);
@@ -66,6 +74,8 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer): Response
     {
+        $this->authorize('update', $customer);
+
         return Inertia::render('Contacts/Customers/Edit', [
             'customer' => $customer,
         ]);
@@ -73,6 +83,8 @@ class CustomerController extends Controller
 
     public function update(Request $request, Customer $customer, UpdateCustomerAction $action): RedirectResponse
     {
+        $this->authorize('update', $customer);
+
         $validated = $request->validate(self::VALIDATION_RULES);
 
         $action->execute($customer, $validated);

@@ -2,8 +2,8 @@
 
 namespace App\Domains\Accounting\Exceptions;
 
-use RuntimeException;
+use DomainException;
 
-class AlreadyPostedException extends RuntimeException
+class AlreadyPostedException extends DomainException
 {
 }

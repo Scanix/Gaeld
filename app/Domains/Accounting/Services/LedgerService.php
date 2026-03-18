@@ -17,6 +17,7 @@ use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Support\Money;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -36,6 +37,10 @@ use Illuminate\Support\Facades\DB;
  */
 class LedgerService
 {
+    private const REFERENCE_PREFIX_REVERSAL = 'REV-';
+    private const REFERENCE_PREFIX_BANK = 'BNK-';
+    private const REFERENCE_PREFIX_EXPENSE = 'EXP-';
+
     // ──────────────────────────────────────────────────────────────
     //  Core Posting
     // ──────────────────────────────────────────────────────────────
@@ -49,7 +54,7 @@ class LedgerService
      *
      * @param  string  $organizationId  UUID of the owning organization
      * @param  array{date: string, reference?: string, description?: string}  $entryData
-     * @param  array<array{account_id: int, debit: float, credit: float, description?: string}>  $lines
+     * @param  array<array{account_id: string, debit: float, credit: float, description?: string}>  $lines
      * @return JournalEntry  The posted journal entry with lines eager-loaded
      *
      * @throws UnbalancedEntryException  When SUM(debit) ≠ SUM(credit)
@@ -59,7 +64,7 @@ class LedgerService
     {
         $this->validateBalance($lines);
         $this->validateAccounts($organizationId, $lines);
-        $this->guardDuplicateReference($organizationId, $entryData['reference'] ?? null);
+        $this->throwIfDuplicateReference($organizationId, $entryData['reference'] ?? null);
 
         return $this->persistEntry($organizationId, $entryData, $lines, true);
     }
@@ -116,7 +121,7 @@ class LedgerService
 
         return $this->postEntry($journalEntry->organization_id, [
             'date' => now()->toDateString(),
-            'reference' => 'REV-' . $journalEntry->reference,
+            'reference' => self::REFERENCE_PREFIX_REVERSAL . $journalEntry->reference,
             'description' => $description ?? 'Reversal of ' . $journalEntry->reference,
         ], $lines);
     }
@@ -198,7 +203,7 @@ class LedgerService
 
             $journalEntry = $this->postEntry($orgId, [
                 'date' => $expense->date->toDateString(),
-                'reference' => 'EXP-' . $expense->id,
+                'reference' => self::REFERENCE_PREFIX_EXPENSE . $expense->id,
                 'description' => $expense->description ?? $expense->category,
             ], [
                 ['account_id' => $expenseAccount->id, 'debit' => $expense->amount, 'credit' => 0, 'description' => $expense->description],
@@ -243,32 +248,44 @@ class LedgerService
             }
 
             $contraAccount = $this->resolveAccount($orgId, $contraAccountCode);
-            $rawAmount = (string) $transaction->amount;
-            $amount = bccomp($rawAmount, '0', 2) < 0 ? bcmul($rawAmount, '-1', 2) : $rawAmount;
+            $amount = Money::absoluteAmount((string) $transaction->amount);
             $isDeposit = $transaction->type === BankTransaction::TYPE_CREDIT;
 
-            $lines = $isDeposit
-                ? [
-                    ['account_id' => $bankLedgerAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => 'Bank deposit'],
-                    ['account_id' => $contraAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => $transaction->description ?? ''],
-                ]
-                : [
-                    ['account_id' => $contraAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => $transaction->description ?? ''],
-                    ['account_id' => $bankLedgerAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => 'Bank withdrawal'],
-                ];
+            $lines = $this->buildBankTransactionLines($bankLedgerAccount, $contraAccount, $amount, $isDeposit, $transaction->description);
 
             $journalEntry = $this->postEntry($orgId, [
                 'date' => $transaction->date->toDateString(),
-                'reference' => $transaction->reference ?? 'BNK-' . $transaction->id,
+                'reference' => $transaction->reference ?? self::REFERENCE_PREFIX_BANK . $transaction->id,
                 'description' => $transaction->description,
             ], $lines);
 
             $transaction->update(['journal_entry_id' => $journalEntry->id]);
 
-            $this->updateBankAccountBalance($bankAccount, (string) $amount, $isDeposit);
+            $this->updateBankAccountBalance($bankAccount, $amount, $isDeposit);
 
             return $transaction->fresh(['journalEntry.lines', 'bankAccount']);
         });
+    }
+
+    /**
+     * Build the debit/credit line pair for a bank transaction journal entry.
+     */
+    private function buildBankTransactionLines(
+        Account $bankLedgerAccount,
+        Account $contraAccount,
+        string $amount,
+        bool $isDeposit,
+        ?string $description,
+    ): array {
+        return $isDeposit
+            ? [
+                ['account_id' => $bankLedgerAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => 'Bank deposit'],
+                ['account_id' => $contraAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => $description ?? ''],
+            ]
+            : [
+                ['account_id' => $contraAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => $description ?? ''],
+                ['account_id' => $bankLedgerAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => 'Bank withdrawal'],
+            ];
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -520,7 +537,7 @@ class LedgerService
      *
      * @throws \DomainException  When a posted entry with the same reference exists
      */
-    private function guardDuplicateReference(string $organizationId, ?string $reference): void
+    private function throwIfDuplicateReference(string $organizationId, ?string $reference): void
     {
         if ($reference === null) {
             return;

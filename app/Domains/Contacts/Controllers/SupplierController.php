@@ -31,6 +31,8 @@ class SupplierController extends Controller
 
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Supplier::class);
+
         return Inertia::render('Contacts/Suppliers/Index', [
             'suppliers' => SupplierQuery::list($request),
             'query' => [
@@ -44,11 +46,15 @@ class SupplierController extends Controller
 
     public function create(): Response
     {
+        $this->authorize('create', Supplier::class);
+
         return Inertia::render('Contacts/Suppliers/Create');
     }
 
     public function store(Request $request, CreateSupplierAction $action): RedirectResponse
     {
+        $this->authorize('create', Supplier::class);
+
         $validated = $request->validate(self::VALIDATION_RULES);
         $validated['organization_id'] = app('current_organization')->id;
 
@@ -60,6 +66,8 @@ class SupplierController extends Controller
 
     public function show(Supplier $supplier): Response
     {
+        $this->authorize('view', $supplier);
+
         return Inertia::render('Contacts/Suppliers/Show', [
             'supplier' => $supplier->load('expenses'),
         ]);
@@ -67,6 +75,8 @@ class SupplierController extends Controller
 
     public function edit(Supplier $supplier): Response
     {
+        $this->authorize('update', $supplier);
+
         return Inertia::render('Contacts/Suppliers/Edit', [
             'supplier' => $supplier,
         ]);
@@ -74,6 +84,8 @@ class SupplierController extends Controller
 
     public function update(Request $request, Supplier $supplier, UpdateSupplierAction $action): RedirectResponse
     {
+        $this->authorize('update', $supplier);
+
         $validated = $request->validate(self::VALIDATION_RULES);
 
         $action->execute($supplier, $validated);
