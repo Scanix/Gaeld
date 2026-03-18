@@ -4,7 +4,7 @@ namespace App\Domains\Banking\Services;
 
 use App\Domains\Accounting\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
-use App\Domains\Accounting\Exceptions\FeatureDisabledException;
+use App\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\MatchConfidence;

@@ -2,12 +2,9 @@
 
 namespace App\Domains\Accounting\Exceptions;
 
-use DomainException;
-
-class FeatureDisabledException extends DomainException
+/**
+ * @deprecated Use App\Exceptions\FeatureDisabledException instead.
+ */
+class FeatureDisabledException extends \App\Exceptions\FeatureDisabledException
 {
-    public function __construct(string $featureName)
-    {
-        parent::__construct("Feature [{$featureName}] is not enabled.");
-    }
 }

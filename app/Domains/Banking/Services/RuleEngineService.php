@@ -2,7 +2,7 @@
 
 namespace App\Domains\Banking\Services;
 
-use App\Domains\Accounting\Exceptions\FeatureDisabledException;
+use App\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\BaseRule;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;

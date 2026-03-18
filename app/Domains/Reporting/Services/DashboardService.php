@@ -15,6 +15,9 @@ use Illuminate\Support\Collection;
 
 class DashboardService
 {
+    /**
+     * @return array{revenue: float, expenses: float, cashBalance: string, unpaidInvoices: array{count: int, total: float}, pendingExpenses: array{count: int, total: float}, balance: float, recentTransactions: \Illuminate\Support\Collection, monthlyData: array}
+     */
     public function getMetrics(string $organizationId): array
     {
         $year = now()->year;
@@ -108,55 +111,40 @@ class DashboardService
 
     private function monthlyBreakdown(string $organizationId, int $year): array
     {
-        $monthlyData = collect(range(1, 12))->map(function ($month) use ($year, $organizationId) {
-            $monthRevenue = (float) Invoice::where('organization_id', $organizationId)
-                ->where('status', InvoiceStatus::Paid)
-                ->whereYear('issue_date', $year)
-                ->whereMonth('issue_date', $month)
-                ->sum('total');
+        // Fetch all data for the year in 3 queries instead of 6*12
+        $paidInvoices = Invoice::where('organization_id', $organizationId)
+            ->where('status', InvoiceStatus::Paid)
+            ->whereYear('issue_date', $year)
+            ->select('number', 'total', 'issue_date')
+            ->get()
+            ->groupBy(fn ($i) => Carbon::parse($i->issue_date)->month);
 
-            $monthExpenses = (float) Expense::where('organization_id', $organizationId)
-                ->whereYear('date', $year)
-                ->whereMonth('date', $month)
-                ->sum('amount');
+        $expenses = Expense::where('organization_id', $organizationId)
+            ->whereYear('date', $year)
+            ->select('description', 'amount', 'date')
+            ->get()
+            ->groupBy(fn ($e) => Carbon::parse($e->date)->month);
 
-            $forecast = (float) Invoice::where('organization_id', $organizationId)
-                ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
-                ->whereYear('due_date', $year)
-                ->whereMonth('due_date', $month)
-                ->sum('total');
+        $forecastInvoices = Invoice::where('organization_id', $organizationId)
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
+            ->whereYear('due_date', $year)
+            ->select('number', 'total', 'due_date')
+            ->get()
+            ->groupBy(fn ($i) => Carbon::parse($i->due_date)->month);
 
-            $revenueItems = Invoice::where('organization_id', $organizationId)
-                ->where('status', InvoiceStatus::Paid)
-                ->whereYear('issue_date', $year)
-                ->whereMonth('issue_date', $month)
-                ->select('number', 'total')
-                ->get()
-                ->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"));
-
-            $expenseItems = Expense::where('organization_id', $organizationId)
-                ->whereYear('date', $year)
-                ->whereMonth('date', $month)
-                ->select('description', 'amount')
-                ->get()
-                ->map(fn ($e) => $e->description . ': ' . number_format((float) $e->amount, 2, '.', "'"));
-
-            $forecastItems = Invoice::where('organization_id', $organizationId)
-                ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
-                ->whereYear('due_date', $year)
-                ->whereMonth('due_date', $month)
-                ->select('number', 'total')
-                ->get()
-                ->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"));
+        $monthlyData = collect(range(1, 12))->map(function ($month) use ($year, $paidInvoices, $expenses, $forecastInvoices) {
+            $monthPaid = $paidInvoices->get($month, collect());
+            $monthExpenses = $expenses->get($month, collect());
+            $monthForecast = $forecastInvoices->get($month, collect());
 
             return [
                 'month' => Carbon::create($year, $month, 1)->format('M'),
-                'revenue' => $monthRevenue,
-                'expenses' => $monthExpenses,
-                'forecast' => $forecast,
-                'revenueItems' => $revenueItems->values(),
-                'expenseItems' => $expenseItems->values(),
-                'forecastItems' => $forecastItems->values(),
+                'revenue' => (float) $monthPaid->sum('total'),
+                'expenses' => (float) $monthExpenses->sum('amount'),
+                'forecast' => (float) $monthForecast->sum('total'),
+                'revenueItems' => $monthPaid->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"))->values(),
+                'expenseItems' => $monthExpenses->map(fn ($e) => $e->description . ': ' . number_format((float) $e->amount, 2, '.', "'"))->values(),
+                'forecastItems' => $monthForecast->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"))->values(),
             ];
         });
 

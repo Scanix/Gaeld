@@ -32,20 +32,20 @@ class BankImportService
         string $filename,
     ): BankImport {
         $format = $this->detectFormat($xml);
-        $entries = $this->parseEntries($xml, $format);
+        $result = $this->parseEntries($xml, $format);
 
-        return DB::transaction(function () use ($bankAccount, $filename, $format, $entries) {
+        return DB::transaction(function () use ($bankAccount, $filename, $format, $result) {
             $import = BankImport::create([
                 'organization_id' => $bankAccount->organization_id,
                 'bank_account_id' => $bankAccount->id,
                 'filename' => $filename,
                 'format' => $format,
-                'statement_id' => $this->getStatementId($format),
+                'statement_id' => $result['statementId'],
                 'transaction_count' => 0,
             ]);
 
             $count = 0;
-            foreach ($entries as $entry) {
+            foreach ($result['entries'] as $entry) {
                 $hash = $this->computeHash($bankAccount->id, $entry);
 
                 // Skip duplicates
@@ -94,43 +94,22 @@ class BankImportService
         throw new \InvalidArgumentException('Unsupported CAMT format. Only CAMT.053 and CAMT.054 are supported.');
     }
 
-    private Camt053Parser|Camt054Parser|null $activeParser = null;
-
     /**
-     * @return CamtEntry[]
+     * @return array{entries: CamtEntry[], statementId: ?string}
      */
     private function parseEntries(string $xml, string $format): array
     {
         if ($format === BankImport::FORMAT_CAMT053) {
             $parser = new Camt053Parser();
             $parser->parse($xml);
-            $this->activeParser = $parser;
 
-            return $parser->getEntries();
+            return ['entries' => $parser->getEntries(), 'statementId' => $parser->getStatementId()];
         }
 
         $parser = new Camt054Parser();
         $parser->parse($xml);
-        $this->activeParser = $parser;
 
-        return $parser->getEntries();
-    }
-
-    private function getStatementId(string $format): ?string
-    {
-        if (! $this->activeParser) {
-            return null;
-        }
-
-        if ($format === BankImport::FORMAT_CAMT053 && $this->activeParser instanceof Camt053Parser) {
-            return $this->activeParser->getStatementId();
-        }
-
-        if ($this->activeParser instanceof Camt054Parser) {
-            return $this->activeParser->getNotificationId();
-        }
-
-        return null;
+        return ['entries' => $parser->getEntries(), 'statementId' => $parser->getNotificationId()];
     }
 
     /**
