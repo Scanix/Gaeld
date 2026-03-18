@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Policies;
 
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Policies\AccountPolicy;
 use App\Domains\Banking\Models\BankAccount;
@@ -61,7 +62,7 @@ class PolicyTest extends TestCase
             'organization_id' => $this->organization->id,
             'code' => '1020',
             'name' => 'Bank CHF',
-            'type' => Account::TYPE_ASSET,
+            'type' => AccountType::Asset->value,
         ]);
 
         $this->assertTrue($policy->view($this->memberUser, $account));
@@ -76,7 +77,7 @@ class PolicyTest extends TestCase
             'organization_id' => $this->organization->id,
             'code' => '1020',
             'name' => 'Bank CHF',
-            'type' => Account::TYPE_ASSET,
+            'type' => AccountType::Asset->value,
         ]);
 
         // No transaction lines → can delete

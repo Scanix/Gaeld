@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
@@ -165,11 +166,11 @@ class TenantIsolationTest extends TestCase
 
         $accountBank = Account::create([
             'organization_id' => $this->orgA->id,
-            'code' => '1020', 'name' => 'Bank', 'type' => Account::TYPE_ASSET,
+            'code' => '1020', 'name' => 'Bank', 'type' => AccountType::Asset->value,
         ]);
         $accountAR = Account::create([
             'organization_id' => $this->orgA->id,
-            'code' => '1100', 'name' => 'AR', 'type' => Account::TYPE_ASSET,
+            'code' => '1100', 'name' => 'AR', 'type' => AccountType::Asset->value,
         ]);
 
         $bankAccount = BankAccount::create([

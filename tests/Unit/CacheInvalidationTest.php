@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Organizations\Models\Organization;
@@ -32,12 +33,12 @@ class CacheInvalidationTest extends TestCase
 
         $this->accounts['ar'] = Account::create([
             'organization_id' => $this->organization->id,
-            'code' => '1100', 'name' => 'Accounts Receivable', 'type' => Account::TYPE_ASSET,
+            'code' => '1100', 'name' => 'Accounts Receivable', 'type' => AccountType::Asset->value,
         ]);
 
         $this->accounts['revenue'] = Account::create([
             'organization_id' => $this->organization->id,
-            'code' => '3000', 'name' => 'Revenue', 'type' => Account::TYPE_REVENUE,
+            'code' => '3000', 'name' => 'Revenue', 'type' => AccountType::Revenue->value,
         ]);
     }
 

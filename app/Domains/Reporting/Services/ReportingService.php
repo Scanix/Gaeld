@@ -2,6 +2,7 @@
 
 namespace App\Domains\Reporting\Services;
 
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
 use Illuminate\Support\Facades\Cache;
@@ -24,7 +25,7 @@ class ReportingService
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $fromDate, $toDate) {
             $revenue = Account::where('organization_id', $organizationId)
-                ->where('type', Account::TYPE_REVENUE)
+                ->where('type', AccountType::Revenue->value)
                 ->where('is_active', true)
                 ->get()
                 ->map(fn (Account $account) => [
@@ -35,7 +36,7 @@ class ReportingService
                 ->filter(fn ($item) => $item['balance'] != 0);
 
             $expenses = Account::where('organization_id', $organizationId)
-                ->where('type', Account::TYPE_EXPENSE)
+                ->where('type', AccountType::Expense->value)
                 ->where('is_active', true)
                 ->get()
                 ->map(fn (Account $account) => [
@@ -71,9 +72,9 @@ class ReportingService
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $asOfDate) {
             $types = [
-                Account::TYPE_ASSET,
-                Account::TYPE_LIABILITY,
-                Account::TYPE_EQUITY,
+                AccountType::Asset->value,
+                AccountType::Liability->value,
+                AccountType::Equity->value,
             ];
 
             $sections = [];
@@ -98,9 +99,9 @@ class ReportingService
 
             return [
                 'as_of_date' => $asOfDate,
-                'assets' => $sections[Account::TYPE_ASSET],
-                'liabilities' => $sections[Account::TYPE_LIABILITY],
-                'equity' => $sections[Account::TYPE_EQUITY],
+                'assets' => $sections[AccountType::Asset->value],
+                'liabilities' => $sections[AccountType::Liability->value],
+                'equity' => $sections[AccountType::Equity->value],
             ];
         });
     }

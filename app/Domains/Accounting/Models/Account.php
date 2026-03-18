@@ -32,14 +32,6 @@ class Account extends Model
         ];
     }
 
-    /**
-     * Account types following Swiss SME chart of accounts (Kontenrahmen KMU).
-     */
-    public const TYPE_ASSET = 'asset';
-    public const TYPE_LIABILITY = 'liability';
-    public const TYPE_EQUITY = 'equity';
-    public const TYPE_REVENUE = 'revenue';
-    public const TYPE_EXPENSE = 'expense';
 
     public function organization(): BelongsTo
     {

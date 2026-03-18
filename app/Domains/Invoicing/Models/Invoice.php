@@ -58,6 +58,9 @@ class Invoice extends Model
         return $this->belongsTo(Organization::class);
     }
 
+    /**
+     * @deprecated Use customer() instead. Remove after migrating client_id data to customer_id.
+     */
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);

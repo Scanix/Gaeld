@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
@@ -45,19 +46,19 @@ class ReconciliationFlowTest extends TestCase
 
         $this->accounts['bank'] = Account::create([
             'organization_id' => $this->organization->id,
-            'code' => '1020', 'name' => 'Bank Account CHF', 'type' => Account::TYPE_ASSET,
+            'code' => '1020', 'name' => 'Bank Account CHF', 'type' => AccountType::Asset->value,
         ]);
         $this->accounts['ar'] = Account::create([
             'organization_id' => $this->organization->id,
-            'code' => '1100', 'name' => 'Accounts Receivable', 'type' => Account::TYPE_ASSET,
+            'code' => '1100', 'name' => 'Accounts Receivable', 'type' => AccountType::Asset->value,
         ]);
         $this->accounts['revenue'] = Account::create([
             'organization_id' => $this->organization->id,
-            'code' => '3000', 'name' => 'Revenue from Services', 'type' => Account::TYPE_REVENUE,
+            'code' => '3000', 'name' => 'Revenue from Services', 'type' => AccountType::Revenue->value,
         ]);
         $this->accounts['software'] = Account::create([
             'organization_id' => $this->organization->id,
-            'code' => '6530', 'name' => 'Software and Subscriptions', 'type' => Account::TYPE_EXPENSE,
+            'code' => '6530', 'name' => 'Software and Subscriptions', 'type' => AccountType::Expense->value,
         ]);
 
         $this->bankAccount = BankAccount::create([

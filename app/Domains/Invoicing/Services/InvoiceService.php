@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Services;
 
+use App\Domains\Accounting\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
@@ -23,6 +24,8 @@ class InvoiceService
      *
      * Supports partial payments. Invoice status is updated to PAID
      * when the full amount has been received.
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException  When account code not found
      */
     public function recordPayment(Invoice $invoice, array $data): InvoicePayment
     {
@@ -30,13 +33,13 @@ class InvoiceService
         $paymentDate = $data['payment_date'] ?? now()->toDateString();
         $paymentMethod = $data['payment_method'] ?? 'bank';
         $reference = $data['reference'] ?? null;
-        $bankAccountCode = $data['bank_account_code'] ?? '1020';
+        $bankAccountCode = $data['bank_account_code'] ?? AccountCode::BANK_CASH;
 
         return DB::transaction(function () use ($invoice, $amount, $paymentDate, $paymentMethod, $reference, $bankAccountCode) {
             $orgId = $invoice->organization_id;
 
             $bankAccount = $this->ledgerService->resolveAccount($orgId, $bankAccountCode);
-            $accountsReceivable = $this->ledgerService->resolveAccount($orgId, '1100');
+            $accountsReceivable = $this->ledgerService->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
 
             $paymentRef = $reference ?? 'PAY-' . $invoice->number . '-' . ($invoice->payments()->count() + 1);
 

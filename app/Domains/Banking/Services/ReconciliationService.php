@@ -2,7 +2,9 @@
 
 namespace App\Domains\Banking\Services;
 
+use App\Domains\Accounting\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
@@ -13,6 +15,7 @@ use App\Services\FeatureFlag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ReconciliationService
 {
@@ -35,11 +38,14 @@ class ReconciliationService
      *
      * Posts the bank transaction to the ledger (debit bank, credit AR)
      * and marks the transaction as reconciled.
+     *
+     * @throws AlreadyReconciledException  When transaction is already reconciled
+     * @throws \DomainException  When bank account is not linked to a ledger account
      */
     public function reconcileWithInvoice(
         BankTransaction $transaction,
         Invoice $invoice,
-        string $bankAccountCode = '1020',
+        string $bankAccountCode = AccountCode::BANK_CASH,
     ): BankTransaction {
         return DB::transaction(function () use ($transaction, $invoice, $bankAccountCode) {
             $bankAccount = $transaction->bankAccount;
@@ -50,19 +56,19 @@ class ReconciliationService
                 throw new \DomainException('Bank account is not linked to a ledger account.');
             }
 
-            $arAccount = $this->ledgerService->resolveAccount($orgId, '1100');
+            $arAccount = $this->ledgerService->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
             $amount = $this->absoluteAmount((string) $transaction->amount);
 
             $reference = 'REC-' . ($transaction->reference ?? $transaction->id);
 
             // Skip if already reconciled
             if ($transaction->is_reconciled) {
-                throw new \DomainException('Transaction is already reconciled.');
+                throw new AlreadyReconciledException();
             }
 
             // Guard against duplicate reconciliation
             if ($this->ledgerService->isDuplicateReference($orgId, $reference)) {
-                $reference = $reference . '-' . time();
+                $reference = $reference . '-' . Str::uuid()->toString();
             }
 
             $journalEntry = $this->ledgerService->postEntry($orgId, [
@@ -92,11 +98,14 @@ class ReconciliationService
      *
      * Posts the bank transaction to the ledger (debit expense account, credit bank)
      * and marks the transaction as reconciled.
+     *
+     * @throws AlreadyReconciledException  When transaction is already reconciled
+     * @throws \DomainException  When bank account is not linked to a ledger account
      */
     public function reconcileWithExpense(
         BankTransaction $transaction,
         Expense $expense,
-        string $expenseAccountCode = '6530',
+        string $expenseAccountCode = AccountCode::GENERAL_EXPENSE,
     ): BankTransaction {
         return DB::transaction(function () use ($transaction, $expense, $expenseAccountCode) {
             $bankAccount = $transaction->bankAccount;
@@ -113,11 +122,11 @@ class ReconciliationService
             $reference = 'REC-' . ($transaction->reference ?? $transaction->id);
 
             if ($transaction->is_reconciled) {
-                throw new \DomainException('Transaction is already reconciled.');
+                throw new AlreadyReconciledException();
             }
 
             if ($this->ledgerService->isDuplicateReference($orgId, $reference)) {
-                $reference = $reference . '-' . time();
+                $reference = $reference . '-' . Str::uuid()->toString();
             }
 
             $journalEntry = $this->ledgerService->postEntry($orgId, [
@@ -144,6 +153,9 @@ class ReconciliationService
 
     /**
      * Manually reconcile a bank transaction with a contra account (no invoice/expense match).
+     *
+     * @throws AlreadyReconciledException  When transaction is already reconciled
+     * @throws \DomainException  When bank account has no linked ledger account
      */
     public function reconcileManual(
         BankTransaction $transaction,
@@ -154,7 +166,7 @@ class ReconciliationService
             $orgId = $bankAccount->organization_id;
 
             if ($transaction->is_reconciled) {
-                throw new \DomainException('Transaction is already reconciled.');
+                throw new AlreadyReconciledException();
             }
 
             $result = $this->ledgerService->postBankTransaction($transaction, $contraAccountCode);
@@ -329,6 +341,9 @@ class ReconciliationService
     /**
      * Confirm a match: reconcile the transaction with the matched invoice
      * and record the payment via the standard payment pipeline.
+     *
+     * @throws AlreadyReconciledException  When transaction is already reconciled
+     * @throws \DomainException  When duplicate payment detected
      */
     public function confirmMatch(BankMatch $match): BankTransaction
     {
@@ -336,7 +351,7 @@ class ReconciliationService
         $invoice = $match->invoice;
 
         if ($transaction->is_reconciled) {
-            throw new \DomainException('Transaction is already reconciled.');
+            throw new AlreadyReconciledException();
         }
 
         // Prevent duplicate payment for the same invoice+transaction
@@ -502,6 +517,8 @@ class ReconciliationService
      * EE only — guarded by 'auto_reconciliation' feature flag.
      *
      * @return array{matched: int, unmatched: int}
+     *
+     * @throws \DomainException  When auto reconciliation feature is disabled
      */
     public function autoReconcile(BankAccount $bankAccount): array
     {
@@ -530,7 +547,7 @@ class ReconciliationService
 
                     continue;
                 } catch (\Exception $e) {
-                    Log::debug('Auto-reconcile: skipped match', [
+                    Log::warning('Auto-reconcile: skipped match', [
                         'transaction_id' => $transaction->id,
                         'error' => $e->getMessage(),
                     ]);
@@ -551,7 +568,7 @@ class ReconciliationService
 
                         continue;
                     } catch (\Exception $e) {
-                        Log::debug('Auto-reconcile: skipped expense match', [
+                        Log::warning('Auto-reconcile: skipped expense match', [
                             'transaction_id' => $transaction->id,
                             'error' => $e->getMessage(),
                         ]);

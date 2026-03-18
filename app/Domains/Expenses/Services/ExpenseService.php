@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Services;
 
+use App\Domains\Accounting\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Expenses\Models\Expense;
 
@@ -18,7 +19,7 @@ class ExpenseService
      *   Debit  {expenseAccountCode} Expense account
      *   Credit {bankAccountCode}    Bank / Cash
      */
-    public function postExpense(Expense $expense, string $expenseAccountCode, string $bankAccountCode = '1020'): Expense
+    public function postExpense(Expense $expense, string $expenseAccountCode, string $bankAccountCode = AccountCode::BANK_CASH): Expense
     {
         return $this->ledgerService->postExpense($expense, $expenseAccountCode, $bankAccountCode);
     }

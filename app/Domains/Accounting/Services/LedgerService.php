@@ -2,6 +2,8 @@
 
 namespace App\Domains\Accounting\Services;
 
+use App\Domains\Accounting\AccountCode;
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Exceptions\AlreadyPostedException;
 use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\Models\Account;
@@ -144,8 +146,8 @@ class LedgerService
         return DB::transaction(function () use ($invoice) {
             $orgId = $invoice->organization_id;
 
-            $ar = $this->resolveAccount($orgId, '1100');
-            $revenue = $this->resolveAccount($orgId, '3000');
+            $ar = $this->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
+            $revenue = $this->resolveAccount($orgId, AccountCode::REVENUE);
 
             $journalEntry = $this->postEntry($orgId, [
                 'date' => $invoice->issue_date->toDateString(),
@@ -179,7 +181,7 @@ class LedgerService
      *
      * @throws \DomainException  When expense is already posted
      */
-    public function postExpense(Expense $expense, string $expenseAccountCode, string $bankAccountCode = '1020'): Expense
+    public function postExpense(Expense $expense, string $expenseAccountCode, string $bankAccountCode = AccountCode::BANK_CASH): Expense
     {
         if ($expense->status === ExpenseStatus::Posted) {
             throw new \DomainException('Expense is already posted.');
@@ -476,7 +478,7 @@ class LedgerService
 
     private function isDebitNormalAccount(string $type): bool
     {
-        return in_array($type, [Account::TYPE_ASSET, Account::TYPE_EXPENSE], true);
+        return AccountType::from($type)->isDebitNormal();
     }
 
     /**

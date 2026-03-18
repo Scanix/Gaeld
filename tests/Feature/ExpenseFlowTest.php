@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
@@ -36,14 +37,14 @@ class ExpenseFlowTest extends TestCase
             'organization_id' => $this->org->id,
             'code' => '6530',
             'name' => 'Software and Subscriptions',
-            'type' => Account::TYPE_EXPENSE,
+            'type' => AccountType::Expense->value,
         ]);
 
         Account::create([
             'organization_id' => $this->org->id,
             'code' => '1020',
             'name' => 'Bank',
-            'type' => Account::TYPE_ASSET,
+            'type' => AccountType::Asset->value,
         ]);
     }
 

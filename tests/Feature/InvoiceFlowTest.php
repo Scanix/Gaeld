@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
@@ -39,21 +40,21 @@ class InvoiceFlowTest extends TestCase
             'organization_id' => $this->org->id,
             'code' => '1100',
             'name' => 'Accounts Receivable',
-            'type' => Account::TYPE_ASSET,
+            'type' => AccountType::Asset->value,
         ]);
 
         Account::create([
             'organization_id' => $this->org->id,
             'code' => '3000',
             'name' => 'Revenue',
-            'type' => Account::TYPE_REVENUE,
+            'type' => AccountType::Revenue->value,
         ]);
 
         Account::create([
             'organization_id' => $this->org->id,
             'code' => '1020',
             'name' => 'Bank',
-            'type' => Account::TYPE_ASSET,
+            'type' => AccountType::Asset->value,
         ]);
 
         $this->vatRate = VatRate::create([

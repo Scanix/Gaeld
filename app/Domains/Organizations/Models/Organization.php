@@ -43,6 +43,9 @@ class Organization extends Model
         return $this->hasMany(Account::class);
     }
 
+    /**
+     * @deprecated Use customers() instead. Remove after migrating client_id data to customer_id.
+     */
     public function clients(): HasMany
     {
         return $this->hasMany(Client::class);
