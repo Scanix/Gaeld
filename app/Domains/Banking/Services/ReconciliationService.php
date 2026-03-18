@@ -6,6 +6,7 @@ use App\Domains\Accounting\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\MatchConfidence;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
@@ -55,7 +56,7 @@ class ReconciliationService
 
             $bankLedgerAccount = $bankAccount->ledgerAccount;
             if (! $bankLedgerAccount) {
-                throw new \DomainException('Bank account is not linked to a ledger account.');
+                throw new UnlinkedBankAccountException();
             }
 
             $arAccount = $this->ledgerService->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
@@ -115,7 +116,7 @@ class ReconciliationService
 
             $bankLedgerAccount = $bankAccount->ledgerAccount;
             if (! $bankLedgerAccount) {
-                throw new \DomainException('Bank account is not linked to a ledger account.');
+                throw new UnlinkedBankAccountException();
             }
 
             $expenseAccount = $this->ledgerService->resolveAccount($orgId, $expenseAccountCode);
@@ -270,19 +271,20 @@ class ReconciliationService
         $invoices = Invoice::where('organization_id', $orgId)
             ->whereIn('status', ['sent', 'overdue'])
             ->whereBetween('total', [
-                bcsub($amount, '0.05', 2),
-                bcadd($amount, '0.05', 2),
+                bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
+                bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
             ])
-            ->with('client')
+            ->with(['customer', 'client'])
             ->get();
 
         return $invoices->filter(function ($invoice) use ($transaction) {
-            if (! $invoice->client) {
+            $contact = $invoice->customer ?? $invoice->client;
+            if (! $contact) {
                 return false;
             }
 
-            return str_contains(strtolower($transaction->debtor_name), strtolower($invoice->client->name))
-                || str_contains(strtolower($invoice->client->name), strtolower($transaction->debtor_name));
+            return str_contains(strtolower($transaction->debtor_name), strtolower($contact->name))
+                || str_contains(strtolower($contact->name), strtolower($transaction->debtor_name));
         })->map(fn ($invoice) => [
             'invoice_id' => $invoice->id,
             'confidence' => MatchConfidence::AMOUNT_AND_CLIENT,
@@ -300,8 +302,8 @@ class ReconciliationService
             ->whereIn('status', ['sent', 'overdue'])
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('total', [
-                    bcsub($amount, '0.05', 2),
-                    bcadd($amount, '0.05', 2),
+                    bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
+                    bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
                 ]);
 
                 if ($transaction->reference) {
@@ -359,7 +361,7 @@ class ReconciliationService
 
         // Prevent duplicate payment for the same invoice+transaction
         if ($this->isDuplicatePayment($transaction, $invoice)) {
-            throw new \DomainException('This payment has already been recorded for this invoice.');
+            throw new \App\Domains\Invoicing\Exceptions\InvalidPaymentException('This payment has already been recorded for this invoice.');
         }
 
         return DB::transaction(function () use ($match, $transaction, $invoice) {
@@ -447,7 +449,7 @@ class ReconciliationService
 
         // Load invoice data for the matches
         $invoiceSuggestions = $matches->map(function ($match) {
-            $invoice = $match->invoice->load('client');
+            $invoice = $match->invoice->load(['customer', 'client']);
             $invoice->match_score = $match->confidence;
             $invoice->match_type = $match->match_type;
             $invoice->match_id = $match->id;
@@ -474,8 +476,8 @@ class ReconciliationService
             ->whereIn('status', ['pending', 'approved'])
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('amount', [
-                    bcsub($amount, '0.05', 2),
-                    bcadd($amount, '0.05', 2),
+                    bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
+                    bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
                 ]);
 
                 if ($transaction->creditor_name) {
@@ -564,7 +566,7 @@ class ReconciliationService
                 $expenseSuggestions = $this->suggestExpenses($orgId, $transaction, $amount);
                 $bestExpense = $expenseSuggestions->first();
 
-                if ($bestExpense && $bestExpense->match_score >= 80) {
+                if ($bestExpense && $bestExpense->match_score >= MatchConfidence::AUTO_EXPENSE_THRESHOLD) {
                     try {
                         $this->reconcileWithExpense($transaction, $bestExpense);
                         $matched++;

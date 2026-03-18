@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\DB;
 
 class BankImportService
 {
+    /** Delimiter used to separate fields in the deduplication hash input. */
+    private const HASH_DELIMITER = '|';
+
     /**
      * Import a CAMT file and create bank transactions.
      *
@@ -135,7 +138,7 @@ class BankImportService
      */
     private function computeHash(int $bankAccountId, CamtEntry $entry): string
     {
-        return hash('sha256', implode('|', [
+        return hash('sha256', implode(self::HASH_DELIMITER, [
             $bankAccountId,
             $entry->date,
             $entry->amount,
