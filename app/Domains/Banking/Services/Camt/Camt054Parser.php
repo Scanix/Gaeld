@@ -13,6 +13,7 @@ namespace App\Domains\Banking\Services\Camt;
  */
 class Camt054Parser
 {
+    use CamtXmlHelper;
     /** @var CamtEntry[] */
     private array $entries = [];
 
@@ -58,24 +59,24 @@ class Camt054Parser
 
         $entries = $xpath->query("//{$prefix}BkToCstmrDbtCdtNtfctn/{$prefix}Ntfctn/{$prefix}Ntry");
 
-        foreach ($entries as $ntry) {
-            $this->parseEntry($xpath, $ntry, $prefix);
+        foreach ($entries as $entryNode) {
+            $this->parseEntry($xpath, $entryNode, $prefix);
         }
 
         return $this;
     }
 
-    private function parseEntry(\DOMXPath $xpath, \DOMElement $ntry, string $prefix): void
+    private function parseEntry(\DOMXPath $xpath, \DOMElement $entryNode, string $prefix): void
     {
-        $amount = $this->contextText($xpath, "{$prefix}Amt", $ntry);
-        $currency = $this->contextAttr($xpath, "{$prefix}Amt", $ntry, 'Ccy');
-        $cdtDbtInd = $this->contextText($xpath, "{$prefix}CdtDbtInd", $ntry);
-        $bookingDate = $this->contextText($xpath, "{$prefix}BookgDt/{$prefix}Dt", $ntry)
-            ?? $this->contextText($xpath, "{$prefix}BookgDt/{$prefix}DtTm", $ntry);
-        $valueDate = $this->contextText($xpath, "{$prefix}ValDt/{$prefix}Dt", $ntry)
-            ?? $this->contextText($xpath, "{$prefix}ValDt/{$prefix}DtTm", $ntry);
+        $amount = $this->contextText($xpath, "{$prefix}Amt", $entryNode);
+        $currency = $this->contextAttr($xpath, "{$prefix}Amt", $entryNode, 'Ccy');
+        $creditDebitIndicator = $this->contextText($xpath, "{$prefix}CdtDbtInd", $entryNode);
+        $bookingDate = $this->contextText($xpath, "{$prefix}BookgDt/{$prefix}Dt", $entryNode)
+            ?? $this->contextText($xpath, "{$prefix}BookgDt/{$prefix}DtTm", $entryNode);
+        $valueDate = $this->contextText($xpath, "{$prefix}ValDt/{$prefix}Dt", $entryNode)
+            ?? $this->contextText($xpath, "{$prefix}ValDt/{$prefix}DtTm", $entryNode);
 
-        if (! $amount || ! $cdtDbtInd) {
+        if (! $amount || ! $creditDebitIndicator) {
             return;
         }
 
@@ -84,18 +85,18 @@ class Camt054Parser
             $date = substr($date, 0, 10);
         }
 
-        $type = strtoupper($cdtDbtInd) === 'CRDT' ? 'credit' : 'debit';
+        $type = strtoupper($creditDebitIndicator) === 'CRDT' ? 'credit' : 'debit';
 
-        $txDtls = $xpath->query("{$prefix}NtryDtls/{$prefix}TxDtls", $ntry);
+        $transactionDetails = $xpath->query("{$prefix}NtryDtls/{$prefix}TxDtls", $entryNode);
 
-        if ($txDtls->length > 0) {
-            foreach ($txDtls as $tx) {
-                $this->entries[] = $this->parseTxDetail($xpath, $tx, $prefix, $date, $amount, $currency, $type);
+        if ($transactionDetails->length > 0) {
+            foreach ($transactionDetails as $detail) {
+                $this->entries[] = $this->parseTxDetail($xpath, $detail, $prefix, $date, $amount, $currency, $type);
             }
         } else {
-            $ref = $this->contextText($xpath, "{$prefix}AcctSvcrRef", $ntry)
-                ?? $this->contextText($xpath, "{$prefix}NtryRef", $ntry);
-            $desc = $this->contextText($xpath, "{$prefix}AddtlNtryInf", $ntry);
+            $ref = $this->contextText($xpath, "{$prefix}AcctSvcrRef", $entryNode)
+                ?? $this->contextText($xpath, "{$prefix}NtryRef", $entryNode);
+            $desc = $this->contextText($xpath, "{$prefix}AddtlNtryInf", $entryNode);
 
             $this->entries[] = new CamtEntry(
                 date: $date,
@@ -112,12 +113,12 @@ class Camt054Parser
         }
     }
 
-    private function parseTxDetail(\DOMXPath $xpath, \DOMElement $tx, string $prefix, string $date, string $fallbackAmount, ?string $fallbackCurrency, string $type): CamtEntry
+    private function parseTxDetail(\DOMXPath $xpath, \DOMElement $detail, string $prefix, string $date, string $fallbackAmount, ?string $fallbackCurrency, string $type): CamtEntry
     {
-        $txAmount = $this->contextText($xpath, "{$prefix}Amt", $tx) ?? $fallbackAmount;
-        $txCurrency = $this->contextAttr($xpath, "{$prefix}Amt", $tx, 'Ccy') ?? $fallbackCurrency ?? 'CHF';
+        $txAmount = $this->contextText($xpath, "{$prefix}Amt", $detail) ?? $fallbackAmount;
+        $txCurrency = $this->contextAttr($xpath, "{$prefix}Amt", $detail, 'Ccy') ?? $fallbackCurrency ?? 'CHF';
 
-        $endToEndId = $this->contextText($xpath, "{$prefix}Refs/{$prefix}EndToEndId", $tx);
+        $endToEndId = $this->contextText($xpath, "{$prefix}Refs/{$prefix}EndToEndId", $detail);
 
         // Strip NOTPROVIDED end-to-end IDs
         if ($endToEndId && strtoupper($endToEndId) === 'NOTPROVIDED') {
@@ -125,20 +126,20 @@ class Camt054Parser
         }
 
         $ref = $endToEndId
-            ?? $this->contextText($xpath, "{$prefix}Refs/{$prefix}AcctSvcrRef", $tx)
-            ?? $this->contextText($xpath, "{$prefix}Refs/{$prefix}PmtInfId", $tx);
+            ?? $this->contextText($xpath, "{$prefix}Refs/{$prefix}AcctSvcrRef", $detail)
+            ?? $this->contextText($xpath, "{$prefix}Refs/{$prefix}PmtInfId", $detail);
 
-        $debtorName = $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Dbtr/{$prefix}Nm", $tx)
-            ?? $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Dbtr/{$prefix}Pty/{$prefix}Nm", $tx);
+        $debtorName = $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Dbtr/{$prefix}Nm", $detail)
+            ?? $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Dbtr/{$prefix}Pty/{$prefix}Nm", $detail);
 
-        $creditorName = $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Cdtr/{$prefix}Nm", $tx)
-            ?? $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Cdtr/{$prefix}Pty/{$prefix}Nm", $tx);
+        $creditorName = $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Cdtr/{$prefix}Nm", $detail)
+            ?? $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Cdtr/{$prefix}Pty/{$prefix}Nm", $detail);
 
-        $description = $this->contextText($xpath, "{$prefix}RmtInf/{$prefix}Ustrd", $tx)
-            ?? $this->contextText($xpath, "{$prefix}AddtlTxInf", $tx);
+        $description = $this->contextText($xpath, "{$prefix}RmtInf/{$prefix}Ustrd", $detail)
+            ?? $this->contextText($xpath, "{$prefix}AddtlTxInf", $detail);
 
         // Extract structured creditor reference (Swiss QR reference)
-        $structuredReference = $this->contextText($xpath, "{$prefix}RmtInf/{$prefix}Strd/{$prefix}CdtrRefInf/{$prefix}Ref", $tx);
+        $structuredReference = $this->contextText($xpath, "{$prefix}RmtInf/{$prefix}Strd/{$prefix}CdtrRefInf/{$prefix}Ref", $detail);
 
         // Normalize: strip whitespace from structured references
         if ($structuredReference) {
@@ -189,41 +190,6 @@ class Camt054Parser
     // ──────────────────────────────────────────────────────────────
     //  XML Helpers
     // ──────────────────────────────────────────────────────────────
-
-    /**
-     * Try to extract a Swiss QR reference (27-digit) from unstructured text.
-     */
-    private function extractQrReferenceFromText(string $text): ?string
-    {
-        // Swiss QR reference: exactly 27 digits (may have spaces)
-        $cleaned = preg_replace('/\s+/', '', $text);
-
-        if (preg_match('/(?<!\d)(\d{27})(?!\d)/', $cleaned, $matches)) {
-            return $matches[1];
-        }
-
-        return null;
-    }
-
-    private function loadXml(string $xml): \DOMDocument
-    {
-        $previousUseErrors = libxml_use_internal_errors(true);
-        $doc = new \DOMDocument();
-
-        if (! $doc->loadXML($xml, LIBXML_NONET | LIBXML_NOENT)) {
-            $errors = libxml_get_errors();
-            libxml_clear_errors();
-            libxml_use_internal_errors($previousUseErrors);
-
-            $msg = ! empty($errors) ? $errors[0]->message : 'Unknown XML error';
-            throw new \InvalidArgumentException('Invalid XML: ' . trim($msg));
-        }
-
-        libxml_clear_errors();
-        libxml_use_internal_errors($previousUseErrors);
-
-        return $doc;
-    }
 
     private function nodeText(\DOMXPath $xpath, string $query): ?string
     {
