@@ -11,10 +11,8 @@ use App\Domains\Banking\Rules\RecurringEntryRule;
 use App\Domains\Banking\Rules\SupplierCategoryRule;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\RuleEngineService;
-use App\Domains\Contacts\Models\Supplier;
-use App\Domains\Invoicing\Actions\RecordPaymentAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
@@ -69,10 +67,10 @@ class RuleEngineTest extends TestCase
 
     public function test_qr_rule_matches_credit_with_structured_reference(): void
     {
-        $client = Client::create(['organization_id' => $this->organization->id, 'name' => 'Test Client']);
+        $client = Customer::create(['organization_id' => $this->organization->id, 'name' => 'Test Client']);
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-2026-001',
             'status' => InvoiceStatus::Sent->value,
             'issue_date' => '2026-03-01',

@@ -21,7 +21,7 @@ class GenerateQrInvoicePdfAction
      */
     public function execute(Invoice $invoice, Organization $organization, string $language = 'en'): string
     {
-        $invoice->loadMissing(['client', 'lines.vatRate']);
+        $invoice->loadMissing(['customer', 'client', 'lines.vatRate']);
 
         $tcpdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8');
         $tcpdf->setPrintHeader(false);
@@ -74,7 +74,7 @@ class GenerateQrInvoicePdfAction
         }
 
         // Client info (top left)
-        $client = $invoice->client;
+        $client = $invoice->customer ?? $invoice->client;
         if ($client) {
             $tcpdf->SetXY(15, 45);
             $tcpdf->SetFont('Helvetica', 'B', 10);

@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Support\QueryBuilder;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
@@ -25,19 +25,19 @@ class QueryBuilderTest extends TestCase
             'currency' => 'CHF',
         ]);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->org->id,
             'name' => 'Alpha Client',
         ]);
 
-        $client2 = Client::create([
+        $client2 = Customer::create([
             'organization_id' => $this->org->id,
             'name' => 'Beta Client',
         ]);
 
         Invoice::create([
             'organization_id' => $this->org->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-001',
             'status' => 'draft',
             'issue_date' => '2026-01-10',
@@ -50,7 +50,7 @@ class QueryBuilderTest extends TestCase
 
         Invoice::create([
             'organization_id' => $this->org->id,
-            'client_id' => $client2->id,
+            'customer_id' => $client2->id,
             'number' => 'INV-002',
             'status' => 'sent',
             'issue_date' => '2026-02-15',
@@ -63,7 +63,7 @@ class QueryBuilderTest extends TestCase
 
         Invoice::create([
             'organization_id' => $this->org->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-003',
             'status' => 'paid',
             'issue_date' => '2026-03-01',

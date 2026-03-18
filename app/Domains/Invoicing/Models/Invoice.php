@@ -112,7 +112,7 @@ class Invoice extends Model
             'organization_id' => $this->organization_id,
             'number' => $this->number ?? '',
             'status' => $this->status?->value ?? '',
-            'client_name' => $this->client?->name ?? '',
+            'client_name' => $this->customer?->name ?? $this->client?->name ?? '',
             'total' => (float) $this->total,
             'currency' => $this->currency,
         ];

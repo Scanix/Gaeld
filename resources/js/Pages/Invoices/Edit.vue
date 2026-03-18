@@ -20,7 +20,7 @@ const props = defineProps({
 const { t } = useTranslations()
 
 const form = useForm({
-  client_id: props.invoice.client_id ?? '',
+  customer_id: props.invoice.customer_id ?? props.invoice.client_id ?? '',
   number: props.invoice.number ?? '',
   issue_date: props.invoice.issue_date?.slice(0, 10) ?? '',
   due_date: props.invoice.due_date?.slice(0, 10) ?? '',
@@ -70,12 +70,12 @@ const vatOptions = [
         <form class="space-y-6" @submit.prevent="submit">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormSelect
-              id="client_id"
-              v-model="form.client_id"
+              id="customer_id"
+              v-model="form.customer_id"
               :label="t('client')"
               :options="clientOptions"
               :placeholder="t('select_client')"
-              :error="form.errors.client_id"
+              :error="form.errors.customer_id"
               required
             />
             <FormInput

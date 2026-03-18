@@ -8,7 +8,7 @@ use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Organizations\Models\Organization;
@@ -22,7 +22,7 @@ class InvoiceFlowTest extends TestCase
 
     private Organization $org;
     private User $user;
-    private Client $client;
+    private Customer $client;
     private VatRate $vatRate;
 
     protected function setUp(): void
@@ -65,7 +65,7 @@ class InvoiceFlowTest extends TestCase
             'is_default' => true,
         ]);
 
-        $this->client = Client::create([
+        $this->client = Customer::create([
             'organization_id' => $this->org->id,
             'name' => 'Test Client AG',
         ]);
@@ -77,7 +77,7 @@ class InvoiceFlowTest extends TestCase
 
         return $action->execute(array_merge([
             'organization_id' => $this->org->id,
-            'client_id' => $this->client->id,
+            'customer_id' => $this->client->id,
             'number' => 'INV-2026-001',
             'issue_date' => '2026-03-16',
             'due_date' => '2026-04-15',

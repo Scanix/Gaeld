@@ -11,7 +11,7 @@ use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Organizations\Models\Organization;
@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Hash;
  * After running this seeder the database contains:
  * - 2 organizations (Demo GmbH, Alpine Consulting Sàrl)
  * - 4 users with varying roles across orgs
- * - Clients, invoices, expenses, bank accounts with journal entries
+ * - Customers, invoices, expenses, bank accounts with journal entries
  * - Chart of accounts and VAT rates for each org
  */
 class DemoDataSeeder extends Seeder
@@ -158,12 +158,11 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        // ── Clients ──────────────────────────────────────────────
-        $client1 = Client::firstOrCreate(
+        // ── Customers ────────────────────────────────────────────
+        $client1 = Customer::firstOrCreate(
             ['organization_id' => $org->id, 'email' => 'hans@acme.ch'],
             [
                 'name' => 'Acme AG',
-                'contact_name' => 'Hans Müller',
                 'address' => 'Hauptstrasse 10',
                 'city' => 'Bern',
                 'postal_code' => '3000',
@@ -171,11 +170,10 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        $client2 = Client::firstOrCreate(
+        $client2 = Customer::firstOrCreate(
             ['organization_id' => $org->id, 'email' => 'marie@swisstech.ch'],
             [
                 'name' => 'Swiss Tech Sàrl',
-                'contact_name' => 'Marie Dupont',
                 'address' => 'Rue du Lac 5',
                 'city' => 'Genève',
                 'postal_code' => '1200',
@@ -191,7 +189,7 @@ class DemoDataSeeder extends Seeder
         // ── Invoice 1: Posted + Paid ─────────────────────────────
         $inv1 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client1->id,
+            'customer_id' => $client1->id,
             'number' => 'INV-2026-001',
             'status' => Invoice::STATUS_DRAFT,
             'issue_date' => now()->subDays(30),
@@ -228,7 +226,7 @@ class DemoDataSeeder extends Seeder
         // ── Invoice 2: Posted (sent, unpaid) ─────────────────────
         $inv2 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client2->id,
+            'customer_id' => $client2->id,
             'number' => 'INV-2026-002',
             'status' => Invoice::STATUS_DRAFT,
             'issue_date' => now()->subDays(10),
@@ -256,7 +254,7 @@ class DemoDataSeeder extends Seeder
         // ── Invoice 3: Draft (not yet posted) ────────────────────
         $inv3 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client1->id,
+            'customer_id' => $client1->id,
             'number' => 'INV-2026-003',
             'status' => Invoice::STATUS_DRAFT,
             'issue_date' => now(),
@@ -342,7 +340,7 @@ class DemoDataSeeder extends Seeder
         // ── Invoice 4: Partially paid ────────────────────────────
         $inv4 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client2->id,
+            'customer_id' => $client2->id,
             'number' => 'INV-2026-004',
             'status' => Invoice::STATUS_DRAFT,
             'issue_date' => now()->subDays(20),
@@ -379,7 +377,7 @@ class DemoDataSeeder extends Seeder
         // ── Invoice 5: Cancelled ─────────────────────────────────
         $inv5 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client1->id,
+            'customer_id' => $client1->id,
             'number' => 'INV-2026-005',
             'status' => InvoiceStatus::Cancelled,
             'issue_date' => now()->subDays(25),
@@ -448,12 +446,11 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        // ── Clients ──────────────────────────────────────────────
-        $client1 = Client::firstOrCreate(
+        // ── Customers ────────────────────────────────────────────
+        $client1 = Customer::firstOrCreate(
             ['organization_id' => $org->id, 'email' => 'info@watchmaker.ch'],
             [
                 'name' => 'Watchmaker SA',
-                'contact_name' => 'Pierre Bonvin',
                 'address' => 'Avenue de la Gare 3',
                 'city' => 'Lausanne',
                 'postal_code' => '1003',
@@ -469,7 +466,7 @@ class DemoDataSeeder extends Seeder
         // ── Invoice: Posted (sent, unpaid) ───────────────────────
         $inv1 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client1->id,
+            'customer_id' => $client1->id,
             'number' => 'ALP-2026-001',
             'status' => Invoice::STATUS_DRAFT,
             'issue_date' => now()->subDays(5),

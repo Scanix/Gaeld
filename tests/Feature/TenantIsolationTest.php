@@ -7,7 +7,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\BankTransaction;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Organizations\Models\Organization;
@@ -182,14 +182,14 @@ class TenantIsolationTest extends TestCase
         ]);
 
         // Create invoice in Org B (should NOT be suggested)
-        $clientB = Client::withoutGlobalScopes()->create([
+        $clientB = Customer::withoutGlobalScopes()->create([
             'organization_id' => $this->orgB->id,
             'name' => 'Client B',
         ]);
 
         Invoice::withoutGlobalScopes()->create([
             'organization_id' => $this->orgB->id,
-            'client_id' => $clientB->id,
+            'customer_id' => $clientB->id,
             'number' => 'INV-B-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -201,14 +201,14 @@ class TenantIsolationTest extends TestCase
         ]);
 
         // Create invoice in Org A
-        $clientA = Client::create([
+        $clientA = Customer::create([
             'organization_id' => $this->orgA->id,
             'name' => 'Client A',
         ]);
 
         Invoice::create([
             'organization_id' => $this->orgA->id,
-            'client_id' => $clientA->id,
+            'customer_id' => $clientA->id,
             'number' => 'INV-A-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',

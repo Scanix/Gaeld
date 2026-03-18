@@ -36,7 +36,7 @@ class SwissQrInvoiceService
      */
     public function buildQrBill(Invoice $invoice, Organization $organization): QrBill
     {
-        $invoice->loadMissing('client');
+        $invoice->loadMissing(['customer', 'client']);
 
         $qrBill = QrBill::create();
 
@@ -58,8 +58,8 @@ class SwissQrInvoiceService
             CreditorInformation::create($iban),
         );
 
-        // Debtor (the client receiving the invoice)
-        $client = $invoice->client;
+        // Debtor (the customer receiving the invoice)
+        $client = $invoice->customer ?? $invoice->client;
         if ($client) {
             $debtorAddress = StructuredAddress::createWithStreet(
                 $client->name,

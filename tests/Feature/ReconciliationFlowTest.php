@@ -11,7 +11,7 @@ use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
@@ -130,14 +130,14 @@ class ReconciliationFlowTest extends TestCase
     {
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Acme AG',
         ]);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-2026-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -217,14 +217,14 @@ class ReconciliationFlowTest extends TestCase
             'is_reconciled' => true,
         ]);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client',
         ]);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-TEST',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -269,14 +269,14 @@ class ReconciliationFlowTest extends TestCase
     {
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Acme AG',
         ]);
 
         Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-MATCH',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -305,14 +305,14 @@ class ReconciliationFlowTest extends TestCase
     {
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Swiss Corp',
         ]);
 
         Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-REF-TEST',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -361,14 +361,14 @@ class ReconciliationFlowTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
 
         // Create a high-confidence match
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Acme AG',
         ]);
 
         Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-AUTO-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',

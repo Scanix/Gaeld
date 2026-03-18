@@ -14,7 +14,7 @@ class CreateInvoiceAction
         return DB::transaction(function () use ($data, $lines) {
             $invoice = Invoice::create([
             'organization_id' => $data['organization_id'],
-            'client_id' => $data['client_id'],
+            'customer_id' => $data['customer_id'],
             'number' => $data['number'],
             'status' => InvoiceStatus::Draft->value,
             'issue_date' => $data['issue_date'],

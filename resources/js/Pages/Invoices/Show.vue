@@ -106,7 +106,7 @@ const paymentMethodOptions = [
               {{ invoice?.status }}
             </Badge>
             <p class="text-sm text-[hsl(var(--muted-foreground))]">
-              {{ invoice?.client?.name }} &middot; {{ t('issued') }} {{ formatDate(invoice?.issue_date) }} &middot; {{ t('due') }} {{ formatDate(invoice?.due_date) }}
+              {{ invoice?.customer?.name ?? invoice?.client?.name }} &middot; {{ t('issued') }} {{ formatDate(invoice?.issue_date) }} &middot; {{ t('due') }} {{ formatDate(invoice?.due_date) }}
             </p>
           </div>
         </div>

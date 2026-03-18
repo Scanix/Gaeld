@@ -10,7 +10,7 @@ use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
@@ -103,14 +103,14 @@ class SmartReconciliationTest extends TestCase
     {
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Helvetia GmbH',
         ]);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-QR-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-04-01',
@@ -157,14 +157,14 @@ class SmartReconciliationTest extends TestCase
     {
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Alpine Solutions',
         ]);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-AMOUNT-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-04-01',
@@ -200,14 +200,14 @@ class SmartReconciliationTest extends TestCase
     {
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Unknown Corp',
         ]);
 
         Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-2026-099',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-04-01',
@@ -243,7 +243,7 @@ class SmartReconciliationTest extends TestCase
     {
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Helvetia GmbH',
         ]);
@@ -251,7 +251,7 @@ class SmartReconciliationTest extends TestCase
         // Invoice with QR reference (should be picked via QR match)
         $qrInvoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-QR-PRIO',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-04-01',
@@ -266,7 +266,7 @@ class SmartReconciliationTest extends TestCase
         // Another invoice with same amount (should NOT match when QR matches)
         Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-SAME-AMOUNT',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-04-01',
@@ -303,14 +303,14 @@ class SmartReconciliationTest extends TestCase
     {
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Confirm Corp',
         ]);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-CONFIRM-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-04-01',
@@ -366,14 +366,14 @@ class SmartReconciliationTest extends TestCase
     {
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Dup Corp',
         ]);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-DUP-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-04-01',
@@ -424,14 +424,14 @@ class SmartReconciliationTest extends TestCase
 
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Auto Corp',
         ]);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-AUTO-QR-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-04-01',
@@ -475,14 +475,14 @@ class SmartReconciliationTest extends TestCase
 
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'NoAutoConfirm Corp',
         ]);
 
         Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-NO-AUTO',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-04-01',
@@ -523,14 +523,14 @@ class SmartReconciliationTest extends TestCase
     {
         $reconciliationService = app(ReconciliationService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client',
         ]);
 
         Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-DEBIT-TEST',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-04-01',
@@ -560,14 +560,14 @@ class SmartReconciliationTest extends TestCase
 
     public function test_confirm_match_route(): void
     {
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Route Test Corp',
         ]);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-ROUTE-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-04-01',

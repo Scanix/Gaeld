@@ -10,7 +10,7 @@ readonly class CreateInvoiceData
      * @param array<int, array{description: string, quantity: string, unit_price: string, vat_rate_id: ?string, sort_order?: int}> $lines
      */
     public function __construct(
-        public string $clientId,
+        public string $customerId,
         public string $number,
         public string $issueDate,
         public string $dueDate,
@@ -23,7 +23,7 @@ readonly class CreateInvoiceData
     public static function fromRequest(Request $request): self
     {
         $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
+            'customer_id' => 'required|exists:customers,id',
             'number' => 'required|string|max:50',
             'issue_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:issue_date',
@@ -38,7 +38,7 @@ readonly class CreateInvoiceData
         ]);
 
         return new self(
-            clientId: $validated['client_id'],
+            customerId: $validated['customer_id'],
             number: $validated['number'],
             issueDate: $validated['issue_date'],
             dueDate: $validated['due_date'],
@@ -52,7 +52,7 @@ readonly class CreateInvoiceData
     public function toArray(): array
     {
         return [
-            'client_id' => $this->clientId,
+            'customer_id' => $this->customerId,
             'number' => $this->number,
             'issue_date' => $this->issueDate,
             'due_date' => $this->dueDate,

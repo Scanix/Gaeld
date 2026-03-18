@@ -2,7 +2,7 @@
 
 namespace App\Domains\Invoicing\Actions;
 
-use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
 
@@ -11,11 +11,11 @@ class UpdateInvoiceAction
     public function execute(Invoice $invoice, array $data, array $lines): Invoice
     {
         if (! $invoice->status->isEditable()) {
-            throw new \DomainException('Only draft invoices can be updated.');
+            throw new InvalidInvoiceStateException('Only draft invoices can be updated.');
         }
 
         $invoice->update([
-            'client_id' => $data['client_id'],
+            'customer_id' => $data['customer_id'],
             'number' => $data['number'],
             'issue_date' => $data['issue_date'],
             'due_date' => $data['due_date'],

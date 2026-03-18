@@ -5,7 +5,7 @@ namespace Tests\Unit;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,7 +18,7 @@ class InvoiceDtoTest extends TestCase
     use RefreshDatabase;
 
     private Organization $org;
-    private Client $client;
+    private Customer $client;
     private VatRate $vatRate;
 
     protected function setUp(): void
@@ -30,7 +30,7 @@ class InvoiceDtoTest extends TestCase
             'currency' => 'CHF',
         ]);
 
-        $this->client = Client::create([
+        $this->client = Customer::create([
             'organization_id' => $this->org->id,
             'name' => 'Test Client',
         ]);
@@ -47,7 +47,7 @@ class InvoiceDtoTest extends TestCase
     public function test_create_invoice_data_from_valid_request(): void
     {
         $request = Request::create('/', 'POST', [
-            'client_id' => $this->client->id,
+            'customer_id' => $this->client->id,
             'number' => 'INV-001',
             'issue_date' => '2026-01-15',
             'due_date' => '2026-02-15',
@@ -60,7 +60,7 @@ class InvoiceDtoTest extends TestCase
 
         $dto = CreateInvoiceData::fromRequest($request);
 
-        $this->assertEquals($this->client->id, $dto->clientId);
+        $this->assertEquals($this->client->id, $dto->customerId);
         $this->assertEquals('INV-001', $dto->number);
         $this->assertEquals('CHF', $dto->currency);
         $this->assertCount(1, $dto->lines);
@@ -70,7 +70,7 @@ class InvoiceDtoTest extends TestCase
     public function test_create_invoice_data_defaults_currency_to_chf(): void
     {
         $request = Request::create('/', 'POST', [
-            'client_id' => $this->client->id,
+            'customer_id' => $this->client->id,
             'number' => 'INV-002',
             'issue_date' => '2026-01-15',
             'due_date' => '2026-02-15',
@@ -87,7 +87,7 @@ class InvoiceDtoTest extends TestCase
     public function test_create_invoice_data_rejects_missing_lines(): void
     {
         $request = Request::create('/', 'POST', [
-            'client_id' => $this->client->id,
+            'customer_id' => $this->client->id,
             'number' => 'INV-003',
             'issue_date' => '2026-01-15',
             'due_date' => '2026-02-15',
@@ -100,7 +100,7 @@ class InvoiceDtoTest extends TestCase
     public function test_create_invoice_data_rejects_invalid_due_date(): void
     {
         $request = Request::create('/', 'POST', [
-            'client_id' => $this->client->id,
+            'customer_id' => $this->client->id,
             'number' => 'INV-004',
             'issue_date' => '2026-03-15',
             'due_date' => '2026-01-01',
@@ -116,7 +116,7 @@ class InvoiceDtoTest extends TestCase
     public function test_create_invoice_data_to_array(): void
     {
         $request = Request::create('/', 'POST', [
-            'client_id' => $this->client->id,
+            'customer_id' => $this->client->id,
             'number' => 'INV-005',
             'issue_date' => '2026-01-15',
             'due_date' => '2026-02-15',
@@ -131,7 +131,7 @@ class InvoiceDtoTest extends TestCase
         $dto = CreateInvoiceData::fromRequest($request);
         $array = $dto->toArray();
 
-        $this->assertEquals($this->client->id, $array['client_id']);
+        $this->assertEquals($this->client->id, $array['customer_id']);
         $this->assertEquals('EUR', $array['currency']);
         $this->assertEquals('Note', $array['notes']);
         $this->assertArrayNotHasKey('lines', $array);
@@ -169,7 +169,7 @@ class InvoiceDtoTest extends TestCase
     public function test_update_invoice_data_from_valid_request(): void
     {
         $request = Request::create('/', 'PUT', [
-            'client_id' => $this->client->id,
+            'customer_id' => $this->client->id,
             'number' => 'INV-UPDATED',
             'issue_date' => '2026-02-01',
             'due_date' => '2026-03-01',
