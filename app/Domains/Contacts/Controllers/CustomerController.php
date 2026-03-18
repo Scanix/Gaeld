@@ -83,6 +83,8 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer): RedirectResponse
     {
+        $this->authorize('delete', $customer);
+
         $customer->delete();
 
         return redirect()->route('customers.index')

@@ -2,7 +2,6 @@
 
 namespace App\Domains\Users\Controllers;
 
-use App\Domains\Users\Models\User;
 use App\Domains\Users\Services\UserService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;

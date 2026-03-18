@@ -84,6 +84,8 @@ class SupplierController extends Controller
 
     public function destroy(Supplier $supplier): RedirectResponse
     {
+        $this->authorize('delete', $supplier);
+
         $supplier->delete();
 
         return redirect()->route('suppliers.index')

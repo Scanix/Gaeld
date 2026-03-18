@@ -9,7 +9,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * Send an invoice notification email to the client.
@@ -59,7 +58,7 @@ class SendInvoiceEmailJob implements ShouldQueue
             'to' => $this->toEmail,
         ]);
 
-        // Mail facade — concrete Mailable to be implemented when email templates are ready.
-        // Mail::to($this->toEmail)->send(new InvoiceMailable($invoice));
+        // TODO: implement when email templates are ready
+        throw new \RuntimeException('Invoice email sending is not yet configured. Create an InvoiceMailable and update this job.');
     }
 }

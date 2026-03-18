@@ -9,6 +9,7 @@ use Database\Seeders\SwissVatRatesSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class GaeldInstallCommand extends Command
 {
@@ -38,14 +39,14 @@ class GaeldInstallCommand extends Command
         if ($this->option('no-interaction')) {
             $adminName = 'Admin';
             $adminEmail = 'admin@gaeld.local';
-            $adminPassword = 'password';
+            $adminPassword = Str::random(16);
             $orgName = 'My Company';
             $currency = 'CHF';
             $locale = 'en';
         } else {
             $adminName = $this->ask('Admin name', 'Admin');
             $adminEmail = $this->ask('Admin email', 'admin@gaeld.local');
-            $adminPassword = $this->secret('Admin password (min 8 chars)') ?? 'password';
+            $adminPassword = $this->secret('Admin password (min 8 chars)') ?? Str::random(16);
             $orgName = $this->ask('Organization name', 'My Company');
             $currency = $this->choice('Default currency', ['CHF', 'EUR', 'USD', 'GBP'], 0);
             $locale = $this->choice('Default language', ['en', 'fr', 'de', 'it', 'rm'], 0);
@@ -109,6 +110,9 @@ class GaeldInstallCommand extends Command
 
         $this->components->twoColumnDetail('URL', config('app.url'));
         $this->components->twoColumnDetail('Admin Email', $adminEmail);
+        if ($this->option('no-interaction')) {
+            $this->components->twoColumnDetail('Admin Password', $adminPassword);
+        }
         $this->components->twoColumnDetail('Currency', $currency);
 
         $this->newLine();
