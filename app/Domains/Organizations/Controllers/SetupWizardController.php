@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class SetupWizardController extends Controller
 {
@@ -23,7 +22,7 @@ class SetupWizardController extends Controller
         private readonly SwissVatRatesSeeder $vatRatesSeeder,
     ) {}
 
-    public function index(): SymfonyResponse
+    public function index(): Response|RedirectResponse
     {
         // Redirect if already set up
         if (Organization::exists()) {
