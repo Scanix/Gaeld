@@ -2,7 +2,7 @@
 
 namespace App\Domains\Invoicing\Services;
 
-use App\Domains\Accounting\AccountCode;
+use App\Domains\Accounting\ValueObjects\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;

@@ -55,7 +55,7 @@ class ReconciliationController extends Controller
         $filter = $request->input('filter', 'unreconciled');
 
         $transactionsQuery = $bankAccount->transactions()
-            ->with(['matchedInvoice.client', 'matchedExpense', 'journalEntry'])
+            ->with(['matchedInvoice.customer', 'matchedExpense', 'journalEntry'])
             ->orderByDesc('date');
 
         if ($filter === 'unreconciled') {
@@ -66,7 +66,7 @@ class ReconciliationController extends Controller
 
         $transactions = $transactionsQuery->paginate(30);
 
-        $suggestions = $this->reconciliationService->getSuggestionsForTransactions($transactions->items());
+        $suggestions = $this->reconciliationService->generateSuggestionsForTransactions($transactions->items());
 
         return Inertia::render('Banking/ReconciliationShow', [
             'bankAccount' => $bankAccount->load('ledgerAccount'),

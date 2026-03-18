@@ -36,6 +36,8 @@ class ExpenseController extends Controller
 
     public function create(Request $request): Response
     {
+        $this->authorize('create', Expense::class);
+
         return Inertia::render('Expenses/Create', [
             'vatRates' => VatRate::where('is_active', true)->get(),
         ]);

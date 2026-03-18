@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\Accounting;
+namespace App\Domains\Accounting\ValueObjects;
 
 /**
  * Named constants for chart-of-accounts codes used across the application.

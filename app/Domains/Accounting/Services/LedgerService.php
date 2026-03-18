@@ -2,7 +2,7 @@
 
 namespace App\Domains\Accounting\Services;
 
-use App\Domains\Accounting\AccountCode;
+use App\Domains\Accounting\ValueObjects\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Exceptions\AlreadyPostedException;
 use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
@@ -143,7 +143,7 @@ class LedgerService
      * @param  Invoice  $invoice  Must be in STATUS_DRAFT
      * @return Invoice  The updated invoice with journalEntry loaded
      *
-     * @throws \DomainException  When invoice is not a draft
+     * @throws InvalidInvoiceStateException  When invoice is not a draft
      */
     public function postInvoice(Invoice $invoice): Invoice
     {
@@ -187,7 +187,7 @@ class LedgerService
      * @param  string   $bankAccountCode     Payment source account code (default '1020')
      * @return Expense  The updated expense with journalEntry loaded
      *
-     * @throws \DomainException  When expense is already posted
+     * @throws InvalidExpenseStateException  When expense is already posted
      */
     public function postExpense(Expense $expense, string $expenseAccountCode, string $bankAccountCode = AccountCode::BANK_CASH): Expense
     {
@@ -234,7 +234,7 @@ class LedgerService
      * @param  string           $contraAccountCode  The opposing account code (e.g. '3000' for revenue, '6530' for software expense)
      * @return BankTransaction  The updated transaction with journalEntry loaded
      *
-     * @throws \DomainException  When bank account has no linked ledger account
+     * @throws UnlinkedBankAccountException  When bank account has no linked ledger account
      */
     public function postBankTransaction(BankTransaction $transaction, string $contraAccountCode): BankTransaction
     {
@@ -341,7 +341,7 @@ class LedgerService
      *
      * @param  string       $organizationId  UUID of the organization
      * @param  string|null  $asOfDate        Cut-off date (inclusive)
-     * @return array<array{account_code: string, account_name: string, account_type: string, debit: float, credit: float}>
+     * @return array<array{account_code: string, account_name: string, account_type: string, debit: string, credit: string}>
      */
     public function trialBalance(string $organizationId, ?string $asOfDate = null): array
     {
@@ -535,7 +535,7 @@ class LedgerService
      *
      * Null references are always allowed (e.g. bank imports without ref).
      *
-     * @throws \DomainException  When a posted entry with the same reference exists
+     * @throws AlreadyPostedException  When a posted entry with the same reference exists
      */
     private function throwIfDuplicateReference(string $organizationId, ?string $reference): void
     {

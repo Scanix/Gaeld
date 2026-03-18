@@ -12,7 +12,6 @@ class DuplicateInvoiceAction
     {
         $newInvoice = Invoice::create([
             'organization_id' => $invoice->organization_id,
-            'client_id' => $invoice->client_id,
             'customer_id' => $invoice->customer_id,
             'number' => $invoice->number . '-COPY',
             'status' => InvoiceStatus::Draft->value,

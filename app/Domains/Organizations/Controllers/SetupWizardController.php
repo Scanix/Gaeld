@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Domains\Organizations\Controllers;
 
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
+use App\Http\Controllers\Controller;
 use Database\Seeders\SwissChartOfAccountsSeeder;
 use Database\Seeders\SwissVatRatesSeeder;
 use Illuminate\Http\RedirectResponse;

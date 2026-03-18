@@ -5,6 +5,7 @@ namespace App\Domains\Banking\Services;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
 class BankingService
@@ -25,8 +26,7 @@ class BankingService
         string $contraAccountCode,
     ): BankTransaction {
         return DB::transaction(function () use ($bankAccount, $data, $contraAccountCode) {
-            $rawAmount = (string) ($data['amount'] ?? '0');
-            $amount = bccomp($rawAmount, '0', 2) < 0 ? bcmul($rawAmount, '-1', 2) : $rawAmount;
+            $amount = Money::absoluteAmount((string) ($data['amount'] ?? '0'));
             $type = $data['type'] ?? BankTransaction::TYPE_CREDIT;
 
             $transaction = BankTransaction::create([

@@ -12,6 +12,8 @@ class DashboardController extends Controller
 {
     public function index(Request $request, DashboardService $dashboardService): Response
     {
+        $this->authorize('viewAny', \App\Domains\Accounting\Models\Account::class);
+
         $organization = app('current_organization');
 
         return Inertia::render('Dashboard', $dashboardService->getMetrics($organization->id));

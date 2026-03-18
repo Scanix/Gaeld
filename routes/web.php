@@ -14,7 +14,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Domains\Reporting\Controllers\DashboardController;
-use App\Http\Controllers\SetupWizardController;
+use App\Domains\Organizations\Controllers\SetupWizardController;
 use Illuminate\Support\Facades\Route;
 
 /*

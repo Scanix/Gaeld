@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\Banking;
+namespace App\Domains\Banking\ValueObjects;
 
 enum MatchConfidence: int
 {

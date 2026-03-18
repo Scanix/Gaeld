@@ -2,16 +2,17 @@
 
 namespace App\Domains\Banking\Services;
 
-use App\Domains\Accounting\AccountCode;
+use App\Domains\Accounting\ValueObjects\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
-use App\Domains\Banking\MatchConfidence;
+use App\Domains\Banking\ValueObjects\MatchConfidence;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Services\FeatureFlag;
@@ -242,7 +243,7 @@ class ReconciliationService
 
         $invoice = Invoice::where('organization_id', $orgId)
             ->where('qr_reference', $ref)
-            ->whereIn('status', ['sent', 'overdue'])
+            ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
             ->first();
 
         if (! $invoice) {
@@ -267,7 +268,7 @@ class ReconciliationService
         }
 
         $invoices = Invoice::where('organization_id', $orgId)
-            ->whereIn('status', ['sent', 'overdue'])
+            ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
             ->whereBetween('total', [
                 bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
                 bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
@@ -297,7 +298,7 @@ class ReconciliationService
     private function matchByHeuristics(string $orgId, BankTransaction $transaction, string $amount): Collection
     {
         $query = Invoice::where('organization_id', $orgId)
-            ->whereIn('status', ['sent', 'overdue'])
+            ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('total', [
                     bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
@@ -352,10 +353,6 @@ class ReconciliationService
     {
         $transaction = $match->bankTransaction;
         $invoice = $match->invoice;
-
-        if ($transaction->is_reconciled) {
-            throw new AlreadyReconciledException();
-        }
 
         // Prevent duplicate payment for the same invoice+transaction
         if ($this->isDuplicatePayment($transaction, $invoice)) {
@@ -417,13 +414,13 @@ class ReconciliationService
      * @param  iterable<BankTransaction>  $transactions
      * @return array<int, array{invoices: \Illuminate\Support\Collection, expenses: \Illuminate\Support\Collection, matches: \Illuminate\Support\Collection}>
      */
-    public function getSuggestionsForTransactions(iterable $transactions): array
+    public function generateSuggestionsForTransactions(iterable $transactions): array
     {
         $suggestions = [];
 
         foreach ($transactions as $transaction) {
             if (! $transaction->is_reconciled) {
-                $suggestions[$transaction->id] = $this->getSuggestions($transaction);
+                $suggestions[$transaction->id] = $this->generateSuggestions($transaction);
             }
         }
 
@@ -437,7 +434,7 @@ class ReconciliationService
      *
      * @return array{invoices: Collection, expenses: Collection, matches: Collection}
      */
-    public function getSuggestions(BankTransaction $transaction): array
+    public function generateSuggestions(BankTransaction $transaction): array
     {
         $orgId = $transaction->bankAccount->organization_id;
         $amount = Money::absoluteAmount((string) $transaction->amount);

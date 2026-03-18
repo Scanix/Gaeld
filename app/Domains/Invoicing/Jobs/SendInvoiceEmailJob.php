@@ -52,12 +52,6 @@ class SendInvoiceEmailJob implements ShouldQueue
             return;
         }
 
-        Log::info('SendInvoiceEmailJob: sending invoice email', [
-            'invoice_id' => $invoice->id,
-            'invoice_number' => $invoice->number,
-            'to' => $this->toEmail,
-        ]);
-
         // TODO: implement when email templates are ready
         throw new \RuntimeException('Invoice email sending is not yet configured. Create an InvoiceMailable and update this job.');
     }
