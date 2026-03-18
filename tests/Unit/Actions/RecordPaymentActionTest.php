@@ -3,6 +3,7 @@
 namespace Tests\Unit\Actions;
 
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
+use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
@@ -33,7 +34,7 @@ class RecordPaymentActionTest extends TestCase
         $this->expectException(InvalidInvoiceStateException::class);
         $this->expectExceptionMessage('Payments can only be recorded for sent or overdue invoices.');
 
-        $this->action->execute($invoice, ['amount' => '100.00']);
+        $this->action->execute($invoice, new RecordPaymentData('100.00', now()->toDateString(), 'bank', null));
     }
 
     public function test_rejects_payment_on_paid_invoice(): void
@@ -43,7 +44,7 @@ class RecordPaymentActionTest extends TestCase
         $this->expectException(InvalidInvoiceStateException::class);
         $this->expectExceptionMessage('Payments can only be recorded for sent or overdue invoices.');
 
-        $this->action->execute($invoice, ['amount' => '100.00']);
+        $this->action->execute($invoice, new RecordPaymentData('100.00', now()->toDateString(), 'bank', null));
     }
 
     public function test_rejects_payment_on_cancelled_invoice(): void
@@ -53,7 +54,7 @@ class RecordPaymentActionTest extends TestCase
         $this->expectException(InvalidInvoiceStateException::class);
         $this->expectExceptionMessage('Payments can only be recorded for sent or overdue invoices.');
 
-        $this->action->execute($invoice, ['amount' => '100.00']);
+        $this->action->execute($invoice, new RecordPaymentData('100.00', now()->toDateString(), 'bank', null));
     }
 
     public function test_rejects_overpayment(): void
@@ -63,21 +64,22 @@ class RecordPaymentActionTest extends TestCase
         $this->expectException(InvalidPaymentException::class);
         $this->expectExceptionMessage('exceeds amount due');
 
-        $this->action->execute($invoice, ['amount' => '600.00']);
+        $this->action->execute($invoice, new RecordPaymentData('600.00', now()->toDateString(), 'bank', null));
     }
 
     public function test_accepts_payment_on_sent_invoice(): void
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Sent, amountDue: '500.00');
 
+        $paymentData = new RecordPaymentData('100.00', now()->toDateString(), 'bank', null);
         $payment = Mockery::mock(InvoicePayment::class);
         $this->invoiceService
             ->shouldReceive('recordPayment')
             ->once()
-            ->with($invoice, ['amount' => '100.00'])
+            ->with($invoice, $paymentData)
             ->andReturn($payment);
 
-        $result = $this->action->execute($invoice, ['amount' => '100.00']);
+        $result = $this->action->execute($invoice, $paymentData);
 
         $this->assertSame($payment, $result);
     }
@@ -86,13 +88,14 @@ class RecordPaymentActionTest extends TestCase
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Overdue, amountDue: '500.00');
 
+        $paymentData = new RecordPaymentData('200.00', now()->toDateString(), 'bank', null);
         $payment = Mockery::mock(InvoicePayment::class);
         $this->invoiceService
             ->shouldReceive('recordPayment')
             ->once()
             ->andReturn($payment);
 
-        $result = $this->action->execute($invoice, ['amount' => '200.00']);
+        $result = $this->action->execute($invoice, $paymentData);
 
         $this->assertSame($payment, $result);
     }
@@ -101,13 +104,14 @@ class RecordPaymentActionTest extends TestCase
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Sent, amountDue: '500.00');
 
+        $paymentData = new RecordPaymentData('500.00', now()->toDateString(), 'bank', null);
         $payment = Mockery::mock(InvoicePayment::class);
         $this->invoiceService
             ->shouldReceive('recordPayment')
             ->once()
             ->andReturn($payment);
 
-        $result = $this->action->execute($invoice, ['amount' => '500.00']);
+        $result = $this->action->execute($invoice, $paymentData);
 
         $this->assertSame($payment, $result);
     }
@@ -118,6 +122,7 @@ class RecordPaymentActionTest extends TestCase
         $invoice->status = $status;
         $invoice->shouldReceive('amountDue')->andReturn($amountDue);
 
+        /** @var Invoice $invoice */
         return $invoice;
     }
 }

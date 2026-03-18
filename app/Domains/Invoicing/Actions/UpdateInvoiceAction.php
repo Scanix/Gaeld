@@ -2,32 +2,33 @@
 
 namespace App\Domains\Invoicing\Actions;
 
+use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
 
 class UpdateInvoiceAction
 {
-    public function execute(Invoice $invoice, array $data, array $lines): Invoice
+    public function execute(Invoice $invoice, UpdateInvoiceData $data): Invoice
     {
         if (! $invoice->status->isEditable()) {
             throw new InvalidInvoiceStateException('Only draft invoices can be updated.');
         }
 
         $invoice->update([
-            'customer_id' => $data['customer_id'],
-            'number' => $data['number'],
-            'issue_date' => $data['issue_date'],
-            'due_date' => $data['due_date'],
-            'currency' => $data['currency'] ?? $invoice->currency,
-            'notes' => $data['notes'] ?? $invoice->notes,
-            'payment_terms' => $data['payment_terms'] ?? $invoice->payment_terms,
+            'customer_id' => $data->customerId,
+            'number' => $data->number,
+            'issue_date' => $data->issueDate,
+            'due_date' => $data->dueDate,
+            'currency' => $data->currency,
+            'notes' => $data->notes,
+            'payment_terms' => $data->paymentTerms,
         ]);
 
         // Replace line items
         $invoice->lines()->delete();
 
-        foreach ($lines as $index => $lineData) {
+        foreach ($data->lines as $index => $lineData) {
             $line = new InvoiceLine([
                 'invoice_id' => $invoice->id,
                 'description' => $lineData['description'],

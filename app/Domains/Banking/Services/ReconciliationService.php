@@ -12,6 +12,7 @@ use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Invoicing\Models\Invoice;
@@ -366,12 +367,12 @@ class ReconciliationService
             $paymentAmount = bccomp($amount, $amountDue, 2) <= 0 ? $amount : $amountDue;
 
             if (bccomp($paymentAmount, '0', 2) > 0) {
-                $this->invoiceService->recordPayment($invoice, [
-                    'amount' => $paymentAmount,
-                    'payment_date' => $transaction->date->toDateString(),
-                    'payment_method' => 'bank',
-                    'reference' => self::REFERENCE_PREFIX_RECONCILIATION . ($transaction->reference ?? $transaction->id),
-                ]);
+                $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
+                    amount: $paymentAmount,
+                    paymentDate: $transaction->date->toDateString(),
+                    paymentMethod: 'bank',
+                    reference: self::REFERENCE_PREFIX_RECONCILIATION . ($transaction->reference ?? $transaction->id),
+                ));
             }
 
             // Reconcile the bank transaction

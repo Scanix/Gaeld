@@ -8,6 +8,8 @@ use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
+use App\Domains\Invoicing\DTOs\CreateInvoiceData;
+use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
@@ -76,18 +78,28 @@ class InvoiceFlowTest extends TestCase
     {
         $action = new CreateInvoiceAction();
 
-        return $action->execute(array_merge([
-            'organization_id' => $this->org->id,
+        $data = array_merge([
             'customer_id' => $this->customer->id,
             'number' => 'INV-2026-001',
             'issue_date' => '2026-03-16',
             'due_date' => '2026-04-15',
-        ], $overrides), $lines ?: [[
-            'description' => 'Web Development',
-            'quantity' => 10,
-            'unit_price' => 150.00,
-            'vat_rate_id' => $this->vatRate->id,
-        ]]);
+        ], $overrides);
+
+        return $action->execute(new CreateInvoiceData(
+            customerId: $data['customer_id'],
+            number: $data['number'],
+            issueDate: $data['issue_date'],
+            dueDate: $data['due_date'],
+            currency: $data['currency'] ?? 'CHF',
+            notes: $data['notes'] ?? null,
+            paymentTerms: $data['payment_terms'] ?? null,
+            lines: $lines ?: [[
+                'description' => 'Web Development',
+                'quantity' => 10,
+                'unit_price' => 150.00,
+                'vat_rate_id' => $this->vatRate->id,
+            ]],
+        ), $this->org->id);
     }
 
     public function test_complete_invoice_flow(): void
@@ -108,11 +120,12 @@ class InvoiceFlowTest extends TestCase
 
         // 3. Record full payment
         $invoiceService = app(InvoiceService::class);
-        $payment = $invoiceService->recordPayment($invoice, [
-            'amount' => (float) $invoice->total,
-            'payment_date' => '2026-04-01',
-            'payment_method' => 'bank',
-        ]);
+        $payment = $invoiceService->recordPayment($invoice, new RecordPaymentData(
+            amount: (string) $invoice->total,
+            paymentDate: '2026-04-01',
+            paymentMethod: 'bank',
+            reference: null,
+        ));
 
         $invoice->refresh();
         $this->assertEquals(InvoiceStatus::Paid, $invoice->status);
@@ -132,11 +145,12 @@ class InvoiceFlowTest extends TestCase
         $halfAmount = round($total / 2, 2);
 
         $invoiceService = app(InvoiceService::class);
-        $payment1 = $invoiceService->recordPayment($invoice, [
-            'amount' => $halfAmount,
-            'payment_date' => '2026-04-01',
-            'payment_method' => 'bank',
-        ]);
+        $payment1 = $invoiceService->recordPayment($invoice, new RecordPaymentData(
+            amount: (string) $halfAmount,
+            paymentDate: '2026-04-01',
+            paymentMethod: 'bank',
+            reference: null,
+        ));
 
         $invoice->refresh();
         $this->assertEquals(InvoiceStatus::Sent, $invoice->status);
@@ -144,11 +158,12 @@ class InvoiceFlowTest extends TestCase
 
         // Pay remainder
         $remaining = (float) $invoice->amountDue();
-        $payment2 = $invoiceService->recordPayment($invoice, [
-            'amount' => $remaining,
-            'payment_date' => '2026-04-10',
-            'payment_method' => 'bank',
-        ]);
+        $payment2 = $invoiceService->recordPayment($invoice, new RecordPaymentData(
+            amount: (string) $remaining,
+            paymentDate: '2026-04-10',
+            paymentMethod: 'bank',
+            reference: null,
+        ));
 
         $invoice->refresh();
         $this->assertEquals(InvoiceStatus::Paid, $invoice->status);

@@ -11,6 +11,7 @@ readonly class RecordPaymentData
         public string $paymentDate,
         public string $paymentMethod,
         public ?string $reference,
+        public ?string $bankAccountCode = null,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -27,6 +28,7 @@ readonly class RecordPaymentData
             paymentDate: $validated['payment_date'],
             paymentMethod: $validated['payment_method'],
             reference: $validated['reference'] ?? null,
+            bankAccountCode: $validated['bank_account_code'] ?? null,
         );
     }
 
@@ -37,6 +39,7 @@ readonly class RecordPaymentData
             'payment_date' => $this->paymentDate,
             'payment_method' => $this->paymentMethod,
             'reference' => $this->reference,
+            'bank_account_code' => $this->bankAccountCode,
         ];
     }
 }

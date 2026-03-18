@@ -4,6 +4,7 @@ namespace App\Domains\Invoicing\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoicePayment;
@@ -27,13 +28,13 @@ class InvoiceService
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException  When account code not found
      */
-    public function recordPayment(Invoice $invoice, array $data): InvoicePayment
+    public function recordPayment(Invoice $invoice, RecordPaymentData $data): InvoicePayment
     {
-        $amount = (string) $data['amount'];
-        $paymentDate = $data['payment_date'] ?? now()->toDateString();
-        $paymentMethod = $data['payment_method'] ?? 'bank';
-        $reference = $data['reference'] ?? null;
-        $bankAccountCode = $data['bank_account_code'] ?? AccountCode::BANK_CASH;
+        $amount = $data->amount;
+        $paymentDate = $data->paymentDate;
+        $paymentMethod = $data->paymentMethod;
+        $reference = $data->reference;
+        $bankAccountCode = $data->bankAccountCode ?? AccountCode::BANK_CASH;
 
         return DB::transaction(function () use ($invoice, $amount, $paymentDate, $paymentMethod, $reference, $bankAccountCode) {
             $orgId = $invoice->organization_id;

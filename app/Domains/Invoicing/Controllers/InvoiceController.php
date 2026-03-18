@@ -54,9 +54,7 @@ class InvoiceController extends Controller
 
         $dto = CreateInvoiceData::fromRequest($request);
 
-        $invoice = $action->execute($dto->toArray() + [
-            'organization_id' => app('current_organization')->id,
-        ], $dto->lines);
+        $invoice = $action->execute($dto, app('current_organization')->id);
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', 'Invoice created.');
@@ -88,7 +86,7 @@ class InvoiceController extends Controller
 
         $dto = UpdateInvoiceData::fromRequest($request);
 
-        $action->execute($invoice, $dto->toArray(), $dto->lines);
+        $action->execute($invoice, $dto);
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', 'Invoice updated.');
@@ -120,7 +118,7 @@ class InvoiceController extends Controller
 
         $dto = RecordPaymentData::fromRequest($request);
 
-        $action->execute($invoice, $dto->toArray());
+        $action->execute($invoice, $dto);
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', 'Payment recorded.');
