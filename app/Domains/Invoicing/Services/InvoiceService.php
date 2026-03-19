@@ -33,36 +33,32 @@ class InvoiceService
      */
     public function recordPayment(Invoice $invoice, RecordPaymentData $data): InvoicePayment
     {
-        $amount = $data->amount;
-        $paymentDate = $data->paymentDate;
-        $paymentMethod = $data->paymentMethod;
-        $reference = $data->reference;
         $bankAccountCode = $data->bankAccountCode ?? AccountCode::BANK_CASH;
 
-        return DB::transaction(function () use ($invoice, $amount, $paymentDate, $paymentMethod, $reference, $bankAccountCode) {
+        return DB::transaction(function () use ($invoice, $data, $bankAccountCode) {
             $orgId = $invoice->organization_id;
 
             $bankAccount = $this->ledgerService->resolveAccount($orgId, $bankAccountCode);
             $accountsReceivable = $this->ledgerService->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
 
-            $paymentRef = $reference ?? 'PAY-' . $invoice->number . '-' . ($invoice->payments()->count() + 1);
+            $paymentRef = $data->reference ?? 'PAY-' . $invoice->number . '-' . ($invoice->payments()->count() + 1);
 
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
-                date: $paymentDate,
+                date: $data->paymentDate,
                 reference: $paymentRef,
                 description: "Payment received for {$invoice->number}",
                 lines: [
-                    new JournalLineData(accountId: $bankAccount->id, debit: $amount, credit: 0, description: 'Bank deposit'),
-                    new JournalLineData(accountId: $accountsReceivable->id, debit: 0, credit: $amount, description: 'Clear receivable'),
+                    new JournalLineData(accountId: $bankAccount->id, debit: $data->amount, credit: 0, description: 'Bank deposit'),
+                    new JournalLineData(accountId: $accountsReceivable->id, debit: 0, credit: $data->amount, description: 'Clear receivable'),
                 ],
             ));
 
             $payment = InvoicePayment::create([
                 'invoice_id' => $invoice->id,
                 'journal_entry_id' => $journalEntry->id,
-                'amount' => $amount,
-                'payment_date' => $paymentDate,
-                'payment_method' => $paymentMethod,
+                'amount' => $data->amount,
+                'payment_date' => $data->paymentDate,
+                'payment_method' => $data->paymentMethod,
                 'reference' => $paymentRef,
             ]);
 

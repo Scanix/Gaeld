@@ -52,13 +52,8 @@ class SupplierCategoryRule extends BaseRule
 
         $supplier = Supplier::where('organization_id', $orgId)
             ->whereNotNull('default_expense_category')
-            ->get()
-            ->first(function ($supplier) use ($transaction) {
-                $creditor = strtolower($transaction->creditor_name);
-                $name = strtolower($supplier->name);
-
-                return str_contains($creditor, $name) || str_contains($name, $creditor);
-            });
+            ->where('name', 'ilike', '%' . $transaction->creditor_name . '%')
+            ->first();
 
         if (! $supplier) {
             return;

@@ -3,9 +3,6 @@
 namespace App\Domains\Banking\Services;
 
 use App\Exceptions\FeatureDisabledException;
-use App\Domains\Banking\Exceptions\AlreadyReconciledException;
-use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
-use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\BaseRule;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
@@ -82,7 +79,7 @@ class RuleEngineService
                     'confidence' => $rule->confidence(),
                     'applied' => $applied,
                 ]);
-            } catch (AlreadyReconciledException|UnlinkedBankAccountException|InvalidPaymentException $e) {
+            } catch (\Throwable $e) {
                 Log::warning('RuleEngineService: rule failed', [
                     'rule' => $rule->name(),
                     'transaction_id' => $transaction->id,

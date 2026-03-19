@@ -108,7 +108,7 @@ class ReconciliationService
                 ));
             }
 
-            $this->bankingService->updateBankAccountBalance($bankAccount, $paymentAmount ?? $amount, true);
+            $this->bankingService->updateBankAccountBalance($bankAccount, $paymentAmount, true);
 
             $transaction->update([
                 'journal_entry_id' => $payment?->journal_entry_id,
@@ -234,7 +234,7 @@ class ReconciliationService
                 ));
             }
 
-            $this->bankingService->updateBankAccountBalance($bankAccount, $paymentAmount ?? $amount, true);
+            $this->bankingService->updateBankAccountBalance($bankAccount, $paymentAmount, true);
 
             $transaction->update([
                 'journal_entry_id' => $payment?->journal_entry_id,

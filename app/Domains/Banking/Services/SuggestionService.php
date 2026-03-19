@@ -3,6 +3,7 @@
 namespace App\Domains\Banking\Services;
 
 use App\Domains\Banking\DTOs\ExpenseSuggestion;
+use App\Domains\Banking\DTOs\InvoiceSuggestion;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\MatchConfidence;
 use App\Domains\Banking\Models\BankTransaction;
@@ -65,12 +66,14 @@ class SuggestionService
 
         $invoiceSuggestions = $matches->map(function ($match) {
             $invoice = $match->invoice->load(['customer']);
-            $invoice->match_score = $match->confidence;
-            $invoice->match_type = $match->match_type;
-            $invoice->match_id = $match->id;
 
-            return $invoice;
-        })->sortByDesc('match_score')->values();
+            return new InvoiceSuggestion(
+                invoice: $invoice,
+                score: $match->confidence,
+                matchType: $match->match_type,
+                matchId: $match->id,
+            );
+        })->sortByDesc(fn ($s) => $s->score)->values();
 
         $expenseSuggestions = $this->suggestExpenses($orgId, $transaction, $amount);
 

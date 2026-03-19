@@ -33,7 +33,13 @@ trait CamtXmlHelper
             return;
         }
 
-        $date = $bookingDate ?? $valueDate ?? date('Y-m-d');
+        $date = $bookingDate ?? $valueDate ?? null;
+        if ($date === null) {
+            Log::warning('CamtXmlHelper: missing booking and value date — falling back to today', [
+                'iban' => $this->iban ?? 'unknown',
+            ]);
+            $date = date('Y-m-d');
+        }
         // Truncate datetime to date if needed
         if (strlen($date) > 10) {
             $date = substr($date, 0, 10);
