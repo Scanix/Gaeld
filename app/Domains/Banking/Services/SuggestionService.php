@@ -2,6 +2,7 @@
 
 namespace App\Domains\Banking\Services;
 
+use App\Domains\Banking\DTOs\ExpenseSuggestion;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\MatchConfidence;
 use App\Domains\Banking\Models\BankTransaction;
@@ -83,7 +84,10 @@ class SuggestionService
     /**
      * Find expense candidates for a debit transaction using amount and vendor heuristics.
      *
-     * Scores each candidate by exact amount match (+50) and vendor name match (+30).
+     * Returns a collection of ExpenseSuggestion DTOs, each wrapping an Expense with
+     * a computed score. Scored by exact amount match (+50) and vendor name match (+30).
+     *
+     * @return Collection<int, ExpenseSuggestion>
      */
     public function suggestExpenses(string $orgId, BankTransaction $transaction, string $amount): Collection
     {
@@ -120,9 +124,7 @@ class SuggestionService
                 }
             }
 
-            $expense->match_score = $score;
-
-            return $expense;
-        })->sortByDesc('match_score')->values();
+            return new ExpenseSuggestion(expense: $expense, score: $score);
+        })->sortByDesc(fn ($s) => $s->score)->values();
     }
 }

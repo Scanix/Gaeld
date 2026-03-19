@@ -3,8 +3,6 @@
 namespace App\Domains\Banking\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
-use App\Domains\Accounting\DTOs\JournalEntryData;
-use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Enums\MatchConfidence;
@@ -13,7 +11,9 @@ use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceService;
@@ -31,6 +31,7 @@ class ReconciliationService
     public function __construct(
         private LedgerService $ledgerService,
         private InvoiceService $invoiceService,
+        private ExpenseService $expenseService,
         private BankingService $bankingService,
         private MatchingEngine $matchingEngine,
         private SuggestionService $suggestionService,
@@ -140,21 +141,19 @@ class ReconciliationService
 
             $this->validateReconciliationPreconditions($transaction, $bankAccount);
 
-            $expenseAccount = $this->ledgerService->resolveAccount($orgId, $expenseAccountCode);
             $amount = Money::absoluteAmount((string) $transaction->amount);
             $reference = $this->buildReconciliationReference($orgId, $transaction);
 
-            $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
-                date: $transaction->date->toDateString(),
+            $journalEntry = $this->expenseService->recordBankPayment($expense, new RecordExpensePaymentData(
+                amount: $amount,
+                paymentDate: $transaction->date->toDateString(),
                 reference: $reference,
                 description: "Reconciliation: {$transaction->description} ↔ Expense {$expense->description}",
-                lines: [
-                    new JournalLineData(accountId: $expenseAccount->id, debit: $amount, credit: 0, description: $expense->description ?? 'Expense'),
-                    new JournalLineData(accountId: $bankAccount->ledgerAccount->id, debit: 0, credit: $amount, description: 'Bank withdrawal'),
-                ],
+                expenseAccountCode: $expenseAccountCode,
+                bankAccountCode: $bankAccount->ledgerAccount->code,
             ));
 
-            $this->bankingService->updateBankAccountBalance($bankAccount, (string) $amount, false);
+            $this->bankingService->updateBankAccountBalance($bankAccount, $amount, false);
 
             $transaction->update([
                 'journal_entry_id' => $journalEntry->id,
@@ -222,13 +221,16 @@ class ReconciliationService
             $amountDue = $invoice->amountDue();
             $paymentAmount = bccomp($amount, $amountDue, 2) <= 0 ? $amount : $amountDue;
 
+            $orgId = $bankAccount->organization_id;
+            $reference = $this->buildReconciliationReference($orgId, $transaction);
+
             $payment = null;
             if (bccomp($paymentAmount, '0', 2) > 0) {
                 $payment = $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
                     amount: $paymentAmount,
                     paymentDate: $transaction->date->toDateString(),
                     paymentMethod: 'bank',
-                    reference: self::REFERENCE_PREFIX_RECONCILIATION . ($transaction->reference ?? $transaction->id),
+                    reference: $reference,
                 ));
             }
 
@@ -317,9 +319,9 @@ class ReconciliationService
             // Auto-reconcile expenses with high confidence
             $bestExpense = $suggestions['expenses']->first();
 
-            if ($bestExpense && $bestExpense->match_score >= MatchConfidence::AutoExpenseThreshold->value) {
+            if ($bestExpense && $bestExpense->score >= MatchConfidence::AutoExpenseThreshold->value) {
                 try {
-                    $this->reconcileWithExpense($transaction, $bestExpense);
+                    $this->reconcileWithExpense($transaction, $bestExpense->expense);
                     $matched++;
 
                     continue;
