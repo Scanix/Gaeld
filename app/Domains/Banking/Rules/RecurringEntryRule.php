@@ -4,6 +4,7 @@ namespace App\Domains\Banking\Rules;
 
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Support\Money;
 
 /**
  * EE Rule: Detect recurring transactions by matching amount AND description
@@ -45,8 +46,7 @@ class RecurringEntryRule extends BaseRule
         $orgId = $transaction->bankAccount->organization_id;
         $lookback = now()->subMonths(self::LOOKBACK_MONTHS);
 
-        $rawAmount = (string) $transaction->amount;
-        $absAmount = bccomp($rawAmount, '0', 2) < 0 ? bcmul($rawAmount, '-1', 2) : $rawAmount;
+        $absAmount = Money::absoluteAmount((string) $transaction->amount);
 
         // DEBIT amounts are stored as negative values; compare against negative range
         $count = BankTransaction::whereHas('bankAccount', fn ($q) => $q->where('organization_id', $orgId))
