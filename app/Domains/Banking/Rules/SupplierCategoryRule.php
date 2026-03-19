@@ -64,13 +64,8 @@ class SupplierCategoryRule extends BaseRule
             return;
         }
 
-        // Store category suggestion in transaction metadata (description prefix for now).
-        // A dedicated `suggested_category` column can be added in a future migration.
         $transaction->update([
-            'matched_expense_id' => null, // cleared — just a suggestion
+            'suggested_expense_category' => $supplier->default_expense_category,
         ]);
-
-        // Surface the suggestion via the transaction meta: attach supplier_id hint
-        // This is surfaced to the reconciliation UI without auto-creating an expense.
     }
 }

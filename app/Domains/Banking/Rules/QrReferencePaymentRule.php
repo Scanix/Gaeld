@@ -53,7 +53,7 @@ class QrReferencePaymentRule extends BaseRule
             return;
         }
 
-        $matches = $this->reconciliationService->findMatches($transaction);
+        $matches = $this->reconciliationService->findAndStoreMatches($transaction);
         $exactMatch = $matches->first(fn ($m) => $m->confidence === 100);
 
         if ($exactMatch) {

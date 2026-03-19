@@ -10,7 +10,7 @@ use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Http\Controllers\Controller;
-use App\Services\FeatureFlag;
+use App\Support\FeatureFlag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;

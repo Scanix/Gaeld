@@ -4,7 +4,7 @@ namespace App\Domains\Banking\Jobs;
 
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Services\RuleEngineService;
-use App\Services\FeatureFlag;
+use App\Support\FeatureFlag;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

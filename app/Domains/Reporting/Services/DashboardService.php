@@ -6,10 +6,8 @@ use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
-use App\Domains\Expenses\Enums\ExpenseStatus;
-use App\Domains\Expenses\Models\Expense;
-use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Expenses\Queries\ExpenseQuery;
+use App\Domains\Invoicing\Services\InvoiceService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -17,6 +15,7 @@ class DashboardService
 {
     public function __construct(
         private readonly LedgerService $ledgerService,
+        private readonly InvoiceService $invoiceService,
     ) {}
     /**
      * @return array{revenue: float, expenses: float, cashBalance: string, unpaidInvoices: array{count: int, total: float}, pendingExpenses: array{count: int, total: float}, balance: float, recentTransactions: \Illuminate\Support\Collection, monthlyData: array}
@@ -29,15 +28,9 @@ class DashboardService
         $totalExpenses = $this->yearlyExpenseTotal($organizationId, $year);
         $cashBalance = $this->cashBalance($organizationId);
 
-        $unpaidInvoices = Invoice::where('organization_id', $organizationId)
-            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
-            ->selectRaw('COUNT(*) as count, COALESCE(SUM(total), 0) as total')
-            ->first();
+        $unpaidInvoices = $this->invoiceService->unpaidSummary($organizationId);
 
-        $pendingExpenses = Expense::where('organization_id', $organizationId)
-            ->where('status', ExpenseStatus::Pending)
-            ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
-            ->first();
+        $pendingExpenses = ExpenseQuery::pendingSummary($organizationId);
 
         return [
             'revenue' => $totalRevenue,
@@ -59,17 +52,12 @@ class DashboardService
 
     private function yearlyInvoiceTotal(string $organizationId, int $year): float
     {
-        return (float) Invoice::where('organization_id', $organizationId)
-            ->where('status', InvoiceStatus::Paid)
-            ->whereYear('issue_date', $year)
-            ->sum('total');
+        return $this->invoiceService->yearlyRevenue($organizationId, $year);
     }
 
     private function yearlyExpenseTotal(string $organizationId, int $year): float
     {
-        return (float) Expense::where('organization_id', $organizationId)
-            ->whereYear('date', $year)
-            ->sum('amount');
+        return ExpenseQuery::yearlyTotal($organizationId, $year);
     }
 
     private function cashBalance(string $organizationId): string
@@ -112,24 +100,13 @@ class DashboardService
     private function monthlyBreakdown(string $organizationId, int $year): array
     {
         // Fetch all data for the year in 3 queries instead of 6*12
-        $paidInvoices = Invoice::where('organization_id', $organizationId)
-            ->where('status', InvoiceStatus::Paid)
-            ->whereYear('issue_date', $year)
-            ->select('number', 'total', 'issue_date')
-            ->get()
+        $paidInvoices = $this->invoiceService->paidInYear($organizationId, $year)
             ->groupBy(fn ($i) => Carbon::parse($i->issue_date)->month);
 
-        $expenses = Expense::where('organization_id', $organizationId)
-            ->whereYear('date', $year)
-            ->select('description', 'amount', 'date')
-            ->get()
+        $expenses = ExpenseQuery::inYear($organizationId, $year)
             ->groupBy(fn ($e) => Carbon::parse($e->date)->month);
 
-        $forecastInvoices = Invoice::where('organization_id', $organizationId)
-            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
-            ->whereYear('due_date', $year)
-            ->select('number', 'total', 'due_date')
-            ->get()
+        $forecastInvoices = $this->invoiceService->sentOrOverdueDueInYear($organizationId, $year)
             ->groupBy(fn ($i) => Carbon::parse($i->due_date)->month);
 
         $monthlyData = collect(range(1, 12))->map(function ($month) use ($year, $paidInvoices, $expenses, $forecastInvoices) {

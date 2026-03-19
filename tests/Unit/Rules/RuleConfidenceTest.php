@@ -118,7 +118,7 @@ class RuleConfidenceTest extends TestCase
     public function test_qr_rule_skips_apply_for_reconciled_transaction(): void
     {
         $reconciliation = $this->createMock(ReconciliationService::class);
-        $reconciliation->expects($this->never())->method('findMatches');
+        $reconciliation->expects($this->never())->method('findAndStoreMatches');
 
         $rule = new QrReferencePaymentRule($reconciliation);
 

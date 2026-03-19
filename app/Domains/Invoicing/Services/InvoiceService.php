@@ -10,6 +10,7 @@ use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoicePayment;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class InvoiceService
@@ -72,5 +73,43 @@ class InvoiceService
 
             return $payment->load('journalEntry');
         });
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Reporting queries
+    // ──────────────────────────────────────────────────────────────
+
+    public function yearlyRevenue(string $orgId, int $year): float
+    {
+        return (float) Invoice::where('organization_id', $orgId)
+            ->where('status', InvoiceStatus::Paid)
+            ->whereYear('issue_date', $year)
+            ->sum('total');
+    }
+
+    public function unpaidSummary(string $orgId): object
+    {
+        return Invoice::where('organization_id', $orgId)
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
+            ->selectRaw('COUNT(*) as count, COALESCE(SUM(total), 0) as total')
+            ->first();
+    }
+
+    public function paidInYear(string $orgId, int $year): Collection
+    {
+        return Invoice::where('organization_id', $orgId)
+            ->where('status', InvoiceStatus::Paid)
+            ->whereYear('issue_date', $year)
+            ->select('number', 'total', 'issue_date')
+            ->get();
+    }
+
+    public function sentOrOverdueDueInYear(string $orgId, int $year): Collection
+    {
+        return Invoice::where('organization_id', $orgId)
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
+            ->whereYear('due_date', $year)
+            ->select('number', 'total', 'due_date')
+            ->get();
     }
 }

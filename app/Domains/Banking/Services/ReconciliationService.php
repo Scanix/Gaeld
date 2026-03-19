@@ -21,7 +21,7 @@ use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Services\FeatureFlag;
+use App\Support\FeatureFlag;
 use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +31,10 @@ use Illuminate\Support\Str;
 class ReconciliationService
 {
     private const REFERENCE_PREFIX_RECONCILIATION = 'REC-';
+
+    private const EXPENSE_SCORE_EXACT_AMOUNT = 50;
+
+    private const EXPENSE_SCORE_VENDOR_MATCH = 30;
 
     public function __construct(
         private LedgerService $ledgerService,
@@ -204,7 +208,7 @@ class ReconciliationService
      *
      * @return Collection<BankMatch>
      */
-    public function findMatches(BankTransaction $transaction): Collection
+    public function findAndStoreMatches(BankTransaction $transaction): Collection
     {
         $orgId = $transaction->bankAccount->organization_id;
         $amount = Money::absoluteAmount((string) $transaction->amount);
@@ -459,7 +463,7 @@ class ReconciliationService
         $amount = Money::absoluteAmount((string) $transaction->amount);
 
         // Use the matching engine for invoices
-        $matches = $this->findMatches($transaction);
+        $matches = $this->findAndStoreMatches($transaction);
 
         // Load invoice data for the matches
         $invoiceSuggestions = $matches->map(function ($match) {
@@ -506,13 +510,13 @@ class ReconciliationService
             $score = 0;
 
             if (bccomp((string) $expense->amount, $amount, 2) === 0) {
-                $score += 50;
+                $score += self::EXPENSE_SCORE_EXACT_AMOUNT;
             }
 
             if ($transaction->creditor_name && $expense->vendor) {
                 if (str_contains(strtolower($transaction->creditor_name), strtolower($expense->vendor))
                     || str_contains(strtolower($expense->vendor), strtolower($transaction->creditor_name))) {
-                    $score += 30;
+                    $score += self::EXPENSE_SCORE_VENDOR_MATCH;
                 }
             }
 
@@ -554,7 +558,7 @@ class ReconciliationService
 
         foreach ($unreconciled as $transaction) {
             // Find and store matches
-            $matches = $this->findMatches($transaction);
+            $matches = $this->findAndStoreMatches($transaction);
 
             // Only auto-confirm exact QR reference matches (confidence = 100)
             $exactMatch = $matches->first(fn ($m) => $m->confidence === 100);

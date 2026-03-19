@@ -3,6 +3,7 @@
 namespace App\Domains\Banking\Services\Camt;
 
 use App\Domains\Banking\Enums\BankTransactionType;
+use Illuminate\Support\Facades\Log;
 
 trait CamtXmlHelper
 {
@@ -23,6 +24,12 @@ trait CamtXmlHelper
             ?? $this->contextText($xpath, "{$prefix}ValDt/{$prefix}DtTm", $entryNode);
 
         if (! $amount || ! $creditDebitIndicator) {
+            Log::warning('CamtXmlHelper: skipping malformed entry — missing amount or credit/debit indicator', [
+                'iban' => $this->iban ?? 'unknown',
+                'has_amount' => (bool) $amount,
+                'has_indicator' => (bool) $creditDebitIndicator,
+            ]);
+
             return;
         }
 

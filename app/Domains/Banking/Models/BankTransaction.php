@@ -32,6 +32,7 @@ class BankTransaction extends Model
         'is_reconciled',
         'matched_invoice_id',
         'matched_expense_id',
+        'suggested_expense_category',
     ];
 
     protected function casts(): array

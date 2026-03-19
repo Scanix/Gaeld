@@ -237,7 +237,7 @@ class LedgerService
      *
      * @throws InvalidEntryDataException  When an account is missing or belongs to another org
      */
-    public function validateAccounts(string $organizationId, array $lines): void
+    private function validateAccounts(string $organizationId, array $lines): void
     {
         $accountIds = array_unique(array_map(fn ($l) => $l->accountId, $lines));
 

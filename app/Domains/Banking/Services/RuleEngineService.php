@@ -8,7 +8,7 @@ use App\Domains\Banking\Rules\BaseRule;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
 use App\Domains\Banking\Rules\RecurringEntryRule;
 use App\Domains\Banking\Rules\SupplierCategoryRule;
-use App\Services\FeatureFlag;
+use App\Support\FeatureFlag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
