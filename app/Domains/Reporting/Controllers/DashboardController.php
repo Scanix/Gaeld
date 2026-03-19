@@ -16,6 +16,6 @@ class DashboardController extends Controller
 
         $organization = app('current_organization');
 
-        return Inertia::render('Dashboard', $dashboardService->getMetrics($organization->id));
+        return Inertia::render('Dashboard', $dashboardService->metrics($organization->id));
     }
 }

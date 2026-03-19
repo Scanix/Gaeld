@@ -260,7 +260,7 @@ class ReconciliationFlowTest extends TestCase
             'reference' => 'MISC-001',
         ]);
 
-        $result = $reconciliationService->reconcileManual($transaction, '3000');
+        $result = $reconciliationService->reconcileWithContraAccount($transaction, '3000');
 
         $this->assertTrue($result->is_reconciled);
         $this->assertNotNull($result->journal_entry_id);

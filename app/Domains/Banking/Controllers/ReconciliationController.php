@@ -2,11 +2,11 @@
 
 namespace App\Domains\Banking\Controllers;
 
+use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
-use App\Domains\Banking\Exceptions\AlreadyReconciledException;
-use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
@@ -108,7 +108,7 @@ class ReconciliationController extends Controller
 
             return redirect()->route('reconciliation.show', $bankAccount)
                 ->with('success', "{$import->transaction_count} transactions imported from {$filename}.");
-        } catch (\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
             return redirect()->back()
                 ->with('error', $e->getMessage());
         }
@@ -123,11 +123,11 @@ class ReconciliationController extends Controller
         $this->authorize('update', $bankAccount);
 
         $validated = $request->validate([
-              'invoice_id' => [
-                 'required',
-                 'uuid',
-                 Rule::exists('invoices', 'id')->where('organization_id', $bankAccount->organization_id),
-              ],
+            'invoice_id' => [
+                'required',
+                'uuid',
+                Rule::exists('invoices', 'id')->where('organization_id', $bankAccount->organization_id),
+            ],
         ]);
 
         $invoice = Invoice::where('organization_id', $bankAccount->organization_id)
@@ -152,11 +152,11 @@ class ReconciliationController extends Controller
         $this->authorize('update', $bankAccount);
 
         $validated = $request->validate([
-                'expense_id' => [
-                    'required',
-                    'uuid',
-                    Rule::exists('expenses', 'id')->where('organization_id', $bankAccount->organization_id),
-                ],
+            'expense_id' => [
+                'required',
+                'uuid',
+                Rule::exists('expenses', 'id')->where('organization_id', $bankAccount->organization_id),
+            ],
             'expense_account_code' => 'required|string|max:10',
         ]);
 
@@ -190,7 +190,7 @@ class ReconciliationController extends Controller
         ]);
 
         try {
-            $this->reconciliationService->reconcileManual(
+            $this->reconciliationService->reconcileWithContraAccount(
                 $transaction,
                 $validated['contra_account_code'],
             );

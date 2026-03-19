@@ -52,18 +52,4 @@ class Account extends Model
     {
         return $this->hasMany(TransactionLine::class);
     }
-
-    public function balance(): string
-    {
-        $query = $this->transactionLines()
-            ->whereHas('journalEntry', fn ($q) => $q->where('is_posted', true));
-
-        $debits = (string) (clone $query)->sum('debit');
-        $credits = (string) (clone $query)->sum('credit');
-
-        return match ($this->type) {
-            AccountType::Asset, AccountType::Expense => bcsub($debits, $credits, 2),
-            default => bcsub($credits, $debits, 2),
-        };
-    }
 }

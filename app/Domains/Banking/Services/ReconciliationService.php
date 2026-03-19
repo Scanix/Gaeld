@@ -74,8 +74,9 @@ class ReconciliationService
     /**
      * Manually reconcile a bank transaction with an invoice.
      *
-     * Posts the bank transaction to the ledger (debit bank, credit AR)
-     * and marks the transaction as reconciled.
+     * Delegates to InvoiceService::recordPayment() which posts the journal entry
+     * (debit bank, credit AR), creates an InvoicePayment record, and marks the
+     * invoice as Paid when fully settled.
      *
      * @throws AlreadyReconciledException  When transaction is already reconciled
      * @throws UnlinkedBankAccountException  When bank account is not linked to a ledger account
@@ -91,24 +92,25 @@ class ReconciliationService
 
             $this->validateReconciliationPreconditions($transaction, $bankAccount);
 
-            $arAccount = $this->ledgerService->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
             $amount = Money::absoluteAmount((string) $transaction->amount);
-            $reference = $this->buildReconciliationReference($orgId, $transaction);
+            $amountDue = $invoice->amountDue();
+            $paymentAmount = bccomp($amount, $amountDue, 2) <= 0 ? $amount : $amountDue;
 
-            $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
-                date: $transaction->date->toDateString(),
-                reference: $reference,
-                description: "Reconciliation: {$transaction->description} ↔ Invoice {$invoice->number}",
-                lines: [
-                    new JournalLineData(accountId: $bankAccount->ledgerAccount->id, debit: $amount, credit: 0, description: 'Bank deposit'),
-                    new JournalLineData(accountId: $arAccount->id, debit: 0, credit: $amount, description: "Payment for invoice {$invoice->number}"),
-                ],
-            ));
+            $payment = null;
+            if (bccomp($paymentAmount, '0', 2) > 0) {
+                $payment = $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
+                    amount: $paymentAmount,
+                    paymentDate: $transaction->date->toDateString(),
+                    paymentMethod: 'bank',
+                    reference: $this->buildReconciliationReference($orgId, $transaction),
+                    bankAccountCode: $bankAccountCode,
+                ));
+            }
 
-            $this->bankingService->updateBankAccountBalance($bankAccount, (string) $amount, true);
+            $this->bankingService->updateBankAccountBalance($bankAccount, $paymentAmount ?? $amount, true);
 
             $transaction->update([
-                'journal_entry_id' => $journalEntry->id,
+                'journal_entry_id' => $payment?->journal_entry_id,
                 'matched_invoice_id' => $invoice->id,
                 'is_reconciled' => true,
             ]);
@@ -116,6 +118,7 @@ class ReconciliationService
             return $transaction->fresh(['journalEntry.lines', 'matchedInvoice', 'bankAccount']);
         });
     }
+
 
     /**
      * Manually reconcile a bank transaction with an expense.
@@ -169,7 +172,7 @@ class ReconciliationService
      * @throws AlreadyReconciledException  When transaction is already reconciled
      * @throws UnlinkedBankAccountException  When bank account has no linked ledger account
      */
-    public function reconcileManual(
+    public function reconcileWithContraAccount(
         BankTransaction $transaction,
         string $contraAccountCode,
     ): BankTransaction {

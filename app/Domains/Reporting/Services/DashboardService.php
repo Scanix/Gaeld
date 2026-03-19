@@ -20,7 +20,7 @@ class DashboardService
     /**
      * @return array{revenue: float, expenses: float, cashBalance: string, unpaidInvoices: array{count: int, total: float}, pendingExpenses: array{count: int, total: float}, balance: float, recentTransactions: \Illuminate\Support\Collection, monthlyData: array}
      */
-    public function getMetrics(string $organizationId): array
+    public function metrics(string $organizationId): array
     {
         $year = now()->year;
 
