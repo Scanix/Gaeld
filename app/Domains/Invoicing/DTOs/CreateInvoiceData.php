@@ -45,6 +45,7 @@ readonly class CreateInvoiceData
             'currency' => $this->currency,
             'notes' => $this->notes,
             'payment_terms' => $this->paymentTerms,
+            'lines' => $this->lines,
         ];
     }
 }

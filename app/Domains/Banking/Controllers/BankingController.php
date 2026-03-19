@@ -10,6 +10,7 @@ use App\Domains\Banking\Services\BankingService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -51,7 +52,10 @@ class BankingController extends Controller
             'name' => 'required|string|max:255',
             'iban' => 'nullable|string|max:34',
             'bank_name' => 'nullable|string|max:255',
-            'account_id' => 'nullable|exists:accounts,id',
+            'account_id' => [
+                'nullable',
+                Rule::exists('accounts', 'id')->where('organization_id', app('current_organization')->id),
+            ],
             'currency' => 'string|size:3',
         ]);
         $validated['organization_id'] = app('current_organization')->id;

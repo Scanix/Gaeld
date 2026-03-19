@@ -10,6 +10,7 @@ use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Enums\MatchConfidence;
+use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
@@ -236,7 +237,7 @@ class ReconciliationService
     /**
      * Match by exact QR reference (structured_reference ↔ invoice.qr_reference).
      *
-     * @return array{invoice_id: string, confidence: int, match_type: string}|null The match, or null if no QR reference match found
+    * @return array{invoice_id: string, confidence: int, match_type: BankMatchType}|null The match, or null if no QR reference match found
      */
     private function matchByQrReference(string $orgId, BankTransaction $transaction): ?array
     {
@@ -482,7 +483,7 @@ class ReconciliationService
         }
 
         $query = Expense::where('organization_id', $orgId)
-            ->whereIn('status', ['pending', 'approved'])
+            ->whereIn('status', [ExpenseStatus::Pending->value, ExpenseStatus::Approved->value])
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('amount', [
                     bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),

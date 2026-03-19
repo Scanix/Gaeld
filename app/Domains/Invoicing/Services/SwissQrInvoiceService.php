@@ -124,7 +124,7 @@ class SwissQrInvoiceService
     }
 
     /**
-     * Generate QR code image as PNG binary.
+     * Generate a PNG data URI for the invoice QR code.
      */
     public function generateQrImage(Invoice $invoice, Organization $organization): string
     {

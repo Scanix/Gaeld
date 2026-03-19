@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\Log;
  * EE Service: Runs all configured automation rules against a bank transaction.
  *
  * Rules are evaluated in descending confidence order. The highest-confidence
- * matching rule is applied automatically; lower-confidence matches are stored
- * as suggestions for the user to confirm.
+ * matching rule is applied automatically; lower-confidence matches are returned
+ * to the caller for optional presentation or follow-up handling.
  *
  * Auto-apply threshold: 100 (only exact matches trigger automated writes).
  *
@@ -43,7 +43,7 @@ class RuleEngineService
      * Run all rules against a transaction.
      *
      * Returns a Collection of matching rules sorted by confidence (desc).
-     * Rules at or above AUTO_APPLY_THRESHOLD are applied immediately.
+        * Rules at or above AUTO_APPLY_THRESHOLD are applied immediately.
      *
      * @return Collection<array{rule: BaseRule, confidence: int, applied: bool}>
      *

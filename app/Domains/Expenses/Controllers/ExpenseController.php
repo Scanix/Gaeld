@@ -16,6 +16,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -54,7 +55,10 @@ class ExpenseController extends Controller
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0.01',
             'vat_amount' => 'nullable|numeric|min:0',
-            'vat_rate_id' => 'nullable|exists:vat_rates,id',
+            'vat_rate_id' => [
+                'nullable',
+                Rule::exists('vat_rates', 'id')->where('organization_id', app('current_organization')->id),
+            ],
             'date' => 'required|date',
             'vendor' => 'nullable|string|max:255',
             'currency' => 'string|size:3',
@@ -105,7 +109,10 @@ class ExpenseController extends Controller
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0.01',
             'vat_amount' => 'nullable|numeric|min:0',
-            'vat_rate_id' => 'nullable|exists:vat_rates,id',
+            'vat_rate_id' => [
+                'nullable',
+                Rule::exists('vat_rates', 'id')->where('organization_id', $expense->organization_id),
+            ],
             'date' => 'required|date',
             'vendor' => 'nullable|string|max:255',
             'currency' => 'string|size:3',

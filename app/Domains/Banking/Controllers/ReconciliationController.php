@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Services\FeatureFlag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -117,7 +118,11 @@ class ReconciliationController extends Controller
         $this->authorize('update', $bankAccount);
 
         $validated = $request->validate([
-            'invoice_id' => 'required|uuid|exists:invoices,id',
+              'invoice_id' => [
+                 'required',
+                 'uuid',
+                 Rule::exists('invoices', 'id')->where('organization_id', $bankAccount->organization_id),
+              ],
         ]);
 
         $invoice = Invoice::where('organization_id', $bankAccount->organization_id)
@@ -138,7 +143,11 @@ class ReconciliationController extends Controller
         $this->authorize('update', $bankAccount);
 
         $validated = $request->validate([
-            'expense_id' => 'required|uuid|exists:expenses,id',
+                'expense_id' => [
+                    'required',
+                    'uuid',
+                    Rule::exists('expenses', 'id')->where('organization_id', $bankAccount->organization_id),
+                ],
             'expense_account_code' => 'required|string|max:10',
         ]);
 

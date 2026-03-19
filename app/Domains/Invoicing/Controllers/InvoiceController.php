@@ -20,6 +20,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -55,7 +56,10 @@ class InvoiceController extends Controller
         $this->authorize('create', Invoice::class);
 
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
+            'customer_id' => [
+                'required',
+                Rule::exists('customers', 'id')->where('organization_id', app('current_organization')->id),
+            ],
             'number' => 'required|string|max:50',
             'issue_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:issue_date',
@@ -66,7 +70,10 @@ class InvoiceController extends Controller
             'lines.*.description' => 'required|string',
             'lines.*.quantity' => 'required|numeric|min:0.01',
             'lines.*.unit_price' => 'required|numeric|min:0',
-            'lines.*.vat_rate_id' => 'nullable|exists:vat_rates,id',
+            'lines.*.vat_rate_id' => [
+                'nullable',
+                Rule::exists('vat_rates', 'id')->where('organization_id', app('current_organization')->id),
+            ],
         ]);
         $validated['organization_id'] = app('current_organization')->id;
 
@@ -103,7 +110,10 @@ class InvoiceController extends Controller
         $this->authorize('update', $invoice);
 
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
+            'customer_id' => [
+                'required',
+                Rule::exists('customers', 'id')->where('organization_id', $invoice->organization_id),
+            ],
             'number' => 'required|string|max:50',
             'issue_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:issue_date',
@@ -114,7 +124,10 @@ class InvoiceController extends Controller
             'lines.*.description' => 'required|string',
             'lines.*.quantity' => 'required|numeric|min:0.01',
             'lines.*.unit_price' => 'required|numeric|min:0',
-            'lines.*.vat_rate_id' => 'nullable|exists:vat_rates,id',
+            'lines.*.vat_rate_id' => [
+                'nullable',
+                Rule::exists('vat_rates', 'id')->where('organization_id', $invoice->organization_id),
+            ],
         ]);
         $validated['organization_id'] = $invoice->organization_id;
 

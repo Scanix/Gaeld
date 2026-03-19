@@ -2,6 +2,8 @@
 
 namespace App\Domains\Users\DTOs;
 
+use DateTimeInterface;
+
 readonly class CreateUserData
 {
     public function __construct(
@@ -9,7 +11,7 @@ readonly class CreateUserData
         public string $email,
         public string $password,
         public string $locale = 'en',
-        public mixed $emailVerifiedAt = null,
+        public DateTimeInterface|string|null $emailVerifiedAt = null,
     ) {}
 
     public static function fromArray(array $data): self
