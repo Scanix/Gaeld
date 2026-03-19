@@ -8,7 +8,6 @@ use App\Domains\Banking\Rules\QrReferencePaymentRule;
 use App\Domains\Banking\Rules\RecurringEntryRule;
 use App\Domains\Banking\Rules\SupplierCategoryRule;
 use App\Domains\Banking\Services\RuleEngineService;
-use App\Services\FeatureFlag;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 

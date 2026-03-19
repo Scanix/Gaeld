@@ -2,12 +2,15 @@
 
 namespace Tests\Unit\Actions;
 
+use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Mockery;
 use Tests\TestCase;
 
@@ -68,12 +71,39 @@ class FinalizeInvoiceActionTest extends TestCase
     public function test_finalizes_valid_draft_invoice(): void
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Draft, lineCount: 2);
+        $invoice->organization_id = 1;
+        $invoice->total = 1000;
+        $invoice->number = 'INV-001';
+        $invoice->issue_date = now();
+
+        $customer = Mockery::mock();
+        $customer->name = 'Test Customer';
+        $invoice->shouldReceive('getAttribute')->with('customer')->andReturn($customer);
+
+        $arAccount = Mockery::mock(Account::class)->makePartial();
+        $arAccount->id = 10;
+        $revenueAccount = Mockery::mock(Account::class)->makePartial();
+        $revenueAccount->id = 20;
+
+        $journalEntry = Mockery::mock(JournalEntry::class)->makePartial();
+        $journalEntry->id = 100;
 
         $this->ledgerService
-            ->shouldReceive('postInvoice')
+            ->shouldReceive('resolveAccount')
+            ->twice()
+            ->andReturn($arAccount, $revenueAccount);
+
+        $this->ledgerService
+            ->shouldReceive('postEntry')
             ->once()
-            ->with($invoice)
-            ->andReturn($invoice);
+            ->andReturn($journalEntry);
+
+        DB::shouldReceive('transaction')
+            ->once()
+            ->andReturnUsing(fn ($callback) => $callback());
+
+        $invoice->shouldReceive('update')->once();
+        $invoice->shouldReceive('fresh')->once()->andReturn($invoice);
 
         $result = $this->action->execute($invoice);
 

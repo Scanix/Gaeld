@@ -4,6 +4,8 @@ namespace App\Domains\Contacts\Controllers;
 
 use App\Domains\Contacts\Actions\CreateCustomerAction;
 use App\Domains\Contacts\Actions\UpdateCustomerAction;
+use App\Domains\Contacts\DTOs\CreateCustomerData;
+use App\Domains\Contacts\DTOs\UpdateCustomerData;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Queries\CustomerQuery;
 use App\Http\Controllers\Controller;
@@ -57,7 +59,7 @@ class CustomerController extends Controller
         $validated = $request->validate(self::VALIDATION_RULES);
         $validated['organization_id'] = app('current_organization')->id;
 
-        $customer = $action->execute($validated);
+        $customer = $action->execute(CreateCustomerData::fromArray($validated));
 
         return redirect()->route('customers.show', $customer)
             ->with('success', 'Customer created.');
@@ -87,7 +89,7 @@ class CustomerController extends Controller
 
         $validated = $request->validate(self::VALIDATION_RULES);
 
-        $action->execute($customer, $validated);
+        $action->execute($customer, UpdateCustomerData::fromArray($validated));
 
         return redirect()->route('customers.show', $customer)
             ->with('success', 'Customer updated.');

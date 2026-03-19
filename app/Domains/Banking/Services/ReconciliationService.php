@@ -30,6 +30,7 @@ class ReconciliationService
     public function __construct(
         private LedgerService $ledgerService,
         private InvoiceService $invoiceService,
+        private BankingService $bankingService,
     ) {}
 
     /**
@@ -100,7 +101,7 @@ class ReconciliationService
                 ['account_id' => $arAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => "Payment for invoice {$invoice->number}"],
             ]);
 
-            $this->ledgerService->updateBankAccountBalance($bankAccount, (string) $amount, true);
+            $this->bankingService->updateBankAccountBalance($bankAccount, (string) $amount, true);
 
             $transaction->update([
                 'journal_entry_id' => $journalEntry->id,
@@ -145,7 +146,7 @@ class ReconciliationService
                 ['account_id' => $bankAccount->ledgerAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => 'Bank withdrawal'],
             ]);
 
-            $this->ledgerService->updateBankAccountBalance($bankAccount, (string) $amount, false);
+            $this->bankingService->updateBankAccountBalance($bankAccount, (string) $amount, false);
 
             $transaction->update([
                 'journal_entry_id' => $journalEntry->id,
@@ -172,7 +173,7 @@ class ReconciliationService
 
             $this->validateReconciliationPreconditions($transaction, $bankAccount);
 
-            $result = $this->ledgerService->postBankTransaction($transaction, $contraAccountCode);
+            $result = $this->bankingService->postBankTransaction($transaction, $contraAccountCode);
 
             $result->update(['is_reconciled' => true]);
 

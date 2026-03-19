@@ -11,6 +11,8 @@ use App\Domains\Organizations\Controllers\OrganizationController;
 use App\Domains\Reporting\Controllers\ReportController;
 use App\Domains\Users\Controllers\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\OnboardingController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Domains\Reporting\Controllers\DashboardController;
@@ -40,10 +42,28 @@ Route::middleware('guest')->group(function () {
     Route::post('/setup', [SetupWizardController::class, 'store'])->name('setup.store');
 });
 
+// Email verification (authenticated but not yet verified)
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+});
+
+// Onboarding (verified but no organization yet)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/onboarding', [OnboardingController::class, 'create'])->name('onboarding');
+    Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
+});
+
+// Logout (available to any authenticated user)
+Route::middleware('auth')->post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
 // Authenticated routes
 Route::middleware(['auth', 'verified', 'org'])->group(function () {
-    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Accounting
@@ -101,6 +121,7 @@ Route::middleware(['auth', 'verified', 'org'])->group(function () {
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/profile/toggle-help', [UserController::class, 'toggleHelp'])->name('profile.toggle-help');
 
     // Contacts — Customers (CE)
     Route::resource('customers', CustomerController::class);

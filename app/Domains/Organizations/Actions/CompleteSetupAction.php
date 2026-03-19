@@ -22,9 +22,9 @@ class CompleteSetupAction
         return DB::transaction(function () use ($data) {
             $user = $this->userService->create($data->user);
 
-            $this->organizationService->create($user, $data->organization);
+            $org = $this->organizationService->create($user, $data->organization);
 
-            $this->organizationSetupService->seedSwissDefaults();
+            $this->organizationSetupService->seedSwissDefaults($org);
 
             return $user;
         });

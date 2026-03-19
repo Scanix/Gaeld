@@ -38,6 +38,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('setup.index');
+        return redirect()->route('verification.notice');
     }
 }

@@ -4,11 +4,13 @@ import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
 import CardTitle from '@/Components/UI/CardTitle.vue'
+import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useHelp } from '@/lib/useHelp'
 
 const props = defineProps({
   user: Object,
@@ -39,6 +41,7 @@ function submitPassword() {
 }
 
 const { t } = useTranslations()
+const { showHelp, toggleHelp } = useHelp()
 
 const localeOptions = [
   { value: 'en', label: t('locale_en') },
@@ -70,6 +73,34 @@ const localeOptions = [
               <Button type="submit" :disabled="profileForm.processing">{{ t('save') }}</Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{{ t('help_preferences') }}</CardTitle>
+          <CardDescription>{{ t('help_preferences_desc') }}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('show_help_label') }}</p>
+              <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('show_help_desc') }}</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              :aria-checked="showHelp"
+              class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2"
+              :class="showHelp ? 'bg-[hsl(var(--primary))]' : 'bg-[hsl(var(--input))]'"
+              @click="toggleHelp"
+            >
+              <span
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                :class="showHelp ? 'translate-x-5' : 'translate-x-0'"
+              />
+            </button>
+          </div>
         </CardContent>
       </Card>
 

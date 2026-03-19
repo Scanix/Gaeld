@@ -44,4 +44,11 @@ class UserController extends Controller
         return redirect()->route('profile')
             ->with('success', 'Password updated.');
     }
+
+    public function toggleHelp(Request $request, UserService $userService): RedirectResponse
+    {
+        $userService->toggleHelp($request->user());
+
+        return back();
+    }
 }

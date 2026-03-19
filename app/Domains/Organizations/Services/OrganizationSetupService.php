@@ -2,6 +2,7 @@
 
 namespace App\Domains\Organizations\Services;
 
+use App\Domains\Organizations\Models\Organization;
 use Database\Seeders\SwissChartOfAccountsSeeder;
 use Database\Seeders\SwissVatRatesSeeder;
 
@@ -12,9 +13,9 @@ class OrganizationSetupService
         private readonly SwissVatRatesSeeder $vatRatesSeeder,
     ) {}
 
-    public function seedSwissDefaults(): void
+    public function seedSwissDefaults(Organization $organization): void
     {
-        $this->chartOfAccountsSeeder->run();
-        $this->vatRatesSeeder->run();
+        $this->chartOfAccountsSeeder->run($organization);
+        $this->vatRatesSeeder->run($organization);
     }
 }

@@ -8,8 +8,11 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Domains\Banking\Services\BankingService;
+use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
@@ -110,7 +113,7 @@ class LedgerServiceTest extends TestCase
             'currency' => 'CHF',
         ]);
 
-        $result = $this->ledgerService->postInvoice($invoice);
+        $result = app(FinalizeInvoiceAction::class)->execute($invoice);
 
         $this->assertEquals(InvoiceStatus::Sent, $result->status);
         $this->assertNotNull($result->journal_entry_id);
@@ -131,7 +134,7 @@ class LedgerServiceTest extends TestCase
             'currency' => 'CHF',
         ]);
 
-        $result = $this->ledgerService->postExpense($expense, '6530');
+        $result = app(PostExpenseAction::class)->execute($expense, '6530');
 
         $this->assertEquals(ExpenseStatus::Posted, $result->status);
         $this->assertNotNull($result->journal_entry_id);
@@ -159,7 +162,7 @@ class LedgerServiceTest extends TestCase
             'reference' => 'BNK-DEP-001',
         ]);
 
-        $result = $this->ledgerService->postBankTransaction($transaction, '3000');
+        $result = app(BankingService::class)->postBankTransaction($transaction, '3000');
 
         $this->assertNotNull($result->journal_entry_id);
         $this->assertTrue($result->journalEntry->isBalanced());

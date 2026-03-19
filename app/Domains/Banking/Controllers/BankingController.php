@@ -3,6 +3,7 @@
 namespace App\Domains\Banking\Controllers;
 
 use App\Domains\Banking\Actions\CreateBankAccountAction;
+use App\Domains\Banking\DTOs\CreateBankAccountData;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Services\BankingService;
 use App\Http\Controllers\Controller;
@@ -52,8 +53,9 @@ class BankingController extends Controller
             'account_id' => 'nullable|exists:accounts,id',
             'currency' => 'string|size:3',
         ]);
+        $validated['organization_id'] = app('current_organization')->id;
 
-        $bankAccount = $action->execute($validated);
+        $bankAccount = $action->execute(CreateBankAccountData::fromArray($validated));
 
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', 'Bank account created.');

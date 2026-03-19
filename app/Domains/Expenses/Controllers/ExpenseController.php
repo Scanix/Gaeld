@@ -5,11 +5,13 @@ namespace App\Domains\Expenses\Controllers;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\DeleteExpenseAction;
+use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Actions\UpdateExpenseAction;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Queries\ExpenseQuery;
-use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Expenses\DTOs\CreateExpenseData;
+use App\Domains\Expenses\DTOs\UpdateExpenseData;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,8 +67,9 @@ class ExpenseController extends Controller
                 'local'
             );
         }
+        $validated['organization_id'] = app('current_organization')->id;
 
-        $expense = $action->execute($validated);
+        $expense = $action->execute(CreateExpenseData::fromArray($validated));
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Expense created.');
@@ -120,7 +123,7 @@ class ExpenseController extends Controller
             );
         }
 
-        $action->execute($expense, $validated);
+        $action->execute($expense, UpdateExpenseData::fromArray($validated));
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Expense updated.');
@@ -151,7 +154,7 @@ class ExpenseController extends Controller
             ->with('success', 'Expense approved.');
     }
 
-    public function postToLedger(Expense $expense, Request $request, LedgerService $ledgerService): RedirectResponse
+    public function postToLedger(Expense $expense, Request $request, PostExpenseAction $action): RedirectResponse
     {
         $this->authorize('update', $expense);
 
@@ -160,7 +163,7 @@ class ExpenseController extends Controller
         ]);
 
         try {
-            $ledgerService->postExpense($expense, $validated['expense_account_code']);
+            $action->execute($expense, $validated['expense_account_code']);
         } catch (\DomainException $e) {
             return redirect()->route('expenses.show', $expense)
                 ->with('error', $e->getMessage());

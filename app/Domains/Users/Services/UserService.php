@@ -29,6 +29,13 @@ class UserService
         return $user;
     }
 
+    public function toggleHelp(User $user): bool
+    {
+        $user->update(['show_help' => ! $user->show_help]);
+
+        return $user->show_help;
+    }
+
     public function updatePassword(User $user, string $newPassword): void
     {
         $user->update([

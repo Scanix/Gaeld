@@ -279,4 +279,50 @@ return [
     'locale_de' => 'Deutsch',
     'locale_it' => 'Italiano',
     'locale_rm' => 'Rumantsch',
+
+    // Email verification
+    'verify_email_title' => 'E-Mail verifizieren',
+    'verify_email_description' => 'Bevor Sie beginnen, verifizieren Sie bitte Ihre E-Mail-Adresse, indem Sie auf den Link klicken, den wir Ihnen gerade gesendet haben.',
+    'verify_email_resent' => 'Ein neuer Verifizierungslink wurde an Ihre E-Mail-Adresse gesendet.',
+    'verify_email_check_inbox' => 'Falls Sie die E-Mail nicht erhalten haben, klicken Sie unten, um eine neue anzufordern.',
+    'verify_email_resend' => 'Verifizierungs-E-Mail erneut senden',
+    'logout' => 'Abmelden',
+
+    // Onboarding
+    'onboarding_title' => 'Organisation erstellen',
+    'onboarding_description' => 'Richten Sie Ihr Unternehmen ein, um mit der Buchhaltung zu beginnen.',
+    'onboarding_org_help' => 'Geben Sie Ihre Firmendaten ein. Sie können diese später ändern.',
+    'create_organization_btn' => 'Organisation erstellen',
+
+    // Chart of accounts
+    'chart_of_accounts' => 'Kontenplan',
+    'chart_swiss_sme' => 'Schweizer KMU (Kontenrahmen KMU)',
+    'chart_none' => 'Leer — ich erstelle meinen eigenen',
+    'chart_of_accounts_help' => 'Die Schweizer KMU-Vorlage enthält Standardkonten und Mehrwertsteuersätze. Sie können später jederzeit Konten hinzufügen oder entfernen.',
+
+    // Help preferences
+    'help_preferences' => 'Hilfe & Anleitung',
+    'help_preferences_desc' => 'Gäld enthält kontextbezogene Tipps, die Ihnen helfen, Buchhaltungskonzepte zu verstehen.',
+    'show_help_label' => 'Kontexthilfe anzeigen',
+    'show_help_desc' => 'Erklärungen und Tipps in der Anwendung anzeigen. Sie können dies deaktivieren, sobald Sie sich sicher fühlen.',
+    'hide_help' => 'Hilfe ausblenden',
+    'show_help' => 'Hilfe anzeigen',
+
+    // Contextual help texts
+    'help_dashboard_title' => 'Ihre Finanzübersicht',
+    'help_dashboard_text' => 'Dieses Dashboard zeigt eine Zusammenfassung Ihrer Finanzen: Einnahmen (verdientes Geld), Ausgaben (ausgegebenes Geld), Gewinn (Einnahmen minus Ausgaben) und Kontostand (Geld auf Ihren Bankkonten). Das Diagramm vergleicht Ihre monatlichen Einnahmen und Ausgaben.',
+    'help_invoices_title' => 'Was sind Rechnungen?',
+    'help_invoices_text' => 'Eine Rechnung ist ein Dokument, das Sie an einen Kunden senden, um die Zahlung für Waren oder Dienstleistungen anzufordern. Erstellen Sie eine Rechnung nach Abschluss einer Arbeit und verfolgen Sie den Status: Entwurf (noch nicht gesendet), Gesendet (Zahlung ausstehend), Bezahlt (Zahlung erhalten) oder Überfällig (Fälligkeitsdatum überschritten).',
+    'help_expenses_title' => 'Ausgaben erfassen',
+    'help_expenses_text' => 'Ausgaben sind Kosten Ihres Unternehmens — Miete, Material, Dienstleistungen usw. Erfassen Sie jede Ausgabe hier, um den Überblick zu behalten, wohin Ihr Geld fliesst. Dies ist wichtig für eine genaue Gewinnberechnung und Steuererklärung.',
+    'help_chart_title' => 'Was ist ein Kontenplan?',
+    'help_chart_text' => 'Der Kontenplan ist die Liste aller Konten, die zur Klassifizierung Ihrer Finanztransaktionen verwendet werden. Jedes Konto hat einen Typ: Aktiven (was Sie besitzen), Passiven (was Sie schulden), Eigenkapital (Investition des Eigentümers), Ertrag (verdientes Geld) und Aufwand (ausgegebenes Geld). Jede Transaktion wird in mindestens zwei Konten erfasst — das nennt man doppelte Buchführung.',
+    'help_journal_title' => 'Buchungen verstehen',
+    'help_journal_text' => 'Eine Buchung erfasst eine Finanztransaktion. Jede Buchung hat mindestens zwei Zeilen: eine Belastung (Soll) und eine Gutschrift (Haben). Die Summe der Belastungen muss immer der Summe der Gutschriften entsprechen — das hält Ihre Bücher ausgeglichen. Sobald eine Buchung verbucht ist, ist sie permanent und kann nicht mehr geändert werden.',
+    'help_balance_sheet_title' => 'Eine Bilanz lesen',
+    'help_balance_sheet_text' => 'Die Bilanz zeigt Ihre finanzielle Lage zu einem bestimmten Datum. Sie folgt einer einfachen Gleichung: Aktiven = Passiven + Eigenkapital. Aktiven sind, was Ihr Unternehmen besitzt, Passiven, was es schuldet, und Eigenkapital ist der Anteil des Eigentümers. Beide Seiten müssen immer ausgeglichen sein.',
+    'help_profit_loss_title' => 'Erfolgsrechnung verstehen',
+    'help_profit_loss_text' => 'Die Erfolgsrechnung zeigt, wie viel Ihr Unternehmen über einen Zeitraum verdient und ausgegeben hat. Ertrag minus Aufwand ergibt Ihren Reingewinn (oder Verlust). Dies zeigt Ihnen, ob Ihr Unternehmen rentabel ist.',
+    'help_reconciliation_title' => 'Was ist Bankabstimmung?',
+    'help_reconciliation_text' => 'Abstimmung bedeutet, Ihre Banktransaktionen mit den Einträgen in Ihrer Buchhaltung abzugleichen. Dies stellt sicher, dass Ihre Bücher genau widerspiegeln, was tatsächlich auf Ihrem Bankkonto passiert ist. Importieren Sie Ihren Kontoauszug und ordnen Sie jede Transaktion einer Rechnung, Ausgabe oder manuellen Buchung zu.',
 ];

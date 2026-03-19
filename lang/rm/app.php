@@ -279,4 +279,50 @@ return [
     'locale_de' => 'Deutsch',
     'locale_it' => 'Italiano',
     'locale_rm' => 'Rumantsch',
+
+    // Email verification
+    'verify_email_title' => 'Verifitgescha tia adressa d\'e-mail',
+    'verify_email_description' => 'Avant che cumenzar, verifitgescha per plaschair tia adressa d\'e-mail cun cliccar sin il link che nus avain tramess.',
+    'verify_email_resent' => 'In nov link da verificaziun è vegnì tramess a tia adressa d\'e-mail.',
+    'verify_email_check_inbox' => 'Sche ti n\'has betg retschavì l\'e-mail, clicca sutvart per dumandar in auter.',
+    'verify_email_resend' => 'Trametter anc ina giada l\'e-mail da verificaziun',
+    'logout' => 'Sortir',
+
+    // Onboarding
+    'onboarding_title' => 'Creescha tia organisaziun',
+    'onboarding_description' => 'Configurescha tia firma per cumenzar cun la contabilitad.',
+    'onboarding_org_help' => 'Endatescha las datas da tia firma. Ti pos las midar pli tard.',
+    'create_organization_btn' => 'Crear l\'organisaziun',
+
+    // Chart of accounts
+    'chart_of_accounts' => 'Plan da contos',
+    'chart_swiss_sme' => 'PMI svizra (Kontenrahmen KMU)',
+    'chart_none' => 'Vid \u2014 jau creeschel mieu agen',
+    'chart_of_accounts_help' => 'Il model PMI svizra cuntegna contos standard e taxas da taglia sin la valur agiunschida. Ti pos adina agiuntar u allontanar contos pli tard.',
+
+    // Help preferences
+    'help_preferences' => 'Agid & cussegliar',
+    'help_preferences_desc' => 'Gäld cuntegna tips contextuals per gidar tai a chapir ils concepts da contabilitad.',
+    'show_help_label' => 'Mussar agid contextual',
+    'show_help_desc' => 'Mussar explicaziuns e tips en l\'applicaziun. Ti pos deactivar quai cura che ti ta sentas segir.',
+    'hide_help' => 'Zuppentar agid',
+    'show_help' => 'Mussar agid',
+
+    // Contextual help texts
+    'help_dashboard_title' => 'Tia survista finanziala',
+    'help_dashboard_text' => 'Quest dashboard mussa in resumé da tias finanzas: entradas (daners gudagnads), expensas (daners dads ora), gudogn (entradas minus expensas) e saldo da cassa (daners sin tes contos da banca). Il diagram sutvart cumparegia tias entradas e expensas mensualas.',
+    'help_invoices_title' => 'Tge èn facturas?',
+    'help_invoices_text' => 'Ina factura è in document che ti tramettast ad in client per dumandar il pajament per rauba u servetschs. Creescha ina factura cura che ti fineschast in lavur e persecutescha ses status: Sboz (anc betg tramess), Tramess (spetgond il pajament), Pajà (pajament retschavì) u Surpassà (data da scadenza surpassada).',
+    'help_expenses_title' => 'Registrar expensas',
+    'help_expenses_text' => 'Expensas èn custs da tia fatschenta — tschains, material, servetschs etc. Registrescha mintga expensa qua per tegnair il survisa nua che tes daners van. Quai è essenzial per in calcul exact dal gudogn e la decleraziun da taglia.',
+    'help_chart_title' => 'Tge è in plan da contos?',
+    'help_chart_text' => 'Il plan da contos è la glista da tut ils contos utilisads per classifichar tias transacziuns finanzialas. Mintga conto ha in tip: Activs (tge che ti possedas), Passivs (tge che ti duevas), Chapital agen (investiziun dal proprietari), Entradas (daners gudagnads) ed Expensas (daners dads ora). Mintga transacziun vegn registrada en almain dus contos — quai sa numna contabilitad dubla.',
+    'help_journal_title' => 'Chapir las registraziuns da conto',
+    'help_journal_text' => 'Ina registraziun da conto documentescha ina transacziun finanziala. Mintga registraziun ha almain duas lingias: in debit ed in credit. Il total dals debits sto adina esser equal al total dals credits — quai tegna tes cudeschs en equiliber. Uschè che ina registraziun è postada, è ella permanenta e na po betg pli vegnir midada.',
+    'help_balance_sheet_title' => 'Leger ina bilantscha',
+    'help_balance_sheet_text' => 'La bilantscha mussa tia posiziun finanziala ad ina data specifica. Ella suonda ina equaziun simpla: Activs = Passivs + Chapital agen. Activs èn tge che tia fatschenta posseda, passivs tge ch\'ella dueva, e chapital agen è la part dal proprietari. Omaduas varts stognan adina esser en equiliber.',
+    'help_profit_loss_title' => 'Chapir il quint da success',
+    'help_profit_loss_text' => 'Il quint da success mussa quant tia fatschenta ha gudagnà e dà ora durant ina perioda. Entradas minus expensas dat tes gudogn net (u perdita). Quai ta di sche tia fatschenta è rentabla.',
+    'help_reconciliation_title' => 'Tge è la reconciliaziun bancara?',
+    'help_reconciliation_text' => 'Reconciliaziun vul dir cumparegliar tias transacziuns bancaras cun las registraziuns en tia contabilitad. Quai garantescha che tes cudeschs reflecteschan exactamain tge ch\'è capità sin tes conto da banca. Importescha tes extract da conto e attribuescha mintga transacziun ad ina factura, ina expensa u ina registraziun manuala.',
 ];

@@ -8,6 +8,7 @@ import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Pencil, Trash2, Copy } from 'lucide-vue-next'
+import HelpText from '@/Components/HelpText.vue'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
@@ -98,6 +99,10 @@ const statusFilters = computed(() => [
 
 <template>
   <AppLayout :title="t('invoices')" help-page="invoices">
+    <HelpText :title="t('help_invoices_title')" class="mb-6">
+      <p>{{ t('help_invoices_text') }}</p>
+    </HelpText>
+
     <div class="mb-6 flex items-center justify-between">
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('manage_invoices') }}

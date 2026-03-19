@@ -9,6 +9,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { computed } from 'vue'
+import HelpText from '@/Components/HelpText.vue'
 
 defineProps({ entries: Object })
 
@@ -24,6 +25,10 @@ const columns = computed(() => [
 
 <template>
   <AppLayout :title="t('journal_entries')" help-page="accounting-basics">
+    <HelpText :title="t('help_journal_title')" class="mb-6">
+      <p>{{ t('help_journal_text') }}</p>
+    </HelpText>
+
     <Card>
       <CardHeader><CardTitle>{{ t('journal_entries') }}</CardTitle></CardHeader>
       <CardContent>

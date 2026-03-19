@@ -10,6 +10,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X } from 'lucide-vue-next'
+import HelpText from '@/Components/HelpText.vue'
 import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -179,6 +180,10 @@ const transactionColumns = computed(() => [
 
 <template>
   <AppLayout :title="t('dashboard')" help-page="getting-started">
+    <HelpText :title="t('help_dashboard_title')" class="mb-6">
+      <p>{{ t('help_dashboard_text') }}</p>
+    </HelpText>
+
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <Card v-for="card in summaryCards" :key="card.title">

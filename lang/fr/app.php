@@ -279,4 +279,49 @@ return [
     'locale_de' => 'Deutsch',
     'locale_it' => 'Italiano',
     'locale_rm' => 'Rumantsch',
+
+    // Email verification
+    'verify_email_title' => 'Vérifiez votre adresse e-mail',
+    'verify_email_description' => 'Avant de commencer, veuillez vérifier votre adresse e-mail en cliquant sur le lien que nous venons de vous envoyer.',
+    'verify_email_resent' => 'Un nouveau lien de vérification a été envoyé à votre adresse e-mail.',
+    'verify_email_check_inbox' => 'Si vous n\'avez pas reçu l\'e-mail, cliquez ci-dessous pour en demander un autre.',
+    'verify_email_resend' => 'Renvoyer l\'e-mail de vérification',
+    'logout' => 'Se déconnecter',
+
+    // Onboarding
+    'onboarding_title' => 'Créez votre organisation',
+    'onboarding_description' => 'Configurez votre entreprise pour commencer à gérer votre comptabilité.',
+    'onboarding_org_help' => 'Entrez les détails de votre entreprise. Vous pourrez les modifier plus tard.',
+    'create_organization_btn' => 'Créer l\'organisation',
+    // Chart of accounts
+    'chart_of_accounts' => 'Plan comptable',
+    'chart_swiss_sme' => 'PME suisse (Kontenrahmen KMU)',
+    'chart_none' => 'Vide \u2014 je cr\u00e9erai le mien',
+    'chart_of_accounts_help' => 'Le modèle PME suisse inclut les comptes standards et les taux de TVA. Vous pourrez toujours ajouter ou supprimer des comptes plus tard.',
+
+    // Help preferences
+    'help_preferences' => 'Aide et conseils',
+    'help_preferences_desc' => 'Gäld inclut des conseils contextuels pour vous aider à comprendre les concepts comptables.',
+    'show_help_label' => 'Afficher l\'aide contextuelle',
+    'show_help_desc' => 'Afficher les explications et conseils dans l\'application. Vous pouvez désactiver cette option quand vous vous sentez à l\'aise.',
+    'hide_help' => 'Masquer l\'aide',
+    'show_help' => 'Afficher l\'aide',
+
+    // Contextual help texts
+    'help_dashboard_title' => 'Votre aperçu financier',
+    'help_dashboard_text' => 'Ce tableau de bord affiche un résumé de vos finances : revenus (argent gagné), dépenses (argent dépensé), bénéfice (revenus moins dépenses) et solde de trésorerie (argent sur vos comptes bancaires). Le graphique ci-dessous compare vos revenus et dépenses mensuels.',
+    'help_invoices_title' => 'Que sont les factures ?',
+    'help_invoices_text' => 'Une facture est un document envoyé à un client pour demander le paiement de biens ou services. Créez une facture lorsque vous terminez un travail et suivez son statut : Brouillon (pas encore envoyée), Envoyée (en attente de paiement), Payée (paiement reçu) ou En retard (date d\'échéance dépassée).',
+    'help_expenses_title' => 'Suivi des dépenses',
+    'help_expenses_text' => 'Les dépenses sont les coûts de votre entreprise — loyer, fournitures, services, etc. Enregistrez chaque dépense ici pour savoir où va votre argent. C\'est essentiel pour un calcul précis des bénéfices et la déclaration fiscale.',
+    'help_chart_title' => 'Qu\'est-ce qu\'un plan comptable ?',
+    'help_chart_text' => 'Le plan comptable est la liste de tous les comptes utilisés pour classer vos transactions financières. Chaque compte a un type : Actifs (ce que vous possédez), Passifs (ce que vous devez), Capitaux propres (investissement du propriétaire), Revenus (argent gagné) et Charges (argent dépensé). Chaque transaction est enregistrée dans au moins deux comptes — c\'est la comptabilité en partie double.',
+    'help_journal_title' => 'Comprendre les écritures comptables',
+    'help_journal_text' => 'Une écriture comptable enregistre une transaction financière. Chaque écriture a au moins deux lignes : un débit (côté gauche) et un crédit (côté droit). Le total des débits doit toujours être égal au total des crédits — cela maintient vos livres équilibrés. Une fois comptabilisée, une écriture est permanente et ne peut plus être modifiée.',
+    'help_balance_sheet_title' => 'Lire un bilan',
+    'help_balance_sheet_text' => 'Le bilan montre votre situation financière à une date donnée. Il suit une équation simple : Actifs = Passifs + Capitaux propres. Les actifs sont ce que votre entreprise possède, les passifs ce qu\'elle doit, et les capitaux propres la part du propriétaire. Les deux côtés doivent toujours s\'équilibrer.',
+    'help_profit_loss_title' => 'Comprendre le compte de résultat',
+    'help_profit_loss_text' => 'Le compte de résultat montre combien votre entreprise a gagné et dépensé sur une période. Revenus moins charges égalent votre bénéfice net (ou perte). Cela vous indique si votre entreprise est rentable.',
+    'help_reconciliation_title' => 'Qu\'est-ce que le rapprochement bancaire ?',
+    'help_reconciliation_text' => 'Le rapprochement consiste à faire correspondre vos transactions bancaires avec les écritures de votre comptabilité. Cela garantit que vos livres reflètent fidèlement ce qui s\'est passé sur votre compte bancaire. Importez votre relevé bancaire et associez chaque transaction à une facture, une dépense ou une écriture manuelle.',
 ];

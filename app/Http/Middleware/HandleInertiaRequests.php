@@ -23,6 +23,7 @@ class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                     'email' => $user->email,
                     'locale' => $user->locale,
+                    'show_help' => $user->show_help,
                 ],
                 'currentOrganization' => $user->resolveCurrentOrganization()?->only(
                     'id', 'name', 'currency', 'locale'

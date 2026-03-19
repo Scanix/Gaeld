@@ -11,7 +11,10 @@ class EnsureHasOrganization
     public function handle(Request $request, Closure $next): Response
     {
         $org = $request->user()?->resolveCurrentOrganization();
-        abort_if(! $org, 403, 'No organization found.');
+
+        if (! $org) {
+            return redirect()->route('onboarding');
+        }
 
         app()->instance('current_organization', $org);
 

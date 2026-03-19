@@ -4,6 +4,8 @@ namespace App\Domains\Contacts\Controllers;
 
 use App\Domains\Contacts\Actions\CreateSupplierAction;
 use App\Domains\Contacts\Actions\UpdateSupplierAction;
+use App\Domains\Contacts\DTOs\CreateSupplierData;
+use App\Domains\Contacts\DTOs\UpdateSupplierData;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Contacts\Queries\SupplierQuery;
 use App\Http\Controllers\Controller;
@@ -58,7 +60,7 @@ class SupplierController extends Controller
         $validated = $request->validate(self::VALIDATION_RULES);
         $validated['organization_id'] = app('current_organization')->id;
 
-        $supplier = $action->execute($validated);
+        $supplier = $action->execute(CreateSupplierData::fromArray($validated));
 
         return redirect()->route('suppliers.show', $supplier)
             ->with('success', 'Supplier created.');
@@ -88,7 +90,7 @@ class SupplierController extends Controller
 
         $validated = $request->validate(self::VALIDATION_RULES);
 
-        $action->execute($supplier, $validated);
+        $action->execute($supplier, UpdateSupplierData::fromArray($validated));
 
         return redirect()->route('suppliers.show', $supplier)
             ->with('success', 'Supplier updated.');

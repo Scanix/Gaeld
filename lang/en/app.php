@@ -303,4 +303,50 @@ return [
     'locale_de' => 'Deutsch',
     'locale_it' => 'Italiano',
     'locale_rm' => 'Rumantsch',
+
+    // Email verification
+    'verify_email_title' => 'Verify your email',
+    'verify_email_description' => 'Before getting started, please verify your email address by clicking the link we just sent you.',
+    'verify_email_resent' => 'A new verification link has been sent to your email address.',
+    'verify_email_check_inbox' => 'If you didn\'t receive the email, click below to request another one.',
+    'verify_email_resend' => 'Resend verification email',
+    'logout' => 'Log out',
+
+    // Onboarding
+    'onboarding_title' => 'Create your organization',
+    'onboarding_description' => 'Set up your company to start managing your accounting.',
+    'onboarding_org_help' => 'Enter your company details. You can update these later.',
+    'create_organization_btn' => 'Create organization',
+
+    // Chart of accounts
+    'chart_of_accounts' => 'Chart of Accounts',
+    'chart_swiss_sme' => 'Swiss SME (Kontenrahmen KMU)',
+    'chart_none' => 'Empty — I\'ll create my own',
+    'chart_of_accounts_help' => 'The Swiss SME template includes standard accounts and VAT rates. You can always add or remove accounts later.',
+
+    // Help preferences
+    'help_preferences' => 'Help & Guidance',
+    'help_preferences_desc' => 'Gäld includes contextual tips to help you understand accounting concepts.',
+    'show_help_label' => 'Show contextual help',
+    'show_help_desc' => 'Display explanations and tips throughout the application. You can turn this off once you feel comfortable.',
+    'hide_help' => 'Hide help',
+    'show_help' => 'Show help',
+
+    // Contextual help texts
+    'help_dashboard_title' => 'Your financial overview',
+    'help_dashboard_text' => 'This dashboard shows a summary of your finances: revenue (money earned), expenses (money spent), profit (revenue minus expenses), and cash balance (money in your bank accounts). The chart below compares your monthly revenue and expenses.',
+    'help_invoices_title' => 'What are invoices?',
+    'help_invoices_text' => 'An invoice is a document you send to a customer to request payment for goods or services. Create an invoice when you complete work, and track its status: Draft (not yet sent), Sent (waiting for payment), Paid (payment received), or Overdue (past due date).',
+    'help_expenses_title' => 'Tracking expenses',
+    'help_expenses_text' => 'Expenses are costs your business incurs — rent, supplies, services, etc. Record each expense here to keep track of where your money goes. This is essential for accurate profit calculations and tax reporting.',
+    'help_chart_title' => 'What is a chart of accounts?',
+    'help_chart_text' => 'The chart of accounts is the list of all accounts used to classify your financial transactions. Each account has a type: Assets (what you own), Liabilities (what you owe), Equity (owner\'s investment), Revenue (money earned), and Expenses (money spent). Every transaction is recorded in at least two accounts — this is called double-entry bookkeeping.',
+    'help_journal_title' => 'Understanding journal entries',
+    'help_journal_text' => 'A journal entry records a financial transaction. Each entry has at least two lines: a debit (left side) and a credit (right side). The total debits must always equal the total credits — this keeps your books balanced. Once an entry is posted, it becomes permanent and cannot be changed.',
+    'help_balance_sheet_title' => 'Reading a balance sheet',
+    'help_balance_sheet_text' => 'The balance sheet shows your financial position at a specific date. It follows a simple equation: Assets = Liabilities + Equity. Assets are what your business owns, liabilities are what it owes, and equity is the owner\'s share. The two sides must always balance.',
+    'help_profit_loss_title' => 'Understanding profit & loss',
+    'help_profit_loss_text' => 'The profit and loss report (also called income statement) shows how much money your business earned and spent over a period. Revenue minus expenses equals your net profit (or loss). This tells you whether your business is profitable.',
+    'help_reconciliation_title' => 'What is bank reconciliation?',
+    'help_reconciliation_text' => 'Reconciliation means matching your bank transactions with entries in your accounting records. This ensures your books accurately reflect what actually happened in your bank account. Import your bank statement and match each transaction to an invoice, expense, or manual entry.',
 ];

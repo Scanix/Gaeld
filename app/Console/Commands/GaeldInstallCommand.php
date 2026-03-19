@@ -86,7 +86,8 @@ class GaeldInstallCommand extends Command
 
         // Step 5: Seed chart of accounts
         $this->components->task('Seeding Swiss chart of accounts and VAT rates', function () {
-            $this->organizationSetupService->seedSwissDefaults();
+            $org = \App\Domains\Organizations\Models\Organization::latest()->first();
+            $this->organizationSetupService->seedSwissDefaults($org);
         });
 
         // Step 6: Demo data (optional)

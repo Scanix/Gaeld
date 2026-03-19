@@ -6,6 +6,10 @@ use App\Domains\Contacts\Actions\CreateCustomerAction;
 use App\Domains\Contacts\Actions\CreateSupplierAction;
 use App\Domains\Contacts\Actions\UpdateCustomerAction;
 use App\Domains\Contacts\Actions\UpdateSupplierAction;
+use App\Domains\Contacts\DTOs\CreateCustomerData;
+use App\Domains\Contacts\DTOs\CreateSupplierData;
+use App\Domains\Contacts\DTOs\UpdateCustomerData;
+use App\Domains\Contacts\DTOs\UpdateSupplierData;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Organizations\Models\Organization;
@@ -39,13 +43,13 @@ class ContactsFlowTest extends TestCase
     public function test_create_customer_action_persists_record(): void
     {
         $action = new CreateCustomerAction();
-        $customer = $action->execute([
-            'organization_id' => $this->org->id,
-            'name' => 'Acme AG',
-            'email' => 'billing@acme.ch',
-            'country' => 'CH',
-            'currency' => 'CHF',
-        ]);
+        $customer = $action->execute(new CreateCustomerData(
+            organizationId: $this->org->id,
+            name: 'Acme AG',
+            email: 'billing@acme.ch',
+            country: 'CH',
+            currency: 'CHF',
+        ));
 
         $this->assertInstanceOf(Customer::class, $customer);
         $this->assertDatabaseHas('customers', [
@@ -65,7 +69,10 @@ class ContactsFlowTest extends TestCase
         ]);
 
         $action = new UpdateCustomerAction();
-        $updated = $action->execute($customer, ['name' => 'New Name', 'city' => 'Zurich']);
+        $updated = $action->execute($customer, new UpdateCustomerData(
+            name: 'New Name',
+            city: 'Zurich',
+        ));
 
         $this->assertEquals('New Name', $updated->name);
         $this->assertEquals('Zurich', $updated->city);
@@ -108,15 +115,15 @@ class ContactsFlowTest extends TestCase
     public function test_create_supplier_action_persists_record(): void
     {
         $action = new CreateSupplierAction();
-        $supplier = $action->execute([
-            'organization_id' => $this->org->id,
-            'name' => 'Swisscom AG',
-            'email' => 'invoice@swisscom.ch',
-            'country' => 'CH',
-            'currency' => 'CHF',
-            'default_expense_category' => 'utilities',
-            'iban' => 'CH56 0483 5012 3456 7800 9',
-        ]);
+        $supplier = $action->execute(new CreateSupplierData(
+            organizationId: $this->org->id,
+            name: 'Swisscom AG',
+            email: 'invoice@swisscom.ch',
+            country: 'CH',
+            currency: 'CHF',
+            defaultExpenseCategory: 'utilities',
+            iban: 'CH56 0483 5012 3456 7800 9',
+        ));
 
         $this->assertInstanceOf(Supplier::class, $supplier);
         $this->assertDatabaseHas('suppliers', [
@@ -137,7 +144,10 @@ class ContactsFlowTest extends TestCase
         ]);
 
         $action = new UpdateSupplierAction();
-        $updated = $action->execute($supplier, ['default_expense_category' => 'other']);
+        $updated = $action->execute($supplier, new UpdateSupplierData(
+            name: $supplier->name,
+            defaultExpenseCategory: 'other',
+        ));
 
         $this->assertEquals('other', $updated->default_expense_category);
     }
