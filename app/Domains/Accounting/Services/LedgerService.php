@@ -2,6 +2,8 @@
 
 namespace App\Domains\Accounting\Services;
 
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Exceptions\AlreadyPostedException;
 use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
@@ -40,21 +42,20 @@ class LedgerService
      * must have a matching credit — the method validates this before
      * persisting. The resulting JournalEntry is immediately marked as posted.
      *
-     * @param  string  $organizationId  UUID of the owning organization
-     * @param  array{date: string, reference?: string, description?: string}  $entryData
-     * @param  array<array{account_id: string, debit: string, credit: string, description?: string}>  $lines
+     * @param  string            $organizationId  UUID of the owning organization
+     * @param  JournalEntryData  $entry           Header + balanced lines
      * @return JournalEntry  The posted journal entry with lines eager-loaded
      *
      * @throws UnbalancedEntryException  When SUM(debit) ≠ SUM(credit)
      * @throws InvalidEntryDataException  When amounts are zero or accounts invalid
      */
-    public function postEntry(string $organizationId, array $entryData, array $lines): JournalEntry
+    public function postEntry(string $organizationId, JournalEntryData $entry): JournalEntry
     {
-        $this->validateBalance($lines);
-        $this->validateAccounts($organizationId, $lines);
-        $this->throwIfDuplicateReference($organizationId, $entryData['reference'] ?? null);
+        $this->validateBalance($entry->lines);
+        $this->validateAccounts($organizationId, $entry->lines);
+        $this->throwIfDuplicateReference($organizationId, $entry->reference);
 
-        return $this->persistEntry($organizationId, $entryData, $lines, true);
+        return $this->persistEntry($organizationId, $entry, true);
     }
 
     /**
@@ -63,12 +64,12 @@ class LedgerService
      * Drafts still enforce balance validation but are not visible
      * in account balances or trial-balance reports until posted.
      */
-    public function createDraft(string $organizationId, array $entryData, array $lines): JournalEntry
+    public function createDraft(string $organizationId, JournalEntryData $entry): JournalEntry
     {
-        $this->validateBalance($lines);
-        $this->validateAccounts($organizationId, $lines);
+        $this->validateBalance($entry->lines);
+        $this->validateAccounts($organizationId, $entry->lines);
 
-        return $this->persistEntry($organizationId, $entryData, $lines, false);
+        return $this->persistEntry($organizationId, $entry, false);
     }
 
     /**
@@ -100,18 +101,19 @@ class LedgerService
      */
     public function reverseEntry(JournalEntry $journalEntry, ?string $description = null): JournalEntry
     {
-        $lines = $journalEntry->lines->map(fn (TransactionLine $line) => [
-            'account_id' => $line->account_id,
-            'debit' => $line->credit,
-            'credit' => $line->debit,
-            'description' => 'Reversal: ' . ($line->description ?? ''),
-        ])->toArray();
+        $lines = $journalEntry->lines->map(fn (TransactionLine $line) => new JournalLineData(
+            accountId: $line->account_id,
+            debit: $line->credit,
+            credit: $line->debit,
+            description: 'Reversal: ' . ($line->description ?? ''),
+        ))->all();
 
-        return $this->postEntry($journalEntry->organization_id, [
-            'date' => now()->toDateString(),
-            'reference' => self::REFERENCE_PREFIX_REVERSAL . $journalEntry->reference,
-            'description' => $description ?? 'Reversal of ' . $journalEntry->reference,
-        ], $lines);
+        return $this->postEntry($journalEntry->organization_id, new JournalEntryData(
+            date: now()->toDateString(),
+            reference: self::REFERENCE_PREFIX_REVERSAL . $journalEntry->reference,
+            description: $description ?? 'Reversal of ' . $journalEntry->reference,
+            lines: $lines,
+        ));
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -237,7 +239,7 @@ class LedgerService
      */
     public function validateAccounts(string $organizationId, array $lines): void
     {
-        $accountIds = array_unique(array_column($lines, 'account_id'));
+        $accountIds = array_unique(array_map(fn ($l) => $l->accountId, $lines));
 
         $existingCount = Account::where('organization_id', $organizationId)
             ->whereIn('id', $accountIds)
@@ -277,24 +279,24 @@ class LedgerService
             ->firstOrFail();
     }
 
-    private function persistEntry(string $organizationId, array $entryData, array $lines, bool $isPosted): JournalEntry
+    private function persistEntry(string $organizationId, JournalEntryData $entry, bool $isPosted): JournalEntry
     {
-        return DB::transaction(function () use ($organizationId, $entryData, $lines, $isPosted) {
+        return DB::transaction(function () use ($organizationId, $entry, $isPosted) {
             $journalEntry = JournalEntry::create([
                 'organization_id' => $organizationId,
-                'date' => $entryData['date'],
-                'reference' => $entryData['reference'] ?? null,
-                'description' => $entryData['description'] ?? null,
+                'date' => $entry->date,
+                'reference' => $entry->reference,
+                'description' => $entry->description,
                 'is_posted' => $isPosted,
             ]);
 
-            foreach ($lines as $line) {
+            foreach ($entry->lines as $line) {
                 TransactionLine::create([
                     'journal_entry_id' => $journalEntry->id,
-                    'account_id' => $line['account_id'],
-                    'debit' => $line['debit'] ?? 0,
-                    'credit' => $line['credit'] ?? 0,
-                    'description' => $line['description'] ?? null,
+                    'account_id' => $line->accountId,
+                    'debit' => $line->debit,
+                    'credit' => $line->credit,
+                    'description' => $line->description,
                 ]);
             }
 
@@ -326,8 +328,8 @@ class LedgerService
         $totalCredit = '0';
 
         foreach ($lines as $line) {
-            $totalDebit = bcadd($totalDebit, (string) ($line['debit'] ?? 0), 2);
-            $totalCredit = bcadd($totalCredit, (string) ($line['credit'] ?? 0), 2);
+            $totalDebit = bcadd($totalDebit, (string) $line->debit, 2);
+            $totalCredit = bcadd($totalCredit, (string) $line->credit, 2);
         }
 
         if (bccomp($totalDebit, $totalCredit, 2) !== 0) {

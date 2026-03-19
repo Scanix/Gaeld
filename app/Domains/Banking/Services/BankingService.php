@@ -3,6 +3,8 @@
 namespace App\Domains\Banking\Services;
 
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Enums\BankTransactionType;
@@ -75,11 +77,12 @@ class BankingService
 
             $lines = $this->buildBankTransactionLines($bankLedgerAccount, $contraAccount, $amount, $isDeposit, $transaction->description);
 
-            $journalEntry = $this->ledgerService->postEntry($orgId, [
-                'date' => $transaction->date->toDateString(),
-                'reference' => $transaction->reference ?? self::REFERENCE_PREFIX_BANK . $transaction->id,
-                'description' => $transaction->description,
-            ], $lines);
+            $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
+                date: $transaction->date->toDateString(),
+                reference: $transaction->reference ?? self::REFERENCE_PREFIX_BANK . $transaction->id,
+                description: $transaction->description,
+                lines: $lines,
+            ));
 
             $transaction->update(['journal_entry_id' => $journalEntry->id]);
 
@@ -101,6 +104,9 @@ class BankingService
         $bankAccount->update(['balance' => $newBalance]);
     }
 
+    /**
+     * @return JournalLineData[]
+     */
     private function buildBankTransactionLines(
         Account $bankLedgerAccount,
         Account $contraAccount,
@@ -110,12 +116,12 @@ class BankingService
     ): array {
         return $isDeposit
             ? [
-                ['account_id' => $bankLedgerAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => 'Bank deposit'],
-                ['account_id' => $contraAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => $description ?? ''],
+                new JournalLineData(accountId: $bankLedgerAccount->id, debit: $amount, credit: 0, description: 'Bank deposit'),
+                new JournalLineData(accountId: $contraAccount->id, debit: 0, credit: $amount, description: $description ?? ''),
             ]
             : [
-                ['account_id' => $contraAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => $description ?? ''],
-                ['account_id' => $bankLedgerAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => 'Bank withdrawal'],
+                new JournalLineData(accountId: $contraAccount->id, debit: $amount, credit: 0, description: $description ?? ''),
+                new JournalLineData(accountId: $bankLedgerAccount->id, debit: 0, credit: $amount, description: 'Bank withdrawal'),
             ];
     }
 }

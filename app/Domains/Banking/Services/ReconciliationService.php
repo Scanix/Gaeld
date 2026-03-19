@@ -3,6 +3,8 @@
 namespace App\Domains\Banking\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Enums\BankMatchType;
@@ -95,14 +97,15 @@ class ReconciliationService
             $amount = Money::absoluteAmount((string) $transaction->amount);
             $reference = $this->buildReconciliationReference($orgId, $transaction);
 
-            $journalEntry = $this->ledgerService->postEntry($orgId, [
-                'date' => $transaction->date->toDateString(),
-                'reference' => $reference,
-                'description' => "Reconciliation: {$transaction->description} ↔ Invoice {$invoice->number}",
-            ], [
-                ['account_id' => $bankAccount->ledgerAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => 'Bank deposit'],
-                ['account_id' => $arAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => "Payment for invoice {$invoice->number}"],
-            ]);
+            $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
+                date: $transaction->date->toDateString(),
+                reference: $reference,
+                description: "Reconciliation: {$transaction->description} ↔ Invoice {$invoice->number}",
+                lines: [
+                    new JournalLineData(accountId: $bankAccount->ledgerAccount->id, debit: $amount, credit: 0, description: 'Bank deposit'),
+                    new JournalLineData(accountId: $arAccount->id, debit: 0, credit: $amount, description: "Payment for invoice {$invoice->number}"),
+                ],
+            ));
 
             $this->bankingService->updateBankAccountBalance($bankAccount, (string) $amount, true);
 
@@ -140,14 +143,15 @@ class ReconciliationService
             $amount = Money::absoluteAmount((string) $transaction->amount);
             $reference = $this->buildReconciliationReference($orgId, $transaction);
 
-            $journalEntry = $this->ledgerService->postEntry($orgId, [
-                'date' => $transaction->date->toDateString(),
-                'reference' => $reference,
-                'description' => "Reconciliation: {$transaction->description} ↔ Expense {$expense->description}",
-            ], [
-                ['account_id' => $expenseAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => $expense->description ?? 'Expense'],
-                ['account_id' => $bankAccount->ledgerAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => 'Bank withdrawal'],
-            ]);
+            $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
+                date: $transaction->date->toDateString(),
+                reference: $reference,
+                description: "Reconciliation: {$transaction->description} ↔ Expense {$expense->description}",
+                lines: [
+                    new JournalLineData(accountId: $expenseAccount->id, debit: $amount, credit: 0, description: $expense->description ?? 'Expense'),
+                    new JournalLineData(accountId: $bankAccount->ledgerAccount->id, debit: 0, credit: $amount, description: 'Bank withdrawal'),
+                ],
+            ));
 
             $this->bankingService->updateBankAccountBalance($bankAccount, (string) $amount, false);
 

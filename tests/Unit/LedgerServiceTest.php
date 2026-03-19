@@ -3,6 +3,8 @@
 namespace Tests\Unit;
 
 use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
@@ -67,14 +69,15 @@ class LedgerServiceTest extends TestCase
 
     public function test_balanced_entry_posts_successfully(): void
     {
-        $entry = $this->ledgerService->postEntry($this->organization->id, [
-            'date' => '2026-03-16',
-            'reference' => 'INV-001',
-            'description' => 'Test invoice',
-        ], [
-            ['account_id' => $this->accounts['ar']->id, 'debit' => 1000.00, 'credit' => 0],
-            ['account_id' => $this->accounts['revenue']->id, 'debit' => 0, 'credit' => 1000.00],
-        ]);
+        $entry = $this->ledgerService->postEntry($this->organization->id, new JournalEntryData(
+            date: '2026-03-16',
+            reference: 'INV-001',
+            description: 'Test invoice',
+            lines: [
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: 1000.00, credit: 0),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 1000.00),
+            ],
+        ));
 
         $this->assertTrue($entry->is_posted);
         $this->assertTrue($entry->isBalanced());
@@ -85,13 +88,15 @@ class LedgerServiceTest extends TestCase
     {
         $this->expectException(UnbalancedEntryException::class);
 
-        $this->ledgerService->postEntry($this->organization->id, [
-            'date' => '2026-03-16',
-            'reference' => 'INV-BAD',
-        ], [
-            ['account_id' => $this->accounts['ar']->id, 'debit' => 1000.00, 'credit' => 0],
-            ['account_id' => $this->accounts['revenue']->id, 'debit' => 0, 'credit' => 500.00],
-        ]);
+        $this->ledgerService->postEntry($this->organization->id, new JournalEntryData(
+            date: '2026-03-16',
+            reference: 'INV-BAD',
+            description: null,
+            lines: [
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: 1000.00, credit: 0),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 500.00),
+            ],
+        ));
     }
 
     public function test_post_invoice_creates_journal_entry(): void

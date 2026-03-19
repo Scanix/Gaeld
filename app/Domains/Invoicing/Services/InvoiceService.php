@@ -3,6 +3,8 @@
 namespace App\Domains\Invoicing\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -44,14 +46,15 @@ class InvoiceService
 
             $paymentRef = $reference ?? 'PAY-' . $invoice->number . '-' . ($invoice->payments()->count() + 1);
 
-            $journalEntry = $this->ledgerService->postEntry($orgId, [
-                'date' => $paymentDate,
-                'reference' => $paymentRef,
-                'description' => "Payment received for {$invoice->number}",
-            ], [
-                ['account_id' => $bankAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => 'Bank deposit'],
-                ['account_id' => $accountsReceivable->id, 'debit' => 0, 'credit' => $amount, 'description' => 'Clear receivable'],
-            ]);
+            $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
+                date: $paymentDate,
+                reference: $paymentRef,
+                description: "Payment received for {$invoice->number}",
+                lines: [
+                    new JournalLineData(accountId: $bankAccount->id, debit: $amount, credit: 0, description: 'Bank deposit'),
+                    new JournalLineData(accountId: $accountsReceivable->id, debit: 0, credit: $amount, description: 'Clear receivable'),
+                ],
+            ));
 
             $payment = InvoicePayment::create([
                 'invoice_id' => $invoice->id,

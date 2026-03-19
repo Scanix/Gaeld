@@ -3,6 +3,8 @@
 namespace App\Domains\Invoicing\Actions;
 
 use App\Domains\Accounting\Constants\AccountCode;
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
@@ -43,14 +45,15 @@ class FinalizeInvoiceAction
             $ar = $this->ledgerService->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
             $revenue = $this->ledgerService->resolveAccount($orgId, AccountCode::REVENUE);
 
-            $journalEntry = $this->ledgerService->postEntry($orgId, [
-                'date' => $invoice->issue_date->toDateString(),
-                'reference' => $invoice->number,
-                'description' => "Invoice {$invoice->number} — " . ($invoice->customer?->name ?? 'N/A'),
-            ], [
-                ['account_id' => $ar->id, 'debit' => $invoice->total, 'credit' => 0, 'description' => 'Accounts Receivable'],
-                ['account_id' => $revenue->id, 'debit' => 0, 'credit' => $invoice->total, 'description' => 'Revenue'],
-            ]);
+            $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
+                date: $invoice->issue_date->toDateString(),
+                reference: $invoice->number,
+                description: "Invoice {$invoice->number} — " . ($invoice->customer?->name ?? 'N/A'),
+                lines: [
+                    new JournalLineData(accountId: $ar->id, debit: $invoice->total, credit: 0, description: 'Accounts Receivable'),
+                    new JournalLineData(accountId: $revenue->id, debit: 0, credit: $invoice->total, description: 'Revenue'),
+                ],
+            ));
 
             $invoice->update([
                 'status' => InvoiceStatus::Sent->value,
