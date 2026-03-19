@@ -8,6 +8,7 @@ use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -228,8 +229,8 @@ class TenantIsolationTest extends TestCase
             'type' => BankTransactionType::Credit,
         ]);
 
-        $reconciliationService = app(\App\Domains\Banking\Services\ReconciliationService::class);
-        $suggestions = $reconciliationService->generateSuggestions($transaction);
+        $suggestionService = app(SuggestionService::class);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
 
         // Should only suggest Org A's invoice
         $invoiceNumbers = $suggestions['invoices']->pluck('number')->toArray();

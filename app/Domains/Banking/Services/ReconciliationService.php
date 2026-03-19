@@ -262,31 +262,6 @@ class ReconciliationService
     }
 
     // ──────────────────────────────────────────────────────────────
-    //  CE: Suggestions (delegates to SuggestionService)
-    // ──────────────────────────────────────────────────────────────
-
-    /**
-     * Get reconciliation suggestions for a paginated collection of transactions.
-     *
-     * @param  iterable<BankTransaction>  $transactions
-     * @return array<int, array{invoices: Collection, expenses: Collection, matches: Collection}>
-     */
-    public function generateSuggestionsForTransactions(iterable $transactions): array
-    {
-        return $this->suggestionService->generateSuggestionsForTransactions($transactions);
-    }
-
-    /**
-     * Get reconciliation suggestions for a single bank transaction.
-     *
-     * @return array{invoices: Collection, expenses: Collection, matches: Collection}
-     */
-    public function generateSuggestions(BankTransaction $transaction): array
-    {
-        return $this->suggestionService->generateSuggestions($transaction);
-    }
-
-    // ──────────────────────────────────────────────────────────────
     //  EE: Auto Reconciliation (feature-flagged)
     // ──────────────────────────────────────────────────────────────
 

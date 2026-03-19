@@ -19,6 +19,8 @@ use Illuminate\Support\Collection;
  */
 class SuggestionService
 {
+    private const MAX_EXPENSE_CANDIDATES = 5;
+
     private const EXPENSE_SCORE_EXACT_AMOUNT = 50;
 
     private const EXPENSE_SCORE_VENDOR_MATCH = 30;
@@ -101,7 +103,7 @@ class SuggestionService
                     $q->orWhere('vendor', 'like', '%' . $transaction->creditor_name . '%');
                 }
             })
-            ->limit(5)
+            ->limit(self::MAX_EXPENSE_CANDIDATES)
             ->get();
 
         return $results->map(function ($expense) use ($amount, $transaction) {

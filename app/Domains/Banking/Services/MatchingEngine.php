@@ -24,6 +24,8 @@ use Illuminate\Support\Collection;
  */
 class MatchingEngine
 {
+    private const MAX_MATCH_CANDIDATES = 5;
+
     /**
      * Find and store matches for a bank transaction.
      *
@@ -146,7 +148,8 @@ class MatchingEngine
                     $q->orWhere('number', 'like', '%' . $transaction->end_to_end_id . '%');
                 }
             })
-            ->limit(5)
+            ->orderBy('total')
+            ->limit(self::MAX_MATCH_CANDIDATES)
             ->get();
 
         return $query->map(fn ($invoice) => [

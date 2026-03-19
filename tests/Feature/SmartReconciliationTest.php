@@ -10,6 +10,7 @@ use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
+use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
@@ -103,6 +104,7 @@ class SmartReconciliationTest extends TestCase
     public function test_match_by_qr_reference_returns_confidence_100(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -133,7 +135,7 @@ class SmartReconciliationTest extends TestCase
             'structured_reference' => '210000000003139471430009017',
         ]);
 
-        $suggestions = $reconciliationService->generateSuggestions($transaction);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
 
         $this->assertCount(1, $suggestions['invoices']);
         $this->assertEquals(100, $suggestions['invoices']->first()->match_score);
@@ -157,6 +159,7 @@ class SmartReconciliationTest extends TestCase
     public function test_match_by_amount_and_client_returns_confidence_90(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -185,7 +188,7 @@ class SmartReconciliationTest extends TestCase
             'debtor_name' => 'Alpine Solutions AG',
         ]);
 
-        $suggestions = $reconciliationService->generateSuggestions($transaction);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
         $bestMatch = $suggestions['invoices']->first();
@@ -200,6 +203,7 @@ class SmartReconciliationTest extends TestCase
     public function test_match_by_heuristic_returns_confidence_70(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -228,7 +232,7 @@ class SmartReconciliationTest extends TestCase
             'debtor_name' => 'Someone Else',
         ]);
 
-        $suggestions = $reconciliationService->generateSuggestions($transaction);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
         $bestMatch = $suggestions['invoices']->first();
@@ -243,6 +247,7 @@ class SmartReconciliationTest extends TestCase
     public function test_qr_match_takes_priority_over_amount_match(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -288,7 +293,7 @@ class SmartReconciliationTest extends TestCase
             'debtor_name' => 'Helvetia GmbH',
         ]);
 
-        $suggestions = $reconciliationService->generateSuggestions($transaction);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
 
         // Only the QR match should be returned (QR returns early)
         $this->assertCount(1, $suggestions['invoices']);
@@ -303,6 +308,7 @@ class SmartReconciliationTest extends TestCase
     public function test_confirm_match_records_payment_and_reconciles(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -333,7 +339,7 @@ class SmartReconciliationTest extends TestCase
         ]);
 
         // Create the match
-        $suggestions = $reconciliationService->generateSuggestions($transaction);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
         $match = BankMatch::where('bank_transaction_id', $transaction->id)
             ->where('confidence', 100)
             ->first();
@@ -366,6 +372,7 @@ class SmartReconciliationTest extends TestCase
     public function test_cannot_confirm_match_for_already_reconciled_transaction(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -396,7 +403,7 @@ class SmartReconciliationTest extends TestCase
         ]);
 
         // Create and confirm match
-        $reconciliationService->generateSuggestions($transaction);
+        $suggestionService->generateSuggestions($transaction);
         $match = BankMatch::where('bank_transaction_id', $transaction->id)->first();
         $reconciliationService->confirmMatch($match);
 
@@ -411,7 +418,7 @@ class SmartReconciliationTest extends TestCase
         ]);
 
         // The invoice is now PAID, so no match should be found
-        $suggestions = $reconciliationService->generateSuggestions($transaction2);
+        $suggestions = $suggestionService->generateSuggestions($transaction2);
         $this->assertEmpty($suggestions['invoices']);
     }
 
@@ -424,6 +431,7 @@ class SmartReconciliationTest extends TestCase
         config(['features.auto_reconciliation' => true]);
 
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -475,6 +483,7 @@ class SmartReconciliationTest extends TestCase
         config(['features.auto_reconciliation' => true]);
 
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -523,6 +532,7 @@ class SmartReconciliationTest extends TestCase
     public function test_debit_transactions_do_not_match_invoices(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -550,7 +560,7 @@ class SmartReconciliationTest extends TestCase
             'type' => BankTransactionType::Debit,
         ]);
 
-        $suggestions = $reconciliationService->generateSuggestions($transaction);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
 
         $this->assertEmpty($suggestions['invoices']);
     }

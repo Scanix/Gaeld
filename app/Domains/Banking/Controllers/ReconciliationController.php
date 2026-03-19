@@ -7,6 +7,7 @@ use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
+use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Http\Controllers\Controller;
@@ -22,6 +23,7 @@ class ReconciliationController extends Controller
     public function __construct(
         private BankImportService $importService,
         private ReconciliationService $reconciliationService,
+        private SuggestionService $suggestionService,
     ) {}
 
     /**
@@ -67,7 +69,7 @@ class ReconciliationController extends Controller
 
         $transactions = $transactionsQuery->paginate(30);
 
-        $suggestions = $this->reconciliationService->generateSuggestionsForTransactions($transactions->items());
+        $suggestions = $this->suggestionService->generateSuggestionsForTransactions($transactions->items());
 
         return Inertia::render('Banking/ReconciliationShow', [
             'bankAccount' => $bankAccount->load('ledgerAccount'),

@@ -9,6 +9,7 @@ use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
+use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -130,6 +131,7 @@ class ReconciliationFlowTest extends TestCase
     public function test_reconcile_transaction_with_invoice(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -172,6 +174,7 @@ class ReconciliationFlowTest extends TestCase
     public function test_reconcile_transaction_with_expense(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $expense = Expense::create([
             'organization_id' => $this->organization->id,
@@ -208,6 +211,7 @@ class ReconciliationFlowTest extends TestCase
     public function test_cannot_reconcile_already_reconciled_transaction(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $transaction = BankTransaction::create([
             'bank_account_id' => $this->bankAccount->id,
@@ -245,6 +249,7 @@ class ReconciliationFlowTest extends TestCase
     public function test_manual_reconcile_with_contra_account(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $transaction = BankTransaction::create([
             'bank_account_id' => $this->bankAccount->id,
@@ -269,6 +274,7 @@ class ReconciliationFlowTest extends TestCase
     public function test_suggestions_match_by_amount(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -296,7 +302,7 @@ class ReconciliationFlowTest extends TestCase
             'type' => BankTransactionType::Credit,
         ]);
 
-        $suggestions = $reconciliationService->generateSuggestions($transaction);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
         $this->assertEquals('INV-MATCH', $suggestions['invoices']->first()->number);
@@ -305,6 +311,7 @@ class ReconciliationFlowTest extends TestCase
     public function test_suggestions_match_by_reference(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -333,7 +340,7 @@ class ReconciliationFlowTest extends TestCase
             'reference' => 'INV-REF-TEST', // Matching reference
         ]);
 
-        $suggestions = $reconciliationService->generateSuggestions($transaction);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
         $this->assertEquals('INV-REF-TEST', $suggestions['invoices']->first()->number);
@@ -348,6 +355,7 @@ class ReconciliationFlowTest extends TestCase
         config(['features.auto_reconciliation' => false]);
 
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('Enterprise Edition');
@@ -360,6 +368,7 @@ class ReconciliationFlowTest extends TestCase
         config(['features.auto_reconciliation' => true]);
 
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         // Create a high-confidence match
         $client = Customer::create([

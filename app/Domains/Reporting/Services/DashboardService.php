@@ -24,8 +24,8 @@ class DashboardService
     {
         $year = now()->year;
 
-        $totalRevenue = $this->yearlyInvoiceTotal($organizationId, $year);
-        $totalExpenses = $this->yearlyExpenseTotal($organizationId, $year);
+        $totalRevenue = $this->invoiceService->yearlyRevenue($organizationId, $year);
+        $totalExpenses = ExpenseQuery::yearlyTotal($organizationId, $year);
         $cashBalance = $this->cashBalance($organizationId);
 
         $unpaidInvoices = $this->invoiceService->unpaidSummary($organizationId);
@@ -48,16 +48,6 @@ class DashboardService
             'recentTransactions' => $this->recentTransactions($organizationId),
             'monthlyData' => $this->monthlyBreakdown($organizationId, $year),
         ];
-    }
-
-    private function yearlyInvoiceTotal(string $organizationId, int $year): float
-    {
-        return $this->invoiceService->yearlyRevenue($organizationId, $year);
-    }
-
-    private function yearlyExpenseTotal(string $organizationId, int $year): float
-    {
-        return ExpenseQuery::yearlyTotal($organizationId, $year);
     }
 
     private function cashBalance(string $organizationId): string
