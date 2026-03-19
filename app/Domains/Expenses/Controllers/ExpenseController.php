@@ -66,9 +66,9 @@ class ExpenseController extends Controller
         ]);
 
         if ($request->hasFile('receipt')) {
-            $validated['receipt_path'] = $request->file('receipt')->store(
-                'receipts/'.app('current_organization')->id,
-                'local'
+            $validated['receipt_path'] = $this->storeReceipt(
+                $request->file('receipt'),
+                app('current_organization')->id,
             );
         }
         $validated['organization_id'] = app('current_organization')->id;
@@ -120,13 +120,10 @@ class ExpenseController extends Controller
         ]);
 
         if ($request->hasFile('receipt')) {
-            // Remove old receipt
-            if ($expense->receipt_path) {
-                Storage::delete($expense->receipt_path);
-            }
-            $validated['receipt_path'] = $request->file('receipt')->store(
-                "receipts/{$expense->organization_id}",
-                'local'
+            $this->deleteReceiptIfExists($expense->receipt_path);
+            $validated['receipt_path'] = $this->storeReceipt(
+                $request->file('receipt'),
+                $expense->organization_id,
             );
         }
 
@@ -140,10 +137,7 @@ class ExpenseController extends Controller
     {
         $this->authorize('delete', $expense);
 
-        // Remove receipt file if exists
-        if ($expense->receipt_path) {
-            Storage::delete($expense->receipt_path);
-        }
+        $this->deleteReceiptIfExists($expense->receipt_path);
 
         $action->execute($expense);
 
@@ -180,11 +174,23 @@ class ExpenseController extends Controller
         $this->authorize('update', $expense);
 
         if ($expense->receipt_path) {
-            Storage::delete($expense->receipt_path);
+            $this->deleteReceiptIfExists($expense->receipt_path);
             $expense->update(['receipt_path' => null]);
         }
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Receipt removed.');
+    }
+
+    private function storeReceipt(\Illuminate\Http\UploadedFile $file, string $orgId): string
+    {
+        return $file->store("receipts/{$orgId}", 'local');
+    }
+
+    private function deleteReceiptIfExists(?string $path): void
+    {
+        if ($path) {
+            Storage::delete($path);
+        }
     }
 }

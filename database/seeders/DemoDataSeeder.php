@@ -11,6 +11,7 @@ use App\Domains\Banking\Services\BankingService;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
+use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
@@ -39,6 +40,7 @@ class DemoDataSeeder extends Seeder
         $finalizeInvoice = app(FinalizeInvoiceAction::class);
         $postExpense = app(PostExpenseAction::class);
         $bankingService = app(BankingService::class);
+        $invoiceService = app(InvoiceService::class);
 
         // ── Users ────────────────────────────────────────────────
         $admin = User::firstOrCreate(
@@ -136,13 +138,13 @@ class DemoDataSeeder extends Seeder
         }
 
         // ── Seed demo data for Organization 1 ────────────────────
-        $this->seedOrganizationData($org1, $finalizeInvoice, $postExpense, $bankingService);
+        $this->seedOrganizationData($org1, $finalizeInvoice, $postExpense, $bankingService, $invoiceService);
 
         // ── Seed demo data for Organization 2 ────────────────────
-        $this->seedOrganization2Data($org2, $finalizeInvoice, $postExpense, $bankingService);
+        $this->seedOrganization2Data($org2, $finalizeInvoice, $postExpense, $bankingService, $invoiceService);
     }
 
-    private function seedOrganizationData(Organization $org, FinalizeInvoiceAction $finalizeInvoice, PostExpenseAction $postExpense, BankingService $bankingService): void
+    private function seedOrganizationData(Organization $org, FinalizeInvoiceAction $finalizeInvoice, PostExpenseAction $postExpense, BankingService $bankingService, InvoiceService $invoiceService): void
     {
         $vatNormal = VatRate::where('organization_id', $org->id)
             ->where('code', 'NORMAL')
@@ -221,7 +223,7 @@ class DemoDataSeeder extends Seeder
         $finalizeInvoice->execute($inv1);
 
         $inv1->refresh();
-        app(\App\Domains\Invoicing\Services\InvoiceService::class)
+        $invoiceService
             ->recordPayment($inv1, new RecordPaymentData(
                 amount: '5405.00',
                 paymentDate: now()->subDays(5)->toDateString(),
@@ -372,7 +374,7 @@ class DemoDataSeeder extends Seeder
         $finalizeInvoice->execute($inv4);
 
         $inv4->refresh();
-        app(\App\Domains\Invoicing\Services\InvoiceService::class)
+        $invoiceService
             ->recordPayment($inv4, new RecordPaymentData(
                 amount: '2000.00',
                 paymentDate: now()->subDays(3)->toDateString(),
@@ -430,7 +432,7 @@ class DemoDataSeeder extends Seeder
         $bankingService->postBankTransaction($bnkTx2, '6000');
     }
 
-    private function seedOrganization2Data(Organization $org, FinalizeInvoiceAction $finalizeInvoice, PostExpenseAction $postExpense, BankingService $bankingService): void
+    private function seedOrganization2Data(Organization $org, FinalizeInvoiceAction $finalizeInvoice, PostExpenseAction $postExpense, BankingService $bankingService, InvoiceService $invoiceService): void
     {
         $vatNormal = VatRate::where('organization_id', $org->id)
             ->where('code', 'NORMAL')
