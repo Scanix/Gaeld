@@ -2,6 +2,8 @@
 
 namespace App\Domains\Contacts\Controllers;
 
+use App\Domains\Contacts\Actions\CreateSupplierAction;
+use App\Domains\Contacts\Actions\UpdateSupplierAction;
 use App\Domains\Contacts\DTOs\CreateSupplierData;
 use App\Domains\Contacts\DTOs\UpdateSupplierData;
 use App\Domains\Contacts\Models\Supplier;
@@ -14,6 +16,11 @@ use Inertia\Response;
 
 class SupplierController extends Controller
 {
+    public function __construct(
+        private CreateSupplierAction $createSupplier,
+        private UpdateSupplierAction $updateSupplier,
+    ) {}
+
     private const VALIDATION_RULES = [
         'name' => 'required|string|max:255',
         'email' => 'nullable|email|max:255',
@@ -58,7 +65,7 @@ class SupplierController extends Controller
         $validated = $request->validate(self::VALIDATION_RULES);
         $validated['organization_id'] = app('current_organization')->id;
 
-        $supplier = Supplier::create(CreateSupplierData::fromArray($validated)->toArray());
+        $supplier = $this->createSupplier->execute(CreateSupplierData::fromArray($validated));
 
         return redirect()->route('suppliers.show', $supplier)
             ->with('success', 'Supplier created.');
@@ -88,7 +95,7 @@ class SupplierController extends Controller
 
         $validated = $request->validate(self::VALIDATION_RULES);
 
-        $supplier->update(UpdateSupplierData::fromArray($validated)->toArray());
+        $this->updateSupplier->execute($supplier, UpdateSupplierData::fromArray($validated));
 
         return redirect()->route('suppliers.show', $supplier)
             ->with('success', 'Supplier updated.');
