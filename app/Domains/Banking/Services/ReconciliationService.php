@@ -7,20 +7,17 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Exceptions\FeatureDisabledException;
-use App\Domains\Banking\Enums\BankMatchType;
 use App\Domains\Banking\Enums\BankTransactionType;
+use App\Domains\Banking\Enums\MatchConfidence;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
-use App\Domains\Banking\Enums\MatchConfidence;
-use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
-use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Services\InvoiceService;
 use App\Support\FeatureFlag;
 use App\Support\Money;
 use Illuminate\Support\Collection;
@@ -32,14 +29,12 @@ class ReconciliationService
 {
     private const REFERENCE_PREFIX_RECONCILIATION = 'REC-';
 
-    private const EXPENSE_SCORE_EXACT_AMOUNT = 50;
-
-    private const EXPENSE_SCORE_VENDOR_MATCH = 30;
-
     public function __construct(
         private LedgerService $ledgerService,
         private InvoiceService $invoiceService,
         private BankingService $bankingService,
+        private MatchingEngine $matchingEngine,
+        private SuggestionService $suggestionService,
     ) {}
 
     /**
@@ -193,167 +188,8 @@ class ReconciliationService
     }
 
     // ──────────────────────────────────────────────────────────────
-    //  CE: Smart Matching Engine
+    //  CE: Match Confirmation
     // ──────────────────────────────────────────────────────────────
-
-    /**
-     * Find and store matches for a bank transaction.
-     *
-     * Priority order:
-     *   1. QR reference match (confidence = 100)
-    *   2. Amount + customer name match (confidence = 90)
-     *   3. Heuristic match (confidence = 70)
-     *
-     * Results are stored in the bank_matches table.
-     *
-     * @return Collection<BankMatch>
-     */
-    public function findAndStoreMatches(BankTransaction $transaction): Collection
-    {
-        $orgId = $transaction->bankAccount->organization_id;
-        $amount = Money::absoluteAmount((string) $transaction->amount);
-
-        // Only match credit transactions to invoices
-        if ($transaction->type !== BankTransactionType::Credit) {
-            return collect();
-        }
-
-        $matches = collect();
-
-        // Priority 1: Exact QR reference match
-        $qrMatch = $this->matchByQrReference($orgId, $transaction);
-        if ($qrMatch) {
-            $matches->push($qrMatch);
-
-            return $this->storeMatches($transaction, $matches);
-        }
-
-        // Priority 2: Amount + customer name match
-        $amountCustomerMatches = $this->matchByAmountAndCustomer($orgId, $transaction, $amount);
-        $matches = $matches->merge($amountCustomerMatches);
-
-        // Priority 3: Heuristic matching (amount or reference)
-        $heuristicMatches = $this->matchByHeuristics($orgId, $transaction, $amount);
-        // Filter out invoices already matched at higher confidence
-        $existingInvoiceIds = $matches->pluck('invoice_id')->toArray();
-        $heuristicMatches = $heuristicMatches->filter(fn ($m) => ! in_array($m['invoice_id'], $existingInvoiceIds));
-        $matches = $matches->merge($heuristicMatches);
-
-        return $this->storeMatches($transaction, $matches);
-    }
-
-    /**
-     * Match by exact QR reference (structured_reference ↔ invoice.qr_reference).
-     *
-    * @return array{invoice_id: string, confidence: int, match_type: BankMatchType}|null The match, or null if no QR reference match found
-     */
-    private function matchByQrReference(string $orgId, BankTransaction $transaction): ?array
-    {
-        $ref = $transaction->structured_reference;
-        if (! $ref) {
-            return null;
-        }
-
-        $invoice = Invoice::where('organization_id', $orgId)
-            ->where('qr_reference', $ref)
-            ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
-            ->first();
-
-        if (! $invoice) {
-            return null;
-        }
-
-        return [
-            'invoice_id' => $invoice->id,
-            'confidence' => MatchConfidence::QrReference->value,
-            'match_type' => BankMatchType::QrReference,
-        ];
-    }
-
-    /**
-    * Match by exact amount AND customer name.
-     * Confidence: 90
-     */
-    private function matchByAmountAndCustomer(string $orgId, BankTransaction $transaction, string $amount): Collection
-    {
-        if (! $transaction->debtor_name) {
-            return collect();
-        }
-
-        $invoices = Invoice::where('organization_id', $orgId)
-            ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
-            ->whereBetween('total', [
-                bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
-                bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
-            ])
-            ->with(['customer'])
-            ->get();
-
-        return $invoices->filter(function ($invoice) use ($transaction) {
-            $contact = $invoice->customer;
-            if (! $contact) {
-                return false;
-            }
-
-            return str_contains(strtolower($transaction->debtor_name), strtolower($contact->name))
-                || str_contains(strtolower($contact->name), strtolower($transaction->debtor_name));
-        })->map(fn ($invoice) => [
-            'invoice_id' => $invoice->id,
-            'confidence' => MatchConfidence::AmountAndCustomer->value,
-            'match_type' => BankMatchType::AmountCustomer,
-        ])->values();
-    }
-
-    /**
-     * Match by amount OR reference (fallback).
-     * Confidence: 70
-     */
-    private function matchByHeuristics(string $orgId, BankTransaction $transaction, string $amount): Collection
-    {
-        $query = Invoice::where('organization_id', $orgId)
-            ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
-            ->where(function ($q) use ($amount, $transaction) {
-                $q->whereBetween('total', [
-                    bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
-                    bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
-                ]);
-
-                if ($transaction->reference) {
-                    $q->orWhere('number', 'like', '%' . $transaction->reference . '%');
-                }
-                if ($transaction->end_to_end_id) {
-                    $q->orWhere('number', 'like', '%' . $transaction->end_to_end_id . '%');
-                }
-            })
-            ->limit(5)
-            ->get();
-
-        return $query->map(fn ($invoice) => [
-            'invoice_id' => $invoice->id,
-            'confidence' => MatchConfidence::Heuristic->value,
-            'match_type' => BankMatchType::Heuristic,
-        ])->values();
-    }
-
-    /**
-     * Persist match candidates to bank_matches table (replaces any existing).
-     *
-     * @return Collection<BankMatch>
-     */
-    private function storeMatches(BankTransaction $transaction, Collection $matches): Collection
-    {
-        // Clear previous unconfirmed matches for this transaction
-        BankMatch::where('bank_transaction_id', $transaction->id)
-            ->where('is_confirmed', false)
-            ->delete();
-
-        return $matches->map(fn ($match) => BankMatch::create([
-            'bank_transaction_id' => $transaction->id,
-            'invoice_id' => $match['invoice_id'],
-            'confidence' => $match['confidence'],
-            'match_type' => $match['match_type'],
-        ]));
-    }
 
     /**
      * Confirm a match: record the payment via the standard pipeline
@@ -365,6 +201,7 @@ class ReconciliationService
      *
      * @throws AlreadyReconciledException  When transaction is already reconciled
      * @throws InvalidPaymentException  When duplicate payment detected
+     * @throws UnlinkedBankAccountException  When bank account is not linked to a ledger account
      */
     public function confirmMatch(BankMatch $match): BankTransaction
     {
@@ -415,12 +252,10 @@ class ReconciliationService
      */
     private function isDuplicatePayment(BankTransaction $transaction, Invoice $invoice): bool
     {
-        // Check if transaction is already matched to this invoice
         if ($transaction->matched_invoice_id === $invoice->id) {
             return true;
         }
 
-        // Check if there's already a confirmed match for this pair
         return BankMatch::where('bank_transaction_id', $transaction->id)
             ->where('invoice_id', $invoice->id)
             ->where('is_confirmed', true)
@@ -428,102 +263,28 @@ class ReconciliationService
     }
 
     // ──────────────────────────────────────────────────────────────
-    //  CE: Basic Suggestions (backward compatible)
+    //  CE: Suggestions (delegates to SuggestionService)
     // ──────────────────────────────────────────────────────────────
 
     /**
      * Get reconciliation suggestions for a paginated collection of transactions.
      *
      * @param  iterable<BankTransaction>  $transactions
-     * @return array<int, array{invoices: \Illuminate\Support\Collection, expenses: \Illuminate\Support\Collection, matches: \Illuminate\Support\Collection}>
+     * @return array<int, array{invoices: Collection, expenses: Collection, matches: Collection}>
      */
     public function generateSuggestionsForTransactions(iterable $transactions): array
     {
-        $suggestions = [];
-
-        foreach ($transactions as $transaction) {
-            if (! $transaction->is_reconciled) {
-                $suggestions[$transaction->id] = $this->generateSuggestions($transaction);
-            }
-        }
-
-        return $suggestions;
+        return $this->suggestionService->generateSuggestionsForTransactions($transactions);
     }
 
     /**
-     * Get basic reconciliation suggestions for a bank transaction.
-     *
-     * Uses the new matching engine for invoices and legacy logic for expenses.
+     * Get reconciliation suggestions for a single bank transaction.
      *
      * @return array{invoices: Collection, expenses: Collection, matches: Collection}
      */
     public function generateSuggestions(BankTransaction $transaction): array
     {
-        $orgId = $transaction->bankAccount->organization_id;
-        $amount = Money::absoluteAmount((string) $transaction->amount);
-
-        // Use the matching engine for invoices
-        $matches = $this->findAndStoreMatches($transaction);
-
-        // Load invoice data for the matches
-        $invoiceSuggestions = $matches->map(function ($match) {
-            $invoice = $match->invoice->load(['customer']);
-            $invoice->match_score = $match->confidence;
-            $invoice->match_type = $match->match_type;
-            $invoice->match_id = $match->id;
-
-            return $invoice;
-        })->sortByDesc('match_score')->values();
-
-        $expenseSuggestions = $this->suggestExpenses($orgId, $transaction, $amount);
-
-        return [
-            'invoices' => $invoiceSuggestions,
-            'expenses' => $expenseSuggestions,
-            'matches' => $matches,
-        ];
-    }
-
-    private function suggestExpenses(string $orgId, BankTransaction $transaction, string $amount): Collection
-    {
-        if ($transaction->type !== BankTransactionType::Debit) {
-            return collect();
-        }
-
-        $query = Expense::where('organization_id', $orgId)
-            ->whereIn('status', [ExpenseStatus::Pending->value, ExpenseStatus::Approved->value])
-            ->where(function ($q) use ($amount, $transaction) {
-                $q->whereBetween('amount', [
-                    bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
-                    bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
-                ]);
-
-                if ($transaction->creditor_name) {
-                    $q->orWhere('vendor', 'like', '%' . $transaction->creditor_name . '%');
-                }
-            })
-            ->limit(5);
-
-        $results = $query->get();
-
-        return $results->map(function ($expense) use ($amount, $transaction) {
-            $score = 0;
-
-            if (bccomp((string) $expense->amount, $amount, 2) === 0) {
-                $score += self::EXPENSE_SCORE_EXACT_AMOUNT;
-            }
-
-            if ($transaction->creditor_name && $expense->vendor) {
-                if (str_contains(strtolower($transaction->creditor_name), strtolower($expense->vendor))
-                    || str_contains(strtolower($expense->vendor), strtolower($transaction->creditor_name))) {
-                    $score += self::EXPENSE_SCORE_VENDOR_MATCH;
-                }
-            }
-
-            $expense->match_score = $score;
-
-            return $expense;
-        })->sortByDesc('match_score')->values();
+        return $this->suggestionService->generateSuggestions($transaction);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -557,8 +318,7 @@ class ReconciliationService
         $unmatched = 0;
 
         foreach ($unreconciled as $transaction) {
-            // Find and store matches
-            $matches = $this->findAndStoreMatches($transaction);
+            $matches = $this->matchingEngine->findAndStoreMatches($transaction);
 
             // Only auto-confirm exact QR reference matches (confidence = 100)
             $exactMatch = $matches->first(fn ($m) => $m->confidence === 100);
@@ -581,7 +341,7 @@ class ReconciliationService
             if ($transaction->type === BankTransactionType::Debit) {
                 $orgId = $bankAccount->organization_id;
                 $amount = Money::absoluteAmount((string) $transaction->amount);
-                $expenseSuggestions = $this->suggestExpenses($orgId, $transaction, $amount);
+                $expenseSuggestions = $this->suggestionService->suggestExpenses($orgId, $transaction, $amount);
                 $bestExpense = $expenseSuggestions->first();
 
                 if ($bestExpense && $bestExpense->match_score >= MatchConfidence::AutoExpenseThreshold->value) {

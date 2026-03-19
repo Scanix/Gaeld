@@ -46,8 +46,9 @@ class LedgerService
      * @param  JournalEntryData  $entry           Header + balanced lines
      * @return JournalEntry  The posted journal entry with lines eager-loaded
      *
-     * @throws UnbalancedEntryException  When SUM(debit) ≠ SUM(credit)
-     * @throws InvalidEntryDataException  When amounts are zero or accounts invalid
+     * @throws UnbalancedEntryException      When SUM(debit) ≠ SUM(credit)
+     * @throws InvalidEntryDataException     When amounts are zero or accounts invalid
+     * @throws DuplicateReferenceException   When a posted entry with the same reference already exists
      */
     public function postEntry(string $organizationId, JournalEntryData $entry): JournalEntry
     {

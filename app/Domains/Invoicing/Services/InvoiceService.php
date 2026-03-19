@@ -92,7 +92,7 @@ class InvoiceService
         return Invoice::where('organization_id', $orgId)
             ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(total), 0) as total')
-            ->first();
+            ->first() ?? (object) ['count' => 0, 'total' => 0];
     }
 
     public function paidInYear(string $orgId, int $year): Collection

@@ -34,7 +34,7 @@ class ExpenseQuery
         return Expense::where('organization_id', $orgId)
             ->where('status', ExpenseStatus::Pending)
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
-            ->first();
+            ->first() ?? (object) ['count' => 0, 'total' => 0];
     }
 
     public static function inYear(string $orgId, int $year): Collection
