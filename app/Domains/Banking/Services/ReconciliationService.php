@@ -7,7 +7,6 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Exceptions\FeatureDisabledException;
-use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\MatchConfidence;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
@@ -318,10 +317,10 @@ class ReconciliationService
         $unmatched = 0;
 
         foreach ($unreconciled as $transaction) {
-            $matches = $this->matchingEngine->findAndStoreMatches($transaction);
+            $suggestions = $this->suggestionService->generateSuggestions($transaction);
 
             // Only auto-confirm exact QR reference matches (confidence = 100)
-            $exactMatch = $matches->first(fn ($m) => $m->confidence === 100);
+            $exactMatch = $suggestions['matches']->first(fn ($m) => $m->confidence === 100);
 
             if ($exactMatch) {
                 try {
@@ -338,24 +337,19 @@ class ReconciliationService
             }
 
             // Auto-reconcile expenses with high confidence
-            if ($transaction->type === BankTransactionType::Debit) {
-                $orgId = $bankAccount->organization_id;
-                $amount = Money::absoluteAmount((string) $transaction->amount);
-                $expenseSuggestions = $this->suggestionService->suggestExpenses($orgId, $transaction, $amount);
-                $bestExpense = $expenseSuggestions->first();
+            $bestExpense = $suggestions['expenses']->first();
 
-                if ($bestExpense && $bestExpense->match_score >= MatchConfidence::AutoExpenseThreshold->value) {
-                    try {
-                        $this->reconcileWithExpense($transaction, $bestExpense);
-                        $matched++;
+            if ($bestExpense && $bestExpense->match_score >= MatchConfidence::AutoExpenseThreshold->value) {
+                try {
+                    $this->reconcileWithExpense($transaction, $bestExpense);
+                    $matched++;
 
-                        continue;
-                    } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
-                        Log::warning('Auto-reconcile: skipped expense match', [
-                            'transaction_id' => $transaction->id,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
+                    continue;
+                } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
+                    Log::warning('Auto-reconcile: skipped expense match', [
+                        'transaction_id' => $transaction->id,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
 

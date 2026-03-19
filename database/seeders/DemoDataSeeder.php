@@ -136,22 +136,17 @@ class DemoDataSeeder extends Seeder
         }
 
         // ── Seed demo data for Organization 1 ────────────────────
-        $this->seedOrganizationData($org1);
+        $this->seedOrganizationData($org1, $finalizeInvoice, $postExpense, $bankingService);
 
         // ── Seed demo data for Organization 2 ────────────────────
-        $this->seedOrganization2Data($org2);
+        $this->seedOrganization2Data($org2, $finalizeInvoice, $postExpense, $bankingService);
     }
 
-    private function seedOrganizationData(Organization $org): void
+    private function seedOrganizationData(Organization $org, FinalizeInvoiceAction $finalizeInvoice, PostExpenseAction $postExpense, BankingService $bankingService): void
     {
         $vatNormal = VatRate::where('organization_id', $org->id)
             ->where('code', 'NORMAL')
             ->first();
-
-        $finalizeInvoice = app(FinalizeInvoiceAction::class);
-        $postExpense = app(PostExpenseAction::class);
-        $bankingService = app(BankingService::class);
-
         // ── Bank Account ─────────────────────────────────────────
         $bankLedgerAccount = Account::where('organization_id', $org->id)
             ->where('code', '1020')
@@ -435,7 +430,7 @@ class DemoDataSeeder extends Seeder
         $bankingService->postBankTransaction($bnkTx2, '6000');
     }
 
-    private function seedOrganization2Data(Organization $org): void
+    private function seedOrganization2Data(Organization $org, FinalizeInvoiceAction $finalizeInvoice, PostExpenseAction $postExpense, BankingService $bankingService): void
     {
         $vatNormal = VatRate::where('organization_id', $org->id)
             ->where('code', 'NORMAL')
@@ -500,10 +495,6 @@ class DemoDataSeeder extends Seeder
             'vat_amount' => 688.50,
             'sort_order' => 1,
         ]);
-
-        $finalizeInvoice = app(FinalizeInvoiceAction::class);
-        $postExpense = app(PostExpenseAction::class);
-        $bankingService = app(BankingService::class);
 
         $finalizeInvoice->execute($inv1);
 
