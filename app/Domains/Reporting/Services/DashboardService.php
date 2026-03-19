@@ -5,7 +5,7 @@ namespace App\Domains\Reporting\Services;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
-use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -15,6 +15,9 @@ use Illuminate\Support\Collection;
 
 class DashboardService
 {
+    public function __construct(
+        private readonly LedgerService $ledgerService,
+    ) {}
     /**
      * @return array{revenue: float, expenses: float, cashBalance: string, unpaidInvoices: array{count: int, total: float}, pendingExpenses: array{count: int, total: float}, balance: float, recentTransactions: \Illuminate\Support\Collection, monthlyData: array}
      */
@@ -79,10 +82,7 @@ class DashboardService
             return '0.00';
         }
 
-        $debits = TransactionLine::where('account_id', $bankAccount->id)->sum('debit');
-        $credits = TransactionLine::where('account_id', $bankAccount->id)->sum('credit');
-
-        return bcsub((string) $debits, (string) $credits, 2);
+        return $this->ledgerService->accountBalance($bankAccount->id);
     }
 
     private function recentTransactions(string $organizationId): Collection

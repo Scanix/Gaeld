@@ -548,7 +548,7 @@ class ReconciliationService
                     $matched++;
 
                     continue;
-                } catch (\Exception $e) {
+                } catch (AlreadyReconciledException|UnlinkedBankAccountException|\App\Domains\Invoicing\Exceptions\InvalidPaymentException $e) {
                     Log::warning('Auto-reconcile: skipped match', [
                         'transaction_id' => $transaction->id,
                         'error' => $e->getMessage(),
@@ -569,7 +569,7 @@ class ReconciliationService
                         $matched++;
 
                         continue;
-                    } catch (\Exception $e) {
+                    } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
                         Log::warning('Auto-reconcile: skipped expense match', [
                             'transaction_id' => $transaction->id,
                             'error' => $e->getMessage(),

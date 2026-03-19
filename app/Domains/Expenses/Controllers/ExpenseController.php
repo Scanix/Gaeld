@@ -162,12 +162,7 @@ class ExpenseController extends Controller
             'expense_account_code' => 'required|string',
         ]);
 
-        try {
-            $action->execute($expense, $validated['expense_account_code']);
-        } catch (\DomainException $e) {
-            return redirect()->route('expenses.show', $expense)
-                ->with('error', $e->getMessage());
-        }
+        $action->execute($expense, $validated['expense_account_code']);
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Expense posted to ledger.');

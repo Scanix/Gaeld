@@ -123,15 +123,10 @@ class ReconciliationController extends Controller
         $invoice = Invoice::where('organization_id', $bankAccount->organization_id)
             ->findOrFail($validated['invoice_id']);
 
-        try {
-            $this->reconciliationService->reconcileWithInvoice($transaction, $invoice);
+        $this->reconciliationService->reconcileWithInvoice($transaction, $invoice);
 
-            return redirect()->back()
-                ->with('success', "Transaction reconciled with invoice {$invoice->number}.");
-        } catch (\DomainException $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage());
-        }
+        return redirect()->back()
+            ->with('success', "Transaction reconciled with invoice {$invoice->number}.");
     }
 
     /**
@@ -150,19 +145,14 @@ class ReconciliationController extends Controller
         $expense = Expense::where('organization_id', $bankAccount->organization_id)
             ->findOrFail($validated['expense_id']);
 
-        try {
-            $this->reconciliationService->reconcileWithExpense(
-                $transaction,
-                $expense,
-                $validated['expense_account_code'],
-            );
+        $this->reconciliationService->reconcileWithExpense(
+            $transaction,
+            $expense,
+            $validated['expense_account_code'],
+        );
 
-            return redirect()->back()
-                ->with('success', 'Transaction reconciled with expense.');
-        } catch (\DomainException $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage());
-        }
+        return redirect()->back()
+            ->with('success', 'Transaction reconciled with expense.');
     }
 
     /**
@@ -177,18 +167,13 @@ class ReconciliationController extends Controller
             'contra_account_code' => 'required|string|max:10',
         ]);
 
-        try {
-            $this->reconciliationService->reconcileManual(
-                $transaction,
-                $validated['contra_account_code'],
-            );
+        $this->reconciliationService->reconcileManual(
+            $transaction,
+            $validated['contra_account_code'],
+        );
 
-            return redirect()->back()
-                ->with('success', 'Transaction reconciled.');
-        } catch (\DomainException $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage());
-        }
+        return redirect()->back()
+            ->with('success', 'Transaction reconciled.');
     }
 
     /**
@@ -199,15 +184,10 @@ class ReconciliationController extends Controller
         $bankAccount = $match->bankTransaction->bankAccount;
         $this->authorize('update', $bankAccount);
 
-        try {
-            $this->reconciliationService->confirmMatch($match);
+        $this->reconciliationService->confirmMatch($match);
 
-            return redirect()->back()
-                ->with('success', "Match confirmed and payment recorded for invoice {$match->invoice->number}.");
-        } catch (\DomainException $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage());
-        }
+        return redirect()->back()
+            ->with('success', "Match confirmed and payment recorded for invoice {$match->invoice->number}.");
     }
 
     /**
@@ -217,14 +197,9 @@ class ReconciliationController extends Controller
     {
         $this->authorize('update', $bankAccount);
 
-        try {
-            $result = $this->reconciliationService->autoReconcile($bankAccount);
+        $result = $this->reconciliationService->autoReconcile($bankAccount);
 
-            return redirect()->back()
-                ->with('success', "Auto-reconciliation complete: {$result['matched']} matched, {$result['unmatched']} unmatched.");
-        } catch (\DomainException $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage());
-        }
+        return redirect()->back()
+            ->with('success', "Auto-reconciliation complete: {$result['matched']} matched, {$result['unmatched']} unmatched.");
     }
 }

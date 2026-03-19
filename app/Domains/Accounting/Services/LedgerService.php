@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Services;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Exceptions\AlreadyPostedException;
 use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
+use App\Domains\Accounting\Exceptions\InvalidEntryDataException;
 use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
@@ -45,7 +46,7 @@ class LedgerService
      * @return JournalEntry  The posted journal entry with lines eager-loaded
      *
      * @throws UnbalancedEntryException  When SUM(debit) ≠ SUM(credit)
-     * @throws \InvalidArgumentException  When amounts are zero or accounts invalid
+     * @throws InvalidEntryDataException  When amounts are zero or accounts invalid
      */
     public function postEntry(string $organizationId, array $entryData, array $lines): JournalEntry
     {
@@ -232,7 +233,7 @@ class LedgerService
      * @param  string  $organizationId
      * @param  array<array{account_id: string}>  $lines
      *
-     * @throws \InvalidArgumentException  When an account is missing or belongs to another org
+     * @throws InvalidEntryDataException  When an account is missing or belongs to another org
      */
     public function validateAccounts(string $organizationId, array $lines): void
     {
@@ -243,7 +244,7 @@ class LedgerService
             ->count();
 
         if ($existingCount !== count($accountIds)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidEntryDataException(
                 'One or more accounts do not exist or do not belong to this organization.'
             );
         }
@@ -317,7 +318,7 @@ class LedgerService
      * Uses bcmath for precision — no floating-point rounding errors.
      *
      * @throws UnbalancedEntryException  When debits ≠ credits
-     * @throws \InvalidArgumentException  When all amounts are zero
+     * @throws InvalidEntryDataException  When all amounts are zero
      */
     private function validateBalance(array $lines): void
     {
@@ -336,7 +337,7 @@ class LedgerService
         }
 
         if (bccomp($totalDebit, '0', 2) === 0) {
-            throw new \InvalidArgumentException('Journal entry must have non-zero amounts.');
+            throw new InvalidEntryDataException('Journal entry must have non-zero amounts.');
         }
     }
 
