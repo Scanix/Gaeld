@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\BankTransaction;
@@ -224,7 +225,7 @@ class TenantIsolationTest extends TestCase
             'date' => '2026-03-10',
             'description' => 'Payment',
             'amount' => 1000.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
         ]);
 
         $reconciliationService = app(\App\Domains\Banking\Services\ReconciliationService::class);

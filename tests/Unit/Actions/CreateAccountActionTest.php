@@ -3,6 +3,7 @@
 namespace Tests\Unit\Actions;
 
 use App\Domains\Accounting\DTOs\CreateAccountData;
+use App\Domains\Accounting\Enums\AccountType;
 use PHPUnit\Framework\TestCase;
 
 class CreateAccountActionTest extends TestCase
@@ -13,7 +14,7 @@ class CreateAccountActionTest extends TestCase
             organizationId: 'org-1',
             code: '1000',
             name: 'Cash',
-            type: 'asset',
+            type: AccountType::Asset,
         );
 
         $this->assertSame([
@@ -42,7 +43,7 @@ class CreateAccountActionTest extends TestCase
         $this->assertSame('org-2', $data->organizationId);
         $this->assertSame('2000', $data->code);
         $this->assertSame('Liabilities', $data->name);
-        $this->assertSame('liability', $data->type);
+        $this->assertSame(AccountType::Liability, $data->type);
         $this->assertSame('parent-1', $data->parentId);
         $this->assertSame('General liabilities', $data->description);
         $this->assertFalse($data->isActive);
@@ -54,7 +55,7 @@ class CreateAccountActionTest extends TestCase
             organizationId: 'org-1',
             code: '1000',
             name: 'Cash',
-            type: 'asset',
+            type: AccountType::Asset,
         );
 
         $this->assertNull($data->parentId);

@@ -346,7 +346,7 @@ class LedgerService
      *
      * Null references are always allowed (e.g. bank imports without ref).
      *
-     * @throws AlreadyPostedException  When a posted entry with the same reference exists
+     * @throws DuplicateReferenceException  When a posted entry with the same reference exists
      */
     private function throwIfDuplicateReference(string $organizationId, ?string $reference): void
     {

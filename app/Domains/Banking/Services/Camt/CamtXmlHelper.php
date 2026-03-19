@@ -2,6 +2,8 @@
 
 namespace App\Domains\Banking\Services\Camt;
 
+use App\Domains\Banking\Enums\BankTransactionType;
+
 trait CamtXmlHelper
 {
     /**
@@ -30,7 +32,7 @@ trait CamtXmlHelper
             $date = substr($date, 0, 10);
         }
 
-        $type = strtoupper($creditDebitIndicator) === 'CRDT' ? 'credit' : 'debit';
+        $type = strtoupper($creditDebitIndicator) === 'CRDT' ? BankTransactionType::Credit : BankTransactionType::Debit;
 
         // Try to extract transaction details from NtryDtls/TxDtls
         $transactionDetails = $xpath->query("{$prefix}NtryDtls/{$prefix}TxDtls", $entryNode);
@@ -64,7 +66,7 @@ trait CamtXmlHelper
     /**
      * Parse a single transaction detail (<TxDtls> element) into a CamtEntry.
      */
-    private function parseTxDetail(\DOMXPath $xpath, \DOMElement $detail, string $prefix, string $date, string $fallbackAmount, ?string $fallbackCurrency, string $type): CamtEntry
+    private function parseTxDetail(\DOMXPath $xpath, \DOMElement $detail, string $prefix, string $date, string $fallbackAmount, ?string $fallbackCurrency, BankTransactionType $type): CamtEntry
     {
         $txAmount = $this->contextText($xpath, "{$prefix}Amt", $detail) ?? $fallbackAmount;
         $txCurrency = $this->contextAttr($xpath, "{$prefix}Amt", $detail, 'Ccy') ?? $fallbackCurrency ?? 'CHF';

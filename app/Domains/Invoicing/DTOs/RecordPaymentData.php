@@ -21,6 +21,7 @@ readonly class RecordPaymentData
             'payment_date' => 'required|date',
             'payment_method' => 'required|in:bank,cash,card',
             'reference' => 'nullable|string|max:100',
+            'bank_account_code' => 'nullable|string|max:20',
         ]);
 
         return new self(

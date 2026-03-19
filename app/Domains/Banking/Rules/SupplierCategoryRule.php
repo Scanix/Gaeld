@@ -2,6 +2,7 @@
 
 namespace App\Domains\Banking\Rules;
 
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Contacts\Models\Supplier;
 
@@ -25,7 +26,7 @@ class SupplierCategoryRule extends BaseRule
 
     public function matches(BankTransaction $transaction): bool
     {
-        if ($transaction->type !== BankTransaction::TYPE_DEBIT) {
+        if ($transaction->type !== BankTransactionType::Debit) {
             return false;
         }
 

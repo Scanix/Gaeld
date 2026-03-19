@@ -42,6 +42,8 @@ class InvoiceController extends Controller
 
     public function create(Request $request): Response
     {
+        $this->authorize('create', Invoice::class);
+
         return Inertia::render('Invoices/Create', [
             'customers' => Customer::orderBy('name')->get(),
             'vatRates' => VatRate::where('is_active', true)->get(),

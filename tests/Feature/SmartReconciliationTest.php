@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
@@ -128,7 +129,7 @@ class SmartReconciliationTest extends TestCase
             'date' => '2026-04-01',
             'description' => 'Payment from Helvetia GmbH',
             'amount' => 1500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'structured_reference' => '210000000003139471430009017',
         ]);
 
@@ -180,7 +181,7 @@ class SmartReconciliationTest extends TestCase
             'date' => '2026-04-02',
             'description' => 'Wire transfer',
             'amount' => 2500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'debtor_name' => 'Alpine Solutions AG',
         ]);
 
@@ -223,7 +224,7 @@ class SmartReconciliationTest extends TestCase
             'date' => '2026-04-03',
             'description' => 'Payment',
             'amount' => 750.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'debtor_name' => 'Someone Else',
         ]);
 
@@ -282,7 +283,7 @@ class SmartReconciliationTest extends TestCase
             'date' => '2026-04-01',
             'description' => 'Payment from Helvetia GmbH',
             'amount' => 1000.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'structured_reference' => '999000000003139471430009017',
             'debtor_name' => 'Helvetia GmbH',
         ]);
@@ -327,7 +328,7 @@ class SmartReconciliationTest extends TestCase
             'date' => '2026-04-05',
             'description' => 'QR payment from Confirm Corp',
             'amount' => 3000.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'structured_reference' => '888000000003139471430009017',
         ]);
 
@@ -390,7 +391,7 @@ class SmartReconciliationTest extends TestCase
             'date' => '2026-04-06',
             'description' => 'Payment',
             'amount' => 500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'structured_reference' => '777000000003139471430009017',
         ]);
 
@@ -405,7 +406,7 @@ class SmartReconciliationTest extends TestCase
             'date' => '2026-04-07',
             'description' => 'Duplicate payment attempt',
             'amount' => 500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'structured_reference' => '777000000003139471430009017',
         ]);
 
@@ -448,7 +449,7 @@ class SmartReconciliationTest extends TestCase
             'date' => '2026-04-07',
             'description' => 'QR payment',
             'amount' => 4200.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'structured_reference' => '666000000003139471430009017',
         ]);
 
@@ -498,7 +499,7 @@ class SmartReconciliationTest extends TestCase
             'date' => '2026-04-08',
             'description' => 'Payment',
             'amount' => 1234.56,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'debtor_name' => 'NoAutoConfirm Corp',
         ]);
 
@@ -546,7 +547,7 @@ class SmartReconciliationTest extends TestCase
             'date' => '2026-04-01',
             'description' => 'Debit payment',
             'amount' => 100.00,
-            'type' => BankTransaction::TYPE_DEBIT,
+            'type' => BankTransactionType::Debit,
         ]);
 
         $suggestions = $reconciliationService->generateSuggestions($transaction);
@@ -584,7 +585,7 @@ class SmartReconciliationTest extends TestCase
             'date' => '2026-04-09',
             'description' => 'Payment',
             'amount' => 800.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'structured_reference' => '555000000003139471430009017',
         ]);
 

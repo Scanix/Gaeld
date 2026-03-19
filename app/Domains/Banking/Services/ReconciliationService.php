@@ -5,6 +5,8 @@ namespace App\Domains\Banking\Services;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Exceptions\FeatureDisabledException;
+use App\Domains\Banking\Enums\BankMatchType;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Enums\MatchConfidence;
@@ -203,7 +205,7 @@ class ReconciliationService
         $amount = Money::absoluteAmount((string) $transaction->amount);
 
         // Only match credit transactions to invoices
-        if ($transaction->type !== BankTransaction::TYPE_CREDIT) {
+        if ($transaction->type !== BankTransactionType::Credit) {
             return collect();
         }
 
@@ -255,7 +257,7 @@ class ReconciliationService
         return [
             'invoice_id' => $invoice->id,
             'confidence' => MatchConfidence::QrReference->value,
-            'match_type' => BankMatch::TYPE_QR_REFERENCE,
+            'match_type' => BankMatchType::QrReference,
         ];
     }
 
@@ -289,7 +291,7 @@ class ReconciliationService
         })->map(fn ($invoice) => [
             'invoice_id' => $invoice->id,
             'confidence' => MatchConfidence::AmountAndCustomer->value,
-            'match_type' => BankMatch::TYPE_AMOUNT_CUSTOMER,
+            'match_type' => BankMatchType::AmountCustomer,
         ])->values();
     }
 
@@ -320,7 +322,7 @@ class ReconciliationService
         return $query->map(fn ($invoice) => [
             'invoice_id' => $invoice->id,
             'confidence' => MatchConfidence::Heuristic->value,
-            'match_type' => BankMatch::TYPE_HEURISTIC,
+            'match_type' => BankMatchType::Heuristic,
         ])->values();
     }
 
@@ -345,30 +347,36 @@ class ReconciliationService
     }
 
     /**
-     * Confirm a match: reconcile the transaction with the matched invoice
-     * and record the payment via the standard payment pipeline.
+     * Confirm a match: record the payment via the standard pipeline
+     * and mark the bank transaction as reconciled.
+     *
+     * Uses recordPayment() alone — which already posts the journal entry
+     * (debit bank, credit AR). Does NOT also call reconcileWithInvoice()
+     * to avoid double-posting the same accounting entry.
      *
      * @throws AlreadyReconciledException  When transaction is already reconciled
-     * @throws \DomainException  When duplicate payment detected
+     * @throws InvalidPaymentException  When duplicate payment detected
      */
     public function confirmMatch(BankMatch $match): BankTransaction
     {
         $transaction = $match->bankTransaction;
         $invoice = $match->invoice;
 
-        // Prevent duplicate payment for the same invoice+transaction
         if ($this->isDuplicatePayment($transaction, $invoice)) {
             throw new \App\Domains\Invoicing\Exceptions\InvalidPaymentException('This payment has already been recorded for this invoice.');
         }
 
-        return DB::transaction(function () use ($match, $transaction, $invoice) {
-            // Record payment through the standard pipeline
+        $bankAccount = $transaction->bankAccount;
+        $this->validateReconciliationPreconditions($transaction, $bankAccount);
+
+        return DB::transaction(function () use ($match, $transaction, $invoice, $bankAccount) {
             $amount = Money::absoluteAmount((string) $transaction->amount);
             $amountDue = $invoice->amountDue();
             $paymentAmount = bccomp($amount, $amountDue, 2) <= 0 ? $amount : $amountDue;
 
+            $payment = null;
             if (bccomp($paymentAmount, '0', 2) > 0) {
-                $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
+                $payment = $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
                     amount: $paymentAmount,
                     paymentDate: $transaction->date->toDateString(),
                     paymentMethod: 'bank',
@@ -376,16 +384,20 @@ class ReconciliationService
                 ));
             }
 
-            // Reconcile the bank transaction
-            $result = $this->reconcileWithInvoice($transaction, $invoice);
+            $this->bankingService->updateBankAccountBalance($bankAccount, $paymentAmount ?? $amount, true);
 
-            // Mark match as confirmed
+            $transaction->update([
+                'journal_entry_id' => $payment?->journal_entry_id,
+                'matched_invoice_id' => $invoice->id,
+                'is_reconciled' => true,
+            ]);
+
             $match->update([
                 'is_confirmed' => true,
                 'confirmed_at' => now(),
             ]);
 
-            return $result;
+            return $transaction->fresh(['journalEntry.lines', 'matchedInvoice', 'bankAccount']);
         });
     }
 
@@ -465,7 +477,7 @@ class ReconciliationService
 
     private function suggestExpenses(string $orgId, BankTransaction $transaction, string $amount): Collection
     {
-        if ($transaction->type !== BankTransaction::TYPE_DEBIT) {
+        if ($transaction->type !== BankTransactionType::Debit) {
             return collect();
         }
 
@@ -557,7 +569,7 @@ class ReconciliationService
             }
 
             // Auto-reconcile expenses with high confidence
-            if ($transaction->type === BankTransaction::TYPE_DEBIT) {
+            if ($transaction->type === BankTransactionType::Debit) {
                 $orgId = $bankAccount->organization_id;
                 $amount = Money::absoluteAmount((string) $transaction->amount);
                 $expenseSuggestions = $this->suggestExpenses($orgId, $transaction, $amount);

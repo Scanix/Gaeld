@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Rules;
 
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
 use App\Domains\Banking\Rules\RecurringEntryRule;
@@ -42,7 +43,7 @@ class RuleConfidenceTest extends TestCase
         $rule = new QrReferencePaymentRule($reconciliation);
 
         $transaction = new BankTransaction();
-        $transaction->type = BankTransaction::TYPE_DEBIT;
+        $transaction->type = BankTransactionType::Debit;
 
         $this->assertFalse($rule->matches($transaction));
     }
@@ -53,7 +54,7 @@ class RuleConfidenceTest extends TestCase
         $rule = new QrReferencePaymentRule($reconciliation);
 
         $transaction = new BankTransaction();
-        $transaction->type = BankTransaction::TYPE_CREDIT;
+        $transaction->type = BankTransactionType::Credit;
         $transaction->structured_reference = null;
 
         $this->assertFalse($rule->matches($transaction));
@@ -64,7 +65,7 @@ class RuleConfidenceTest extends TestCase
         $rule = new SupplierCategoryRule();
 
         $transaction = new BankTransaction();
-        $transaction->type = BankTransaction::TYPE_CREDIT;
+        $transaction->type = BankTransactionType::Credit;
 
         $this->assertFalse($rule->matches($transaction));
     }
@@ -74,7 +75,7 @@ class RuleConfidenceTest extends TestCase
         $rule = new SupplierCategoryRule();
 
         $transaction = new BankTransaction();
-        $transaction->type = BankTransaction::TYPE_DEBIT;
+        $transaction->type = BankTransactionType::Debit;
         $transaction->creditor_name = null;
 
         $this->assertFalse($rule->matches($transaction));
@@ -85,7 +86,7 @@ class RuleConfidenceTest extends TestCase
         $rule = new RecurringEntryRule();
 
         $transaction = new BankTransaction();
-        $transaction->type = BankTransaction::TYPE_CREDIT;
+        $transaction->type = BankTransactionType::Credit;
 
         $this->assertFalse($rule->matches($transaction));
     }
@@ -95,7 +96,7 @@ class RuleConfidenceTest extends TestCase
         $rule = new RecurringEntryRule();
 
         $transaction = new BankTransaction();
-        $transaction->type = BankTransaction::TYPE_DEBIT;
+        $transaction->type = BankTransactionType::Debit;
         $transaction->description = null;
         $transaction->amount = '100.00';
 
@@ -107,7 +108,7 @@ class RuleConfidenceTest extends TestCase
         $rule = new RecurringEntryRule();
 
         $transaction = new BankTransaction();
-        $transaction->type = BankTransaction::TYPE_DEBIT;
+        $transaction->type = BankTransactionType::Debit;
         $transaction->description = 'GitHub subscription';
         $transaction->amount = null;
 

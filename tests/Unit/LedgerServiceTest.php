@@ -6,6 +6,7 @@ use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankingService;
@@ -158,7 +159,7 @@ class LedgerServiceTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Client payment received',
             'amount' => 3000.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'BNK-DEP-001',
         ]);
 

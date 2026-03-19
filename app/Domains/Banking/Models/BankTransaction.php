@@ -3,6 +3,7 @@
 namespace App\Domains\Banking\Models;
 
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,13 +39,10 @@ class BankTransaction extends Model
         return [
             'date' => 'date',
             'amount' => 'decimal:2',
+            'type' => BankTransactionType::class,
             'is_reconciled' => 'boolean',
         ];
     }
-
-    public const TYPE_CREDIT = 'credit';
-
-    public const TYPE_DEBIT = 'debit';
 
     public function bankAccount(): BelongsTo
     {

@@ -4,6 +4,7 @@ namespace App\Domains\Banking\Services;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
@@ -30,7 +31,7 @@ class BankingService
     ): BankTransaction {
         return DB::transaction(function () use ($bankAccount, $data, $contraAccountCode) {
             $amount = Money::absoluteAmount((string) ($data['amount'] ?? '0'));
-            $type = $data['type'] ?? BankTransaction::TYPE_CREDIT;
+            $type = $data['type'] ?? BankTransactionType::Credit;
 
             $transaction = BankTransaction::create([
                 'bank_account_id' => $bankAccount->id,
@@ -71,7 +72,7 @@ class BankingService
 
             $contraAccount = $this->ledgerService->resolveAccount($orgId, $contraAccountCode);
             $amount = Money::absoluteAmount((string) $transaction->amount);
-            $isDeposit = $transaction->type === BankTransaction::TYPE_CREDIT;
+            $isDeposit = $transaction->type === BankTransactionType::Credit;
 
             $lines = $this->buildBankTransactionLines($bankLedgerAccount, $contraAccount, $amount, $isDeposit, $transaction->description);
 

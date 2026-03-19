@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
@@ -87,7 +88,7 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Payment for invoice',
             'amount' => 1000.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'structured_reference' => '000000000000000012345678901',
             'import_hash' => 'hash-qr-test',
             'is_reconciled' => false,
@@ -107,7 +108,7 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Expense payment',
             'amount' => -500.00,
-            'type' => BankTransaction::TYPE_DEBIT,
+            'type' => BankTransactionType::Debit,
             'structured_reference' => '000000000000000099999999',
             'import_hash' => 'hash-debit-test',
             'is_reconciled' => false,
@@ -126,7 +127,7 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'No reference payment',
             'amount' => 500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'structured_reference' => null,
             'import_hash' => 'hash-no-ref',
             'is_reconciled' => false,
@@ -155,7 +156,7 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Income',
             'amount' => 100.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'import_hash' => 'hash-supplier-credit',
             'is_reconciled' => false,
         ]);
@@ -184,7 +185,7 @@ class RuleEngineTest extends TestCase
                 'date' => now()->subMonths($i)->toDateString(),
                 'description' => 'Monthly SaaS subscription',
                 'amount' => -99.00,
-                'type' => BankTransaction::TYPE_DEBIT,
+                'type' => BankTransactionType::Debit,
                 'import_hash' => "hash-recurring-past-{$i}",
                 'is_reconciled' => true,
             ]);
@@ -196,7 +197,7 @@ class RuleEngineTest extends TestCase
             'date' => now()->toDateString(),
             'description' => 'Monthly SaaS subscription',
             'amount' => -99.00,
-            'type' => BankTransaction::TYPE_DEBIT,
+            'type' => BankTransactionType::Debit,
             'import_hash' => 'hash-recurring-current',
             'is_reconciled' => false,
         ]);
@@ -219,7 +220,7 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Test',
             'amount' => 100.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'import_hash' => 'hash-ce-flag',
             'is_reconciled' => false,
         ]);
@@ -242,7 +243,7 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Test payment',
             'amount' => 50.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'import_hash' => 'hash-ee-enabled',
             'is_reconciled' => false,
         ]);
@@ -265,7 +266,7 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Already reconciled',
             'amount' => 100.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'import_hash' => 'hash-reconciled',
             'is_reconciled' => true,
         ]);

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankingService;
@@ -416,7 +417,7 @@ class DemoDataSeeder extends Seeder
             'date' => now()->subDays(20),
             'description' => 'Freelance income — Logo design',
             'amount' => 2500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'BNK-2026-001',
         ]);
 
@@ -427,7 +428,7 @@ class DemoDataSeeder extends Seeder
             'date' => now()->subDays(3),
             'description' => 'Office rent — March 2026',
             'amount' => 1800.00,
-            'type' => BankTransaction::TYPE_DEBIT,
+            'type' => BankTransactionType::Debit,
             'reference' => 'BNK-2026-002',
         ]);
 
@@ -528,7 +529,7 @@ class DemoDataSeeder extends Seeder
             'date' => now()->subDays(10),
             'description' => 'Consulting payment — February',
             'amount' => 4200.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'ALP-BNK-001',
         ]);
 

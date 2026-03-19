@@ -16,6 +16,8 @@ class OrganizationController extends Controller
 {
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Organization::class);
+
         $organizations = $request->user()->organizations()->get();
 
         return Inertia::render('Organizations/Index', [

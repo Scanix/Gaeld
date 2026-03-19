@@ -2,8 +2,10 @@
 
 namespace App\Domains\Banking\Rules;
 
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\ReconciliationService;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 
 /**
@@ -29,7 +31,7 @@ class QrReferencePaymentRule extends BaseRule
 
     public function matches(BankTransaction $transaction): bool
     {
-        if ($transaction->type !== BankTransaction::TYPE_CREDIT) {
+        if ($transaction->type !== BankTransactionType::Credit) {
             return false;
         }
 
@@ -41,7 +43,7 @@ class QrReferencePaymentRule extends BaseRule
 
         return Invoice::where('organization_id', $orgId)
             ->where('qr_reference', $transaction->structured_reference)
-            ->whereIn('status', ['sent', 'overdue'])
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
             ->exists();
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Banking\Rules;
 
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankTransaction;
 
 /**
@@ -33,7 +34,7 @@ class RecurringEntryRule extends BaseRule
 
     public function matches(BankTransaction $transaction): bool
     {
-        if ($transaction->type !== BankTransaction::TYPE_DEBIT) {
+        if ($transaction->type !== BankTransactionType::Debit) {
             return false;
         }
 
@@ -50,7 +51,7 @@ class RecurringEntryRule extends BaseRule
         // DEBIT amounts are stored as negative values; compare against negative range
         $count = BankTransaction::whereHas('bankAccount', fn ($q) => $q->where('organization_id', $orgId))
             ->where('is_reconciled', true)
-            ->where('type', BankTransaction::TYPE_DEBIT)
+            ->where('type', BankTransactionType::Debit)
             ->where('date', '>=', $lookback)
             ->where('id', '!=', $transaction->id)
             ->whereBetween('amount', [

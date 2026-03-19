@@ -2,6 +2,7 @@
 
 namespace App\Domains\Banking\Models;
 
+use App\Domains\Banking\Enums\BankMatchType;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,16 +22,11 @@ class BankMatch extends Model
     {
         return [
             'confidence' => 'integer',
+            'match_type' => BankMatchType::class,
             'is_confirmed' => 'boolean',
             'confirmed_at' => 'datetime',
         ];
     }
-
-    public const TYPE_QR_REFERENCE = 'qr_reference';
-
-    public const TYPE_AMOUNT_CUSTOMER = 'amount_customer';
-
-    public const TYPE_HEURISTIC = 'heuristic';
 
     public function bankTransaction(): BelongsTo
     {

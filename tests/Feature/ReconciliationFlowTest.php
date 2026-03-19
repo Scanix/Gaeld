@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
@@ -153,7 +154,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-10',
             'description' => 'Payment from Acme AG',
             'amount' => 5000.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'INV-2026-001',
         ]);
 
@@ -189,7 +190,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-12',
             'description' => 'GitHub Pro subscription',
             'amount' => 200.00,
-            'type' => BankTransaction::TYPE_DEBIT,
+            'type' => BankTransactionType::Debit,
             'reference' => 'EXP-GITHUB',
         ]);
 
@@ -213,7 +214,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-10',
             'description' => 'Already reconciled',
             'amount' => 100.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'is_reconciled' => true,
         ]);
 
@@ -250,7 +251,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-14',
             'description' => 'Misc income',
             'amount' => 1500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'MISC-001',
         ]);
 
@@ -292,7 +293,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-10',
             'description' => 'Wire transfer',
             'amount' => 2500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
         ]);
 
         $suggestions = $reconciliationService->generateSuggestions($transaction);
@@ -328,7 +329,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-10',
             'description' => 'Payment',
             'amount' => 500.00, // Different amount
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'INV-REF-TEST', // Matching reference
         ]);
 
@@ -384,7 +385,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Payment from Acme AG',
             'amount' => 7500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'INV-AUTO-001',
             'debtor_name' => 'Acme AG',
         ]);
