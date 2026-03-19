@@ -4,6 +4,7 @@ namespace App\Domains\Banking\Controllers;
 
 use App\Domains\Banking\Actions\CreateBankAccountAction;
 use App\Domains\Banking\DTOs\CreateBankAccountData;
+use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Services\BankingService;
 use App\Http\Controllers\Controller;
@@ -79,8 +80,7 @@ class BankingController extends Controller
 
         $bankingService->recordTransaction(
             $bankAccount,
-            $validated,
-            $validated['contra_account_code'],
+            RecordBankTransactionData::fromArray($validated),
         );
 
         return redirect()->route('banking.show', $bankAccount)

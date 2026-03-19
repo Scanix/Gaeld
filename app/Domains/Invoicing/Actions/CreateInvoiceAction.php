@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\DB;
 
 class CreateInvoiceAction
 {
-    public function execute(CreateInvoiceData $data, string $organizationId): Invoice
+    public function execute(CreateInvoiceData $data): Invoice
     {
-        return DB::transaction(function () use ($data, $organizationId) {
+        return DB::transaction(function () use ($data) {
             $invoice = Invoice::create([
-                'organization_id' => $organizationId,
+                'organization_id' => $data->organizationId,
                 'customer_id' => $data->customerId,
                 'number' => $data->number,
                 'status' => InvoiceStatus::Draft->value,

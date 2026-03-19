@@ -2,8 +2,6 @@
 
 namespace App\Domains\Invoicing\DTOs;
 
-use Illuminate\Http\Request;
-
 readonly class RecordPaymentData
 {
     public function __construct(
@@ -14,22 +12,14 @@ readonly class RecordPaymentData
         public ?string $bankAccountCode = null,
     ) {}
 
-    public static function fromRequest(Request $request): self
+    public static function fromArray(array $data): self
     {
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'payment_date' => 'required|date',
-            'payment_method' => 'required|in:bank,cash,card',
-            'reference' => 'nullable|string|max:100',
-            'bank_account_code' => 'nullable|string|max:20',
-        ]);
-
         return new self(
-            amount: $validated['amount'],
-            paymentDate: $validated['payment_date'],
-            paymentMethod: $validated['payment_method'],
-            reference: $validated['reference'] ?? null,
-            bankAccountCode: $validated['bank_account_code'] ?? null,
+            amount: (string) $data['amount'],
+            paymentDate: $data['payment_date'],
+            paymentMethod: $data['payment_method'],
+            reference: $data['reference'] ?? null,
+            bankAccountCode: $data['bank_account_code'] ?? null,
         );
     }
 

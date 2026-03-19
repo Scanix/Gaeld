@@ -80,6 +80,8 @@ class OrganizationController extends Controller
 
     public function switchOrganization(Request $request, Organization $organization): RedirectResponse
     {
+        $this->authorize('view', $organization);
+
         $request->user()->switchOrganization($organization);
 
         return redirect()->route('dashboard')

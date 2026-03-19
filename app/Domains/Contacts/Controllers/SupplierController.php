@@ -2,8 +2,6 @@
 
 namespace App\Domains\Contacts\Controllers;
 
-use App\Domains\Contacts\Actions\CreateSupplierAction;
-use App\Domains\Contacts\Actions\UpdateSupplierAction;
 use App\Domains\Contacts\DTOs\CreateSupplierData;
 use App\Domains\Contacts\DTOs\UpdateSupplierData;
 use App\Domains\Contacts\Models\Supplier;
@@ -53,14 +51,14 @@ class SupplierController extends Controller
         return Inertia::render('Contacts/Suppliers/Create');
     }
 
-    public function store(Request $request, CreateSupplierAction $action): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', Supplier::class);
 
         $validated = $request->validate(self::VALIDATION_RULES);
         $validated['organization_id'] = app('current_organization')->id;
 
-        $supplier = $action->execute(CreateSupplierData::fromArray($validated));
+        $supplier = Supplier::create(CreateSupplierData::fromArray($validated)->toArray());
 
         return redirect()->route('suppliers.show', $supplier)
             ->with('success', 'Supplier created.');
@@ -84,13 +82,13 @@ class SupplierController extends Controller
         ]);
     }
 
-    public function update(Request $request, Supplier $supplier, UpdateSupplierAction $action): RedirectResponse
+    public function update(Request $request, Supplier $supplier): RedirectResponse
     {
         $this->authorize('update', $supplier);
 
         $validated = $request->validate(self::VALIDATION_RULES);
 
-        $action->execute($supplier, UpdateSupplierData::fromArray($validated));
+        $supplier->update(UpdateSupplierData::fromArray($validated)->toArray());
 
         return redirect()->route('suppliers.show', $supplier)
             ->with('success', 'Supplier updated.');

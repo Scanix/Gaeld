@@ -54,9 +54,25 @@ class InvoiceController extends Controller
     {
         $this->authorize('create', Invoice::class);
 
-        $dto = CreateInvoiceData::fromRequest($request);
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'number' => 'required|string|max:50',
+            'issue_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
+            'currency' => 'string|size:3',
+            'notes' => 'nullable|string',
+            'payment_terms' => 'nullable|string',
+            'lines' => 'required|array|min:1',
+            'lines.*.description' => 'required|string',
+            'lines.*.quantity' => 'required|numeric|min:0.01',
+            'lines.*.unit_price' => 'required|numeric|min:0',
+            'lines.*.vat_rate_id' => 'nullable|exists:vat_rates,id',
+        ]);
+        $validated['organization_id'] = app('current_organization')->id;
 
-        $invoice = $action->execute($dto, app('current_organization')->id);
+        $dto = CreateInvoiceData::fromArray($validated);
+
+        $invoice = $action->execute($dto);
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', 'Invoice created.');
@@ -86,7 +102,23 @@ class InvoiceController extends Controller
     {
         $this->authorize('update', $invoice);
 
-        $dto = UpdateInvoiceData::fromRequest($request);
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'number' => 'required|string|max:50',
+            'issue_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
+            'currency' => 'string|size:3',
+            'notes' => 'nullable|string',
+            'payment_terms' => 'nullable|string',
+            'lines' => 'required|array|min:1',
+            'lines.*.description' => 'required|string',
+            'lines.*.quantity' => 'required|numeric|min:0.01',
+            'lines.*.unit_price' => 'required|numeric|min:0',
+            'lines.*.vat_rate_id' => 'nullable|exists:vat_rates,id',
+        ]);
+        $validated['organization_id'] = $invoice->organization_id;
+
+        $dto = UpdateInvoiceData::fromArray($validated);
 
         $action->execute($invoice, $dto);
 
@@ -118,7 +150,15 @@ class InvoiceController extends Controller
     {
         $this->authorize('update', $invoice);
 
-        $dto = RecordPaymentData::fromRequest($request);
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payment_date' => 'required|date',
+            'payment_method' => 'required|in:bank,cash,card',
+            'reference' => 'nullable|string|max:100',
+            'bank_account_code' => 'nullable|string|max:20',
+        ]);
+
+        $dto = RecordPaymentData::fromArray($validated);
 
         $action->execute($invoice, $dto);
 

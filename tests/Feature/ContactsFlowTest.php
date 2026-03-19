@@ -2,10 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Domains\Contacts\Actions\CreateCustomerAction;
-use App\Domains\Contacts\Actions\CreateSupplierAction;
-use App\Domains\Contacts\Actions\UpdateCustomerAction;
-use App\Domains\Contacts\Actions\UpdateSupplierAction;
 use App\Domains\Contacts\DTOs\CreateCustomerData;
 use App\Domains\Contacts\DTOs\CreateSupplierData;
 use App\Domains\Contacts\DTOs\UpdateCustomerData;
@@ -40,16 +36,15 @@ class ContactsFlowTest extends TestCase
     //  Customer CRUD
     // ──────────────────────────────────────────────────────────────
 
-    public function test_create_customer_action_persists_record(): void
+    public function test_create_customer_persists_record(): void
     {
-        $action = new CreateCustomerAction();
-        $customer = $action->execute(new CreateCustomerData(
+        $customer = Customer::create((new CreateCustomerData(
             organizationId: $this->org->id,
             name: 'Acme AG',
             email: 'billing@acme.ch',
             country: 'CH',
             currency: 'CHF',
-        ));
+        ))->toArray());
 
         $this->assertInstanceOf(Customer::class, $customer);
         $this->assertDatabaseHas('customers', [
@@ -59,7 +54,7 @@ class ContactsFlowTest extends TestCase
         ]);
     }
 
-    public function test_update_customer_action_changes_fields(): void
+    public function test_update_customer_changes_fields(): void
     {
         $customer = Customer::create([
             'organization_id' => $this->org->id,
@@ -68,11 +63,11 @@ class ContactsFlowTest extends TestCase
             'currency' => 'CHF',
         ]);
 
-        $action = new UpdateCustomerAction();
-        $updated = $action->execute($customer, new UpdateCustomerData(
+        $customer->update((new UpdateCustomerData(
             name: 'New Name',
             city: 'Zurich',
-        ));
+        ))->toArray());
+        $updated = $customer->fresh();
 
         $this->assertEquals('New Name', $updated->name);
         $this->assertEquals('Zurich', $updated->city);
@@ -112,10 +107,9 @@ class ContactsFlowTest extends TestCase
     //  Supplier CRUD
     // ──────────────────────────────────────────────────────────────
 
-    public function test_create_supplier_action_persists_record(): void
+    public function test_create_supplier_persists_record(): void
     {
-        $action = new CreateSupplierAction();
-        $supplier = $action->execute(new CreateSupplierData(
+        $supplier = Supplier::create((new CreateSupplierData(
             organizationId: $this->org->id,
             name: 'Swisscom AG',
             email: 'invoice@swisscom.ch',
@@ -123,7 +117,7 @@ class ContactsFlowTest extends TestCase
             currency: 'CHF',
             defaultExpenseCategory: 'utilities',
             iban: 'CH56 0483 5012 3456 7800 9',
-        ));
+        ))->toArray());
 
         $this->assertInstanceOf(Supplier::class, $supplier);
         $this->assertDatabaseHas('suppliers', [
@@ -133,7 +127,7 @@ class ContactsFlowTest extends TestCase
         ]);
     }
 
-    public function test_update_supplier_action_changes_category(): void
+    public function test_update_supplier_changes_category(): void
     {
         $supplier = Supplier::create([
             'organization_id' => $this->org->id,
@@ -143,11 +137,11 @@ class ContactsFlowTest extends TestCase
             'default_expense_category' => 'office',
         ]);
 
-        $action = new UpdateSupplierAction();
-        $updated = $action->execute($supplier, new UpdateSupplierData(
+        $supplier->update((new UpdateSupplierData(
             name: $supplier->name,
             defaultExpenseCategory: 'other',
-        ));
+        ))->toArray());
+        $updated = $supplier->fresh();
 
         $this->assertEquals('other', $updated->default_expense_category);
     }

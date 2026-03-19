@@ -4,6 +4,7 @@ namespace App\Domains\Banking\Services;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
@@ -26,23 +27,21 @@ class BankingService
      */
     public function recordTransaction(
         BankAccount $bankAccount,
-        array $data,
-        string $contraAccountCode,
+        RecordBankTransactionData $data,
     ): BankTransaction {
-        return DB::transaction(function () use ($bankAccount, $data, $contraAccountCode) {
-            $amount = Money::absoluteAmount((string) ($data['amount'] ?? '0'));
-            $type = $data['type'] ?? BankTransactionType::Credit;
+        return DB::transaction(function () use ($bankAccount, $data) {
+            $amount = Money::absoluteAmount($data->amount);
 
             $transaction = BankTransaction::create([
                 'bank_account_id' => $bankAccount->id,
-                'date' => $data['date'],
-                'description' => $data['description'] ?? null,
+                'date' => $data->date,
+                'description' => $data->description,
                 'amount' => $amount,
-                'type' => $type,
-                'reference' => $data['reference'] ?? null,
+                'type' => $data->type,
+                'reference' => $data->reference,
             ]);
 
-            return $this->postBankTransaction($transaction, $contraAccountCode);
+            return $this->postBankTransaction($transaction, $data->contraAccountCode);
         });
     }
 

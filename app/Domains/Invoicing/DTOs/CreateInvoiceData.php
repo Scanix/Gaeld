@@ -2,14 +2,13 @@
 
 namespace App\Domains\Invoicing\DTOs;
 
-use Illuminate\Http\Request;
-
 readonly class CreateInvoiceData
 {
     /**
      * @param array<int, array{description: string, quantity: string, unit_price: string, vat_rate_id: ?string, sort_order?: int}> $lines
      */
     public function __construct(
+        public string $organizationId,
         public string $customerId,
         public string $number,
         public string $issueDate,
@@ -20,38 +19,25 @@ readonly class CreateInvoiceData
         public array $lines,
     ) {}
 
-    public static function fromRequest(Request $request): self
+    public static function fromArray(array $data): self
     {
-        $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'number' => 'required|string|max:50',
-            'issue_date' => 'required|date',
-            'due_date' => 'required|date|after_or_equal:issue_date',
-            'currency' => 'string|size:3',
-            'notes' => 'nullable|string',
-            'payment_terms' => 'nullable|string',
-            'lines' => 'required|array|min:1',
-            'lines.*.description' => 'required|string',
-            'lines.*.quantity' => 'required|numeric|min:0.01',
-            'lines.*.unit_price' => 'required|numeric|min:0',
-            'lines.*.vat_rate_id' => 'nullable|exists:vat_rates,id',
-        ]);
-
         return new self(
-            customerId: $validated['customer_id'],
-            number: $validated['number'],
-            issueDate: $validated['issue_date'],
-            dueDate: $validated['due_date'],
-            currency: $validated['currency'] ?? 'CHF',
-            notes: $validated['notes'] ?? null,
-            paymentTerms: $validated['payment_terms'] ?? null,
-            lines: $validated['lines'],
+            organizationId: $data['organization_id'],
+            customerId: $data['customer_id'],
+            number: $data['number'],
+            issueDate: $data['issue_date'],
+            dueDate: $data['due_date'],
+            currency: $data['currency'] ?? 'CHF',
+            notes: $data['notes'] ?? null,
+            paymentTerms: $data['payment_terms'] ?? null,
+            lines: $data['lines'],
         );
     }
 
     public function toArray(): array
     {
         return [
+            'organization_id' => $this->organizationId,
             'customer_id' => $this->customerId,
             'number' => $this->number,
             'issue_date' => $this->issueDate,

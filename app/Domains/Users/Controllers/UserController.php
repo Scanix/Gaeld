@@ -14,6 +14,8 @@ class UserController extends Controller
 {
     public function profile(Request $request): Response
     {
+        $this->authorize('view', $request->user());
+
         return Inertia::render('Users/Profile', [
             'user' => $request->user(),
         ]);
@@ -21,6 +23,8 @@ class UserController extends Controller
 
     public function updateProfile(Request $request, UserService $userService): RedirectResponse
     {
+        $this->authorize('update', $request->user());
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'locale' => 'required|string|in:en,fr,de,it,rm',
@@ -34,6 +38,8 @@ class UserController extends Controller
 
     public function updatePassword(Request $request, UserService $userService): RedirectResponse
     {
+        $this->authorize('update', $request->user());
+
         $validated = $request->validate([
             'current_password' => 'required|current_password',
             'password' => ['required', 'confirmed', Password::defaults()],
@@ -47,6 +53,8 @@ class UserController extends Controller
 
     public function toggleHelp(Request $request, UserService $userService): RedirectResponse
     {
+        $this->authorize('update', $request->user());
+
         $userService->toggleHelp($request->user());
 
         return back();

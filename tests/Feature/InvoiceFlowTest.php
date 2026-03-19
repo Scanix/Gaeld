@@ -86,6 +86,7 @@ class InvoiceFlowTest extends TestCase
         ], $overrides);
 
         return $action->execute(new CreateInvoiceData(
+            organizationId: $this->org->id,
             customerId: $data['customer_id'],
             number: $data['number'],
             issueDate: $data['issue_date'],
@@ -99,7 +100,7 @@ class InvoiceFlowTest extends TestCase
                 'unit_price' => 150.00,
                 'vat_rate_id' => $this->vatRate->id,
             ]],
-        ), $this->org->id);
+        ));
     }
 
     public function test_complete_invoice_flow(): void

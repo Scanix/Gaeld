@@ -60,10 +60,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function switchOrganization(Organization $organization): void
     {
-        if (! $this->organizations()->where('organizations.id', $organization->id)->exists()) {
-            abort(403, 'You do not belong to this organization.');
-        }
-
         session(['current_organization_id' => $organization->id]);
     }
 }
