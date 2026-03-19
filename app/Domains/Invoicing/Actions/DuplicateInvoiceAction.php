@@ -4,10 +4,13 @@ namespace App\Domains\Invoicing\Actions;
 
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Invoicing\Models\InvoiceLine;
 
 class DuplicateInvoiceAction
 {
+    public function __construct(
+        private SyncInvoiceLinesAction $syncInvoiceLines,
+    ) {}
+
     public function execute(Invoice $invoice): Invoice
     {
         $newInvoice = Invoice::create([
@@ -25,18 +28,15 @@ class DuplicateInvoiceAction
             'total' => 0,
         ]);
 
-        foreach ($invoice->lines as $index => $line) {
-            $newLine = new InvoiceLine([
-                'invoice_id' => $newInvoice->id,
+        $this->syncInvoiceLines->create($newInvoice, $invoice->lines->map(
+            fn ($line) => [
                 'description' => $line->description,
                 'quantity' => $line->quantity,
                 'unit_price' => $line->unit_price,
                 'vat_rate_id' => $line->vat_rate_id,
-                'sort_order' => $line->sort_order ?? $index,
-            ]);
-
-            $newLine->calculateAndSave();
-        }
+                'sort_order' => $line->sort_order,
+            ]
+        )->all());
 
         $newInvoice->recalculate();
 

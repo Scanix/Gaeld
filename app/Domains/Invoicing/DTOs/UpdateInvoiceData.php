@@ -10,4 +10,18 @@ namespace App\Domains\Invoicing\DTOs;
  */
 readonly class UpdateInvoiceData extends CreateInvoiceData
 {
+	public static function fromArray(array $data): self
+	{
+		return new self(
+			organizationId: $data['organization_id'],
+			customerId: $data['customer_id'],
+			number: $data['number'],
+			issueDate: $data['issue_date'],
+			dueDate: $data['due_date'],
+			currency: $data['currency'] ?? 'CHF',
+			notes: $data['notes'] ?? null,
+			paymentTerms: $data['payment_terms'] ?? null,
+			lines: $data['lines'],
+		);
+	}
 }

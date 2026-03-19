@@ -5,7 +5,6 @@ namespace App\Domains\Invoicing\Models;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-// Note: client_id column retained in DB for legacy data; new records use customer_id only.
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;

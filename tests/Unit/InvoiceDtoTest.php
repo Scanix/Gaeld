@@ -69,7 +69,8 @@ class InvoiceDtoTest extends TestCase
         $this->assertEquals('customer-1', $array['customer_id']);
         $this->assertEquals('EUR', $array['currency']);
         $this->assertEquals('Note', $array['notes']);
-        $this->assertArrayNotHasKey('lines', $array);
+    $this->assertCount(1, $array['lines']);
+    $this->assertEquals('Service', $array['lines'][0]['description']);
     }
 
     public function test_record_payment_data_from_valid_request(): void
@@ -119,6 +120,7 @@ class InvoiceDtoTest extends TestCase
             ],
         ]);
 
+        $this->assertInstanceOf(UpdateInvoiceData::class, $dto);
         $this->assertEquals('INV-UPDATED', $dto->number);
         $this->assertCount(1, $dto->lines);
     }

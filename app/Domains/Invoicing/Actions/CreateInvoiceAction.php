@@ -5,11 +5,14 @@ namespace App\Domains\Invoicing\Actions;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Invoicing\Models\InvoiceLine;
 use Illuminate\Support\Facades\DB;
 
 class CreateInvoiceAction
 {
+    public function __construct(
+        private SyncInvoiceLinesAction $syncInvoiceLines,
+    ) {}
+
     public function execute(CreateInvoiceData $data): Invoice
     {
         return DB::transaction(function () use ($data) {
@@ -28,18 +31,7 @@ class CreateInvoiceAction
                 'total' => 0,
             ]);
 
-            foreach ($data->lines as $index => $lineData) {
-                $line = new InvoiceLine([
-                    'invoice_id' => $invoice->id,
-                    'description' => $lineData['description'],
-                    'quantity' => $lineData['quantity'],
-                    'unit_price' => $lineData['unit_price'],
-                    'vat_rate_id' => $lineData['vat_rate_id'] ?? null,
-                    'sort_order' => $lineData['sort_order'] ?? $index,
-                ]);
-
-                $line->calculateAndSave();
-            }
+            $this->syncInvoiceLines->create($invoice, $data->lines);
 
             $invoice->recalculate();
 
