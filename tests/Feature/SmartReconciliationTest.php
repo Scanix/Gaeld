@@ -139,9 +139,9 @@ class SmartReconciliationTest extends TestCase
         $suggestions = $suggestionService->generateSuggestions($transaction);
 
         $this->assertCount(1, $suggestions['invoices']);
-        $this->assertEquals(100, $suggestions['invoices']->first()->match_score);
-        $this->assertEquals('qr_reference', $suggestions['invoices']->first()->match_type);
-        $this->assertEquals($invoice->id, $suggestions['invoices']->first()->id);
+        $this->assertEquals(100, $suggestions['invoices']->first()->score);
+        $this->assertEquals('qr_reference', $suggestions['invoices']->first()->matchType->value);
+        $this->assertEquals($invoice->id, $suggestions['invoices']->first()->invoice->id);
 
         // Verify match is stored in bank_matches
         $this->assertDatabaseHas('bank_matches', [
@@ -193,8 +193,8 @@ class SmartReconciliationTest extends TestCase
 
         $this->assertNotEmpty($suggestions['invoices']);
         $bestMatch = $suggestions['invoices']->first();
-        $this->assertEquals(90, $bestMatch->match_score);
-        $this->assertEquals('amount_customer', $bestMatch->match_type);
+        $this->assertEquals(90, $bestMatch->score);
+        $this->assertEquals('amount_customer', $bestMatch->matchType->value);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -237,8 +237,8 @@ class SmartReconciliationTest extends TestCase
 
         $this->assertNotEmpty($suggestions['invoices']);
         $bestMatch = $suggestions['invoices']->first();
-        $this->assertEquals(70, $bestMatch->match_score);
-        $this->assertEquals('heuristic', $bestMatch->match_type);
+        $this->assertEquals(70, $bestMatch->score);
+        $this->assertEquals('heuristic', $bestMatch->matchType->value);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -298,8 +298,8 @@ class SmartReconciliationTest extends TestCase
 
         // Only the QR match should be returned (QR returns early)
         $this->assertCount(1, $suggestions['invoices']);
-        $this->assertEquals($qrInvoice->id, $suggestions['invoices']->first()->id);
-        $this->assertEquals(100, $suggestions['invoices']->first()->match_score);
+        $this->assertEquals($qrInvoice->id, $suggestions['invoices']->first()->invoice->id);
+        $this->assertEquals(100, $suggestions['invoices']->first()->score);
     }
 
     // ──────────────────────────────────────────────────────────────

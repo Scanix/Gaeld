@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
+use App\Domains\Invoicing\Enums\PaymentMethod;
 use PHPUnit\Framework\TestCase;
 
 class InvoiceDtoTest extends TestCase
@@ -84,7 +85,7 @@ class InvoiceDtoTest extends TestCase
 
         $this->assertEquals('500.00', $dto->amount);
         $this->assertEquals('2026-04-01', $dto->paymentDate);
-        $this->assertEquals('bank', $dto->paymentMethod);
+        $this->assertEquals(PaymentMethod::Bank, $dto->paymentMethod);
         $this->assertEquals('PAY-001', $dto->reference);
     }
 

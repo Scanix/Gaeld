@@ -103,7 +103,12 @@ class ExpenseFlowTest extends TestCase
 
         $this->assertEquals(ExpenseStatus::Pending, $expense->status);
 
-        // Post expense to ledger (direct — skips approval in service layer)
+        // Approve expense first (state machine: Pending → Approved → Posted)
+        $approveAction = new ApproveExpenseAction();
+        $expense = $approveAction->execute($expense);
+        $this->assertEquals(ExpenseStatus::Approved, $expense->status);
+
+        // Post expense to ledger
         $postAction = app(PostExpenseAction::class);
         $expense = $postAction->execute($expense, '6530');
 
@@ -137,6 +142,9 @@ class ExpenseFlowTest extends TestCase
             'vendor' => null,
             'description' => null,
         ]);
+
+        $approveAction = new ApproveExpenseAction();
+        $expense = $approveAction->execute($expense);
 
         $postAction = app(PostExpenseAction::class);
         $postAction->execute($expense, '6530');

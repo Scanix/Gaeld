@@ -20,6 +20,7 @@ use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -120,6 +121,15 @@ class LedgerServiceTest extends TestCase
             'currency' => 'CHF',
         ]);
 
+        InvoiceLine::create([
+            'invoice_id' => $invoice->id,
+            'description' => 'Consulting services',
+            'quantity' => 1,
+            'unit_price' => 5000.00,
+            'amount' => 5000.00,
+            'vat_amount' => 0,
+        ]);
+
         $result = app(FinalizeInvoiceAction::class)->execute($invoice);
 
         $this->assertEquals(InvoiceStatus::Sent, $result->status);
@@ -137,7 +147,7 @@ class LedgerServiceTest extends TestCase
             'vat_amount' => 0,
             'date' => '2026-03-10',
             'vendor' => 'GitHub',
-            'status' => ExpenseStatus::Pending,
+            'status' => ExpenseStatus::Approved,
             'currency' => 'CHF',
         ]);
 

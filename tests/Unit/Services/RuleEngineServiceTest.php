@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Services;
 
-use App\Exceptions\FeatureDisabledException;
+use App\Support\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
 use App\Domains\Banking\Rules\RecurringEntryRule;

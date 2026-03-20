@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Enums\BankTransactionType;
+use App\Domains\Banking\Enums\CamtFormat;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
@@ -86,7 +87,7 @@ class ReconciliationFlowTest extends TestCase
 
         $import = $importService->importCamtFile($this->bankAccount, $xml, 'test.xml');
 
-        $this->assertEquals('camt053', $import->format);
+        $this->assertEquals(CamtFormat::Camt053, $import->format);
         $this->assertEquals('STMT-2026-001', $import->statement_id);
         $this->assertEquals(3, $import->transaction_count);
         $this->assertCount(3, $import->transactions);
@@ -105,7 +106,7 @@ class ReconciliationFlowTest extends TestCase
 
         $import = $importService->importCamtFile($this->bankAccount, $xml, 'notification.xml');
 
-        $this->assertEquals('camt054', $import->format);
+        $this->assertEquals(CamtFormat::Camt054, $import->format);
         $this->assertEquals('NOTIF-2026-001', $import->statement_id);
         $this->assertEquals(2, $import->transaction_count);
     }
@@ -306,7 +307,7 @@ class ReconciliationFlowTest extends TestCase
         $suggestions = $suggestionService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
-        $this->assertEquals('INV-MATCH', $suggestions['invoices']->first()->number);
+        $this->assertEquals('INV-MATCH', $suggestions['invoices']->first()->invoice->number);
     }
 
     public function test_suggestions_match_by_reference(): void
@@ -344,7 +345,7 @@ class ReconciliationFlowTest extends TestCase
         $suggestions = $suggestionService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
-        $this->assertEquals('INV-REF-TEST', $suggestions['invoices']->first()->number);
+        $this->assertEquals('INV-REF-TEST', $suggestions['invoices']->first()->invoice->number);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -359,7 +360,7 @@ class ReconciliationFlowTest extends TestCase
         $suggestionService = app(SuggestionService::class);
 
         $this->expectException(\DomainException::class);
-        $this->expectExceptionMessage('Enterprise Edition');
+        $this->expectExceptionMessage('Feature [auto_reconciliation] is not enabled.');
 
         $reconciliationService->autoReconcile($this->bankAccount);
     }

@@ -9,8 +9,10 @@ use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
+use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceService;
@@ -76,7 +78,7 @@ class InvoiceFlowTest extends TestCase
 
     private function createInvoice(array $overrides = [], array $lines = []): Invoice
     {
-        $action = new CreateInvoiceAction();
+        $action = app(CreateInvoiceAction::class);
 
         $data = array_merge([
             'customer_id' => $this->customer->id,
@@ -94,12 +96,15 @@ class InvoiceFlowTest extends TestCase
             currency: $data['currency'] ?? 'CHF',
             notes: $data['notes'] ?? null,
             paymentTerms: $data['payment_terms'] ?? null,
-            lines: $lines ?: [[
-                'description' => 'Web Development',
-                'quantity' => 10,
-                'unit_price' => 150.00,
-                'vat_rate_id' => $this->vatRate->id,
-            ]],
+            lines: array_map(
+                fn (array $l) => InvoiceLineData::fromArray($l),
+                $lines ?: [[
+                    'description' => 'Web Development',
+                    'quantity' => 10,
+                    'unit_price' => 150.00,
+                    'vat_rate_id' => $this->vatRate->id,
+                ]]
+            ),
         ));
     }
 
@@ -124,7 +129,7 @@ class InvoiceFlowTest extends TestCase
         $payment = $invoiceService->recordPayment($invoice, new RecordPaymentData(
             amount: (string) $invoice->total,
             paymentDate: '2026-04-01',
-            paymentMethod: 'bank',
+            paymentMethod: PaymentMethod::Bank,
             reference: null,
         ));
 
@@ -149,7 +154,7 @@ class InvoiceFlowTest extends TestCase
         $payment1 = $invoiceService->recordPayment($invoice, new RecordPaymentData(
             amount: (string) $halfAmount,
             paymentDate: '2026-04-01',
-            paymentMethod: 'bank',
+            paymentMethod: PaymentMethod::Bank,
             reference: null,
         ));
 
@@ -162,7 +167,7 @@ class InvoiceFlowTest extends TestCase
         $payment2 = $invoiceService->recordPayment($invoice, new RecordPaymentData(
             amount: (string) $remaining,
             paymentDate: '2026-04-10',
-            paymentMethod: 'bank',
+            paymentMethod: PaymentMethod::Bank,
             reference: null,
         ));
 
@@ -175,7 +180,7 @@ class InvoiceFlowTest extends TestCase
     public function test_duplicate_invoice(): void
     {
         $invoice = $this->createInvoice();
-        $action = new DuplicateInvoiceAction();
+        $action = app(DuplicateInvoiceAction::class);
 
         $duplicate = $action->execute($invoice);
 

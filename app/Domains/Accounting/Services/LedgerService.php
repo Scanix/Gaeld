@@ -333,8 +333,12 @@ class LedgerService
         });
     }
 
-    private function isDebitNormalAccount(string $type): bool
+    private function isDebitNormalAccount(AccountType|string $type): bool
     {
+        if ($type instanceof AccountType) {
+            return $type->isDebitNormal();
+        }
+
         return AccountType::from($type)->isDebitNormal();
     }
 

@@ -39,7 +39,7 @@ readonly class UpdateSupplierData
 
     public function toArray(): array
     {
-        return [
+        return array_filter([
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
@@ -52,6 +52,6 @@ readonly class UpdateSupplierData
             'currency' => $this->currency,
             'iban' => $this->iban,
             'internal_notes' => $this->internalNotes,
-        ];
+        ], fn ($value) => $value !== null);
     }
 }

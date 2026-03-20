@@ -133,8 +133,8 @@ class QueryBuilderTest extends TestCase
     {
         $request = Request::create('/', 'GET', ['search' => 'Beta']);
 
-        $results = QueryBuilder::for(Invoice::with('client'), $request)
-            ->searchable(['number', 'client.name'])
+        $results = QueryBuilder::for(Invoice::with('customer'), $request)
+            ->searchable(['number', 'customer.name'])
             ->allowedSorts(['issue_date'], 'issue_date', 'desc')
             ->apply()
             ->get();
@@ -165,10 +165,10 @@ class QueryBuilderTest extends TestCase
             'direction' => 'desc',
         ]);
 
-        $results = QueryBuilder::for(Invoice::with('client'), $request)
+        $results = QueryBuilder::for(Invoice::with('customer'), $request)
             ->allowedSorts(['issue_date', 'total'], 'issue_date', 'desc')
             ->allowedFilters(['status'])
-            ->searchable(['client.name'])
+            ->searchable(['customer.name'])
             ->apply()
             ->get();
 

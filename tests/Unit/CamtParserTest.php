@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Services\Camt\Camt053Parser;
 use App\Domains\Banking\Services\Camt\Camt054Parser;
 use Tests\TestCase;
@@ -39,7 +40,7 @@ class CamtParserTest extends TestCase
         $this->assertEquals('2026-03-10', $credit->date);
         $this->assertEquals('5000.00', $credit->amount);
         $this->assertEquals('CHF', $credit->currency);
-        $this->assertEquals('credit', $credit->type);
+        $this->assertEquals(BankTransactionType::Credit, $credit->type);
         $this->assertEquals('INV-2026-001', $credit->endToEndId);
         $this->assertEquals('INV-2026-001', $credit->reference);
         $this->assertEquals('Acme AG', $credit->debtorName);
@@ -58,7 +59,7 @@ class CamtParserTest extends TestCase
 
         $this->assertEquals('2026-03-12', $debit->date);
         $this->assertEquals('200.00', $debit->amount);
-        $this->assertEquals('debit', $debit->type);
+        $this->assertEquals(BankTransactionType::Debit, $debit->type);
         $this->assertEquals('GitHub Inc', $debit->creditorName);
         $this->assertEquals('GitHub Pro subscription', $debit->description);
     }
@@ -75,7 +76,7 @@ class CamtParserTest extends TestCase
 
         $this->assertEquals('2026-03-14', $simple->date);
         $this->assertEquals('1500.00', $simple->amount);
-        $this->assertEquals('credit', $simple->type);
+        $this->assertEquals(BankTransactionType::Credit, $simple->type);
         $this->assertEquals('REF-003', $simple->reference);
         $this->assertEquals('Wire transfer from client', $simple->description);
     }
@@ -128,7 +129,7 @@ class CamtParserTest extends TestCase
         $credit = $entries[0];
         $this->assertEquals('2026-03-15', $credit->date);
         $this->assertEquals('3200.50', $credit->amount);
-        $this->assertEquals('credit', $credit->type);
+        $this->assertEquals(BankTransactionType::Credit, $credit->type);
         $this->assertEquals('INV-2026-005', $credit->endToEndId);
         $this->assertEquals('Swiss Corp SA', $credit->debtorName);
     }
@@ -145,7 +146,7 @@ class CamtParserTest extends TestCase
 
         $this->assertNull($debit->endToEndId);
         $this->assertEquals('PMT-INFO-001', $debit->reference);
-        $this->assertEquals('debit', $debit->type);
+        $this->assertEquals(BankTransactionType::Debit, $debit->type);
         $this->assertEquals('89.90', $debit->amount);
         $this->assertEquals('Office Depot', $debit->creditorName);
     }

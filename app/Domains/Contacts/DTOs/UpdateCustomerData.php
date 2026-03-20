@@ -37,7 +37,7 @@ readonly class UpdateCustomerData
 
     public function toArray(): array
     {
-        return [
+        return array_filter([
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
@@ -49,6 +49,6 @@ readonly class UpdateCustomerData
             'currency' => $this->currency,
             'payment_terms' => $this->paymentTerms,
             'internal_notes' => $this->internalNotes,
-        ];
+        ], fn ($value) => $value !== null);
     }
 }

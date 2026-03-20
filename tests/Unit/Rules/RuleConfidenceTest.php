@@ -9,6 +9,7 @@ use App\Domains\Banking\Rules\RecurringEntryRule;
 use App\Domains\Banking\Rules\SupplierCategoryRule;
 use App\Domains\Banking\Services\MatchingService;
 use App\Domains\Banking\Services\ReconciliationService;
+use App\Domains\Invoicing\Services\InvoiceService;
 use Tests\TestCase;
 
 class RuleConfidenceTest extends TestCase
@@ -17,7 +18,8 @@ class RuleConfidenceTest extends TestCase
     {
         $matchingService = $this->createMock(MatchingService::class);
         $reconciliation = $this->createMock(ReconciliationService::class);
-        $rule = new QrReferencePaymentRule($matchingService, $reconciliation);
+        $invoiceService = $this->createMock(InvoiceService::class);
+        $rule = new QrReferencePaymentRule($matchingService, $reconciliation, $invoiceService);
 
         $this->assertEquals(100, $rule->confidence());
         $this->assertEquals('QR Reference Payment', $rule->name());
@@ -43,7 +45,8 @@ class RuleConfidenceTest extends TestCase
     {
         $matchingService = $this->createMock(MatchingService::class);
         $reconciliation = $this->createMock(ReconciliationService::class);
-        $rule = new QrReferencePaymentRule($matchingService, $reconciliation);
+        $invoiceService = $this->createMock(InvoiceService::class);
+        $rule = new QrReferencePaymentRule($matchingService, $reconciliation, $invoiceService);
 
         $transaction = new BankTransaction();
         $transaction->type = BankTransactionType::Debit;
@@ -55,7 +58,8 @@ class RuleConfidenceTest extends TestCase
     {
         $matchingService = $this->createMock(MatchingService::class);
         $reconciliation = $this->createMock(ReconciliationService::class);
-        $rule = new QrReferencePaymentRule($matchingService, $reconciliation);
+        $invoiceService = $this->createMock(InvoiceService::class);
+        $rule = new QrReferencePaymentRule($matchingService, $reconciliation, $invoiceService);
 
         $transaction = new BankTransaction();
         $transaction->type = BankTransactionType::Credit;
@@ -124,8 +128,9 @@ class RuleConfidenceTest extends TestCase
         $matchingService = $this->createMock(MatchingService::class);
         $matchingService->expects($this->never())->method('findAndStoreMatches');
         $reconciliation = $this->createMock(ReconciliationService::class);
+        $invoiceService = $this->createMock(InvoiceService::class);
 
-        $rule = new QrReferencePaymentRule($matchingService, $reconciliation);
+        $rule = new QrReferencePaymentRule($matchingService, $reconciliation, $invoiceService);
 
         $transaction = new BankTransaction();
         $transaction->forceFill(['is_reconciled' => true]);

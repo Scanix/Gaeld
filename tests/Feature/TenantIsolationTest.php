@@ -234,7 +234,7 @@ class TenantIsolationTest extends TestCase
         $suggestions = $suggestionService->generateSuggestions($transaction);
 
         // Should only suggest Org A's invoice
-        $invoiceNumbers = $suggestions['invoices']->pluck('number')->toArray();
+        $invoiceNumbers = $suggestions['invoices']->map(fn ($s) => $s->invoice->number)->toArray();
         $this->assertContains('INV-A-001', $invoiceNumbers);
         $this->assertNotContains('INV-B-001', $invoiceNumbers);
     }

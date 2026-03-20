@@ -95,7 +95,7 @@ class RuleEngineTest extends TestCase
             'is_reconciled' => false,
         ]);
 
-        $rule = new QrReferencePaymentRule(app(ReconciliationService::class));
+        $rule = app(QrReferencePaymentRule::class);
 
         $this->assertTrue($rule->matches($transaction));
         $this->assertEquals(100, $rule->confidence());
@@ -115,7 +115,7 @@ class RuleEngineTest extends TestCase
             'is_reconciled' => false,
         ]);
 
-        $rule = new QrReferencePaymentRule(app(ReconciliationService::class));
+        $rule = app(QrReferencePaymentRule::class);
 
         $this->assertFalse($rule->matches($transaction));
     }
@@ -134,7 +134,7 @@ class RuleEngineTest extends TestCase
             'is_reconciled' => false,
         ]);
 
-        $rule = new QrReferencePaymentRule(app(ReconciliationService::class));
+        $rule = app(QrReferencePaymentRule::class);
 
         $this->assertFalse($rule->matches($transaction));
     }
@@ -229,7 +229,7 @@ class RuleEngineTest extends TestCase
         $ruleEngine = app(RuleEngineService::class);
 
         $this->expectException(\DomainException::class);
-        $this->expectExceptionMessage('Enterprise Edition');
+        $this->expectExceptionMessage('Feature [rule_engine] is not enabled.');
 
         $ruleEngine->evaluateRules($transaction);
     }
