@@ -146,13 +146,9 @@ class LedgerService
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addHour(), function () use ($accountId, $account, $fromDate, $toDate) {
             $query = TransactionLine::where('account_id', $accountId)
                 ->whereHas('journalEntry', function ($q) use ($fromDate, $toDate) {
-                    $q->where('is_posted', true);
-                    if ($fromDate) {
-                        $q->where('date', '>=', $fromDate);
-                    }
-                    if ($toDate) {
-                        $q->where('date', '<=', $toDate);
-                    }
+                    $q->where('is_posted', true)
+                        ->when($fromDate, fn ($q, $date) => $q->where('date', '>=', $date))
+                        ->when($toDate, fn ($q, $date) => $q->where('date', '<=', $date));
                 });
 
             $debits = (string) (clone $query)->sum('debit');
@@ -180,40 +176,51 @@ class LedgerService
         $orgTag = "org:{$organizationId}:ledger";
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $asOfDate) {
-            $query = Account::where('accounts.organization_id', $organizationId)
-                ->where('accounts.is_active', true)
-                ->leftJoin('transaction_lines', 'transaction_lines.account_id', '=', 'accounts.id')
-                ->leftJoin('journal_entries', function ($join) use ($asOfDate) {
-                    $join->on('journal_entries.id', '=', 'transaction_lines.journal_entry_id')
-                        ->where('journal_entries.is_posted', true);
-                    if ($asOfDate) {
-                        $join->where('journal_entries.date', '<=', $asOfDate);
-                    }
-                })
-                ->groupBy('accounts.id', 'accounts.code', 'accounts.name', 'accounts.type')
-                ->orderBy('accounts.code')
-                ->selectRaw('accounts.id, accounts.code, accounts.name, accounts.type, COALESCE(SUM(transaction_lines.debit), 0) as total_debit, COALESCE(SUM(transaction_lines.credit), 0) as total_credit');
+            $rows = $this->buildTrialBalanceQuery($organizationId, $asOfDate)->get();
 
-            $balances = [];
+            return $this->computeTrialBalances($rows);
+        });
+    }
 
-            foreach ($query->get() as $row) {
-                $isDebitNormal = $this->isDebitNormalAccount($row->type);
-                $balance = $isDebitNormal
-                    ? bcsub((string) $row->total_debit, (string) $row->total_credit, 2)
-                    : bcsub((string) $row->total_credit, (string) $row->total_debit, 2);
-
-                if (bccomp($balance, '0', 2) !== 0) {
-                    $balances[] = [
-                        'account_code' => $row->code,
-                        'account_name' => $row->name,
-                        'account_type' => $row->type,
-                        'debit' => $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
-                        'credit' => ! $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
-                    ];
+    private function buildTrialBalanceQuery(string $organizationId, ?string $asOfDate): \Illuminate\Database\Eloquent\Builder
+    {
+        return Account::where('accounts.organization_id', $organizationId)
+            ->where('accounts.is_active', true)
+            ->leftJoin('transaction_lines', 'transaction_lines.account_id', '=', 'accounts.id')
+            ->leftJoin('journal_entries', function ($join) use ($asOfDate) {
+                $join->on('journal_entries.id', '=', 'transaction_lines.journal_entry_id')
+                    ->where('journal_entries.is_posted', true);
+                if ($asOfDate) {
+                    $join->where('journal_entries.date', '<=', $asOfDate);
                 }
-            }
+            })
+            ->groupBy('accounts.id', 'accounts.code', 'accounts.name', 'accounts.type')
+            ->orderBy('accounts.code')
+            ->selectRaw('accounts.id, accounts.code, accounts.name, accounts.type, COALESCE(SUM(transaction_lines.debit), 0) as total_debit, COALESCE(SUM(transaction_lines.credit), 0) as total_credit');
+    }
 
-            return $balances;
+    private function computeTrialBalances($rows): array
+    {
+        $balances = [];
+
+        foreach ($rows as $row) {
+            $isDebitNormal = $this->isDebitNormalAccount($row->type);
+            $balance = $isDebitNormal
+                ? bcsub((string) $row->total_debit, (string) $row->total_credit, 2)
+                : bcsub((string) $row->total_credit, (string) $row->total_debit, 2);
+
+            if (bccomp($balance, '0', 2) !== 0) {
+                $balances[] = [
+                    'account_code' => $row->code,
+                    'account_name' => $row->name,
+                    'account_type' => $row->type,
+                    'debit' => $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
+                    'credit' => ! $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
+                ];
+            }
+        }
+
+        return $balances;
         });
     }
 

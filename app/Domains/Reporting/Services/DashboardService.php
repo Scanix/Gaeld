@@ -73,19 +73,28 @@ class DashboardService
             ->limit(10)
             ->get()
             ->map(function (JournalEntry $entry) {
-                $hasRevenue = $entry->lines->contains(fn ($line) => AccountCode::isRevenue($line->account?->code ?? ''));
-                $hasExpense = $entry->lines->contains(fn ($line) => AccountCode::isExpense($line->account?->code ?? ''));
-                $type = $hasRevenue ? 'income' : ($hasExpense ? 'expense' : 'transfer');
-
                 return [
                     'id' => $entry->id,
                     'date' => $entry->date,
                     'description' => $entry->description,
                     'reference' => $entry->reference,
                     'amount' => (float) $entry->lines->sum('debit'),
-                    'type' => $type,
+                    'type' => $this->classifyTransactionType($entry),
                 ];
             });
+    }
+
+    private function classifyTransactionType(JournalEntry $entry): string
+    {
+        $hasRevenue = $entry->lines->contains(fn ($line) => AccountCode::isRevenue($line->account?->code ?? ''));
+
+        if ($hasRevenue) {
+            return 'income';
+        }
+
+        $hasExpense = $entry->lines->contains(fn ($line) => AccountCode::isExpense($line->account?->code ?? ''));
+
+        return $hasExpense ? 'expense' : 'transfer';
     }
 
     private function monthlyBreakdown(string $organizationId, int $year): array
