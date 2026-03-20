@@ -2,12 +2,17 @@
 
 namespace App\Http\Middleware;
 
+use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
+    public function __construct(
+        private CurrentOrganization $currentOrganization,
+    ) {}
+
     public function share(Request $request): array
     {
         $user = $request->user();
@@ -25,8 +30,8 @@ class HandleInertiaRequests extends Middleware
                     'locale' => $user->locale,
                     'show_help' => $user->show_help,
                 ],
-                'currentOrganization' => (app()->bound('current_organization')
-                    ? app('current_organization')
+                'currentOrganization' => ($this->currentOrganization->isBound()
+                    ? $this->currentOrganization->get()
                     : $user->resolveCurrentOrganization()
                 )?->only('id', 'name', 'currency', 'locale'),
                 'organizations' => $user->organizations()

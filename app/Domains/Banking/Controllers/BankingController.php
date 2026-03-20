@@ -6,6 +6,7 @@ use App\Domains\Banking\DTOs\CreateBankAccountData;
 use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Services\BankingService;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,7 +44,7 @@ class BankingController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', BankAccount::class);
 
@@ -53,11 +54,11 @@ class BankingController extends Controller
             'bank_name' => 'nullable|string|max:255',
             'account_id' => [
                 'nullable',
-                Rule::exists('accounts', 'id')->where('organization_id', app('current_organization')->id),
+                Rule::exists('accounts', 'id')->where('organization_id', $currentOrg->id()),
             ],
             'currency' => 'string|size:3',
         ]);
-        $validated['organization_id'] = app('current_organization')->id;
+        $validated['organization_id'] = $currentOrg->id();
 
         $bankAccount = BankAccount::create(CreateBankAccountData::fromArray($validated)->toArray());
 

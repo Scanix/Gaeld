@@ -13,6 +13,7 @@ use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -45,7 +46,7 @@ class TenantIsolationTest extends TestCase
 
     private function setCurrentOrg(Organization $org): void
     {
-        app()->instance('current_organization', $org);
+        app(CurrentOrganization::class)->set($org);
     }
 
     // ──────────────────────────────────────────────────────────────

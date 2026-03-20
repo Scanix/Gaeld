@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Controllers;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -36,11 +37,11 @@ class AccountingController extends Controller
         ]);
     }
 
-    public function trialBalance(Request $request, LedgerService $ledgerService): Response
+    public function trialBalance(Request $request, LedgerService $ledgerService, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', Account::class);
 
-        $orgId = app('current_organization')->id;
+        $orgId = $currentOrg->id();
         $asOfDate = $request->input('as_of_date', now()->toDateString());
 
         $balances = $ledgerService->trialBalance($orgId, $asOfDate);

@@ -2,6 +2,7 @@
 
 namespace App\Support\Traits;
 
+use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Database\Eloquent\Builder;
 
 trait BelongsToOrganization
@@ -9,18 +10,21 @@ trait BelongsToOrganization
     public static function bootBelongsToOrganization(): void
     {
         static::addGlobalScope('organization', function (Builder $builder) {
-            if (app()->bound('current_organization')) {
-                $org = app('current_organization');
+            $currentOrg = app(CurrentOrganization::class);
+            if ($currentOrg->isBound()) {
                 $builder->where(
                     $builder->getModel()->getTable().'.organization_id',
-                    $org->id,
+                    $currentOrg->id(),
                 );
             }
         });
 
         static::creating(function ($model) {
-            if (! $model->organization_id && app()->bound('current_organization')) {
-                $model->organization_id = app('current_organization')->id;
+            if (! $model->organization_id) {
+                $currentOrg = app(CurrentOrganization::class);
+                if ($currentOrg->isBound()) {
+                    $model->organization_id = $currentOrg->id();
+                }
             }
         });
     }

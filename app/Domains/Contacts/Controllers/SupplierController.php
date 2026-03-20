@@ -6,6 +6,7 @@ use App\Domains\Contacts\DTOs\CreateSupplierData;
 use App\Domains\Contacts\DTOs\UpdateSupplierData;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Contacts\Queries\SupplierQuery;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,12 +52,12 @@ class SupplierController extends Controller
         return Inertia::render('Contacts/Suppliers/Create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', Supplier::class);
 
         $validated = $request->validate(self::VALIDATION_RULES);
-        $validated['organization_id'] = app('current_organization')->id;
+        $validated['organization_id'] = $currentOrg->id();
 
         $supplier = Supplier::create(CreateSupplierData::fromArray($validated)->toArray());
 

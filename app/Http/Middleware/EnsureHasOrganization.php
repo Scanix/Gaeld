@@ -2,12 +2,17 @@
 
 namespace App\Http\Middleware;
 
+use App\Domains\Organizations\Services\CurrentOrganization;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureHasOrganization
 {
+    public function __construct(
+        private CurrentOrganization $currentOrganization,
+    ) {}
+
     public function handle(Request $request, Closure $next): Response
     {
         $org = $request->user()?->resolveCurrentOrganization();
@@ -16,7 +21,7 @@ class EnsureHasOrganization
             return redirect()->route('onboarding');
         }
 
-        app()->instance('current_organization', $org);
+        $this->currentOrganization->set($org);
 
         return $next($request);
     }

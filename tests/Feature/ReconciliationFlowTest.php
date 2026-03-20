@@ -16,6 +16,7 @@ use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -44,7 +45,7 @@ class ReconciliationFlowTest extends TestCase
         $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
 
         // Bind current organization
-        app()->instance('current_organization', $this->organization);
+        app(CurrentOrganization::class)->set($this->organization);
 
         $this->accounts['bank'] = Account::create([
             'organization_id' => $this->organization->id,

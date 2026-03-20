@@ -6,6 +6,7 @@ use App\Domains\Contacts\DTOs\CreateCustomerData;
 use App\Domains\Contacts\DTOs\UpdateCustomerData;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Queries\CustomerQuery;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,12 +51,12 @@ class CustomerController extends Controller
         return Inertia::render('Contacts/Customers/Create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', Customer::class);
 
         $validated = $request->validate(self::VALIDATION_RULES);
-        $validated['organization_id'] = app('current_organization')->id;
+        $validated['organization_id'] = $currentOrg->id();
 
         $customer = Customer::create(CreateCustomerData::fromArray($validated)->toArray());
 

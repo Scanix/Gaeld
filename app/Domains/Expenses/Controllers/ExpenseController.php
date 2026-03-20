@@ -13,6 +13,7 @@ use App\Domains\Expenses\Queries\ExpenseQuery;
 use App\Domains\Accounting\Queries\VatRateQuery;
 use App\Domains\Expenses\DTOs\CreateExpenseData;
 use App\Domains\Expenses\DTOs\UpdateExpenseData;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,7 +48,7 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function store(Request $request, CreateExpenseAction $action): RedirectResponse
+    public function store(Request $request, CreateExpenseAction $action, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', Expense::class);
 
@@ -58,7 +59,7 @@ class ExpenseController extends Controller
             'vat_amount' => 'nullable|numeric|min:0',
             'vat_rate_id' => [
                 'nullable',
-                Rule::exists('vat_rates', 'id')->where('organization_id', app('current_organization')->id),
+                Rule::exists('vat_rates', 'id')->where('organization_id', $currentOrg->id()),
             ],
             'date' => 'required|date',
             'vendor' => 'nullable|string|max:255',
@@ -69,10 +70,10 @@ class ExpenseController extends Controller
         if ($request->hasFile('receipt')) {
             $validated['receipt_path'] = $this->storeReceipt(
                 $request->file('receipt'),
-                app('current_organization')->id,
+                $currentOrg->id(),
             );
         }
-        $validated['organization_id'] = app('current_organization')->id;
+        $validated['organization_id'] = $currentOrg->id();
 
         $expense = $action->execute(CreateExpenseData::fromArray($validated));
 

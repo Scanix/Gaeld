@@ -15,6 +15,7 @@ use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
 use App\Domains\Invoicing\Enums\PaymentMethod;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Contacts\Queries\CustomerQuery;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
@@ -54,14 +55,14 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function store(Request $request, CreateInvoiceAction $action): RedirectResponse
+    public function store(Request $request, CreateInvoiceAction $action, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', Invoice::class);
 
         $validated = $request->validate([
             'customer_id' => [
                 'required',
-                Rule::exists('customers', 'id')->where('organization_id', app('current_organization')->id),
+                Rule::exists('customers', 'id')->where('organization_id', $currentOrg->id()),
             ],
             'number' => 'required|string|max:50',
             'issue_date' => 'required|date',
@@ -75,10 +76,10 @@ class InvoiceController extends Controller
             'lines.*.unit_price' => 'required|numeric|min:0',
             'lines.*.vat_rate_id' => [
                 'nullable',
-                Rule::exists('vat_rates', 'id')->where('organization_id', app('current_organization')->id),
+                Rule::exists('vat_rates', 'id')->where('organization_id', $currentOrg->id()),
             ],
         ]);
-        $validated['organization_id'] = app('current_organization')->id;
+        $validated['organization_id'] = $currentOrg->id();
 
         $dto = CreateInvoiceData::fromArray($validated);
 
@@ -208,11 +209,11 @@ class InvoiceController extends Controller
             ->with('success', 'Invoice duplicated.');
     }
 
-    public function downloadQrPdf(Invoice $invoice, GenerateQrInvoicePdfAction $action): HttpResponse
+    public function downloadQrPdf(Invoice $invoice, GenerateQrInvoicePdfAction $action, CurrentOrganization $currentOrg): HttpResponse
     {
         $this->authorize('view', $invoice);
 
-        $organization = app('current_organization');
+        $organization = $currentOrg->get();
         $locale = $organization->locale ?? app()->getLocale();
 
         $pdf = $action->execute($invoice, $organization, $locale);

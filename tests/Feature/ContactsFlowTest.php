@@ -9,6 +9,7 @@ use App\Domains\Contacts\DTOs\UpdateSupplierData;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -29,7 +30,7 @@ class ContactsFlowTest extends TestCase
         $this->org = Organization::create(['name' => 'Test GmbH', 'currency' => 'CHF']);
         $this->org->users()->attach($this->user->id, ['role' => 'owner']);
 
-        app()->instance('current_organization', $this->org);
+        app(CurrentOrganization::class)->set($this->org);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -279,6 +280,6 @@ class ContactsFlowTest extends TestCase
 
     private function setCurrentOrgMiddleware(): void
     {
-        app()->instance('current_organization', $this->org);
+        app(CurrentOrganization::class)->set($this->org);
     }
 }
