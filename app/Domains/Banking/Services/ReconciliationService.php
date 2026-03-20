@@ -16,6 +16,7 @@ use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\PaymentMethod;
+use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceService;
 use App\Support\FeatureFlag;
@@ -69,6 +70,17 @@ class ReconciliationService
         return $reference;
     }
 
+    /**
+     * Resolve the payment amount: clamped to invoice's outstanding balance.
+     */
+    private function resolvePaymentAmount(BankTransaction $transaction, Invoice $invoice): string
+    {
+        $amount = Money::absoluteAmount((string) $transaction->amount);
+        $amountDue = $invoice->amountDue();
+
+        return bccomp($amount, $amountDue, 2) <= 0 ? $amount : $amountDue;
+    }
+
     // ──────────────────────────────────────────────────────────────
     //  CE: Manual Reconciliation
     // ──────────────────────────────────────────────────────────────
@@ -94,9 +106,7 @@ class ReconciliationService
 
             $this->validateReconciliationPreconditions($transaction, $bankAccount);
 
-            $amount = Money::absoluteAmount((string) $transaction->amount);
-            $amountDue = $invoice->amountDue();
-            $paymentAmount = bccomp($amount, $amountDue, 2) <= 0 ? $amount : $amountDue;
+            $paymentAmount = $this->resolvePaymentAmount($transaction, $invoice);
 
             $payment = null;
             if (bccomp($paymentAmount, '0', 2) > 0) {
@@ -209,19 +219,17 @@ class ReconciliationService
     {
         $transaction = $match->bankTransaction;
         $invoice = $match->invoice;
-
-        if ($this->isDuplicatePayment($transaction, $invoice)) {
-            throw new \App\Domains\Invoicing\Exceptions\InvalidPaymentException('This payment has already been recorded for this invoice.');
-        }
-
         $bankAccount = $transaction->bankAccount;
-        $this->validateReconciliationPreconditions($transaction, $bankAccount);
 
         return DB::transaction(function () use ($match, $transaction, $invoice, $bankAccount) {
-            $amount = Money::absoluteAmount((string) $transaction->amount);
-            $amountDue = $invoice->amountDue();
-            $paymentAmount = bccomp($amount, $amountDue, 2) <= 0 ? $amount : $amountDue;
+            // Guards inside the transaction so checks and writes are serialized together
+            if ($this->isDuplicatePayment($transaction, $invoice)) {
+                throw new \App\Domains\Invoicing\Exceptions\InvalidPaymentException('This payment has already been recorded for this invoice.');
+            }
 
+            $this->validateReconciliationPreconditions($transaction, $bankAccount);
+
+            $paymentAmount = $this->resolvePaymentAmount($transaction, $invoice);
             $orgId = $bankAccount->organization_id;
             $reference = $this->buildReconciliationReference($orgId, $transaction);
 
@@ -300,43 +308,51 @@ class ReconciliationService
         foreach ($unreconciled as $transaction) {
             $suggestions = $this->suggestionService->generateSuggestions($transaction);
 
-            // Only auto-confirm exact QR reference matches (confidence = 100)
-            $exactMatch = $suggestions['matches']->first(fn ($m) => $m->confidence === 100);
+            $reconciled = $this->tryAutoReconcileTransaction($transaction, $suggestions);
 
-            if ($exactMatch) {
-                try {
-                    $this->confirmMatch($exactMatch);
-                    $matched++;
-
-                    continue;
-                } catch (AlreadyReconciledException|UnlinkedBankAccountException|\App\Domains\Invoicing\Exceptions\InvalidPaymentException $e) {
-                    Log::warning('Auto-reconcile: skipped match', [
-                        'transaction_id' => $transaction->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-
-            // Auto-reconcile expenses with high confidence
-            $bestExpense = $suggestions['expenses']->first();
-
-            if ($bestExpense && $bestExpense->score >= MatchConfidence::AutoExpenseThreshold->value) {
-                try {
-                    $this->reconcileWithExpense($transaction, $bestExpense->expense);
-                    $matched++;
-
-                    continue;
-                } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
-                    Log::warning('Auto-reconcile: skipped expense match', [
-                        'transaction_id' => $transaction->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-
-            $unmatched++;
+            $reconciled ? $matched++ : $unmatched++;
         }
 
         return ['matched' => $matched, 'unmatched' => $unmatched];
+    }
+
+    /**
+     * Attempt to auto-reconcile a single transaction. Returns true if reconciled.
+     */
+    private function tryAutoReconcileTransaction(BankTransaction $transaction, array $suggestions): bool
+    {
+        // Only auto-confirm exact QR reference matches (confidence = 100)
+        $exactMatch = $suggestions['matches']->first(fn ($m) => $m->confidence === 100);
+
+        if ($exactMatch) {
+            try {
+                $this->confirmMatch($exactMatch);
+
+                return true;
+            } catch (AlreadyReconciledException|UnlinkedBankAccountException|\App\Domains\Invoicing\Exceptions\InvalidPaymentException $e) {
+                Log::warning('Auto-reconcile: skipped match', [
+                    'transaction_id' => $transaction->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Auto-reconcile expenses with high confidence
+        $bestExpense = $suggestions['expenses']->first();
+
+        if ($bestExpense && $bestExpense->score >= MatchConfidence::AutoExpenseThreshold->value) {
+            try {
+                $this->reconcileWithExpense($transaction, $bestExpense->expense);
+
+                return true;
+            } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
+                Log::warning('Auto-reconcile: skipped expense match', [
+                    'transaction_id' => $transaction->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return false;
     }
 }
