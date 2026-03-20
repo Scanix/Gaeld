@@ -6,7 +6,7 @@ use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
-use App\Domains\Expenses\Services\ExpenseService;
+use App\Domains\Expenses\Queries\ExpenseQuery;
 use App\Domains\Invoicing\Services\InvoiceService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -16,7 +16,6 @@ class DashboardService
     public function __construct(
         private readonly LedgerService $ledgerService,
         private readonly InvoiceService $invoiceService,
-        private readonly ExpenseService $expenseService,
     ) {}
     /**
      * @return array{revenue: float, expenses: float, cashBalance: string, unpaidInvoices: array{count: int, total: float}, pendingExpenses: array{count: int, total: float}, balance: float, recentTransactions: \Illuminate\Support\Collection, monthlyBreakdown: array}
@@ -26,12 +25,12 @@ class DashboardService
         $year = now()->year;
 
         $totalRevenue = $this->invoiceService->yearlyRevenue($organizationId, $year);
-        $totalExpenses = $this->expenseService->yearlyTotal($organizationId, $year);
+        $totalExpenses = ExpenseQuery::yearlyTotal($organizationId, $year);
         $cashBalance = $this->cashBalance($organizationId);
 
         $unpaidInvoices = $this->invoiceService->unpaidSummary($organizationId);
 
-        $pendingExpenses = $this->expenseService->pendingSummary($organizationId);
+        $pendingExpenses = ExpenseQuery::pendingSummary($organizationId);
 
         return [
             'revenue' => $totalRevenue,
@@ -103,7 +102,7 @@ class DashboardService
         $paidInvoices = $this->invoiceService->paidInYear($organizationId, $year)
             ->groupBy(fn ($i) => Carbon::parse($i->issue_date)->month);
 
-        $expenses = $this->expenseService->inYear($organizationId, $year)
+        $expenses = ExpenseQuery::inYear($organizationId, $year)
             ->groupBy(fn ($e) => Carbon::parse($e->date)->month);
 
         $forecastInvoices = $this->invoiceService->sentOrOverdueDueInYear($organizationId, $year)

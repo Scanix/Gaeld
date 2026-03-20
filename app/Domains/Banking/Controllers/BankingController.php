@@ -2,7 +2,6 @@
 
 namespace App\Domains\Banking\Controllers;
 
-use App\Domains\Banking\Actions\CreateBankAccountAction;
 use App\Domains\Banking\DTOs\CreateBankAccountData;
 use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Models\BankAccount;
@@ -44,7 +43,7 @@ class BankingController extends Controller
         ]);
     }
 
-    public function store(Request $request, CreateBankAccountAction $action): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', BankAccount::class);
 
@@ -60,7 +59,7 @@ class BankingController extends Controller
         ]);
         $validated['organization_id'] = app('current_organization')->id;
 
-        $bankAccount = $action->execute(CreateBankAccountData::fromArray($validated));
+        $bankAccount = BankAccount::create(CreateBankAccountData::fromArray($validated)->toArray());
 
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', 'Bank account created.');

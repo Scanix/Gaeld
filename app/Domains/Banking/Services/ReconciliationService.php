@@ -170,7 +170,7 @@ class ReconciliationService
             $amount = Money::absoluteAmount((string) $transaction->amount);
             $reference = $this->buildReconciliationReference($orgId, $transaction);
 
-            $journalEntry = $this->expenseService->recordBankPayment($expense, RecordExpensePaymentData::forReconciliation(
+            $journalEntry = $this->expenseService->postToLedger($expense, RecordExpensePaymentData::forReconciliation(
                 amount: $amount,
                 paymentDate: $transaction->date->toDateString(),
                 reference: $reference,

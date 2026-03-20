@@ -10,9 +10,6 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
-use App\Domains\Expenses\Queries\ExpenseQuery;
-use App\Support\DTOs\SummaryResult;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ExpenseService
@@ -58,32 +55,5 @@ class ExpenseService
 
             return $journalEntry;
         });
-    }
-
-    /**
-     * Post the ledger entry for an expense paid via bank reconciliation.
-     *
-     * Delegates to postToLedger() for the shared accounting logic.
-     *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException  When account code not found
-     */
-    public function recordBankPayment(Expense $expense, RecordExpensePaymentData $data): JournalEntry
-    {
-        return $this->postToLedger($expense, $data);
-    }
-
-    public function yearlyTotal(string $orgId, int $year): float
-    {
-        return ExpenseQuery::yearlyTotal($orgId, $year);
-    }
-
-    public function pendingSummary(string $orgId): SummaryResult
-    {
-        return ExpenseQuery::pendingSummary($orgId);
-    }
-
-    public function inYear(string $orgId, int $year): Collection
-    {
-        return ExpenseQuery::inYear($orgId, $year);
     }
 }
