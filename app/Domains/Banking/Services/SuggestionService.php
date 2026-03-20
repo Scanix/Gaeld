@@ -35,7 +35,7 @@ class SuggestionService
      * Get reconciliation suggestions for a paginated collection of transactions.
      *
      * @param  iterable<BankTransaction>  $transactions
-     * @return array<int, array{invoices: Collection, expenses: Collection, matches: Collection}>
+     * @return array<string, array{invoices: Collection, expenses: Collection, matches: Collection}>
      */
     public function generateSuggestionsForTransactions(iterable $transactions): array
     {

@@ -63,10 +63,12 @@ class RecurringEntryRule extends BaseRule
         return $count >= self::MIN_OCCURRENCES;
     }
 
+    /**
+     * Intentional no-op: confidence 70 is below the auto-apply threshold (100).
+     * The engine surfaces the recurring-entry suggestion to the UI; the user must confirm.
+     */
     public function apply(BankTransaction $transaction): void
     {
-        // For recurring entries, the engine surfaces the suggestion to the UI.
-        // The actual categorization (creating an expense) must be confirmed by the user.
-        // No automated write happens here — confidence 70 is below the auto-apply threshold.
+        // Surface-only rule: no automated write. User confirmation required.
     }
 }

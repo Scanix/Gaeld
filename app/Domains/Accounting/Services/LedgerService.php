@@ -99,6 +99,8 @@ class LedgerService
      *
      * Swaps debit ↔ credit on every line and posts a new entry
      * with a REV- reference prefix.
+     *
+     * @throws \App\Domains\Accounting\Exceptions\DuplicateReferenceException if this entry has already been reversed
      */
     public function reverseEntry(JournalEntry $journalEntry, ?string $description = null): JournalEntry
     {
