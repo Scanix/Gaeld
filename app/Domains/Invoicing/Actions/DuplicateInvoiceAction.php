@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Actions;
 
+use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 
@@ -29,13 +30,13 @@ class DuplicateInvoiceAction
         ]);
 
         $this->syncInvoiceLines->create($newInvoice, $invoice->lines->map(
-            fn ($line) => [
-                'description' => $line->description,
-                'quantity' => $line->quantity,
-                'unit_price' => $line->unit_price,
-                'vat_rate_id' => $line->vat_rate_id,
-                'sort_order' => $line->sort_order,
-            ]
+            fn ($line) => new InvoiceLineData(
+                description: $line->description,
+                quantity: $line->quantity,
+                unitPrice: $line->unit_price,
+                vatRateId: $line->vat_rate_id,
+                sortOrder: $line->sort_order,
+            )
         )->all());
 
         $newInvoice->recalculate();

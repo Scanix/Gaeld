@@ -29,7 +29,7 @@ class InvoiceDtoTest extends TestCase
         $this->assertEquals('INV-001', $dto->number);
         $this->assertEquals('CHF', $dto->currency);
         $this->assertCount(1, $dto->lines);
-        $this->assertEquals('Service', $dto->lines[0]['description']);
+        $this->assertEquals('Service', $dto->lines[0]->description);
     }
 
     public function test_create_invoice_data_defaults_currency_to_chf(): void

@@ -3,14 +3,13 @@
 namespace Tests\Unit\Actions;
 
 use App\Domains\Accounting\Constants\AccountCode;
-use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
-use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Expenses\Actions\PostExpenseAction;
+use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
-use Illuminate\Support\Facades\DB;
+use App\Domains\Expenses\Services\ExpenseService;
 use Mockery;
 use Tests\TestCase;
 
@@ -18,14 +17,14 @@ class PostExpenseActionTest extends TestCase
 {
     private PostExpenseAction $action;
 
-    private $ledgerService;
+    private $expenseService;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->ledgerService = Mockery::mock(LedgerService::class);
-        $this->action = new PostExpenseAction($this->ledgerService);
+        $this->expenseService = Mockery::mock(ExpenseService::class);
+        $this->action = new PostExpenseAction($this->expenseService);
     }
 
     public function test_rejects_already_posted_expense(): void
@@ -50,29 +49,22 @@ class PostExpenseActionTest extends TestCase
         $expense->id = 42;
         $expense->date = now();
 
-        $expenseAccount = Mockery::mock(Account::class)->makePartial();
-        $expenseAccount->id = 10;
-        $bankAccount = Mockery::mock(Account::class)->makePartial();
-        $bankAccount->id = 20;
-
         $journalEntry = Mockery::mock(JournalEntry::class)->makePartial();
         $journalEntry->id = 100;
 
-        $this->ledgerService
-            ->shouldReceive('resolveAccount')
-            ->twice()
-            ->andReturn($expenseAccount, $bankAccount);
-
-        $this->ledgerService
-            ->shouldReceive('postEntry')
+        $this->expenseService
+            ->shouldReceive('postToLedger')
             ->once()
+            ->withArgs(function ($exp, RecordExpensePaymentData $data) use ($expense) {
+                return $exp === $expense
+                    && $data->amount === '500'
+                    && $data->expenseAccountCode === AccountCode::GENERAL_EXPENSE
+                    && $data->bankAccountCode === AccountCode::BANK_CASH
+                    && $data->reference === 'EXP-42'
+                    && $data->description === 'Office supplies';
+            })
             ->andReturn($journalEntry);
 
-        DB::shouldReceive('transaction')
-            ->once()
-            ->andReturnUsing(fn ($callback) => $callback());
-
-        $expense->shouldReceive('update')->once();
         $expense->shouldReceive('fresh')->once()->andReturn($expense);
 
         $result = $this->action->execute($expense, AccountCode::GENERAL_EXPENSE);
@@ -80,7 +72,7 @@ class PostExpenseActionTest extends TestCase
         $this->assertSame($expense, $result);
     }
 
-    public function test_uses_default_bank_account_code(): void
+    public function test_uses_description_fallback_to_category(): void
     {
         $expense = Mockery::mock(Expense::class)->makePartial();
         $expense->status = ExpenseStatus::Approved;
@@ -91,36 +83,18 @@ class PostExpenseActionTest extends TestCase
         $expense->id = 43;
         $expense->date = now();
 
-        $expenseAccount = Mockery::mock(Account::class)->makePartial();
-        $expenseAccount->id = 10;
-        $bankAccount = Mockery::mock(Account::class)->makePartial();
-        $bankAccount->id = 20;
-
         $journalEntry = Mockery::mock(JournalEntry::class)->makePartial();
         $journalEntry->id = 101;
 
-        $this->ledgerService
-            ->shouldReceive('resolveAccount')
-            ->with('org-1', AccountCode::GENERAL_EXPENSE)
+        $this->expenseService
+            ->shouldReceive('postToLedger')
             ->once()
-            ->andReturn($expenseAccount);
-
-        $this->ledgerService
-            ->shouldReceive('resolveAccount')
-            ->with('org-1', AccountCode::BANK_CASH)
-            ->once()
-            ->andReturn($bankAccount);
-
-        $this->ledgerService
-            ->shouldReceive('postEntry')
-            ->once()
+            ->withArgs(function ($exp, RecordExpensePaymentData $data) {
+                return $data->description === 'Travel'
+                    && $data->expenseAccountCode === AccountCode::GENERAL_EXPENSE;
+            })
             ->andReturn($journalEntry);
 
-        DB::shouldReceive('transaction')
-            ->once()
-            ->andReturnUsing(fn ($callback) => $callback());
-
-        $expense->shouldReceive('update')->once();
         $expense->shouldReceive('fresh')->once()->andReturn($expense);
 
         $this->action->execute($expense, AccountCode::GENERAL_EXPENSE);

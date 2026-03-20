@@ -25,6 +25,25 @@ readonly class RecordExpensePaymentData
         );
     }
 
+    public static function forReconciliation(
+        string $amount,
+        string $paymentDate,
+        string $reference,
+        string $transactionDescription,
+        string $expenseDescription,
+        string $expenseAccountCode,
+        string $bankAccountCode,
+    ): self {
+        return new self(
+            amount: $amount,
+            paymentDate: $paymentDate,
+            reference: $reference,
+            description: "Reconciliation: {$transactionDescription} ↔ Expense {$expenseDescription}",
+            expenseAccountCode: $expenseAccountCode,
+            bankAccountCode: $bankAccountCode,
+        );
+    }
+
     public function toArray(): array
     {
         return [

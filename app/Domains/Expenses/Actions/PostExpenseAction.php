@@ -3,20 +3,18 @@
 namespace App\Domains\Expenses\Actions;
 
 use App\Domains\Accounting\Constants\AccountCode;
-use App\Domains\Accounting\DTOs\JournalEntryData;
-use App\Domains\Accounting\DTOs\JournalLineData;
-use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
-use Illuminate\Support\Facades\DB;
+use App\Domains\Expenses\Services\ExpenseService;
 
 class PostExpenseAction
 {
     private const REFERENCE_PREFIX_EXPENSE = 'EXP-';
 
     public function __construct(
-        private LedgerService $ledgerService,
+        private ExpenseService $expenseService,
     ) {}
 
     /**
@@ -34,28 +32,15 @@ class PostExpenseAction
             throw new InvalidExpenseStateException('Expense is already posted.');
         }
 
-        return DB::transaction(function () use ($expense, $expenseAccountCode, $bankAccountCode) {
-            $orgId = $expense->organization_id;
+        $this->expenseService->postToLedger($expense, new RecordExpensePaymentData(
+            amount: (string) $expense->amount,
+            paymentDate: $expense->date->toDateString(),
+            reference: self::REFERENCE_PREFIX_EXPENSE . $expense->id,
+            description: $expense->description ?? $expense->category,
+            expenseAccountCode: $expenseAccountCode,
+            bankAccountCode: $bankAccountCode,
+        ));
 
-            $expenseAccount = $this->ledgerService->resolveAccount($orgId, $expenseAccountCode);
-            $bankAccount = $this->ledgerService->resolveAccount($orgId, $bankAccountCode);
-
-            $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
-                date: $expense->date->toDateString(),
-                reference: self::REFERENCE_PREFIX_EXPENSE . $expense->id,
-                description: $expense->description ?? $expense->category,
-                lines: [
-                    new JournalLineData(accountId: $expenseAccount->id, debit: $expense->amount, credit: 0, description: $expense->description),
-                    new JournalLineData(accountId: $bankAccount->id, debit: 0, credit: $expense->amount, description: 'Payment from bank'),
-                ],
-            ));
-
-            $expense->update([
-                'status' => ExpenseStatus::Posted->value,
-                'journal_entry_id' => $journalEntry->id,
-            ]);
-
-            return $expense->fresh(['journalEntry.lines']);
-        });
+        return $expense->fresh(['journalEntry.lines']);
     }
 }

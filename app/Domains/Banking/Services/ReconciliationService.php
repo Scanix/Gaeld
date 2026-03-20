@@ -170,11 +170,12 @@ class ReconciliationService
             $amount = Money::absoluteAmount((string) $transaction->amount);
             $reference = $this->buildReconciliationReference($orgId, $transaction);
 
-            $journalEntry = $this->expenseService->recordBankPayment($expense, new RecordExpensePaymentData(
+            $journalEntry = $this->expenseService->recordBankPayment($expense, RecordExpensePaymentData::forReconciliation(
                 amount: $amount,
                 paymentDate: $transaction->date->toDateString(),
                 reference: $reference,
-                description: "Reconciliation: {$transaction->description} ↔ Expense {$expense->description}",
+                transactionDescription: $transaction->description,
+                expenseDescription: $expense->description,
                 expenseAccountCode: $expenseAccountCode,
                 bankAccountCode: $bankAccount->ledgerAccount->code,
             ));
@@ -238,7 +239,7 @@ class ReconciliationService
 
         return DB::transaction(function () use ($match, $transaction, $invoice, $bankAccount) {
             if ($this->isDuplicatePayment($transaction, $invoice)) {
-                throw new \App\Domains\Invoicing\Exceptions\InvalidPaymentException('This payment has already been recorded for this invoice.');
+                throw new InvalidPaymentException('This payment has already been recorded for this invoice.');
             }
 
             $this->validateReconciliationPreconditions($transaction, $bankAccount);
@@ -323,7 +324,7 @@ class ReconciliationService
                 $this->confirmMatch($exactMatch);
 
                 return true;
-            } catch (AlreadyReconciledException|UnlinkedBankAccountException|\App\Domains\Invoicing\Exceptions\InvalidPaymentException $e) {
+            } catch (AlreadyReconciledException|UnlinkedBankAccountException|InvalidPaymentException $e) {
                 Log::warning('Auto-reconcile: skipped match', [
                     'transaction_id' => $transaction->id,
                     'error' => $e->getMessage(),

@@ -5,7 +5,7 @@ namespace App\Domains\Invoicing\DTOs;
 readonly class CreateInvoiceData
 {
     /**
-     * @param array<int, array{description: string, quantity: string, unit_price: string, vat_rate_id: ?string, sort_order?: int}> $lines
+     * @param array<int, InvoiceLineData> $lines
      */
     public function __construct(
         public string $organizationId,
@@ -30,7 +30,7 @@ readonly class CreateInvoiceData
             currency: $data['currency'] ?? 'CHF',
             notes: $data['notes'] ?? null,
             paymentTerms: $data['payment_terms'] ?? null,
-            lines: $data['lines'],
+            lines: array_map(fn (array $line) => InvoiceLineData::fromArray($line), $data['lines']),
         );
     }
 
@@ -45,7 +45,7 @@ readonly class CreateInvoiceData
             'currency' => $this->currency,
             'notes' => $this->notes,
             'payment_terms' => $this->paymentTerms,
-            'lines' => $this->lines,
+            'lines' => array_map(fn (InvoiceLineData $line) => $line->toArray(), $this->lines),
         ];
     }
 }
