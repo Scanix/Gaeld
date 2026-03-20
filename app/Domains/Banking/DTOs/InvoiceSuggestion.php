@@ -12,13 +12,13 @@ use App\Domains\Invoicing\Models\Invoice;
  * ad-hoc dynamic properties (match_score, match_type, match_id). Match
  * metadata is held here; the Invoice model stays clean.
  */
-final class InvoiceSuggestion implements \JsonSerializable
+readonly class InvoiceSuggestion implements \JsonSerializable
 {
     public function __construct(
-        public readonly Invoice $invoice,
-        public readonly int $score,
-        public readonly BankMatchType $matchType,
-        public readonly int $matchId,
+        public Invoice $invoice,
+        public int $score,
+        public BankMatchType $matchType,
+        public int $matchId,
     ) {}
 
     /**

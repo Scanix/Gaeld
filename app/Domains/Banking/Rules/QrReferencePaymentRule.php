@@ -4,7 +4,7 @@ namespace App\Domains\Banking\Rules;
 
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankTransaction;
-use App\Domains\Banking\Services\MatchingEngine;
+use App\Domains\Banking\Services\MatchingService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Invoicing\Services\InvoiceService;
 
@@ -16,7 +16,7 @@ use App\Domains\Invoicing\Services\InvoiceService;
 class QrReferencePaymentRule extends BaseRule
 {
     public function __construct(
-        private MatchingEngine $matchingEngine,
+        private MatchingService $matchingService,
         private ReconciliationService $reconciliationService,
         private InvoiceService $invoiceService,
     ) {}
@@ -52,7 +52,7 @@ class QrReferencePaymentRule extends BaseRule
             return;
         }
 
-        $matches = $this->matchingEngine->findAndStoreMatches($transaction);
+        $matches = $this->matchingService->findAndStoreMatches($transaction);
         $exactMatch = $matches->first(fn ($m) => $m->confidence === 100);
 
         if ($exactMatch) {

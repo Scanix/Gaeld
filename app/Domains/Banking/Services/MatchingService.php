@@ -22,7 +22,7 @@ use Illuminate\Support\Collection;
  *
  * Results are stored in the bank_matches table.
  */
-class MatchingEngine
+class MatchingService
 {
     private const MAX_MATCH_CANDIDATES = 5;
 

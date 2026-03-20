@@ -7,7 +7,7 @@ use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
 use App\Domains\Banking\Rules\RecurringEntryRule;
 use App\Domains\Banking\Rules\SupplierCategoryRule;
-use App\Domains\Banking\Services\MatchingEngine;
+use App\Domains\Banking\Services\MatchingService;
 use App\Domains\Banking\Services\ReconciliationService;
 use Tests\TestCase;
 
@@ -15,9 +15,9 @@ class RuleConfidenceTest extends TestCase
 {
     public function test_qr_reference_rule_has_confidence_100(): void
     {
-        $matchingEngine = $this->createMock(MatchingEngine::class);
+        $matchingService = $this->createMock(MatchingService::class);
         $reconciliation = $this->createMock(ReconciliationService::class);
-        $rule = new QrReferencePaymentRule($matchingEngine, $reconciliation);
+        $rule = new QrReferencePaymentRule($matchingService, $reconciliation);
 
         $this->assertEquals(100, $rule->confidence());
         $this->assertEquals('QR Reference Payment', $rule->name());
@@ -41,9 +41,9 @@ class RuleConfidenceTest extends TestCase
 
     public function test_qr_rule_rejects_debit_transaction(): void
     {
-        $matchingEngine = $this->createMock(MatchingEngine::class);
+        $matchingService = $this->createMock(MatchingService::class);
         $reconciliation = $this->createMock(ReconciliationService::class);
-        $rule = new QrReferencePaymentRule($matchingEngine, $reconciliation);
+        $rule = new QrReferencePaymentRule($matchingService, $reconciliation);
 
         $transaction = new BankTransaction();
         $transaction->type = BankTransactionType::Debit;
@@ -53,9 +53,9 @@ class RuleConfidenceTest extends TestCase
 
     public function test_qr_rule_rejects_credit_without_structured_reference(): void
     {
-        $matchingEngine = $this->createMock(MatchingEngine::class);
+        $matchingService = $this->createMock(MatchingService::class);
         $reconciliation = $this->createMock(ReconciliationService::class);
-        $rule = new QrReferencePaymentRule($matchingEngine, $reconciliation);
+        $rule = new QrReferencePaymentRule($matchingService, $reconciliation);
 
         $transaction = new BankTransaction();
         $transaction->type = BankTransactionType::Credit;
@@ -121,11 +121,11 @@ class RuleConfidenceTest extends TestCase
 
     public function test_qr_rule_skips_apply_for_reconciled_transaction(): void
     {
-        $matchingEngine = $this->createMock(MatchingEngine::class);
-        $matchingEngine->expects($this->never())->method('findAndStoreMatches');
+        $matchingService = $this->createMock(MatchingService::class);
+        $matchingService->expects($this->never())->method('findAndStoreMatches');
         $reconciliation = $this->createMock(ReconciliationService::class);
 
-        $rule = new QrReferencePaymentRule($matchingEngine, $reconciliation);
+        $rule = new QrReferencePaymentRule($matchingService, $reconciliation);
 
         $transaction = new BankTransaction();
         $transaction->forceFill(['is_reconciled' => true]);

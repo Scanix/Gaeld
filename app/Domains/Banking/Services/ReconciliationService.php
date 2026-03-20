@@ -35,7 +35,7 @@ class ReconciliationService
         private InvoiceService $invoiceService,
         private ExpenseService $expenseService,
         private BankingService $bankingService,
-        private MatchingEngine $matchingEngine,
+        private MatchingService $matchingService,
         private SuggestionService $suggestionService,
     ) {}
 

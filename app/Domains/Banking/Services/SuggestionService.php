@@ -16,7 +16,7 @@ use Illuminate\Support\Collection;
  * Generates reconciliation suggestions (invoice and expense candidates)
  * for bank transactions.
  *
- * Delegates invoice matching to MatchingEngine. Handles expense scoring
+ * Delegates invoice matching to MatchingService. Handles expense scoring
  * using amount proximity and vendor name heuristics.
  */
 class SuggestionService
@@ -28,7 +28,7 @@ class SuggestionService
     private const EXPENSE_SCORE_VENDOR_MATCH = 30;
 
     public function __construct(
-        private MatchingEngine $matchingEngine,
+        private MatchingService $matchingService,
     ) {}
 
     /**
@@ -53,7 +53,7 @@ class SuggestionService
     /**
      * Get reconciliation suggestions for a single bank transaction.
      *
-     * Uses MatchingEngine for invoice candidates and expense scoring for debit transactions.
+     * Uses MatchingService for invoice candidates and expense scoring for debit transactions.
      *
      * @return array{invoices: Collection, expenses: Collection, matches: Collection}
      */
@@ -62,7 +62,7 @@ class SuggestionService
         $orgId = $transaction->bankAccount->organization_id;
         $amount = Money::absoluteAmount((string) $transaction->amount);
 
-        $matches = $this->matchingEngine->findAndStoreMatches($transaction);
+        $matches = $this->matchingService->findAndStoreMatches($transaction);
 
         $invoiceSuggestions = $matches->map(function ($match) {
             $invoice = $match->invoice->load(['customer']);

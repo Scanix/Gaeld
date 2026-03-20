@@ -11,11 +11,11 @@ use App\Domains\Expenses\Models\Expense;
  * ad-hoc dynamic properties (match_score). The score is held here; the
  * Expense model stays clean.
  */
-final class ExpenseSuggestion implements \JsonSerializable
+readonly class ExpenseSuggestion implements \JsonSerializable
 {
     public function __construct(
-        public readonly Expense $expense,
-        public readonly int $score,
+        public Expense $expense,
+        public int $score,
     ) {}
 
     /**
