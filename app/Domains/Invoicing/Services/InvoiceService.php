@@ -10,7 +10,7 @@ use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoicePayment;
-use App\Domains\Reporting\DTOs\SummaryResult;
+use App\Support\DTOs\SummaryResult;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 

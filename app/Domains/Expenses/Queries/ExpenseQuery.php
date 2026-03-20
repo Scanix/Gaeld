@@ -4,7 +4,7 @@ namespace App\Domains\Expenses\Queries;
 
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
-use App\Domains\Reporting\DTOs\SummaryResult;
+use App\Support\DTOs\SummaryResult;
 use App\Support\QueryBuilder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
