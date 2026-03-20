@@ -21,6 +21,42 @@ class InvoiceService
     ) {}
 
     /**
+     * Post the ledger entry for an invoice.
+     *
+     * Accounting effect:
+     *   Debit  1100 Accounts Receivable  (invoice total)
+     *   Credit 3000 Revenue from Services (invoice total)
+     *
+     * Marks the invoice as Sent.
+     */
+    public function postToLedger(Invoice $invoice): Invoice
+    {
+        return DB::transaction(function () use ($invoice) {
+            $orgId = $invoice->organization_id;
+
+            $ar = $this->ledgerService->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
+            $revenue = $this->ledgerService->resolveAccount($orgId, AccountCode::REVENUE);
+
+            $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
+                date: $invoice->issue_date->toDateString(),
+                reference: $invoice->number,
+                description: "Invoice {$invoice->number} — " . ($invoice->customer?->name ?? 'N/A'),
+                lines: [
+                    new JournalLineData(accountId: $ar->id, debit: $invoice->total, credit: '0', description: 'Accounts Receivable'),
+                    new JournalLineData(accountId: $revenue->id, debit: '0', credit: $invoice->total, description: 'Revenue'),
+                ],
+            ));
+
+            $invoice->update([
+                'status' => InvoiceStatus::Sent,
+                'journal_entry_id' => $journalEntry->id,
+            ]);
+
+            return $invoice->fresh(['lines', 'customer', 'journalEntry.lines']);
+        });
+    }
+
+    /**
      * Record a payment for an invoice with full payment tracking.
      *
      * Creates an InvoicePayment record and posts to ledger:

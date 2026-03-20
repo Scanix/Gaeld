@@ -10,6 +10,8 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
+use App\Support\DTOs\SummaryResult;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ExpenseService
@@ -55,5 +57,37 @@ class ExpenseService
 
             return $journalEntry;
         });
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Reporting queries
+    // ──────────────────────────────────────────────────────────────
+
+    public function yearlyTotal(string $orgId, int $year): string
+    {
+        return (string) Expense::where('organization_id', $orgId)
+            ->whereYear('date', $year)
+            ->sum('amount');
+    }
+
+    public function pendingSummary(string $orgId): SummaryResult
+    {
+        $row = Expense::where('organization_id', $orgId)
+            ->where('status', ExpenseStatus::Pending)
+            ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
+            ->first();
+
+        return new SummaryResult(
+            count: (int) ($row->count ?? 0),
+            total: (string) ($row->total ?? '0'),
+        );
+    }
+
+    public function inYear(string $orgId, int $year): Collection
+    {
+        return Expense::where('organization_id', $orgId)
+            ->whereYear('date', $year)
+            ->select('description', 'amount', 'date')
+            ->get();
     }
 }

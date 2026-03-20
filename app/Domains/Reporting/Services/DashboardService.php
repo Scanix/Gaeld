@@ -3,10 +3,9 @@
 namespace App\Domains\Reporting\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
-use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
-use App\Domains\Expenses\Queries\ExpenseQuery;
+use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Invoicing\Services\InvoiceService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -16,6 +15,7 @@ class DashboardService
     public function __construct(
         private readonly LedgerService $ledgerService,
         private readonly InvoiceService $invoiceService,
+        private readonly ExpenseService $expenseService,
     ) {}
     /**
      * @return array{revenue: string, expenses: string, cashBalance: string, unpaidInvoices: array{count: int, total: string}, pendingExpenses: array{count: int, total: string}, balance: string, recentTransactions: \Illuminate\Support\Collection, monthlyBreakdown: array}
@@ -25,12 +25,12 @@ class DashboardService
         $year = now()->year;
 
         $totalRevenue = $this->invoiceService->yearlyRevenue($organizationId, $year);
-        $totalExpenses = ExpenseQuery::yearlyTotal($organizationId, $year);
+        $totalExpenses = $this->expenseService->yearlyTotal($organizationId, $year);
         $cashBalance = $this->cashBalance($organizationId);
 
         $unpaidInvoices = $this->invoiceService->unpaidSummary($organizationId);
 
-        $pendingExpenses = ExpenseQuery::pendingSummary($organizationId);
+        $pendingExpenses = $this->expenseService->pendingSummary($organizationId);
 
         return [
             'revenue' => $totalRevenue,
@@ -52,11 +52,9 @@ class DashboardService
 
     private function cashBalance(string $organizationId): string
     {
-        $bankAccount = Account::where('organization_id', $organizationId)
-            ->where('code', AccountCode::BANK_CASH)
-            ->first();
-
-        if (! $bankAccount) {
+        try {
+            $bankAccount = $this->ledgerService->resolveAccount($organizationId, AccountCode::BANK_CASH);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             return '0.00';
         }
 
@@ -65,12 +63,7 @@ class DashboardService
 
     private function recentTransactions(string $organizationId): Collection
     {
-        return JournalEntry::where('organization_id', $organizationId)
-            ->with('lines.account')
-            ->orderByDesc('date')
-            ->orderByDesc('created_at')
-            ->limit(10)
-            ->get()
+        return $this->ledgerService->recentEntries($organizationId)
             ->map(function (JournalEntry $entry) {
                 return [
                     'id' => $entry->id,
@@ -102,7 +95,7 @@ class DashboardService
         $paidInvoices = $this->invoiceService->paidInYear($organizationId, $year)
             ->groupBy(fn ($i) => Carbon::parse($i->issue_date)->month);
 
-        $expenses = ExpenseQuery::inYear($organizationId, $year)
+        $expenses = $this->expenseService->inYear($organizationId, $year)
             ->groupBy(fn ($e) => Carbon::parse($e->date)->month);
 
         $forecastInvoices = $this->invoiceService->sentOrOverdueDueInYear($organizationId, $year)

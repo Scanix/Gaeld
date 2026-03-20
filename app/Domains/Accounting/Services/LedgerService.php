@@ -161,6 +161,21 @@ class LedgerService
     }
 
     /**
+     * Get the most recent posted journal entries for an organization.
+     *
+     * @return \Illuminate\Support\Collection<int, JournalEntry>
+     */
+    public function recentEntries(string $organizationId, int $limit = 10): \Illuminate\Support\Collection
+    {
+        return JournalEntry::where('organization_id', $organizationId)
+            ->with('lines.account')
+            ->orderByDesc('date')
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Get trial balance for an organization.
      *
      * Returns all accounts with non-zero posted balances, ordered by code.
