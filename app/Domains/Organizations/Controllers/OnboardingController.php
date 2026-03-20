@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Domains\Organizations\Controllers;
 
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
 use App\Domains\Organizations\Services\OrganizationService;
