@@ -41,18 +41,20 @@ class OnboardingController extends Controller
             'chart_of_accounts' => 'required|string|in:swiss_sme,none',
         ]);
 
-        DB::transaction(function () use ($request, $validated, $organizationService, $setupService) {
+        $org = DB::transaction(function () use ($request, $validated, $organizationService, $setupService) {
             $org = $organizationService->create(
                 $request->user(),
                 CreateOrganizationData::fromArray($validated),
             );
 
-            session(['current_organization_id' => $org->id]);
-
             if ($validated['chart_of_accounts'] === 'swiss_sme') {
                 $setupService->seedSwissDefaults($org);
             }
+
+            return $org;
         });
+
+        session(['current_organization_id' => $org->id]);
 
         return redirect()->route('dashboard')
             ->with('success', 'Welcome to Gäld! Your organization is ready.');

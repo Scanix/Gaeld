@@ -23,10 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->redirectGuestsTo(static function () {
-            static $hasOrg = null;
-            $hasOrg ??= Organization::exists();
-
-            return $hasOrg ? route('login') : route('setup.index');
+            return Organization::exists() ? route('login') : route('setup.index');
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {

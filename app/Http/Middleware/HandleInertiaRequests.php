@@ -25,9 +25,10 @@ class HandleInertiaRequests extends Middleware
                     'locale' => $user->locale,
                     'show_help' => $user->show_help,
                 ],
-                'currentOrganization' => $user->resolveCurrentOrganization()?->only(
-                    'id', 'name', 'currency', 'locale'
-                ),
+                'currentOrganization' => (app()->bound('current_organization')
+                    ? app('current_organization')
+                    : $user->resolveCurrentOrganization()
+                )?->only('id', 'name', 'currency', 'locale'),
                 'organizations' => $user->organizations()
                     ->select('organizations.id', 'organizations.name')
                     ->get()
