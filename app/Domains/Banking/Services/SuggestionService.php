@@ -98,7 +98,7 @@ class SuggestionService
             return collect();
         }
 
-        $results = Expense::where('organization_id', $orgId)
+        $candidateExpenses = Expense::where('organization_id', $orgId)
             ->whereIn('status', [ExpenseStatus::Pending->value, ExpenseStatus::Approved->value])
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('amount', [
@@ -113,7 +113,7 @@ class SuggestionService
             ->limit(self::MAX_EXPENSE_CANDIDATES)
             ->get();
 
-        return $results->map(function ($expense) use ($amount, $transaction) {
+        return $candidateExpenses->map(function ($expense) use ($amount, $transaction) {
             $score = 0;
 
             if (bccomp((string) $expense->amount, $amount, 2) === 0) {

@@ -33,20 +33,20 @@ class BankImportService
         string $filename,
     ): BankImport {
         $format = $this->detectFormat($xml);
-        $result = $this->parseEntries($xml, $format);
+        $parsedStatement = $this->parseEntries($xml, $format);
 
-        return DB::transaction(function () use ($bankAccount, $filename, $format, $result) {
+        return DB::transaction(function () use ($bankAccount, $filename, $format, $parsedStatement) {
             $import = BankImport::create([
                 'organization_id' => $bankAccount->organization_id,
                 'bank_account_id' => $bankAccount->id,
                 'filename' => $filename,
                 'format' => $format->value,
-                'statement_id' => $result['statementId'],
+                'statement_id' => $parsedStatement['statementId'],
                 'transaction_count' => 0,
             ]);
 
             $count = 0;
-            foreach ($result['entries'] as $entry) {
+            foreach ($parsedStatement['entries'] as $entry) {
                 $hash = $this->computeHash($bankAccount->id, $entry);
 
                 // Skip duplicates

@@ -18,7 +18,7 @@ class DashboardService
         private readonly InvoiceService $invoiceService,
     ) {}
     /**
-     * @return array{revenue: float, expenses: float, cashBalance: string, unpaidInvoices: array{count: int, total: float}, pendingExpenses: array{count: int, total: float}, balance: float, recentTransactions: \Illuminate\Support\Collection, monthlyData: array}
+     * @return array{revenue: float, expenses: float, cashBalance: string, unpaidInvoices: array{count: int, total: float}, pendingExpenses: array{count: int, total: float}, balance: float, recentTransactions: \Illuminate\Support\Collection, monthlyBreakdown: array}
      */
     public function metrics(string $organizationId): array
     {
@@ -46,7 +46,7 @@ class DashboardService
             ],
             'balance' => $totalRevenue - $totalExpenses,
             'recentTransactions' => $this->recentTransactions($organizationId),
-            'monthlyData' => $this->monthlyBreakdown($organizationId, $year),
+            'monthlyBreakdown' => $this->monthlyBreakdown($organizationId, $year),
         ];
     }
 
@@ -72,8 +72,8 @@ class DashboardService
             ->limit(10)
             ->get()
             ->map(function (JournalEntry $entry) {
-                $hasRevenue = $entry->lines->contains(fn ($l) => AccountCode::isRevenue($l->account?->code ?? ''));
-                $hasExpense = $entry->lines->contains(fn ($l) => AccountCode::isExpense($l->account?->code ?? ''));
+                $hasRevenue = $entry->lines->contains(fn ($line) => AccountCode::isRevenue($line->account?->code ?? ''));
+                $hasExpense = $entry->lines->contains(fn ($line) => AccountCode::isExpense($line->account?->code ?? ''));
                 $type = $hasRevenue ? 'income' : ($hasExpense ? 'expense' : 'transfer');
 
                 return [

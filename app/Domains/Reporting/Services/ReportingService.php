@@ -33,7 +33,7 @@ class ReportingService
                     'name' => $account->name,
                     'balance' => $this->ledgerService->accountBalance($account->id, $fromDate, $toDate),
                 ])
-                ->filter(fn ($item) => bccomp((string) $item['balance'], '0', 2) !== 0);
+                ->filter(fn ($accountRow) => bccomp((string) $accountRow['balance'], '0', 2) !== 0);
 
             $expenses = Account::where('organization_id', $organizationId)
                 ->where('type', AccountType::Expense->value)
@@ -44,7 +44,7 @@ class ReportingService
                     'name' => $account->name,
                     'balance' => $this->ledgerService->accountBalance($account->id, $fromDate, $toDate),
                 ])
-                ->filter(fn ($item) => bccomp((string) $item['balance'], '0', 2) !== 0);
+                ->filter(fn ($accountRow) => bccomp((string) $accountRow['balance'], '0', 2) !== 0);
 
             $totalRevenue = $revenue->sum('balance');
             $totalExpenses = $expenses->sum('balance');
@@ -89,7 +89,7 @@ class ReportingService
                         'name' => $account->name,
                         'balance' => $this->ledgerService->accountBalance($account->id, null, $asOfDate),
                     ])
-                    ->filter(fn ($item) => bccomp((string) $item['balance'], '0', 2) !== 0);
+                    ->filter(fn ($accountRow) => bccomp((string) $accountRow['balance'], '0', 2) !== 0);
 
                 $sections[$type] = [
                     'accounts' => $accounts->values()->toArray(),

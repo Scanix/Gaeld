@@ -230,7 +230,7 @@ class RuleEngineTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('Enterprise Edition');
 
-        $ruleEngine->run($transaction);
+        $ruleEngine->evaluateRules($transaction);
     }
 
     public function test_rule_engine_runs_when_flag_enabled(): void
@@ -251,7 +251,7 @@ class RuleEngineTest extends TestCase
         $ruleEngine = app(RuleEngineService::class);
 
         // Should not throw — returns an empty collection (no rules match)
-        $results = $ruleEngine->run($transaction);
+        $results = $ruleEngine->evaluateRules($transaction);
 
         $this->assertInstanceOf(\Illuminate\Support\Collection::class, $results);
     }
@@ -272,7 +272,7 @@ class RuleEngineTest extends TestCase
         ]);
 
         $ruleEngine = app(RuleEngineService::class);
-        $results = $ruleEngine->run($transaction);
+        $results = $ruleEngine->evaluateRules($transaction);
 
         $this->assertTrue($results->isEmpty());
     }

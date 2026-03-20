@@ -191,11 +191,11 @@ class ReconciliationService
 
             $this->validateReconciliationPreconditions($transaction, $bankAccount);
 
-            $result = $this->bankingService->postBankTransaction($transaction, $contraAccountCode);
+            $postedTransaction = $this->bankingService->postBankTransaction($transaction, $contraAccountCode);
 
-            $result->update(['is_reconciled' => true]);
+            $postedTransaction->update(['is_reconciled' => true]);
 
-            return $result->fresh(['journalEntry.lines', 'bankAccount']);
+            return $postedTransaction->fresh(['journalEntry.lines', 'bankAccount']);
         });
     }
 

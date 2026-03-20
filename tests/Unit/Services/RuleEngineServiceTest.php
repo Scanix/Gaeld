@@ -45,7 +45,7 @@ class RuleEngineServiceTest extends TestCase
         $this->expectException(FeatureDisabledException::class);
         $this->expectExceptionMessage('rule_engine');
 
-        $this->service->run($transaction);
+        $this->service->evaluateRules($transaction);
     }
 
     public function test_run_returns_empty_for_reconciled_transaction(): void
@@ -55,7 +55,7 @@ class RuleEngineServiceTest extends TestCase
         $transaction = $this->createMock(BankTransaction::class);
         $transaction->is_reconciled = true;
 
-        $results = $this->service->run($transaction);
+        $results = $this->service->evaluateRules($transaction);
 
         $this->assertTrue($results->isEmpty());
     }
@@ -79,7 +79,7 @@ class RuleEngineServiceTest extends TestCase
         $this->recurringRule->method('confidence')->willReturn(70);
         $this->recurringRule->method('name')->willReturn('Recurring');
 
-        $results = $this->service->run($transaction);
+        $results = $this->service->evaluateRules($transaction);
 
         $this->assertCount(2, $results);
         // Results are sorted desc by confidence
@@ -108,7 +108,7 @@ class RuleEngineServiceTest extends TestCase
         $this->recurringRule->method('matches')->willReturn(false);
         $this->recurringRule->method('name')->willReturn('Recurring');
 
-        $results = $this->service->run($transaction);
+        $results = $this->service->evaluateRules($transaction);
 
         $this->assertCount(2, $results);
 
@@ -138,7 +138,7 @@ class RuleEngineServiceTest extends TestCase
         $this->recurringRule->method('name')->willReturn('Recurring');
 
         // Should not throw — the QR rule exception is caught and logged
-        $results = $this->service->run($transaction);
+        $results = $this->service->evaluateRules($transaction);
 
         // Only supplier matched
         $this->assertCount(1, $results);

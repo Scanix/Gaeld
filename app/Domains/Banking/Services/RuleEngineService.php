@@ -49,7 +49,7 @@ class RuleEngineService
      *
      * @throws FeatureDisabledException in CE (feature flag disabled)
      */
-    public function run(BankTransaction $transaction): Collection
+    public function evaluateRules(BankTransaction $transaction): Collection
     {
         if (FeatureFlag::disabled('rule_engine')) {
             throw new FeatureDisabledException('rule_engine');
@@ -59,7 +59,7 @@ class RuleEngineService
             return collect();
         }
 
-        $results = collect();
+        $ruleMatches = collect();
 
         foreach ($this->rules as $rule) {
             try {
@@ -74,7 +74,7 @@ class RuleEngineService
                     $applied = true;
                 }
 
-                $results->push([
+                $ruleMatches->push([
                     'rule' => $rule,
                     'confidence' => $rule->confidence(),
                     'applied' => $applied,
@@ -88,7 +88,7 @@ class RuleEngineService
             }
         }
 
-        return $results->sortByDesc('confidence')->values();
+        return $ruleMatches->sortByDesc('confidence')->values();
     }
 
     /**
@@ -116,12 +116,12 @@ class RuleEngineService
         $applied = 0;
 
         foreach ($transactions as $transaction) {
-            $results = $this->run($transaction);
+            $ruleMatches = $this->evaluateRules($transaction);
             $processed++;
 
-            if ($results->isNotEmpty()) {
+            if ($ruleMatches->isNotEmpty()) {
                 $matched++;
-                $applied += $results->where('applied', true)->count();
+                $applied += $ruleMatches->where('applied', true)->count();
             }
         }
 
