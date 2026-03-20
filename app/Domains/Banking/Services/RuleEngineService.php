@@ -79,7 +79,7 @@ class RuleEngineService
                     'confidence' => $rule->confidence(),
                     'applied' => $applied,
                 ]);
-            } catch (\Throwable $e) {
+            } catch (\Exception $e) {
                 Log::warning('RuleEngineService: rule failed', [
                     'rule' => $rule->name(),
                     'transaction_id' => $transaction->id,

@@ -13,6 +13,7 @@ use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Support\Exceptions\FeatureDisabledException;
 use App\Http\Controllers\Controller;
 use App\Support\FeatureFlag;
 use Illuminate\Http\RedirectResponse;
@@ -227,7 +228,11 @@ class ReconciliationController extends Controller
     {
         $this->authorize('update', $bankAccount);
 
-        $result = $this->reconciliationService->autoReconcile($bankAccount);
+        try {
+            $result = $this->reconciliationService->autoReconcile($bankAccount);
+        } catch (FeatureDisabledException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->back()
             ->with('success', "Auto-reconciliation complete: {$result['matched']} matched, {$result['unmatched']} unmatched.");

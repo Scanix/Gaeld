@@ -9,6 +9,8 @@ use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
+use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
@@ -134,7 +136,11 @@ class InvoiceController extends Controller
 
         $dto = UpdateInvoiceData::fromArray($validated);
 
-        $action->execute($invoice, $dto);
+        try {
+            $action->execute($invoice, $dto);
+        } catch (InvalidInvoiceStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', 'Invoice updated.');
@@ -144,7 +150,11 @@ class InvoiceController extends Controller
     {
         $this->authorize('delete', $invoice);
 
-        $action->execute($invoice);
+        try {
+            $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('invoices.index')
             ->with('success', 'Invoice deleted.');
@@ -154,7 +164,11 @@ class InvoiceController extends Controller
     {
         $this->authorize('update', $invoice);
 
-        $action->execute($invoice);
+        try {
+            $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', 'Invoice finalized and posted to ledger.');
@@ -174,7 +188,11 @@ class InvoiceController extends Controller
 
         $dto = RecordPaymentData::fromArray($validated);
 
-        $action->execute($invoice, $dto);
+        try {
+            $action->execute($invoice, $dto);
+        } catch (InvalidInvoiceStateException|InvalidPaymentException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', 'Payment recorded.');

@@ -7,6 +7,7 @@ use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\DeleteExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Actions\UpdateExpenseAction;
+use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Queries\ExpenseQuery;
 use App\Domains\Accounting\Models\VatRate;
@@ -127,7 +128,11 @@ class ExpenseController extends Controller
             );
         }
 
-        $action->execute($expense, UpdateExpenseData::fromArray($validated));
+        try {
+            $action->execute($expense, UpdateExpenseData::fromArray($validated));
+        } catch (InvalidExpenseStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Expense updated.');
@@ -137,9 +142,12 @@ class ExpenseController extends Controller
     {
         $this->authorize('delete', $expense);
 
-        $this->deleteReceiptIfExists($expense->receipt_path);
-
-        $action->execute($expense);
+        try {
+            $this->deleteReceiptIfExists($expense->receipt_path);
+            $action->execute($expense);
+        } catch (InvalidExpenseStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('expenses.index')
             ->with('success', 'Expense deleted.');
@@ -149,7 +157,11 @@ class ExpenseController extends Controller
     {
         $this->authorize('update', $expense);
 
-        $action->execute($expense);
+        try {
+            $action->execute($expense);
+        } catch (InvalidExpenseStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Expense approved.');
@@ -163,7 +175,11 @@ class ExpenseController extends Controller
             'expense_account_code' => 'required|string',
         ]);
 
-        $action->execute($expense, $validated['expense_account_code']);
+        try {
+            $action->execute($expense, $validated['expense_account_code']);
+        } catch (InvalidExpenseStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Expense posted to ledger.');
