@@ -22,10 +22,6 @@ class BankImport extends Model
         'transaction_count',
     ];
 
-    public const FORMAT_CAMT053 = 'camt053';
-
-    public const FORMAT_CAMT054 = 'camt054';
-
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);

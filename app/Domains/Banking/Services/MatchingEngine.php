@@ -79,7 +79,7 @@ class MatchingEngine
 
         $invoice = Invoice::where('organization_id', $orgId)
             ->where('qr_reference', $ref)
-            ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
             ->first();
 
         if (! $invoice) {
@@ -104,7 +104,7 @@ class MatchingEngine
         }
 
         $invoices = Invoice::where('organization_id', $orgId)
-            ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
             ->whereBetween('total', [
                 bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
                 bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
@@ -134,7 +134,7 @@ class MatchingEngine
     private function matchByHeuristics(string $orgId, BankTransaction $transaction, string $amount): Collection
     {
         $query = Invoice::where('organization_id', $orgId)
-            ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('total', [
                     bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),

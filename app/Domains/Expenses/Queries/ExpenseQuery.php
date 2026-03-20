@@ -4,6 +4,7 @@ namespace App\Domains\Expenses\Queries;
 
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Reporting\DTOs\SummaryResult;
 use App\Support\QueryBuilder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
@@ -29,12 +30,17 @@ class ExpenseQuery
             ->sum('amount');
     }
 
-    public static function pendingSummary(string $orgId): object
+    public static function pendingSummary(string $orgId): SummaryResult
     {
-        return Expense::where('organization_id', $orgId)
+        $row = Expense::where('organization_id', $orgId)
             ->where('status', ExpenseStatus::Pending)
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
-            ->first() ?? (object) ['count' => 0, 'total' => 0];
+            ->first();
+
+        return new SummaryResult(
+            count: (int) ($row->count ?? 0),
+            total: (string) ($row->total ?? '0'),
+        );
     }
 
     public static function inYear(string $orgId, int $year): Collection

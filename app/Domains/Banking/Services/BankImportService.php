@@ -2,6 +2,7 @@
 
 namespace App\Domains\Banking\Services;
 
+use App\Domains\Banking\Enums\CamtFormat;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\BankTransaction;
@@ -39,7 +40,7 @@ class BankImportService
                 'organization_id' => $bankAccount->organization_id,
                 'bank_account_id' => $bankAccount->id,
                 'filename' => $filename,
-                'format' => $format,
+                'format' => $format->value,
                 'statement_id' => $result['statementId'],
                 'transaction_count' => 0,
             ]);
@@ -81,14 +82,14 @@ class BankImportService
     /**
      * Detect CAMT format from XML content.
      */
-    private function detectFormat(string $xml): string
+    private function detectFormat(string $xml): CamtFormat
     {
         if (str_contains($xml, 'BkToCstmrStmt')) {
-            return BankImport::FORMAT_CAMT053;
+            return CamtFormat::Camt053;
         }
 
         if (str_contains($xml, 'BkToCstmrDbtCdtNtfctn')) {
-            return BankImport::FORMAT_CAMT054;
+            return CamtFormat::Camt054;
         }
 
         throw new \InvalidArgumentException('Unsupported CAMT format. Only CAMT.053 and CAMT.054 are supported.');
@@ -97,9 +98,9 @@ class BankImportService
     /**
      * @return array{entries: CamtEntry[], statementId: ?string}
      */
-    private function parseEntries(string $xml, string $format): array
+    private function parseEntries(string $xml, CamtFormat $format): array
     {
-        if ($format === BankImport::FORMAT_CAMT053) {
+        if ($format === CamtFormat::Camt053) {
             $parser = new Camt053Parser();
             $parser->parse($xml);
 

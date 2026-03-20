@@ -10,6 +10,7 @@ use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoicePayment;
+use App\Domains\Reporting\DTOs\SummaryResult;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -58,7 +59,7 @@ class InvoiceService
                 'journal_entry_id' => $journalEntry->id,
                 'amount' => $data->amount,
                 'payment_date' => $data->paymentDate,
-                'payment_method' => $data->paymentMethod,
+                'payment_method' => $data->paymentMethod->value,
                 'reference' => $paymentRef,
             ]);
 
@@ -83,12 +84,17 @@ class InvoiceService
             ->sum('total');
     }
 
-    public function unpaidSummary(string $orgId): object
+    public function unpaidSummary(string $orgId): SummaryResult
     {
-        return Invoice::where('organization_id', $orgId)
+        $row = Invoice::where('organization_id', $orgId)
             ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(total), 0) as total')
-            ->first() ?? (object) ['count' => 0, 'total' => 0];
+            ->first();
+
+        return new SummaryResult(
+            count: (int) ($row->count ?? 0),
+            total: (string) ($row->total ?? '0'),
+        );
     }
 
     public function paidInYear(string $orgId, int $year): Collection

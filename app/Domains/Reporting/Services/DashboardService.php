@@ -37,12 +37,12 @@ class DashboardService
             'expenses' => $totalExpenses,
             'cashBalance' => $cashBalance,
             'unpaidInvoices' => [
-                'count' => (int) ($unpaidInvoices->count ?? 0),
-                'total' => (float) ($unpaidInvoices->total ?? 0),
+                'count' => $unpaidInvoices->count,
+                'total' => (float) $unpaidInvoices->total,
             ],
             'pendingExpenses' => [
-                'count' => (int) ($pendingExpenses->count ?? 0),
-                'total' => (float) ($pendingExpenses->total ?? 0),
+                'count' => $pendingExpenses->count,
+                'total' => (float) $pendingExpenses->total,
             ],
             'balance' => $totalRevenue - $totalExpenses,
             'recentTransactions' => $this->recentTransactions($organizationId),

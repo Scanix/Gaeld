@@ -45,7 +45,7 @@ class QrReferencePaymentRule extends BaseRule
 
         return Invoice::where('organization_id', $orgId)
             ->where('qr_reference', $transaction->structured_reference)
-            ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
             ->exists();
     }
 

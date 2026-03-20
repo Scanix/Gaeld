@@ -15,6 +15,7 @@ use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
+use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceService;
 use App\Support\FeatureFlag;
@@ -102,7 +103,7 @@ class ReconciliationService
                 $payment = $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
                     amount: $paymentAmount,
                     paymentDate: $transaction->date->toDateString(),
-                    paymentMethod: 'bank',
+                    paymentMethod: PaymentMethod::Bank,
                     reference: $this->buildReconciliationReference($orgId, $transaction),
                     bankAccountCode: $bankAccountCode,
                 ));
@@ -229,7 +230,7 @@ class ReconciliationService
                 $payment = $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
                     amount: $paymentAmount,
                     paymentDate: $transaction->date->toDateString(),
-                    paymentMethod: 'bank',
+                    paymentMethod: PaymentMethod::Bank,
                     reference: $reference,
                 ));
             }

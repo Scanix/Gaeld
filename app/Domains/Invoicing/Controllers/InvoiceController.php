@@ -12,6 +12,7 @@ use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
+use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
@@ -166,7 +167,7 @@ class InvoiceController extends Controller
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
-            'payment_method' => 'required|in:bank,cash,card',
+            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'reference' => 'nullable|string|max:100',
             'bank_account_code' => 'nullable|string|max:20',
         ]);
