@@ -19,9 +19,9 @@ readonly class CreateInvoiceData
         public array $lines,
     ) {}
 
-    public static function fromArray(array $data): self
+    public static function fromArray(array $data): static
     {
-        return new self(
+        return new static(
             organizationId: $data['organization_id'],
             customerId: $data['customer_id'],
             number: $data['number'],

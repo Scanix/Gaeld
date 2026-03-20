@@ -4,51 +4,10 @@ namespace App\Domains\Invoicing\DTOs;
 
 /**
  * DTO for updating an invoice.
+ *
+ * Structurally identical to CreateInvoiceData — both carry the same
+ * invoice fields. Separate class provides type safety at the action boundary.
  */
-readonly class UpdateInvoiceData
+readonly class UpdateInvoiceData extends CreateInvoiceData
 {
-    /**
-     * @param array<int, InvoiceLineData> $lines
-     */
-    public function __construct(
-        public string $organizationId,
-        public string $customerId,
-        public string $number,
-        public string $issueDate,
-        public string $dueDate,
-        public string $currency,
-        public ?string $notes,
-        public ?string $paymentTerms,
-        public array $lines,
-    ) {}
-
-    public static function fromArray(array $data): self
-    {
-        return new self(
-            organizationId: $data['organization_id'],
-            customerId: $data['customer_id'],
-            number: $data['number'],
-            issueDate: $data['issue_date'],
-            dueDate: $data['due_date'],
-            currency: $data['currency'] ?? 'CHF',
-            notes: $data['notes'] ?? null,
-            paymentTerms: $data['payment_terms'] ?? null,
-            lines: array_map(fn (array $line) => InvoiceLineData::fromArray($line), $data['lines']),
-        );
-    }
-
-    public function toArray(): array
-    {
-        return [
-            'organization_id' => $this->organizationId,
-            'customer_id' => $this->customerId,
-            'number' => $this->number,
-            'issue_date' => $this->issueDate,
-            'due_date' => $this->dueDate,
-            'currency' => $this->currency,
-            'notes' => $this->notes,
-            'payment_terms' => $this->paymentTerms,
-            'lines' => array_map(fn (InvoiceLineData $line) => $line->toArray(), $this->lines),
-        ];
-    }
 }

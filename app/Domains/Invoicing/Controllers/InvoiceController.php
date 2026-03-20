@@ -30,6 +30,19 @@ use Inertia\Response;
 
 class InvoiceController extends Controller
 {
+    private const VALIDATION_RULES = [
+        'number' => 'required|string|max:50',
+        'issue_date' => 'required|date',
+        'due_date' => 'required|date|after_or_equal:issue_date',
+        'currency' => 'string|size:3',
+        'notes' => 'nullable|string',
+        'payment_terms' => 'nullable|string',
+        'lines' => 'required|array|min:1',
+        'lines.*.description' => 'required|string',
+        'lines.*.quantity' => 'required|numeric|min:0.01',
+        'lines.*.unit_price' => 'required|numeric|min:0',
+    ];
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Invoice::class);
@@ -59,26 +72,16 @@ class InvoiceController extends Controller
     {
         $this->authorize('create', Invoice::class);
 
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge(self::VALIDATION_RULES, [
             'customer_id' => [
                 'required',
                 Rule::exists('customers', 'id')->where('organization_id', $currentOrg->id()),
             ],
-            'number' => 'required|string|max:50',
-            'issue_date' => 'required|date',
-            'due_date' => 'required|date|after_or_equal:issue_date',
-            'currency' => 'string|size:3',
-            'notes' => 'nullable|string',
-            'payment_terms' => 'nullable|string',
-            'lines' => 'required|array|min:1',
-            'lines.*.description' => 'required|string',
-            'lines.*.quantity' => 'required|numeric|min:0.01',
-            'lines.*.unit_price' => 'required|numeric|min:0',
             'lines.*.vat_rate_id' => [
                 'nullable',
                 Rule::exists('vat_rates', 'id')->where('organization_id', $currentOrg->id()),
             ],
-        ]);
+        ]));
         $validated['organization_id'] = $currentOrg->id();
 
         $dto = CreateInvoiceData::fromArray($validated);
@@ -113,26 +116,16 @@ class InvoiceController extends Controller
     {
         $this->authorize('update', $invoice);
 
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge(self::VALIDATION_RULES, [
             'customer_id' => [
                 'required',
                 Rule::exists('customers', 'id')->where('organization_id', $invoice->organization_id),
             ],
-            'number' => 'required|string|max:50',
-            'issue_date' => 'required|date',
-            'due_date' => 'required|date|after_or_equal:issue_date',
-            'currency' => 'string|size:3',
-            'notes' => 'nullable|string',
-            'payment_terms' => 'nullable|string',
-            'lines' => 'required|array|min:1',
-            'lines.*.description' => 'required|string',
-            'lines.*.quantity' => 'required|numeric|min:0.01',
-            'lines.*.unit_price' => 'required|numeric|min:0',
             'lines.*.vat_rate_id' => [
                 'nullable',
                 Rule::exists('vat_rates', 'id')->where('organization_id', $invoice->organization_id),
             ],
-        ]);
+        ]));
         $validated['organization_id'] = $invoice->organization_id;
 
         $dto = UpdateInvoiceData::fromArray($validated);
