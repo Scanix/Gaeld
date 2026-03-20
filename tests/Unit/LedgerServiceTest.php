@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Domains\Accounting\Exceptions\AlreadyPostedException;
 use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
@@ -172,5 +173,138 @@ class LedgerServiceTest extends TestCase
 
         $this->assertNotNull($result->journal_entry_id);
         $this->assertTrue($result->journalEntry->isBalanced());
+    }
+
+    public function test_account_balance_debit_normal_returns_debits_minus_credits(): void
+    {
+        // Asset account is debit-normal: balance = debits - credits
+        $this->ledgerService->postEntry($this->organization->id, new JournalEntryData(
+            date: '2026-03-01',
+            reference: 'BAL-001',
+            description: 'Opening balance',
+            lines: [
+                new JournalLineData(accountId: $this->accounts['bank']->id, debit: 1000.00, credit: 0),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 1000.00),
+            ],
+        ));
+
+        $balance = $this->ledgerService->accountBalance($this->accounts['bank']->id);
+
+        $this->assertSame('1000.00', $balance);
+    }
+
+    public function test_account_balance_credit_normal_returns_credits_minus_debits(): void
+    {
+        // Revenue account is credit-normal: balance = credits - debits
+        $this->ledgerService->postEntry($this->organization->id, new JournalEntryData(
+            date: '2026-03-01',
+            reference: 'BAL-002',
+            description: 'Service revenue',
+            lines: [
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: 500.00, credit: 0),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 500.00),
+            ],
+        ));
+
+        $balance = $this->ledgerService->accountBalance($this->accounts['revenue']->id);
+
+        $this->assertSame('500.00', $balance);
+    }
+
+    public function test_reversal_creates_contra_entry_and_nets_to_zero(): void
+    {
+        $entry = $this->ledgerService->postEntry($this->organization->id, new JournalEntryData(
+            date: '2026-03-05',
+            reference: 'INV-REV-001',
+            description: 'Invoice to be reversed',
+            lines: [
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: 750.00, credit: 0),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 750.00),
+            ],
+        ));
+
+        $this->ledgerService->reverseEntry($entry, 'Test reversal');
+
+        // Net balance for both accounts should be zero after reversal
+        $this->assertSame('0.00', $this->ledgerService->accountBalance($this->accounts['ar']->id));
+        $this->assertSame('0.00', $this->ledgerService->accountBalance($this->accounts['revenue']->id));
+    }
+
+    public function test_create_draft_does_not_affect_account_balance(): void
+    {
+        $draft = $this->ledgerService->createDraft($this->organization->id, new JournalEntryData(
+            date: '2026-03-10',
+            reference: 'DRAFT-001',
+            description: 'Draft entry',
+            lines: [
+                new JournalLineData(accountId: $this->accounts['bank']->id, debit: 2000.00, credit: 0),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 2000.00),
+            ],
+        ));
+
+        $this->assertFalse($draft->is_posted);
+        // Draft entries must not appear in account balance
+        $this->assertSame('0.00', $this->ledgerService->accountBalance($this->accounts['bank']->id));
+    }
+
+    public function test_post_draft_marks_entry_as_posted(): void
+    {
+        $draft = $this->ledgerService->createDraft($this->organization->id, new JournalEntryData(
+            date: '2026-03-10',
+            reference: 'DRAFT-POST-001',
+            description: 'Draft to post',
+            lines: [
+                new JournalLineData(accountId: $this->accounts['bank']->id, debit: 300.00, credit: 0),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 300.00),
+            ],
+        ));
+
+        $posted = $this->ledgerService->postDraft($draft);
+
+        $this->assertTrue($posted->is_posted);
+        $this->assertSame('300.00', $this->ledgerService->accountBalance($this->accounts['bank']->id));
+    }
+
+    public function test_post_draft_rejects_already_posted_entry(): void
+    {
+        $entry = $this->ledgerService->postEntry($this->organization->id, new JournalEntryData(
+            date: '2026-03-10',
+            reference: 'ALREADY-POSTED',
+            description: 'Already posted',
+            lines: [
+                new JournalLineData(accountId: $this->accounts['bank']->id, debit: 100.00, credit: 0),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 100.00),
+            ],
+        ));
+
+        $this->expectException(\App\Domains\Accounting\Exceptions\AlreadyPostedException::class);
+        $this->ledgerService->postDraft($entry);
+    }
+
+    public function test_trial_balance_reflects_posted_entries(): void
+    {
+        $this->ledgerService->postEntry($this->organization->id, new JournalEntryData(
+            date: '2026-03-15',
+            reference: 'TB-001',
+            description: 'Trial balance test entry',
+            lines: [
+                new JournalLineData(accountId: $this->accounts['bank']->id, debit: 1500.00, credit: 0),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 1500.00),
+            ],
+        ));
+
+        $trialBalance = $this->ledgerService->trialBalance($this->organization->id);
+
+        $codes = array_column($trialBalance, 'account_code');
+        $this->assertContains('1020', $codes); // bank (debit-normal, debit side)
+        $this->assertContains('3000', $codes); // revenue (credit-normal, credit side)
+
+        $bankRow = array_values(array_filter($trialBalance, fn ($r) => $r['account_code'] === '1020'))[0];
+        $revenueRow = array_values(array_filter($trialBalance, fn ($r) => $r['account_code'] === '3000'))[0];
+
+        $this->assertSame('1500.00', $bankRow['debit']);
+        $this->assertSame('0', $bankRow['credit']);
+        $this->assertSame('0', $revenueRow['debit']);
+        $this->assertSame('1500.00', $revenueRow['credit']);
     }
 }

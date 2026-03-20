@@ -1,12 +1,12 @@
 <?php
 
-namespace Tests\Unit\Actions;
+namespace Tests\Unit\DTOs;
 
 use App\Domains\Accounting\DTOs\CreateAccountData;
 use App\Domains\Accounting\Enums\AccountType;
 use PHPUnit\Framework\TestCase;
 
-class CreateAccountActionTest extends TestCase
+class CreateAccountDataTest extends TestCase
 {
     public function test_create_account_data_to_array(): void
     {
