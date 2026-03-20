@@ -86,6 +86,41 @@ class ReconciliationService
     // ──────────────────────────────────────────────────────────────
 
     /**
+     * Record a payment for an invoice and mark the transaction as reconciled.
+     *
+     * Shared by reconcileWithInvoice() and confirmMatch() to avoid duplicating
+     * the validate→pay→update sequence.
+     */
+    private function recordInvoicePaymentAndReconcile(
+        BankTransaction $transaction,
+        Invoice $invoice,
+        BankAccount $bankAccount,
+        ?string $bankAccountCode = null,
+    ): void {
+        $paymentAmount = $this->resolvePaymentAmount($transaction, $invoice);
+        $orgId = $bankAccount->organization_id;
+
+        $payment = null;
+        if (bccomp($paymentAmount, '0', 2) > 0) {
+            $payment = $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
+                amount: $paymentAmount,
+                paymentDate: $transaction->date->toDateString(),
+                paymentMethod: PaymentMethod::Bank,
+                reference: $this->buildReconciliationReference($orgId, $transaction),
+                bankAccountCode: $bankAccountCode,
+            ));
+        }
+
+        $this->bankingService->updateBankAccountBalance($bankAccount, $paymentAmount, true);
+
+        $transaction->update([
+            'journal_entry_id' => $payment?->journal_entry_id,
+            'matched_invoice_id' => $invoice->id,
+            'is_reconciled' => true,
+        ]);
+    }
+
+    /**
      * Manually reconcile a bank transaction with an invoice.
      *
      * Delegates to InvoiceService::recordPayment() which posts the journal entry
@@ -102,30 +137,10 @@ class ReconciliationService
     ): BankTransaction {
         return DB::transaction(function () use ($transaction, $invoice, $bankAccountCode) {
             $bankAccount = $transaction->bankAccount;
-            $orgId = $bankAccount->organization_id;
 
             $this->validateReconciliationPreconditions($transaction, $bankAccount);
 
-            $paymentAmount = $this->resolvePaymentAmount($transaction, $invoice);
-
-            $payment = null;
-            if (bccomp($paymentAmount, '0', 2) > 0) {
-                $payment = $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
-                    amount: $paymentAmount,
-                    paymentDate: $transaction->date->toDateString(),
-                    paymentMethod: PaymentMethod::Bank,
-                    reference: $this->buildReconciliationReference($orgId, $transaction),
-                    bankAccountCode: $bankAccountCode,
-                ));
-            }
-
-            $this->bankingService->updateBankAccountBalance($bankAccount, $paymentAmount, true);
-
-            $transaction->update([
-                'journal_entry_id' => $payment?->journal_entry_id,
-                'matched_invoice_id' => $invoice->id,
-                'is_reconciled' => true,
-            ]);
+            $this->recordInvoicePaymentAndReconcile($transaction, $invoice, $bankAccount, $bankAccountCode);
 
             return $transaction->fresh(['journalEntry.lines', 'matchedInvoice', 'bankAccount']);
         });
@@ -222,34 +237,13 @@ class ReconciliationService
         $bankAccount = $transaction->bankAccount;
 
         return DB::transaction(function () use ($match, $transaction, $invoice, $bankAccount) {
-            // Guards inside the transaction so checks and writes are serialized together
             if ($this->isDuplicatePayment($transaction, $invoice)) {
                 throw new \App\Domains\Invoicing\Exceptions\InvalidPaymentException('This payment has already been recorded for this invoice.');
             }
 
             $this->validateReconciliationPreconditions($transaction, $bankAccount);
 
-            $paymentAmount = $this->resolvePaymentAmount($transaction, $invoice);
-            $orgId = $bankAccount->organization_id;
-            $reference = $this->buildReconciliationReference($orgId, $transaction);
-
-            $payment = null;
-            if (bccomp($paymentAmount, '0', 2) > 0) {
-                $payment = $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
-                    amount: $paymentAmount,
-                    paymentDate: $transaction->date->toDateString(),
-                    paymentMethod: PaymentMethod::Bank,
-                    reference: $reference,
-                ));
-            }
-
-            $this->bankingService->updateBankAccountBalance($bankAccount, $paymentAmount, true);
-
-            $transaction->update([
-                'journal_entry_id' => $payment?->journal_entry_id,
-                'matched_invoice_id' => $invoice->id,
-                'is_reconciled' => true,
-            ]);
+            $this->recordInvoicePaymentAndReconcile($transaction, $invoice, $bankAccount);
 
             $match->update([
                 'is_confirmed' => true,

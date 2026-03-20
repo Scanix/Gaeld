@@ -35,12 +35,15 @@ use Illuminate\Support\Facades\Hash;
  */
 class DemoDataSeeder extends Seeder
 {
+    public function __construct(
+        private readonly FinalizeInvoiceAction $finalizeInvoice,
+        private readonly PostExpenseAction $postExpense,
+        private readonly BankingService $bankingService,
+        private readonly InvoiceService $invoiceService,
+    ) {}
+
     public function run(): void
     {
-        $finalizeInvoice = app(FinalizeInvoiceAction::class);
-        $postExpense = app(PostExpenseAction::class);
-        $bankingService = app(BankingService::class);
-        $invoiceService = app(InvoiceService::class);
 
         // ── Users ────────────────────────────────────────────────
         $admin = User::firstOrCreate(
@@ -138,13 +141,13 @@ class DemoDataSeeder extends Seeder
         }
 
         // ── Seed demo data for Organization 1 ────────────────────
-        $this->seedOrganizationData($org1, $finalizeInvoice, $postExpense, $bankingService, $invoiceService);
+        $this->seedOrganizationData($org1);
 
         // ── Seed demo data for Organization 2 ────────────────────
-        $this->seedOrganization2Data($org2, $finalizeInvoice, $postExpense, $bankingService, $invoiceService);
+        $this->seedOrganization2Data($org2);
     }
 
-    private function seedOrganizationData(Organization $org, FinalizeInvoiceAction $finalizeInvoice, PostExpenseAction $postExpense, BankingService $bankingService, InvoiceService $invoiceService): void
+    private function seedOrganizationData(Organization $org): void
     {
         $vatNormal = VatRate::where('organization_id', $org->id)
             ->where('code', 'NORMAL')
@@ -220,10 +223,10 @@ class DemoDataSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $finalizeInvoice->execute($inv1);
+        $this->finalizeInvoice->execute($inv1);
 
         $inv1->refresh();
-        $invoiceService
+        $this->invoiceService
             ->recordPayment($inv1, new RecordPaymentData(
                 amount: '5405.00',
                 paymentDate: now()->subDays(5)->toDateString(),
@@ -257,7 +260,7 @@ class DemoDataSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $finalizeInvoice->execute($inv2);
+        $this->finalizeInvoice->execute($inv2);
 
         // ── Invoice 3: Draft (not yet posted) ────────────────────
         $inv3 = Invoice::create([
@@ -299,7 +302,7 @@ class DemoDataSeeder extends Seeder
             'currency' => 'CHF',
         ]);
 
-        $postExpense->execute($exp1, '6530');
+        $this->postExpense->execute($exp1, '6530');
 
         // ── Expense 2: Posted (Office Supplies) ──────────────────
         $exp2 = Expense::create([
@@ -314,7 +317,7 @@ class DemoDataSeeder extends Seeder
             'currency' => 'CHF',
         ]);
 
-        $postExpense->execute($exp2, '6500');
+        $this->postExpense->execute($exp2, '6500');
 
         // ── Expense 3: Pending (awaiting approval) ───────────────
         Expense::create([
@@ -371,10 +374,10 @@ class DemoDataSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $finalizeInvoice->execute($inv4);
+        $this->finalizeInvoice->execute($inv4);
 
         $inv4->refresh();
-        $invoiceService
+        $this->invoiceService
             ->recordPayment($inv4, new RecordPaymentData(
                 amount: '2000.00',
                 paymentDate: now()->subDays(3)->toDateString(),
@@ -418,7 +421,7 @@ class DemoDataSeeder extends Seeder
             'reference' => 'BNK-2026-001',
         ]);
 
-        $bankingService->postBankTransaction($bnkTx1, '3000');
+        $this->bankingService->postBankTransaction($bnkTx1, '3000');
 
         $bnkTx2 = BankTransaction::create([
             'bank_account_id' => $bankAccount->id,
@@ -429,10 +432,10 @@ class DemoDataSeeder extends Seeder
             'reference' => 'BNK-2026-002',
         ]);
 
-        $bankingService->postBankTransaction($bnkTx2, '6000');
+        $this->bankingService->postBankTransaction($bnkTx2, '6000');
     }
 
-    private function seedOrganization2Data(Organization $org, FinalizeInvoiceAction $finalizeInvoice, PostExpenseAction $postExpense, BankingService $bankingService, InvoiceService $invoiceService): void
+    private function seedOrganization2Data(Organization $org): void
     {
         $vatNormal = VatRate::where('organization_id', $org->id)
             ->where('code', 'NORMAL')
@@ -498,7 +501,7 @@ class DemoDataSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $finalizeInvoice->execute($inv1);
+        $this->finalizeInvoice->execute($inv1);
 
         // ── Expense: Posted ──────────────────────────────────────
         $exp1 = Expense::create([
@@ -514,7 +517,7 @@ class DemoDataSeeder extends Seeder
             'currency' => 'CHF',
         ]);
 
-        $postExpense->execute($exp1, '6700');
+        $this->postExpense->execute($exp1, '6700');
 
         // ── Bank Transaction ─────────────────────────────────────
         $bnkTx1 = BankTransaction::create([
@@ -526,6 +529,6 @@ class DemoDataSeeder extends Seeder
             'reference' => 'ALP-BNK-001',
         ]);
 
-        $bankingService->postBankTransaction($bnkTx1, '3000');
+        $this->bankingService->postBankTransaction($bnkTx1, '3000');
     }
 }
