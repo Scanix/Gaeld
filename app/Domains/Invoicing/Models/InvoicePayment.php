@@ -3,11 +3,23 @@
 namespace App\Domains\Invoicing\Models;
 
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Invoicing\Enums\PaymentMethod;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property string $id
+ * @property string $invoice_id
+ * @property string|null $journal_entry_id
+ * @property string $amount
+ * @property \Illuminate\Support\Carbon $payment_date
+ * @property PaymentMethod $payment_method
+ * @property string|null $reference
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
 class InvoicePayment extends Model
 {
     use HasFactory, HasUuids;
@@ -26,6 +38,7 @@ class InvoicePayment extends Model
         return [
             'payment_date' => 'date',
             'amount' => 'decimal:2',
+            'payment_method' => PaymentMethod::class,
         ];
     }
 

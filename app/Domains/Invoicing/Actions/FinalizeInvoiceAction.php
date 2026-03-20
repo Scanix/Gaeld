@@ -14,7 +14,7 @@ class FinalizeInvoiceAction
 
     public function execute(Invoice $invoice): Invoice
     {
-        if ($invoice->status !== \App\Domains\Invoicing\Enums\InvoiceStatus::Draft) {
+        if (! $invoice->status->canTransitionTo(\App\Domains\Invoicing\Enums\InvoiceStatus::Sent)) {
             throw new InvalidInvoiceStateException("Only draft invoices can be finalized (current status: {$invoice->status->value}).");
         }
 

@@ -10,7 +10,7 @@ class ApproveExpenseAction
 {
     public function execute(Expense $expense): Expense
     {
-        if ($expense->status !== ExpenseStatus::Pending) {
+        if (! $expense->status->canTransitionTo(ExpenseStatus::Approved)) {
             throw new InvalidExpenseStateException('Only pending expenses can be approved.');
         }
 

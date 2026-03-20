@@ -11,6 +11,28 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $bank_account_id
+ * @property int|null $bank_import_id
+ * @property string|null $journal_entry_id
+ * @property \Illuminate\Support\Carbon $date
+ * @property string|null $description
+ * @property string $amount
+ * @property BankTransactionType $type
+ * @property string|null $reference
+ * @property string|null $debtor_name
+ * @property string|null $creditor_name
+ * @property string|null $end_to_end_id
+ * @property string|null $structured_reference
+ * @property string $import_hash
+ * @property bool $is_reconciled
+ * @property string|null $matched_invoice_id
+ * @property string|null $matched_expense_id
+ * @property string|null $suggested_expense_category
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
 class BankTransaction extends Model
 {
     use HasFactory;

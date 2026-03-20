@@ -257,7 +257,7 @@ class LedgerService
      * Validate that all account IDs in the lines exist and belong to the organization.
      *
      * @param  string  $organizationId
-     * @param  array<array{account_id: string}>  $lines
+     * @param  JournalLineData[]  $lines
      *
      * @throws InvalidEntryDataException  When an account is missing or belongs to another org
      */

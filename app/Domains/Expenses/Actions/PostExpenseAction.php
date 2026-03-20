@@ -28,7 +28,7 @@ class PostExpenseAction
      */
     public function execute(Expense $expense, string $expenseAccountCode, string $bankAccountCode = AccountCode::BANK_CASH): Expense
     {
-        if ($expense->status === ExpenseStatus::Posted) {
+        if (! $expense->status->canTransitionTo(ExpenseStatus::Posted)) {
             throw new InvalidExpenseStateException('Expense is already posted.');
         }
 

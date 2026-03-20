@@ -45,12 +45,16 @@ class BankImportService
                 'transaction_count' => 0,
             ]);
 
+            $existingHashes = BankTransaction::where('bank_account_id', $bankAccount->id)
+                ->pluck('import_hash')
+                ->flip();
+
             $count = 0;
             foreach ($parsedStatement['entries'] as $entry) {
                 $hash = $this->computeHash($bankAccount->id, $entry);
 
                 // Skip duplicates
-                if (BankTransaction::where('import_hash', $hash)->exists()) {
+                if ($existingHashes->has($hash)) {
                     continue;
                 }
 

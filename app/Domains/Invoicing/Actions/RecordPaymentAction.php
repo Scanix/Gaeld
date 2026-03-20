@@ -18,7 +18,7 @@ class RecordPaymentAction
 
     public function execute(Invoice $invoice, RecordPaymentData $data): InvoicePayment
     {
-        if (! in_array($invoice->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue], true)) {
+        if (! $invoice->status->canTransitionTo(InvoiceStatus::Paid)) {
             throw new InvalidInvoiceStateException('Payments can only be recorded for sent or overdue invoices.');
         }
 

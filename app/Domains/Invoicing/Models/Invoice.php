@@ -15,6 +15,28 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
+/**
+ * @property string $id
+ * @property string $organization_id
+ * @property string|null $customer_id
+ * @property string|null $journal_entry_id
+ * @property string|null $number
+ * @property InvoiceStatus $status
+ * @property \Illuminate\Support\Carbon $issue_date
+ * @property \Illuminate\Support\Carbon $due_date
+ * @property string $subtotal
+ * @property string $vat_amount
+ * @property string $total
+ * @property string $currency
+ * @property string|null $notes
+ * @property string|null $payment_terms
+ * @property string|null $qr_reference
+ * @property string|null $qr_type
+ * @property string|null $qr_iban
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ */
 class Invoice extends Model
 {
     use BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;

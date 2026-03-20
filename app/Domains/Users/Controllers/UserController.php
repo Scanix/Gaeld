@@ -2,6 +2,7 @@
 
 namespace App\Domains\Users\Controllers;
 
+use App\Domains\Users\DTOs\UpdateUserProfileData;
 use App\Domains\Users\Services\UserService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +31,7 @@ class UserController extends Controller
             'locale' => 'required|string|in:en,fr,de,it,rm',
         ]);
 
-        $userService->updateProfile($request->user(), $validated);
+        $userService->updateProfile($request->user(), UpdateUserProfileData::fromArray($validated));
 
         return redirect()->route('profile')
             ->with('success', 'Profile updated.');

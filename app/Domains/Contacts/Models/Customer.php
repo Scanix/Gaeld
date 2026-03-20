@@ -11,6 +11,25 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
+/**
+ * @property int $id
+ * @property string $organization_id
+ * @property string $name
+ * @property string|null $email
+ * @property string|null $phone
+ * @property string|null $address
+ * @property string|null $city
+ * @property string|null $postal_code
+ * @property string|null $country
+ * @property string|null $vat_number
+ * @property string|null $currency
+ * @property string|null $payment_terms
+ * @property array|null $notes
+ * @property string|null $internal_notes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ */
 class Customer extends Model
 {
     use BelongsToOrganization, HasFactory, Searchable, SoftDeletes;

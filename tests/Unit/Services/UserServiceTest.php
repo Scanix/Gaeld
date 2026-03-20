@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use App\Domains\Users\DTOs\UpdateUserProfileData;
 use App\Domains\Users\Models\User;
 use App\Domains\Users\Services\UserService;
 use Illuminate\Support\Facades\Hash;
@@ -29,11 +30,10 @@ class UserServiceTest extends TestCase
             'locale' => 'fr',
         ]);
 
-        $result = $this->service->updateProfile($user, [
+        $result = $this->service->updateProfile($user, UpdateUserProfileData::fromArray([
             'name' => 'Updated Name',
             'locale' => 'fr',
-            'email' => 'ignored@example.com',
-        ]);
+        ]));
 
         $this->assertSame($user, $result);
     }

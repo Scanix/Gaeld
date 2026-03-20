@@ -10,6 +10,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $organization_id
+ * @property string $code
+ * @property string $name
+ * @property AccountType $type
+ * @property int|null $parent_id
+ * @property bool $is_active
+ * @property string|null $description
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
 class Account extends Model
 {
     use BelongsToOrganization, HasFactory;
