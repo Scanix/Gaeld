@@ -16,11 +16,6 @@ use Inertia\Response;
 
 class CustomerController extends Controller
 {
-    public function __construct(
-        private CreateCustomerAction $createCustomer,
-        private UpdateCustomerAction $updateCustomer,
-    ) {}
-
     private const VALIDATION_RULES = [
         'name' => 'required|string|max:255',
         'email' => 'nullable|email|max:255',
@@ -57,14 +52,14 @@ class CustomerController extends Controller
         return Inertia::render('Contacts/Customers/Create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, CreateCustomerAction $createCustomer): RedirectResponse
     {
         $this->authorize('create', Customer::class);
 
         $validated = $request->validate(self::VALIDATION_RULES);
         $validated['organization_id'] = app('current_organization')->id;
 
-        $customer = $this->createCustomer->execute(CreateCustomerData::fromArray($validated));
+        $customer = $createCustomer->execute(CreateCustomerData::fromArray($validated));
 
         return redirect()->route('customers.show', $customer)
             ->with('success', 'Customer created.');
@@ -88,13 +83,13 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function update(Request $request, Customer $customer): RedirectResponse
+    public function update(Request $request, Customer $customer, UpdateCustomerAction $updateCustomer): RedirectResponse
     {
         $this->authorize('update', $customer);
 
         $validated = $request->validate(self::VALIDATION_RULES);
 
-        $this->updateCustomer->execute($customer, UpdateCustomerData::fromArray($validated));
+        $updateCustomer->execute($customer, UpdateCustomerData::fromArray($validated));
 
         return redirect()->route('customers.show', $customer)
             ->with('success', 'Customer updated.');

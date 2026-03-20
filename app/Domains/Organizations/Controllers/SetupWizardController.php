@@ -14,10 +14,6 @@ use Inertia\Response;
 
 class SetupWizardController extends Controller
 {
-    public function __construct(
-        private readonly CompleteSetupAction $completeSetupAction,
-    ) {}
-
     public function index(): Response|RedirectResponse
     {
         // Redirect if already set up
@@ -28,7 +24,7 @@ class SetupWizardController extends Controller
         return Inertia::render('Setup/Wizard');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, CompleteSetupAction $completeSetupAction): RedirectResponse
     {
         if (Organization::exists()) {
             return redirect()->route('dashboard');
@@ -49,7 +45,7 @@ class SetupWizardController extends Controller
             'locale' => 'required|string|in:en,fr,de,it,rm',
         ]);
 
-        $user = $this->completeSetupAction->execute(CompleteSetupData::fromArray($validated));
+        $user = $completeSetupAction->execute(CompleteSetupData::fromArray($validated));
         Auth::login($user);
 
         return redirect()->route('dashboard')

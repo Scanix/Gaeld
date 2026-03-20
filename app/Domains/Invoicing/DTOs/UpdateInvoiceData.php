@@ -4,12 +4,24 @@ namespace App\Domains\Invoicing\DTOs;
 
 /**
  * DTO for updating an invoice.
- *
- * Shares the same structure and validation as CreateInvoiceData.
- * Extends CreateInvoiceData to eliminate duplication.
  */
-readonly class UpdateInvoiceData extends CreateInvoiceData
+readonly class UpdateInvoiceData
 {
+    /**
+     * @param array<int, array{description: string, quantity: string, unit_price: string, vat_rate_id: ?string, sort_order?: int}> $lines
+     */
+    public function __construct(
+        public string $organizationId,
+        public string $customerId,
+        public string $number,
+        public string $issueDate,
+        public string $dueDate,
+        public string $currency,
+        public ?string $notes,
+        public ?string $paymentTerms,
+        public array $lines,
+    ) {}
+
 	public static function fromArray(array $data): self
 	{
 		return new self(
@@ -24,4 +36,19 @@ readonly class UpdateInvoiceData extends CreateInvoiceData
 			lines: $data['lines'],
 		);
 	}
+
+    public function toArray(): array
+    {
+        return [
+            'organization_id' => $this->organizationId,
+            'customer_id' => $this->customerId,
+            'number' => $this->number,
+            'issue_date' => $this->issueDate,
+            'due_date' => $this->dueDate,
+            'currency' => $this->currency,
+            'notes' => $this->notes,
+            'payment_terms' => $this->paymentTerms,
+            'lines' => $this->lines,
+        ];
+    }
 }

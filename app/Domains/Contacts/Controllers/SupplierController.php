@@ -16,11 +16,6 @@ use Inertia\Response;
 
 class SupplierController extends Controller
 {
-    public function __construct(
-        private CreateSupplierAction $createSupplier,
-        private UpdateSupplierAction $updateSupplier,
-    ) {}
-
     private const VALIDATION_RULES = [
         'name' => 'required|string|max:255',
         'email' => 'nullable|email|max:255',
@@ -58,14 +53,14 @@ class SupplierController extends Controller
         return Inertia::render('Contacts/Suppliers/Create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, CreateSupplierAction $createSupplier): RedirectResponse
     {
         $this->authorize('create', Supplier::class);
 
         $validated = $request->validate(self::VALIDATION_RULES);
         $validated['organization_id'] = app('current_organization')->id;
 
-        $supplier = $this->createSupplier->execute(CreateSupplierData::fromArray($validated));
+        $supplier = $createSupplier->execute(CreateSupplierData::fromArray($validated));
 
         return redirect()->route('suppliers.show', $supplier)
             ->with('success', 'Supplier created.');
@@ -89,13 +84,13 @@ class SupplierController extends Controller
         ]);
     }
 
-    public function update(Request $request, Supplier $supplier): RedirectResponse
+    public function update(Request $request, Supplier $supplier, UpdateSupplierAction $updateSupplier): RedirectResponse
     {
         $this->authorize('update', $supplier);
 
         $validated = $request->validate(self::VALIDATION_RULES);
 
-        $this->updateSupplier->execute($supplier, UpdateSupplierData::fromArray($validated));
+        $updateSupplier->execute($supplier, UpdateSupplierData::fromArray($validated));
 
         return redirect()->route('suppliers.show', $supplier)
             ->with('success', 'Supplier updated.');

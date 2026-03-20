@@ -24,4 +24,15 @@ readonly class CreateUserData
             emailVerifiedAt: $data['email_verified_at'] ?? null,
         );
     }
+
+    public function toArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'email' => $this->email,
+            'password' => $this->password,
+            'locale' => $this->locale,
+            'email_verified_at' => $this->emailVerifiedAt,
+        ];
+    }
 }

@@ -69,7 +69,7 @@ Route::middleware(['auth', 'verified', 'org'])->group(function () {
     // Accounting
     Route::get('/accounting/chart-of-accounts', [AccountingController::class, 'chartOfAccounts'])->name('accounting.chart');
     Route::get('/accounting/journal-entries', [AccountingController::class, 'journalEntries'])->name('accounting.journal');
-    Route::get('/accounting/trial-balance', [AccountingController::class, 'trialBalance'])->name('accounting.trial-balance');
+    Route::get('/accounting/trial-balance', [AccountingController::class, 'trialBalance'])->name('accounting.trialBalance');
 
     // Invoices
     Route::resource('invoices', InvoiceController::class);
@@ -86,7 +86,7 @@ Route::middleware(['auth', 'verified', 'org'])->group(function () {
 
     // Reports
     Route::get('/reports/profit-and-loss', [ReportController::class, 'profitAndLoss'])->name('reports.pnl');
-    Route::get('/reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('reports.balance-sheet');
+    Route::get('/reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('reports.balanceSheet');
 
     // Banking (CE — core banking features)
     Route::get('/banking', [BankingController::class, 'index'])->name('banking.index');

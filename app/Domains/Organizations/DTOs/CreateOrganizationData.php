@@ -34,4 +34,21 @@ readonly class CreateOrganizationData
             locale: $data['locale'] ?? 'en',
         );
     }
+
+    public function toArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'legal_name' => $this->legalName,
+            'address' => $this->address,
+            'city' => $this->city,
+            'postal_code' => $this->postalCode,
+            'canton' => $this->canton,
+            'country' => $this->country,
+            'vat_number' => $this->vatNumber,
+            'currency' => $this->currency,
+            'fiscal_year_start' => $this->fiscalYearStart,
+            'locale' => $this->locale,
+        ];
+    }
 }

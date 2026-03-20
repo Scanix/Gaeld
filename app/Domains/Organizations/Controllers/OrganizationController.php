@@ -2,10 +2,11 @@
 
 namespace App\Domains\Organizations\Controllers;
 
+use App\Domains\Organizations\Actions\CreateOrganizationAction;
+use App\Domains\Organizations\Actions\UpdateOrganizationAction;
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Organizations\Services\OrganizationService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class OrganizationController extends Controller
         ]);
     }
 
-    public function store(Request $request, OrganizationService $organizationService): RedirectResponse
+    public function store(Request $request, CreateOrganizationAction $action): RedirectResponse
     {
         $this->authorize('create', Organization::class);
 
@@ -50,13 +51,13 @@ class OrganizationController extends Controller
             'locale' => 'string|in:en,fr,de,it,rm',
         ]);
 
-        $org = $organizationService->create($request->user(), CreateOrganizationData::fromArray($validated));
+        $org = $action->execute($request->user(), CreateOrganizationData::fromArray($validated));
 
         return redirect()->route('organizations.show', $org)
             ->with('success', 'Organization created.');
     }
 
-    public function update(Request $request, Organization $organization, OrganizationService $organizationService): RedirectResponse
+    public function update(Request $request, Organization $organization, UpdateOrganizationAction $action): RedirectResponse
     {
         $this->authorize('update', $organization);
 
@@ -72,7 +73,7 @@ class OrganizationController extends Controller
             'locale' => 'string|in:en,fr,de,it,rm',
         ]);
 
-        $organizationService->update($organization, UpdateOrganizationData::fromArray($validated));
+        $action->execute($organization, UpdateOrganizationData::fromArray($validated));
 
         return redirect()->route('organizations.show', $organization)
             ->with('success', 'Organization updated.');

@@ -30,4 +30,19 @@ readonly class UpdateOrganizationData
             locale: $data['locale'] ?? 'en',
         );
     }
+
+    public function toArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'legal_name' => $this->legalName,
+            'address' => $this->address,
+            'city' => $this->city,
+            'postal_code' => $this->postalCode,
+            'canton' => $this->canton,
+            'vat_number' => $this->vatNumber,
+            'currency' => $this->currency,
+            'locale' => $this->locale,
+        ];
+    }
 }

@@ -19,4 +19,27 @@ readonly class JournalEntryData
         public ?string $description,
         public array $lines,
     ) {}
+
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            date: $data['date'],
+            reference: $data['reference'] ?? null,
+            description: $data['description'] ?? null,
+            lines: array_map(
+                fn (array $line) => JournalLineData::fromArray($line),
+                $data['lines'],
+            ),
+        );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'date' => $this->date,
+            'reference' => $this->reference,
+            'description' => $this->description,
+            'lines' => array_map(fn (JournalLineData $line) => $line->toArray(), $this->lines),
+        ];
+    }
 }

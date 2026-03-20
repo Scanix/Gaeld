@@ -17,4 +17,24 @@ readonly class JournalLineData
         public string|int|float $credit,
         public ?string $description = null,
     ) {}
+
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            accountId: $data['account_id'],
+            debit: $data['debit'],
+            credit: $data['credit'],
+            description: $data['description'] ?? null,
+        );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'account_id' => $this->accountId,
+            'debit' => $this->debit,
+            'credit' => $this->credit,
+            'description' => $this->description,
+        ];
+    }
 }
