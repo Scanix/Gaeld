@@ -19,4 +19,20 @@ class SupplierQuery
             ->paginate($perPage)
             ->withQueryString();
     }
+
+    public static function hasMatchingSupplier(string $organizationId, string $creditorName): bool
+    {
+        return Supplier::where('organization_id', $organizationId)
+            ->whereNotNull('default_expense_category')
+            ->where('name', 'ilike', '%' . $creditorName . '%')
+            ->exists();
+    }
+
+    public static function findByCreditorName(string $organizationId, string $creditorName): ?Supplier
+    {
+        return Supplier::where('organization_id', $organizationId)
+            ->whereNotNull('default_expense_category')
+            ->where('name', 'ilike', '%' . $creditorName . '%')
+            ->first();
+    }
 }

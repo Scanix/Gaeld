@@ -10,7 +10,7 @@ use App\Domains\Expenses\Actions\UpdateExpenseAction;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Queries\ExpenseQuery;
-use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Accounting\Queries\VatRateQuery;
 use App\Domains\Expenses\DTOs\CreateExpenseData;
 use App\Domains\Expenses\DTOs\UpdateExpenseData;
 use App\Http\Controllers\Controller;
@@ -43,7 +43,7 @@ class ExpenseController extends Controller
         $this->authorize('create', Expense::class);
 
         return Inertia::render('Expenses/Create', [
-            'vatRates' => VatRate::where('is_active', true)->get(),
+            'vatRates' => VatRateQuery::active(),
         ]);
     }
 
@@ -96,7 +96,7 @@ class ExpenseController extends Controller
 
         return Inertia::render('Expenses/Edit', [
             'expense' => $expense->load('vatRate'),
-            'vatRates' => VatRate::where('is_active', true)->get(),
+            'vatRates' => VatRateQuery::active(),
             'receiptUrl' => $expense->receipt_path ? Storage::url($expense->receipt_path) : null,
         ]);
     }

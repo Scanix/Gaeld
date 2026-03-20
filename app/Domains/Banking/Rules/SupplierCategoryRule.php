@@ -4,7 +4,7 @@ namespace App\Domains\Banking\Rules;
 
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankTransaction;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Queries\SupplierQuery;
 
 /**
  * EE Rule: When a debit transaction creditor matches a known Supplier,
@@ -36,10 +36,7 @@ class SupplierCategoryRule extends BaseRule
 
         $orgId = $transaction->bankAccount->organization_id;
 
-        return Supplier::where('organization_id', $orgId)
-            ->whereNotNull('default_expense_category')
-            ->where('name', 'ilike', '%' . $transaction->creditor_name . '%')
-            ->exists();
+        return SupplierQuery::hasMatchingSupplier($orgId, $transaction->creditor_name);
     }
 
     public function apply(BankTransaction $transaction): void
@@ -50,10 +47,7 @@ class SupplierCategoryRule extends BaseRule
 
         $orgId = $transaction->bankAccount->organization_id;
 
-        $supplier = Supplier::where('organization_id', $orgId)
-            ->whereNotNull('default_expense_category')
-            ->where('name', 'ilike', '%' . $transaction->creditor_name . '%')
-            ->first();
+        $supplier = SupplierQuery::findByCreditorName($orgId, $transaction->creditor_name);
 
         if (! $supplier) {
             return;

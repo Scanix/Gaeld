@@ -114,4 +114,12 @@ class InvoiceService
             ->select('number', 'total', 'due_date')
             ->get();
     }
+
+    public function hasMatchingQrReference(string $organizationId, string $reference): bool
+    {
+        return Invoice::where('organization_id', $organizationId)
+            ->where('qr_reference', $reference)
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
+            ->exists();
+    }
 }

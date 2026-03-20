@@ -6,8 +6,7 @@ use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\MatchingEngine;
 use App\Domains\Banking\Services\ReconciliationService;
-use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Services\InvoiceService;
 
 /**
  * EE Rule: Auto-reconcile when bank transaction has an exact QR reference match.
@@ -19,6 +18,7 @@ class QrReferencePaymentRule extends BaseRule
     public function __construct(
         private MatchingEngine $matchingEngine,
         private ReconciliationService $reconciliationService,
+        private InvoiceService $invoiceService,
     ) {}
 
     public function name(): string
@@ -43,10 +43,7 @@ class QrReferencePaymentRule extends BaseRule
 
         $orgId = $transaction->bankAccount->organization_id;
 
-        return Invoice::where('organization_id', $orgId)
-            ->where('qr_reference', $transaction->structured_reference)
-            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
-            ->exists();
+        return $this->invoiceService->hasMatchingQrReference($orgId, $transaction->structured_reference);
     }
 
     public function apply(BankTransaction $transaction): void
