@@ -13,6 +13,7 @@ use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Expenses\Enums\ExpenseStatus;
+use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -37,6 +38,7 @@ class DemoDataSeeder extends Seeder
 {
     public function __construct(
         private readonly FinalizeInvoiceAction $finalizeInvoice,
+        private readonly ApproveExpenseAction $approveExpense,
         private readonly PostExpenseAction $postExpense,
         private readonly BankingService $bankingService,
         private readonly InvoiceService $invoiceService,
@@ -230,7 +232,7 @@ class DemoDataSeeder extends Seeder
             ->recordPayment($inv1, new RecordPaymentData(
                 amount: '5405.00',
                 paymentDate: now()->subDays(5)->toDateString(),
-                paymentMethod: 'bank',
+                paymentMethod: PaymentMethod::Bank,
                 reference: null,
             ));
 
@@ -302,6 +304,7 @@ class DemoDataSeeder extends Seeder
             'currency' => 'CHF',
         ]);
 
+        $this->approveExpense->execute($exp1);
         $this->postExpense->execute($exp1, '6530');
 
         // ── Expense 2: Posted (Office Supplies) ──────────────────
@@ -317,6 +320,7 @@ class DemoDataSeeder extends Seeder
             'currency' => 'CHF',
         ]);
 
+        $this->approveExpense->execute($exp2);
         $this->postExpense->execute($exp2, '6500');
 
         // ── Expense 3: Pending (awaiting approval) ───────────────
@@ -346,7 +350,7 @@ class DemoDataSeeder extends Seeder
             'currency' => 'CHF',
         ]);
 
-        (new ApproveExpenseAction())->execute($exp4);
+        $this->approveExpense->execute($exp4);
 
         // ── Invoice 4: Partially paid ────────────────────────────
         $inv4 = Invoice::create([
@@ -381,7 +385,7 @@ class DemoDataSeeder extends Seeder
             ->recordPayment($inv4, new RecordPaymentData(
                 amount: '2000.00',
                 paymentDate: now()->subDays(3)->toDateString(),
-                paymentMethod: 'bank',
+                paymentMethod: PaymentMethod::Bank,
                 reference: 'Partial payment — Phase 1 deposit',
             ));
 
@@ -517,6 +521,7 @@ class DemoDataSeeder extends Seeder
             'currency' => 'CHF',
         ]);
 
+        $this->approveExpense->execute($exp1);
         $this->postExpense->execute($exp1, '6700');
 
         // ── Bank Transaction ─────────────────────────────────────
