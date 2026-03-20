@@ -49,8 +49,8 @@ class InvoiceService
                 reference: $paymentRef,
                 description: "Payment received for {$invoice->number}",
                 lines: [
-                    new JournalLineData(accountId: $bankAccount->id, debit: $data->amount, credit: 0, description: 'Bank deposit'),
-                    new JournalLineData(accountId: $accountsReceivable->id, debit: 0, credit: $data->amount, description: 'Clear receivable'),
+                    new JournalLineData(accountId: $bankAccount->id, debit: $data->amount, credit: '0', description: 'Bank deposit'),
+                    new JournalLineData(accountId: $accountsReceivable->id, debit: '0', credit: $data->amount, description: 'Clear receivable'),
                 ],
             ));
 
@@ -65,7 +65,7 @@ class InvoiceService
 
             // Check if invoice is fully paid
             if ($invoice->fresh()->isFullyPaid()) {
-                $invoice->update(['status' => InvoiceStatus::Paid->value]);
+                $invoice->update(['status' => InvoiceStatus::Paid]);
             }
 
             return $payment->load('journalEntry');
@@ -76,9 +76,9 @@ class InvoiceService
     //  Reporting queries
     // ──────────────────────────────────────────────────────────────
 
-    public function yearlyRevenue(string $orgId, int $year): float
+    public function yearlyRevenue(string $orgId, int $year): string
     {
-        return (float) Invoice::where('organization_id', $orgId)
+        return (string) Invoice::where('organization_id', $orgId)
             ->where('status', InvoiceStatus::Paid)
             ->whereYear('issue_date', $year)
             ->sum('total');

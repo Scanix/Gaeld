@@ -43,13 +43,13 @@ class ExpenseService
                 reference: $data->reference,
                 description: $data->description,
                 lines: [
-                    new JournalLineData(accountId: $expenseAccount->id, debit: $data->amount, credit: 0, description: $expense->description ?? 'Expense'),
-                    new JournalLineData(accountId: $bankAccount->id, debit: 0, credit: $data->amount, description: 'Bank withdrawal'),
+                    new JournalLineData(accountId: $expenseAccount->id, debit: $data->amount, credit: '0', description: $expense->description ?? 'Expense'),
+                    new JournalLineData(accountId: $bankAccount->id, debit: '0', credit: $data->amount, description: 'Bank withdrawal'),
                 ],
             ));
 
             $expense->update([
-                'status' => ExpenseStatus::Posted->value,
+                'status' => ExpenseStatus::Posted,
                 'journal_entry_id' => $journalEntry->id,
             ]);
 

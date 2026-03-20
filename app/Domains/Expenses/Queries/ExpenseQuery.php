@@ -23,9 +23,9 @@ class ExpenseQuery
             ->withQueryString();
     }
 
-    public static function yearlyTotal(string $orgId, int $year): float
+    public static function yearlyTotal(string $orgId, int $year): string
     {
-        return (float) Expense::where('organization_id', $orgId)
+        return (string) Expense::where('organization_id', $orgId)
             ->whereYear('date', $year)
             ->sum('amount');
     }

@@ -50,13 +50,13 @@ class FinalizeInvoiceAction
                 reference: $invoice->number,
                 description: "Invoice {$invoice->number} — " . ($invoice->customer?->name ?? 'N/A'),
                 lines: [
-                    new JournalLineData(accountId: $ar->id, debit: $invoice->total, credit: 0, description: 'Accounts Receivable'),
-                    new JournalLineData(accountId: $revenue->id, debit: 0, credit: $invoice->total, description: 'Revenue'),
+                    new JournalLineData(accountId: $ar->id, debit: $invoice->total, credit: '0', description: 'Accounts Receivable'),
+                    new JournalLineData(accountId: $revenue->id, debit: '0', credit: $invoice->total, description: 'Revenue'),
                 ],
             ));
 
             $invoice->update([
-                'status' => InvoiceStatus::Sent->value,
+                'status' => InvoiceStatus::Sent,
                 'journal_entry_id' => $journalEntry->id,
             ]);
 

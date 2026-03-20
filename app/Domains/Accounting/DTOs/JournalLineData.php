@@ -5,16 +5,15 @@ namespace App\Domains\Accounting\DTOs;
 /**
  * Value object representing a single debit/credit line in a journal entry.
  *
- * Amounts accept string, int, or float. Callers that come from bcmath
- * will pass strings; callers that pass literal zero use int — both are
- * accepted by the underlying DB decimal columns.
+ * Amounts are always strings (bcmath-compatible). Callers must pass
+ * string values; use '0' instead of integer 0.
  */
 readonly class JournalLineData
 {
     public function __construct(
         public string $accountId,
-        public string|int|float $debit,
-        public string|int|float $credit,
+        public string $debit,
+        public string $credit,
         public ?string $description = null,
     ) {}
 
@@ -22,8 +21,8 @@ readonly class JournalLineData
     {
         return new self(
             accountId: $data['account_id'],
-            debit: $data['debit'],
-            credit: $data['credit'],
+            debit: (string) $data['debit'],
+            credit: (string) $data['credit'],
             description: $data['description'] ?? null,
         );
     }

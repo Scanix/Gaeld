@@ -106,8 +106,8 @@ class LedgerService
     {
         $lines = $journalEntry->lines->map(fn (TransactionLine $line) => new JournalLineData(
             accountId: $line->account_id,
-            debit: $line->credit,
-            credit: $line->debit,
+            debit: (string) $line->credit,
+            credit: (string) $line->debit,
             description: 'Reversal: ' . ($line->description ?? ''),
         ))->all();
 
@@ -199,7 +199,7 @@ class LedgerService
             ->selectRaw('accounts.id, accounts.code, accounts.name, accounts.type, COALESCE(SUM(transaction_lines.debit), 0) as total_debit, COALESCE(SUM(transaction_lines.credit), 0) as total_credit');
     }
 
-    private function computeTrialBalances($rows): array
+    private function computeTrialBalances(\Illuminate\Support\Collection $rows): array
     {
         $balances = [];
 
@@ -221,7 +221,6 @@ class LedgerService
         }
 
         return $balances;
-        });
     }
 
     /**

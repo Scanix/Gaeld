@@ -77,7 +77,7 @@ class Expense extends Model
             'description' => $this->description ?? '',
             'vendor' => $this->vendor ?? '',
             'category' => $this->category,
-            'amount' => (float) $this->amount,
+            'amount' => (string) $this->amount,
             'status' => $this->status?->value ?? '',
         ];
     }

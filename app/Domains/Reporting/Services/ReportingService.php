@@ -37,7 +37,7 @@ class ReportingService
                 'expenses' => $expenses->values()->toArray(),
                 'total_revenue' => $totalRevenue,
                 'total_expenses' => $totalExpenses,
-                'net_profit' => (float) bcsub((string) $totalRevenue, (string) $totalExpenses, 2),
+                'net_profit' => bcsub((string) $totalRevenue, (string) $totalExpenses, 2),
             ];
         });
     }

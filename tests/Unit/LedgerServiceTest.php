@@ -75,8 +75,8 @@ class LedgerServiceTest extends TestCase
             reference: 'INV-001',
             description: 'Test invoice',
             lines: [
-                new JournalLineData(accountId: $this->accounts['ar']->id, debit: 1000.00, credit: 0),
-                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 1000.00),
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: '1000.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '1000.00'),
             ],
         ));
 
@@ -94,8 +94,8 @@ class LedgerServiceTest extends TestCase
             reference: 'INV-BAD',
             description: null,
             lines: [
-                new JournalLineData(accountId: $this->accounts['ar']->id, debit: 1000.00, credit: 0),
-                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 500.00),
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: '1000.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '500.00'),
             ],
         ));
     }
@@ -183,8 +183,8 @@ class LedgerServiceTest extends TestCase
             reference: 'BAL-001',
             description: 'Opening balance',
             lines: [
-                new JournalLineData(accountId: $this->accounts['bank']->id, debit: 1000.00, credit: 0),
-                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 1000.00),
+                new JournalLineData(accountId: $this->accounts['bank']->id, debit: '1000.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '1000.00'),
             ],
         ));
 
@@ -201,8 +201,8 @@ class LedgerServiceTest extends TestCase
             reference: 'BAL-002',
             description: 'Service revenue',
             lines: [
-                new JournalLineData(accountId: $this->accounts['ar']->id, debit: 500.00, credit: 0),
-                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 500.00),
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: '500.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '500.00'),
             ],
         ));
 
@@ -218,8 +218,8 @@ class LedgerServiceTest extends TestCase
             reference: 'INV-REV-001',
             description: 'Invoice to be reversed',
             lines: [
-                new JournalLineData(accountId: $this->accounts['ar']->id, debit: 750.00, credit: 0),
-                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 750.00),
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: '750.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '750.00'),
             ],
         ));
 
@@ -237,8 +237,8 @@ class LedgerServiceTest extends TestCase
             reference: 'DRAFT-001',
             description: 'Draft entry',
             lines: [
-                new JournalLineData(accountId: $this->accounts['bank']->id, debit: 2000.00, credit: 0),
-                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 2000.00),
+                new JournalLineData(accountId: $this->accounts['bank']->id, debit: '2000.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '2000.00'),
             ],
         ));
 
@@ -254,8 +254,8 @@ class LedgerServiceTest extends TestCase
             reference: 'DRAFT-POST-001',
             description: 'Draft to post',
             lines: [
-                new JournalLineData(accountId: $this->accounts['bank']->id, debit: 300.00, credit: 0),
-                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 300.00),
+                new JournalLineData(accountId: $this->accounts['bank']->id, debit: '300.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '300.00'),
             ],
         ));
 
@@ -272,8 +272,8 @@ class LedgerServiceTest extends TestCase
             reference: 'ALREADY-POSTED',
             description: 'Already posted',
             lines: [
-                new JournalLineData(accountId: $this->accounts['bank']->id, debit: 100.00, credit: 0),
-                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 100.00),
+                new JournalLineData(accountId: $this->accounts['bank']->id, debit: '100.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '100.00'),
             ],
         ));
 
@@ -288,8 +288,8 @@ class LedgerServiceTest extends TestCase
             reference: 'TB-001',
             description: 'Trial balance test entry',
             lines: [
-                new JournalLineData(accountId: $this->accounts['bank']->id, debit: 1500.00, credit: 0),
-                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 1500.00),
+                new JournalLineData(accountId: $this->accounts['bank']->id, debit: '1500.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '1500.00'),
             ],
         ));
 

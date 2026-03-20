@@ -18,7 +18,7 @@ class DuplicateInvoiceAction
             'organization_id' => $invoice->organization_id,
             'customer_id' => $invoice->customer_id,
             'number' => $invoice->number . '-COPY',
-            'status' => InvoiceStatus::Draft->value,
+            'status' => InvoiceStatus::Draft,
             'issue_date' => now()->toDateString(),
             'due_date' => now()->addDays(30)->toDateString(),
             'currency' => $invoice->currency,

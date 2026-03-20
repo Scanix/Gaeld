@@ -20,7 +20,7 @@ class CreateInvoiceAction
                 'organization_id' => $data->organizationId,
                 'customer_id' => $data->customerId,
                 'number' => $data->number,
-                'status' => InvoiceStatus::Draft->value,
+                'status' => InvoiceStatus::Draft,
                 'issue_date' => $data->issueDate,
                 'due_date' => $data->dueDate,
                 'currency' => $data->currency,

@@ -116,12 +116,12 @@ class BankingService
     ): array {
         return $isDeposit
             ? [
-                new JournalLineData(accountId: $bankLedgerAccount->id, debit: $amount, credit: 0, description: 'Bank deposit'),
-                new JournalLineData(accountId: $contraAccount->id, debit: 0, credit: $amount, description: $description ?? ''),
+                new JournalLineData(accountId: $bankLedgerAccount->id, debit: $amount, credit: '0', description: 'Bank deposit'),
+                new JournalLineData(accountId: $contraAccount->id, debit: '0', credit: $amount, description: $description ?? ''),
             ]
             : [
-                new JournalLineData(accountId: $contraAccount->id, debit: $amount, credit: 0, description: $description ?? ''),
-                new JournalLineData(accountId: $bankLedgerAccount->id, debit: 0, credit: $amount, description: 'Bank withdrawal'),
+                new JournalLineData(accountId: $contraAccount->id, debit: $amount, credit: '0', description: $description ?? ''),
+                new JournalLineData(accountId: $bankLedgerAccount->id, debit: '0', credit: $amount, description: 'Bank withdrawal'),
             ];
     }
 }

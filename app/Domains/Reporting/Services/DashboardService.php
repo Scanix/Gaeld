@@ -18,7 +18,7 @@ class DashboardService
         private readonly InvoiceService $invoiceService,
     ) {}
     /**
-     * @return array{revenue: float, expenses: float, cashBalance: string, unpaidInvoices: array{count: int, total: float}, pendingExpenses: array{count: int, total: float}, balance: float, recentTransactions: \Illuminate\Support\Collection, monthlyBreakdown: array}
+     * @return array{revenue: string, expenses: string, cashBalance: string, unpaidInvoices: array{count: int, total: string}, pendingExpenses: array{count: int, total: string}, balance: string, recentTransactions: \Illuminate\Support\Collection, monthlyBreakdown: array}
      */
     public function metrics(string $organizationId): array
     {
@@ -38,13 +38,13 @@ class DashboardService
             'cashBalance' => $cashBalance,
             'unpaidInvoices' => [
                 'count' => $unpaidInvoices->count,
-                'total' => (float) $unpaidInvoices->total,
+                'total' => $unpaidInvoices->total,
             ],
             'pendingExpenses' => [
                 'count' => $pendingExpenses->count,
-                'total' => (float) $pendingExpenses->total,
+                'total' => $pendingExpenses->total,
             ],
-            'balance' => $totalRevenue - $totalExpenses,
+            'balance' => bcsub($totalRevenue, $totalExpenses, 2),
             'recentTransactions' => $this->recentTransactions($organizationId),
             'monthlyBreakdown' => $this->monthlyBreakdown($organizationId, $year),
         ];
@@ -77,7 +77,7 @@ class DashboardService
                     'date' => $entry->date,
                     'description' => $entry->description,
                     'reference' => $entry->reference,
-                    'amount' => (float) $entry->lines->sum('debit'),
+                    'amount' => (string) $entry->lines->sum('debit'),
                     'type' => $this->classifyTransactionType($entry),
                 ];
             });
@@ -115,9 +115,9 @@ class DashboardService
 
             return [
                 'month' => Carbon::create($year, $month, 1)->format('M'),
-                'revenue' => (float) $monthPaid->sum('total'),
-                'expenses' => (float) $monthExpenses->sum('amount'),
-                'forecast' => (float) $monthForecast->sum('total'),
+                'revenue' => (string) $monthPaid->sum('total'),
+                'expenses' => (string) $monthExpenses->sum('amount'),
+                'forecast' => (string) $monthForecast->sum('total'),
                 'revenueItems' => $monthPaid->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"))->values(),
                 'expenseItems' => $monthExpenses->map(fn ($e) => $e->description . ': ' . number_format((float) $e->amount, 2, '.', "'"))->values(),
                 'forecastItems' => $monthForecast->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"))->values(),

@@ -74,8 +74,8 @@ class CacheInvalidationTest extends TestCase
             reference: 'CACHE-TEST-001',
             description: 'Cache invalidation test',
             lines: [
-                new JournalLineData(accountId: $this->accounts['ar']->id, debit: 500.00, credit: 0),
-                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 500.00),
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: '500.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '500.00'),
             ],
         ));
 
@@ -114,8 +114,8 @@ class CacheInvalidationTest extends TestCase
             reference: 'FLUSH-TEST',
             description: 'Flush test',
             lines: [
-                new JournalLineData(accountId: $this->accounts['ar']->id, debit: 200.00, credit: 0),
-                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: 0, credit: 200.00),
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: '200.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '200.00'),
             ],
         ));
 

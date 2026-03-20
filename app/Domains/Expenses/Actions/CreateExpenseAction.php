@@ -12,7 +12,7 @@ class CreateExpenseAction
     {
         return Expense::create([
             ...$data->toArray(),
-            'status' => ExpenseStatus::Pending->value,
+            'status' => ExpenseStatus::Pending,
             'vat_amount' => $data->vatAmount ?? 0,
         ]);
     }

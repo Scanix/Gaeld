@@ -14,7 +14,7 @@ class ApproveExpenseAction
             throw new InvalidExpenseStateException('Only pending expenses can be approved.');
         }
 
-        $expense->update(['status' => ExpenseStatus::Approved->value]);
+        $expense->update(['status' => ExpenseStatus::Approved]);
 
         return $expense->fresh();
     }

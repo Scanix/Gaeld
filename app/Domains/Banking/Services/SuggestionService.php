@@ -99,7 +99,7 @@ class SuggestionService
         }
 
         $candidateExpenses = Expense::where('organization_id', $orgId)
-            ->whereIn('status', [ExpenseStatus::Pending->value, ExpenseStatus::Approved->value])
+            ->whereIn('status', [ExpenseStatus::Pending, ExpenseStatus::Approved])
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('amount', [
                     bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
