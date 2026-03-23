@@ -11,6 +11,7 @@ use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
+use App\Support\AddressData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -42,8 +43,8 @@ class ContactsFlowTest extends TestCase
         $customer = Customer::create((new CreateCustomerData(
             organizationId: $this->org->id,
             name: 'Acme AG',
+            addressData: new AddressData(country: 'CH'),
             email: 'billing@acme.ch',
-            country: 'CH',
             currency: 'CHF',
         ))->toArray());
 
@@ -66,7 +67,7 @@ class ContactsFlowTest extends TestCase
 
         $customer->update((new UpdateCustomerData(
             name: 'New Name',
-            city: 'Zurich',
+            addressData: new AddressData(city: 'Zurich'),
         ))->toArray());
         $updated = $customer->fresh();
 
@@ -113,8 +114,8 @@ class ContactsFlowTest extends TestCase
         $supplier = Supplier::create((new CreateSupplierData(
             organizationId: $this->org->id,
             name: 'Swisscom AG',
+            addressData: new AddressData(country: 'CH'),
             email: 'invoice@swisscom.ch',
-            country: 'CH',
             currency: 'CHF',
             defaultExpenseCategory: 'utilities',
             iban: 'CH56 0483 5012 3456 7800 9',

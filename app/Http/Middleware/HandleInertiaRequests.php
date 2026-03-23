@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Support\FeatureFlag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Inertia\Middleware;
@@ -45,6 +46,7 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             'locale' => App::getLocale(),
             'translations' => fn () => trans('app'),
+            'features' => FeatureFlag::all(),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

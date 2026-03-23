@@ -33,6 +33,7 @@ use Laravel\Scout\Searchable;
  * @property string|null $qr_reference
  * @property string|null $qr_type
  * @property string|null $qr_iban
+ * @property string|null $justificatif_path
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -58,6 +59,7 @@ class Invoice extends Model
         'qr_reference',
         'qr_type',
         'qr_iban',
+        'justificatif_path',
     ];
 
     protected function casts(): array

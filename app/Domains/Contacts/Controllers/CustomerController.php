@@ -2,8 +2,6 @@
 
 namespace App\Domains\Contacts\Controllers;
 
-use App\Domains\Contacts\Actions\CreateCustomerAction;
-use App\Domains\Contacts\Actions\UpdateCustomerAction;
 use App\Domains\Contacts\DTOs\CreateCustomerData;
 use App\Domains\Contacts\DTOs\UpdateCustomerData;
 use App\Domains\Contacts\Models\Customer;
@@ -53,14 +51,14 @@ class CustomerController extends Controller
         return Inertia::render('Contacts/Customers/Create');
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg, CreateCustomerAction $action): RedirectResponse
+    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', Customer::class);
 
         $validated = $request->validate(self::VALIDATION_RULES);
         $validated['organization_id'] = $currentOrg->id();
 
-        $customer = $action->execute(CreateCustomerData::fromArray($validated));
+        $customer = Customer::create(CreateCustomerData::fromArray($validated)->toArray());
 
         return redirect()->route('customers.show', $customer)
             ->with('success', 'Customer created.');
@@ -84,13 +82,13 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function update(Request $request, Customer $customer, UpdateCustomerAction $action): RedirectResponse
+    public function update(Request $request, Customer $customer): RedirectResponse
     {
         $this->authorize('update', $customer);
 
         $validated = $request->validate(self::VALIDATION_RULES);
 
-        $action->execute($customer, UpdateCustomerData::fromArray($validated));
+        $customer->update(UpdateCustomerData::fromArray($validated)->toArray());
 
         return redirect()->route('customers.show', $customer)
             ->with('success', 'Customer updated.');
