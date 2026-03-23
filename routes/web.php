@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Accounting\Controllers\AccountingController;
+use App\Domains\Accounting\Controllers\YearEndClosingController;
 use App\Domains\Banking\Controllers\BankingController;
 use App\Domains\Banking\Controllers\ReconciliationController;
 use App\Domains\Contacts\Controllers\CustomerController;
@@ -70,6 +71,8 @@ Route::middleware(['auth', 'verified', 'org'])->group(function () {
     Route::get('/accounting/chart-of-accounts', [AccountingController::class, 'chartOfAccounts'])->name('accounting.chart');
     Route::get('/accounting/journal-entries', [AccountingController::class, 'journalEntries'])->name('accounting.journal');
     Route::get('/accounting/trial-balance', [AccountingController::class, 'trialBalance'])->name('accounting.trialBalance');
+    Route::get('/accounting/year-end-closing', [YearEndClosingController::class, 'index'])->name('accounting.closing');
+    Route::post('/accounting/year-end-closing', [YearEndClosingController::class, 'store'])->name('accounting.closing.store');
 
     // Invoices
     Route::resource('invoices', InvoiceController::class);
@@ -77,12 +80,15 @@ Route::middleware(['auth', 'verified', 'org'])->group(function () {
     Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment'])->name('invoices.payment');
     Route::post('/invoices/{invoice}/duplicate', [InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
     Route::get('/invoices/{invoice}/qr-pdf', [InvoiceController::class, 'downloadQrPdf'])->name('invoices.qr-pdf');
+    Route::delete('/invoices/{invoice}/justificatif', [InvoiceController::class, 'removeJustificatif'])->name('invoices.justificatif.remove');
+    Route::get('/invoices/{invoice}/justificatif', [InvoiceController::class, 'downloadJustificatif'])->name('invoices.justificatif.download');
 
     // Expenses
     Route::resource('expenses', ExpenseController::class);
     Route::post('/expenses/{expense}/approve', [ExpenseController::class, 'approve'])->name('expenses.approve');
     Route::post('/expenses/{expense}/post', [ExpenseController::class, 'postToLedger'])->name('expenses.post');
     Route::delete('/expenses/{expense}/receipt', [ExpenseController::class, 'removeReceipt'])->name('expenses.receipt.remove');
+    Route::get('/expenses/{expense}/receipt', [ExpenseController::class, 'downloadReceipt'])->name('expenses.receipt.download');
 
     // Reports
     Route::get('/reports/profit-and-loss', [ReportController::class, 'profitAndLoss'])->name('reports.pnl');

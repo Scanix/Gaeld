@@ -2,16 +2,15 @@
 
 namespace App\Domains\Contacts\DTOs;
 
+use App\Support\AddressData;
+
 readonly class UpdateCustomerData
 {
     public function __construct(
         public string $name,
+        public ?AddressData $addressData = null,
         public ?string $email = null,
         public ?string $phone = null,
-        public ?string $address = null,
-        public ?string $city = null,
-        public ?string $postalCode = null,
-        public ?string $country = null,
         public ?string $vatNumber = null,
         public ?string $currency = null,
         public ?string $paymentTerms = null,
@@ -22,12 +21,9 @@ readonly class UpdateCustomerData
     {
         return new self(
             name: $data['name'],
+            addressData: AddressData::fromArray($data),
             email: $data['email'] ?? null,
             phone: $data['phone'] ?? null,
-            address: $data['address'] ?? null,
-            city: $data['city'] ?? null,
-            postalCode: $data['postal_code'] ?? null,
-            country: $data['country'] ?? null,
             vatNumber: $data['vat_number'] ?? null,
             currency: $data['currency'] ?? null,
             paymentTerms: $data['payment_terms'] ?? null,
@@ -41,14 +37,10 @@ readonly class UpdateCustomerData
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'address' => $this->address,
-            'city' => $this->city,
-            'postal_code' => $this->postalCode,
-            'country' => $this->country,
             'vat_number' => $this->vatNumber,
             'currency' => $this->currency,
             'payment_terms' => $this->paymentTerms,
             'internal_notes' => $this->internalNotes,
-        ], fn ($value) => $value !== null);
+        ] + ($this->addressData?->toArray() ?? AddressData::empty()->toArray()), fn ($value) => $value !== null);
     }
 }

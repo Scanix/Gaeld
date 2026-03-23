@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Commands;
 
+use App\Console\Commands\GaeldInstallCommand;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -36,5 +37,14 @@ class GaeldInstallCommandTest extends TestCase
 
         $this->artisan('gaeld:install', ['--no-interaction' => true])
             ->assertSuccessful();
+    }
+
+    public function test_it_exposes_expected_command_metadata(): void
+    {
+        $command = app(GaeldInstallCommand::class);
+
+        $this->assertSame('gaeld:install', $command->getName());
+        $this->assertStringContainsString('Install Gäld', $command->getDescription());
+        $this->assertTrue($command->getDefinition()->hasOption('demo'));
     }
 }

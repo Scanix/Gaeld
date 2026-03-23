@@ -3,6 +3,7 @@
 namespace Tests\Unit\DTOs;
 
 use App\Domains\Contacts\DTOs\CreateCustomerData;
+use App\Support\AddressData;
 use PHPUnit\Framework\TestCase;
 
 class CreateCustomerDataTest extends TestCase
@@ -38,7 +39,8 @@ class CreateCustomerDataTest extends TestCase
         ]);
 
         $this->assertSame('test@example.com', $dto->email);
-        $this->assertSame('Zürich', $dto->city);
+        $this->assertInstanceOf(AddressData::class, $dto->addressData);
+        $this->assertSame('Zürich', $dto->addressData?->city);
         $this->assertSame('CHE-123.456.789', $dto->vatNumber);
     }
 
@@ -49,14 +51,14 @@ class CreateCustomerDataTest extends TestCase
             'name' => 'Test',
             'email' => null,
             'phone' => null,
-            'address' => null,
-            'city' => null,
-            'postal_code' => null,
-            'country' => null,
             'vat_number' => null,
             'currency' => null,
             'payment_terms' => null,
             'internal_notes' => null,
+            'address' => null,
+            'city' => null,
+            'postal_code' => null,
+            'country' => null,
         ];
 
         $dto = CreateCustomerData::fromArray($input);

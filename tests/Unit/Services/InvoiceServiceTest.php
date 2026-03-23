@@ -1,0 +1,92 @@
+<?php
+
+namespace Tests\Unit\Services;
+
+use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Models\Account;
+use App\Domains\Contacts\Models\Customer;
+use App\Domains\Invoicing\DTOs\RecordPaymentData;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Enums\PaymentMethod;
+use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Organizations\Models\Organization;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class InvoiceServiceTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private Organization $organization;
+
+    private Customer $customer;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->organization = Organization::create([
+            'name' => 'Invoice Service Org',
+            'currency' => 'CHF',
+        ]);
+
+        Account::create([
+            'organization_id' => $this->organization->id,
+            'code' => '1100',
+            'name' => 'Accounts Receivable',
+            'type' => AccountType::Asset->value,
+        ]);
+
+        Account::create([
+            'organization_id' => $this->organization->id,
+            'code' => '1020',
+            'name' => 'Bank',
+            'type' => AccountType::Asset->value,
+        ]);
+
+        Account::create([
+            'organization_id' => $this->organization->id,
+            'code' => '3000',
+            'name' => 'Revenue',
+            'type' => AccountType::Revenue->value,
+        ]);
+
+        $this->customer = Customer::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Client AG',
+        ]);
+    }
+
+    public function test_record_payment_uses_default_reference_and_marks_invoice_paid(): void
+    {
+        $service = app(InvoiceService::class);
+
+        $invoice = Invoice::create([
+            'organization_id' => $this->organization->id,
+            'customer_id' => $this->customer->id,
+            'number' => 'INV-2026-100',
+            'status' => InvoiceStatus::Sent,
+            'issue_date' => '2026-03-01',
+            'due_date' => '2026-03-31',
+            'subtotal' => 400.00,
+            'vat_amount' => 0,
+            'total' => 400.00,
+            'currency' => 'CHF',
+        ]);
+
+        $payment = $service->recordPayment($invoice, new RecordPaymentData(
+            amount: '400.00',
+            paymentDate: '2026-03-10',
+            paymentMethod: PaymentMethod::Bank,
+            reference: null,
+        ));
+
+        $invoice->refresh();
+
+        $this->assertSame('PAY-INV-2026-100-1', $payment->reference);
+        $this->assertTrue($payment->journalEntry->isBalanced());
+        $this->assertSame(InvoiceStatus::Paid, $invoice->status);
+        $this->assertSame('0.00', $invoice->amountDue());
+    }
+}

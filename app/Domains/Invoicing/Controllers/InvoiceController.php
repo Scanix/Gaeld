@@ -24,6 +24,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -81,8 +82,16 @@ class InvoiceController extends Controller
                 'nullable',
                 Rule::exists('vat_rates', 'id')->where('organization_id', $currentOrg->id()),
             ],
+            'justificatif' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]));
         $validated['organization_id'] = $currentOrg->id();
+
+        if ($request->hasFile('justificatif')) {
+            $validated['justificatif_path'] = $this->storeJustificatif(
+                $request->file('justificatif'),
+                $currentOrg->id(),
+            );
+        }
 
         $dto = CreateInvoiceData::fromArray($validated);
 
@@ -98,6 +107,9 @@ class InvoiceController extends Controller
 
         return Inertia::render('Invoices/Show', [
             'invoice' => $invoice->load(['customer', 'lines.vatRate', 'journalEntry.lines.account', 'payments.journalEntry']),
+            'justificatifUrl' => $invoice->justificatif_path
+                ? route('invoices.justificatif.download', $invoice)
+                : null,
         ]);
     }
 
@@ -109,6 +121,9 @@ class InvoiceController extends Controller
             'invoice' => $invoice->load('lines.vatRate'),
             'customers' => CustomerQuery::forSelect(),
             'vatRates' => VatRateQuery::active(),
+            'justificatifUrl' => $invoice->justificatif_path
+                ? route('invoices.justificatif.download', $invoice)
+                : null,
         ]);
     }
 
@@ -125,8 +140,17 @@ class InvoiceController extends Controller
                 'nullable',
                 Rule::exists('vat_rates', 'id')->where('organization_id', $invoice->organization_id),
             ],
+            'justificatif' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]));
         $validated['organization_id'] = $invoice->organization_id;
+
+        if ($request->hasFile('justificatif')) {
+            $this->deleteJustificatifIfExists($invoice->justificatif_path);
+            $validated['justificatif_path'] = $this->storeJustificatif(
+                $request->file('justificatif'),
+                $invoice->organization_id,
+            );
+        }
 
         $dto = UpdateInvoiceData::fromArray($validated);
 
@@ -170,7 +194,7 @@ class InvoiceController extends Controller
 
     public function recordPayment(Request $request, Invoice $invoice, RecordPaymentAction $action): RedirectResponse
     {
-        $this->authorize('update', $invoice);
+        $this->authorize('view', $invoice);
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
@@ -202,6 +226,33 @@ class InvoiceController extends Controller
             ->with('success', 'Invoice duplicated.');
     }
 
+    public function removeJustificatif(Invoice $invoice): RedirectResponse
+    {
+        $this->authorize('update', $invoice);
+
+        if ($invoice->justificatif_path) {
+            $this->deleteJustificatifIfExists($invoice->justificatif_path);
+            $invoice->update(['justificatif_path' => null]);
+        }
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('success', 'Justificatif removed.');
+    }
+
+    public function downloadJustificatif(Invoice $invoice): \Symfony\Component\HttpFoundation\StreamedResponse|\Illuminate\Http\RedirectResponse
+    {
+        $this->authorize('view', $invoice);
+
+        if (! $invoice->justificatif_path || ! Storage::disk('local')->exists($invoice->justificatif_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->download(
+            $invoice->justificatif_path,
+            basename($invoice->justificatif_path),
+        );
+    }
+
     public function downloadQrPdf(Invoice $invoice, GenerateQrInvoicePdfAction $action, CurrentOrganization $currentOrg): HttpResponse
     {
         $this->authorize('view', $invoice);
@@ -217,5 +268,17 @@ class InvoiceController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
+    }
+
+    private function storeJustificatif(\Illuminate\Http\UploadedFile $file, string $orgId): string
+    {
+        return $file->store("justificatifs/{$orgId}", 'local');
+    }
+
+    private function deleteJustificatifIfExists(?string $path): void
+    {
+        if ($path) {
+            Storage::delete($path);
+        }
     }
 }

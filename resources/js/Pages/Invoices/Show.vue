@@ -16,10 +16,11 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, Copy, Download } from 'lucide-vue-next'
+import { Pencil, Trash2, Copy, Download, Paperclip } from 'lucide-vue-next'
 
 const props = defineProps({
   invoice: Object,
+  justificatifUrl: { type: String, default: null },
 })
 
 const { t } = useTranslations()
@@ -56,6 +57,10 @@ function recordPayment() {
 
 function duplicate() {
   router.post(`/invoices/${props.invoice.id}/duplicate`)
+}
+
+function removeJustificatif() {
+  router.delete(`/invoices/${props.invoice.id}/justificatif`)
 }
 
 function executeDelete() {
@@ -210,6 +215,31 @@ const paymentMethodOptions = [
             ]"
             :rows="invoice.journal_entry.lines ?? []"
           />
+        </CardContent>
+      </Card>
+
+      <!-- Justificatif -->
+      <Card v-if="justificatifUrl">
+        <CardHeader>
+          <div class="flex items-center justify-between">
+            <CardTitle class="flex items-center gap-2">
+              <Paperclip class="h-4 w-4" />
+              {{ t('justificatif') }}
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              @click="removeJustificatif"
+            >
+              <Trash2 class="mr-1 h-4 w-4" />
+              {{ t('remove') }}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <a :href="justificatifUrl" target="_blank" class="text-sm text-[hsl(var(--primary))] hover:underline">
+            {{ t('view_justificatif') }}
+          </a>
         </CardContent>
       </Card>
     </div>

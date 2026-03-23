@@ -2,15 +2,14 @@
 
 namespace App\Domains\Organizations\DTOs;
 
+use App\Support\AddressData;
+
 readonly class CreateOrganizationData
 {
     public function __construct(
         public string $name,
         public ?string $legalName = null,
-        public ?string $address = null,
-        public ?string $city = null,
-        public ?string $postalCode = null,
-        public ?string $canton = null,
+        public ?AddressData $addressData = null,
         public string $country = 'CH',
         public ?string $vatNumber = null,
         public string $currency = 'CHF',
@@ -23,10 +22,7 @@ readonly class CreateOrganizationData
         return new self(
             name: $data['name'],
             legalName: $data['legal_name'] ?? null,
-            address: $data['address'] ?? null,
-            city: $data['city'] ?? null,
-            postalCode: $data['postal_code'] ?? null,
-            canton: $data['canton'] ?? null,
+            addressData: AddressData::fromArray($data, includeCanton: true, defaultCountry: $data['country'] ?? 'CH'),
             country: $data['country'] ?? 'CH',
             vatNumber: $data['vat_number'] ?? null,
             currency: $data['currency'] ?? 'CHF',
@@ -39,16 +35,12 @@ readonly class CreateOrganizationData
     {
         return [
             'name' => $this->name,
-            'legal_name' => $this->legalName,
-            'address' => $this->address,
-            'city' => $this->city,
-            'postal_code' => $this->postalCode,
-            'canton' => $this->canton,
+            'legal_name' => $this->legalName ?? $this->name,
             'country' => $this->country,
             'vat_number' => $this->vatNumber,
             'currency' => $this->currency,
             'fiscal_year_start' => $this->fiscalYearStart,
             'locale' => $this->locale,
-        ];
+        ] + ($this->addressData?->toArray(includeCanton: true) ?? AddressData::empty(includeCanton: true)->toArray(includeCanton: true));
     }
 }

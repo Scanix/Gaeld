@@ -27,6 +27,7 @@ const form = useForm({
   notes: '',
   payment_terms: '',
   lines: [{ description: '', quantity: 1, unit_price: 0, vat_rate_id: '' }],
+  justificatif: null,
 })
 
 function addLine() {
@@ -40,7 +41,11 @@ function removeLine(index) {
 }
 
 function submit() {
-  form.post('/invoices')
+  form.post('/invoices', { forceFormData: true })
+}
+
+function onJustificatifChange(e) {
+  form.justificatif = e.target.files[0] ?? null
 }
 
 const clientOptions = props.customers.map(c => ({ value: c.id, label: c.name }))
@@ -176,6 +181,18 @@ const vatOptions = [
               :label="t('payment_terms')"
               placeholder="Net 30"
             />
+          </div>
+
+          <div>
+            <label for="justificatif" class="mb-1 block text-sm font-medium">{{ t('justificatif') }}</label>
+            <input
+              id="justificatif"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              class="block w-full text-sm text-[hsl(var(--muted-foreground))] file:mr-4 file:rounded-md file:border-0 file:bg-[hsl(var(--primary))] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[hsl(var(--primary-foreground))] hover:file:opacity-90"
+              @change="onJustificatifChange"
+            />
+            <p v-if="form.errors.justificatif" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.justificatif }}</p>
           </div>
 
           <div class="flex justify-end gap-3">

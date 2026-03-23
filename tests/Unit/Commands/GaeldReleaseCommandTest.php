@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Commands;
 
+use App\Console\Commands\GaeldReleaseCommand;
 use Tests\TestCase;
 
 class GaeldReleaseCommandTest extends TestCase
@@ -34,5 +35,14 @@ class GaeldReleaseCommandTest extends TestCase
     {
         $this->artisan('gaeld:release', ['edition' => 'saas', '--dry-run' => true])
             ->assertSuccessful();
+    }
+
+    public function test_it_exposes_expected_command_metadata(): void
+    {
+        $command = new GaeldReleaseCommand();
+
+        $this->assertSame('gaeld:release', $command->getName());
+        $this->assertStringContainsString('Prepare a release build', $command->getDescription());
+        $this->assertTrue($command->getDefinition()->hasOption('dry-run'));
     }
 }

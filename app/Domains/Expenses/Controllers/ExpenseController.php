@@ -87,7 +87,7 @@ class ExpenseController extends Controller
 
         return Inertia::render('Expenses/Show', [
             'expense' => $expense->load(['vatRate', 'journalEntry.lines.account']),
-            'receiptUrl' => $expense->receipt_path ? Storage::url($expense->receipt_path) : null,
+            'receiptUrl' => $expense->receipt_path ? route('expenses.receipt.download', $expense) : null,
         ]);
     }
 
@@ -98,7 +98,7 @@ class ExpenseController extends Controller
         return Inertia::render('Expenses/Edit', [
             'expense' => $expense->load('vatRate'),
             'vatRates' => VatRateQuery::active(),
-            'receiptUrl' => $expense->receipt_path ? Storage::url($expense->receipt_path) : null,
+            'receiptUrl' => $expense->receipt_path ? route('expenses.receipt.download', $expense) : null,
         ]);
     }
 
@@ -197,6 +197,20 @@ class ExpenseController extends Controller
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Receipt removed.');
+    }
+
+    public function downloadReceipt(Expense $expense): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('view', $expense);
+
+        if (! $expense->receipt_path || ! Storage::disk('local')->exists($expense->receipt_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->download(
+            $expense->receipt_path,
+            basename($expense->receipt_path),
+        );
     }
 
     private function storeReceipt(\Illuminate\Http\UploadedFile $file, string $orgId): string
