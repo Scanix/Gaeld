@@ -2,6 +2,7 @@
 
 namespace App\Domains\Reporting\Controllers;
 
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Services\DashboardService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -10,10 +11,10 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, DashboardService $dashboardService): Response
+    public function index(Request $request, DashboardService $dashboardService, CurrentOrganization $currentOrg): Response
     {
-        $organization = app('current_organization');
+        $this->authorize('viewAny', \App\Domains\Accounting\Models\Account::class);
 
-        return Inertia::render('Dashboard', $dashboardService->getMetrics($organization->id));
+        return Inertia::render('Dashboard', $dashboardService->metrics($currentOrg->id()));
     }
 }

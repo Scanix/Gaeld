@@ -39,7 +39,7 @@ class GenerateReportsJob implements ShouldQueue
                 Log::info('GenerateReportsJob: pre-warmed reports', [
                     'organization_id' => $org->id,
                 ]);
-            } catch (\Throwable $e) {
+            } catch (\Exception $e) {
                 Log::warning('GenerateReportsJob: failed for org', [
                     'organization_id' => $org->id,
                     'error' => $e->getMessage(),

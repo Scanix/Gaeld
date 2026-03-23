@@ -5,6 +5,7 @@ namespace App\Domains\Contacts\Queries;
 use App\Domains\Contacts\Models\Customer;
 use App\Support\QueryBuilder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 class CustomerQuery
@@ -18,5 +19,10 @@ class CustomerQuery
             ->apply()
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    public static function forSelect(): Collection
+    {
+        return Customer::orderBy('name')->get();
     }
 }

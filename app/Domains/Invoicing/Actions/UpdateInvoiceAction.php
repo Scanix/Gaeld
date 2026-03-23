@@ -2,43 +2,33 @@
 
 namespace App\Domains\Invoicing\Actions;
 
-use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Invoicing\Models\InvoiceLine;
 
 class UpdateInvoiceAction
 {
-    public function execute(Invoice $invoice, array $data, array $lines): Invoice
+    public function __construct(
+        private SyncInvoiceLinesAction $syncInvoiceLines,
+    ) {}
+
+    public function execute(Invoice $invoice, UpdateInvoiceData $data): Invoice
     {
         if (! $invoice->status->isEditable()) {
-            throw new \DomainException('Only draft invoices can be updated.');
+            throw new InvalidInvoiceStateException('Only draft invoices can be updated.');
         }
 
         $invoice->update([
-            'client_id' => $data['client_id'],
-            'number' => $data['number'],
-            'issue_date' => $data['issue_date'],
-            'due_date' => $data['due_date'],
-            'currency' => $data['currency'] ?? $invoice->currency,
-            'notes' => $data['notes'] ?? $invoice->notes,
-            'payment_terms' => $data['payment_terms'] ?? $invoice->payment_terms,
+            'customer_id' => $data->customerId,
+            'number' => $data->number,
+            'issue_date' => $data->issueDate,
+            'due_date' => $data->dueDate,
+            'currency' => $data->currency,
+            'notes' => $data->notes,
+            'payment_terms' => $data->paymentTerms,
         ]);
 
-        // Replace line items
-        $invoice->lines()->delete();
-
-        foreach ($lines as $index => $lineData) {
-            $line = new InvoiceLine([
-                'invoice_id' => $invoice->id,
-                'description' => $lineData['description'],
-                'quantity' => $lineData['quantity'],
-                'unit_price' => $lineData['unit_price'],
-                'vat_rate_id' => $lineData['vat_rate_id'] ?? null,
-                'sort_order' => $lineData['sort_order'] ?? $index,
-            ]);
-
-            $line->calculateAndSave();
-        }
+        $this->syncInvoiceLines->replace($invoice, $data->lines);
 
         $invoice->recalculate();
 

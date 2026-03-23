@@ -1,9 +1,9 @@
 services:
     laravel.test:
         build:
-            context: '.'
+            context: .
             dockerfile: docker/php/Dockerfile
-        image: 'gaeld-sail/app'
+        image: gaeld-sail/app
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
@@ -17,8 +17,8 @@ services:
         depends_on:
             - pgsql
             - redis
+            - mailpit
         command: 'php artisan serve --host=0.0.0.0 --port=80'
-
     pgsql:
         image: 'postgres:16-alpine'
         ports:
@@ -44,7 +44,6 @@ services:
                 - '${DB_USERNAME}'
             retries: 3
             timeout: 5s
-
     redis:
         image: 'redis:7-alpine'
         ports:
@@ -60,11 +59,16 @@ services:
                 - ping
             retries: 3
             timeout: 5s
-
+    mailpit:
+        image: 'axllent/mailpit:latest'
+        ports:
+            - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+            - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+        networks:
+            - sail
 networks:
     sail:
         driver: bridge
-
 volumes:
     sail-pgsql:
         driver: local

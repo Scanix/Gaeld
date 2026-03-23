@@ -9,7 +9,7 @@ Gäld is an open-source accounting platform designed for freelancers and small b
 
 ## Tech Stack
 
-- **Backend:** Laravel 11+
+- **Backend:** Laravel 12
 - **Frontend:** Laravel + Inertia.js + Vue 3
 - **Database:** PostgreSQL
 - **Cache / Queue:** Redis
@@ -75,14 +75,15 @@ Gäld uses a **domain-driven modular architecture**:
 app/Domains/
 ├── Accounting/     # Chart of accounts, journal entries, ledger
 ├── Banking/        # Bank accounts, transactions, sync
+├── Contacts/       # Customers and suppliers
 ├── Expenses/       # Expense tracking
-├── Invoicing/      # Clients, invoices, invoice lines
+├── Invoicing/      # Invoices, invoice lines, payments
 ├── Organizations/  # Multi-org support
-├── Reporting/      # Financial reports
+├── Reporting/      # Financial reports (read-only projection)
 └── Users/          # Authentication, user management
 ```
 
-Each domain contains: `Models/`, `Actions/`, `Services/`, `Controllers/`, `Policies/`
+Domains commonly contain: `Models/`, `Actions/`, `Services/`, `Controllers/`, `Policies/`, `DTOs/`, `Queries/`. Some domains omit sub-packages by design (e.g. Accounting routes all mutations through `LedgerService`, Reporting is a read-only projection with no Models).
 
 ## Accounting Engine
 

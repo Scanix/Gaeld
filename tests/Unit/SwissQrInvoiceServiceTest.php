@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Domains\Invoicing\Services\SwissQrInvoiceService;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -15,7 +15,7 @@ class SwissQrInvoiceServiceTest extends TestCase
 
     private SwissQrInvoiceService $service;
     private Organization $org;
-    private Client $client;
+    private Customer $client;
 
     protected function setUp(): void
     {
@@ -34,7 +34,7 @@ class SwissQrInvoiceServiceTest extends TestCase
             'qr_iban' => 'CH4431999123000889012',
         ]);
 
-        $this->client = Client::create([
+        $this->client = Customer::create([
             'organization_id' => $this->org->id,
             'name' => 'Client AG',
             'address' => 'Lagerstrasse 5',
@@ -65,7 +65,7 @@ class SwissQrInvoiceServiceTest extends TestCase
     {
         $invoice = Invoice::create([
             'organization_id' => $this->org->id,
-            'client_id' => $this->client->id,
+            'customer_id' => $this->client->id,
             'number' => 'INV-2026-001',
             'status' => 'sent',
             'issue_date' => '2026-01-15',
@@ -91,7 +91,7 @@ class SwissQrInvoiceServiceTest extends TestCase
     {
         $invoice = Invoice::create([
             'organization_id' => $this->org->id,
-            'client_id' => $this->client->id,
+            'customer_id' => $this->client->id,
             'number' => 'INV-2026-002',
             'status' => 'sent',
             'issue_date' => '2026-01-15',
@@ -114,7 +114,7 @@ class SwissQrInvoiceServiceTest extends TestCase
     {
         $invoice = Invoice::create([
             'organization_id' => $this->org->id,
-            'client_id' => $this->client->id,
+            'customer_id' => $this->client->id,
             'number' => 'INV-2026-003',
             'status' => 'sent',
             'issue_date' => '2026-01-15',
@@ -137,7 +137,7 @@ class SwissQrInvoiceServiceTest extends TestCase
     {
         $invoice = Invoice::create([
             'organization_id' => $this->org->id,
-            'client_id' => $this->client->id,
+            'customer_id' => $this->client->id,
             'number' => 'INV-2026-004',
             'status' => 'sent',
             'issue_date' => '2026-01-15',

@@ -39,6 +39,7 @@ const navigation = [
     { key: 'chart_of_accounts', href: '/accounting/chart-of-accounts' },
     { key: 'journal_entries', href: '/accounting/journal-entries' },
     { key: 'trial_balance', href: '/accounting/trial-balance' },
+    { key: 'year_end_closing', href: '/accounting/year-end-closing' },
   ]},
   { key: 'reports', href: '/reports/profit-and-loss', icon: BarChart3, children: [
     { key: 'profit_and_loss', href: '/reports/profit-and-loss' },

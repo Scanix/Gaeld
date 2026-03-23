@@ -2,6 +2,7 @@
 
 namespace App\Domains\Banking\Services;
 
+use App\Domains\Banking\Enums\CamtFormat;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\BankTransaction;
@@ -12,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 
 class BankImportService
 {
+    /** Delimiter used to separate fields in the deduplication hash input. */
+    private const HASH_DELIMITER = '|';
+
     /**
      * Import a CAMT file and create bank transactions.
      *
@@ -29,24 +33,28 @@ class BankImportService
         string $filename,
     ): BankImport {
         $format = $this->detectFormat($xml);
-        $entries = $this->parseEntries($xml, $format);
+        $parsedStatement = $this->parseEntries($xml, $format);
 
-        return DB::transaction(function () use ($bankAccount, $filename, $format, $entries) {
+        return DB::transaction(function () use ($bankAccount, $filename, $format, $parsedStatement) {
             $import = BankImport::create([
                 'organization_id' => $bankAccount->organization_id,
                 'bank_account_id' => $bankAccount->id,
                 'filename' => $filename,
-                'format' => $format,
-                'statement_id' => $this->getStatementId($format),
+                'format' => $format->value,
+                'statement_id' => $parsedStatement['statementId'],
                 'transaction_count' => 0,
             ]);
 
+            $existingHashes = BankTransaction::where('bank_account_id', $bankAccount->id)
+                ->pluck('import_hash')
+                ->flip();
+
             $count = 0;
-            foreach ($entries as $entry) {
+            foreach ($parsedStatement['entries'] as $entry) {
                 $hash = $this->computeHash($bankAccount->id, $entry);
 
                 // Skip duplicates
-                if (BankTransaction::where('import_hash', $hash)->exists()) {
+                if ($existingHashes->has($hash)) {
                     continue;
                 }
 
@@ -56,7 +64,7 @@ class BankImportService
                     'date' => $entry->date,
                     'description' => $entry->description,
                     'amount' => $entry->amount,
-                    'type' => $entry->type,
+                    'type' => $entry->type->value,
                     'reference' => $entry->reference,
                     'debtor_name' => $entry->debtorName,
                     'creditor_name' => $entry->creditorName,
@@ -78,56 +86,35 @@ class BankImportService
     /**
      * Detect CAMT format from XML content.
      */
-    private function detectFormat(string $xml): string
+    private function detectFormat(string $xml): CamtFormat
     {
         if (str_contains($xml, 'BkToCstmrStmt')) {
-            return BankImport::FORMAT_CAMT053;
+            return CamtFormat::Camt053;
         }
 
         if (str_contains($xml, 'BkToCstmrDbtCdtNtfctn')) {
-            return BankImport::FORMAT_CAMT054;
+            return CamtFormat::Camt054;
         }
 
         throw new \InvalidArgumentException('Unsupported CAMT format. Only CAMT.053 and CAMT.054 are supported.');
     }
 
-    private Camt053Parser|Camt054Parser|null $activeParser = null;
-
     /**
-     * @return CamtEntry[]
+     * @return array{entries: CamtEntry[], statementId: ?string}
      */
-    private function parseEntries(string $xml, string $format): array
+    private function parseEntries(string $xml, CamtFormat $format): array
     {
-        if ($format === BankImport::FORMAT_CAMT053) {
+        if ($format === CamtFormat::Camt053) {
             $parser = new Camt053Parser();
             $parser->parse($xml);
-            $this->activeParser = $parser;
 
-            return $parser->getEntries();
+            return ['entries' => $parser->getEntries(), 'statementId' => $parser->getStatementId()];
         }
 
         $parser = new Camt054Parser();
         $parser->parse($xml);
-        $this->activeParser = $parser;
 
-        return $parser->getEntries();
-    }
-
-    private function getStatementId(string $format): ?string
-    {
-        if (! $this->activeParser) {
-            return null;
-        }
-
-        if ($format === BankImport::FORMAT_CAMT053 && $this->activeParser instanceof Camt053Parser) {
-            return $this->activeParser->getStatementId();
-        }
-
-        if ($this->activeParser instanceof Camt054Parser) {
-            return $this->activeParser->getNotificationId();
-        }
-
-        return null;
+        return ['entries' => $parser->getEntries(), 'statementId' => $parser->getNotificationId()];
     }
 
     /**
@@ -135,11 +122,11 @@ class BankImportService
      */
     private function computeHash(int $bankAccountId, CamtEntry $entry): string
     {
-        return hash('sha256', implode('|', [
+        return hash('sha256', implode(self::HASH_DELIMITER, [
             $bankAccountId,
             $entry->date,
             $entry->amount,
-            $entry->type,
+            $entry->type->value,
             $entry->reference ?? '',
             $entry->endToEndId ?? '',
             $entry->description ?? '',

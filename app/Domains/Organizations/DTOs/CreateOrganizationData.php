@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Domains\Organizations\DTOs;
+
+use App\Support\AddressData;
+
+readonly class CreateOrganizationData
+{
+    public function __construct(
+        public string $name,
+        public ?string $legalName = null,
+        public ?AddressData $addressData = null,
+        public string $country = 'CH',
+        public ?string $vatNumber = null,
+        public string $currency = 'CHF',
+        public string $fiscalYearStart = '01-01',
+        public string $locale = 'en',
+    ) {}
+
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            name: $data['name'],
+            legalName: $data['legal_name'] ?? null,
+            addressData: AddressData::fromArray($data, includeCanton: true, defaultCountry: $data['country'] ?? 'CH'),
+            country: $data['country'] ?? 'CH',
+            vatNumber: $data['vat_number'] ?? null,
+            currency: $data['currency'] ?? 'CHF',
+            fiscalYearStart: $data['fiscal_year_start'] ?? '01-01',
+            locale: $data['locale'] ?? 'en',
+        );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'legal_name' => $this->legalName ?? $this->name,
+            'country' => $this->country,
+            'vat_number' => $this->vatNumber,
+            'currency' => $this->currency,
+            'fiscal_year_start' => $this->fiscalYearStart,
+            'locale' => $this->locale,
+        ] + ($this->addressData?->toArray(includeCanton: true) ?? AddressData::empty(includeCanton: true)->toArray(includeCanton: true));
+    }
+}

@@ -5,15 +5,20 @@ namespace App\Domains\Expenses\Controllers;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\DeleteExpenseAction;
+use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Actions\UpdateExpenseAction;
+use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Queries\ExpenseQuery;
-use App\Domains\Expenses\Services\ExpenseService;
-use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Accounting\Queries\VatRateQuery;
+use App\Domains\Expenses\DTOs\CreateExpenseData;
+use App\Domains\Expenses\DTOs\UpdateExpenseData;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,12 +41,14 @@ class ExpenseController extends Controller
 
     public function create(Request $request): Response
     {
+        $this->authorize('create', Expense::class);
+
         return Inertia::render('Expenses/Create', [
-            'vatRates' => VatRate::where('is_active', true)->get(),
+            'vatRates' => VatRateQuery::active(),
         ]);
     }
 
-    public function store(Request $request, CreateExpenseAction $action): RedirectResponse
+    public function store(Request $request, CreateExpenseAction $action, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', Expense::class);
 
@@ -50,7 +57,10 @@ class ExpenseController extends Controller
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0.01',
             'vat_amount' => 'nullable|numeric|min:0',
-            'vat_rate_id' => 'nullable|exists:vat_rates,id',
+            'vat_rate_id' => [
+                'nullable',
+                Rule::exists('vat_rates', 'id')->where('organization_id', $currentOrg->id()),
+            ],
             'date' => 'required|date',
             'vendor' => 'nullable|string|max:255',
             'currency' => 'string|size:3',
@@ -58,13 +68,14 @@ class ExpenseController extends Controller
         ]);
 
         if ($request->hasFile('receipt')) {
-            $validated['receipt_path'] = $request->file('receipt')->store(
-                'receipts/'.app('current_organization')->id,
-                'local'
+            $validated['receipt_path'] = $this->storeReceipt(
+                $request->file('receipt'),
+                $currentOrg->id(),
             );
         }
+        $validated['organization_id'] = $currentOrg->id();
 
-        $expense = $action->execute($validated);
+        $expense = $action->execute(CreateExpenseData::fromArray($validated));
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Expense created.');
@@ -76,7 +87,7 @@ class ExpenseController extends Controller
 
         return Inertia::render('Expenses/Show', [
             'expense' => $expense->load(['vatRate', 'journalEntry.lines.account']),
-            'receiptUrl' => $expense->receipt_path ? Storage::url($expense->receipt_path) : null,
+            'receiptUrl' => $expense->receipt_path ? route('expenses.receipt.download', $expense) : null,
         ]);
     }
 
@@ -86,8 +97,8 @@ class ExpenseController extends Controller
 
         return Inertia::render('Expenses/Edit', [
             'expense' => $expense->load('vatRate'),
-            'vatRates' => VatRate::where('is_active', true)->get(),
-            'receiptUrl' => $expense->receipt_path ? Storage::url($expense->receipt_path) : null,
+            'vatRates' => VatRateQuery::active(),
+            'receiptUrl' => $expense->receipt_path ? route('expenses.receipt.download', $expense) : null,
         ]);
     }
 
@@ -100,7 +111,10 @@ class ExpenseController extends Controller
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0.01',
             'vat_amount' => 'nullable|numeric|min:0',
-            'vat_rate_id' => 'nullable|exists:vat_rates,id',
+            'vat_rate_id' => [
+                'nullable',
+                Rule::exists('vat_rates', 'id')->where('organization_id', $expense->organization_id),
+            ],
             'date' => 'required|date',
             'vendor' => 'nullable|string|max:255',
             'currency' => 'string|size:3',
@@ -108,17 +122,18 @@ class ExpenseController extends Controller
         ]);
 
         if ($request->hasFile('receipt')) {
-            // Remove old receipt
-            if ($expense->receipt_path) {
-                Storage::delete($expense->receipt_path);
-            }
-            $validated['receipt_path'] = $request->file('receipt')->store(
-                "receipts/{$expense->organization_id}",
-                'local'
+            $this->deleteReceiptIfExists($expense->receipt_path);
+            $validated['receipt_path'] = $this->storeReceipt(
+                $request->file('receipt'),
+                $expense->organization_id,
             );
         }
 
-        $action->execute($expense, $validated);
+        try {
+            $action->execute($expense, UpdateExpenseData::fromArray($validated));
+        } catch (InvalidExpenseStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Expense updated.');
@@ -128,12 +143,12 @@ class ExpenseController extends Controller
     {
         $this->authorize('delete', $expense);
 
-        // Remove receipt file if exists
-        if ($expense->receipt_path) {
-            Storage::delete($expense->receipt_path);
+        try {
+            $this->deleteReceiptIfExists($expense->receipt_path);
+            $action->execute($expense);
+        } catch (InvalidExpenseStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
-
-        $action->execute($expense);
 
         return redirect()->route('expenses.index')
             ->with('success', 'Expense deleted.');
@@ -143,13 +158,17 @@ class ExpenseController extends Controller
     {
         $this->authorize('update', $expense);
 
-        $action->execute($expense);
+        try {
+            $action->execute($expense);
+        } catch (InvalidExpenseStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Expense approved.');
     }
 
-    public function postToLedger(Expense $expense, Request $request, ExpenseService $service): RedirectResponse
+    public function postToLedger(Expense $expense, Request $request, PostExpenseAction $action): RedirectResponse
     {
         $this->authorize('update', $expense);
 
@@ -157,7 +176,11 @@ class ExpenseController extends Controller
             'expense_account_code' => 'required|string',
         ]);
 
-        $service->postExpense($expense, $validated['expense_account_code']);
+        try {
+            $action->execute($expense, $validated['expense_account_code']);
+        } catch (InvalidExpenseStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Expense posted to ledger.');
@@ -168,11 +191,37 @@ class ExpenseController extends Controller
         $this->authorize('update', $expense);
 
         if ($expense->receipt_path) {
-            Storage::delete($expense->receipt_path);
+            $this->deleteReceiptIfExists($expense->receipt_path);
             $expense->update(['receipt_path' => null]);
         }
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', 'Receipt removed.');
+    }
+
+    public function downloadReceipt(Expense $expense): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('view', $expense);
+
+        if (! $expense->receipt_path || ! Storage::disk('local')->exists($expense->receipt_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->download(
+            $expense->receipt_path,
+            basename($expense->receipt_path),
+        );
+    }
+
+    private function storeReceipt(\Illuminate\Http\UploadedFile $file, string $orgId): string
+    {
+        return $file->store("receipts/{$orgId}", 'local');
+    }
+
+    private function deleteReceiptIfExists(?string $path): void
+    {
+        if ($path) {
+            Storage::delete($path);
+        }
     }
 }

@@ -11,6 +11,7 @@ import Button from '@/Components/UI/Button.vue'
 import { formatCurrency } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
+import HelpText from '@/Components/HelpText.vue'
 
 const props = defineProps({ report: Object })
 
@@ -32,6 +33,10 @@ const accountColumns = computed(() => [
 
 <template>
   <AppLayout :title="t('profit_and_loss')" help-page="reports">
+    <HelpText :title="t('help_profit_loss_title')" class="mb-6">
+      <p>{{ t('help_profit_loss_text') }}</p>
+    </HelpText>
+
     <div class="mb-6 flex flex-wrap items-end gap-4">
       <FormInput id="from" v-model="from" type="date" :label="t('from')" />
       <FormInput id="to" v-model="to" type="date" :label="t('to')" />

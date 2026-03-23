@@ -8,17 +8,16 @@
         "php": "^8.2",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^12.54",
-        "laravel/sanctum": "^4.0",
         "laravel/scout": "^11.0",
-        "laravel/tinker": "^2.9",
         "sprain/swiss-qr-bill": "^5.3",
-        "tecnickcom/tcpdf": "^6.11",
-        "tightenco/ziggy": "^2.0"
+        "tecnickcom/tcpdf": "^6.11"
     },
     "require-dev": {
+        "deployer/deployer": "^7.5",
         "fakerphp/faker": "^1.23",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.26",
+        "laravel/tinker": "^2.9",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.0",
         "phpunit/phpunit": "^13.0",
@@ -60,10 +59,7 @@
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
-        "allow-plugins": {
-            "pestphp/pest-plugin": true,
-            "php-http/discovery": true
-        }
+        "allow-plugins": {}
     },
     "minimum-stability": "stable",
     "prefer-stable": true

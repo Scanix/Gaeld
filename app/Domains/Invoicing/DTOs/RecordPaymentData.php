@@ -2,31 +2,26 @@
 
 namespace App\Domains\Invoicing\DTOs;
 
-use Illuminate\Http\Request;
+use App\Domains\Invoicing\Enums\PaymentMethod;
 
 readonly class RecordPaymentData
 {
     public function __construct(
         public string $amount,
         public string $paymentDate,
-        public string $paymentMethod,
+        public PaymentMethod $paymentMethod,
         public ?string $reference,
+        public ?string $bankAccountCode = null,
     ) {}
 
-    public static function fromRequest(Request $request): self
+    public static function fromArray(array $data): self
     {
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'payment_date' => 'required|date',
-            'payment_method' => 'required|in:bank,cash,card',
-            'reference' => 'nullable|string|max:100',
-        ]);
-
         return new self(
-            amount: $validated['amount'],
-            paymentDate: $validated['payment_date'],
-            paymentMethod: $validated['payment_method'],
-            reference: $validated['reference'] ?? null,
+            amount: (string) $data['amount'],
+            paymentDate: $data['payment_date'],
+            paymentMethod: PaymentMethod::from($data['payment_method']),
+            reference: $data['reference'] ?? null,
+            bankAccountCode: $data['bank_account_code'] ?? null,
         );
     }
 
@@ -35,8 +30,9 @@ readonly class RecordPaymentData
         return [
             'amount' => $this->amount,
             'payment_date' => $this->paymentDate,
-            'payment_method' => $this->paymentMethod,
+            'payment_method' => $this->paymentMethod->value,
             'reference' => $this->reference,
+            'bank_account_code' => $this->bankAccountCode,
         ];
     }
 }

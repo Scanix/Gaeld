@@ -5,6 +5,7 @@ namespace App\Domains\Reporting\Services;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class ReportingService
@@ -24,27 +25,8 @@ class ReportingService
         $orgTag = "org:{$organizationId}:reports";
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $fromDate, $toDate) {
-            $revenue = Account::where('organization_id', $organizationId)
-                ->where('type', AccountType::Revenue->value)
-                ->where('is_active', true)
-                ->get()
-                ->map(fn (Account $account) => [
-                    'code' => $account->code,
-                    'name' => $account->name,
-                    'balance' => $this->ledgerService->accountBalance($account->id, $fromDate, $toDate),
-                ])
-                ->filter(fn ($item) => $item['balance'] != 0);
-
-            $expenses = Account::where('organization_id', $organizationId)
-                ->where('type', AccountType::Expense->value)
-                ->where('is_active', true)
-                ->get()
-                ->map(fn (Account $account) => [
-                    'code' => $account->code,
-                    'name' => $account->name,
-                    'balance' => $this->ledgerService->accountBalance($account->id, $fromDate, $toDate),
-                ])
-                ->filter(fn ($item) => $item['balance'] != 0);
+            $revenue = $this->accountsWithBalances($organizationId, AccountType::Revenue, $fromDate, $toDate);
+            $expenses = $this->accountsWithBalances($organizationId, AccountType::Expense, $fromDate, $toDate);
 
             $totalRevenue = $revenue->sum('balance');
             $totalExpenses = $expenses->sum('balance');
@@ -55,7 +37,7 @@ class ReportingService
                 'expenses' => $expenses->values()->toArray(),
                 'total_revenue' => $totalRevenue,
                 'total_expenses' => $totalExpenses,
-                'net_profit' => (float) bcsub((string) $totalRevenue, (string) $totalExpenses, 2),
+                'net_profit' => bcsub((string) $totalRevenue, (string) $totalExpenses, 2),
             ];
         });
     }
@@ -72,26 +54,17 @@ class ReportingService
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $asOfDate) {
             $types = [
-                AccountType::Asset->value,
-                AccountType::Liability->value,
-                AccountType::Equity->value,
+                AccountType::Asset,
+                AccountType::Liability,
+                AccountType::Equity,
             ];
 
             $sections = [];
 
             foreach ($types as $type) {
-                $accounts = Account::where('organization_id', $organizationId)
-                    ->where('type', $type)
-                    ->where('is_active', true)
-                    ->get()
-                    ->map(fn (Account $account) => [
-                        'code' => $account->code,
-                        'name' => $account->name,
-                        'balance' => $this->ledgerService->accountBalance($account->id, null, $asOfDate),
-                    ])
-                    ->filter(fn ($item) => $item['balance'] != 0);
+                $accounts = $this->accountsWithBalances($organizationId, $type, null, $asOfDate);
 
-                $sections[$type] = [
+                $sections[$type->value] = [
                     'accounts' => $accounts->values()->toArray(),
                     'total' => $accounts->sum('balance'),
                 ];
@@ -104,5 +77,19 @@ class ReportingService
                 'equity' => $sections[AccountType::Equity->value],
             ];
         });
+    }
+
+    private function accountsWithBalances(string $organizationId, AccountType $type, ?string $fromDate, ?string $toDate): Collection
+    {
+        return Account::where('organization_id', $organizationId)
+            ->where('type', $type->value)
+            ->where('is_active', true)
+            ->get()
+            ->map(fn (Account $account) => [
+                'code' => $account->code,
+                'name' => $account->name,
+                'balance' => $this->ledgerService->accountBalance($account->id, $fromDate, $toDate),
+            ])
+            ->filter(fn ($accountRow) => bccomp((string) $accountRow['balance'], '0', 2) !== 0);
     }
 }

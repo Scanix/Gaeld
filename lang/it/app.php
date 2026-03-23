@@ -279,4 +279,50 @@ return [
     'locale_de' => 'Deutsch',
     'locale_it' => 'Italiano',
     'locale_rm' => 'Rumantsch',
+
+    // Email verification
+    'verify_email_title' => 'Verifica il tuo indirizzo e-mail',
+    'verify_email_description' => 'Prima di iniziare, verifica il tuo indirizzo e-mail cliccando sul link che ti abbiamo appena inviato.',
+    'verify_email_resent' => 'Un nuovo link di verifica è stato inviato al tuo indirizzo e-mail.',
+    'verify_email_check_inbox' => 'Se non hai ricevuto l\'e-mail, clicca qui sotto per richiederne un\'altra.',
+    'verify_email_resend' => 'Rinvia e-mail di verifica',
+    'logout' => 'Disconnettersi',
+
+    // Onboarding
+    'onboarding_title' => 'Crea la tua organizzazione',
+    'onboarding_description' => 'Configura la tua azienda per iniziare a gestire la contabilità.',
+    'onboarding_org_help' => 'Inserisci i dati della tua azienda. Potrai modificarli in seguito.',
+    'create_organization_btn' => 'Crea organizzazione',
+
+    // Chart of accounts
+    'chart_of_accounts' => 'Piano dei conti',
+    'chart_swiss_sme' => 'PMI svizzera (Kontenrahmen KMU)',
+    'chart_none' => 'Vuoto \u2014 creer\u00f2 il mio',
+    'chart_of_accounts_help' => 'Il modello PMI svizzera include conti standard e aliquote IVA. Potrai sempre aggiungere o rimuovere conti in seguito.',
+
+    // Help preferences
+    'help_preferences' => 'Aiuto e suggerimenti',
+    'help_preferences_desc' => 'Gäld include suggerimenti contestuali per aiutarti a comprendere i concetti contabili.',
+    'show_help_label' => 'Mostra aiuto contestuale',
+    'show_help_desc' => 'Mostra spiegazioni e suggerimenti nell\'applicazione. Puoi disattivare questa opzione quando ti senti a tuo agio.',
+    'hide_help' => 'Nascondi aiuto',
+    'show_help' => 'Mostra aiuto',
+
+    // Contextual help texts
+    'help_dashboard_title' => 'La tua panoramica finanziaria',
+    'help_dashboard_text' => 'Questa dashboard mostra un riepilogo delle tue finanze: ricavi (denaro guadagnato), spese (denaro speso), profitto (ricavi meno spese) e saldo di cassa (denaro sui tuoi conti bancari). Il grafico qui sotto confronta i tuoi ricavi e spese mensili.',
+    'help_invoices_title' => 'Cosa sono le fatture?',
+    'help_invoices_text' => 'Una fattura è un documento che invii a un cliente per richiedere il pagamento di beni o servizi. Crea una fattura quando completi un lavoro e monitora il suo stato: Bozza (non ancora inviata), Inviata (in attesa di pagamento), Pagata (pagamento ricevuto) o Scaduta (data di scadenza superata).',
+    'help_expenses_title' => 'Monitoraggio delle spese',
+    'help_expenses_text' => 'Le spese sono i costi della tua attività — affitto, forniture, servizi, ecc. Registra ogni spesa qui per tenere traccia di dove vanno i tuoi soldi. Questo è essenziale per un calcolo accurato dei profitti e la dichiarazione fiscale.',
+    'help_chart_title' => 'Cos\'è un piano dei conti?',
+    'help_chart_text' => 'Il piano dei conti è l\'elenco di tutti i conti utilizzati per classificare le tue transazioni finanziarie. Ogni conto ha un tipo: Attività (ciò che possiedi), Passività (ciò che devi), Patrimonio netto (investimento del proprietario), Ricavi (denaro guadagnato) e Costi (denaro speso). Ogni transazione viene registrata in almeno due conti — questo si chiama partita doppia.',
+    'help_journal_title' => 'Comprendere le registrazioni contabili',
+    'help_journal_text' => 'Una registrazione contabile documenta una transazione finanziaria. Ogni registrazione ha almeno due righe: un dare e un avere. Il totale dei dare deve sempre essere uguale al totale degli avere — questo mantiene i tuoi libri in equilibrio. Una volta contabilizzata, una registrazione diventa permanente e non può essere modificata.',
+    'help_balance_sheet_title' => 'Leggere un bilancio',
+    'help_balance_sheet_text' => 'Il bilancio mostra la tua situazione finanziaria a una data specifica. Segue un\'equazione semplice: Attività = Passività + Patrimonio netto. Le attività sono ciò che la tua azienda possiede, le passività ciò che deve, e il patrimonio netto è la quota del proprietario. I due lati devono sempre essere in equilibrio.',
+    'help_profit_loss_title' => 'Comprendere il conto economico',
+    'help_profit_loss_text' => 'Il conto economico mostra quanto la tua azienda ha guadagnato e speso in un periodo. Ricavi meno costi uguale il tuo utile netto (o perdita). Questo ti dice se la tua azienda è redditizia.',
+    'help_reconciliation_title' => 'Cos\'è la riconciliazione bancaria?',
+    'help_reconciliation_text' => 'La riconciliazione consiste nel far corrispondere le tue transazioni bancarie con le registrazioni nella tua contabilità. Questo garantisce che i tuoi libri riflettano accuratamente ciò che è realmente accaduto sul tuo conto bancario. Importa il tuo estratto conto e associa ogni transazione a una fattura, una spesa o una registrazione manuale.',
 ];

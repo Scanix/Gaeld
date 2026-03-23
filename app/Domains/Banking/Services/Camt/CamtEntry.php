@@ -2,6 +2,8 @@
 
 namespace App\Domains\Banking\Services\Camt;
 
+use App\Domains\Banking\Enums\BankTransactionType;
+
 /**
  * Normalized bank transaction extracted from a CAMT file.
  *
@@ -14,7 +16,7 @@ class CamtEntry
         public readonly string $date,
         public readonly string $amount,
         public readonly string $currency,
-        public readonly string $type, // 'credit' or 'debit'
+        public readonly BankTransactionType $type,
         public readonly ?string $reference,
         public readonly ?string $description,
         public readonly ?string $iban,

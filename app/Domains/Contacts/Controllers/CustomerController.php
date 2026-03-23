@@ -2,10 +2,11 @@
 
 namespace App\Domains\Contacts\Controllers;
 
-use App\Domains\Contacts\Actions\CreateCustomerAction;
-use App\Domains\Contacts\Actions\UpdateCustomerAction;
+use App\Domains\Contacts\DTOs\CreateCustomerData;
+use App\Domains\Contacts\DTOs\UpdateCustomerData;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Queries\CustomerQuery;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +31,8 @@ class CustomerController extends Controller
 
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Customer::class);
+
         return Inertia::render('Contacts/Customers/Index', [
             'customers' => CustomerQuery::list($request),
             'query' => [
@@ -43,15 +46,19 @@ class CustomerController extends Controller
 
     public function create(): Response
     {
+        $this->authorize('create', Customer::class);
+
         return Inertia::render('Contacts/Customers/Create');
     }
 
-    public function store(Request $request, CreateCustomerAction $action): RedirectResponse
+    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
-        $validated = $request->validate(self::VALIDATION_RULES);
-        $validated['organization_id'] = app('current_organization')->id;
+        $this->authorize('create', Customer::class);
 
-        $customer = $action->execute($validated);
+        $validated = $request->validate(self::VALIDATION_RULES);
+        $validated['organization_id'] = $currentOrg->id();
+
+        $customer = Customer::create(CreateCustomerData::fromArray($validated)->toArray());
 
         return redirect()->route('customers.show', $customer)
             ->with('success', 'Customer created.');
@@ -59,6 +66,8 @@ class CustomerController extends Controller
 
     public function show(Customer $customer): Response
     {
+        $this->authorize('view', $customer);
+
         return Inertia::render('Contacts/Customers/Show', [
             'customer' => $customer->load('invoices'),
         ]);
@@ -66,16 +75,20 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer): Response
     {
+        $this->authorize('update', $customer);
+
         return Inertia::render('Contacts/Customers/Edit', [
             'customer' => $customer,
         ]);
     }
 
-    public function update(Request $request, Customer $customer, UpdateCustomerAction $action): RedirectResponse
+    public function update(Request $request, Customer $customer): RedirectResponse
     {
+        $this->authorize('update', $customer);
+
         $validated = $request->validate(self::VALIDATION_RULES);
 
-        $action->execute($customer, $validated);
+        $customer->update(UpdateCustomerData::fromArray($validated)->toArray());
 
         return redirect()->route('customers.show', $customer)
             ->with('success', 'Customer updated.');
@@ -83,6 +96,8 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer): RedirectResponse
     {
+        $this->authorize('delete', $customer);
+
         $customer->delete();
 
         return redirect()->route('customers.index')

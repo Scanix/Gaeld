@@ -12,14 +12,14 @@ import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
-  clients: { type: Array, default: () => [] },
+  customers: { type: Array, default: () => [] },
   vatRates: { type: Array, default: () => [] },
 })
 
 const { t } = useTranslations()
 
 const form = useForm({
-  client_id: '',
+  customer_id: '',
   number: '',
   issue_date: new Date().toISOString().slice(0, 10),
   due_date: '',
@@ -27,6 +27,7 @@ const form = useForm({
   notes: '',
   payment_terms: '',
   lines: [{ description: '', quantity: 1, unit_price: 0, vat_rate_id: '' }],
+  justificatif: null,
 })
 
 function addLine() {
@@ -40,10 +41,14 @@ function removeLine(index) {
 }
 
 function submit() {
-  form.post('/invoices')
+  form.post('/invoices', { forceFormData: true })
 }
 
-const clientOptions = props.clients.map(c => ({ value: c.id, label: c.name }))
+function onJustificatifChange(e) {
+  form.justificatif = e.target.files[0] ?? null
+}
+
+const clientOptions = props.customers.map(c => ({ value: c.id, label: c.name }))
 const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
@@ -60,12 +65,12 @@ const vatOptions = [
         <form class="space-y-6" @submit.prevent="submit">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormSelect
-              id="client_id"
-              v-model="form.client_id"
+              id="customer_id"
+              v-model="form.customer_id"
               :label="t('client')"
               :options="clientOptions"
               :placeholder="t('select_client')"
-              :error="form.errors.client_id"
+              :error="form.errors.customer_id"
               required
             />
             <FormInput
@@ -176,6 +181,18 @@ const vatOptions = [
               :label="t('payment_terms')"
               placeholder="Net 30"
             />
+          </div>
+
+          <div>
+            <label for="justificatif" class="mb-1 block text-sm font-medium">{{ t('justificatif') }}</label>
+            <input
+              id="justificatif"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              class="block w-full text-sm text-[hsl(var(--muted-foreground))] file:mr-4 file:rounded-md file:border-0 file:bg-[hsl(var(--primary))] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[hsl(var(--primary-foreground))] hover:file:opacity-90"
+              @change="onJustificatifChange"
+            />
+            <p v-if="form.errors.justificatif" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.justificatif }}</p>
           </div>
 
           <div class="flex justify-end gap-3">

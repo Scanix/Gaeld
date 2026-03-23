@@ -2,9 +2,11 @@
 
 namespace App\Domains\Banking\Rules;
 
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Domains\Banking\Services\MatchingService;
 use App\Domains\Banking\Services\ReconciliationService;
-use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Services\InvoiceService;
 
 /**
  * EE Rule: Auto-reconcile when bank transaction has an exact QR reference match.
@@ -14,7 +16,9 @@ use App\Domains\Invoicing\Models\Invoice;
 class QrReferencePaymentRule extends BaseRule
 {
     public function __construct(
+        private MatchingService $matchingService,
         private ReconciliationService $reconciliationService,
+        private InvoiceService $invoiceService,
     ) {}
 
     public function name(): string
@@ -29,7 +33,7 @@ class QrReferencePaymentRule extends BaseRule
 
     public function matches(BankTransaction $transaction): bool
     {
-        if ($transaction->type !== BankTransaction::TYPE_CREDIT) {
+        if ($transaction->type !== BankTransactionType::Credit) {
             return false;
         }
 
@@ -39,10 +43,7 @@ class QrReferencePaymentRule extends BaseRule
 
         $orgId = $transaction->bankAccount->organization_id;
 
-        return Invoice::where('organization_id', $orgId)
-            ->where('qr_reference', $transaction->structured_reference)
-            ->whereIn('status', ['sent', 'overdue'])
-            ->exists();
+        return $this->invoiceService->hasMatchingQrReference($orgId, $transaction->structured_reference);
     }
 
     public function apply(BankTransaction $transaction): void
@@ -51,7 +52,7 @@ class QrReferencePaymentRule extends BaseRule
             return;
         }
 
-        $matches = $this->reconciliationService->findMatches($transaction);
+        $matches = $this->matchingService->findAndStoreMatches($transaction);
         $exactMatch = $matches->first(fn ($m) => $m->confidence === 100);
 
         if ($exactMatch) {

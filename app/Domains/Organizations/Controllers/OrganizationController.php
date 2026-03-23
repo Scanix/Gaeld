@@ -3,6 +3,9 @@
 namespace App\Domains\Organizations\Controllers;
 
 use App\Domains\Organizations\Actions\CreateOrganizationAction;
+use App\Domains\Organizations\Actions\UpdateOrganizationAction;
+use App\Domains\Organizations\DTOs\CreateOrganizationData;
+use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Models\Organization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -14,6 +17,8 @@ class OrganizationController extends Controller
 {
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Organization::class);
+
         $organizations = $request->user()->organizations()->get();
 
         return Inertia::render('Organizations/Index', [
@@ -41,18 +46,19 @@ class OrganizationController extends Controller
             'city' => 'nullable|string|max:100',
             'postal_code' => 'nullable|string|max:10',
             'canton' => 'nullable|string|size:2',
+            'country' => 'nullable|string|size:2',
             'vat_number' => 'nullable|string|max:50',
             'currency' => 'string|size:3',
             'locale' => 'string|in:en,fr,de,it,rm',
         ]);
 
-        $org = $action->execute($request->user(), $validated);
+        $org = $action->execute($request->user(), CreateOrganizationData::fromArray($validated));
 
         return redirect()->route('organizations.show', $org)
             ->with('success', 'Organization created.');
     }
 
-    public function update(Request $request, Organization $organization): RedirectResponse
+    public function update(Request $request, Organization $organization, UpdateOrganizationAction $action): RedirectResponse
     {
         $this->authorize('update', $organization);
 
@@ -63,12 +69,13 @@ class OrganizationController extends Controller
             'city' => 'nullable|string|max:100',
             'postal_code' => 'nullable|string|max:10',
             'canton' => 'nullable|string|size:2',
+            'country' => 'nullable|string|size:2',
             'vat_number' => 'nullable|string|max:50',
             'currency' => 'string|size:3',
             'locale' => 'string|in:en,fr,de,it,rm',
         ]);
 
-        $organization->update($validated);
+        $action->execute($organization, UpdateOrganizationData::fromArray($validated));
 
         return redirect()->route('organizations.show', $organization)
             ->with('success', 'Organization updated.');
@@ -76,6 +83,8 @@ class OrganizationController extends Controller
 
     public function switchOrganization(Request $request, Organization $organization): RedirectResponse
     {
+        $this->authorize('view', $organization);
+
         $request->user()->switchOrganization($organization);
 
         return redirect()->route('dashboard')

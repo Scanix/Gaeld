@@ -1,0 +1,67 @@
+<script setup>
+import { Head, useForm, Link } from '@inertiajs/vue3'
+import Button from '@/Components/UI/Button.vue'
+import Card from '@/Components/UI/Card.vue'
+import CardContent from '@/Components/UI/CardContent.vue'
+import { useTranslations } from '@/lib/useTranslations'
+
+const { t } = useTranslations()
+
+defineProps({
+  status: String,
+})
+
+const form = useForm({})
+
+function resend() {
+  form.post('/email/verification-notification')
+}
+</script>
+
+<template>
+  <Head title="Verify Email" />
+
+  <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
+    <div class="w-full max-w-md">
+      <div class="mb-8 text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-xl font-bold">
+          ✉
+        </div>
+        <h1 class="mt-4 text-2xl font-bold">{{ t('verify_email_title') }}</h1>
+        <p class="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
+          {{ t('verify_email_description') }}
+        </p>
+      </div>
+
+      <Card>
+        <CardContent class="pt-6">
+          <div
+            v-if="status === 'verification-link-sent'"
+            class="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400"
+          >
+            {{ t('verify_email_resent') }}
+          </div>
+
+          <p class="mb-4 text-sm text-[hsl(var(--muted-foreground))]">
+            {{ t('verify_email_check_inbox') }}
+          </p>
+
+          <div class="flex items-center justify-between">
+            <Button @click="resend" :disabled="form.processing">
+              {{ t('verify_email_resend') }}
+            </Button>
+
+            <Link
+              href="/logout"
+              method="post"
+              as="button"
+              class="text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] underline"
+            >
+              {{ t('logout') }}
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+</template>

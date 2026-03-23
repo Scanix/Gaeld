@@ -3,6 +3,8 @@
 namespace Tests\Unit;
 
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Organizations\Models\Organization;
@@ -67,14 +69,15 @@ class CacheInvalidationTest extends TestCase
         $this->ledgerService->trialBalance($this->organization->id);
 
         // Post a new entry — should flush the cached balances
-        $this->ledgerService->postEntry($this->organization->id, [
-            'date' => '2026-03-17',
-            'reference' => 'CACHE-TEST-001',
-            'description' => 'Cache invalidation test',
-        ], [
-            ['account_id' => $this->accounts['ar']->id, 'debit' => 500.00, 'credit' => 0],
-            ['account_id' => $this->accounts['revenue']->id, 'debit' => 0, 'credit' => 500.00],
-        ]);
+        $this->ledgerService->postEntry($this->organization->id, new JournalEntryData(
+            date: '2026-03-17',
+            reference: 'CACHE-TEST-001',
+            description: 'Cache invalidation test',
+            lines: [
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: '500.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '500.00'),
+            ],
+        ));
 
         // After posting, balance should reflect the new entry (cache was flushed)
         $balance = $this->ledgerService->accountBalance($this->accounts['ar']->id);
@@ -106,14 +109,15 @@ class CacheInvalidationTest extends TestCase
         $this->ledgerService->flushCache($this->organization->id);
 
         // Post an entry and verify fresh data is returned
-        $this->ledgerService->postEntry($this->organization->id, [
-            'date' => '2026-03-17',
-            'reference' => 'FLUSH-TEST',
-            'description' => 'Flush test',
-        ], [
-            ['account_id' => $this->accounts['ar']->id, 'debit' => 200.00, 'credit' => 0],
-            ['account_id' => $this->accounts['revenue']->id, 'debit' => 0, 'credit' => 200.00],
-        ]);
+        $this->ledgerService->postEntry($this->organization->id, new JournalEntryData(
+            date: '2026-03-17',
+            reference: 'FLUSH-TEST',
+            description: 'Flush test',
+            lines: [
+                new JournalLineData(accountId: $this->accounts['ar']->id, debit: '200.00', credit: '0'),
+                new JournalLineData(accountId: $this->accounts['revenue']->id, debit: '0', credit: '200.00'),
+            ],
+        ));
 
         $balance = $this->ledgerService->accountBalance($this->accounts['ar']->id);
         $this->assertEquals(200.0, $balance);

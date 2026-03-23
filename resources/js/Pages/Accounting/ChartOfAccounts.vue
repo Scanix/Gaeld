@@ -8,6 +8,7 @@ import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { computed } from 'vue'
+import HelpText from '@/Components/HelpText.vue'
 
 defineProps({ accounts: Array })
 
@@ -31,6 +32,10 @@ const columns = computed(() => [
 
 <template>
   <AppLayout :title="t('chart_of_accounts')" help-page="accounting-basics">
+    <HelpText :title="t('help_chart_title')" class="mb-6">
+      <p>{{ t('help_chart_text') }}</p>
+    </HelpText>
+
     <Card>
       <CardHeader><CardTitle>{{ t('chart_of_accounts') }}</CardTitle></CardHeader>
       <CardContent>
