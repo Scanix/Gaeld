@@ -2,159 +2,118 @@
 
 namespace App\Domains\Reporting\Services;
 
-use App\Domains\Accounting\AccountCode;
-use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Models\JournalEntry;
-use App\Domains\Accounting\Models\TransactionLine;
-use App\Domains\Expenses\Models\Expense;
-use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Expenses\Services\ExpenseService;
+use App\Domains\Invoicing\Services\InvoiceService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class DashboardService
 {
-    public function getMetrics(string $organizationId): array
+    public function __construct(
+        private readonly LedgerService $ledgerService,
+        private readonly InvoiceService $invoiceService,
+        private readonly ExpenseService $expenseService,
+    ) {}
+    /**
+     * @return array{revenue: string, expenses: string, cashBalance: string, unpaidInvoices: array{count: int, total: string}, pendingExpenses: array{count: int, total: string}, balance: string, recentTransactions: \Illuminate\Support\Collection, monthlyBreakdown: array}
+     */
+    public function metrics(string $organizationId): array
     {
         $year = now()->year;
 
-        $totalRevenue = $this->yearlyInvoiceTotal($organizationId, $year);
-        $totalExpenses = $this->yearlyExpenseTotal($organizationId, $year);
+        $totalRevenue = $this->invoiceService->yearlyRevenue($organizationId, $year);
+        $totalExpenses = $this->expenseService->yearlyTotal($organizationId, $year);
         $cashBalance = $this->cashBalance($organizationId);
 
-        $unpaidInvoices = Invoice::where('organization_id', $organizationId)
-            ->whereIn('status', ['sent', 'overdue'])
-            ->selectRaw('COUNT(*) as count, COALESCE(SUM(total), 0) as total')
-            ->first();
+        $unpaidInvoices = $this->invoiceService->unpaidSummary($organizationId);
 
-        $pendingExpenses = Expense::where('organization_id', $organizationId)
-            ->where('status', 'pending')
-            ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
-            ->first();
+        $pendingExpenses = $this->expenseService->pendingSummary($organizationId);
 
         return [
             'revenue' => $totalRevenue,
             'expenses' => $totalExpenses,
             'cashBalance' => $cashBalance,
             'unpaidInvoices' => [
-                'count' => (int) ($unpaidInvoices->count ?? 0),
-                'total' => (float) ($unpaidInvoices->total ?? 0),
+                'count' => $unpaidInvoices->count,
+                'total' => $unpaidInvoices->total,
             ],
             'pendingExpenses' => [
-                'count' => (int) ($pendingExpenses->count ?? 0),
-                'total' => (float) ($pendingExpenses->total ?? 0),
+                'count' => $pendingExpenses->count,
+                'total' => $pendingExpenses->total,
             ],
-            'balance' => (float) bcsub((string) $totalRevenue, (string) $totalExpenses, 2),
+            'balance' => bcsub($totalRevenue, $totalExpenses, 2),
             'recentTransactions' => $this->recentTransactions($organizationId),
-            'monthlyData' => $this->monthlyBreakdown($organizationId, $year),
+            'monthlyBreakdown' => $this->monthlyBreakdown($organizationId, $year),
         ];
     }
 
-    private function yearlyInvoiceTotal(string $organizationId, int $year): float
+    private function cashBalance(string $organizationId): string
     {
-        return (float) Invoice::where('organization_id', $organizationId)
-            ->where('status', 'paid')
-            ->whereYear('issue_date', $year)
-            ->sum('total');
-    }
-
-    private function yearlyExpenseTotal(string $organizationId, int $year): float
-    {
-        return (float) Expense::where('organization_id', $organizationId)
-            ->whereYear('date', $year)
-            ->sum('amount');
-    }
-
-    private function cashBalance(string $organizationId): float
-    {
-        $bankAccount = Account::where('organization_id', $organizationId)
-            ->where('code', AccountCode::BANK_CASH)
-            ->first();
-
-        if (! $bankAccount) {
-            return 0.0;
+        try {
+            $bankAccount = $this->ledgerService->resolveAccount($organizationId, AccountCode::BANK_CASH);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return '0.00';
         }
 
-        $debits = (float) TransactionLine::where('account_id', $bankAccount->id)->sum('debit');
-        $credits = (float) TransactionLine::where('account_id', $bankAccount->id)->sum('credit');
-
-        return (float) bcsub((string) $debits, (string) $credits, 2);
+        return $this->ledgerService->accountBalance($bankAccount->id);
     }
 
     private function recentTransactions(string $organizationId): Collection
     {
-        return JournalEntry::where('organization_id', $organizationId)
-            ->with('lines.account')
-            ->orderByDesc('date')
-            ->orderByDesc('created_at')
-            ->limit(10)
-            ->get()
+        return $this->ledgerService->recentEntries($organizationId)
             ->map(function (JournalEntry $entry) {
-                $hasRevenue = $entry->lines->contains(fn ($l) => AccountCode::isRevenue($l->account?->code ?? ''));
-                $hasExpense = $entry->lines->contains(fn ($l) => AccountCode::isExpense($l->account?->code ?? ''));
-                $type = $hasRevenue ? 'income' : ($hasExpense ? 'expense' : 'transfer');
-
                 return [
                     'id' => $entry->id,
                     'date' => $entry->date,
                     'description' => $entry->description,
                     'reference' => $entry->reference,
-                    'amount' => (float) $entry->lines->sum('debit'),
-                    'type' => $type,
+                    'amount' => (string) $entry->lines->sum('debit'),
+                    'type' => $this->classifyTransactionType($entry),
                 ];
             });
     }
 
+    private function classifyTransactionType(JournalEntry $entry): string
+    {
+        $hasRevenue = $entry->lines->contains(fn ($line) => AccountCode::isRevenue($line->account?->code ?? ''));
+
+        if ($hasRevenue) {
+            return 'income';
+        }
+
+        $hasExpense = $entry->lines->contains(fn ($line) => AccountCode::isExpense($line->account?->code ?? ''));
+
+        return $hasExpense ? 'expense' : 'transfer';
+    }
+
     private function monthlyBreakdown(string $organizationId, int $year): array
     {
-        $monthlyData = collect(range(1, 12))->map(function ($month) use ($year, $organizationId) {
-            $monthRevenue = (float) Invoice::where('organization_id', $organizationId)
-                ->where('status', 'paid')
-                ->whereYear('issue_date', $year)
-                ->whereMonth('issue_date', $month)
-                ->sum('total');
+        // Fetch all data for the year in 3 queries instead of 6*12
+        $paidInvoices = $this->invoiceService->paidInYear($organizationId, $year)
+            ->groupBy(fn ($i) => Carbon::parse($i->issue_date)->month);
 
-            $monthExpenses = (float) Expense::where('organization_id', $organizationId)
-                ->whereYear('date', $year)
-                ->whereMonth('date', $month)
-                ->sum('amount');
+        $expenses = $this->expenseService->inYear($organizationId, $year)
+            ->groupBy(fn ($e) => Carbon::parse($e->date)->month);
 
-            $forecast = (float) Invoice::where('organization_id', $organizationId)
-                ->whereIn('status', ['sent', 'overdue'])
-                ->whereYear('due_date', $year)
-                ->whereMonth('due_date', $month)
-                ->sum('total');
+        $forecastInvoices = $this->invoiceService->sentOrOverdueDueInYear($organizationId, $year)
+            ->groupBy(fn ($i) => Carbon::parse($i->due_date)->month);
 
-            $revenueItems = Invoice::where('organization_id', $organizationId)
-                ->where('status', 'paid')
-                ->whereYear('issue_date', $year)
-                ->whereMonth('issue_date', $month)
-                ->select('number', 'total')
-                ->get()
-                ->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"));
-
-            $expenseItems = Expense::where('organization_id', $organizationId)
-                ->whereYear('date', $year)
-                ->whereMonth('date', $month)
-                ->select('description', 'amount')
-                ->get()
-                ->map(fn ($e) => $e->description . ': ' . number_format((float) $e->amount, 2, '.', "'"));
-
-            $forecastItems = Invoice::where('organization_id', $organizationId)
-                ->whereIn('status', ['sent', 'overdue'])
-                ->whereYear('due_date', $year)
-                ->whereMonth('due_date', $month)
-                ->select('number', 'total')
-                ->get()
-                ->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"));
+        $monthlyData = collect(range(1, 12))->map(function ($month) use ($year, $paidInvoices, $expenses, $forecastInvoices) {
+            $monthPaid = $paidInvoices->get($month, collect());
+            $monthExpenses = $expenses->get($month, collect());
+            $monthForecast = $forecastInvoices->get($month, collect());
 
             return [
                 'month' => Carbon::create($year, $month, 1)->format('M'),
-                'revenue' => $monthRevenue,
-                'expenses' => $monthExpenses,
-                'forecast' => $forecast,
-                'revenueItems' => $revenueItems->values(),
-                'expenseItems' => $expenseItems->values(),
-                'forecastItems' => $forecastItems->values(),
+                'revenue' => (string) $monthPaid->sum('total'),
+                'expenses' => (string) $monthExpenses->sum('amount'),
+                'forecast' => (string) $monthForecast->sum('total'),
+                'revenueItems' => $monthPaid->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"))->values(),
+                'expenseItems' => $monthExpenses->map(fn ($e) => $e->description . ': ' . number_format((float) $e->amount, 2, '.', "'"))->values(),
+                'forecastItems' => $monthForecast->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"))->values(),
             ];
         });
 

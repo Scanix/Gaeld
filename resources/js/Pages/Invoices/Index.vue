@@ -8,6 +8,7 @@ import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Pencil, Trash2, Copy } from 'lucide-vue-next'
+import HelpText from '@/Components/HelpText.vue'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
@@ -64,7 +65,7 @@ function handleFilter({ key, value }) {
 
 const columns = computed(() => [
   { key: 'number', label: t('number'), sortable: true },
-  { key: 'client', label: t('client'), format: (v) => v?.name ?? '—' },
+  { key: 'customer', label: t('client'), format: (v) => v?.name ?? '—' },
   { key: 'issue_date', label: t('date'), format: (v) => formatDate(v), sortable: true },
   { key: 'due_date', label: t('due'), format: (v) => formatDate(v), sortable: true },
   { key: 'total', label: t('total'), class: 'text-right', format: (v) => formatCurrency(v), sortable: true },
@@ -98,6 +99,10 @@ const statusFilters = computed(() => [
 
 <template>
   <AppLayout :title="t('invoices')" help-page="invoices">
+    <HelpText :title="t('help_invoices_title')" class="mb-6">
+      <p>{{ t('help_invoices_text') }}</p>
+    </HelpText>
+
     <div class="mb-6 flex items-center justify-between">
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('manage_invoices') }}

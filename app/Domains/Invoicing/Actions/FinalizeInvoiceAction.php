@@ -2,26 +2,26 @@
 
 namespace App\Domains\Invoicing\Actions;
 
-use App\Domains\Accounting\Services\LedgerService;
-use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Services\InvoiceService;
 
 class FinalizeInvoiceAction
 {
     public function __construct(
-        private LedgerService $ledgerService,
+        private InvoiceService $invoiceService,
     ) {}
 
     public function execute(Invoice $invoice): Invoice
     {
-        if ($invoice->status !== InvoiceStatus::Draft) {
-            throw new \DomainException("Only draft invoices can be finalized (current status: {$invoice->status->value}).");
+        if (! $invoice->status->canTransitionTo(\App\Domains\Invoicing\Enums\InvoiceStatus::Sent)) {
+            throw new InvalidInvoiceStateException("Only draft invoices can be finalized (current status: {$invoice->status->value}).");
         }
 
         if ($invoice->lines()->count() === 0) {
-            throw new \DomainException('Cannot finalize an invoice with no line items.');
+            throw new InvalidInvoiceStateException('Cannot finalize an invoice with no line items.');
         }
 
-        return $this->ledgerService->postInvoice($invoice);
+        return $this->invoiceService->postToLedger($invoice);
     }
 }

@@ -2,12 +2,15 @@
 
 namespace App\Domains\Banking\Controllers;
 
-use App\Domains\Banking\Actions\CreateBankAccountAction;
+use App\Domains\Banking\DTOs\CreateBankAccountData;
+use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Services\BankingService;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,7 +44,7 @@ class BankingController extends Controller
         ]);
     }
 
-    public function store(Request $request, CreateBankAccountAction $action): RedirectResponse
+    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', BankAccount::class);
 
@@ -49,11 +52,15 @@ class BankingController extends Controller
             'name' => 'required|string|max:255',
             'iban' => 'nullable|string|max:34',
             'bank_name' => 'nullable|string|max:255',
-            'account_id' => 'nullable|exists:accounts,id',
+            'account_id' => [
+                'nullable',
+                Rule::exists('accounts', 'id')->where('organization_id', $currentOrg->id()),
+            ],
             'currency' => 'string|size:3',
         ]);
+        $validated['organization_id'] = $currentOrg->id();
 
-        $bankAccount = $action->execute($validated);
+        $bankAccount = BankAccount::create(CreateBankAccountData::fromArray($validated)->toArray());
 
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', 'Bank account created.');
@@ -77,8 +84,7 @@ class BankingController extends Controller
 
         $bankingService->recordTransaction(
             $bankAccount,
-            $validated,
-            $validated['contra_account_code'],
+            RecordBankTransactionData::fromArray($validated),
         );
 
         return redirect()->route('banking.show', $bankAccount)

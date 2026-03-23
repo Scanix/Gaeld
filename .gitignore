@@ -29,3 +29,6 @@ yarn-error.log
 .DS_Store
 /bootstrap/cache/packages.php
 /bootstrap/cache/services.php
+
+# EE proprietary plugin — distributed via private Composer registry, never committed to this repo
+/plugins/gaeld-ee/

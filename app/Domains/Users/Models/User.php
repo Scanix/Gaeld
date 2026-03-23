@@ -3,12 +3,13 @@
 namespace App\Domains\Users\Models;
 
 use App\Domains\Organizations\Models\Organization;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -17,6 +18,7 @@ class User extends Authenticatable
         'email',
         'password',
         'locale',
+        'show_help',
     ];
 
     protected $hidden = [
@@ -29,6 +31,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'show_help' => 'boolean',
         ];
     }
 
@@ -57,10 +60,6 @@ class User extends Authenticatable
 
     public function switchOrganization(Organization $organization): void
     {
-        if (! $this->organizations()->where('organizations.id', $organization->id)->exists()) {
-            abort(403, 'You do not belong to this organization.');
-        }
-
         session(['current_organization_id' => $organization->id]);
     }
 }

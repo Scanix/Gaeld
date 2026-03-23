@@ -6,7 +6,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Organizations\Traits\BelongsToOrganization;
+use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,13 +15,36 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
+/**
+ * @property string $id
+ * @property string $organization_id
+ * @property string|null $customer_id
+ * @property string|null $journal_entry_id
+ * @property string|null $number
+ * @property InvoiceStatus $status
+ * @property \Illuminate\Support\Carbon $issue_date
+ * @property \Illuminate\Support\Carbon $due_date
+ * @property string $subtotal
+ * @property string $vat_amount
+ * @property string $total
+ * @property string $currency
+ * @property string|null $notes
+ * @property string|null $payment_terms
+ * @property string|null $qr_reference
+ * @property string|null $qr_type
+ * @property string|null $qr_iban
+ * @property string|null $justificatif_path
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ */
 class Invoice extends Model
 {
     use BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;
 
     protected $fillable = [
         'organization_id',
-        'client_id',
+        'customer_id',
         'journal_entry_id',
         'number',
         'status',
@@ -36,7 +59,7 @@ class Invoice extends Model
         'qr_reference',
         'qr_type',
         'qr_iban',
-        'customer_id',
+        'justificatif_path',
     ];
 
     protected function casts(): array
@@ -56,14 +79,6 @@ class Invoice extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
-    }
-
-    /**
-     * @deprecated Use customer() instead. Remove after migrating client_id data to customer_id.
-     */
-    public function client(): BelongsTo
-    {
-        return $this->belongsTo(Client::class);
     }
 
     public function customer(): BelongsTo
@@ -112,7 +127,7 @@ class Invoice extends Model
             'organization_id' => $this->organization_id,
             'number' => $this->number ?? '',
             'status' => $this->status?->value ?? '',
-            'client_name' => $this->client?->name ?? '',
+            'customer_name' => $this->customer?->name ?? '',
             'total' => (float) $this->total,
             'currency' => $this->currency,
         ];

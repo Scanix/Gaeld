@@ -2,13 +2,13 @@
 
 namespace App\Domains\Banking\Services;
 
-use App\Domains\Accounting\Exceptions\FeatureDisabledException;
+use App\Support\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\BaseRule;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
 use App\Domains\Banking\Rules\RecurringEntryRule;
 use App\Domains\Banking\Rules\SupplierCategoryRule;
-use App\Services\FeatureFlag;
+use App\Support\FeatureFlag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\Log;
  * EE Service: Runs all configured automation rules against a bank transaction.
  *
  * Rules are evaluated in descending confidence order. The highest-confidence
- * matching rule is applied automatically; lower-confidence matches are stored
- * as suggestions for the user to confirm.
+ * matching rule is applied automatically; lower-confidence matches are returned
+ * to the caller for optional presentation or follow-up handling.
  *
  * Auto-apply threshold: 100 (only exact matches trigger automated writes).
  *
@@ -43,13 +43,13 @@ class RuleEngineService
      * Run all rules against a transaction.
      *
      * Returns a Collection of matching rules sorted by confidence (desc).
-     * Rules at or above AUTO_APPLY_THRESHOLD are applied immediately.
+        * Rules at or above AUTO_APPLY_THRESHOLD are applied immediately.
      *
      * @return Collection<array{rule: BaseRule, confidence: int, applied: bool}>
      *
      * @throws FeatureDisabledException in CE (feature flag disabled)
      */
-    public function run(BankTransaction $transaction): Collection
+    public function evaluateRules(BankTransaction $transaction): Collection
     {
         if (FeatureFlag::disabled('rule_engine')) {
             throw new FeatureDisabledException('rule_engine');
@@ -59,7 +59,7 @@ class RuleEngineService
             return collect();
         }
 
-        $results = collect();
+        $ruleMatches = collect();
 
         foreach ($this->rules as $rule) {
             try {
@@ -74,12 +74,12 @@ class RuleEngineService
                     $applied = true;
                 }
 
-                $results->push([
+                $ruleMatches->push([
                     'rule' => $rule,
                     'confidence' => $rule->confidence(),
                     'applied' => $applied,
                 ]);
-            } catch (\Throwable $e) {
+            } catch (\Exception $e) {
                 Log::warning('RuleEngineService: rule failed', [
                     'rule' => $rule->name(),
                     'transaction_id' => $transaction->id,
@@ -88,7 +88,7 @@ class RuleEngineService
             }
         }
 
-        return $results->sortByDesc('confidence')->values();
+        return $ruleMatches->sortByDesc('confidence')->values();
     }
 
     /**
@@ -116,12 +116,12 @@ class RuleEngineService
         $applied = 0;
 
         foreach ($transactions as $transaction) {
-            $results = $this->run($transaction);
+            $ruleMatches = $this->evaluateRules($transaction);
             $processed++;
 
-            if ($results->isNotEmpty()) {
+            if ($ruleMatches->isNotEmpty()) {
                 $matched++;
-                $applied += $results->where('applied', true)->count();
+                $applied += $ruleMatches->where('applied', true)->count();
             }
         }
 

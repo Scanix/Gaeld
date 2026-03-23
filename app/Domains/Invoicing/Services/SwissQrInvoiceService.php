@@ -15,6 +15,10 @@ use Sprain\SwissQrBill\Reference\QrPaymentReferenceGenerator;
 
 class SwissQrInvoiceService
 {
+    private const DEFAULT_COUNTRY = 'CH';
+    private const DEFAULT_CURRENCY = 'CHF';
+    private const ALLOWED_CURRENCIES = ['CHF', 'EUR'];
+
     /**
      * Generate a QR reference (QRR) for an invoice.
      *
@@ -36,77 +40,15 @@ class SwissQrInvoiceService
      */
     public function buildQrBill(Invoice $invoice, Organization $organization): QrBill
     {
-        $invoice->loadMissing('client');
+        $invoice->loadMissing(['customer']);
 
         $qrBill = QrBill::create();
 
-        // Creditor (the organization issuing the invoice)
-        $creditorAddress = StructuredAddress::createWithStreet(
-            $organization->legal_name ?? $organization->name,
-            $organization->address ?? '',
-            null,
-            $organization->postal_code ?? '',
-            $organization->city ?? '',
-            $organization->country ?? 'CH',
-        );
+        $this->setCreditorInfo($qrBill, $invoice, $organization);
+        $this->setDebtorInfo($qrBill, $invoice);
+        $this->setPaymentAmount($qrBill, $invoice);
+        $this->setPaymentReference($qrBill, $invoice);
 
-        $qrBill->setCreditor($creditorAddress);
-
-        // Creditor IBAN
-        $iban = $invoice->qr_iban ?? $organization->qr_iban ?? '';
-        $qrBill->setCreditorInformation(
-            CreditorInformation::create($iban),
-        );
-
-        // Debtor (the client receiving the invoice)
-        $client = $invoice->client;
-        if ($client) {
-            $debtorAddress = StructuredAddress::createWithStreet(
-                $client->name,
-                $client->address ?? '',
-                null,
-                $client->postal_code ?? '',
-                $client->city ?? '',
-                $client->country ?? 'CH',
-            );
-
-            $qrBill->setUltimateDebtor($debtorAddress);
-        }
-
-        // Payment amount
-        $currency = $invoice->currency ?? 'CHF';
-        if (! in_array($currency, ['CHF', 'EUR'], true)) {
-            $currency = 'CHF';
-        }
-
-        $qrBill->setPaymentAmountInformation(
-            PaymentAmountInformation::create($currency, (float) $invoice->total),
-        );
-
-        // Payment reference
-        $qrType = $invoice->qr_type ?? 'QRR';
-
-        if ($qrType === 'QRR' && $invoice->qr_reference) {
-            $qrBill->setPaymentReference(
-                PaymentReference::create(
-                    PaymentReference::TYPE_QR,
-                    $invoice->qr_reference,
-                ),
-            );
-        } elseif ($qrType === 'SCOR' && $invoice->qr_reference) {
-            $qrBill->setPaymentReference(
-                PaymentReference::create(
-                    PaymentReference::TYPE_SCOR,
-                    $invoice->qr_reference,
-                ),
-            );
-        } else {
-            $qrBill->setPaymentReference(
-                PaymentReference::create(PaymentReference::TYPE_NON),
-            );
-        }
-
-        // Additional info
         $qrBill->setAdditionalInformation(
             AdditionalInformation::create($invoice->number ?? ''),
         );
@@ -114,8 +56,75 @@ class SwissQrInvoiceService
         return $qrBill;
     }
 
+    private function setCreditorInfo(QrBill $qrBill, Invoice $invoice, Organization $organization): void
+    {
+        $creditorAddress = StructuredAddress::createWithStreet(
+            $organization->legal_name ?? $organization->name,
+            $organization->address ?? '',
+            null,
+            $organization->postal_code ?? '',
+            $organization->city ?? '',
+            $organization->country ?? self::DEFAULT_COUNTRY,
+        );
+
+        $qrBill->setCreditor($creditorAddress);
+
+        $iban = $invoice->qr_iban ?? $organization->qr_iban ?? '';
+        $qrBill->setCreditorInformation(
+            CreditorInformation::create($iban),
+        );
+    }
+
+    private function setDebtorInfo(QrBill $qrBill, Invoice $invoice): void
+    {
+        $customer = $invoice->customer;
+        if (! $customer) {
+            return;
+        }
+
+        $debtorAddress = StructuredAddress::createWithStreet(
+            $customer->name,
+            $customer->address ?? '',
+            null,
+            $customer->postal_code ?? '',
+            $customer->city ?? '',
+            $customer->country ?? self::DEFAULT_COUNTRY,
+        );
+
+        $qrBill->setUltimateDebtor($debtorAddress);
+    }
+
+    private function setPaymentAmount(QrBill $qrBill, Invoice $invoice): void
+    {
+        $currency = $invoice->currency ?? self::DEFAULT_CURRENCY;
+        if (! in_array($currency, self::ALLOWED_CURRENCIES, true)) {
+            $currency = self::DEFAULT_CURRENCY;
+        }
+
+        $qrBill->setPaymentAmountInformation(
+            PaymentAmountInformation::create($currency, (float) $invoice->total),
+        );
+    }
+
+    private function setPaymentReference(QrBill $qrBill, Invoice $invoice): void
+    {
+        $qrType = $invoice->qr_type ?? 'QRR';
+
+        if ($qrType === 'QRR' && $invoice->qr_reference) {
+            $refType = PaymentReference::TYPE_QR;
+        } elseif ($qrType === 'SCOR' && $invoice->qr_reference) {
+            $refType = PaymentReference::TYPE_SCOR;
+        } else {
+            $refType = PaymentReference::TYPE_NON;
+        }
+
+        $qrBill->setPaymentReference(
+            PaymentReference::create($refType, $invoice->qr_reference ?? null),
+        );
+    }
+
     /**
-     * Generate QR code image as PNG binary.
+     * Generate a PNG data URI for the invoice QR code.
      */
     public function generateQrImage(Invoice $invoice, Organization $organization): string
     {

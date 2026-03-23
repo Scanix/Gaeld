@@ -2,7 +2,9 @@
 
 namespace App\Domains\Banking\Rules;
 
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Support\Money;
 
 /**
  * EE Rule: Detect recurring transactions by matching amount AND description
@@ -33,7 +35,7 @@ class RecurringEntryRule extends BaseRule
 
     public function matches(BankTransaction $transaction): bool
     {
-        if ($transaction->type !== BankTransaction::TYPE_DEBIT) {
+        if ($transaction->type !== BankTransactionType::Debit) {
             return false;
         }
 
@@ -44,13 +46,12 @@ class RecurringEntryRule extends BaseRule
         $orgId = $transaction->bankAccount->organization_id;
         $lookback = now()->subMonths(self::LOOKBACK_MONTHS);
 
-        $rawAmount = (string) $transaction->amount;
-        $absAmount = bccomp($rawAmount, '0', 2) < 0 ? bcmul($rawAmount, '-1', 2) : $rawAmount;
+        $absAmount = Money::absoluteAmount((string) $transaction->amount);
 
         // DEBIT amounts are stored as negative values; compare against negative range
         $count = BankTransaction::whereHas('bankAccount', fn ($q) => $q->where('organization_id', $orgId))
             ->where('is_reconciled', true)
-            ->where('type', BankTransaction::TYPE_DEBIT)
+            ->where('type', BankTransactionType::Debit)
             ->where('date', '>=', $lookback)
             ->where('id', '!=', $transaction->id)
             ->whereBetween('amount', [
@@ -62,10 +63,12 @@ class RecurringEntryRule extends BaseRule
         return $count >= self::MIN_OCCURRENCES;
     }
 
+    /**
+     * Intentional no-op: confidence 70 is below the auto-apply threshold (100).
+     * The engine surfaces the recurring-entry suggestion to the UI; the user must confirm.
+     */
     public function apply(BankTransaction $transaction): void
     {
-        // For recurring entries, the engine surfaces the suggestion to the UI.
-        // The actual categorization (creating an expense) must be confirmed by the user.
-        // No automated write happens here — confidence 70 is below the auto-apply threshold.
+        // Surface-only rule: no automated write. User confirmation required.
     }
 }

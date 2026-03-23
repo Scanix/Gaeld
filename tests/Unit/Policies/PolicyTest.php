@@ -11,7 +11,7 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Policies\ExpensePolicy;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Policies\InvoicePolicy;
 use App\Domains\Organizations\Models\Organization;
@@ -92,14 +92,14 @@ class PolicyTest extends TestCase
     {
         $policy = new InvoicePolicy();
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client',
         ]);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-001',
             'status' => InvoiceStatus::Draft->value,
             'issue_date' => now()->toDateString(),
@@ -118,14 +118,14 @@ class PolicyTest extends TestCase
     {
         $policy = new InvoicePolicy();
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client',
         ]);
 
         $paidInvoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-002',
             'status' => InvoiceStatus::Paid->value,
             'issue_date' => now()->toDateString(),
@@ -143,14 +143,14 @@ class PolicyTest extends TestCase
     {
         $policy = new InvoicePolicy();
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client',
         ]);
 
         $draftInvoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-003',
             'status' => InvoiceStatus::Draft->value,
             'issue_date' => now()->toDateString(),

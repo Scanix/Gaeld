@@ -10,6 +10,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X } from 'lucide-vue-next'
+import HelpText from '@/Components/HelpText.vue'
 import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -33,7 +34,7 @@ const props = defineProps({
   unpaidInvoices: { type: Object, default: () => ({ count: 0, total: 0 }) },
   pendingExpenses: { type: Object, default: () => ({ count: 0, total: 0 }) },
   recentTransactions: { type: Array, default: () => [] },
-  monthlyData: { type: Object, default: () => ({ labels: [], revenue: [], expenses: [], forecast: [], revenueItems: [], expenseItems: [], forecastItems: [] }) },
+  monthlyBreakdown: { type: Object, default: () => ({ labels: [], revenue: [], expenses: [], forecast: [], revenueItems: [], expenseItems: [], forecastItems: [] }) },
 })
 
 const profit = computed(() => props.revenue - props.expenses)
@@ -46,23 +47,23 @@ const summaryCards = computed(() => [
 ])
 
 const chartData = computed(() => ({
-  labels: props.monthlyData.labels?.length ? props.monthlyData.labels : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  labels: props.monthlyBreakdown.labels?.length ? props.monthlyBreakdown.labels : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
   datasets: [
     {
       label: t('revenue'),
-      data: props.monthlyData.revenue?.length ? props.monthlyData.revenue : [0, 0, 0, 0, 0, 0],
+      data: props.monthlyBreakdown.revenue?.length ? props.monthlyBreakdown.revenue : [0, 0, 0, 0, 0, 0],
       backgroundColor: 'hsl(142 71% 45% / 0.8)',
       borderRadius: 4,
     },
     {
       label: t('expenses'),
-      data: props.monthlyData.expenses?.length ? props.monthlyData.expenses : [0, 0, 0, 0, 0, 0],
+      data: props.monthlyBreakdown.expenses?.length ? props.monthlyBreakdown.expenses : [0, 0, 0, 0, 0, 0],
       backgroundColor: 'hsl(0 84% 60% / 0.8)',
       borderRadius: 4,
     },
     {
       label: t('forecast'),
-      data: props.monthlyData.forecast?.length ? props.monthlyData.forecast : [0, 0, 0, 0, 0, 0],
+      data: props.monthlyBreakdown.forecast?.length ? props.monthlyBreakdown.forecast : [0, 0, 0, 0, 0, 0],
       backgroundColor: 'hsl(45 93% 58% / 0.7)',
       borderRadius: 4,
       borderColor: 'hsl(45 93% 47% / 1)',
@@ -123,16 +124,16 @@ const chartOptions = {
         afterBody: (items) => {
           if (!items.length) return ''
           const index = items[0].dataIndex
-          const rev = props.monthlyData.revenue?.[index] ?? 0
-          const exp = props.monthlyData.expenses?.[index] ?? 0
-          const fc = props.monthlyData.forecast?.[index] ?? 0
+          const rev = props.monthlyBreakdown.revenue?.[index] ?? 0
+          const exp = props.monthlyBreakdown.expenses?.[index] ?? 0
+          const fc = props.monthlyBreakdown.forecast?.[index] ?? 0
           const net = rev - exp
           const lines = []
 
           // Detail items
-          const revItems = props.monthlyData.revenueItems?.[index] ?? []
-          const expItems = props.monthlyData.expenseItems?.[index] ?? []
-          const fcItems = props.monthlyData.forecastItems?.[index] ?? []
+          const revItems = props.monthlyBreakdown.revenueItems?.[index] ?? []
+          const expItems = props.monthlyBreakdown.expenseItems?.[index] ?? []
+          const fcItems = props.monthlyBreakdown.forecastItems?.[index] ?? []
 
           if (revItems.length) {
             lines.push('', `── ${t('revenue')} ──`)
@@ -179,6 +180,10 @@ const transactionColumns = computed(() => [
 
 <template>
   <AppLayout :title="t('dashboard')" help-page="getting-started">
+    <HelpText :title="t('help_dashboard_title')" class="mb-6">
+      <p>{{ t('help_dashboard_text') }}</p>
+    </HelpText>
+
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <Card v-for="card in summaryCards" :key="card.title">

@@ -5,6 +5,7 @@ namespace App\Domains\Invoicing\Actions;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\SwissQrInvoiceService;
 use App\Domains\Organizations\Models\Organization;
+use Sprain\SwissQrBill\PaymentPart\Output\DisplayOptions;
 use Sprain\SwissQrBill\PaymentPart\Output\TcPdfOutput\TcPdfOutput;
 use TCPDF;
 
@@ -21,7 +22,7 @@ class GenerateQrInvoicePdfAction
      */
     public function execute(Invoice $invoice, Organization $organization, string $language = 'en'): string
     {
-        $invoice->loadMissing(['client', 'lines.vatRate']);
+        $invoice->loadMissing(['customer', 'lines.vatRate']);
 
         $tcpdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8');
         $tcpdf->setPrintHeader(false);
@@ -45,8 +46,8 @@ class GenerateQrInvoicePdfAction
         $qrLang = $langMap[$language] ?? 'en';
 
         $output = new TcPdfOutput($qrBill, $qrLang, $tcpdf);
-        $output->setPrintable(false);
-        $output->getPaymentPart();
+        $displayOptions = (new DisplayOptions())->setPrintable(false);
+        $output->setDisplayOptions($displayOptions)->getPaymentPart();
 
         return $tcpdf->Output('', 'S');
     }
@@ -73,20 +74,20 @@ class GenerateQrInvoicePdfAction
             $tcpdf->Cell(75, 4, $organization->vat_number, 0, 1, 'R');
         }
 
-        // Client info (top left)
-        $client = $invoice->client;
-        if ($client) {
+        // Customer info (top left)
+        $customer = $invoice->customer;
+        if ($customer) {
             $tcpdf->SetXY(15, 45);
             $tcpdf->SetFont('Helvetica', 'B', 10);
-            $tcpdf->Cell(80, 5, $client->name, 0, 1);
+            $tcpdf->Cell(80, 5, $customer->name, 0, 1);
 
             $tcpdf->SetFont('Helvetica', '', 9);
-            $clientAddress = array_filter([
-                $client->address,
-                trim(($client->postal_code ?? '') . ' ' . ($client->city ?? '')),
-                $client->country ?? 'CH',
+            $customerAddress = array_filter([
+                $customer->address,
+                trim(($customer->postal_code ?? '') . ' ' . ($customer->city ?? '')),
+                $customer->country ?? 'CH',
             ]);
-            foreach ($clientAddress as $line) {
+            foreach ($customerAddress as $line) {
                 $tcpdf->Cell(80, 4, $line, 0, 1);
             }
         }

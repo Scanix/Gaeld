@@ -7,7 +7,7 @@ use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Organizations\Traits\BelongsToOrganization;
+use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +15,25 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
+/**
+ * @property string $id
+ * @property string $organization_id
+ * @property string|null $journal_entry_id
+ * @property int|null $vat_rate_id
+ * @property string $category
+ * @property string|null $description
+ * @property string $amount
+ * @property string $vat_amount
+ * @property \Illuminate\Support\Carbon $date
+ * @property string|null $vendor
+ * @property string|null $receipt_path
+ * @property ExpenseStatus $status
+ * @property string $currency
+ * @property int|null $supplier_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ */
 class Expense extends Model
 {
     use BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;
@@ -77,7 +96,7 @@ class Expense extends Model
             'description' => $this->description ?? '',
             'vendor' => $this->vendor ?? '',
             'category' => $this->category,
-            'amount' => (float) $this->amount,
+            'amount' => (string) $this->amount,
             'status' => $this->status?->value ?? '',
         ];
     }

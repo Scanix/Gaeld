@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Accounting\Controllers\AccountingController;
+use App\Domains\Accounting\Controllers\YearEndClosingController;
 use App\Domains\Banking\Controllers\BankingController;
 use App\Domains\Banking\Controllers\ReconciliationController;
 use App\Domains\Contacts\Controllers\CustomerController;
@@ -8,13 +9,15 @@ use App\Domains\Contacts\Controllers\SupplierController;
 use App\Domains\Expenses\Controllers\ExpenseController;
 use App\Domains\Invoicing\Controllers\InvoiceController;
 use App\Domains\Organizations\Controllers\OrganizationController;
+use App\Domains\Organizations\Controllers\OnboardingController;
 use App\Domains\Reporting\Controllers\ReportController;
+use App\Domains\Users\Controllers\AuthenticatedSessionController;
+use App\Domains\Users\Controllers\EmailVerificationController;
+use App\Domains\Users\Controllers\PasswordResetController;
+use App\Domains\Users\Controllers\RegisteredUserController;
 use App\Domains\Users\Controllers\UserController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\PasswordResetController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Domains\Reporting\Controllers\DashboardController;
-use App\Http\Controllers\SetupWizardController;
+use App\Domains\Organizations\Controllers\SetupWizardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,16 +43,36 @@ Route::middleware('guest')->group(function () {
     Route::post('/setup', [SetupWizardController::class, 'store'])->name('setup.store');
 });
 
+// Email verification (authenticated but not yet verified)
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+});
+
+// Onboarding (verified but no organization yet)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/onboarding', [OnboardingController::class, 'create'])->name('onboarding');
+    Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
+});
+
+// Logout (available to any authenticated user)
+Route::middleware('auth')->post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
 // Authenticated routes
 Route::middleware(['auth', 'verified', 'org'])->group(function () {
-    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Accounting
     Route::get('/accounting/chart-of-accounts', [AccountingController::class, 'chartOfAccounts'])->name('accounting.chart');
     Route::get('/accounting/journal-entries', [AccountingController::class, 'journalEntries'])->name('accounting.journal');
-    Route::get('/accounting/trial-balance', [AccountingController::class, 'trialBalance'])->name('accounting.trial-balance');
+    Route::get('/accounting/trial-balance', [AccountingController::class, 'trialBalance'])->name('accounting.trialBalance');
+    Route::get('/accounting/year-end-closing', [YearEndClosingController::class, 'index'])->name('accounting.closing');
+    Route::post('/accounting/year-end-closing', [YearEndClosingController::class, 'store'])->name('accounting.closing.store');
 
     // Invoices
     Route::resource('invoices', InvoiceController::class);
@@ -57,16 +80,19 @@ Route::middleware(['auth', 'verified', 'org'])->group(function () {
     Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment'])->name('invoices.payment');
     Route::post('/invoices/{invoice}/duplicate', [InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
     Route::get('/invoices/{invoice}/qr-pdf', [InvoiceController::class, 'downloadQrPdf'])->name('invoices.qr-pdf');
+    Route::delete('/invoices/{invoice}/justificatif', [InvoiceController::class, 'removeJustificatif'])->name('invoices.justificatif.remove');
+    Route::get('/invoices/{invoice}/justificatif', [InvoiceController::class, 'downloadJustificatif'])->name('invoices.justificatif.download');
 
     // Expenses
     Route::resource('expenses', ExpenseController::class);
     Route::post('/expenses/{expense}/approve', [ExpenseController::class, 'approve'])->name('expenses.approve');
     Route::post('/expenses/{expense}/post', [ExpenseController::class, 'postToLedger'])->name('expenses.post');
     Route::delete('/expenses/{expense}/receipt', [ExpenseController::class, 'removeReceipt'])->name('expenses.receipt.remove');
+    Route::get('/expenses/{expense}/receipt', [ExpenseController::class, 'downloadReceipt'])->name('expenses.receipt.download');
 
     // Reports
     Route::get('/reports/profit-and-loss', [ReportController::class, 'profitAndLoss'])->name('reports.pnl');
-    Route::get('/reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('reports.balance-sheet');
+    Route::get('/reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('reports.balanceSheet');
 
     // Banking (CE — core banking features)
     Route::get('/banking', [BankingController::class, 'index'])->name('banking.index');
@@ -101,6 +127,7 @@ Route::middleware(['auth', 'verified', 'org'])->group(function () {
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/profile/toggle-help', [UserController::class, 'toggleHelp'])->name('profile.toggle-help');
 
     // Contacts — Customers (CE)
     Route::resource('customers', CustomerController::class);

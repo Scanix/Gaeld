@@ -10,6 +10,7 @@ import { ArrowLeftRight } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 import { formatCurrency } from '@/lib/utils'
 import { computed } from 'vue'
+import HelpText from '@/Components/HelpText.vue'
 
 const props = defineProps({
   bankAccounts: { type: Array, default: () => [] },
@@ -28,6 +29,10 @@ const columns = computed(() => [
 
 <template>
   <AppLayout :title="t('reconciliation') || 'Reconciliation'">
+    <HelpText :title="t('help_reconciliation_title')" class="mb-6">
+      <p>{{ t('help_reconciliation_text') }}</p>
+    </HelpText>
+
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-xl font-semibold">{{ t('reconciliation') || 'Reconciliation' }}</h2>
     </div>

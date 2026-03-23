@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Exceptions;
 
-use App\Domains\Accounting\Exceptions\FeatureDisabledException;
+use App\Support\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use PHPUnit\Framework\TestCase;
 

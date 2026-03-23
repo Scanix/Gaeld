@@ -15,7 +15,7 @@ class FeatureFlagServiceProvider extends ServiceProvider
 
         // Blade directives for feature flags
         Blade::if('feature', function (string $feature) {
-            return \App\Services\FeatureFlag::enabled($feature);
+            return \App\Support\FeatureFlag::enabled($feature);
         });
     }
 }

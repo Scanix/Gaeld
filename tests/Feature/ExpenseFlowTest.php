@@ -7,9 +7,10 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
+use App\Domains\Expenses\Actions\PostExpenseAction;
+use App\Domains\Expenses\DTOs\CreateExpenseData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
-use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,7 +53,7 @@ class ExpenseFlowTest extends TestCase
     {
         $action = new CreateExpenseAction();
 
-        return $action->execute(array_merge([
+        return $action->execute(CreateExpenseData::fromArray(array_merge([
             'organization_id' => $this->org->id,
             'category' => 'Software and Subscriptions',
             'description' => 'Adobe Creative Cloud',
@@ -60,7 +61,7 @@ class ExpenseFlowTest extends TestCase
             'vat_amount' => 56.70,
             'date' => '2026-03-16',
             'vendor' => 'Adobe Inc.',
-        ], $overrides));
+        ], $overrides)));
     }
 
     public function test_complete_expense_flow_with_approval(): void
@@ -76,8 +77,8 @@ class ExpenseFlowTest extends TestCase
         $this->assertEquals(ExpenseStatus::Approved, $expense->status);
 
         // 3. Post expense to ledger
-        $expenseService = app(ExpenseService::class);
-        $expense = $expenseService->postExpense($expense, '6530');
+        $postAction = app(PostExpenseAction::class);
+        $expense = $postAction->execute($expense, '6530');
 
         $this->assertEquals(ExpenseStatus::Posted, $expense->status);
         $this->assertNotNull($expense->journal_entry_id);
@@ -102,9 +103,14 @@ class ExpenseFlowTest extends TestCase
 
         $this->assertEquals(ExpenseStatus::Pending, $expense->status);
 
-        // Post expense to ledger (direct — skips approval in service layer)
-        $expenseService = app(ExpenseService::class);
-        $expense = $expenseService->postExpense($expense, '6530');
+        // Approve expense first (state machine: Pending → Approved → Posted)
+        $approveAction = new ApproveExpenseAction();
+        $expense = $approveAction->execute($expense);
+        $this->assertEquals(ExpenseStatus::Approved, $expense->status);
+
+        // Post expense to ledger
+        $postAction = app(PostExpenseAction::class);
+        $expense = $postAction->execute($expense, '6530');
 
         $this->assertEquals(ExpenseStatus::Posted, $expense->status);
         $this->assertNotNull($expense->journal_entry_id);
@@ -137,12 +143,15 @@ class ExpenseFlowTest extends TestCase
             'description' => null,
         ]);
 
-        $expenseService = app(ExpenseService::class);
-        $expenseService->postExpense($expense, '6530');
+        $approveAction = new ApproveExpenseAction();
+        $expense = $approveAction->execute($expense);
+
+        $postAction = app(PostExpenseAction::class);
+        $postAction->execute($expense, '6530');
 
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('already posted');
 
-        $expenseService->postExpense($expense->fresh(), '6530');
+        $postAction->execute($expense->fresh(), '6530');
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 use App\Domains\Reporting\Jobs\GenerateReportsJob;
-use App\Services\FeatureFlag;
+use App\Support\FeatureFlag;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 

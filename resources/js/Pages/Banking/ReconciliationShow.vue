@@ -222,7 +222,7 @@ const currentSuggestions = computed(() => {
                     <Check class="h-3 w-3" />
                     <span class="font-medium">{{ confidenceLabel(inv.match_score) }}</span>
                     {{ inv.number }} ({{ formatCurrency(inv.total) }})
-                    <span v-if="inv.client" class="opacity-70">— {{ inv.client.name }}</span>
+                    <span v-if="inv.customer || inv.client" class="opacity-70">— {{ (inv.customer ?? inv.client).name }}</span>
                   </button>
                 </template>
                 <template v-if="suggestions[tx.id].expenses?.length">
@@ -333,7 +333,7 @@ const currentSuggestions = computed(() => {
                 <span class="font-medium">{{ inv.number }}</span>
                 <span>{{ formatCurrency(inv.total) }}</span>
               </div>
-              <span v-if="inv.client" class="text-xs text-muted-foreground">{{ inv.client.name }}</span>
+              <span v-if="inv.customer || inv.client" class="text-xs text-muted-foreground">{{ (inv.customer ?? inv.client).name }}</span>
             </button>
           </div>
           <FormInput

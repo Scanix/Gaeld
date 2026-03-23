@@ -2,16 +2,26 @@
 
 namespace App\Console\Commands;
 
+use App\Domains\Organizations\DTOs\CreateOrganizationData;
+use App\Domains\Organizations\Services\OrganizationService;
+use App\Domains\Organizations\Services\OrganizationSetupService;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
-use Database\Seeders\SwissChartOfAccountsSeeder;
-use Database\Seeders\SwissVatRatesSeeder;
+use App\Domains\Users\DTOs\CreateUserData;
+use App\Domains\Users\Services\UserService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class GaeldInstallCommand extends Command
 {
+    public function __construct(
+        private readonly UserService $userService,
+        private readonly OrganizationService $organizationService,
+        private readonly OrganizationSetupService $organizationSetupService,
+    ) {
+        parent::__construct();
+    }
+
     protected $signature = 'gaeld:install
         {--demo : Seed demo data for testing}';
 
@@ -38,14 +48,14 @@ class GaeldInstallCommand extends Command
         if ($this->option('no-interaction')) {
             $adminName = 'Admin';
             $adminEmail = 'admin@gaeld.local';
-            $adminPassword = 'password';
+            $adminPassword = Str::random(16);
             $orgName = 'My Company';
             $currency = 'CHF';
             $locale = 'en';
         } else {
             $adminName = $this->ask('Admin name', 'Admin');
             $adminEmail = $this->ask('Admin email', 'admin@gaeld.local');
-            $adminPassword = $this->secret('Admin password (min 8 chars)') ?? 'password';
+            $adminPassword = $this->secret('Admin password (min 8 chars)') ?? Str::random(16);
             $orgName = $this->ask('Organization name', 'My Company');
             $currency = $this->choice('Default currency', ['CHF', 'EUR', 'USD', 'GBP'], 0);
             $locale = $this->choice('Default language', ['en', 'fr', 'de', 'it', 'rm'], 0);
@@ -56,37 +66,31 @@ class GaeldInstallCommand extends Command
             $adminName, $adminEmail, $adminPassword, $orgName, $currency, $locale
         ) {
             DB::transaction(function () use ($adminName, $adminEmail, $adminPassword, $orgName, $currency, $locale) {
-                $user = User::create([
-                    'name' => $adminName,
-                    'email' => $adminEmail,
-                    'password' => Hash::make($adminPassword),
-                    'locale' => $locale,
-                    'email_verified_at' => now(),
-                ]);
+                $user = $this->userService->create(new CreateUserData(
+                    name: $adminName,
+                    email: $adminEmail,
+                    password: $adminPassword,
+                    locale: $locale,
+                    emailVerifiedAt: now(),
+                ));
 
-                $org = Organization::create([
-                    'name' => $orgName,
-                    'legal_name' => $orgName,
-                    'currency' => $currency,
-                    'locale' => $locale,
-                    'country' => 'CH',
-                ]);
-
-                $org->users()->attach($user->id, ['role' => 'owner']);
+                $this->organizationService->create($user, new CreateOrganizationData(
+                    name: $orgName,
+                    legalName: $orgName,
+                    currency: $currency,
+                    locale: $locale,
+                    country: 'CH',
+                ));
             });
         });
 
         // Step 5: Seed chart of accounts
-        $this->components->task('Seeding Swiss chart of accounts (Kontenrahmen KMU)', function () {
-            app(SwissChartOfAccountsSeeder::class)->run();
+        $this->components->task('Seeding Swiss chart of accounts and VAT rates', function () {
+            $org = \App\Domains\Organizations\Models\Organization::latest()->first();
+            $this->organizationSetupService->seedSwissDefaults($org);
         });
 
-        // Step 6: Seed VAT rates
-        $this->components->task('Seeding Swiss VAT rates', function () {
-            app(SwissVatRatesSeeder::class)->run();
-        });
-
-        // Step 7: Demo data (optional)
+        // Step 6: Demo data (optional)
         if ($this->option('demo')) {
             $this->components->task('Seeding demo data', function () {
                 $this->callSilently('db:seed', [
@@ -96,7 +100,7 @@ class GaeldInstallCommand extends Command
             });
         }
 
-        // Step 8: Cache config
+        // Step 7: Cache config
         $this->components->task('Caching configuration', function () {
             $this->callSilently('config:cache');
             $this->callSilently('route:cache');
@@ -109,6 +113,9 @@ class GaeldInstallCommand extends Command
 
         $this->components->twoColumnDetail('URL', config('app.url'));
         $this->components->twoColumnDetail('Admin Email', $adminEmail);
+        if ($this->option('no-interaction')) {
+            $this->components->twoColumnDetail('Admin Password', $adminPassword);
+        }
         $this->components->twoColumnDetail('Currency', $currency);
 
         $this->newLine();

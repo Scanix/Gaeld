@@ -4,16 +4,20 @@ namespace Tests\Feature;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Banking\Enums\BankTransactionType;
+use App\Domains\Banking\Enums\CamtFormat;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
+use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -42,7 +46,7 @@ class ReconciliationFlowTest extends TestCase
         $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
 
         // Bind current organization
-        app()->instance('current_organization', $this->organization);
+        app(CurrentOrganization::class)->set($this->organization);
 
         $this->accounts['bank'] = Account::create([
             'organization_id' => $this->organization->id,
@@ -83,7 +87,7 @@ class ReconciliationFlowTest extends TestCase
 
         $import = $importService->importCamtFile($this->bankAccount, $xml, 'test.xml');
 
-        $this->assertEquals('camt053', $import->format);
+        $this->assertEquals(CamtFormat::Camt053, $import->format);
         $this->assertEquals('STMT-2026-001', $import->statement_id);
         $this->assertEquals(3, $import->transaction_count);
         $this->assertCount(3, $import->transactions);
@@ -102,7 +106,7 @@ class ReconciliationFlowTest extends TestCase
 
         $import = $importService->importCamtFile($this->bankAccount, $xml, 'notification.xml');
 
-        $this->assertEquals('camt054', $import->format);
+        $this->assertEquals(CamtFormat::Camt054, $import->format);
         $this->assertEquals('NOTIF-2026-001', $import->statement_id);
         $this->assertEquals(2, $import->transaction_count);
     }
@@ -129,15 +133,16 @@ class ReconciliationFlowTest extends TestCase
     public function test_reconcile_transaction_with_invoice(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Acme AG',
         ]);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-2026-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -153,7 +158,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-10',
             'description' => 'Payment from Acme AG',
             'amount' => 5000.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'INV-2026-001',
         ]);
 
@@ -171,6 +176,7 @@ class ReconciliationFlowTest extends TestCase
     public function test_reconcile_transaction_with_expense(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $expense = Expense::create([
             'organization_id' => $this->organization->id,
@@ -189,7 +195,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-12',
             'description' => 'GitHub Pro subscription',
             'amount' => 200.00,
-            'type' => BankTransaction::TYPE_DEBIT,
+            'type' => BankTransactionType::Debit,
             'reference' => 'EXP-GITHUB',
         ]);
 
@@ -207,24 +213,25 @@ class ReconciliationFlowTest extends TestCase
     public function test_cannot_reconcile_already_reconciled_transaction(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $transaction = BankTransaction::create([
             'bank_account_id' => $this->bankAccount->id,
             'date' => '2026-03-10',
             'description' => 'Already reconciled',
             'amount' => 100.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'is_reconciled' => true,
         ]);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client',
         ]);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-TEST',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -244,17 +251,18 @@ class ReconciliationFlowTest extends TestCase
     public function test_manual_reconcile_with_contra_account(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $transaction = BankTransaction::create([
             'bank_account_id' => $this->bankAccount->id,
             'date' => '2026-03-14',
             'description' => 'Misc income',
             'amount' => 1500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'MISC-001',
         ]);
 
-        $result = $reconciliationService->reconcileManual($transaction, '3000');
+        $result = $reconciliationService->reconcileWithContraAccount($transaction, '3000');
 
         $this->assertTrue($result->is_reconciled);
         $this->assertNotNull($result->journal_entry_id);
@@ -268,15 +276,16 @@ class ReconciliationFlowTest extends TestCase
     public function test_suggestions_match_by_amount(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Acme AG',
         ]);
 
         Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-MATCH',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -292,27 +301,28 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-10',
             'description' => 'Wire transfer',
             'amount' => 2500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
         ]);
 
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
-        $this->assertEquals('INV-MATCH', $suggestions['invoices']->first()->number);
+        $this->assertEquals('INV-MATCH', $suggestions['invoices']->first()->invoice->number);
     }
 
     public function test_suggestions_match_by_reference(): void
     {
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Swiss Corp',
         ]);
 
         Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-REF-TEST',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -328,14 +338,14 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-10',
             'description' => 'Payment',
             'amount' => 500.00, // Different amount
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'INV-REF-TEST', // Matching reference
         ]);
 
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
 
         $this->assertNotEmpty($suggestions['invoices']);
-        $this->assertEquals('INV-REF-TEST', $suggestions['invoices']->first()->number);
+        $this->assertEquals('INV-REF-TEST', $suggestions['invoices']->first()->invoice->number);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -347,9 +357,10 @@ class ReconciliationFlowTest extends TestCase
         config(['features.auto_reconciliation' => false]);
 
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         $this->expectException(\DomainException::class);
-        $this->expectExceptionMessage('Enterprise Edition');
+        $this->expectExceptionMessage('Feature [auto_reconciliation] is not enabled.');
 
         $reconciliationService->autoReconcile($this->bankAccount);
     }
@@ -359,16 +370,17 @@ class ReconciliationFlowTest extends TestCase
         config(['features.auto_reconciliation' => true]);
 
         $reconciliationService = app(ReconciliationService::class);
+        $suggestionService = app(SuggestionService::class);
 
         // Create a high-confidence match
-        $client = Client::create([
+        $client = Customer::create([
             'organization_id' => $this->organization->id,
             'name' => 'Acme AG',
         ]);
 
         Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-AUTO-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -384,7 +396,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Payment from Acme AG',
             'amount' => 7500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'INV-AUTO-001',
             'debtor_name' => 'Acme AG',
         ]);

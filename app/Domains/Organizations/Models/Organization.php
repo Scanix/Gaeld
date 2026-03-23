@@ -4,7 +4,7 @@ namespace App\Domains\Organizations\Models;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Models\BankAccount;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,12 +43,9 @@ class Organization extends Model
         return $this->hasMany(Account::class);
     }
 
-    /**
-     * @deprecated Use customers() instead. Remove after migrating client_id data to customer_id.
-     */
-    public function clients(): HasMany
+    public function customers(): HasMany
     {
-        return $this->hasMany(Client::class);
+        return $this->hasMany(Customer::class);
     }
 
     public function bankAccounts(): HasMany

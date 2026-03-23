@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Services\FeatureFlag;
+use App\Support\FeatureFlag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

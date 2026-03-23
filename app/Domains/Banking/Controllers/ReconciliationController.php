@@ -2,17 +2,23 @@
 
 namespace App\Domains\Banking\Controllers;
 
+use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
+use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Support\Exceptions\FeatureDisabledException;
 use App\Http\Controllers\Controller;
-use App\Services\FeatureFlag;
+use App\Support\FeatureFlag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,6 +27,7 @@ class ReconciliationController extends Controller
     public function __construct(
         private BankImportService $importService,
         private ReconciliationService $reconciliationService,
+        private SuggestionService $suggestionService,
     ) {}
 
     /**
@@ -55,7 +62,7 @@ class ReconciliationController extends Controller
         $filter = $request->input('filter', 'unreconciled');
 
         $transactionsQuery = $bankAccount->transactions()
-            ->with(['matchedInvoice.client', 'matchedExpense', 'journalEntry'])
+            ->with(['matchedInvoice.customer', 'matchedExpense', 'journalEntry'])
             ->orderByDesc('date');
 
         if ($filter === 'unreconciled') {
@@ -66,7 +73,7 @@ class ReconciliationController extends Controller
 
         $transactions = $transactionsQuery->paginate(30);
 
-        $suggestions = $this->reconciliationService->getSuggestionsForTransactions($transactions->items());
+        $suggestions = $this->suggestionService->generateSuggestionsForTransactions($transactions->items());
 
         return Inertia::render('Banking/ReconciliationShow', [
             'bankAccount' => $bankAccount->load('ledgerAccount'),
@@ -102,7 +109,7 @@ class ReconciliationController extends Controller
 
             return redirect()->route('reconciliation.show', $bankAccount)
                 ->with('success', "{$import->transaction_count} transactions imported from {$filename}.");
-        } catch (\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
             return redirect()->back()
                 ->with('error', $e->getMessage());
         }
@@ -117,7 +124,11 @@ class ReconciliationController extends Controller
         $this->authorize('update', $bankAccount);
 
         $validated = $request->validate([
-            'invoice_id' => 'required|uuid|exists:invoices,id',
+            'invoice_id' => [
+                'required',
+                'uuid',
+                Rule::exists('invoices', 'id')->where('organization_id', $bankAccount->organization_id),
+            ],
         ]);
 
         $invoice = Invoice::where('organization_id', $bankAccount->organization_id)
@@ -125,13 +136,12 @@ class ReconciliationController extends Controller
 
         try {
             $this->reconciliationService->reconcileWithInvoice($transaction, $invoice);
-
-            return redirect()->back()
-                ->with('success', "Transaction reconciled with invoice {$invoice->number}.");
-        } catch (\DomainException $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage());
+        } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
+
+        return redirect()->back()
+            ->with('success', "Transaction reconciled with invoice {$invoice->number}.");
     }
 
     /**
@@ -143,7 +153,11 @@ class ReconciliationController extends Controller
         $this->authorize('update', $bankAccount);
 
         $validated = $request->validate([
-            'expense_id' => 'required|uuid|exists:expenses,id',
+            'expense_id' => [
+                'required',
+                'uuid',
+                Rule::exists('expenses', 'id')->where('organization_id', $bankAccount->organization_id),
+            ],
             'expense_account_code' => 'required|string|max:10',
         ]);
 
@@ -156,13 +170,12 @@ class ReconciliationController extends Controller
                 $expense,
                 $validated['expense_account_code'],
             );
-
-            return redirect()->back()
-                ->with('success', 'Transaction reconciled with expense.');
-        } catch (\DomainException $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage());
+        } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
+
+        return redirect()->back()
+            ->with('success', 'Transaction reconciled with expense.');
     }
 
     /**
@@ -178,17 +191,16 @@ class ReconciliationController extends Controller
         ]);
 
         try {
-            $this->reconciliationService->reconcileManual(
+            $this->reconciliationService->reconcileWithContraAccount(
                 $transaction,
                 $validated['contra_account_code'],
             );
-
-            return redirect()->back()
-                ->with('success', 'Transaction reconciled.');
-        } catch (\DomainException $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage());
+        } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
+
+        return redirect()->back()
+            ->with('success', 'Transaction reconciled.');
     }
 
     /**
@@ -201,13 +213,12 @@ class ReconciliationController extends Controller
 
         try {
             $this->reconciliationService->confirmMatch($match);
-
-            return redirect()->back()
-                ->with('success', "Match confirmed and payment recorded for invoice {$match->invoice->number}.");
-        } catch (\DomainException $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage());
+        } catch (AlreadyReconciledException|UnlinkedBankAccountException|InvalidPaymentException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
+
+        return redirect()->back()
+            ->with('success', "Match confirmed and payment recorded for invoice {$match->invoice->number}.");
     }
 
     /**
@@ -219,12 +230,11 @@ class ReconciliationController extends Controller
 
         try {
             $result = $this->reconciliationService->autoReconcile($bankAccount);
-
-            return redirect()->back()
-                ->with('success', "Auto-reconciliation complete: {$result['matched']} matched, {$result['unmatched']} unmatched.");
-        } catch (\DomainException $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage());
+        } catch (FeatureDisabledException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
+
+        return redirect()->back()
+            ->with('success', "Auto-reconciliation complete: {$result['matched']} matched, {$result['unmatched']} unmatched.");
     }
 }

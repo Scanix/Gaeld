@@ -2,18 +2,16 @@
 
 namespace App\Domains\Accounting\Services;
 
-use App\Domains\Accounting\AccountCode;
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Exceptions\AlreadyPostedException;
+use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
+use App\Domains\Accounting\Exceptions\InvalidEntryDataException;
 use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
-use App\Domains\Banking\Models\BankTransaction;
-use App\Domains\Expenses\Enums\ExpenseStatus;
-use App\Domains\Expenses\Models\Expense;
-use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -26,13 +24,13 @@ use Illuminate\Support\Facades\DB;
  * - Account existence validation within the organization
  * - Duplicate reference prevention
  *
- * Domain services (InvoiceService, ExpenseService, BankingService) delegate
- * here for the actual ledger write. Convenience methods postInvoice(),
- * postExpense(), and postBankTransaction() provide direct one-call posting
- * for use in seeders, CLI commands, or plugin code.
+ * Domain actions (FinalizeInvoiceAction, PostExpenseAction, BankingService)
+ * call postEntry() for the actual ledger write.
  */
 class LedgerService
 {
+    private const REFERENCE_PREFIX_REVERSAL = 'REV-';
+
     // ──────────────────────────────────────────────────────────────
     //  Core Posting
     // ──────────────────────────────────────────────────────────────
@@ -44,21 +42,21 @@ class LedgerService
      * must have a matching credit — the method validates this before
      * persisting. The resulting JournalEntry is immediately marked as posted.
      *
-     * @param  string  $organizationId  UUID of the owning organization
-     * @param  array{date: string, reference?: string, description?: string}  $entryData
-     * @param  array<array{account_id: int, debit: float, credit: float, description?: string}>  $lines
+     * @param  string            $organizationId  UUID of the owning organization
+     * @param  JournalEntryData  $entry           Header + balanced lines
      * @return JournalEntry  The posted journal entry with lines eager-loaded
      *
-     * @throws UnbalancedEntryException  When SUM(debit) ≠ SUM(credit)
-     * @throws \InvalidArgumentException  When amounts are zero or accounts invalid
+     * @throws UnbalancedEntryException      When SUM(debit) ≠ SUM(credit)
+     * @throws InvalidEntryDataException     When amounts are zero or accounts invalid
+     * @throws DuplicateReferenceException   When a posted entry with the same reference already exists
      */
-    public function postEntry(string $organizationId, array $entryData, array $lines): JournalEntry
+    public function postEntry(string $organizationId, JournalEntryData $entry): JournalEntry
     {
-        $this->validateBalance($lines);
-        $this->validateAccounts($organizationId, $lines);
-        $this->guardDuplicateReference($organizationId, $entryData['reference'] ?? null);
+        $this->validateBalance($entry->lines);
+        $this->validateAccounts($organizationId, $entry->lines);
+        $this->throwIfDuplicateReference($organizationId, $entry->reference);
 
-        return $this->persistEntry($organizationId, $entryData, $lines, true);
+        return $this->persistEntry($organizationId, $entry, true);
     }
 
     /**
@@ -67,12 +65,12 @@ class LedgerService
      * Drafts still enforce balance validation but are not visible
      * in account balances or trial-balance reports until posted.
      */
-    public function createDraft(string $organizationId, array $entryData, array $lines): JournalEntry
+    public function createDraft(string $organizationId, JournalEntryData $entry): JournalEntry
     {
-        $this->validateBalance($lines);
-        $this->validateAccounts($organizationId, $lines);
+        $this->validateBalance($entry->lines);
+        $this->validateAccounts($organizationId, $entry->lines);
 
-        return $this->persistEntry($organizationId, $entryData, $lines, false);
+        return $this->persistEntry($organizationId, $entry, false);
     }
 
     /**
@@ -101,171 +99,24 @@ class LedgerService
      *
      * Swaps debit ↔ credit on every line and posts a new entry
      * with a REV- reference prefix.
+     *
+     * @throws \App\Domains\Accounting\Exceptions\DuplicateReferenceException if this entry has already been reversed
      */
     public function reverseEntry(JournalEntry $journalEntry, ?string $description = null): JournalEntry
     {
-        $lines = $journalEntry->lines->map(fn (TransactionLine $line) => [
-            'account_id' => $line->account_id,
-            'debit' => $line->credit,
-            'credit' => $line->debit,
-            'description' => 'Reversal: ' . ($line->description ?? ''),
-        ])->toArray();
+        $lines = $journalEntry->lines->map(fn (TransactionLine $line) => new JournalLineData(
+            accountId: $line->account_id,
+            debit: (string) $line->credit,
+            credit: (string) $line->debit,
+            description: 'Reversal: ' . ($line->description ?? ''),
+        ))->all();
 
-        return $this->postEntry($journalEntry->organization_id, [
-            'date' => now()->toDateString(),
-            'reference' => 'REV-' . $journalEntry->reference,
-            'description' => $description ?? 'Reversal of ' . $journalEntry->reference,
-        ], $lines);
-    }
-
-    // ──────────────────────────────────────────────────────────────
-    //  Domain Convenience Methods
-    // ──────────────────────────────────────────────────────────────
-
-    /**
-     * Finalize and post an invoice to the ledger.
-     *
-     * Accounting effect:
-     *   Debit  1100 Accounts Receivable  (invoice total)
-     *   Credit 3000 Revenue from Services (invoice total)
-     *
-     * The invoice status is moved from draft → sent and the resulting
-     * journal entry is linked via invoice.journal_entry_id.
-     *
-     * @param  Invoice  $invoice  Must be in STATUS_DRAFT
-     * @return Invoice  The updated invoice with journalEntry loaded
-     *
-     * @throws \DomainException  When invoice is not a draft
-     */
-    public function postInvoice(Invoice $invoice): Invoice
-    {
-        if ($invoice->status !== InvoiceStatus::Draft) {
-            throw new \DomainException('Only draft invoices can be posted.');
-        }
-
-        return DB::transaction(function () use ($invoice) {
-            $orgId = $invoice->organization_id;
-
-            $ar = $this->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
-            $revenue = $this->resolveAccount($orgId, AccountCode::REVENUE);
-
-            $journalEntry = $this->postEntry($orgId, [
-                'date' => $invoice->issue_date->toDateString(),
-                'reference' => $invoice->number,
-                'description' => "Invoice {$invoice->number} — " . ($invoice->client->name ?? 'N/A'),
-            ], [
-                ['account_id' => $ar->id, 'debit' => $invoice->total, 'credit' => 0, 'description' => 'Accounts Receivable'],
-                ['account_id' => $revenue->id, 'debit' => 0, 'credit' => $invoice->total, 'description' => 'Revenue'],
-            ]);
-
-            $invoice->update([
-                'status' => InvoiceStatus::Sent->value,
-                'journal_entry_id' => $journalEntry->id,
-            ]);
-
-            return $invoice->fresh(['lines', 'client', 'journalEntry.lines']);
-        });
-    }
-
-    /**
-     * Post an expense to the ledger.
-     *
-     * Accounting effect:
-     *   Debit  {expenseAccountCode} Expense account  (expense amount)
-     *   Credit {bankAccountCode}    Bank / Cash       (expense amount)
-     *
-     * @param  Expense  $expense  Must not already be posted
-     * @param  string   $expenseAccountCode  Chart-of-accounts code for the expense category (e.g. '6530')
-     * @param  string   $bankAccountCode     Payment source account code (default '1020')
-     * @return Expense  The updated expense with journalEntry loaded
-     *
-     * @throws \DomainException  When expense is already posted
-     */
-    public function postExpense(Expense $expense, string $expenseAccountCode, string $bankAccountCode = AccountCode::BANK_CASH): Expense
-    {
-        if ($expense->status === ExpenseStatus::Posted) {
-            throw new \DomainException('Expense is already posted.');
-        }
-
-        return DB::transaction(function () use ($expense, $expenseAccountCode, $bankAccountCode) {
-            $orgId = $expense->organization_id;
-
-            $expenseAccount = $this->resolveAccount($orgId, $expenseAccountCode);
-            $bankAccount = $this->resolveAccount($orgId, $bankAccountCode);
-
-            $journalEntry = $this->postEntry($orgId, [
-                'date' => $expense->date->toDateString(),
-                'reference' => 'EXP-' . $expense->id,
-                'description' => $expense->description ?? $expense->category,
-            ], [
-                ['account_id' => $expenseAccount->id, 'debit' => $expense->amount, 'credit' => 0, 'description' => $expense->description],
-                ['account_id' => $bankAccount->id, 'debit' => 0, 'credit' => $expense->amount, 'description' => 'Payment from bank'],
-            ]);
-
-            $expense->update([
-                'status' => ExpenseStatus::Posted->value,
-                'journal_entry_id' => $journalEntry->id,
-            ]);
-
-            return $expense->fresh(['journalEntry.lines']);
-        });
-    }
-
-    /**
-     * Post a bank transaction to the ledger.
-     *
-     * Accounting effect for deposits (credit type):
-     *   Debit  Bank account (1020)    (amount)
-     *   Credit Contra account          (amount)
-     *
-     * Accounting effect for withdrawals (debit type):
-     *   Debit  Contra account          (amount)
-     *   Credit Bank account (1020)     (amount)
-     *
-     * @param  BankTransaction  $transaction       The bank transaction (must have bankAccount loaded)
-     * @param  string           $contraAccountCode  The opposing account code (e.g. '3000' for revenue, '6530' for software expense)
-     * @return BankTransaction  The updated transaction with journalEntry loaded
-     *
-     * @throws \DomainException  When bank account has no linked ledger account
-     */
-    public function postBankTransaction(BankTransaction $transaction, string $contraAccountCode): BankTransaction
-    {
-        return DB::transaction(function () use ($transaction, $contraAccountCode) {
-            $bankAccount = $transaction->bankAccount;
-            $orgId = $bankAccount->organization_id;
-
-            $bankLedgerAccount = $bankAccount->ledgerAccount;
-            if (! $bankLedgerAccount) {
-                throw new \DomainException('Bank account is not linked to a ledger account.');
-            }
-
-            $contraAccount = $this->resolveAccount($orgId, $contraAccountCode);
-            $rawAmount = (string) $transaction->amount;
-            $amount = bccomp($rawAmount, '0', 2) < 0 ? bcmul($rawAmount, '-1', 2) : $rawAmount;
-            $isDeposit = $transaction->type === BankTransaction::TYPE_CREDIT;
-
-            $lines = $isDeposit
-                ? [
-                    ['account_id' => $bankLedgerAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => 'Bank deposit'],
-                    ['account_id' => $contraAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => $transaction->description ?? ''],
-                ]
-                : [
-                    ['account_id' => $contraAccount->id, 'debit' => $amount, 'credit' => 0, 'description' => $transaction->description ?? ''],
-                    ['account_id' => $bankLedgerAccount->id, 'debit' => 0, 'credit' => $amount, 'description' => 'Bank withdrawal'],
-                ];
-
-            $journalEntry = $this->postEntry($orgId, [
-                'date' => $transaction->date->toDateString(),
-                'reference' => $transaction->reference ?? 'BNK-' . $transaction->id,
-                'description' => $transaction->description,
-            ], $lines);
-
-            $transaction->update(['journal_entry_id' => $journalEntry->id]);
-
-            $this->updateBankAccountBalance($bankAccount, (string) $amount, $isDeposit);
-
-            return $transaction->fresh(['journalEntry.lines', 'bankAccount']);
-        });
+        return $this->postEntry($journalEntry->organization_id, new JournalEntryData(
+            date: now()->toDateString(),
+            reference: self::REFERENCE_PREFIX_REVERSAL . $journalEntry->reference,
+            description: $description ?? 'Reversal of ' . $journalEntry->reference,
+            lines: $lines,
+        ));
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -295,13 +146,9 @@ class LedgerService
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addHour(), function () use ($accountId, $account, $fromDate, $toDate) {
             $query = TransactionLine::where('account_id', $accountId)
                 ->whereHas('journalEntry', function ($q) use ($fromDate, $toDate) {
-                    $q->where('is_posted', true);
-                    if ($fromDate) {
-                        $q->where('date', '>=', $fromDate);
-                    }
-                    if ($toDate) {
-                        $q->where('date', '<=', $toDate);
-                    }
+                    $q->where('is_posted', true)
+                        ->when($fromDate, fn ($q, $date) => $q->where('date', '>=', $date))
+                        ->when($toDate, fn ($q, $date) => $q->where('date', '<=', $date));
                 });
 
             $debits = (string) (clone $query)->sum('debit');
@@ -314,6 +161,21 @@ class LedgerService
     }
 
     /**
+     * Get the most recent posted journal entries for an organization.
+     *
+     * @return \Illuminate\Support\Collection<int, JournalEntry>
+     */
+    public function recentEntries(string $organizationId, int $limit = 10): \Illuminate\Support\Collection
+    {
+        return JournalEntry::where('organization_id', $organizationId)
+            ->with('lines.account')
+            ->orderByDesc('date')
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Get trial balance for an organization.
      *
      * Returns all accounts with non-zero posted balances, ordered by code.
@@ -321,7 +183,7 @@ class LedgerService
      *
      * @param  string       $organizationId  UUID of the organization
      * @param  string|null  $asOfDate        Cut-off date (inclusive)
-     * @return array<array{account_code: string, account_name: string, account_type: string, debit: float, credit: float}>
+     * @return array<array{account_code: string, account_name: string, account_type: string, debit: string, credit: string}>
      */
     public function trialBalance(string $organizationId, ?string $asOfDate = null): array
     {
@@ -329,41 +191,51 @@ class LedgerService
         $orgTag = "org:{$organizationId}:ledger";
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $asOfDate) {
-            $query = Account::where('accounts.organization_id', $organizationId)
-                ->where('accounts.is_active', true)
-                ->leftJoin('transaction_lines', 'transaction_lines.account_id', '=', 'accounts.id')
-                ->leftJoin('journal_entries', function ($join) use ($asOfDate) {
-                    $join->on('journal_entries.id', '=', 'transaction_lines.journal_entry_id')
-                        ->where('journal_entries.is_posted', true);
-                    if ($asOfDate) {
-                        $join->where('journal_entries.date', '<=', $asOfDate);
-                    }
-                })
-                ->groupBy('accounts.id', 'accounts.code', 'accounts.name', 'accounts.type')
-                ->orderBy('accounts.code')
-                ->selectRaw('accounts.id, accounts.code, accounts.name, accounts.type, COALESCE(SUM(transaction_lines.debit), 0) as total_debit, COALESCE(SUM(transaction_lines.credit), 0) as total_credit');
+            $rows = $this->buildTrialBalanceQuery($organizationId, $asOfDate)->get();
 
-            $balances = [];
-
-            foreach ($query->get() as $row) {
-                $isDebitNormal = $this->isDebitNormalAccount($row->type);
-                $balance = $isDebitNormal
-                    ? bcsub((string) $row->total_debit, (string) $row->total_credit, 2)
-                    : bcsub((string) $row->total_credit, (string) $row->total_debit, 2);
-
-                if (bccomp($balance, '0', 2) !== 0) {
-                    $balances[] = [
-                        'account_code' => $row->code,
-                        'account_name' => $row->name,
-                        'account_type' => $row->type,
-                        'debit' => $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
-                        'credit' => ! $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
-                    ];
-                }
-            }
-
-            return $balances;
+            return $this->computeTrialBalances($rows);
         });
+    }
+
+    private function buildTrialBalanceQuery(string $organizationId, ?string $asOfDate): \Illuminate\Database\Eloquent\Builder
+    {
+        return Account::where('accounts.organization_id', $organizationId)
+            ->where('accounts.is_active', true)
+            ->leftJoin('transaction_lines', 'transaction_lines.account_id', '=', 'accounts.id')
+            ->leftJoin('journal_entries', function ($join) use ($asOfDate) {
+                $join->on('journal_entries.id', '=', 'transaction_lines.journal_entry_id')
+                    ->where('journal_entries.is_posted', true);
+                if ($asOfDate) {
+                    $join->where('journal_entries.date', '<=', $asOfDate);
+                }
+            })
+            ->groupBy('accounts.id', 'accounts.code', 'accounts.name', 'accounts.type')
+            ->orderBy('accounts.code')
+            ->selectRaw('accounts.id, accounts.code, accounts.name, accounts.type, COALESCE(SUM(transaction_lines.debit), 0) as total_debit, COALESCE(SUM(transaction_lines.credit), 0) as total_credit');
+    }
+
+    private function computeTrialBalances(\Illuminate\Support\Collection $rows): array
+    {
+        $balances = [];
+
+        foreach ($rows as $row) {
+            $isDebitNormal = $this->isDebitNormalAccount($row->type);
+            $balance = $isDebitNormal
+                ? bcsub((string) $row->total_debit, (string) $row->total_credit, 2)
+                : bcsub((string) $row->total_credit, (string) $row->total_debit, 2);
+
+            if (bccomp($balance, '0', 2) !== 0) {
+                $balances[] = [
+                    'account_code' => $row->code,
+                    'account_name' => $row->name,
+                    'account_type' => $row->type,
+                    'debit' => $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
+                    'credit' => ! $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
+                ];
+            }
+        }
+
+        return $balances;
     }
 
     /**
@@ -377,21 +249,6 @@ class LedgerService
         Cache::tags(["org:{$organizationId}:reports"])->flush();
     }
 
-    /**
-     * Update a bank account's denormalized balance field.
-     *
-     * This is the single authoritative path for balance mutations.
-     * Deposits add to balance; withdrawals subtract.
-     */
-    public function updateBankAccountBalance(\App\Domains\Banking\Models\BankAccount $bankAccount, string $amount, bool $isDeposit): void
-    {
-        $newBalance = $isDeposit
-            ? bcadd((string) $bankAccount->balance, $amount, 2)
-            : bcsub((string) $bankAccount->balance, $amount, 2);
-
-        $bankAccount->update(['balance' => $newBalance]);
-    }
-
     // ──────────────────────────────────────────────────────────────
     //  Validation
     // ──────────────────────────────────────────────────────────────
@@ -400,20 +257,20 @@ class LedgerService
      * Validate that all account IDs in the lines exist and belong to the organization.
      *
      * @param  string  $organizationId
-     * @param  array<array{account_id: int}>  $lines
+     * @param  JournalLineData[]  $lines
      *
-     * @throws \InvalidArgumentException  When an account is missing or belongs to another org
+     * @throws InvalidEntryDataException  When an account is missing or belongs to another org
      */
-    public function validateAccounts(string $organizationId, array $lines): void
+    private function validateAccounts(string $organizationId, array $lines): void
     {
-        $accountIds = array_unique(array_column($lines, 'account_id'));
+        $accountIds = array_unique(array_map(fn ($l) => $l->accountId, $lines));
 
         $existingCount = Account::where('organization_id', $organizationId)
             ->whereIn('id', $accountIds)
             ->count();
 
         if ($existingCount !== count($accountIds)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidEntryDataException(
                 'One or more accounts do not exist or do not belong to this organization.'
             );
         }
@@ -446,24 +303,24 @@ class LedgerService
             ->firstOrFail();
     }
 
-    private function persistEntry(string $organizationId, array $entryData, array $lines, bool $isPosted): JournalEntry
+    private function persistEntry(string $organizationId, JournalEntryData $entry, bool $isPosted): JournalEntry
     {
-        return DB::transaction(function () use ($organizationId, $entryData, $lines, $isPosted) {
+        return DB::transaction(function () use ($organizationId, $entry, $isPosted) {
             $journalEntry = JournalEntry::create([
                 'organization_id' => $organizationId,
-                'date' => $entryData['date'],
-                'reference' => $entryData['reference'] ?? null,
-                'description' => $entryData['description'] ?? null,
+                'date' => $entry->date,
+                'reference' => $entry->reference,
+                'description' => $entry->description,
                 'is_posted' => $isPosted,
             ]);
 
-            foreach ($lines as $line) {
+            foreach ($entry->lines as $line) {
                 TransactionLine::create([
                     'journal_entry_id' => $journalEntry->id,
-                    'account_id' => $line['account_id'],
-                    'debit' => $line['debit'] ?? 0,
-                    'credit' => $line['credit'] ?? 0,
-                    'description' => $line['description'] ?? null,
+                    'account_id' => $line->accountId,
+                    'debit' => $line->debit,
+                    'credit' => $line->credit,
+                    'description' => $line->description,
                 ]);
             }
 
@@ -476,8 +333,12 @@ class LedgerService
         });
     }
 
-    private function isDebitNormalAccount(string $type): bool
+    private function isDebitNormalAccount(AccountType|string $type): bool
     {
+        if ($type instanceof AccountType) {
+            return $type->isDebitNormal();
+        }
+
         return AccountType::from($type)->isDebitNormal();
     }
 
@@ -487,7 +348,7 @@ class LedgerService
      * Uses bcmath for precision — no floating-point rounding errors.
      *
      * @throws UnbalancedEntryException  When debits ≠ credits
-     * @throws \InvalidArgumentException  When all amounts are zero
+     * @throws InvalidEntryDataException  When all amounts are zero
      */
     private function validateBalance(array $lines): void
     {
@@ -495,8 +356,8 @@ class LedgerService
         $totalCredit = '0';
 
         foreach ($lines as $line) {
-            $totalDebit = bcadd($totalDebit, (string) ($line['debit'] ?? 0), 2);
-            $totalCredit = bcadd($totalCredit, (string) ($line['credit'] ?? 0), 2);
+            $totalDebit = bcadd($totalDebit, (string) $line->debit, 2);
+            $totalCredit = bcadd($totalCredit, (string) $line->credit, 2);
         }
 
         if (bccomp($totalDebit, $totalCredit, 2) !== 0) {
@@ -506,7 +367,7 @@ class LedgerService
         }
 
         if (bccomp($totalDebit, '0', 2) === 0) {
-            throw new \InvalidArgumentException('Journal entry must have non-zero amounts.');
+            throw new InvalidEntryDataException('Journal entry must have non-zero amounts.');
         }
     }
 
@@ -515,16 +376,16 @@ class LedgerService
      *
      * Null references are always allowed (e.g. bank imports without ref).
      *
-     * @throws \DomainException  When a posted entry with the same reference exists
+     * @throws DuplicateReferenceException  When a posted entry with the same reference exists
      */
-    private function guardDuplicateReference(string $organizationId, ?string $reference): void
+    private function throwIfDuplicateReference(string $organizationId, ?string $reference): void
     {
         if ($reference === null) {
             return;
         }
 
         if ($this->isDuplicateReference($organizationId, $reference)) {
-            throw new \DomainException(
+            throw new DuplicateReferenceException(
                 "A posted journal entry with reference '{$reference}' already exists in this organization."
             );
         }

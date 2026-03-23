@@ -2,8 +2,9 @@
 
 namespace App\Domains\Banking\Rules;
 
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankTransaction;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Queries\SupplierQuery;
 
 /**
  * EE Rule: When a debit transaction creditor matches a known Supplier,
@@ -25,7 +26,7 @@ class SupplierCategoryRule extends BaseRule
 
     public function matches(BankTransaction $transaction): bool
     {
-        if ($transaction->type !== BankTransaction::TYPE_DEBIT) {
+        if ($transaction->type !== BankTransactionType::Debit) {
             return false;
         }
 
@@ -35,13 +36,7 @@ class SupplierCategoryRule extends BaseRule
 
         $orgId = $transaction->bankAccount->organization_id;
 
-        return Supplier::where('organization_id', $orgId)
-            ->whereNotNull('default_expense_category')
-            ->where(function ($q) use ($transaction) {
-                $q->where('name', 'ilike', '%' . $transaction->creditor_name . '%')
-                  ->orWhere($transaction->creditor_name, 'ilike', '%' . 'name' . '%');
-            })
-            ->exists();
+        return SupplierQuery::hasMatchingSupplier($orgId, $transaction->creditor_name);
     }
 
     public function apply(BankTransaction $transaction): void
@@ -52,30 +47,14 @@ class SupplierCategoryRule extends BaseRule
 
         $orgId = $transaction->bankAccount->organization_id;
 
-        $supplier = Supplier::where('organization_id', $orgId)
-            ->whereNotNull('default_expense_category')
-            ->get()
-            ->first(function ($supplier) use ($transaction) {
-                $creditor = strtolower($transaction->creditor_name);
-                $name = strtolower($supplier->name);
-
-                return str_contains($creditor, $name) || str_contains($name, $creditor);
-            });
+        $supplier = SupplierQuery::findByCreditorName($orgId, $transaction->creditor_name);
 
         if (! $supplier) {
             return;
         }
 
-        // Store category suggestion in transaction metadata (description prefix for now).
-        // A dedicated `suggested_category` column can be added in a future migration.
         $transaction->update([
-            'matched_expense_id' => null, // cleared — just a suggestion
+            'suggested_expense_category' => $supplier->default_expense_category,
         ]);
-
-        // Surface the suggestion via the transaction meta: attach supplier_id hint
-        // This is surfaced to the reconciliation UI without auto-creating an expense.
-        $transaction->forceFill([
-            'creditor_name' => $transaction->creditor_name,
-        ])->save();
     }
 }

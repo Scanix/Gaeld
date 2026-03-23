@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\FeatureFlag;
+use App\Support\FeatureFlag;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;

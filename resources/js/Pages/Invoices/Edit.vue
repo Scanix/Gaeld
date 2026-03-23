@@ -13,14 +13,15 @@ import { Plus, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
   invoice: Object,
-  clients: { type: Array, default: () => [] },
+  customers: { type: Array, default: () => [] },
   vatRates: { type: Array, default: () => [] },
+  justificatifUrl: { type: String, default: null },
 })
 
 const { t } = useTranslations()
 
 const form = useForm({
-  client_id: props.invoice.client_id ?? '',
+  customer_id: props.invoice.customer_id ?? '',
   number: props.invoice.number ?? '',
   issue_date: props.invoice.issue_date?.slice(0, 10) ?? '',
   due_date: props.invoice.due_date?.slice(0, 10) ?? '',
@@ -33,6 +34,7 @@ const form = useForm({
     unit_price: l.unit_price,
     vat_rate_id: l.vat_rate_id ?? '',
   })),
+  justificatif: null,
 })
 
 if (form.lines.length === 0) {
@@ -50,10 +52,17 @@ function removeLine(index) {
 }
 
 function submit() {
-  form.put(`/invoices/${props.invoice.id}`)
+  form.post(`/invoices/${props.invoice.id}`, {
+    forceFormData: true,
+    headers: { 'X-HTTP-Method-Override': 'PUT' },
+  })
 }
 
-const clientOptions = props.clients.map(c => ({ value: c.id, label: c.name }))
+function onJustificatifChange(e) {
+  form.justificatif = e.target.files[0] ?? null
+}
+
+const clientOptions = props.customers.map(c => ({ value: c.id, label: c.name }))
 const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
@@ -70,12 +79,12 @@ const vatOptions = [
         <form class="space-y-6" @submit.prevent="submit">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormSelect
-              id="client_id"
-              v-model="form.client_id"
+              id="customer_id"
+              v-model="form.customer_id"
               :label="t('client')"
               :options="clientOptions"
               :placeholder="t('select_client')"
-              :error="form.errors.client_id"
+              :error="form.errors.customer_id"
               required
             />
             <FormInput
@@ -186,6 +195,21 @@ const vatOptions = [
               :label="t('payment_terms')"
               placeholder="Net 30"
             />
+          </div>
+
+          <div>
+            <label for="justificatif" class="mb-1 block text-sm font-medium">{{ t('justificatif') }}</label>
+            <input
+              id="justificatif"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              class="block w-full text-sm text-[hsl(var(--muted-foreground))] file:mr-4 file:rounded-md file:border-0 file:bg-[hsl(var(--primary))] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[hsl(var(--primary-foreground))] hover:file:opacity-90"
+              @change="onJustificatifChange"
+            />
+            <p v-if="form.errors.justificatif" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.justificatif }}</p>
+            <p v-if="justificatifUrl && !form.justificatif" class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+              {{ t('justificatif_attached') }}
+            </p>
           </div>
 
           <div class="flex justify-end gap-3">

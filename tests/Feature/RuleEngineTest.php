@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
@@ -11,12 +12,11 @@ use App\Domains\Banking\Rules\RecurringEntryRule;
 use App\Domains\Banking\Rules\SupplierCategoryRule;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\RuleEngineService;
-use App\Domains\Contacts\Models\Supplier;
-use App\Domains\Invoicing\Actions\RecordPaymentAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -39,7 +39,7 @@ class RuleEngineTest extends TestCase
         $this->organization = Organization::create(['name' => 'Rule Test Org', 'currency' => 'CHF']);
         $this->organization->users()->attach($user->id, ['role' => 'owner']);
 
-        app()->instance('current_organization', $this->organization);
+        app(CurrentOrganization::class)->set($this->organization);
 
         $this->accounts['bank'] = Account::create([
             'organization_id' => $this->organization->id,
@@ -69,10 +69,10 @@ class RuleEngineTest extends TestCase
 
     public function test_qr_rule_matches_credit_with_structured_reference(): void
     {
-        $client = Client::create(['organization_id' => $this->organization->id, 'name' => 'Test Client']);
+        $client = Customer::create(['organization_id' => $this->organization->id, 'name' => 'Test Client']);
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
-            'client_id' => $client->id,
+            'customer_id' => $client->id,
             'number' => 'INV-2026-001',
             'status' => InvoiceStatus::Sent->value,
             'issue_date' => '2026-03-01',
@@ -89,13 +89,13 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Payment for invoice',
             'amount' => 1000.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'structured_reference' => '000000000000000012345678901',
             'import_hash' => 'hash-qr-test',
             'is_reconciled' => false,
         ]);
 
-        $rule = new QrReferencePaymentRule(app(ReconciliationService::class));
+        $rule = app(QrReferencePaymentRule::class);
 
         $this->assertTrue($rule->matches($transaction));
         $this->assertEquals(100, $rule->confidence());
@@ -109,13 +109,13 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Expense payment',
             'amount' => -500.00,
-            'type' => BankTransaction::TYPE_DEBIT,
+            'type' => BankTransactionType::Debit,
             'structured_reference' => '000000000000000099999999',
             'import_hash' => 'hash-debit-test',
             'is_reconciled' => false,
         ]);
 
-        $rule = new QrReferencePaymentRule(app(ReconciliationService::class));
+        $rule = app(QrReferencePaymentRule::class);
 
         $this->assertFalse($rule->matches($transaction));
     }
@@ -128,13 +128,13 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'No reference payment',
             'amount' => 500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'structured_reference' => null,
             'import_hash' => 'hash-no-ref',
             'is_reconciled' => false,
         ]);
 
-        $rule = new QrReferencePaymentRule(app(ReconciliationService::class));
+        $rule = app(QrReferencePaymentRule::class);
 
         $this->assertFalse($rule->matches($transaction));
     }
@@ -157,7 +157,7 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Income',
             'amount' => 100.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'import_hash' => 'hash-supplier-credit',
             'is_reconciled' => false,
         ]);
@@ -186,7 +186,7 @@ class RuleEngineTest extends TestCase
                 'date' => now()->subMonths($i)->toDateString(),
                 'description' => 'Monthly SaaS subscription',
                 'amount' => -99.00,
-                'type' => BankTransaction::TYPE_DEBIT,
+                'type' => BankTransactionType::Debit,
                 'import_hash' => "hash-recurring-past-{$i}",
                 'is_reconciled' => true,
             ]);
@@ -198,7 +198,7 @@ class RuleEngineTest extends TestCase
             'date' => now()->toDateString(),
             'description' => 'Monthly SaaS subscription',
             'amount' => -99.00,
-            'type' => BankTransaction::TYPE_DEBIT,
+            'type' => BankTransactionType::Debit,
             'import_hash' => 'hash-recurring-current',
             'is_reconciled' => false,
         ]);
@@ -221,7 +221,7 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Test',
             'amount' => 100.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'import_hash' => 'hash-ce-flag',
             'is_reconciled' => false,
         ]);
@@ -229,9 +229,9 @@ class RuleEngineTest extends TestCase
         $ruleEngine = app(RuleEngineService::class);
 
         $this->expectException(\DomainException::class);
-        $this->expectExceptionMessage('Enterprise Edition');
+        $this->expectExceptionMessage('Feature [rule_engine] is not enabled.');
 
-        $ruleEngine->run($transaction);
+        $ruleEngine->evaluateRules($transaction);
     }
 
     public function test_rule_engine_runs_when_flag_enabled(): void
@@ -244,7 +244,7 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Test payment',
             'amount' => 50.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'import_hash' => 'hash-ee-enabled',
             'is_reconciled' => false,
         ]);
@@ -252,7 +252,7 @@ class RuleEngineTest extends TestCase
         $ruleEngine = app(RuleEngineService::class);
 
         // Should not throw — returns an empty collection (no rules match)
-        $results = $ruleEngine->run($transaction);
+        $results = $ruleEngine->evaluateRules($transaction);
 
         $this->assertInstanceOf(\Illuminate\Support\Collection::class, $results);
     }
@@ -267,13 +267,13 @@ class RuleEngineTest extends TestCase
             'date' => '2026-03-15',
             'description' => 'Already reconciled',
             'amount' => 100.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'import_hash' => 'hash-reconciled',
             'is_reconciled' => true,
         ]);
 
         $ruleEngine = app(RuleEngineService::class);
-        $results = $ruleEngine->run($transaction);
+        $results = $ruleEngine->evaluateRules($transaction);
 
         $this->assertTrue($results->isEmpty());
     }

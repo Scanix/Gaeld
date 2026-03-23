@@ -4,14 +4,20 @@ namespace Database\Seeders;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
-use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Domains\Banking\Services\BankingService;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
+use App\Domains\Expenses\Actions\PostExpenseAction;
+use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
+use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Expenses\Enums\ExpenseStatus;
+use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Organizations\Models\Organization;
@@ -25,14 +31,21 @@ use Illuminate\Support\Facades\Hash;
  * After running this seeder the database contains:
  * - 2 organizations (Demo GmbH, Alpine Consulting Sàrl)
  * - 4 users with varying roles across orgs
- * - Clients, invoices, expenses, bank accounts with journal entries
+ * - Customers, invoices, expenses, bank accounts with journal entries
  * - Chart of accounts and VAT rates for each org
  */
 class DemoDataSeeder extends Seeder
 {
+    public function __construct(
+        private readonly FinalizeInvoiceAction $finalizeInvoice,
+        private readonly ApproveExpenseAction $approveExpense,
+        private readonly PostExpenseAction $postExpense,
+        private readonly BankingService $bankingService,
+        private readonly InvoiceService $invoiceService,
+    ) {}
+
     public function run(): void
     {
-        $ledger = app(LedgerService::class);
 
         // ── Users ────────────────────────────────────────────────
         $admin = User::firstOrCreate(
@@ -130,18 +143,17 @@ class DemoDataSeeder extends Seeder
         }
 
         // ── Seed demo data for Organization 1 ────────────────────
-        $this->seedOrganizationData($org1, $ledger);
+        $this->seedOrganizationData($org1);
 
         // ── Seed demo data for Organization 2 ────────────────────
-        $this->seedOrganization2Data($org2, $ledger);
+        $this->seedOrganization2Data($org2);
     }
 
-    private function seedOrganizationData(Organization $org, LedgerService $ledger): void
+    private function seedOrganizationData(Organization $org): void
     {
         $vatNormal = VatRate::where('organization_id', $org->id)
             ->where('code', 'NORMAL')
             ->first();
-
         // ── Bank Account ─────────────────────────────────────────
         $bankLedgerAccount = Account::where('organization_id', $org->id)
             ->where('code', '1020')
@@ -158,12 +170,11 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        // ── Clients ──────────────────────────────────────────────
-        $client1 = Client::firstOrCreate(
+        // ── Customers ────────────────────────────────────────────
+        $client1 = Customer::firstOrCreate(
             ['organization_id' => $org->id, 'email' => 'hans@acme.ch'],
             [
                 'name' => 'Acme AG',
-                'contact_name' => 'Hans Müller',
                 'address' => 'Hauptstrasse 10',
                 'city' => 'Bern',
                 'postal_code' => '3000',
@@ -171,11 +182,10 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        $client2 = Client::firstOrCreate(
+        $client2 = Customer::firstOrCreate(
             ['organization_id' => $org->id, 'email' => 'marie@swisstech.ch'],
             [
                 'name' => 'Swiss Tech Sàrl',
-                'contact_name' => 'Marie Dupont',
                 'address' => 'Rue du Lac 5',
                 'city' => 'Genève',
                 'postal_code' => '1200',
@@ -191,9 +201,9 @@ class DemoDataSeeder extends Seeder
         // ── Invoice 1: Posted + Paid ─────────────────────────────
         $inv1 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client1->id,
+            'customer_id' => $client1->id,
             'number' => 'INV-2026-001',
-            'status' => Invoice::STATUS_DRAFT,
+            'status' => InvoiceStatus::Draft->value,
             'issue_date' => now()->subDays(30),
             'due_date' => now(),
             'subtotal' => 5000.00,
@@ -215,22 +225,23 @@ class DemoDataSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $ledger->postInvoice($inv1);
+        $this->finalizeInvoice->execute($inv1);
 
         $inv1->refresh();
-        app(\App\Domains\Invoicing\Services\InvoiceService::class)
-            ->recordPayment($inv1, [
-                'amount' => 5405.00,
-                'payment_date' => now()->subDays(5)->toDateString(),
-                'payment_method' => 'bank',
-            ]);
+        $this->invoiceService
+            ->recordPayment($inv1, new RecordPaymentData(
+                amount: '5405.00',
+                paymentDate: now()->subDays(5)->toDateString(),
+                paymentMethod: PaymentMethod::Bank,
+                reference: null,
+            ));
 
         // ── Invoice 2: Posted (sent, unpaid) ─────────────────────
         $inv2 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client2->id,
+            'customer_id' => $client2->id,
             'number' => 'INV-2026-002',
-            'status' => Invoice::STATUS_DRAFT,
+            'status' => InvoiceStatus::Draft->value,
             'issue_date' => now()->subDays(10),
             'due_date' => now()->addDays(20),
             'subtotal' => 3200.00,
@@ -251,14 +262,14 @@ class DemoDataSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $ledger->postInvoice($inv2);
+        $this->finalizeInvoice->execute($inv2);
 
         // ── Invoice 3: Draft (not yet posted) ────────────────────
         $inv3 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client1->id,
+            'customer_id' => $client1->id,
             'number' => 'INV-2026-003',
-            'status' => Invoice::STATUS_DRAFT,
+            'status' => InvoiceStatus::Draft->value,
             'issue_date' => now(),
             'due_date' => now()->addDays(30),
             'subtotal' => 1500.00,
@@ -293,7 +304,8 @@ class DemoDataSeeder extends Seeder
             'currency' => 'CHF',
         ]);
 
-        $ledger->postExpense($exp1, '6530');
+        $this->approveExpense->execute($exp1);
+        $this->postExpense->execute($exp1, '6530');
 
         // ── Expense 2: Posted (Office Supplies) ──────────────────
         $exp2 = Expense::create([
@@ -308,7 +320,8 @@ class DemoDataSeeder extends Seeder
             'currency' => 'CHF',
         ]);
 
-        $ledger->postExpense($exp2, '6500');
+        $this->approveExpense->execute($exp2);
+        $this->postExpense->execute($exp2, '6500');
 
         // ── Expense 3: Pending (awaiting approval) ───────────────
         Expense::create([
@@ -337,14 +350,14 @@ class DemoDataSeeder extends Seeder
             'currency' => 'CHF',
         ]);
 
-        (new ApproveExpenseAction())->execute($exp4);
+        $this->approveExpense->execute($exp4);
 
         // ── Invoice 4: Partially paid ────────────────────────────
         $inv4 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client2->id,
+            'customer_id' => $client2->id,
             'number' => 'INV-2026-004',
-            'status' => Invoice::STATUS_DRAFT,
+            'status' => InvoiceStatus::Draft->value,
             'issue_date' => now()->subDays(20),
             'due_date' => now()->addDays(10),
             'subtotal' => 4000.00,
@@ -365,21 +378,21 @@ class DemoDataSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $ledger->postInvoice($inv4);
+        $this->finalizeInvoice->execute($inv4);
 
         $inv4->refresh();
-        app(\App\Domains\Invoicing\Services\InvoiceService::class)
-            ->recordPayment($inv4, [
-                'amount' => 2000.00,
-                'payment_date' => now()->subDays(3)->toDateString(),
-                'payment_method' => 'bank',
-                'reference' => 'Partial payment — Phase 1 deposit',
-            ]);
+        $this->invoiceService
+            ->recordPayment($inv4, new RecordPaymentData(
+                amount: '2000.00',
+                paymentDate: now()->subDays(3)->toDateString(),
+                paymentMethod: PaymentMethod::Bank,
+                reference: 'Partial payment — Phase 1 deposit',
+            ));
 
         // ── Invoice 5: Cancelled ─────────────────────────────────
         $inv5 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client1->id,
+            'customer_id' => $client1->id,
             'number' => 'INV-2026-005',
             'status' => InvoiceStatus::Cancelled,
             'issue_date' => now()->subDays(25),
@@ -408,25 +421,25 @@ class DemoDataSeeder extends Seeder
             'date' => now()->subDays(20),
             'description' => 'Freelance income — Logo design',
             'amount' => 2500.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'BNK-2026-001',
         ]);
 
-        $ledger->postBankTransaction($bnkTx1, '3000');
+        $this->bankingService->postBankTransaction($bnkTx1, '3000');
 
         $bnkTx2 = BankTransaction::create([
             'bank_account_id' => $bankAccount->id,
             'date' => now()->subDays(3),
             'description' => 'Office rent — March 2026',
             'amount' => 1800.00,
-            'type' => BankTransaction::TYPE_DEBIT,
+            'type' => BankTransactionType::Debit,
             'reference' => 'BNK-2026-002',
         ]);
 
-        $ledger->postBankTransaction($bnkTx2, '6000');
+        $this->bankingService->postBankTransaction($bnkTx2, '6000');
     }
 
-    private function seedOrganization2Data(Organization $org, LedgerService $ledger): void
+    private function seedOrganization2Data(Organization $org): void
     {
         $vatNormal = VatRate::where('organization_id', $org->id)
             ->where('code', 'NORMAL')
@@ -448,12 +461,11 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        // ── Clients ──────────────────────────────────────────────
-        $client1 = Client::firstOrCreate(
+        // ── Customers ────────────────────────────────────────────
+        $client1 = Customer::firstOrCreate(
             ['organization_id' => $org->id, 'email' => 'info@watchmaker.ch'],
             [
                 'name' => 'Watchmaker SA',
-                'contact_name' => 'Pierre Bonvin',
                 'address' => 'Avenue de la Gare 3',
                 'city' => 'Lausanne',
                 'postal_code' => '1003',
@@ -469,9 +481,9 @@ class DemoDataSeeder extends Seeder
         // ── Invoice: Posted (sent, unpaid) ───────────────────────
         $inv1 = Invoice::create([
             'organization_id' => $org->id,
-            'client_id' => $client1->id,
+            'customer_id' => $client1->id,
             'number' => 'ALP-2026-001',
-            'status' => Invoice::STATUS_DRAFT,
+            'status' => InvoiceStatus::Draft->value,
             'issue_date' => now()->subDays(5),
             'due_date' => now()->addDays(25),
             'subtotal' => 8500.00,
@@ -493,7 +505,7 @@ class DemoDataSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $ledger->postInvoice($inv1);
+        $this->finalizeInvoice->execute($inv1);
 
         // ── Expense: Posted ──────────────────────────────────────
         $exp1 = Expense::create([
@@ -509,7 +521,8 @@ class DemoDataSeeder extends Seeder
             'currency' => 'CHF',
         ]);
 
-        $ledger->postExpense($exp1, '6700');
+        $this->approveExpense->execute($exp1);
+        $this->postExpense->execute($exp1, '6700');
 
         // ── Bank Transaction ─────────────────────────────────────
         $bnkTx1 = BankTransaction::create([
@@ -517,10 +530,10 @@ class DemoDataSeeder extends Seeder
             'date' => now()->subDays(10),
             'description' => 'Consulting payment — February',
             'amount' => 4200.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
             'reference' => 'ALP-BNK-001',
         ]);
 
-        $ledger->postBankTransaction($bnkTx1, '3000');
+        $this->bankingService->postBankTransaction($bnkTx1, '3000');
     }
 }

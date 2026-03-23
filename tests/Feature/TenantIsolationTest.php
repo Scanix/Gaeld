@@ -4,13 +4,16 @@ namespace Tests\Feature;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\BankTransaction;
-use App\Domains\Invoicing\Models\Client;
+use App\Domains\Banking\Services\SuggestionService;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -43,7 +46,7 @@ class TenantIsolationTest extends TestCase
 
     private function setCurrentOrg(Organization $org): void
     {
-        app()->instance('current_organization', $org);
+        app(CurrentOrganization::class)->set($org);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -182,14 +185,14 @@ class TenantIsolationTest extends TestCase
         ]);
 
         // Create invoice in Org B (should NOT be suggested)
-        $clientB = Client::withoutGlobalScopes()->create([
+        $clientB = Customer::withoutGlobalScopes()->create([
             'organization_id' => $this->orgB->id,
             'name' => 'Client B',
         ]);
 
         Invoice::withoutGlobalScopes()->create([
             'organization_id' => $this->orgB->id,
-            'client_id' => $clientB->id,
+            'customer_id' => $clientB->id,
             'number' => 'INV-B-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -201,14 +204,14 @@ class TenantIsolationTest extends TestCase
         ]);
 
         // Create invoice in Org A
-        $clientA = Client::create([
+        $clientA = Customer::create([
             'organization_id' => $this->orgA->id,
             'name' => 'Client A',
         ]);
 
         Invoice::create([
             'organization_id' => $this->orgA->id,
-            'client_id' => $clientA->id,
+            'customer_id' => $clientA->id,
             'number' => 'INV-A-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
@@ -224,14 +227,14 @@ class TenantIsolationTest extends TestCase
             'date' => '2026-03-10',
             'description' => 'Payment',
             'amount' => 1000.00,
-            'type' => BankTransaction::TYPE_CREDIT,
+            'type' => BankTransactionType::Credit,
         ]);
 
-        $reconciliationService = app(\App\Domains\Banking\Services\ReconciliationService::class);
-        $suggestions = $reconciliationService->getSuggestions($transaction);
+        $suggestionService = app(SuggestionService::class);
+        $suggestions = $suggestionService->generateSuggestions($transaction);
 
         // Should only suggest Org A's invoice
-        $invoiceNumbers = $suggestions['invoices']->pluck('number')->toArray();
+        $invoiceNumbers = $suggestions['invoices']->map(fn ($s) => $s->invoice->number)->toArray();
         $this->assertContains('INV-A-001', $invoiceNumbers);
         $this->assertNotContains('INV-B-001', $invoiceNumbers);
     }

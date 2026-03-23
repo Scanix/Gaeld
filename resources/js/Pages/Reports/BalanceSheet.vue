@@ -11,6 +11,7 @@ import Button from '@/Components/UI/Button.vue'
 import { formatCurrency } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
+import HelpText from '@/Components/HelpText.vue'
 
 const props = defineProps({ report: Object })
 
@@ -37,6 +38,10 @@ const sections = computed(() => [
 
 <template>
   <AppLayout :title="t('balance_sheet')" help-page="reports">
+    <HelpText :title="t('help_balance_sheet_title')" class="mb-6">
+      <p>{{ t('help_balance_sheet_text') }}</p>
+    </HelpText>
+
     <div class="mb-6 flex items-end gap-4">
       <FormInput id="as_of_date" v-model="asOfDate" type="date" :label="t('as_of_date')" />
       <Button @click="applyFilter">{{ t('apply') }}</Button>

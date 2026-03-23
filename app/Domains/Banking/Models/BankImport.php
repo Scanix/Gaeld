@@ -2,13 +2,25 @@
 
 namespace App\Domains\Banking\Models;
 
+use App\Domains\Banking\Enums\CamtFormat;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Organizations\Traits\BelongsToOrganization;
+use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string $id
+ * @property string $organization_id
+ * @property int $bank_account_id
+ * @property string $filename
+ * @property CamtFormat $format
+ * @property string|null $statement_id
+ * @property int $transaction_count
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
 class BankImport extends Model
 {
     use BelongsToOrganization, HasUuids;
@@ -22,9 +34,12 @@ class BankImport extends Model
         'transaction_count',
     ];
 
-    public const FORMAT_CAMT053 = 'camt053';
-
-    public const FORMAT_CAMT054 = 'camt054';
+    protected function casts(): array
+    {
+        return [
+            'format' => CamtFormat::class,
+        ];
+    }
 
     public function organization(): BelongsTo
     {

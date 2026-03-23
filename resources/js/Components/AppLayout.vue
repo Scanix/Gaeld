@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import Sidebar from '@/Components/Sidebar.vue'
 import Topbar from '@/Components/Topbar.vue'
 import HelpSidebar from '@/Components/HelpSidebar.vue'
+import { useHelp } from '@/lib/useHelp'
 
 const props = defineProps({
   title: String,
@@ -13,20 +14,9 @@ const props = defineProps({
   },
 })
 
-const showHelp = ref(false)
+const { showHelp, toggleHelp } = useHelp()
 const collapsed = ref(false)
 const mobileOpen = ref(false)
-
-onMounted(() => {
-  if (props.helpPage) {
-    showHelp.value = localStorage.getItem('gaeld-help-open') === 'true'
-  }
-})
-
-function toggleHelp() {
-  showHelp.value = !showHelp.value
-  localStorage.setItem('gaeld-help-open', showHelp.value ? 'true' : 'false')
-}
 </script>
 
 <template>

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Models;
 
+use App\Domains\Accounting\Enums\VatEntryType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,11 +24,9 @@ class VatEntry extends Model
         return [
             'base_amount' => 'decimal:2',
             'vat_amount' => 'decimal:2',
+            'type' => VatEntryType::class,
         ];
     }
-
-    public const TYPE_INPUT = 'input';   // VAT on purchases (Vorsteuer)
-    public const TYPE_OUTPUT = 'output'; // VAT on sales (Umsatzsteuer)
 
     public function journalEntry(): BelongsTo
     {

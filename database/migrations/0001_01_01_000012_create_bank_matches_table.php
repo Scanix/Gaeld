@@ -24,7 +24,7 @@ return new class extends Migration
             $table->unsignedBigInteger('bank_transaction_id');
             $table->uuid('invoice_id');
             $table->integer('confidence'); // 100 = exact QR, 90 = amount+client, 70 = heuristic
-            $table->string('match_type'); // qr_reference, amount_client, heuristic
+            $table->string('match_type'); // qr_reference, amount_customer, heuristic
             $table->boolean('is_confirmed')->default(false);
             $table->timestamp('confirmed_at')->nullable();
             $table->timestamps();
