@@ -6,6 +6,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Users\Models\User;
+use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Organization extends Model
 {
-    use HasFactory, HasUuids;
+    use Auditable, HasFactory, HasUuids;
 
     protected $fillable = [
         'name',

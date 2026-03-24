@@ -4,6 +4,7 @@ namespace App\Domains\Accounting\Models;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Account extends Model
 {
-    use BelongsToOrganization, HasFactory;
+    use Auditable, BelongsToOrganization, HasFactory;
 
     protected $fillable = [
         'organization_id',

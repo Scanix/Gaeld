@@ -7,6 +7,7 @@ use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -36,7 +37,7 @@ use Laravel\Scout\Searchable;
  */
 class Expense extends Model
 {
-    use BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;
+    use Auditable, BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;
 
     protected $fillable = [
         'organization_id',

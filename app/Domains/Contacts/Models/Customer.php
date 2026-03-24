@@ -3,6 +3,7 @@
 namespace App\Domains\Contacts\Models;
 
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -32,7 +33,7 @@ use Laravel\Scout\Searchable;
  */
 class Customer extends Model
 {
-    use BelongsToOrganization, HasFactory, Searchable, SoftDeletes;
+    use Auditable, BelongsToOrganization, HasFactory, Searchable, SoftDeletes;
 
     protected $fillable = [
         'organization_id',

@@ -6,6 +6,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -40,7 +41,7 @@ use Laravel\Scout\Searchable;
  */
 class Invoice extends Model
 {
-    use BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;
+    use Auditable, BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;
 
     protected $fillable = [
         'organization_id',
