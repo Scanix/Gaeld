@@ -25,6 +25,12 @@ class EnsureHasOrganization
 
         app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($org->id);
 
+        \Log::info('EnsureHasOrganization: teamId set', [
+            'org' => $org->id,
+            'user' => $request->user()->id,
+            'path' => $request->path(),
+        ]);
+
         return $next($request);
     }
 }
