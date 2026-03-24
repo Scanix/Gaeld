@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "appstract/laravel-opcache": "^4.0",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^12.54",
         "laravel/scout": "^11.0",
