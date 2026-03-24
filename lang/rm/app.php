@@ -93,6 +93,7 @@ return [
     'clear_filter' => 'Stizzar il filter',
     'no_transactions_in_month' => 'Naginas transacziuns en :month.',
     'click_bar_filter' => 'cliccar sin ina barra per filtrar las transacziuns',
+    'all_countries' => 'Tut ils pajais',
 
     // Invoices
     'create_invoice' => 'Crear ina factura',
@@ -160,6 +161,16 @@ return [
     'cat_utilities' => 'Custs da gestiun',
     'cat_insurance' => 'Assicuranzas',
     'cat_other' => 'Auter',
+
+    // Customers
+    'new_customer' => 'Nov client',
+    'manage_customers' => 'Administrai e vesai voss clients.',
+    'no_customers_yet' => 'Anc nagins clients. Agiuntas Voss emprim client per cumenzar.',
+
+    // Suppliers
+    'new_supplier' => 'Nov furnider',
+    'manage_suppliers' => 'Administrai e vesai voss furniders.',
+    'no_suppliers_yet' => 'Anc nagins furniders. Agiuntas Voss emprim furnider per cumenzar.',
 
     // Accounting
     'posted' => 'Registrà',

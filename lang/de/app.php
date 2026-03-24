@@ -70,6 +70,7 @@ return [
     'finalize' => 'Abschliessen',
     'search' => 'Suchen…',
     'all_statuses' => 'Alle Status',
+    'all_countries' => 'Alle Länder',
 
     // Common labels
     'date' => 'Datum',
@@ -194,6 +195,16 @@ return [
     'cat_utilities' => 'Nebenkosten',
     'cat_insurance' => 'Versicherungen',
     'cat_other' => 'Sonstiges',
+
+    // Customers
+    'new_customer' => 'Neuer Kunde',
+    'manage_customers' => 'Verwalten und anzeigen Ihrer Kunden.',
+    'no_customers_yet' => 'Noch keine Kunden vorhanden. Fügen Sie Ihren ersten Kunden hinzu.',
+
+    // Suppliers
+    'new_supplier' => 'Neuer Lieferant',
+    'manage_suppliers' => 'Verwalten und anzeigen Ihrer Lieferanten.',
+    'no_suppliers_yet' => 'Noch keine Lieferanten vorhanden. Fügen Sie Ihren ersten Lieferanten hinzu.',
 
     // Accounting
     'posted' => 'Verbucht',

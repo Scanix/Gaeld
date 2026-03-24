@@ -70,6 +70,7 @@ return [
     'finalize' => 'Finalizza',
     'search' => 'Cerca…',
     'all_statuses' => 'Tutti gli stati',
+    'all_countries' => 'Tutti i paesi',
 
     // Common labels
     'date' => 'Data',
@@ -194,6 +195,16 @@ return [
     'cat_utilities' => 'Utenze',
     'cat_insurance' => 'Assicurazioni',
     'cat_other' => 'Altro',
+
+    // Customers
+    'new_customer' => 'Nuovo cliente',
+    'manage_customers' => 'Gestisci e visualizza i tuoi clienti.',
+    'no_customers_yet' => 'Nessun cliente presente. Aggiungi il tuo primo cliente per iniziare.',
+
+    // Suppliers
+    'new_supplier' => 'Nuovo fornitore',
+    'manage_suppliers' => 'Gestisci e visualizza i tuoi fornitori.',
+    'no_suppliers_yet' => 'Nessun fornitore presente. Aggiungi il tuo primo fornitore per iniziare.',
 
     // Accounting
     'posted' => 'Registrata',
