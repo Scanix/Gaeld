@@ -13,20 +13,21 @@ const props = defineProps({
   },
   baseUrl: {
     type: String,
-    default: 'http://localhost:3000',
+    default: null,
   },
 })
 
 defineEmits(['close'])
 
-const iframeSrc = computed(() => `${props.baseUrl}/docs/${props.page}`)
-const loadError = ref(false)
+const iframeSrc = computed(() => props.baseUrl ? `${props.baseUrl}/docs/${props.page}` : null)
+const loadError = ref(!props.baseUrl)
 
 function onIframeError() {
   loadError.value = true
 }
 
 onMounted(() => {
+  if (!iframeSrc.value) return
   // Check if iframe can load by testing a fetch (same-origin only)
   // Falls back gracefully if docs server is unavailable
   const controller = new AbortController()

@@ -47,6 +47,7 @@ class HandleInertiaRequests extends Middleware
             'locale' => App::getLocale(),
             'translations' => fn () => trans('app'),
             'features' => FeatureFlag::all(),
+            'docsBaseUrl' => config('docs.base_url'),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
