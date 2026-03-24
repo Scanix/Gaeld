@@ -22,7 +22,7 @@ class AccountPolicy
                 'error' => $e->getMessage(),
             ]);
         }
-        \Log::info('AccountPolicy::viewAny', [
+        \Log::error('DEBUG AccountPolicy::viewAny', [
             'user' => $user->id,
             'email' => $user->email,
             'org' => $org?->id,
