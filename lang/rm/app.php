@@ -336,4 +336,22 @@ return [
     'help_profit_loss_text' => 'Il quint da success mussa quant tia fatschenta ha gudagnà e dà ora durant ina perioda. Entradas minus expensas dat tes gudogn net (u perdita). Quai ta di sche tia fatschenta è rentabla.',
     'help_reconciliation_title' => 'Tge è la reconciliaziun bancara?',
     'help_reconciliation_text' => 'Reconciliaziun vul dir cumparegliar tias transacziuns bancaras cun las registraziuns en tia contabilitad. Quai garantescha che tes cudeschs reflecteschan exactamain tge ch\'è capità sin tes conto da banca. Importescha tes extract da conto e attribuescha mintga transacziun ad ina factura, ina expensa u ina registraziun manuala.',
+
+    // Signup / SaaS
+    'signup_title' => 'Cumenza tia prova gratuita da :days dis',
+    'signup_subtitle' => 'Nagina carta da credit necessaria. Annullescha en mintga mument.',
+    'signup_cta' => 'Cumenza prova da :days dis',
+    'signup_disclaimer' => 'Suenter la prova, vegns ti renvià a Stripe per agiuntar tes medi da pajament.',
+    'creating_account' => 'Crenum il conto…',
+    'unlimited_invoices' => 'Facturas illimitadas',
+    'trial_ends_in' => 'Tia prova finescha en :days di/dis.',
+    'upgrade_now' => 'Meglierar uss →',
+    'saas_admin' => 'Admin SaaS',
+    'total_orgs' => 'Organisaziuns',
+    'active_subscriptions' => 'Abunnaments actifs',
+    'trialing' => 'En prova',
+    'past_due' => 'Pajament en retard',
+    'mrr' => 'MRR (CHF)',
+    'all_subscriptions' => 'Tuts ils abunnaments',
+    'created_at' => 'Creà ils',
 ];

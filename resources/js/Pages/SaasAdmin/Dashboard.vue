@@ -4,9 +4,10 @@ import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
 import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
-import DataTable from '@/Components/UI/DataTable.vue'
-import { TrendingUp, Users, AlertCircle, CreditCard } from 'lucide-vue-next'
-import { formatCurrency } from '@/lib/utils'
+import { useTranslations } from '@/lib/useTranslations'
+import { TrendingUp, Users, AlertCircle, CreditCard, Clock } from 'lucide-vue-next'
+
+const { t } = useTranslations()
 
 const props = defineProps({
   stats: { type: Object, default: () => ({}) },
@@ -14,37 +15,28 @@ const props = defineProps({
   subscriptions: { type: Array, default: () => [] },
 })
 
-const subscriptionColumns = [
-  { key: 'org_name', label: 'Organization' },
-  { key: 'plan', label: 'Plan' },
-  { key: 'status', label: 'Status' },
-  { key: 'trial_ends_at', label: 'Trial ends' },
-  { key: 'created_at', label: 'Since' },
-]
-
-const statusColor = {
-  active: 'text-green-600 bg-green-50',
+const statusClass = {
+  active: 'text-[hsl(var(--primary))] bg-[hsl(var(--accent))]',
   trialing: 'text-blue-600 bg-blue-50',
-  past_due: 'text-red-600 bg-red-50',
-  canceled: 'text-gray-500 bg-gray-100',
-  paused: 'text-yellow-600 bg-yellow-50',
+  past_due: 'text-[hsl(var(--destructive))] bg-[hsl(var(--destructive)/0.08)]',
+  canceled: 'text-[hsl(var(--muted-foreground))] bg-[hsl(var(--muted))]',
+  paused: 'text-yellow-700 bg-yellow-50',
 }
 </script>
 
 <template>
-  <AppLayout title="SaaS Admin">
+  <AppLayout :title="t('saas_admin')">
     <div class="space-y-6">
-      <h1 class="text-2xl font-bold text-gray-900">SaaS Admin Dashboard</h1>
 
       <!-- KPI row -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent class="pt-6">
-            <div class="flex items-center gap-3">
-              <Users class="h-8 w-8 text-gray-400" />
+            <div class="flex items-start gap-3">
+              <Users class="h-5 w-5 text-[hsl(var(--muted-foreground))] mt-0.5" />
               <div>
                 <p class="text-2xl font-bold">{{ stats.total_orgs }}</p>
-                <p class="text-xs text-gray-500">Total organizations</p>
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('total_orgs') }}</p>
               </div>
             </div>
           </CardContent>
@@ -52,11 +44,11 @@ const statusColor = {
 
         <Card>
           <CardContent class="pt-6">
-            <div class="flex items-center gap-3">
-              <CreditCard class="h-8 w-8 text-green-400" />
+            <div class="flex items-start gap-3">
+              <CreditCard class="h-5 w-5 text-[hsl(var(--primary))] mt-0.5" />
               <div>
                 <p class="text-2xl font-bold">{{ stats.active_subscriptions }}</p>
-                <p class="text-xs text-gray-500">Active subscriptions</p>
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('active_subscriptions') }}</p>
               </div>
             </div>
           </CardContent>
@@ -64,11 +56,11 @@ const statusColor = {
 
         <Card>
           <CardContent class="pt-6">
-            <div class="flex items-center gap-3">
-              <TrendingUp class="h-8 w-8 text-blue-400" />
+            <div class="flex items-start gap-3">
+              <Clock class="h-5 w-5 text-blue-500 mt-0.5" />
               <div>
-                <p class="text-2xl font-bold">CHF {{ stats.mrr_chf }}</p>
-                <p class="text-xs text-gray-500">Monthly Recurring Revenue</p>
+                <p class="text-2xl font-bold">{{ stats.trialing }}</p>
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('trialing') }}</p>
               </div>
             </div>
           </CardContent>
@@ -76,11 +68,23 @@ const statusColor = {
 
         <Card>
           <CardContent class="pt-6">
-            <div class="flex items-center gap-3">
-              <AlertCircle class="h-8 w-8 text-red-400" />
+            <div class="flex items-start gap-3">
+              <AlertCircle class="h-5 w-5 text-[hsl(var(--destructive))] mt-0.5" />
               <div>
                 <p class="text-2xl font-bold">{{ stats.past_due }}</p>
-                <p class="text-xs text-gray-500">Past due</p>
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('past_due') }}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent class="pt-6">
+            <div class="flex items-start gap-3">
+              <TrendingUp class="h-5 w-5 text-[hsl(var(--primary))] mt-0.5" />
+              <div>
+                <p class="text-2xl font-bold">{{ stats.mrr_chf }}</p>
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('mrr') }}</p>
               </div>
             </div>
           </CardContent>
@@ -89,12 +93,15 @@ const statusColor = {
 
       <!-- Plans breakdown -->
       <Card>
-        <CardHeader><CardTitle>Plans breakdown</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{{ t('billing') }}</CardTitle></CardHeader>
         <CardContent>
-          <div class="grid grid-cols-2 gap-4">
-            <div v-for="plan in plans" :key="plan.name" class="flex justify-between items-center py-2 border-b last:border-0">
+          <div class="divide-y divide-[hsl(var(--border))]">
+            <div v-for="plan in plans" :key="plan.name" class="flex justify-between items-center py-3">
               <span class="font-medium">{{ plan.name }}</span>
-              <span class="text-gray-600">{{ plan.active_count }} active</span>
+              <div class="flex items-center gap-4 text-sm text-[hsl(var(--muted-foreground))]">
+                <span>CHF {{ plan.price_chf }}/mo</span>
+                <span class="font-semibold text-[hsl(var(--foreground))]">{{ plan.active_count }} {{ t('active_subscriptions').toLowerCase() }}</span>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -102,33 +109,37 @@ const statusColor = {
 
       <!-- Subscriptions table -->
       <Card>
-        <CardHeader><CardTitle>All subscriptions</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{{ t('all_subscriptions') }}</CardTitle></CardHeader>
         <CardContent>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead>
-                <tr class="border-b">
-                  <th v-for="col in subscriptionColumns" :key="col.key"
-                      class="text-left py-2 px-3 font-medium text-gray-600">{{ col.label }}</th>
+                <tr class="border-b border-[hsl(var(--border))]">
+                  <th class="text-left py-2 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('organization') }}</th>
+                  <th class="text-left py-2 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('billing') }}</th>
+                  <th class="text-left py-2 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('status') }}</th>
+                  <th class="text-left py-2 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('trial_ends') }}</th>
+                  <th class="text-left py-2 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('created_at') }}</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="sub in subscriptions" :key="sub.id" class="border-b hover:bg-gray-50">
+                <tr v-for="sub in subscriptions" :key="sub.id" class="border-b border-[hsl(var(--border))] hover:bg-[hsl(var(--accent)/0.5)]">
                   <td class="py-2 px-3 font-medium">{{ sub.org_name }}</td>
-                  <td class="py-2 px-3">{{ sub.plan }}</td>
+                  <td class="py-2 px-3 text-[hsl(var(--muted-foreground))]">{{ sub.plan }}</td>
                   <td class="py-2 px-3">
-                    <span :class="statusColor[sub.status]" class="px-2 py-0.5 rounded-full text-xs font-medium capitalize">
-                      {{ sub.status }}
+                    <span :class="statusClass[sub.status]" class="px-2 py-0.5 rounded-full text-xs font-medium capitalize">
+                      {{ t(`subscription_status_${sub.status}`) }}
                     </span>
                   </td>
-                  <td class="py-2 px-3 text-gray-500">{{ sub.trial_ends_at ?? '—' }}</td>
-                  <td class="py-2 px-3 text-gray-500">{{ sub.created_at }}</td>
+                  <td class="py-2 px-3 text-[hsl(var(--muted-foreground))]">{{ sub.trial_ends_at ?? '—' }}</td>
+                  <td class="py-2 px-3 text-[hsl(var(--muted-foreground))]">{{ sub.created_at }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
+
     </div>
   </AppLayout>
 </template>

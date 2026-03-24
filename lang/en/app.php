@@ -405,4 +405,24 @@ return [
     'help_profit_loss_text' => 'The profit and loss report (also called income statement) shows how much money your business earned and spent over a period. Revenue minus expenses equals your net profit (or loss). This tells you whether your business is profitable.',
     'help_reconciliation_title' => 'What is bank reconciliation?',
     'help_reconciliation_text' => 'Reconciliation means matching your bank transactions with entries in your accounting records. This ensures your books accurately reflect what actually happened in your bank account. Import your bank statement and match each transaction to an invoice, expense, or manual entry.',
+
+    // Signup / SaaS
+    'signup_title' => 'Start your :days-day free trial',
+    'signup_subtitle' => 'No credit card required to start. Cancel anytime.',
+    'signup_cta' => 'Start :days-day free trial',
+    'signup_disclaimer' => 'After the trial, you\'ll be redirected to Stripe to add your payment method.',
+    'creating_account' => 'Creating account…',
+    'unlimited_invoices' => 'Unlimited invoices',
+    'trial_ends_in' => 'Your trial ends in :days day(s).',
+    'upgrade_now' => 'Upgrade now →',
+
+    // SaaS admin
+    'saas_admin' => 'SaaS Admin',
+    'total_orgs' => 'Total Organizations',
+    'active_subscriptions' => 'Active Subscriptions',
+    'trialing' => 'Trialing',
+    'past_due' => 'Past Due',
+    'mrr' => 'MRR (CHF)',
+    'all_subscriptions' => 'All Subscriptions',
+    'created_at' => 'Created',
 ];

@@ -35,6 +35,7 @@ class HandleInertiaRequests extends Middleware
                     ? $this->currentOrganization->get()
                     : $user->resolveCurrentOrganization()
                 )?->only('id', 'name', 'currency', 'locale'),
+                'subscription' => $this->resolveSubscription($user),
                 'organizations' => $user->organizations()
                     ->select('organizations.id', 'organizations.name')
                     ->get()
@@ -53,5 +54,29 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
             ],
         ]);
+    }
+
+    private function resolveSubscription($user): ?array
+    {
+        if (! FeatureFlag::isSaas()) {
+            return null;
+        }
+
+        $org = $this->currentOrganization->isBound()
+            ? $this->currentOrganization->get()
+            : $user?->resolveCurrentOrganization();
+
+        $sub = $org?->activeSubscription;
+
+        if (! $sub) {
+            return null;
+        }
+
+        return [
+            'status' => $sub->status,
+            'plan_slug' => $sub->plan->slug ?? null,
+            'trial_ends_at' => $sub->trial_ends_at?->toDateString(),
+            'ends_at' => $sub->ends_at?->toDateString(),
+        ];
     }
 }

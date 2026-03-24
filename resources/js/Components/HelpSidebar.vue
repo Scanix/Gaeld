@@ -15,11 +15,22 @@ const props = defineProps({
     type: String,
     default: null,
   },
+  locale: {
+    type: String,
+    default: 'en',
+  },
 })
 
 defineEmits(['close'])
 
-const iframeSrc = computed(() => props.baseUrl ? `${props.baseUrl}/docs/${props.page}` : null)
+// Docusaurus i18n: English has no prefix, other languages use /<locale>/docs/<page>
+const localizedPath = computed(() => {
+  const prefix = props.locale && props.locale !== 'en' && props.locale !== 'rm'
+    ? `/${props.locale}`
+    : ''
+  return `${prefix}/docs/${props.page}`
+})
+const iframeSrc = computed(() => props.baseUrl ? `${props.baseUrl}${localizedPath.value}` : null)
 const loadError = ref(!props.baseUrl)
 
 function onIframeError() {

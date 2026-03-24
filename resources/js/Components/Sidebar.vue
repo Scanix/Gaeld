@@ -13,6 +13,7 @@ import {
   ArrowLeftRight,
   Users,
   X,
+  CreditCard,
 } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 
@@ -26,6 +27,7 @@ const props = defineProps({
 const emit = defineEmits(['update:collapsed', 'closeMobile'])
 
 const page = usePage()
+const features = computed(() => page.props.features ?? {})
 
 const navigation = [
   { key: 'dashboard', href: '/', icon: LayoutDashboard },
@@ -49,6 +51,10 @@ const navigation = [
   { key: 'reconciliation', href: '/reconciliation', icon: ArrowLeftRight },
   { key: 'organization', href: '/organizations', icon: Building2 },
 ]
+
+const billingNav = computed(() =>
+  features.value.saas ? [{ key: 'billing', href: '/billing', icon: CreditCard }] : []
+)
 
 function isActive(href) {
   const url = page.url
@@ -130,6 +136,25 @@ function isGroupActive(item) {
 
         <Link
           v-else
+          :href="item.href"
+          :class="[
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+            isActive(item.href)
+              ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
+              : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
+          ]"
+        >
+          <component :is="item.icon" class="h-4 w-4 shrink-0" />
+          <span v-if="!collapsed">{{ t(item.key) }}</span>
+        </Link>
+      </template>
+
+      <!-- Billing (SaaS only) -->
+      <template v-if="billingNav.length">
+        <div class="my-1 border-t border-[hsl(var(--sidebar-border))]" />
+        <Link
+          v-for="item in billingNav"
+          :key="item.key"
           :href="item.href"
           :class="[
             'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
