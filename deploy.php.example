@@ -1,0 +1,94 @@
+<?php
+
+/**
+ * Gäld — Deployer configuration template for self-hosters.
+ *
+ * Copy this file to deploy.php and fill in your values,
+ * or set the equivalent environment variables in your CI/CD pipeline.
+ *
+ * Requires: composer require --dev deployer/deployer
+ * Usage:    dep deploy
+ */
+
+namespace Deployer;
+
+require 'recipe/laravel.php';
+
+// --- Project ---
+set('application', 'gaeld');
+set('repository', getenv('DEPLOY_REPO') ?: 'git@github.com:Scanix/Gaeld.git');
+set('keep_releases', 5);
+
+// --- Shared files/dirs (persisted across releases) ---
+add('shared_files', ['.env']);
+add('shared_dirs', ['storage']);
+
+// --- Writable dirs ---
+add('writable_dirs', ['bootstrap/cache', 'storage']);
+set('writable_mode', 'chmod');
+set('writable_use_sudo', true);
+
+// --- Host ---
+// Set DEPLOY_HOST, DEPLOY_USER, DEPLOY_PATH in .env or as environment variables.
+host('production')
+    ->setLabels(['stage' => 'production'])
+    ->setHostname(getenv('DEPLOY_HOST') ?: 'your-server-alias-or-ip')
+    ->setRemoteUser(getenv('DEPLOY_USER') ?: 'deploy')
+    ->set('branch', 'main')
+    ->set('http_user', 'www-data')
+    ->setDeployPath(getenv('DEPLOY_PATH') ?: '/var/www/gaeld')
+    ->setForwardAgent(true);
+
+// --- Tasks ---
+
+// Build assets locally to avoid CPU spikes on production.
+task('assets:build', function () {
+    runLocally('npm install --no-audit --no-fund --silent');
+    runLocally('npm run build');
+})->desc('Build frontend assets locally');
+
+task('assets:upload', function () {
+    upload(__DIR__.'/public/build/', '{{release_path}}/public/build/');
+})->desc('Upload built assets to release path');
+
+task('deploy:fpm:restart', function () {
+    // Adjust the PHP-FPM service name to match your server (e.g. php8.3-fpm).
+    run('sudo systemctl reload php8.4-fpm');
+})->desc('Gracefully reload PHP-FPM workers');
+
+task('deploy:permissions', function () {
+    run('sudo chown -R {{remote_user}}:{{http_user}} {{deploy_path}}/shared/storage');
+    run('sudo chmod -R 2775 {{deploy_path}}/shared/storage');
+    run('sudo chown -R {{remote_user}}:{{http_user}} {{release_path}}/bootstrap/cache');
+    run('sudo chmod -R 2775 {{release_path}}/bootstrap/cache');
+})->desc('Fix storage & cache permissions');
+
+task('deploy:storage:link', function () {
+    run('rm -f {{release_path}}/public/storage');
+    run('ln -s {{deploy_path}}/shared/storage/app/public {{release_path}}/public/storage');
+})->desc('Symlink public/storage to shared storage');
+
+task('deploy:worker:restart', function () {
+    run('sudo systemctl restart gaeld-worker');
+})->desc('Restart gaeld-worker systemd service after deploy');
+
+// --- Deployment flow ---
+task('deploy', [
+    'deploy:prepare',
+    'deploy:vendors',
+    'assets:build',
+    'assets:upload',
+    'deploy:storage:link',
+    'artisan:migrate',
+    'artisan:config:cache',
+    'artisan:route:cache',
+    'artisan:view:cache',
+    'artisan:event:cache',
+    'deploy:permissions',
+    'deploy:fpm:restart',
+    'deploy:publish',
+    'deploy:worker:restart',
+])->desc('Deploy the application');
+
+// --- Hooks ---
+after('deploy:failed', 'deploy:unlock');

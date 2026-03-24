@@ -107,9 +107,8 @@ Key environment variables:
 | Variable | Description | Default |
 |---|---|---|
 | `DB_CONNECTION` | Database driver | `pgsql` |
-| `CACHE_DRIVER` | Cache backend | `redis` |
+| `CACHE_STORE` | Cache backend | `redis` |
 | `QUEUE_CONNECTION` | Queue backend | `redis` |
-| `FEATURE_SAAS` | Enable SaaS edition | `false` |
 | `FEATURE_BANK_SYNC` | Enable bank sync | `false` |
 | `FEATURE_AUTOMATION` | Enable automation | `false` |
 | `DOCS_BASE_URL` | Documentation site URL | `http://localhost:3000` |
