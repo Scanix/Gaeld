@@ -1,34 +1,34 @@
-# Gäld — Open-Source Swiss Accounting
+# Gäld
 
-Gäld is an open-source accounting application for freelancers and small businesses in Switzerland. Double-entry accounting, invoicing, expense tracking, Swiss VAT (MWST), and financial reports — free, self-hosted, MIT licensed.
+**Open-source accounting for Swiss freelancers and small businesses.**
 
-> **Early beta** — under active development. Expect rough edges.
+Proper double-entry bookkeeping, Swiss QR-Bill invoicing, VAT reporting, and bank reconciliation — built with Laravel and Vue, MIT licensed, fully self-hostable.
 
-## Features
+> Early beta — the core is solid but expect rough edges and breaking changes between versions.
 
-- **Double-entry accounting** — full journal, ledger, and trial balance
-- **Invoicing** — PDF/QR invoices (Swiss QR-Bill standard)
-- **Expenses** — receipt capture and expense reports
-- **Swiss VAT (MWST)** — preconfigured rates and reporting
-- **Bank reconciliation** — import CAMT.053 files, match transactions
-- **Contacts** — customers and suppliers
-- **Financial reports** — P&L, balance sheet, trial balance
-- **Multi-language** — EN / FR / DE / IT / RM
-- **Plugin system** — extend without touching core code
+[Website](https://gaeld.ch) · [Documentation](https://docs.gaeld.ch) · [Hosted version](https://app.gaeld.ch)
 
-A managed hosted version is available at [gaeld.ch](https://gaeld.ch).
+---
 
-## Tech Stack
+## What it does
 
-| Layer | Technology |
-|---|---|
-| Backend | Laravel 12 |
-| Frontend | Inertia.js + Vue 3 |
-| Database | PostgreSQL |
-| Cache / Queue | Redis |
-| Docs | Docusaurus |
+Gäld covers the full accounting workflow for a small Swiss business:
 
-## Quick Start (Docker)
+- **Double-entry accounting** — journal, ledger, and trial balance with strict debit/credit balance enforcement
+- **Invoicing** — professional PDFs with Swiss QR-Bill payment slip (ready to print and send)
+- **Expense tracking** — log expenses, attach receipts, categorise by supplier
+- **Swiss VAT (MWST)** — correct rates preconfigured, VAT report ready for the tax authority
+- **Bank reconciliation** — import CAMT.053 files from your bank, match transactions against invoices and expenses
+- **Contacts** — shared customer and supplier directory across all modules
+- **Financial reports** — profit & loss, balance sheet, trial balance
+- **Multi-language** — English, French, German, Italian, Romansh (EN / FR / DE / IT / RM)
+- **Plugin system** — extend functionality without touching the core codebase
+
+---
+
+## Getting started
+
+### Docker (recommended)
 
 ```bash
 cp .env.example .env
@@ -37,9 +37,15 @@ docker-compose exec app php artisan key:generate
 docker-compose exec app php artisan gaeld:install
 ```
 
-Open `http://localhost:8080`.
+Visit `http://localhost:8080`. The install wizard walks you through creating your organisation and admin account.
 
-## Manual Installation
+Add `--demo` to seed the database with sample invoices, expenses, and contacts:
+
+```bash
+docker-compose exec app php artisan gaeld:install --demo
+```
+
+### Manual
 
 ```bash
 composer install
@@ -50,46 +56,50 @@ php artisan gaeld:install
 php artisan serve
 ```
 
-## Artisan Commands
-
-### `gaeld:install`
-
-Interactive first-run setup — runs migrations, creates the admin user and organization, and seeds the Swiss chart of accounts and VAT rates.
-
-```bash
-php artisan gaeld:install          # interactive
-php artisan gaeld:install --demo   # with demo invoices, expenses, contacts
-php artisan gaeld:install --no-interaction
-```
-
-### `gaeld:update`
-
-Run after pulling a new version. Handles migrations, cache clearing, and queue restarts gracefully.
+### Updating
 
 ```bash
 php artisan gaeld:update
 ```
 
+Runs pending migrations, clears caches, and restarts the queue worker — safe to run on a live instance.
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 12 |
+| Frontend | Inertia.js + Vue 3 |
+| Database | PostgreSQL |
+| Cache / Queue | Redis |
+| Docs | Docusaurus |
+
+---
+
 ## Architecture
 
-Domain-driven modular structure under `app/Domains/`:
+The codebase follows a domain-driven structure. Each business domain is self-contained under `app/Domains/`:
 
 ```
-Accounting/     # chart of accounts, journal, ledger
-Banking/        # bank accounts, CAMT import, reconciliation
-Contacts/       # customers and suppliers
-Expenses/       # expense tracking
-Invoicing/      # invoices, lines, payments, QR-Bill
-Organizations/  # multi-org, tenant isolation
-Reporting/      # read-only financial projections
-Users/          # auth, user management
+Accounting/     — chart of accounts, journal entries, ledger
+Banking/        — bank accounts, CAMT import, transaction reconciliation
+Contacts/       — customers and suppliers
+Expenses/       — expense recording and reporting
+Invoicing/      — invoices, payments, QR-Bill generation
+Organizations/  — multi-org support, tenant isolation
+Reporting/      — read-only financial projections (P&L, balance sheet)
+Users/          — authentication, profiles
 ```
 
-Each domain contains some combination of `Models/`, `Actions/`, `Services/`, `Controllers/`, `Policies/`, `DTOs/`, `Queries/`. All ledger mutations go through `LedgerService` to guarantee double-entry integrity.
+All ledger mutations go through `LedgerService`, which enforces double-entry integrity. The `Reporting` domain is a read-only projection — it never writes to the ledger.
 
-## Feature Flags
+---
 
-Optional features can be toggled in `.env`:
+## Configuration
+
+Optional features are toggled in `.env`:
 
 ```env
 FEATURE_BANK_SYNC=false
@@ -99,31 +109,37 @@ FEATURE_MULTI_CURRENCY=false
 FEATURE_API_ACCESS=false
 ```
 
-## Plugin System
+---
 
-Drop a plugin into `/plugins`. A plugin is a self-contained Laravel service provider:
+## Plugin system
+
+Drop a plugin into `/plugins/`. A plugin is a standard Laravel service provider with a manifest:
 
 ```
 plugins/my-plugin/
-├── plugin.json          # name, version, provider class
+├── plugin.json           — name, version, provider class
 ├── src/
 │   └── MyServiceProvider.php
-├── routes/web.php       # optional
-└── migrations/          # optional
+├── routes/web.php        — optional
+└── migrations/           — optional
 ```
 
-Plugins are auto-discovered on boot — no manual registration needed.
+Plugins are auto-discovered on boot. See `plugins/example-plugin/` for a minimal working example.
+
+---
 
 ## Contributing
 
-Pull requests are welcome. For significant changes, open an issue first to discuss what you'd like to change. Please keep PRs focused and include tests for new behaviour.
+Issues and pull requests are welcome. For larger changes, please open an issue first so we can discuss the approach.
 
 ```bash
-# Run the test suite
-php artisan test
+php artisan test          # run the test suite (255 tests)
+./vendor/bin/pint         # fix code style
 ```
 
-Code style follows Laravel conventions (`pint` is configured).
+Please keep pull requests focused and include tests for new behaviour.
+
+---
 
 ## License
 

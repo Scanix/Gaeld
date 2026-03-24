@@ -30,6 +30,5 @@ yarn-error.log
 /bootstrap/cache/packages.php
 /bootstrap/cache/services.php
 
-# EE proprietary plugin — distributed via private Composer registry, never committed to this repo
+# EE proprietary plugin — distributed via private GitLab repo, cloned on deploy
 /plugins/gaeld-ee/
-INTERNAL.md
