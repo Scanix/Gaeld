@@ -4,9 +4,11 @@ namespace App\Domains\Organizations\Services;
 
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
+use App\Domains\Organizations\Enums\Role;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\PermissionRegistrar;
 
 class OrganizationService
 {
@@ -19,6 +21,8 @@ class OrganizationService
             $org = Organization::create($data->toArray());
 
             $org->users()->attach($owner->id, ['role' => 'owner']);
+
+            $this->assignSpatieRole($owner, $org, Role::Owner);
 
             return $org;
         });
@@ -39,6 +43,9 @@ class OrganizationService
         $organization->users()->syncWithoutDetaching([
             $user->id => ['role' => $role],
         ]);
+
+        $spatieRole = Role::tryFrom($role) ?? Role::Member;
+        $this->assignSpatieRole($user, $organization, $spatieRole);
     }
 
     /**
@@ -47,5 +54,14 @@ class OrganizationService
     public function removeMember(Organization $organization, User $user): void
     {
         $organization->users()->detach($user->id);
+
+        app()[PermissionRegistrar::class]->setPermissionsTeamId($organization->id);
+        $user->roles()->detach();
+    }
+
+    private function assignSpatieRole(User $user, Organization $organization, Role $role): void
+    {
+        app()[PermissionRegistrar::class]->setPermissionsTeamId($organization->id);
+        $user->syncRoles([$role->value]);
     }
 }

@@ -21,9 +21,11 @@ use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Enums\Role;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Demo data with real ledger transactions.
@@ -104,6 +106,12 @@ class DemoDataSeeder extends Seeder
             $member->id => ['role' => 'member'],
         ]);
 
+        // Assign spatie roles for org1
+        app()[PermissionRegistrar::class]->setPermissionsTeamId($org1->id);
+        $admin->syncRoles([Role::Owner->value]);
+        $accountant->syncRoles([Role::Member->value]);
+        $member->syncRoles([Role::Member->value]);
+
         // Seed chart of accounts and VAT rates for org1
         $chartsSeeder = new SwissChartOfAccountsSeeder();
         $vatSeeder = new SwissVatRatesSeeder();
@@ -134,6 +142,11 @@ class DemoDataSeeder extends Seeder
             $admin->id => ['role' => 'owner'],
             $viewer->id => ['role' => 'member'],
         ]);
+
+        // Assign spatie roles for org2
+        app()[PermissionRegistrar::class]->setPermissionsTeamId($org2->id);
+        $admin->syncRoles([Role::Owner->value]);
+        $viewer->syncRoles([Role::Viewer->value]);
 
         if ($org2->accounts()->count() === 0) {
             $chartsSeeder->run($org2);
