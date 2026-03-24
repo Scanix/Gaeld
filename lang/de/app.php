@@ -405,4 +405,22 @@ return [
     'help_profit_loss_text' => 'Die Erfolgsrechnung zeigt, wie viel Ihr Unternehmen über einen Zeitraum verdient und ausgegeben hat. Ertrag minus Aufwand ergibt Ihren Reingewinn (oder Verlust). Dies zeigt Ihnen, ob Ihr Unternehmen rentabel ist.',
     'help_reconciliation_title' => 'Was ist Bankabstimmung?',
     'help_reconciliation_text' => 'Abstimmung bedeutet, Ihre Banktransaktionen mit den Einträgen in Ihrer Buchhaltung abzugleichen. Dies stellt sicher, dass Ihre Bücher genau widerspiegeln, was tatsächlich auf Ihrem Bankkonto passiert ist. Importieren Sie Ihren Kontoauszug und ordnen Sie jede Transaktion einer Rechnung, Ausgabe oder manuellen Buchung zu.',
+
+    // Signup / SaaS
+    'signup_title' => 'Starten Sie Ihre :days-tägige kostenlose Testphase',
+    'signup_subtitle' => 'Keine Kreditkarte erforderlich. Jederzeit kündbar.',
+    'signup_cta' => ':days-tägige Testphase starten',
+    'signup_disclaimer' => 'Nach der Testphase werden Sie zu Stripe weitergeleitet, um Ihre Zahlungsmethode hinzuzufügen.',
+    'creating_account' => 'Konto wird erstellt…',
+    'unlimited_invoices' => 'Unbegrenzte Rechnungen',
+    'trial_ends_in' => 'Ihre Testphase endet in :days Tag(en).',
+    'upgrade_now' => 'Jetzt upgraden →',
+    'saas_admin' => 'SaaS-Admin',
+    'total_orgs' => 'Organisationen',
+    'active_subscriptions' => 'Aktive Abonnements',
+    'trialing' => 'Testphase',
+    'past_due' => 'Zahlung überfällig',
+    'mrr' => 'MRR (CHF)',
+    'all_subscriptions' => 'Alle Abonnements',
+    'created_at' => 'Erstellt am',
 ];

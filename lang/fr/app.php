@@ -404,4 +404,22 @@ return [
     'help_profit_loss_text' => 'Le compte de résultat montre combien votre entreprise a gagné et dépensé sur une période. Revenus moins charges égalent votre bénéfice net (ou perte). Cela vous indique si votre entreprise est rentable.',
     'help_reconciliation_title' => 'Qu\'est-ce que le rapprochement bancaire ?',
     'help_reconciliation_text' => 'Le rapprochement consiste à faire correspondre vos transactions bancaires avec les écritures de votre comptabilité. Cela garantit que vos livres reflètent fidèlement ce qui s\'est passé sur votre compte bancaire. Importez votre relevé bancaire et associez chaque transaction à une facture, une dépense ou une écriture manuelle.',
+
+    // Signup / SaaS
+    'signup_title' => 'Commencez votre essai gratuit de :days jours',
+    'signup_subtitle' => 'Aucune carte de crédit requise. Annulez à tout moment.',
+    'signup_cta' => 'Commencer l\'essai de :days jours',
+    'signup_disclaimer' => 'Après l\'essai, vous serez redirigé vers Stripe pour ajouter votre moyen de paiement.',
+    'creating_account' => 'Création du compte…',
+    'unlimited_invoices' => 'Factures illimitées',
+    'trial_ends_in' => 'Votre essai se termine dans :days jour(s).',
+    'upgrade_now' => 'Mettre à niveau →',
+    'saas_admin' => 'Admin SaaS',
+    'total_orgs' => 'Organisations',
+    'active_subscriptions' => 'Abonnements actifs',
+    'trialing' => 'En essai',
+    'past_due' => 'Paiement en retard',
+    'mrr' => 'MRR (CHF)',
+    'all_subscriptions' => 'Tous les abonnements',
+    'created_at' => 'Créé le',
 ];

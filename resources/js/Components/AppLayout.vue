@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { Head, usePage } from '@inertiajs/vue3'
+import { Head, usePage, Link } from '@inertiajs/vue3'
 
 const betaDismissed = ref(
   typeof localStorage !== 'undefined' && localStorage.getItem('beta-dismissed') === '1'
@@ -25,9 +25,19 @@ const props = defineProps({
 const { showHelp, toggleHelp } = useHelp()
 const page = usePage()
 const docsBaseUrl = computed(() => page.props.docsBaseUrl)
+const locale = computed(() => page.props.locale ?? 'en')
 const showDocs = ref(false)
 const collapsed = ref(false)
 const mobileOpen = ref(false)
+
+const subscription = computed(() => page.props.auth?.subscription ?? null)
+const trialDaysLeft = computed(() => {
+  if (subscription.value?.status !== 'trialing' || !subscription.value?.trial_ends_at) return null
+  const diff = Math.ceil((new Date(subscription.value.trial_ends_at) - new Date()) / 86400000)
+  return Math.max(0, diff)
+})
+const showTrialBanner = computed(() => trialDaysLeft.value !== null && trialDaysLeft.value <= 7)
+const showPastDueBanner = computed(() => subscription.value?.status === 'past_due')
 </script>
 
 <template>
@@ -52,6 +62,28 @@ const mobileOpen = ref(false)
   </div>
 
   <div class="min-h-screen bg-[hsl(var(--background))]">
+    <!-- Trial ending banner -->
+    <div
+      v-if="showTrialBanner"
+      class="relative z-40 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-sm font-medium"
+    >
+      <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
+        <span>{{ t('trial_ends_in', { days: trialDaysLeft }) }}</span>
+        <Link href="/billing" class="underline underline-offset-2 font-semibold hover:opacity-80 whitespace-nowrap">{{ t('upgrade_now') }}</Link>
+      </div>
+    </div>
+
+    <!-- Past-due payment banner -->
+    <div
+      v-if="showPastDueBanner"
+      class="relative z-40 bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] text-sm font-medium"
+    >
+      <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
+        <span>{{ t('payment_failed_warning') }}</span>
+        <Link href="/billing" class="underline underline-offset-2 font-semibold hover:opacity-80 whitespace-nowrap">{{ t('update_payment_method') }}</Link>
+      </div>
+    </div>
+
     <Sidebar
       v-model:collapsed="collapsed"
       :mobileOpen="mobileOpen"
@@ -80,6 +112,7 @@ const mobileOpen = ref(false)
       v-if="helpPage && showDocs"
       :page="helpPage"
       :base-url="docsBaseUrl"
+      :locale="locale"
       @close="showDocs = false"
     />
   </div>

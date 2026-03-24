@@ -405,4 +405,22 @@ return [
     'help_profit_loss_text' => 'Il conto economico mostra quanto la tua azienda ha guadagnato e speso in un periodo. Ricavi meno costi uguale il tuo utile netto (o perdita). Questo ti dice se la tua azienda è redditizia.',
     'help_reconciliation_title' => 'Cos\'è la riconciliazione bancaria?',
     'help_reconciliation_text' => 'La riconciliazione consiste nel far corrispondere le tue transazioni bancarie con le registrazioni nella tua contabilità. Questo garantisce che i tuoi libri riflettano accuratamente ciò che è realmente accaduto sul tuo conto bancario. Importa il tuo estratto conto e associa ogni transazione a una fattura, una spesa o una registrazione manuale.',
+
+    // Signup / SaaS
+    'signup_title' => 'Inizia la tua prova gratuita di :days giorni',
+    'signup_subtitle' => 'Nessuna carta di credito richiesta. Annulla in qualsiasi momento.',
+    'signup_cta' => 'Inizia la prova di :days giorni',
+    'signup_disclaimer' => 'Dopo la prova, verrai reindirizzato a Stripe per aggiungere il tuo metodo di pagamento.',
+    'creating_account' => 'Creazione account…',
+    'unlimited_invoices' => 'Fatture illimitate',
+    'trial_ends_in' => 'La tua prova termina tra :days giorno/i.',
+    'upgrade_now' => 'Aggiorna ora →',
+    'saas_admin' => 'Admin SaaS',
+    'total_orgs' => 'Organizzazioni',
+    'active_subscriptions' => 'Abbonamenti attivi',
+    'trialing' => 'In prova',
+    'past_due' => 'Pagamento in ritardo',
+    'mrr' => 'MRR (CHF)',
+    'all_subscriptions' => 'Tutti gli abbonamenti',
+    'created_at' => 'Creato il',
 ];
