@@ -69,6 +69,7 @@ return [
     'finalize' => 'Finalize',
     'search' => 'Search…',
     'all_statuses' => 'All statuses',
+    'all_countries' => 'All countries',
 
     // Common labels
     'date' => 'Date',
@@ -193,6 +194,16 @@ return [
     'cat_utilities' => 'Utilities',
     'cat_insurance' => 'Insurance',
     'cat_other' => 'Other',
+
+    // Customers
+    'new_customer' => 'New Customer',
+    'manage_customers' => 'Manage and view your customers.',
+    'no_customers_yet' => 'No customers yet. Add your first customer to get started.',
+
+    // Suppliers
+    'new_supplier' => 'New Supplier',
+    'manage_suppliers' => 'Manage and view your suppliers.',
+    'no_suppliers_yet' => 'No suppliers yet. Add your first supplier to get started.',
 
     // Accounting
     'posted' => 'Posted',
