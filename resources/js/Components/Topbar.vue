@@ -18,7 +18,7 @@ defineProps({
   },
 })
 
-const emit = defineEmits(['toggleHelp'])
+const emit = defineEmits(['toggleHelp', 'toggleDocs'])
 
 const page = usePage()
 const logoutForm = useForm({})
@@ -97,16 +97,15 @@ function switchOrg(orgId) {
         <HelpCircle class="h-4 w-4" />
       </Button>
 
-      <a
+      <Button
         v-if="docsUrl"
-        :href="docsUrl"
-        target="_blank"
-        rel="noopener"
+        variant="ghost"
+        size="icon"
         :title="t('documentation')"
-        class="inline-flex items-center justify-center rounded-md h-9 w-9 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] transition-colors"
+        @click="$emit('toggleDocs')"
       >
         <BookOpen class="h-4 w-4" />
-      </a>
+      </Button>
 
       <div class="relative">
         <Button

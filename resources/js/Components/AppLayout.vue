@@ -11,6 +11,7 @@ function dismissBeta() {
 }
 import Sidebar from '@/Components/Sidebar.vue'
 import Topbar from '@/Components/Topbar.vue'
+import HelpSidebar from '@/Components/HelpSidebar.vue'
 import { useHelp } from '@/lib/useHelp'
 
 const props = defineProps({
@@ -23,11 +24,8 @@ const props = defineProps({
 
 const { showHelp, toggleHelp } = useHelp()
 const page = usePage()
-const docsUrl = computed(() =>
-  props.helpPage && page.props.docsBaseUrl
-    ? `${page.props.docsBaseUrl}/docs/${props.helpPage}`
-    : null
-)
+const docsBaseUrl = computed(() => page.props.docsBaseUrl)
+const showDocs = ref(false)
 const collapsed = ref(false)
 const mobileOpen = ref(false)
 </script>
@@ -67,7 +65,7 @@ const mobileOpen = ref(false)
         collapsed ? 'lg:pl-16' : 'lg:pl-60',
       ]"
     >
-      <Topbar :helpPage="helpPage" :docs-url="docsUrl" @toggleHelp="toggleHelp" @toggleMobile="mobileOpen = !mobileOpen">
+      <Topbar :helpPage="helpPage" :docs-url="docsBaseUrl ? `${docsBaseUrl}/docs/${helpPage}` : null" @toggleHelp="toggleHelp" @toggleDocs="showDocs = !showDocs" @toggleMobile="mobileOpen = !mobileOpen">
         <template #heading>
           {{ title }}
         </template>
@@ -77,5 +75,12 @@ const mobileOpen = ref(false)
         <slot />
       </main>
     </div>
+
+    <HelpSidebar
+      v-if="helpPage && showDocs"
+      :page="helpPage"
+      :base-url="docsBaseUrl"
+      @close="showDocs = false"
+    />
   </div>
 </template>

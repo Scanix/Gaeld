@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { X } from 'lucide-vue-next'
 import Button from './UI/Button.vue'
 import { useTranslations } from '@/lib/useTranslations'
@@ -25,17 +25,6 @@ const loadError = ref(!props.baseUrl)
 function onIframeError() {
   loadError.value = true
 }
-
-onMounted(() => {
-  if (!iframeSrc.value) return
-  // Check if iframe can load by testing a fetch (same-origin only)
-  // Falls back gracefully if docs server is unavailable
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 3000)
-  fetch(iframeSrc.value, { mode: 'no-cors', signal: controller.signal })
-    .catch(() => { loadError.value = true })
-    .finally(() => clearTimeout(timeout))
-})
 </script>
 
 <template>
