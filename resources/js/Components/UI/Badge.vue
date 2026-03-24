@@ -21,7 +21,7 @@ const badgeVariants = cva(
         destructive: 'border-transparent bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] shadow',
         outline: 'text-[hsl(var(--foreground))]',
         warning: 'border-transparent bg-amber-100 text-amber-800',
-        info: 'border-transparent bg-blue-100 text-blue-800',
+        info: 'border-transparent bg-sky-100 text-sky-900',
         success: 'border-transparent bg-green-100 text-green-800',
       },
     },
