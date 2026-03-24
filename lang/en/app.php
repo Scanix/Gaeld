@@ -425,4 +425,15 @@ return [
     'mrr' => 'MRR (CHF)',
     'all_subscriptions' => 'All Subscriptions',
     'created_at' => 'Created',
+
+    // Subscription management (user-facing)
+    'my_subscription' => 'My Subscription',
+    'plan' => 'Plan',
+    'subscription_ends' => 'Subscription ends',
+    'billing_portal_description' => 'View and download your invoices, update your payment method, or cancel your subscription via the Stripe billing portal.',
+    'view_invoices' => 'View invoices',
+    'change_plan' => 'Change plan',
+    'choose_plan' => 'Choose a plan',
+    'checkout_success' => 'Your subscription is now active. Welcome aboard!',
+    'checkout_canceled' => 'Checkout was canceled. You can start a subscription anytime.',
 ];
