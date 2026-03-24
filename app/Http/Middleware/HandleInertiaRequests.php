@@ -38,8 +38,8 @@ class HandleInertiaRequests extends Middleware
                     : $user->resolveCurrentOrganization()
                 )?->only('id', 'name', 'currency', 'locale', 'require_two_factor'),
                 'subscription' => $this->resolveSubscription($user),
-                'role' => $this->resolveCurrentRole($user),
-                'permissions' => $this->resolvePermissions($user),
+                'role' => fn () => $this->resolveCurrentRole($user),
+                'permissions' => fn () => $this->resolvePermissions($user),
                 'organizations' => $user->organizations()
                     ->select('organizations.id', 'organizations.name')
                     ->get()

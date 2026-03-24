@@ -10,29 +10,8 @@ class AccountPolicy
 {
     public function viewAny(User $user): bool
     {
-        $org = $user->resolveCurrentOrganization();
-        $teamId = app(\Spatie\Permission\PermissionRegistrar::class)->getPermissionsTeamId();
-        $roles = $user->getRoleNames()->toArray();
-        $hasPerm = false;
-        try {
-            $hasPerm = $user->hasPermissionTo(Permission::AccountingView);
-        } catch (\Throwable $e) {
-            \Log::error('AccountPolicy::viewAny permission check failed', [
-                'user' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-        \Log::error('DEBUG AccountPolicy::viewAny', [
-            'user' => $user->id,
-            'email' => $user->email,
-            'org' => $org?->id,
-            'teamId' => $teamId,
-            'roles' => $roles,
-            'hasPerm' => $hasPerm,
-            'result' => $org !== null && $hasPerm,
-        ]);
-
-        return $org !== null && $hasPerm;
+        return $user->resolveCurrentOrganization() !== null
+            && $user->hasPermissionTo(Permission::AccountingView);
     }
 
     public function view(User $user, Account $account): bool
