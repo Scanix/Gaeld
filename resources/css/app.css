@@ -6,31 +6,45 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Page background — clearly gray so white cards stand out */
+    --background: 0 0% 95%;
     --foreground: 0 0% 9%;
+
+    /* Cards — pure white, pop off the gray background */
     --card: 0 0% 100%;
     --card-foreground: 0 0% 9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 9%;
+
+    /* Brand green primary — #33cc66 with near-black text for contrast */
     --primary: 142 60% 50%;
     --primary-foreground: 0 0% 8%;
-    --secondary: 0 0% 95%;
+
+    /* Neutrals */
+    --secondary: 0 0% 92%;
     --secondary-foreground: 0 0% 15%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 32%;
-    --accent: 142 25% 93%;
-    --accent-foreground: 142 40% 18%;
-    --destructive: 0 84.2% 60.2%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 36%;
+
+    /* Active/hover states — light green tint */
+    --accent: 142 35% 91%;
+    --accent-foreground: 142 50% 20%;
+
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89%;
-    --input: 0 0% 89%;
+
+    --border: 0 0% 86%;
+    --input: 0 0% 86%;
     --ring: 142 60% 50%;
     --radius: 0.5rem;
-    --sidebar: 0 0% 99%;
-    --sidebar-foreground: 0 0% 20%;
-    --sidebar-border: 0 0% 90%;
+
+    /* Sidebar — white with a clear right border */
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 0 0% 18%;
+    --sidebar-border: 0 0% 88%;
+
     --chart-1: 221 83% 53%;
-    --chart-2: 142 71% 45%;
+    --chart-2: 142 60% 45%;
     --chart-3: 38 92% 50%;
     --chart-4: 0 84% 60%;
     --chart-5: 262 83% 58%;
@@ -44,5 +58,12 @@
   body {
     @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))];
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Give cards a clear elevation on the gray background */
+  .card-elevated {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
   }
 }
