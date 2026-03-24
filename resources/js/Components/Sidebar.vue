@@ -1,6 +1,6 @@
 <script setup>
-import { computed } from 'vue'
-import { Link, usePage } from '@inertiajs/vue3'
+import { computed, ref } from 'vue'
+import { Link, useForm, usePage } from '@inertiajs/vue3'
 import {
   LayoutDashboard,
   FileText,
@@ -11,6 +11,8 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Check,
   ArrowLeftRight,
   Users,
   X,
@@ -29,6 +31,17 @@ const emit = defineEmits(['update:collapsed', 'closeMobile'])
 
 const page = usePage()
 const features = computed(() => page.props.features ?? {})
+
+const showOrgMenu = ref(false)
+const currentOrg = computed(() => page.props.auth?.currentOrganization)
+const organizations = computed(() => page.props.auth?.organizations ?? [])
+const hasMultipleOrgs = computed(() => organizations.value.length > 1)
+
+function switchOrg(orgId) {
+  showOrgMenu.value = false
+  const form = useForm({})
+  form.post(`/organizations/${orgId}/switch`)
+}
 
 const navigation = [
   { key: 'dashboard', href: '/', icon: LayoutDashboard },
@@ -100,6 +113,38 @@ function isGroupActive(item) {
       >
         <X class="h-5 w-5" />
       </button>
+    </div>
+
+    <!-- Organization Switcher -->
+    <div v-if="currentOrg" class="relative border-b border-[hsl(var(--sidebar-border))] px-3 py-2">
+      <button
+        class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-[hsl(var(--sidebar-foreground))] transition-colors hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+        :class="collapsed ? 'justify-center' : ''"
+        @click="hasMultipleOrgs ? (showOrgMenu = !showOrgMenu) : undefined"
+      >
+        <Building2 class="h-4 w-4 shrink-0" />
+        <span v-if="!collapsed" class="min-w-0 truncate">{{ currentOrg.name }}</span>
+        <ChevronDown v-if="!collapsed && hasMultipleOrgs" class="ml-auto h-3 w-3 shrink-0" />
+      </button>
+
+      <div
+        v-if="showOrgMenu && hasMultipleOrgs"
+        :class="[
+          'absolute z-50 w-56 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-1 shadow-lg',
+          collapsed ? 'left-full top-0 ml-1' : 'left-3 right-3 top-full mt-1 w-auto',
+        ]"
+        @mouseleave="showOrgMenu = false"
+      >
+        <button
+          v-for="org in organizations"
+          :key="org.id"
+          class="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))]"
+          @click="switchOrg(org.id)"
+        >
+          <span class="truncate">{{ org.name }}</span>
+          <Check v-if="org.id === currentOrg.id" class="ml-2 h-4 w-4 shrink-0 text-[hsl(var(--primary))]" />
+        </button>
+      </div>
     </div>
 
     <!-- Navigation -->

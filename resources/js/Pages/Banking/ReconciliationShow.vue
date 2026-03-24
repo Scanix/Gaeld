@@ -21,7 +21,7 @@ const props = defineProps({
   transactions: Object,
   suggestions: { type: Object, default: () => ({}) },
   filter: { type: String, default: 'unreconciled' },
-  features: { type: Object, default: () => ({}) },
+  pageFeatures: { type: Object, default: () => ({}) },
 })
 
 const { t } = useTranslations()
@@ -131,7 +131,7 @@ const currentSuggestions = computed(() => {
         <Badge variant="secondary">{{ formatCurrency(bankAccount.balance, bankAccount.currency) }}</Badge>
       </div>
       <div class="flex items-center gap-2">
-        <Button v-if="features.auto_reconciliation" @click="autoReconcile" variant="outline">
+        <Button v-if="pageFeatures.auto_reconciliation" @click="autoReconcile" variant="outline">
           <RotateCcw class="mr-2 h-4 w-4" /> {{ t('auto_reconcile') || 'Auto Reconcile' }}
         </Button>
         <Button @click="showUploadModal = true">

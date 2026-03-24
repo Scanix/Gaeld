@@ -46,7 +46,7 @@ class ReconciliationController extends Controller
 
         return Inertia::render('Banking/Reconciliation', [
             'bankAccounts' => $bankAccounts,
-            'features' => [
+            'pageFeatures' => [
                 'auto_reconciliation' => FeatureFlag::enabled('auto_reconciliation'),
             ],
         ]);
@@ -80,7 +80,7 @@ class ReconciliationController extends Controller
             'transactions' => $transactions,
             'suggestions' => $suggestions,
             'filter' => $filter,
-            'features' => [
+            'pageFeatures' => [
                 'auto_reconciliation' => FeatureFlag::enabled('auto_reconciliation'),
             ],
         ]);
