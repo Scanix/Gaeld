@@ -422,4 +422,15 @@ return [
     'mrr' => 'MRR (CHF)',
     'all_subscriptions' => 'Tous les abonnements',
     'created_at' => 'Créé le',
+
+    // Subscription management (user-facing)
+    'my_subscription' => 'Mon abonnement',
+    'plan' => 'Formule',
+    'subscription_ends' => "L'abonnement se termine le",
+    'billing_portal_description' => 'Consultez et téléchargez vos factures, mettez à jour votre mode de paiement ou résiliez votre abonnement via le portail Stripe.',
+    'view_invoices' => 'Voir les factures',
+    'change_plan' => 'Changer de formule',
+    'choose_plan' => 'Choisir une formule',
+    'checkout_success' => 'Votre abonnement est maintenant actif. Bienvenue !',
+    'checkout_canceled' => 'Le paiement a été annulé. Vous pouvez souscrire un abonnement à tout moment.',
 ];

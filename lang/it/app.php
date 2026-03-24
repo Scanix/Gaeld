@@ -423,4 +423,15 @@ return [
     'mrr' => 'MRR (CHF)',
     'all_subscriptions' => 'Tutti gli abbonamenti',
     'created_at' => 'Creato il',
+
+    // Subscription management (user-facing)
+    'my_subscription' => 'Il mio abbonamento',
+    'plan' => 'Piano',
+    'subscription_ends' => "L'abbonamento termina il",
+    'billing_portal_description' => 'Visualizza e scarica le tue fatture, aggiorna il metodo di pagamento o cancella il tuo abbonamento tramite il portale Stripe.',
+    'view_invoices' => 'Visualizza fatture',
+    'change_plan' => 'Cambia piano',
+    'choose_plan' => 'Scegli un piano',
+    'checkout_success' => "Il tuo abbonamento è ora attivo. Benvenuto!",
+    'checkout_canceled' => 'Il pagamento è stato annullato. Puoi sottoscrivere un abbonamento in qualsiasi momento.',
 ];

@@ -354,4 +354,15 @@ return [
     'mrr' => 'MRR (CHF)',
     'all_subscriptions' => 'Tuts ils abunnaments',
     'created_at' => 'Creà ils',
+
+    // Subscription management (user-facing)
+    'my_subscription' => 'Mia abonanza',
+    'plan' => 'Plan',
+    'subscription_ends' => "L'abonanza terminescha ils",
+    'billing_portal_description' => 'Veser e telechargiar tes fatturis, actualisar il modus da pajament u resilisar la abonanza via il portal Stripe.',
+    'view_invoices' => 'Veser fatturis',
+    'change_plan' => 'Midar plan',
+    'choose_plan' => 'Tscherner in plan',
+    'checkout_success' => 'Vossa abonanza è uss activa. Bainvegni!',
+    'checkout_canceled' => "Il pajament è vegnì annullà. Vus pudais suttascriver ina abonanza en mintga mument.",
 ];
