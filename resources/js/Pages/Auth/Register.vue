@@ -28,10 +28,8 @@ function submit() {
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
-        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-xl font-bold">
-          G
-        </div>
-        <h1 class="mt-4 text-2xl font-bold">{{ t('create_account') }}</h1>
+        <img src="/logo-wide.svg" alt="Gäld" class="mx-auto h-14 w-auto mb-4" />
+        <h1 class="text-2xl font-bold">{{ t('create_account') }}</h1>
         <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{{ t('start_managing') }}</p>
       </div>
 

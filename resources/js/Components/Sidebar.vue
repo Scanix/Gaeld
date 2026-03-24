@@ -84,10 +84,8 @@ function isGroupActive(item) {
     <!-- Logo + mobile close -->
     <div class="flex h-14 items-center justify-between border-b border-[hsl(var(--sidebar-border))] px-4">
       <Link href="/" class="flex min-w-0 items-center gap-2">
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-sm font-bold">
-          G
-        </div>
-        <span v-if="!collapsed" class="truncate text-lg font-semibold text-[hsl(var(--sidebar-foreground))]">Gäld</span>
+        <img src="/logo-square.svg" alt="Gäld" class="h-8 w-8 shrink-0 rounded-lg" />
+        <img v-if="!collapsed" src="/logo-wide.svg" alt="Gäld" class="h-6 w-auto shrink-0" />
       </Link>
       <button
         class="ml-2 rounded p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] lg:hidden"
