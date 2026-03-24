@@ -15,13 +15,13 @@ const { showHelp } = useHelp()
 <template>
   <div
     v-if="showHelp"
-    class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30"
+    class="rounded-lg border border-[hsl(var(--accent-foreground)/0.15)] bg-[hsl(var(--accent))] p-4"
   >
     <div class="flex gap-3">
-      <Lightbulb class="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
-      <div class="text-sm text-amber-900 dark:text-amber-200">
+      <Lightbulb class="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--accent-foreground))]" />
+      <div class="text-sm text-[hsl(var(--accent-foreground))]">
         <p v-if="title" class="mb-1 font-medium">{{ title }}</p>
-        <div class="leading-relaxed [&>p]:mt-1 first:[&>p]:mt-0">
+        <div class="leading-relaxed opacity-80 [&>p]:mt-1 first:[&>p]:mt-0">
           <slot />
         </div>
       </div>
