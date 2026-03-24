@@ -6,6 +6,8 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { TrendingUp, Users, AlertCircle, CreditCard, Clock } from 'lucide-vue-next'
+import { router } from '@inertiajs/vue3'
+import { ref } from 'vue'
 
 const { t } = useTranslations()
 
@@ -13,6 +15,7 @@ const props = defineProps({
   stats: { type: Object, default: () => ({}) },
   plans: { type: Array, default: () => [] },
   subscriptions: { type: Array, default: () => [] },
+  unsubscribed_orgs: { type: Array, default: () => [] },
 })
 
 const statusClass = {
@@ -21,6 +24,25 @@ const statusClass = {
   past_due: 'text-[hsl(var(--destructive))] bg-[hsl(var(--destructive)/0.08)]',
   canceled: 'text-[hsl(var(--muted-foreground))] bg-[hsl(var(--muted))]',
   paused: 'text-yellow-700 bg-yellow-50',
+}
+
+const selectedPlan = ref({})
+
+function grantPlan(orgId) {
+  const planId = selectedPlan.value[orgId]
+  if (!planId) return
+  router.post(`/saas-admin/${orgId}/grant-plan`, { plan_id: planId })
+}
+
+function changePlan(sub) {
+  const planId = selectedPlan.value[sub.organization_id]
+  if (!planId) return
+  router.post(`/saas-admin/${sub.organization_id}/grant-plan`, { plan_id: planId })
+}
+
+function revokePlan(orgId) {
+  if (!confirm('Cancel this subscription?')) return
+  router.post(`/saas-admin/${orgId}/revoke-plan`)
 }
 </script>
 
@@ -120,6 +142,7 @@ const statusClass = {
                   <th class="text-left py-2 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('status') }}</th>
                   <th class="text-left py-2 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('trial_ends') }}</th>
                   <th class="text-left py-2 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('created_at') }}</th>
+                  <th class="text-left py-2 px-3 font-medium text-[hsl(var(--muted-foreground))]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -133,6 +156,47 @@ const statusClass = {
                   </td>
                   <td class="py-2 px-3 text-[hsl(var(--muted-foreground))]">{{ sub.trial_ends_at ?? '—' }}</td>
                   <td class="py-2 px-3 text-[hsl(var(--muted-foreground))]">{{ sub.created_at }}</td>
+                  <td class="py-2 px-3">
+                    <div class="flex items-center gap-2">
+                      <select v-model="selectedPlan[sub.organization_id]" class="text-xs border border-[hsl(var(--border))] rounded px-2 py-1 bg-[hsl(var(--background))]">
+                        <option value="" disabled selected>Change plan…</option>
+                        <option v-for="p in plans" :key="p.id" :value="p.id">{{ p.name }} (CHF {{ p.price_chf }})</option>
+                      </select>
+                      <button @click="changePlan(sub)" :disabled="!selectedPlan[sub.organization_id]" class="text-xs px-2 py-1 rounded bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] disabled:opacity-40">Apply</button>
+                      <button v-if="sub.status !== 'canceled'" @click="revokePlan(sub.organization_id)" class="text-xs px-2 py-1 rounded bg-[hsl(var(--destructive))] text-white">Cancel</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Unsubscribed organizations -->
+      <Card v-if="unsubscribed_orgs.length">
+        <CardHeader><CardTitle>Organizations without subscription</CardTitle></CardHeader>
+        <CardContent>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-[hsl(var(--border))]">
+                  <th class="text-left py-2 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('organization') }}</th>
+                  <th class="text-left py-2 px-3 font-medium text-[hsl(var(--muted-foreground))]">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="org in unsubscribed_orgs" :key="org.id" class="border-b border-[hsl(var(--border))] hover:bg-[hsl(var(--accent)/0.5)]">
+                  <td class="py-2 px-3 font-medium">{{ org.name }}</td>
+                  <td class="py-2 px-3">
+                    <div class="flex items-center gap-2">
+                      <select v-model="selectedPlan[org.id]" class="text-xs border border-[hsl(var(--border))] rounded px-2 py-1 bg-[hsl(var(--background))]">
+                        <option value="" disabled selected>Select plan…</option>
+                        <option v-for="p in plans" :key="p.id" :value="p.id">{{ p.name }} (CHF {{ p.price_chf }})</option>
+                      </select>
+                      <button @click="grantPlan(org.id)" :disabled="!selectedPlan[org.id]" class="text-xs px-2 py-1 rounded bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] disabled:opacity-40">Grant</button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
