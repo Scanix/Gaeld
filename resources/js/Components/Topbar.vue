@@ -1,6 +1,6 @@
 <script setup>
 import { useForm, usePage, router } from '@inertiajs/vue3'
-import { LogOut, User, HelpCircle, Building2, ChevronDown, Check, Menu } from 'lucide-vue-next'
+import { LogOut, User, HelpCircle, BookOpen, Building2, ChevronDown, Check, Menu } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import Button from './UI/Button.vue'
 import { useTranslations } from '@/lib/useTranslations'
@@ -9,6 +9,10 @@ const { t } = useTranslations()
 
 defineProps({
   helpPage: {
+    type: String,
+    default: null,
+  },
+  docsUrl: {
     type: String,
     default: null,
   },
@@ -92,6 +96,17 @@ function switchOrg(orgId) {
       >
         <HelpCircle class="h-4 w-4" />
       </Button>
+
+      <a
+        v-if="docsUrl"
+        :href="docsUrl"
+        target="_blank"
+        rel="noopener"
+        :title="t('documentation')"
+        class="inline-flex items-center justify-center rounded-md h-9 w-9 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] transition-colors"
+      >
+        <BookOpen class="h-4 w-4" />
+      </a>
 
       <div class="relative">
         <Button
