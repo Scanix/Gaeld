@@ -2,29 +2,23 @@
 
 namespace App\Domains\Users\Policies;
 
+use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Users\Models\User;
 
 class UserPolicy
 {
     public function viewAny(User $user): bool
     {
-        $org = $user->resolveCurrentOrganization();
-
-        return $org !== null
-            && $user->organizations()
-                ->where('organizations.id', $org->id)
-                ->wherePivot('role', 'owner')
-                ->exists();
+        return $user->resolveCurrentOrganization() !== null
+            && $user->hasPermissionTo(Permission::OrganizationManageUsers);
     }
 
     public function view(User $user, User $target): bool
     {
-        // Users can view themselves
         if ($user->id === $target->id) {
             return true;
         }
 
-        // Owners can view members of their organization
         return $this->sharesOrganization($user, $target);
     }
 
@@ -35,7 +29,7 @@ class UserPolicy
 
     public function delete(User $user, User $target): bool
     {
-        return false; // Users cannot be deleted through the UI
+        return false;
     }
 
     private function sharesOrganization(User $user, User $target): bool

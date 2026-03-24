@@ -38,6 +38,8 @@ class HandleInertiaRequests extends Middleware
                     : $user->resolveCurrentOrganization()
                 )?->only('id', 'name', 'currency', 'locale', 'require_two_factor'),
                 'subscription' => $this->resolveSubscription($user),
+                'role' => $this->resolveCurrentRole($user),
+                'permissions' => $this->resolvePermissions($user),
                 'organizations' => $user->organizations()
                     ->select('organizations.id', 'organizations.name')
                     ->get()
@@ -80,5 +82,18 @@ class HandleInertiaRequests extends Middleware
             'trial_ends_at' => $sub->trial_ends_at?->toDateString(),
             'ends_at' => $sub->ends_at?->toDateString(),
         ];
+    }
+
+    private function resolveCurrentRole($user): ?string
+    {
+        return $user->getRoleNames()->first();
+    }
+
+    /**
+     * @return string[]
+     */
+    private function resolvePermissions($user): array
+    {
+        return $user->getAllPermissions()->pluck('name')->toArray();
     }
 }

@@ -10,10 +10,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laragear\WebAuthn\Contracts\WebAuthnAuthenticatable;
 use Laragear\WebAuthn\WebAuthnAuthentication;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail, WebAuthnAuthenticatable
 {
-    use HasFactory, Notifiable, WebAuthnAuthentication;
+    use HasFactory, HasRoles, Notifiable, WebAuthnAuthentication;
 
     protected $fillable = [
         'name',

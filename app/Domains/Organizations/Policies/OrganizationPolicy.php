@@ -2,6 +2,7 @@
 
 namespace App\Domains\Organizations\Policies;
 
+use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 
@@ -24,14 +25,19 @@ class OrganizationPolicy
 
     public function update(User $user, Organization $organization): bool
     {
-        return $user->organizations()
-            ->where('organizations.id', $organization->id)
-            ->wherePivot('role', 'owner')
-            ->exists();
+        return $this->view($user, $organization)
+            && $user->hasPermissionTo(Permission::OrganizationEdit);
     }
 
     public function delete(User $user, Organization $organization): bool
     {
-        return $this->update($user, $organization);
+        return $this->view($user, $organization)
+            && $user->hasPermissionTo(Permission::OrganizationDelete);
+    }
+
+    public function manageUsers(User $user, Organization $organization): bool
+    {
+        return $this->view($user, $organization)
+            && $user->hasPermissionTo(Permission::OrganizationManageUsers);
     }
 }

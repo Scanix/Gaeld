@@ -23,6 +23,8 @@ class EnsureHasOrganization
 
         $this->currentOrganization->set($org);
 
+        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($org->id);
+
         return $next($request);
     }
 }

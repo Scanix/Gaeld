@@ -23,5 +23,6 @@ return [
     'multi_currency' => env('FEATURE_MULTI_CURRENCY', false),
     'api_access' => env('FEATURE_API_ACCESS', false),
     'rule_engine' => env('FEATURE_RULE_ENGINE', false),
+    'advanced_permissions' => env('FEATURE_ADVANCED_PERMISSIONS', false),
 
 ];

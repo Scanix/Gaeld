@@ -13,6 +13,7 @@
         "laravel/framework": "^12.54",
         "laravel/scout": "^11.0",
         "pragmarx/google2fa-laravel": "^3.0",
+        "spatie/laravel-permission": "^7.2",
         "sprain/swiss-qr-bill": "^5.3",
         "tecnickcom/tcpdf": "^6.11"
     },
