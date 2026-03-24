@@ -15,11 +15,11 @@ const { showHelp } = useHelp()
 <template>
   <div
     v-if="showHelp"
-    class="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950/30"
+    class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30"
   >
     <div class="flex gap-3">
-      <Lightbulb class="mt-0.5 h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
-      <div class="text-sm text-green-900 dark:text-green-200">
+      <Lightbulb class="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+      <div class="text-sm text-amber-900 dark:text-amber-200">
         <p v-if="title" class="mb-1 font-medium">{{ title }}</p>
         <div class="leading-relaxed [&>p]:mt-1 first:[&>p]:mt-0">
           <slot />
