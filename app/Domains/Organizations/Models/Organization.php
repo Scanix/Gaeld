@@ -29,7 +29,15 @@ class Organization extends Model
         'currency',
         'fiscal_year_start',
         'locale',
+        'require_two_factor',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'require_two_factor' => 'boolean',
+        ];
+    }
 
     public function users(): BelongsToMany
     {

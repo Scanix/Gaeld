@@ -30,11 +30,13 @@ class HandleInertiaRequests extends Middleware
                     'email' => $user->email,
                     'locale' => $user->locale,
                     'show_help' => $user->show_help,
+                    'two_factor_enabled' => $user->hasTwoFactorEnabled(),
+                    'has_passkeys' => $user->webAuthnCredentials()->exists(),
                 ],
                 'currentOrganization' => ($this->currentOrganization->isBound()
                     ? $this->currentOrganization->get()
                     : $user->resolveCurrentOrganization()
-                )?->only('id', 'name', 'currency', 'locale'),
+                )?->only('id', 'name', 'currency', 'locale', 'require_two_factor'),
                 'subscription' => $this->resolveSubscription($user),
                 'organizations' => $user->organizations()
                     ->select('organizations.id', 'organizations.name')

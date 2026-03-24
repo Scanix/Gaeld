@@ -73,6 +73,7 @@ class OrganizationController extends Controller
             'vat_number' => 'nullable|string|max:50',
             'currency' => 'string|size:3',
             'locale' => 'string|in:en,fr,de,it,rm',
+            'require_two_factor' => 'sometimes|boolean',
         ]);
 
         $action->execute($organization, UpdateOrganizationData::fromArray($validated));

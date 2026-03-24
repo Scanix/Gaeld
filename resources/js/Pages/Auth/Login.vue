@@ -1,5 +1,5 @@
 <script setup>
-import { Head, useForm, Link } from '@inertiajs/vue3'
+import { Head, useForm, Link, router } from '@inertiajs/vue3'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -8,6 +8,8 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { startAuthentication, browserSupportsWebAuthn } from '@simplewebauthn/browser'
+import { ref } from 'vue'
 
 const { t } = useTranslations()
 
@@ -17,10 +19,68 @@ const form = useForm({
   remember: false,
 })
 
+const passkeyError = ref('')
+const passkeyLoading = ref(false)
+const supportsPasskeys = browserSupportsWebAuthn()
+
 function submit() {
   form.post('/login', {
     onFinish: () => form.reset('password'),
   })
+}
+
+async function loginWithPasskey() {
+  passkeyError.value = ''
+  passkeyLoading.value = true
+
+  try {
+    const optionsRes = await fetch('/passkey/login/options', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-XSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+      credentials: 'same-origin',
+    })
+
+    if (!optionsRes.ok) {
+      throw new Error('Failed to get authentication options')
+    }
+
+    const options = await optionsRes.json()
+    const assertion = await startAuthentication({ optionsJSON: options })
+
+    const loginRes = await fetch('/passkey/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-XSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify(assertion),
+    })
+
+    if (!loginRes.ok) {
+      const data = await loginRes.json()
+      throw new Error(data.message || 'Passkey authentication failed')
+    }
+
+    const data = await loginRes.json()
+    window.location.href = data.redirect || '/'
+  } catch (err) {
+    if (err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+      passkeyError.value = err.message || t('passkey_login_failed')
+    }
+  } finally {
+    passkeyLoading.value = false
+  }
+}
+
+function getCsrfToken() {
+  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : ''
 }
 </script>
 
@@ -71,6 +131,31 @@ function submit() {
               {{ t('sign_in') }}
             </Button>
           </form>
+
+          <template v-if="supportsPasskeys">
+            <div class="relative my-4">
+              <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-[hsl(var(--border))]"></div>
+              </div>
+              <div class="relative flex justify-center text-xs uppercase">
+                <span class="bg-[hsl(var(--card))] px-2 text-[hsl(var(--muted-foreground))]">{{ t('or') }}</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              class="w-full"
+              :disabled="passkeyLoading"
+              @click="loginWithPasskey"
+            >
+              {{ t('sign_in_with_passkey') }}
+            </Button>
+
+            <p v-if="passkeyError" class="mt-2 text-sm text-[hsl(var(--destructive))]">
+              {{ passkeyError }}
+            </p>
+          </template>
         </CardContent>
       </Card>
 

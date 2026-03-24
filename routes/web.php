@@ -13,8 +13,11 @@ use App\Domains\Organizations\Controllers\OnboardingController;
 use App\Domains\Reporting\Controllers\ReportController;
 use App\Domains\Users\Controllers\AuthenticatedSessionController;
 use App\Domains\Users\Controllers\EmailVerificationController;
+use App\Domains\Users\Controllers\PasskeyController;
 use App\Domains\Users\Controllers\PasswordResetController;
 use App\Domains\Users\Controllers\RegisteredUserController;
+use App\Domains\Users\Controllers\TwoFactorChallengeController;
+use App\Domains\Users\Controllers\TwoFactorController;
 use App\Domains\Users\Controllers\UserController;
 use App\Domains\Reporting\Controllers\DashboardController;
 use App\Domains\Organizations\Controllers\SetupWizardController;
@@ -29,10 +32,18 @@ use Illuminate\Support\Facades\Route;
 // Setup wizard (only accessible if no organization exists)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login.store');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:5,1')->name('login.store');
 
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
+    Route::post('/register', [RegisteredUserController::class, 'store'])->middleware('throttle:5,1')->name('register.store');
+
+    // Passkey login (unauthenticated)
+    Route::post('/passkey/login/options', [PasskeyController::class, 'loginOptions'])->middleware('throttle:10,1');
+    Route::post('/passkey/login', [PasskeyController::class, 'login'])->middleware('throttle:5,1');
+
+    // Two-factor challenge
+    Route::get('/two-factor-challenge', [TwoFactorChallengeController::class, 'create'])->name('two-factor.create');
+    Route::post('/two-factor-challenge', [TwoFactorChallengeController::class, 'store'])->middleware('throttle:5,1')->name('two-factor.store');
 
     Route::get('/forgot-password', [PasswordResetController::class, 'requestForm'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
@@ -64,7 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware('auth')->post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
 // Authenticated routes
-Route::middleware(['auth', 'verified', 'org'])->group(function () {
+Route::middleware(['auth', 'verified', 'org', 'org-2fa'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Accounting
@@ -128,6 +139,19 @@ Route::middleware(['auth', 'verified', 'org'])->group(function () {
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profile/toggle-help', [UserController::class, 'toggleHelp'])->name('profile.toggle-help');
+
+    // Two-factor authentication management
+    Route::post('/profile/two-factor', [TwoFactorController::class, 'enable'])->name('two-factor.enable');
+    Route::post('/profile/two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
+    Route::delete('/profile/two-factor', [TwoFactorController::class, 'disable'])->name('two-factor.disable');
+    Route::post('/profile/two-factor/recovery-codes', [TwoFactorController::class, 'showRecoveryCodes'])->name('two-factor.recovery-codes');
+    Route::post('/profile/two-factor/recovery-codes/regenerate', [TwoFactorController::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes.regenerate');
+
+    // Passkey management
+    Route::post('/profile/passkeys/register/options', [PasskeyController::class, 'registerOptions'])->name('passkeys.register.options');
+    Route::post('/profile/passkeys/register', [PasskeyController::class, 'register'])->name('passkeys.register');
+    Route::get('/profile/passkeys', [PasskeyController::class, 'index'])->name('passkeys.index');
+    Route::delete('/profile/passkeys/{credential}', [PasskeyController::class, 'destroy'])->name('passkeys.destroy');
 
     // Contacts — Customers (CE)
     Route::resource('customers', CustomerController::class);
