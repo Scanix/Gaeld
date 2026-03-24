@@ -64,6 +64,8 @@ function submit() {
               required
             />
 
+            <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('password_requirements_hint') }}</p>
+
             <FormInput
               id="password_confirmation"
               v-model="form.password_confirmation"

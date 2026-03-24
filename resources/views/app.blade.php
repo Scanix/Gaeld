@@ -14,6 +14,15 @@
         <meta name="msapplication-config" content="/browserconfig.xml">
         <meta name="theme-color" content="#33cc66">
 
+        {{-- Prevent flash of wrong theme --}}
+        <script>
+          (function(){
+            var t=localStorage.getItem('gaeld-theme')||'system';
+            var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches);
+            if(d)document.documentElement.classList.add('dark');
+          })();
+        </script>
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead
     </head>

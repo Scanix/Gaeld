@@ -34,6 +34,7 @@ const form = useForm({
   vat_number: props.organization.vat_number || '',
   currency: props.organization.currency || 'CHF',
   locale: props.organization.locale || 'en',
+  require_two_factor: props.organization.require_two_factor || false,
 })
 
 function submitUpdate() {
@@ -97,6 +98,12 @@ const userColumns = computed(() => [
             <dd>{{ organization.currency || 'CHF' }}</dd>
             <dt class="text-[hsl(var(--muted-foreground))]">{{ t('locale') }}</dt>
             <dd class="uppercase">{{ organization.locale || '—' }}</dd>
+            <dt class="text-[hsl(var(--muted-foreground))]">{{ t('require_two_factor') }}</dt>
+            <dd>
+              <Badge :variant="organization.require_two_factor ? 'default' : 'secondary'">
+                {{ organization.require_two_factor ? t('enabled') : t('disabled') }}
+              </Badge>
+            </dd>
           </dl>
         </CardContent>
       </Card>
@@ -133,6 +140,25 @@ const userColumns = computed(() => [
           <FormSelect id="locale" v-model="form.locale" :label="t('locale')" :options="localeOptions" :error="form.errors.locale" />
         </div>
         <FormInput id="vat_number" v-model="form.vat_number" :label="t('vat_number')" :error="form.errors.vat_number" />
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('require_two_factor') }}</p>
+            <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('require_two_factor_desc') }}</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            :aria-checked="form.require_two_factor"
+            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2"
+            :class="form.require_two_factor ? 'bg-[hsl(var(--primary))]' : 'bg-[hsl(var(--input))]'"
+            @click="form.require_two_factor = !form.require_two_factor"
+          >
+            <span
+              class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+              :class="form.require_two_factor ? 'translate-x-5' : 'translate-x-0'"
+            />
+          </button>
+        </div>
         <div class="flex justify-end gap-3">
           <Button variant="outline" @click="showEditModal = false">{{ t('cancel') }}</Button>
           <Button type="submit" :disabled="form.processing">{{ t('save') }}</Button>

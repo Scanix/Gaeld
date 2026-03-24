@@ -4,6 +4,8 @@
 @source "../../resources/**/*.js";
 @source "../../resources/**/*.blade.php";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     /* Page background — clearly gray so white cards stand out */
@@ -49,6 +51,44 @@
     --chart-4: 0 84% 60%;
     --chart-5: 262 83% 58%;
   }
+
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 93%;
+
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 93%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 93%;
+
+    --primary: 142 60% 55%;
+    --primary-foreground: 0 0% 4%;
+
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 93%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 63%;
+
+    --accent: 142 30% 12%;
+    --accent-foreground: 142 50% 80%;
+
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 17%;
+    --input: 0 0% 17%;
+    --ring: 142 60% 55%;
+
+    --sidebar: 0 0% 6%;
+    --sidebar-foreground: 0 0% 88%;
+    --sidebar-border: 0 0% 13%;
+
+    --chart-1: 221 83% 63%;
+    --chart-2: 142 60% 55%;
+    --chart-3: 38 92% 60%;
+    --chart-4: 0 84% 65%;
+    --chart-5: 262 83% 68%;
+  }
 }
 
 @layer base {
@@ -65,5 +105,8 @@
   /* Give cards a clear elevation on the gray background */
   .card-elevated {
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  }
+  .dark .card-elevated {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.25);
   }
 }

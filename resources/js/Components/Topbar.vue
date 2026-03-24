@@ -1,9 +1,10 @@
 <script setup>
 import { useForm, usePage, router } from '@inertiajs/vue3'
-import { LogOut, User, HelpCircle, BookOpen, Building2, ChevronDown, Check, Menu } from 'lucide-vue-next'
+import { LogOut, User, HelpCircle, BookOpen, Building2, ChevronDown, Check, Menu, Sun, Moon } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import Button from './UI/Button.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useTheme } from '@/lib/useTheme'
 
 const { t } = useTranslations()
 
@@ -24,6 +25,8 @@ const page = usePage()
 const logoutForm = useForm({})
 const showUserMenu = ref(false)
 const showOrgMenu = ref(false)
+
+const { isDark, toggleTheme } = useTheme()
 
 const currentOrg = computed(() => page.props.auth?.currentOrganization)
 const organizations = computed(() => page.props.auth?.organizations ?? [])
@@ -86,6 +89,16 @@ function switchOrg(orgId) {
           </button>
         </div>
       </div>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        :title="isDark ? t('light_mode') : t('dark_mode')"
+        @click="toggleTheme"
+      >
+        <Sun v-if="isDark" class="h-4 w-4" />
+        <Moon v-else class="h-4 w-4" />
+      </Button>
 
       <Button
         v-if="helpPage"
