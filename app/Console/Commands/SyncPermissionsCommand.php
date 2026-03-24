@@ -10,7 +10,7 @@ use Spatie\Permission\PermissionRegistrar;
 
 class SyncPermissionsCommand extends Command
 {
-    protected $signature = 'gaeld:sync-permissions';
+    protected $signature = 'gaeld:sync-permissions {--debug : Show current permission state}';
 
     protected $description = 'Assign spatie roles to organization members who are missing them';
 
@@ -18,6 +18,10 @@ class SyncPermissionsCommand extends Command
     {
         // Ensure roles exist
         $this->callSilently('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
+
+        if ($this->option('debug')) {
+            return $this->debug();
+        }
 
         $pivotRows = DB::table('organization_users')->get();
         $fixed = 0;
@@ -56,6 +60,40 @@ class SyncPermissionsCommand extends Command
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $this->info("Done. Fixed: {$fixed}, already assigned: {$skipped}.");
+
+        return self::SUCCESS;
+    }
+
+    private function debug(): int
+    {
+        $roles = \Spatie\Permission\Models\Role::with('permissions')->get();
+        $this->info("Roles: {$roles->count()}");
+        foreach ($roles as $r) {
+            $this->line("  {$r->name} => {$r->permissions->count()} permissions");
+        }
+
+        $permCount = \Spatie\Permission\Models\Permission::count();
+        $this->info("Total permissions: {$permCount}");
+
+        $userRoles = DB::table('model_has_roles')->get();
+        $this->info("User-role assignments: {$userRoles->count()}");
+        foreach ($userRoles as $ur) {
+            $roleName = $roles->firstWhere('id', $ur->role_id)?->name ?? '?';
+            $this->line("  user={$ur->model_id} role={$roleName} org={$ur->organization_id}");
+        }
+
+        // Test hasPermissionTo for the first user
+        $first = $userRoles->first();
+        if ($first) {
+            app()[PermissionRegistrar::class]->setPermissionsTeamId($first->organization_id);
+            $user = \App\Domains\Users\Models\User::find($first->model_id);
+            if ($user) {
+                $this->info("Testing user {$user->email}:");
+                $this->line("  Roles: " . $user->getRoleNames()->implode(', '));
+                $this->line("  Permissions: " . $user->getAllPermissions()->pluck('name')->implode(', '));
+                $this->line("  hasPermissionTo(accounting.view): " . ($user->hasPermissionTo('accounting.view') ? 'YES' : 'NO'));
+            }
+        }
 
         return self::SUCCESS;
     }
