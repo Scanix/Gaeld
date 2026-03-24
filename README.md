@@ -1,19 +1,32 @@
-# Gäld — Open-Source Swiss Accounting Platform
+# Gäld — Open-Source Swiss Accounting
 
-Gäld is an open-source accounting platform designed for freelancers and small businesses in Switzerland.
+Gäld is an open-source accounting application for freelancers and small businesses in Switzerland. Double-entry accounting, invoicing, expense tracking, Swiss VAT (MWST), and financial reports — free, self-hosted, MIT licensed.
 
-## Editions
+> **Early beta** — under active development. Expect rough edges.
 
-- **Community Edition** — Free, open-source, self-hosted
-- **SaaS Edition** — Hosted, subscription-based (additional features via feature flags)
+## Features
+
+- **Double-entry accounting** — full journal, ledger, and trial balance
+- **Invoicing** — PDF/QR invoices (Swiss QR-Bill standard)
+- **Expenses** — receipt capture and expense reports
+- **Swiss VAT (MWST)** — preconfigured rates and reporting
+- **Bank reconciliation** — import CAMT.053 files, match transactions
+- **Contacts** — customers and suppliers
+- **Financial reports** — P&L, balance sheet, trial balance
+- **Multi-language** — EN / FR / DE / IT / RM
+- **Plugin system** — extend without touching core code
+
+A managed hosted version is available at [gaeld.ch](https://gaeld.ch).
 
 ## Tech Stack
 
-- **Backend:** Laravel 12
-- **Frontend:** Laravel + Inertia.js + Vue 3
-- **Database:** PostgreSQL
-- **Cache / Queue:** Redis
-- **Documentation:** Docusaurus (external)
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 12 |
+| Frontend | Inertia.js + Vue 3 |
+| Database | PostgreSQL |
+| Cache / Queue | Redis |
+| Docs | Docusaurus |
 
 ## Quick Start (Docker)
 
@@ -24,7 +37,7 @@ docker-compose exec app php artisan key:generate
 docker-compose exec app php artisan gaeld:install
 ```
 
-Then visit `http://localhost:8080` to access the application.
+Open `http://localhost:8080`.
 
 ## Manual Installation
 
@@ -41,27 +54,17 @@ php artisan serve
 
 ### `gaeld:install`
 
-Interactive first-run setup. Runs migrations, creates the admin user and organization, seeds the Swiss chart of accounts and VAT rates.
+Interactive first-run setup — runs migrations, creates the admin user and organization, and seeds the Swiss chart of accounts and VAT rates.
 
 ```bash
-php artisan gaeld:install          # Interactive prompts
-php artisan gaeld:install --demo   # Include demo data (clients, invoices, expenses)
-php artisan gaeld:install --no-interaction  # Non-interactive with sensible defaults
-```
-
-### `gaeld:release`
-
-Prepare the application for a specific edition release. Sets feature flags and optimizes for production.
-
-```bash
-php artisan gaeld:release community   # Disable SaaS features
-php artisan gaeld:release saas        # Enable all features
-php artisan gaeld:release saas --dry-run  # Preview changes without applying
+php artisan gaeld:install          # interactive
+php artisan gaeld:install --demo   # with demo invoices, expenses, contacts
+php artisan gaeld:install --no-interaction
 ```
 
 ### `gaeld:update`
 
-Run after pulling a new version. Handles migrations, cache clearing, and queue restarts with zero-downtime maintenance mode.
+Run after pulling a new version. Handles migrations, cache clearing, and queue restarts gracefully.
 
 ```bash
 php artisan gaeld:update
@@ -69,51 +72,59 @@ php artisan gaeld:update
 
 ## Architecture
 
-Gäld uses a **domain-driven modular architecture**:
+Domain-driven modular structure under `app/Domains/`:
 
 ```
-app/Domains/
-├── Accounting/     # Chart of accounts, journal entries, ledger
-├── Banking/        # Bank accounts, transactions, sync
-├── Contacts/       # Customers and suppliers
-├── Expenses/       # Expense tracking
-├── Invoicing/      # Invoices, invoice lines, payments
-├── Organizations/  # Multi-org support
-├── Reporting/      # Financial reports (read-only projection)
-└── Users/          # Authentication, user management
+Accounting/     # chart of accounts, journal, ledger
+Banking/        # bank accounts, CAMT import, reconciliation
+Contacts/       # customers and suppliers
+Expenses/       # expense tracking
+Invoicing/      # invoices, lines, payments, QR-Bill
+Organizations/  # multi-org, tenant isolation
+Reporting/      # read-only financial projections
+Users/          # auth, user management
 ```
 
-Domains commonly contain: `Models/`, `Actions/`, `Services/`, `Controllers/`, `Policies/`, `DTOs/`, `Queries/`. Some domains omit sub-packages by design (e.g. Accounting routes all mutations through `LedgerService`, Reporting is a read-only projection with no Models).
-
-## Accounting Engine
-
-- Double-entry accounting
-- Every journal entry must balance (SUM debit = SUM credit)
-- `LedgerService` handles posting transactions
-- Swiss SME chart of accounts included as default seeder
+Each domain contains some combination of `Models/`, `Actions/`, `Services/`, `Controllers/`, `Policies/`, `DTOs/`, `Queries/`. All ledger mutations go through `LedgerService` to guarantee double-entry integrity.
 
 ## Feature Flags
 
-Enable/disable features via `.env`:
+Optional features can be toggled in `.env`:
 
 ```env
 FEATURE_BANK_SYNC=false
-FEATURE_SAAS=false
+FEATURE_AUTO_RECONCILIATION=false
 FEATURE_AUTOMATION=false
+FEATURE_MULTI_CURRENCY=false
+FEATURE_API_ACCESS=false
 ```
 
 ## Plugin System
 
-Drop plugins into `/plugins` directory. Each plugin includes:
+Drop a plugin into `/plugins`. A plugin is a self-contained Laravel service provider:
 
-- `plugin.json` — metadata
-- `ServiceProvider` — auto-registered
-- `routes/`, `migrations/` — optional
+```
+plugins/my-plugin/
+├── plugin.json          # name, version, provider class
+├── src/
+│   └── MyServiceProvider.php
+├── routes/web.php       # optional
+└── migrations/          # optional
+```
 
-## Languages
+Plugins are auto-discovered on boot — no manual registration needed.
 
-Supported: English, French, German, Italian, Romansh (EN/FR/DE/IT/RM)
+## Contributing
+
+Pull requests are welcome. For significant changes, open an issue first to discuss what you'd like to change. Please keep PRs focused and include tests for new behaviour.
+
+```bash
+# Run the test suite
+php artisan test
+```
+
+Code style follows Laravel conventions (`pint` is configured).
 
 ## License
 
-MIT License — See [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE).
