@@ -32,3 +32,4 @@ yarn-error.log
 
 # EE proprietary plugin — distributed via private Composer registry, never committed to this repo
 /plugins/gaeld-ee/
+INTERNAL.md
