@@ -52,6 +52,13 @@ class PluginServiceProvider extends ServiceProvider
         // Register the plugin's service provider
         $providerClass = $manifest['provider'];
 
+        // Load the plugin's own Composer dependencies if they were installed
+        // separately (i.e. `composer install` was run inside the plugin directory).
+        $pluginAutoload = $pluginDir . '/vendor/autoload.php';
+        if (File::exists($pluginAutoload)) {
+            require_once $pluginAutoload;
+        }
+
         // Dynamically register a PSR-4 autoloader for this plugin's src/ directory.
         // This decouples directory naming (e.g. kebab-case slugs) from PHP namespaces
         // and allows plugins distributed as Composer packages OR dropped in manually.
