@@ -13,12 +13,40 @@ return [
     'banking' => 'Banca',
     'reconciliation' => 'Riconciliazione',
     'settings' => 'Impostazioni',
+    'billing' => 'Fatturazione & Piano',
     'organization' => 'Organizzazione',
     'chart_of_accounts' => 'Piano dei conti',
     'journal_entries' => 'Registrazioni contabili',
     'trial_balance' => 'Bilancio di verifica',
+    'year_end_closing' => 'Chiusura annuale',
     'profit_and_loss' => 'Conto economico',
     'balance_sheet' => 'Bilancio',
+
+    // Billing / SaaS
+    'current_plan' => 'Piano attuale',
+    'manage_subscription' => 'Gestisci abbonamento',
+    'start_trial' => 'Inizia la prova gratuita',
+    'switch_plan' => 'Passa a questo piano',
+    'month' => 'mese',
+    'unlimited_users' => 'Utenti illimitati',
+    'unlimited_invoices' => 'Fatture illimitate',
+    'users' => 'utenti',
+    'invoices_per_month' => 'fatture / mese',
+    'payment_failed_warning' => 'Il tuo ultimo pagamento è fallito. Aggiorna il tuo metodo di pagamento per mantenere l\'accesso.',
+    'update_payment_method' => 'Aggiorna metodo di pagamento',
+    'trial_ends' => 'La prova termina il',
+    'subscription_status_active' => 'Attivo',
+    'subscription_status_trialing' => 'Periodo di prova',
+    'subscription_status_past_due' => 'Pagamento scaduto',
+    'subscription_status_canceled' => 'Annullato',
+    'subscription_status_paused' => 'In pausa',
+    'feature_bank_import' => 'Importazione bancaria',
+    'feature_auto_reconciliation' => 'Riconciliazione automatica',
+    'feature_bank_sync' => 'Sincronizzazione bancaria in tempo reale',
+    'feature_automation' => 'Regole di automazione',
+    'feature_multi_currency' => 'Multi-valuta',
+    'feature_api_access' => 'Accesso API',
+    'feature_rule_engine' => 'Motore di regole',
 
     // Common actions
     'create' => 'Crea',
@@ -40,6 +68,8 @@ return [
     'approve' => 'Approva',
     'duplicate' => 'Duplica',
     'finalize' => 'Finalizza',
+    'search' => 'Cerca…',
+    'all_statuses' => 'Tutti gli stati',
 
     // Common labels
     'date' => 'Data',
@@ -149,6 +179,10 @@ return [
     'view_receipt' => 'Visualizza ricevuta',
     'current_receipt' => 'Ricevuta attuale allegata. Carica un nuovo file per sostituirla.',
     'journal_entry' => 'Registrazione contabile',
+    'justificatif' => 'Documento giustificativo',
+    'justificatif_attached' => 'Documento attuale allegato. Carica un nuovo file per sostituirlo.',
+    'view_justificatif' => 'Visualizza documento',
+    'remove_justificatif' => 'Rimuovi documento',
 
     // Expense categories
     'cat_office_supplies' => 'Materiale d\'ufficio',
@@ -164,6 +198,20 @@ return [
     // Accounting
     'posted' => 'Registrata',
     'draft' => 'Bozza',
+    'year_end_closing_desc' => 'Chiudere i conti di ricavo e di costo alla fine dell\'esercizio fiscale.',
+    'fiscal_year' => 'Esercizio fiscale',
+    'closing_date' => 'Data di chiusura',
+    'closing_reference' => 'Riferimento di chiusura',
+    'income_accounts' => 'Conti di ricavo',
+    'expense_accounts' => 'Conti di costo',
+    'net_result' => 'Risultato netto',
+    'run_closing' => 'Esegui la chiusura annuale',
+    'closing_preview' => 'Anteprima della chiusura',
+    'closing_warning' => 'Verrà creata una registrazione contabile che azzera tutti i conti di ricavo e di costo. Questa azione non può essere facilmente annullata.',
+    'no_accounts_to_close' => 'Nessun conto di ricavo o di costo con saldo non zero trovato per questo periodo.',
+    'closing_success' => 'Chiusura annuale completata.',
+    'result_account_code' => 'Codice conto risultato',
+    'result_account_code_help' => 'Conto in cui verrà registrato il risultato netto (utile o perdita) (es. 9000).',
 
     // Reports
     'from' => 'Dal',
@@ -194,6 +242,28 @@ return [
     'add_first_account' => 'Aggiungi il tuo primo conto',
     'transactions' => 'Transazioni',
     'no_transactions_recorded' => 'Nessuna transazione registrata.',
+
+    // Reconciliation
+    'unreconciled' => 'Non riconciliata',
+    'reconciled' => 'Riconciliata',
+    'all' => 'Tutte',
+    'import_camt' => 'Importa CAMT',
+    'auto_reconcile' => 'Riconcilia automaticamente',
+    'match' => 'Abbina',
+    'reconcile' => 'Riconcilia',
+    'reconcile_transaction' => 'Riconcilia transazione',
+    'suggested_matches' => 'Corrispondenze suggerite',
+    'invoice_id' => 'ID fattura',
+    'expense_id' => 'ID spesa',
+    'expense_account' => 'Codice conto spese',
+    'contra_account' => 'Codice conto di contropartita',
+    'manual_reconcile_help' => 'Inserisci il codice del conto di contropartita per registrare questa transazione.',
+    'no_transactions' => 'Nessuna transazione trovata.',
+    'enter_invoice_id' => 'Seleziona o inserisci ID fattura',
+    'enter_expense_id' => 'Seleziona o inserisci ID spesa',
+    'file' => 'File',
+    'import' => 'Importa',
+    'manual' => 'Manuale',
 
     // Organizations
     'organizations' => 'Organizzazioni',
@@ -286,7 +356,7 @@ return [
     'verify_email_resent' => 'Un nuovo link di verifica è stato inviato al tuo indirizzo e-mail.',
     'verify_email_check_inbox' => 'Se non hai ricevuto l\'e-mail, clicca qui sotto per richiederne un\'altra.',
     'verify_email_resend' => 'Rinvia e-mail di verifica',
-    'logout' => 'Disconnettersi',
+    'logout' => 'Esci',
 
     // Onboarding
     'onboarding_title' => 'Crea la tua organizzazione',
@@ -295,7 +365,6 @@ return [
     'create_organization_btn' => 'Crea organizzazione',
 
     // Chart of accounts
-    'chart_of_accounts' => 'Piano dei conti',
     'chart_swiss_sme' => 'PMI svizzera (Kontenrahmen KMU)',
     'chart_none' => 'Vuoto \u2014 creer\u00f2 il mio',
     'chart_of_accounts_help' => 'Il modello PMI svizzera include conti standard e aliquote IVA. Potrai sempre aggiungere o rimuovere conti in seguito.',

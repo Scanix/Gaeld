@@ -197,7 +197,6 @@ return [
     // Accounting
     'posted' => 'Posted',
     'draft' => 'Draft',
-    'year_end_closing' => 'Year-End Closing',
     'year_end_closing_desc' => 'Close income and expense accounts at the end of the fiscal year.',
     'fiscal_year' => 'Fiscal Year',
     'closing_date' => 'Closing Date',
@@ -366,7 +365,6 @@ return [
     'create_organization_btn' => 'Create organization',
 
     // Chart of accounts
-    'chart_of_accounts' => 'Chart of Accounts',
     'chart_swiss_sme' => 'Swiss SME (Kontenrahmen KMU)',
     'chart_none' => 'Empty — I\'ll create my own',
     'chart_of_accounts_help' => 'The Swiss SME template includes standard accounts and VAT rates. You can always add or remove accounts later.',

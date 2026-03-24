@@ -13,12 +13,40 @@ return [
     'banking' => 'Bankwesen',
     'reconciliation' => 'Abgleich',
     'settings' => 'Einstellungen',
+    'billing' => 'Abrechnung & Plan',
     'organization' => 'Organisation',
     'chart_of_accounts' => 'Kontenplan',
     'journal_entries' => 'Buchungen',
     'trial_balance' => 'Saldobilanz',
+    'year_end_closing' => 'Jahresabschluss',
     'profit_and_loss' => 'Erfolgsrechnung',
     'balance_sheet' => 'Bilanz',
+
+    // Billing / SaaS
+    'current_plan' => 'Aktueller Plan',
+    'manage_subscription' => 'Abonnement verwalten',
+    'start_trial' => 'Kostenlose Testphase starten',
+    'switch_plan' => 'Zu diesem Plan wechseln',
+    'month' => 'Monat',
+    'unlimited_users' => 'Unbegrenzte Benutzer',
+    'unlimited_invoices' => 'Unbegrenzte Rechnungen',
+    'users' => 'Benutzer',
+    'invoices_per_month' => 'Rechnungen / Monat',
+    'payment_failed_warning' => 'Ihre letzte Zahlung ist fehlgeschlagen. Bitte aktualisieren Sie Ihre Zahlungsmethode, um den Zugang zu behalten.',
+    'update_payment_method' => 'Zahlungsmethode aktualisieren',
+    'trial_ends' => 'Testphase endet am',
+    'subscription_status_active' => 'Aktiv',
+    'subscription_status_trialing' => 'Testphase',
+    'subscription_status_past_due' => 'Zahlung überfällig',
+    'subscription_status_canceled' => 'Gekündigt',
+    'subscription_status_paused' => 'Pausiert',
+    'feature_bank_import' => 'Bankimport',
+    'feature_auto_reconciliation' => 'Automatischer Abgleich',
+    'feature_bank_sync' => 'Live-Banksynchronisation',
+    'feature_automation' => 'Automatisierungsregeln',
+    'feature_multi_currency' => 'Mehrwährung',
+    'feature_api_access' => 'API-Zugang',
+    'feature_rule_engine' => 'Regelwerk',
 
     // Common actions
     'create' => 'Erstellen',
@@ -40,6 +68,8 @@ return [
     'approve' => 'Genehmigen',
     'duplicate' => 'Duplizieren',
     'finalize' => 'Abschliessen',
+    'search' => 'Suchen…',
+    'all_statuses' => 'Alle Status',
 
     // Common labels
     'date' => 'Datum',
@@ -149,6 +179,10 @@ return [
     'view_receipt' => 'Beleg anzeigen',
     'current_receipt' => 'Aktueller Beleg vorhanden. Laden Sie eine neue Datei hoch, um ihn zu ersetzen.',
     'journal_entry' => 'Buchungssatz',
+    'justificatif' => 'Beleg (Justifikativ)',
+    'justificatif_attached' => 'Aktueller Beleg angehängt. Laden Sie eine neue Datei hoch, um ihn zu ersetzen.',
+    'view_justificatif' => 'Beleg anzeigen',
+    'remove_justificatif' => 'Beleg entfernen',
 
     // Expense categories
     'cat_office_supplies' => 'Büromaterial',
@@ -164,6 +198,20 @@ return [
     // Accounting
     'posted' => 'Verbucht',
     'draft' => 'Entwurf',
+    'year_end_closing_desc' => 'Aufwand- und Ertragskonten am Ende des Geschäftsjahres abschliessen.',
+    'fiscal_year' => 'Geschäftsjahr',
+    'closing_date' => 'Abschlussdatum',
+    'closing_reference' => 'Abschlussreferenz',
+    'income_accounts' => 'Ertragskonten',
+    'expense_accounts' => 'Aufwandkonten',
+    'net_result' => 'Nettoergebnis',
+    'run_closing' => 'Jahresabschluss durchführen',
+    'closing_preview' => 'Abschlussvorschau',
+    'closing_warning' => 'Dies erstellt einen Buchungssatz, der alle Aufwand- und Ertragskonten nullsetzt. Diese Aktion kann nicht einfach rükgängig gemacht werden.',
+    'no_accounts_to_close' => 'Keine Aufwand- oder Ertragskonten mit Nicht-Null-Saldo für diesen Zeitraum gefunden.',
+    'closing_success' => 'Jahresabschluss abgeschlossen.',
+    'result_account_code' => 'Ergebniskonto-Nr.',
+    'result_account_code_help' => 'Konto, auf das das Nettoergebnis (Gewinn oder Verlust) gebucht wird (z. B. 9000).',
 
     // Reports
     'from' => 'Von',
@@ -194,6 +242,28 @@ return [
     'add_first_account' => 'Erstes Konto hinzufügen',
     'transactions' => 'Transaktionen',
     'no_transactions_recorded' => 'Noch keine Transaktionen erfasst.',
+
+    // Reconciliation
+    'unreconciled' => 'Nicht abgeglichen',
+    'reconciled' => 'Abgeglichen',
+    'all' => 'Alle',
+    'import_camt' => 'CAMT importieren',
+    'auto_reconcile' => 'Automatisch abgleichen',
+    'match' => 'Zuordnen',
+    'reconcile' => 'Abgleichen',
+    'reconcile_transaction' => 'Transaktion abgleichen',
+    'suggested_matches' => 'Vorgeschlagene Zuordnungen',
+    'invoice_id' => 'Rechnungs-ID',
+    'expense_id' => 'Ausgaben-ID',
+    'expense_account' => 'Aufwandkonto-Nr.',
+    'contra_account' => 'Gegenkonto-Nr.',
+    'manual_reconcile_help' => 'Geben Sie die Gegenkonto-Nr. ein, um diese Transaktion zu verbuchen.',
+    'no_transactions' => 'Keine Transaktionen gefunden.',
+    'enter_invoice_id' => 'Rechnungs-ID auswählen oder eingeben',
+    'enter_expense_id' => 'Ausgaben-ID auswählen oder eingeben',
+    'file' => 'Datei',
+    'import' => 'Importieren',
+    'manual' => 'Manuell',
 
     // Organizations
     'organizations' => 'Organisationen',
@@ -295,7 +365,6 @@ return [
     'create_organization_btn' => 'Organisation erstellen',
 
     // Chart of accounts
-    'chart_of_accounts' => 'Kontenplan',
     'chart_swiss_sme' => 'Schweizer KMU (Kontenrahmen KMU)',
     'chart_none' => 'Leer — ich erstelle meinen eigenen',
     'chart_of_accounts_help' => 'Die Schweizer KMU-Vorlage enthält Standardkonten und Mehrwertsteuersätze. Sie können später jederzeit Konten hinzufügen oder entfernen.',
