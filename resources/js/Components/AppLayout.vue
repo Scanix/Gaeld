@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue'
-import { Head } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+import { Head, usePage } from '@inertiajs/vue3'
 
 const betaDismissed = ref(
   typeof localStorage !== 'undefined' && localStorage.getItem('beta-dismissed') === '1'
@@ -23,6 +23,8 @@ const props = defineProps({
 })
 
 const { showHelp, toggleHelp } = useHelp()
+const page = usePage()
+const docsBaseUrl = computed(() => page.props.docsBaseUrl)
 const collapsed = ref(false)
 const mobileOpen = ref(false)
 </script>
@@ -76,6 +78,7 @@ const mobileOpen = ref(false)
     <HelpSidebar
       v-if="helpPage && showHelp"
       :page="helpPage"
+      :base-url="docsBaseUrl"
       @close="toggleHelp"
     />
   </div>
