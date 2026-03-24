@@ -68,6 +68,8 @@ return [
     'approve' => 'Approuver',
     'duplicate' => 'Dupliquer',
     'finalize' => 'Finaliser',
+    'search' => 'Rechercher…',
+    'all_statuses' => 'Tous les statuts',
 
     // Common labels
     'date' => 'Date',
@@ -196,7 +198,6 @@ return [
     // Accounting
     'posted' => 'Comptabilisée',
     'draft' => 'Brouillon',
-    'year_end_closing' => 'Bouclement de compte',
     'year_end_closing_desc' => 'Clôturer les comptes de produits et charges en fin d\'exercice.',
     'fiscal_year' => 'Exercice fiscal',
     'closing_date' => 'Date de clôture',
@@ -241,6 +242,28 @@ return [
     'add_first_account' => 'Ajouter votre premier compte',
     'transactions' => 'Transactions',
     'no_transactions_recorded' => 'Aucune transaction enregistrée.',
+
+    // Reconciliation
+    'unreconciled' => 'Non rapproché',
+    'reconciled' => 'Rapproché',
+    'all' => 'Tous',
+    'import_camt' => 'Importer CAMT',
+    'auto_reconcile' => 'Rapprochement automatique',
+    'match' => 'Associer',
+    'reconcile' => 'Rapprocher',
+    'reconcile_transaction' => 'Rapprocher la transaction',
+    'suggested_matches' => 'Associations suggérées',
+    'invoice_id' => 'ID facture',
+    'expense_id' => 'ID dépense',
+    'expense_account' => 'Code du compte de charges',
+    'contra_account' => 'Code du compte de contrepartie',
+    'manual_reconcile_help' => 'Saisissez le code du compte de contrepartie pour comptabiliser cette transaction.',
+    'no_transactions' => 'Aucune transaction trouvée.',
+    'enter_invoice_id' => 'Sélectionner ou saisir l\'ID de facture',
+    'enter_expense_id' => 'Sélectionner ou saisir l\'ID de dépense',
+    'file' => 'Fichier',
+    'import' => 'Importer',
+    'manual' => 'Manuel',
 
     // Organizations
     'organizations' => 'Organisations',
@@ -341,7 +364,6 @@ return [
     'onboarding_org_help' => 'Entrez les détails de votre entreprise. Vous pourrez les modifier plus tard.',
     'create_organization_btn' => 'Créer l\'organisation',
     // Chart of accounts
-    'chart_of_accounts' => 'Plan comptable',
     'chart_swiss_sme' => 'PME suisse (Kontenrahmen KMU)',
     'chart_none' => 'Vide \u2014 je cr\u00e9erai le mien',
     'chart_of_accounts_help' => 'Le modèle PME suisse inclut les comptes standards et les taux de TVA. Vous pourrez toujours ajouter ou supprimer des comptes plus tard.',
