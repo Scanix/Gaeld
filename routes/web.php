@@ -8,6 +8,8 @@ use App\Domains\Contacts\Controllers\CustomerController;
 use App\Domains\Contacts\Controllers\SupplierController;
 use App\Domains\Expenses\Controllers\ExpenseController;
 use App\Domains\Invoicing\Controllers\InvoiceController;
+use App\Domains\Organizations\Controllers\InvitationController;
+use App\Domains\Organizations\Controllers\MemberController;
 use App\Domains\Organizations\Controllers\OrganizationController;
 use App\Domains\Organizations\Controllers\OnboardingController;
 use App\Domains\Reporting\Controllers\ReportController;
@@ -71,6 +73,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
 });
 
+// Invitation accept (authenticated but no org middleware needed)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/invitations/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
+});
+
 // Logout (available to any authenticated user)
 Route::middleware('auth')->post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
@@ -95,6 +102,8 @@ Route::middleware(['auth', 'verified', 'org', 'org-2fa'])->group(function () {
     Route::get('/invoices/{invoice}/justificatif', [InvoiceController::class, 'downloadJustificatif'])->name('invoices.justificatif.download');
 
     // Expenses
+    Route::post('/expenses/scan-receipt', [ExpenseController::class, 'scanReceipt'])->name('expenses.scan-receipt');
+    Route::get('/expenses/scan-receipt/{scanId}', [ExpenseController::class, 'scanReceiptStatus'])->name('expenses.scan-receipt.status');
     Route::resource('expenses', ExpenseController::class);
     Route::post('/expenses/{expense}/approve', [ExpenseController::class, 'approve'])->name('expenses.approve');
     Route::post('/expenses/{expense}/post', [ExpenseController::class, 'postToLedger'])->name('expenses.post');
@@ -134,12 +143,23 @@ Route::middleware(['auth', 'verified', 'org', 'org-2fa'])->group(function () {
     Route::resource('organizations', OrganizationController::class)->only(['index', 'show', 'store', 'update']);
     Route::post('/organizations/{organization}/switch', [OrganizationController::class, 'switchOrganization'])->name('organizations.switch');
 
+    // Organization members
+    Route::post('/organizations/{organization}/members/{user}/role', [MemberController::class, 'updateRole'])->name('organizations.members.updateRole');
+    Route::delete('/organizations/{organization}/members/{user}', [MemberController::class, 'remove'])->name('organizations.members.remove');
+    Route::post('/organizations/{organization}/leave', [MemberController::class, 'leave'])->name('organizations.leave');
+
+    // Organization invitations
+    Route::post('/organizations/{organization}/invitations', [InvitationController::class, 'store'])->name('organizations.invitations.store');
+    Route::delete('/organizations/{organization}/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('organizations.invitations.destroy');
+    Route::post('/organizations/{organization}/invitations/{invitation}/resend', [InvitationController::class, 'resend'])->name('organizations.invitations.resend');
+
     // User profile
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profile/toggle-help', [UserController::class, 'toggleHelp'])->name('profile.toggle-help');
-    Route::get('/profile/export', [UserController::class, 'exportData'])->name('profile.export');
+    Route::post('/profile/export', [UserController::class, 'exportData'])->name('profile.export');
+    Route::get('/profile/export/download/{filename}', [UserController::class, 'downloadExport'])->name('profile.export.download')->middleware('signed');
     Route::delete('/profile', [UserController::class, 'destroyAccount'])->name('profile.destroy');
 
     // Two-factor authentication management

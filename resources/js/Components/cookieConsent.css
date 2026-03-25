@@ -1,0 +1,29 @@
+#cc-main {
+  --cc-btn-primary-bg: #33cc66;
+  --cc-btn-primary-hover-bg: #2bb858;
+  --cc-toggle-on-bg: #33cc66;
+  --cc-btn-border-radius: 10px;
+}
+
+html.dark #cc-main {
+  --cc-bg: #18181b;
+  --cc-secondary-color: #d4d4d8;
+  --cc-primary-color: #fafafa;
+  --cc-btn-primary-bg: #33cc66;
+  --cc-btn-primary-hover-bg: #2bb858;
+  --cc-btn-primary-color: #fff;
+  --cc-btn-secondary-bg: #27272a;
+  --cc-btn-secondary-hover-bg: #3f3f46;
+  --cc-btn-secondary-color: #fafafa;
+  --cc-toggle-on-bg: #33cc66;
+  --cc-toggle-off-bg: #3f3f46;
+  --cc-toggle-readonly-bg: #52525b;
+  --cc-cookie-category-block-bg: #27272a;
+  --cc-cookie-category-block-hover-bg: #3f3f46;
+  --cc-section-border: #3f3f46;
+  --cc-overlay-bg: rgba(0, 0, 0, 0.65);
+  --cc-separator-border-color: #3f3f46;
+  --cc-footer-bg: #1e1e21;
+  --cc-footer-color: #a1a1aa;
+  --cc-footer-border-color: #3f3f46;
+}

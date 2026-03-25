@@ -18,4 +18,32 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | OCR (Optical Character Recognition)
+    |--------------------------------------------------------------------------
+    |
+    | Used by the Quick Receipt feature to extract text from receipt photos.
+    | The 'tesseract' driver requires the tesseract-ocr package installed
+    | on the server (apt install tesseract-ocr tesseract-ocr-deu tesseract-ocr-fra).
+    |
+    */
+
+    'ocr' => [
+        'driver' => env('OCR_DRIVER', 'tesseract'),
+        'tesseract_binary' => env('TESSERACT_BINARY', 'tesseract'),
+        'tesseract_lang' => env('TESSERACT_LANG', 'deu+fra+eng'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google (GTM / GA4)
+    |--------------------------------------------------------------------------
+    */
+
+    'google' => [
+        'gtm_id' => env('GTM_ID'),
+        'ga4_id' => env('GA4_ID'),
+    ],
+
 ];

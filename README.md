@@ -132,6 +132,8 @@ Plugins are auto-discovered on boot. See `plugins/example-plugin/` for a minimal
 
 Issues and pull requests are welcome. For larger changes, please open an issue first so we can discuss the approach.
 
+Please also read the repository-level contribution guide at [../CONTRIBUTING.md](../CONTRIBUTING.md).
+
 ```bash
 php artisan test          # run the test suite (255 tests)
 ./vendor/bin/pint         # fix code style

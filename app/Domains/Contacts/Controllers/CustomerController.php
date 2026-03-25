@@ -8,6 +8,7 @@ use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Queries\CustomerQuery;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -51,7 +52,7 @@ class CustomerController extends Controller
         return Inertia::render('Contacts/Customers/Create');
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Customer::class);
 
@@ -59,6 +60,10 @@ class CustomerController extends Controller
         $validated['organization_id'] = $currentOrg->id();
 
         $customer = Customer::create(CreateCustomerData::fromArray($validated)->toArray());
+
+        if ($request->wantsJson()) {
+            return response()->json(['customer' => $customer], 201);
+        }
 
         return redirect()->route('customers.show', $customer)
             ->with('success', 'Customer created.');

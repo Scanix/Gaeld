@@ -7,6 +7,7 @@ use App\Domains\Organizations\Actions\UpdateOrganizationAction;
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Services\InvitationService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,12 +27,19 @@ class OrganizationController extends Controller
         ]);
     }
 
-    public function show(Organization $organization): Response
+    public function show(Organization $organization, InvitationService $invitationService): Response
     {
         $this->authorize('view', $organization);
 
+        $canManageUsers = request()->user()->can('manageUsers', $organization);
+
         return Inertia::render('Organizations/Show', [
             'organization' => $organization->load('users'),
+            'invitations' => $canManageUsers
+                ? $organization->invitations()->pending()->with('inviter:id,name')->get()
+                : [],
+            'canManageUsers' => $canManageUsers,
+            'canAddMember' => $canManageUsers && $invitationService->canAddMember($organization),
         ]);
     }
 
@@ -74,6 +82,7 @@ class OrganizationController extends Controller
             'currency' => 'string|size:3',
             'locale' => 'string|in:en,fr,de,it,rm',
             'require_two_factor' => 'sometimes|boolean',
+            'default_payment_terms_days' => 'sometimes|integer|min:0|max:365',
         ]);
 
         $action->execute($organization, UpdateOrganizationData::fromArray($validated));

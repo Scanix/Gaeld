@@ -11,6 +11,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
+import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -266,5 +267,7 @@ const transactionColumns = computed(() => [
         </DataTable>
       </CardContent>
     </Card>
+
+    <QuickReceiptButton />
   </AppLayout>
 </template>

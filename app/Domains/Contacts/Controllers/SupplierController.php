@@ -8,6 +8,7 @@ use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Contacts\Queries\SupplierQuery;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -52,7 +53,7 @@ class SupplierController extends Controller
         return Inertia::render('Contacts/Suppliers/Create');
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Supplier::class);
 
@@ -60,6 +61,10 @@ class SupplierController extends Controller
         $validated['organization_id'] = $currentOrg->id();
 
         $supplier = Supplier::create(CreateSupplierData::fromArray($validated)->toArray());
+
+        if ($request->wantsJson()) {
+            return response()->json(['supplier' => $supplier], 201);
+        }
 
         return redirect()->route('suppliers.show', $supplier)
             ->with('success', 'Supplier created.');

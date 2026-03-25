@@ -2,12 +2,14 @@
 
 namespace App\Domains\Expenses\Controllers;
 
+use App\Domains\Contacts\Queries\SupplierQuery;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\DeleteExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Actions\UpdateExpenseAction;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
+use App\Domains\Expenses\Jobs\ProcessReceiptOcrJob;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Queries\ExpenseQuery;
 use App\Domains\Accounting\Queries\VatRateQuery;
@@ -15,9 +17,12 @@ use App\Domains\Expenses\DTOs\CreateExpenseData;
 use App\Domains\Expenses\DTOs\UpdateExpenseData;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -45,6 +50,7 @@ class ExpenseController extends Controller
 
         return Inertia::render('Expenses/Create', [
             'vatRates' => VatRateQuery::active(),
+            'suppliers' => SupplierQuery::forSelect(),
         ]);
     }
 
@@ -76,6 +82,12 @@ class ExpenseController extends Controller
                 $request->file('receipt'),
                 $currentOrg->id(),
             );
+        } elseif ($request->filled('receipt_path')) {
+            // Accept a pre-stored receipt path from the scan-receipt flow
+            $path = $request->input('receipt_path');
+            if (str_starts_with($path, "receipts/{$currentOrg->id()}/") && Storage::disk('local')->exists($path)) {
+                $validated['receipt_path'] = $path;
+            }
         }
         $validated['organization_id'] = $currentOrg->id();
 
@@ -102,6 +114,7 @@ class ExpenseController extends Controller
         return Inertia::render('Expenses/Edit', [
             'expense' => $expense->load('vatRate'),
             'vatRates' => VatRateQuery::active(),
+            'suppliers' => SupplierQuery::forSelect(),
             'receiptUrl' => $expense->receipt_path ? route('expenses.receipt.download', $expense) : null,
         ]);
     }
@@ -219,6 +232,44 @@ class ExpenseController extends Controller
             $expense->receipt_path,
             basename($expense->receipt_path),
         );
+    }
+
+    public function scanReceipt(Request $request, CurrentOrganization $currentOrg): JsonResponse
+    {
+        $this->authorize('create', Expense::class);
+
+        $request->validate([
+            'receipt' => 'required|file|mimes:jpg,jpeg,png|max:10240',
+        ]);
+
+        $receiptPath = $this->storeReceipt($request->file('receipt'), $currentOrg->id());
+        $scanId = Str::uuid()->toString();
+
+        Cache::put("receipt_scan:{$scanId}", [
+            'status' => 'processing',
+            'receipt_path' => $receiptPath,
+            'extracted' => null,
+        ], now()->addMinutes(30));
+
+        ProcessReceiptOcrJob::dispatch($scanId, $receiptPath);
+
+        return response()->json([
+            'scan_id' => $scanId,
+            'receipt_path' => $receiptPath,
+        ]);
+    }
+
+    public function scanReceiptStatus(Request $request, string $scanId): JsonResponse
+    {
+        $this->authorize('create', Expense::class);
+
+        $data = Cache::get("receipt_scan:{$scanId}");
+
+        if (! $data) {
+            return response()->json(['status' => 'not_found'], 404);
+        }
+
+        return response()->json($data);
     }
 
     private function storeReceipt(\Illuminate\Http\UploadedFile $file, string $orgId): string

@@ -1,4 +1,5 @@
 <script setup>
+import { ref, reactive } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -8,6 +9,7 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Trash2 } from 'lucide-vue-next'
 
@@ -48,7 +50,17 @@ function onJustificatifChange(e) {
   form.justificatif = e.target.files[0] ?? null
 }
 
-const clientOptions = props.customers.map(c => ({ value: c.id, label: c.name }))
+const customerList = reactive([...props.customers])
+const clientOptions = ref(customerList.map(c => ({ value: c.id, label: c.name })))
+
+const showCreateCustomer = ref(false)
+
+function onCustomerCreated(customer) {
+  customerList.push(customer)
+  clientOptions.value = customerList.map(c => ({ value: c.id, label: c.name }))
+  form.customer_id = customer.id
+}
+
 const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
@@ -64,15 +76,28 @@ const vatOptions = [
       <CardContent>
         <form class="space-y-6" @submit.prevent="submit">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormSelect
-              id="customer_id"
-              v-model="form.customer_id"
-              :label="t('client')"
-              :options="clientOptions"
-              :placeholder="t('select_client')"
-              :error="form.errors.customer_id"
-              required
-            />
+            <div class="flex items-end gap-2">
+              <FormSelect
+                id="customer_id"
+                v-model="form.customer_id"
+                :label="t('client')"
+                :options="clientOptions"
+                :placeholder="t('select_client')"
+                :error="form.errors.customer_id"
+                required
+                class="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                class="mb-[2px] shrink-0"
+                :title="t('new_customer')"
+                @click="showCreateCustomer = true"
+              >
+                <Plus class="h-4 w-4" />
+              </Button>
+            </div>
             <FormInput
               id="number"
               v-model="form.number"
@@ -202,5 +227,12 @@ const vatOptions = [
         </form>
       </CardContent>
     </Card>
+
+    <QuickCreateContactModal
+      :open="showCreateCustomer"
+      contact-type="customer"
+      @close="showCreateCustomer = false"
+      @created="onCustomerCreated"
+    />
   </AppLayout>
 </template>

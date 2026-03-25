@@ -3,16 +3,17 @@
 namespace App\Domains\Users\Controllers;
 
 use App\Domains\Users\DTOs\UpdateUserProfileData;
-use App\Domains\Users\Services\DataExportService;
+use App\Domains\Users\Jobs\ExportUserDataJob;
 use App\Domains\Users\Services\UserService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
 {
@@ -65,16 +66,31 @@ class UserController extends Controller
     }
 
     /**
-     * Export all personal data for the authenticated user (GDPR Art. 15 / Art. 20).
+     * Queue an export of all personal data for the authenticated user (GDPR Art. 15 / Art. 20).
      */
-    public function exportData(Request $request, DataExportService $exportService): JsonResponse
+    public function exportData(Request $request): RedirectResponse
     {
         $this->authorize('view', $request->user());
 
-        $data = $exportService->export($request->user());
+        ExportUserDataJob::dispatch($request->user());
 
-        return response()->json($data, 200, [
-            'Content-Disposition' => 'attachment; filename="gaeld-data-export.json"',
+        return back()->with('success', __('app.export_data_queued'));
+    }
+
+    /**
+     * Download a previously generated data export via signed URL.
+     */
+    public function downloadExport(Request $request, string $filename): StreamedResponse
+    {
+        $path = 'exports/'.$filename;
+
+        abort_unless(Storage::disk('local')->exists($path), 404);
+
+        // Ensure the file belongs to the authenticated user
+        abort_unless(str_starts_with($filename, 'user-'.$request->user()->id.'-'), 403);
+
+        return Storage::disk('local')->download($path, 'gaeld-data-export.json', [
+            'Content-Type' => 'application/json',
         ]);
     }
 

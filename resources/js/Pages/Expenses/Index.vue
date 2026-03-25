@@ -9,6 +9,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
+import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -160,5 +161,7 @@ const statusFilters = computed(() => [
       @confirm="executeDelete"
       @cancel="deleteTarget = null"
     />
+
+    <QuickReceiptButton />
   </AppLayout>
 </template>

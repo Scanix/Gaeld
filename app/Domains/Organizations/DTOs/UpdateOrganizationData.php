@@ -13,6 +13,7 @@ readonly class UpdateOrganizationData
         public ?string $vatNumber = null,
         public string $currency = 'CHF',
         public string $locale = 'en',
+        public int $defaultPaymentTermsDays = 30,
     ) {}
 
     public static function fromArray(array $data): self
@@ -24,6 +25,7 @@ readonly class UpdateOrganizationData
             vatNumber: $data['vat_number'] ?? null,
             currency: $data['currency'] ?? 'CHF',
             locale: $data['locale'] ?? 'en',
+            defaultPaymentTermsDays: (int) ($data['default_payment_terms_days'] ?? 30),
         );
     }
 
@@ -35,6 +37,7 @@ readonly class UpdateOrganizationData
             'vat_number' => $this->vatNumber,
             'currency' => $this->currency,
             'locale' => $this->locale,
+            'default_payment_terms_days' => $this->defaultPaymentTermsDays,
         ] + ($this->addressData?->toArray(includeCanton: true) ?? AddressData::empty(includeCanton: true)->toArray(includeCanton: true));
     }
 }

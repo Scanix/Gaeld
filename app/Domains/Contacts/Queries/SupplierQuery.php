@@ -5,6 +5,7 @@ namespace App\Domains\Contacts\Queries;
 use App\Domains\Contacts\Models\Supplier;
 use App\Support\QueryBuilder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 class SupplierQuery
@@ -18,6 +19,11 @@ class SupplierQuery
             ->apply()
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    public static function forSelect(): Collection
+    {
+        return Supplier::orderBy('name')->get();
     }
 
     public static function hasMatchingSupplier(string $organizationId, string $creditorName): bool

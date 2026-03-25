@@ -1,4 +1,5 @@
 <script setup>
+import { ref, reactive } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -8,10 +9,13 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { Plus } from 'lucide-vue-next'
 
 const props = defineProps({
   vatRates: { type: Array, default: () => [] },
+  suppliers: { type: Array, default: () => [] },
 })
 
 const form = useForm({
@@ -22,6 +26,7 @@ const form = useForm({
   vat_rate_id: '',
   date: new Date().toISOString().slice(0, 10),
   vendor: '',
+  supplier_id: '',
   currency: 'CHF',
   receipt: null,
 })
@@ -52,6 +57,24 @@ const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
 ]
+
+const supplierList = reactive([...props.suppliers])
+const supplierOptions = ref([
+  { value: '', label: '—' },
+  ...supplierList.map(s => ({ value: s.id, label: s.name })),
+])
+
+const showCreateSupplier = ref(false)
+
+function onSupplierCreated(supplier) {
+  supplierList.push(supplier)
+  supplierOptions.value = [
+    { value: '', label: '—' },
+    ...supplierList.map(s => ({ value: s.id, label: s.name })),
+  ]
+  form.supplier_id = supplier.id
+  form.vendor = supplier.name
+}
 </script>
 
 <template>
@@ -72,13 +95,27 @@ const vatOptions = [
               :error="form.errors.category"
               required
             />
-            <FormInput
-              id="vendor"
-              v-model="form.vendor"
-              :label="t('vendor')"
-              placeholder="e.g. Digitec"
-              :error="form.errors.vendor"
-            />
+            <div class="flex items-end gap-2">
+              <FormSelect
+                id="supplier_id"
+                v-model="form.supplier_id"
+                :label="t('vendor')"
+                :options="supplierOptions"
+                :placeholder="t('select_supplier')"
+                :error="form.errors.supplier_id"
+                class="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                class="mb-[2px] shrink-0"
+                :title="t('new_supplier')"
+                @click="showCreateSupplier = true"
+              >
+                <Plus class="h-4 w-4" />
+              </Button>
+            </div>
             <FormInput
               id="amount"
               v-model="form.amount"
@@ -139,5 +176,12 @@ const vatOptions = [
         </form>
       </CardContent>
     </Card>
+
+    <QuickCreateContactModal
+      :open="showCreateSupplier"
+      contact-type="supplier"
+      @close="showCreateSupplier = false"
+      @created="onSupplierCreated"
+    />
   </AppLayout>
 </template>

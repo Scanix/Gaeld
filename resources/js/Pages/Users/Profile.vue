@@ -152,26 +152,12 @@ const exportLoading = ref(false)
 const showDeleteConfirm = ref(false)
 const deleteAccountForm = useForm({ current_password: '' })
 
-async function exportData() {
+function exportData() {
   exportLoading.value = true
-  try {
-    const res = await fetch('/profile/export', {
-      headers: { 'Accept': 'application/json' },
-      credentials: 'same-origin',
-    })
-    if (!res.ok) throw new Error('Export failed')
-    const blob = await res.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'gaeld-data-export.json'
-    a.click()
-    URL.revokeObjectURL(url)
-  } catch {
-    // silently fail
-  } finally {
-    exportLoading.value = false
-  }
+  router.post('/profile/export', {}, {
+    preserveScroll: true,
+    onFinish: () => { exportLoading.value = false },
+  })
 }
 
 function confirmDeleteAccount() {
@@ -529,7 +515,7 @@ function confirmDeletePasskey() {
                 <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('export_data_desc') }}</p>
               </div>
               <Button variant="outline" :disabled="exportLoading" @click="exportData">
-                {{ exportLoading ? t('downloading') : t('export_my_data') }}
+                {{ exportLoading ? t('exporting') : t('export_my_data') }}
               </Button>
             </div>
 

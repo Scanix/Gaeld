@@ -8,6 +8,7 @@ use App\Domains\Organizations\Enums\Role;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\PermissionRegistrar;
 
 class OrganizationService
@@ -57,6 +58,39 @@ class OrganizationService
 
         app()[PermissionRegistrar::class]->setPermissionsTeamId($organization->id);
         $user->roles()->detach();
+    }
+
+    /**
+     * Change a member's role within an organization.
+     */
+    public function changeMemberRole(Organization $organization, User $user, Role $role): void
+    {
+        // Prevent removing the last owner
+        if ($this->isLastOwner($organization, $user)) {
+            throw ValidationException::withMessages([
+                'role' => [__('app.cannot_change_last_owner')],
+            ]);
+        }
+
+        $organization->users()->updateExistingPivot($user->id, ['role' => $role->value]);
+        $this->assignSpatieRole($user, $organization, $role);
+    }
+
+    /**
+     * Check if removing/changing this user would leave the org without an owner.
+     */
+    public function isLastOwner(Organization $organization, User $user): bool
+    {
+        $ownerCount = $organization->users()
+            ->wherePivot('role', 'owner')
+            ->count();
+
+        $isOwner = $organization->users()
+            ->wherePivot('role', 'owner')
+            ->where('users.id', $user->id)
+            ->exists();
+
+        return $isOwner && $ownerCount === 1;
     }
 
     private function assignSpatieRole(User $user, Organization $organization, Role $role): void

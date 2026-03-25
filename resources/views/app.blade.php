@@ -24,6 +24,7 @@
         </script>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite('resources/js/cookieConsent.js')
         @inertiaHead
     </head>
     <body>

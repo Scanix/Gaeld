@@ -31,12 +31,14 @@ class Organization extends Model
         'fiscal_year_start',
         'locale',
         'require_two_factor',
+        'default_payment_terms_days',
     ];
 
     protected function casts(): array
     {
         return [
             'require_two_factor' => 'boolean',
+            'default_payment_terms_days' => 'integer',
         ];
     }
 
@@ -60,5 +62,10 @@ class Organization extends Model
     public function bankAccounts(): HasMany
     {
         return $this->hasMany(BankAccount::class);
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(OrganizationInvitation::class);
     }
 }
