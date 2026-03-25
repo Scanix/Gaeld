@@ -12,6 +12,7 @@
         "laragear/webauthn": "^4.1",
         "laravel/framework": "^12.54",
         "laravel/scout": "^11.0",
+        "meilisearch/meilisearch-php": "^1.16",
         "pragmarx/google2fa-laravel": "^3.0",
         "spatie/laravel-activitylog": "^4.12",
         "spatie/laravel-permission": "^7.2",
@@ -71,7 +72,9 @@
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
-        "allow-plugins": {}
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true
