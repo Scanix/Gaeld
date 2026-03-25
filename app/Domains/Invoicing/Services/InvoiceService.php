@@ -5,6 +5,7 @@ namespace App\Domains\Invoicing\Services;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -23,9 +24,10 @@ class InvoiceService
     /**
      * Post the ledger entry for an invoice.
      *
-     * Accounting effect:
-     *   Debit  1100 Accounts Receivable  (invoice total)
-     *   Credit 3000 Revenue from Services (invoice total)
+     * Accounting effect (multi-VAT aware):
+     *   Debit  1100 Accounts Receivable  (invoice total incl. VAT)
+     *   Credit 3000 Revenue from Services (net amount per VAT group)
+     *   Credit 2200 VAT Output Tax        (VAT amount per VAT group)
      *
      * Marks the invoice as Sent.
      */
@@ -33,18 +35,64 @@ class InvoiceService
     {
         return DB::transaction(function () use ($invoice) {
             $orgId = $invoice->organization_id;
+            $invoice->load('lines.vatRate');
 
             $ar = $this->ledgerService->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
             $revenue = $this->ledgerService->resolveAccount($orgId, AccountCode::REVENUE);
+
+            $lines = [];
+
+            // Debit Accounts Receivable for the full invoice total (incl. VAT)
+            $lines[] = new JournalLineData(
+                accountId: $ar->id,
+                debit: $invoice->total,
+                credit: '0',
+                description: 'Accounts Receivable',
+            );
+
+            // Group invoice lines by VAT rate to create separate revenue + VAT entries
+            $groupedByVat = $invoice->lines->groupBy(fn ($line) => $line->vat_rate_id ?? 'none');
+
+            foreach ($groupedByVat as $vatRateId => $invoiceLines) {
+                $netAmount = '0';
+                $vatAmount = '0';
+
+                foreach ($invoiceLines as $line) {
+                    $netAmount = bcadd($netAmount, (string) $line->amount, 2);
+                    $vatAmount = bcadd($vatAmount, (string) ($line->vat_amount ?? '0'), 2);
+                }
+
+                // Credit Revenue for the net amount of this VAT group
+                if (bccomp($netAmount, '0', 2) > 0) {
+                    $vatLabel = $vatRateId !== 'none' && $invoiceLines->first()->vatRate
+                        ? " ({$invoiceLines->first()->vatRate->name})"
+                        : '';
+                    $lines[] = new JournalLineData(
+                        accountId: $revenue->id,
+                        debit: '0',
+                        credit: $netAmount,
+                        description: "Revenue{$vatLabel}",
+                    );
+                }
+
+                // Credit VAT Output Tax for the VAT portion
+                if (bccomp($vatAmount, '0', 2) > 0) {
+                    $vatOutputAccount = $this->ledgerService->resolveAccount($orgId, AccountCode::VAT_OUTPUT);
+                    $rateName = $invoiceLines->first()->vatRate?->name ?? 'VAT';
+                    $lines[] = new JournalLineData(
+                        accountId: $vatOutputAccount->id,
+                        debit: '0',
+                        credit: $vatAmount,
+                        description: "VAT Output — {$rateName}",
+                    );
+                }
+            }
 
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
                 date: $invoice->issue_date->toDateString(),
                 reference: $invoice->number,
                 description: "Invoice {$invoice->number} — " . ($invoice->customer?->name ?? 'N/A'),
-                lines: [
-                    new JournalLineData(accountId: $ar->id, debit: $invoice->total, credit: '0', description: 'Accounts Receivable'),
-                    new JournalLineData(accountId: $revenue->id, debit: '0', credit: $invoice->total, description: 'Revenue'),
-                ],
+                lines: $lines,
             ));
 
             $invoice->update([

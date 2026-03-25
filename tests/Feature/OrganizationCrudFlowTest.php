@@ -6,10 +6,11 @@ use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithOrganizationPermissions;
 
 class OrganizationCrudFlowTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithOrganizationPermissions;
 
     private User $owner;
 
@@ -25,6 +26,8 @@ class OrganizationCrudFlowTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedPermissions();
+
         $this->owner = User::factory()->create();
         $this->member = User::factory()->create();
         $this->outsider = User::factory()->create();
@@ -39,8 +42,11 @@ class OrganizationCrudFlowTest extends TestCase
         ]);
 
         $this->primaryOrganization->users()->attach($this->owner->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($this->owner, $this->primaryOrganization, 'owner');
         $this->primaryOrganization->users()->attach($this->member->id, ['role' => 'member']);
+        $this->assignOrganizationRole($this->member, $this->primaryOrganization, 'member');
         $this->secondaryOrganization->users()->attach($this->outsider->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($this->outsider, $this->secondaryOrganization, 'owner');
     }
 
     public function test_owner_can_view_organization_index_and_only_see_memberships(): void

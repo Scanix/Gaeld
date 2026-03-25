@@ -255,11 +255,17 @@ class ReconciliationService
     }
 
     /**
-     * Check if a payment has already been recorded for this transaction-invoice pair.
+     * Check if a payment has already been recorded for this transaction-invoice pair,
+     * or if the invoice is already fully paid.
      */
     private function isDuplicatePayment(BankTransaction $transaction, Invoice $invoice): bool
     {
         if ($transaction->matched_invoice_id === $invoice->id) {
+            return true;
+        }
+
+        // Prevent double-payment: if the invoice is already fully settled, block it
+        if ($invoice->fresh()->isFullyPaid()) {
             return true;
         }
 

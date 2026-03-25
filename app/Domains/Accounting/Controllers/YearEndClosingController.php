@@ -12,6 +12,7 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -74,59 +75,61 @@ class YearEndClosingController extends Controller
             ]);
         }
 
-        // Build closing journal lines
-        // Revenue (credit-normal): debit the account, credit result
-        // Expense (debit-normal):  credit the account, debit result
-        $lines = [];
-        $netDebitOnResult  = '0';  // debits to result account (for expenses)
-        $netCreditOnResult = '0';  // credits to result account (for revenues)
-
-        foreach ($income as $row) {
-            if (bccomp((string) $row['balance'], '0', 2) === 0) {
-                continue;
-            }
-            $lines[] = new JournalLineData(
-                accountId: (string) $row['account_id'],
-                debit:     (string) $row['balance'],
-                credit:    '0',
-                description: "Bouclement {$year} — clôture " . $row['code'],
-            );
-            $netCreditOnResult = bcadd($netCreditOnResult, (string) $row['balance'], 2);
-        }
-
-        foreach ($expenses as $row) {
-            if (bccomp((string) $row['balance'], '0', 2) === 0) {
-                continue;
-            }
-            $lines[] = new JournalLineData(
-                accountId: (string) $row['account_id'],
-                debit:     '0',
-                credit:    (string) $row['balance'],
-                description: "Bouclement {$year} — clôture " . $row['code'],
-            );
-            $netDebitOnResult = bcadd($netDebitOnResult, (string) $row['balance'], 2);
-        }
-
-        // Add result account line (net debit or credit)
-        $netDebit  = $netDebitOnResult;
-        $netCredit = $netCreditOnResult;
-
-        $lines[] = new JournalLineData(
-            accountId: (string) $resultAccount->id,
-            debit:     $netDebit,
-            credit:    $netCredit,
-            description: "Bouclement {$year} — résultat de l'exercice",
-        );
-
-        $entry = new JournalEntryData(
-            date:        $validated['closing_date'],
-            reference:   $validated['reference'],
-            description: "Bouclement de compte {$year}",
-            lines:       $lines,
-        );
-
         try {
-            $ledger->postEntry($orgId, $entry);
+            DB::transaction(function () use ($income, $expenses, $year, $validated, $resultAccount, $orgId, $ledger) {
+                // Build closing journal lines
+                // Revenue (credit-normal): debit the account, credit result
+                // Expense (debit-normal):  credit the account, debit result
+                $lines = [];
+                $netDebitOnResult  = '0';  // debits to result account (for expenses)
+                $netCreditOnResult = '0';  // credits to result account (for revenues)
+
+                foreach ($income as $row) {
+                    if (bccomp((string) $row['balance'], '0', 2) === 0) {
+                        continue;
+                    }
+                    $lines[] = new JournalLineData(
+                        accountId: (string) $row['account_id'],
+                        debit:     (string) $row['balance'],
+                        credit:    '0',
+                        description: "Bouclement {$year} — clôture " . $row['code'],
+                    );
+                    $netCreditOnResult = bcadd($netCreditOnResult, (string) $row['balance'], 2);
+                }
+
+                foreach ($expenses as $row) {
+                    if (bccomp((string) $row['balance'], '0', 2) === 0) {
+                        continue;
+                    }
+                    $lines[] = new JournalLineData(
+                        accountId: (string) $row['account_id'],
+                        debit:     '0',
+                        credit:    (string) $row['balance'],
+                        description: "Bouclement {$year} — clôture " . $row['code'],
+                    );
+                    $netDebitOnResult = bcadd($netDebitOnResult, (string) $row['balance'], 2);
+                }
+
+                // Add result account line (net debit or credit)
+                $netDebit  = $netDebitOnResult;
+                $netCredit = $netCreditOnResult;
+
+                $lines[] = new JournalLineData(
+                    accountId: (string) $resultAccount->id,
+                    debit:     $netDebit,
+                    credit:    $netCredit,
+                    description: "Bouclement {$year} — résultat de l'exercice",
+                );
+
+                $entry = new JournalEntryData(
+                    date:        $validated['closing_date'],
+                    reference:   $validated['reference'],
+                    description: "Bouclement de compte {$year}",
+                    lines:       $lines,
+                );
+
+                $ledger->postEntry($orgId, $entry);
+            });
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }

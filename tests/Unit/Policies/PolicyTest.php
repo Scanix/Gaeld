@@ -18,10 +18,11 @@ use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithOrganizationPermissions;
 
 class PolicyTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithOrganizationPermissions;
 
     private User $memberUser;
     private User $outsiderUser;
@@ -31,6 +32,8 @@ class PolicyTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedPermissions();
+
         $this->organization = Organization::create([
             'name' => 'Test Org',
             'currency' => 'CHF',
@@ -38,6 +41,7 @@ class PolicyTest extends TestCase
 
         $this->memberUser = User::factory()->create();
         $this->organization->users()->attach($this->memberUser->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($this->memberUser, $this->organization, 'owner');
 
         $this->outsiderUser = User::factory()->create();
     }

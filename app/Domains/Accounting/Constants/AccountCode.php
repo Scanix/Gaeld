@@ -7,6 +7,7 @@ final class AccountCode
     public const ACCOUNTS_RECEIVABLE = '1100';
     public const BANK_CASH = '1020';
     public const REVENUE = '3000';
+    public const VAT_OUTPUT = '2200';
     public const GENERAL_EXPENSE = '6530';
 
     public const REVENUE_PREFIX = '3';

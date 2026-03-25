@@ -61,6 +61,10 @@ class ExpenseController extends Controller
                 'nullable',
                 Rule::exists('vat_rates', 'id')->where('organization_id', $currentOrg->id()),
             ],
+            'supplier_id' => [
+                'nullable',
+                Rule::exists('suppliers', 'id')->where('organization_id', $currentOrg->id()),
+            ],
             'date' => 'required|date',
             'vendor' => 'nullable|string|max:255',
             'currency' => 'string|size:3',
@@ -114,6 +118,10 @@ class ExpenseController extends Controller
             'vat_rate_id' => [
                 'nullable',
                 Rule::exists('vat_rates', 'id')->where('organization_id', $expense->organization_id),
+            ],
+            'supplier_id' => [
+                'nullable',
+                Rule::exists('suppliers', 'id')->where('organization_id', $expense->organization_id),
             ],
             'date' => 'required|date',
             'vendor' => 'nullable|string|max:255',

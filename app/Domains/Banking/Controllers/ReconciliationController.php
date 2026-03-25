@@ -73,7 +73,14 @@ class ReconciliationController extends Controller
 
         $transactions = $transactionsQuery->paginate(30);
 
-        $suggestions = $this->suggestionService->generateSuggestionsForTransactions($transactions->items());
+        // Only generate suggestions for unreconciled transactions on the current page
+        // to avoid N+1 query storms across already-reconciled items
+        $unreconciledOnPage = collect($transactions->items())
+            ->filter(fn (BankTransaction $t) => ! $t->is_reconciled);
+
+        $suggestions = $unreconciledOnPage->isNotEmpty()
+            ? $this->suggestionService->generateSuggestionsForTransactions($unreconciledOnPage)
+            : [];
 
         return Inertia::render('Banking/ReconciliationShow', [
             'bankAccount' => $bankAccount->load('ledgerAccount'),

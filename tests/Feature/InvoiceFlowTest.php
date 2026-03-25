@@ -20,10 +20,11 @@ use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithOrganizationPermissions;
 
 class InvoiceFlowTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithOrganizationPermissions;
 
     private Organization $org;
     private User $user;
@@ -34,12 +35,15 @@ class InvoiceFlowTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedPermissions();
+
         $this->user = User::factory()->create();
         $this->org = Organization::create([
             'name' => 'Test GmbH',
             'currency' => 'CHF',
         ]);
         $this->org->users()->attach($this->user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($this->user, $this->org, 'owner');
 
         Account::create([
             'organization_id' => $this->org->id,
@@ -60,6 +64,13 @@ class InvoiceFlowTest extends TestCase
             'code' => '1020',
             'name' => 'Bank',
             'type' => AccountType::Asset->value,
+        ]);
+
+        Account::create([
+            'organization_id' => $this->org->id,
+            'code' => '2200',
+            'name' => 'VAT Output',
+            'type' => AccountType::Liability->value,
         ]);
 
         $this->vatRate = VatRate::create([

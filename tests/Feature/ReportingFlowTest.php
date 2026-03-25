@@ -22,10 +22,11 @@ use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
+use Tests\Traits\WithOrganizationPermissions;
 
 class ReportingFlowTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithOrganizationPermissions;
 
     private User $user;
 
@@ -35,6 +36,8 @@ class ReportingFlowTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedPermissions();
+
         Carbon::setTestNow('2026-03-20 12:00:00');
 
         $this->user = User::factory()->create();
@@ -43,6 +46,7 @@ class ReportingFlowTest extends TestCase
             'currency' => 'CHF',
         ]);
         $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
 
         Account::create([
             'organization_id' => $this->organization->id,
@@ -67,6 +71,12 @@ class ReportingFlowTest extends TestCase
             'code' => '6530',
             'name' => 'Software Expense',
             'type' => AccountType::Expense->value,
+        ]);
+        Account::create([
+            'organization_id' => $this->organization->id,
+            'code' => '2200',
+            'name' => 'VAT Output',
+            'type' => AccountType::Liability->value,
         ]);
 
         VatRate::create([
@@ -149,9 +159,9 @@ class ReportingFlowTest extends TestCase
         $profitAndLoss->assertStatus(200);
         $profitAndLoss->assertInertia(fn ($page) => $page
             ->component('Reports/ProfitAndLoss')
-            ->where('report.total_revenue', 1081)
+            ->where('report.total_revenue', 1000)
             ->where('report.total_expenses', 200)
-            ->where('report.net_profit', '881.00'));
+            ->where('report.net_profit', '800.00'));
     }
 
     private function seedFinancialActivity(): void

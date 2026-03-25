@@ -23,10 +23,15 @@ const form = useForm({
   date: new Date().toISOString().slice(0, 10),
   vendor: '',
   currency: 'CHF',
+  receipt: null,
 })
 
 function submit() {
-  form.post('/expenses')
+  form.post('/expenses', { forceFormData: true })
+}
+
+function onReceiptChange(e) {
+  form.receipt = e.target.files[0] ?? null
 }
 
 const { t } = useTranslations()
@@ -113,6 +118,18 @@ const vatOptions = [
               rows="3"
               class="flex w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
             />
+          </div>
+
+          <div>
+            <label for="receipt" class="mb-1 block text-sm font-medium">{{ t('receipt') }}</label>
+            <input
+              id="receipt"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              class="block w-full text-sm text-[hsl(var(--muted-foreground))] file:mr-4 file:rounded-md file:border-0 file:bg-[hsl(var(--primary))] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[hsl(var(--primary-foreground))] hover:file:opacity-90"
+              @change="onReceiptChange"
+            />
+            <p v-if="form.errors.receipt" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.receipt }}</p>
           </div>
 
           <div class="flex justify-end gap-3">

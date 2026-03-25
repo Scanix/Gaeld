@@ -14,10 +14,11 @@ use App\Domains\Users\Models\User;
 use App\Support\AddressData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithOrganizationPermissions;
 
 class ContactsFlowTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithOrganizationPermissions;
 
     private Organization $org;
 
@@ -27,9 +28,12 @@ class ContactsFlowTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedPermissions();
+
         $this->user = User::factory()->create();
         $this->org = Organization::create(['name' => 'Test GmbH', 'currency' => 'CHF']);
         $this->org->users()->attach($this->user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($this->user, $this->org, 'owner');
 
         app(CurrentOrganization::class)->set($this->org);
     }

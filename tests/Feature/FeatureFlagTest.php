@@ -5,10 +5,11 @@ namespace Tests\Feature;
 use App\Support\FeatureFlag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithOrganizationPermissions;
 
 class FeatureFlagTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithOrganizationPermissions;
 
     public function test_feature_flag_defaults_to_disabled(): void
     {
@@ -64,6 +65,8 @@ class FeatureFlagTest extends TestCase
 
     public function test_banking_accessible_in_ce_without_feature_flag(): void
     {
+        $this->seedPermissions();
+
         // Banking is CE — no feature flag needed
         $user = \App\Domains\Users\Models\User::factory()->create();
         $org = \App\Domains\Organizations\Models\Organization::create([
@@ -71,6 +74,7 @@ class FeatureFlagTest extends TestCase
             'currency' => 'CHF',
         ]);
         $org->users()->attach($user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($user, $org, 'owner');
 
         $response = $this->actingAs($user)->get('/banking');
 
@@ -79,6 +83,8 @@ class FeatureFlagTest extends TestCase
 
     public function test_auto_reconcile_route_blocked_when_disabled(): void
     {
+        $this->seedPermissions();
+
         config(['features.auto_reconciliation' => false]);
 
         $user = \App\Domains\Users\Models\User::factory()->create();
@@ -87,6 +93,7 @@ class FeatureFlagTest extends TestCase
             'currency' => 'CHF',
         ]);
         $org->users()->attach($user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($user, $org, 'owner');
         $bankAccount = \App\Domains\Banking\Models\BankAccount::create([
             'organization_id' => $org->id,
             'name' => 'Test',
@@ -101,6 +108,8 @@ class FeatureFlagTest extends TestCase
 
     public function test_auto_reconcile_route_allowed_when_enabled(): void
     {
+        $this->seedPermissions();
+
         config(['features.auto_reconciliation' => true]);
 
         $user = \App\Domains\Users\Models\User::factory()->create();
@@ -109,6 +118,7 @@ class FeatureFlagTest extends TestCase
             'currency' => 'CHF',
         ]);
         $org->users()->attach($user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($user, $org, 'owner');
         $bankAccount = \App\Domains\Banking\Models\BankAccount::create([
             'organization_id' => $org->id,
             'name' => 'Test',

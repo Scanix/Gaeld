@@ -21,10 +21,11 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithOrganizationPermissions;
 
 class ReconciliationFlowTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithOrganizationPermissions;
 
     private Organization $organization;
 
@@ -38,12 +39,15 @@ class ReconciliationFlowTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedPermissions();
+
         $this->user = User::factory()->create();
         $this->organization = Organization::create([
             'name' => 'Test Org',
             'currency' => 'CHF',
         ]);
         $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
 
         // Bind current organization
         app(CurrentOrganization::class)->set($this->organization);

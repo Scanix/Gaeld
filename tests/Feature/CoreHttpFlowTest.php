@@ -15,10 +15,11 @@ use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithOrganizationPermissions;
 
 class CoreHttpFlowTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithOrganizationPermissions;
 
     private User $user;
 
@@ -32,12 +33,15 @@ class CoreHttpFlowTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedPermissions();
+
         $this->user = User::factory()->create();
         $this->organization = Organization::create([
             'name' => 'Core HTTP Org',
             'currency' => 'CHF',
         ]);
         $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
 
         Account::create([
             'organization_id' => $this->organization->id,
@@ -62,6 +66,12 @@ class CoreHttpFlowTest extends TestCase
             'code' => '6530',
             'name' => 'Software Expense',
             'type' => AccountType::Expense->value,
+        ]);
+        Account::create([
+            'organization_id' => $this->organization->id,
+            'code' => '2200',
+            'name' => 'VAT Output',
+            'type' => AccountType::Liability->value,
         ]);
 
         $this->vatRate = VatRate::create([

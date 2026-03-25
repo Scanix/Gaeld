@@ -11,10 +11,11 @@ use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithOrganizationPermissions;
 
 class AccountingHttpFlowTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithOrganizationPermissions;
 
     private User $user;
 
@@ -28,12 +29,15 @@ class AccountingHttpFlowTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedPermissions();
+
         $this->user = User::factory()->create();
         $this->organization = Organization::create([
             'name' => 'Accounting HTTP Org',
             'currency' => 'CHF',
         ]);
         $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
 
         $this->bankAccount = Account::create([
             'organization_id' => $this->organization->id,

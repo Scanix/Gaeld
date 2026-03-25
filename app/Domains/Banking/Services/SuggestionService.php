@@ -6,6 +6,7 @@ use App\Domains\Banking\DTOs\ExpenseSuggestion;
 use App\Domains\Banking\DTOs\InvoiceSuggestion;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\MatchConfidence;
+use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
@@ -41,13 +42,64 @@ class SuggestionService
     {
         $suggestions = [];
 
+        // Preload existing matches for all transactions in one query
+        $transactionIds = collect($transactions)->pluck('id')->all();
+        $existingMatches = BankMatch::whereIn('bank_transaction_id', $transactionIds)
+            ->with('invoice.customer')
+            ->get()
+            ->groupBy('bank_transaction_id');
+
         foreach ($transactions as $transaction) {
-            if (! $transaction->is_reconciled) {
-                $suggestions[$transaction->id] = $this->generateSuggestions($transaction);
+            if ($transaction->is_reconciled) {
+                continue;
             }
+
+            $cachedMatches = $existingMatches->get($transaction->id, collect());
+            $suggestions[$transaction->id] = $this->generateSuggestionsWithCache($transaction, $cachedMatches);
         }
 
         return $suggestions;
+    }
+
+    /**
+     * Generate suggestions using pre-loaded match cache to minimize queries.
+     *
+     * @return array{invoices: Collection, expenses: Collection, matches: Collection}
+     */
+    private function generateSuggestionsWithCache(BankTransaction $transaction, Collection $cachedMatches): array
+    {
+        $amount = Money::absoluteAmount((string) $transaction->amount);
+
+        // If we have existing unconfirmed matches, reuse them instead of re-querying
+        $matches = $cachedMatches->isNotEmpty()
+            ? $cachedMatches
+            : $this->matchingService->findAndStoreMatches($transaction);
+
+        $invoiceSuggestions = $matches->map(function ($match) {
+            $invoice = $match->invoice?->load(['customer']);
+            if (! $invoice) {
+                return null;
+            }
+
+            return new InvoiceSuggestion(
+                invoice: $invoice,
+                score: $match->confidence,
+                matchType: $match->match_type,
+                matchId: $match->id,
+            );
+        })->filter()->sortByDesc(fn ($s) => $s->score)->values();
+
+        $expenseSuggestions = $this->suggestExpenses(
+            $transaction->bankAccount->organization_id,
+            $transaction,
+            $amount,
+        );
+
+        return [
+            'invoices' => $invoiceSuggestions,
+            'expenses' => $expenseSuggestions,
+            'matches' => $matches,
+        ];
     }
 
     /**

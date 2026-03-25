@@ -16,9 +16,14 @@ class ReportController extends Controller
     {
         $this->authorize('viewAny', Account::class);
 
+        $validated = $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after_or_equal:from'],
+        ]);
+
         $orgId = $currentOrg->id();
-        $from = $request->input('from', now()->startOfYear()->toDateString());
-        $to = $request->input('to', now()->toDateString());
+        $from = $validated['from'] ?? now()->startOfYear()->toDateString();
+        $to = $validated['to'] ?? now()->toDateString();
 
         $report = $reportingService->profitAndLoss($orgId, $from, $to);
 
@@ -31,8 +36,12 @@ class ReportController extends Controller
     {
         $this->authorize('viewAny', Account::class);
 
+        $validated = $request->validate([
+            'as_of_date' => ['nullable', 'date'],
+        ]);
+
         $orgId = $currentOrg->id();
-        $asOfDate = $request->input('as_of_date', now()->toDateString());
+        $asOfDate = $validated['as_of_date'] ?? now()->toDateString();
 
         $report = $reportingService->balanceSheet($orgId, $asOfDate);
 

@@ -6,20 +6,25 @@ use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithOrganizationPermissions;
 
 class OrganizationSwitchFlowTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithOrganizationPermissions;
 
     public function test_switch_route_updates_active_organization_in_session(): void
     {
+        $this->seedPermissions();
+
         $user = User::factory()->create();
         /** @var User $user */
         $orgA = Organization::create(['name' => 'Org A', 'currency' => 'CHF']);
         $orgB = Organization::create(['name' => 'Org B', 'currency' => 'EUR']);
 
         $orgA->users()->attach($user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($user, $orgA, 'owner');
         $orgB->users()->attach($user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($user, $orgB, 'owner');
 
         $switch = $this->actingAs($user)
             ->withSession(['current_organization_id' => $orgA->id])
@@ -32,12 +37,15 @@ class OrganizationSwitchFlowTest extends TestCase
 
     public function test_switch_route_forbids_unrelated_organization(): void
     {
+        $this->seedPermissions();
+
         $user = User::factory()->create();
         /** @var User $user */
         $orgA = Organization::create(['name' => 'Org A', 'currency' => 'CHF']);
         $orgB = Organization::create(['name' => 'Org B', 'currency' => 'EUR']);
 
         $orgA->users()->attach($user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($user, $orgA, 'owner');
 
         $response = $this->actingAs($user)
             ->withSession(['current_organization_id' => $orgA->id])
@@ -48,10 +56,13 @@ class OrganizationSwitchFlowTest extends TestCase
 
     public function test_stale_session_org_id_falls_back_to_first_membership(): void
     {
+        $this->seedPermissions();
+
         $user = User::factory()->create();
         /** @var User $user */
         $organization = Organization::create(['name' => 'Fallback Org', 'currency' => 'CHF']);
         $organization->users()->attach($user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($user, $organization, 'owner');
 
         $response = $this->actingAs($user)
             ->withSession(['current_organization_id' => (string) fake()->uuid()])

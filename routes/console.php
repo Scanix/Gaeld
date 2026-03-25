@@ -19,6 +19,11 @@ Artisan::command('about:gaeld', function () {
 Schedule::job(GenerateReportsJob::class)->dailyAt('01:00');
 
 /**
+ * Mark overdue invoices (02:00) — all editions.
+ */
+Schedule::command('invoices:mark-overdue')->dailyAt('02:00');
+
+/**
  * Nightly auto-reconciliation (02:00) — EE only.
  * Runs RuleEngineService across all unreconciled transactions.
  */

@@ -80,10 +80,11 @@ class RuleEngineService
                     'applied' => $applied,
                 ]);
             } catch (\Exception $e) {
-                Log::warning('RuleEngineService: rule failed', [
+                Log::error('RuleEngineService: rule failed', [
                     'rule' => $rule->name(),
                     'transaction_id' => $transaction->id,
                     'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
             }
         }
