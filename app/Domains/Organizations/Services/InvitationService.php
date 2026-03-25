@@ -51,7 +51,7 @@ class InvitationService
         $invitation->load('organization');
 
         Notification::route('mail', $email)
-            ->notify(new InvitationNotification($invitation));
+            ->notify((new InvitationNotification($invitation))->locale($organization->locale));
 
         return $invitation;
     }
@@ -109,7 +109,7 @@ class InvitationService
         $invitation->load('organization');
 
         Notification::route('mail', $invitation->email)
-            ->notify(new InvitationNotification($invitation));
+            ->notify((new InvitationNotification($invitation))->locale($invitation->organization->locale));
     }
 
     public function canAddMember(Organization $organization): bool

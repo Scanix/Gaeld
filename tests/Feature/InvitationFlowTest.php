@@ -56,6 +56,27 @@ class InvitationFlowTest extends TestCase
         Notification::assertSentOnDemand(InvitationNotification::class);
     }
 
+    public function test_invitation_notification_uses_organization_locale(): void
+    {
+        Notification::fake();
+
+        $this->organization->update(['locale' => 'fr']);
+
+        $this->actingAs($this->owner)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->post("/organizations/{$this->organization->id}/invitations", [
+                'email' => 'localized@example.com',
+                'role' => 'member',
+            ]);
+
+        Notification::assertSentOnDemand(
+            InvitationNotification::class,
+            function (InvitationNotification $notification, array $channels, object $notifiable) {
+                return $notification->locale === 'fr';
+            },
+        );
+    }
+
     public function test_accept_invitation_for_existing_user(): void
     {
         $invitedUser = User::factory()->create(['email' => 'invited@example.com']);
