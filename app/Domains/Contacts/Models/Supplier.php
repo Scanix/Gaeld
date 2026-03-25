@@ -37,6 +37,7 @@ class Supplier extends Model
     {
         return [
             'notes' => 'array', // multi-language JSON
+            'iban' => 'encrypted',
         ];
     }
 

@@ -12,6 +12,8 @@ readonly class CreateUserData
         public string $password,
         public string $locale = 'en',
         public DateTimeInterface|string|null $emailVerifiedAt = null,
+        public DateTimeInterface|string|null $acceptedPrivacyAt = null,
+        public DateTimeInterface|string|null $acceptedTermsAt = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -22,6 +24,8 @@ readonly class CreateUserData
             password: $data['password'],
             locale: $data['locale'] ?? 'en',
             emailVerifiedAt: $data['email_verified_at'] ?? null,
+            acceptedPrivacyAt: $data['accepted_privacy_at'] ?? null,
+            acceptedTermsAt: $data['accepted_terms_at'] ?? null,
         );
     }
 

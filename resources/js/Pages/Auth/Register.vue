@@ -1,18 +1,22 @@
 <script setup>
-import { Head, useForm, Link } from '@inertiajs/vue3'
+import { Head, useForm, Link, usePage } from '@inertiajs/vue3'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { computed } from 'vue'
 
 const { t } = useTranslations()
+const page = usePage()
+const isSaas = computed(() => page.props.features?.saas ?? false)
 
 const form = useForm({
   name: '',
   email: '',
   password: '',
   password_confirmation: '',
+  accepted_privacy: false,
 })
 
 function submit() {
@@ -73,6 +77,24 @@ function submit() {
               :label="t('confirm_password')"
               required
             />
+
+            <div v-if="isSaas" class="space-y-1">
+              <label class="flex items-start gap-2">
+                <input
+                  id="accepted_privacy"
+                  v-model="form.accepted_privacy"
+                  type="checkbox"
+                  class="mt-1 h-4 w-4 rounded border-[hsl(var(--input))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--ring))]"
+                />
+                <span class="text-sm text-[hsl(var(--muted-foreground))]">
+                  {{ t('accept_privacy_prefix') }}
+                  <a href="https://gaeld.ch/privacy" target="_blank" class="font-medium text-[hsl(var(--primary))] hover:underline">{{ t('privacy_policy') }}</a>
+                  {{ t('and') }}
+                  <a href="https://gaeld.ch/terms" target="_blank" class="font-medium text-[hsl(var(--primary))] hover:underline">{{ t('terms_of_service') }}</a>.
+                </span>
+              </label>
+              <p v-if="form.errors.accepted_privacy" class="text-sm text-[hsl(var(--destructive))]">{{ form.errors.accepted_privacy }}</p>
+            </div>
 
             <Button type="submit" class="w-full" :disabled="form.processing">
               {{ t('create_account_btn') }}

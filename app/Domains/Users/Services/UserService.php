@@ -5,7 +5,9 @@ namespace App\Domains\Users\Services;
 use App\Domains\Users\DTOs\CreateUserData;
 use App\Domains\Users\DTOs\UpdateUserProfileData;
 use App\Domains\Users\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Activitylog\Models\Activity;
 
 class UserService
 {
@@ -17,6 +19,8 @@ class UserService
             'password' => Hash::make($data->password),
             'locale' => $data->locale,
             'email_verified_at' => $data->emailVerifiedAt,
+            'accepted_privacy_at' => $data->acceptedPrivacyAt,
+            'accepted_terms_at' => $data->acceptedTermsAt,
         ]);
     }
 
@@ -42,5 +46,39 @@ class UserService
         $user->update([
             'password' => Hash::make($newPassword),
         ]);
+    }
+
+    /**
+     * Permanently delete a user account and all associated data (GDPR Art. 17).
+     */
+    public function deleteAccount(User $user): void
+    {
+        DB::transaction(function () use ($user) {
+            // Delete activity logs where user is the causer
+            Activity::where('causer_type', User::class)
+                ->where('causer_id', $user->id)
+                ->delete();
+
+            // Delete organizations where the user is the sole member
+            foreach ($user->organizations as $org) {
+                $memberCount = $org->users()->count();
+                if ($memberCount <= 1) {
+                    // Sole owner: cascade delete the entire organization
+                    $org->delete();
+                } else {
+                    // Other members remain: just detach this user
+                    $org->users()->detach($user->id);
+                }
+            }
+
+            // Delete WebAuthn credentials (passkeys)
+            $user->webAuthnCredentials()->delete();
+
+            // Delete sessions
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+
+            // Delete the user
+            $user->delete();
+        });
     }
 }

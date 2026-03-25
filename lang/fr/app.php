@@ -468,4 +468,43 @@ return [
     'choose_plan' => 'Choisir une formule',
     'checkout_success' => 'Votre abonnement est maintenant actif. Bienvenue !',
     'checkout_canceled' => 'Le paiement a été annulé. Vous pouvez souscrire un abonnement à tout moment.',
+
+    // SaaS admin enhancements
+    'saas_admin_subtitle' => 'Gérer les organisations, abonnements et formules.',
+    'saas_admin_confirm_title' => 'Vérification d\'accès admin',
+    'saas_admin_confirm_desc' => 'Entrez votre code d\'authentification à deux facteurs pour accéder au panneau admin. Cette session sera valide 30 minutes.',
+    'verify_and_continue' => 'Vérifier et continuer',
+    'back_to_dashboard' => 'Retour au tableau de bord',
+    'plans_overview' => 'Aperçu des formules',
+    'free' => 'Gratuit',
+    'since' => 'Depuis',
+    'actions' => 'Actions',
+    'no_active_subscriptions' => 'Aucun abonnement actif.',
+    'canceled_subscriptions' => 'Abonnements résiliés',
+    'ended_at' => 'Terminé le',
+    'reactivate' => 'Réactiver',
+    'grant' => 'Accorder',
+    'revoke' => 'Révoquer',
+    'revoke_subscription' => 'Révoquer l\'abonnement',
+    'revoke_subscription_confirm' => 'Êtes-vous sûr de vouloir résilier l\'abonnement de :org ? Cette action prend effet immédiatement.',
+    'unsubscribed_orgs' => 'Organisations sans abonnement',
+    'select_plan' => 'Choisir une formule',
+
+    // Privacy & Terms
+    'accept_privacy_prefix' => 'J\'accepte la',
+    'privacy_policy' => 'Politique de confidentialité',
+    'terms_of_service' => 'Conditions d\'utilisation',
+    'and' => 'et les',
+
+    // Data & Account
+    'data_privacy' => 'Données & confidentialité',
+    'data_privacy_desc' => 'Exportez vos données ou supprimez votre compte.',
+    'export_my_data' => 'Exporter mes données',
+    'export_data_desc' => 'Téléchargez un fichier JSON contenant toutes vos données personnelles.',
+    'downloading' => 'Téléchargement…',
+    'danger_zone' => 'Zone dangereuse',
+    'delete_account' => 'Supprimer le compte',
+    'delete_account_desc' => 'Supprimez définitivement votre compte et toutes les données associées. Cette action est irréversible.',
+    'delete_account_confirm' => 'Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible. Toutes vos données seront définitivement supprimées.',
+    'deleting' => 'Suppression…',
 ];

@@ -22,6 +22,8 @@ class User extends Authenticatable implements MustVerifyEmail, WebAuthnAuthentic
         'password',
         'locale',
         'show_help',
+        'accepted_privacy_at',
+        'accepted_terms_at',
     ];
 
     protected $hidden = [
@@ -40,6 +42,8 @@ class User extends Authenticatable implements MustVerifyEmail, WebAuthnAuthentic
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
+            'accepted_privacy_at' => 'datetime',
+            'accepted_terms_at' => 'datetime',
         ];
     }
 

@@ -48,6 +48,9 @@ class HandleInertiaRequests extends Middleware
                         'name' => $org->name,
                         'role' => $org->pivot->role,
                     ]),
+                'is_saas_admin' => FeatureFlag::isSaas()
+                    && config('ee.saas_admin_email')
+                    && $user->email === config('ee.saas_admin_email'),
             ] : null,
             'locale' => App::getLocale(),
             'translations' => fn () => trans('app'),

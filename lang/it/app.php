@@ -469,4 +469,43 @@ return [
     'choose_plan' => 'Scegli un piano',
     'checkout_success' => "Il tuo abbonamento è ora attivo. Benvenuto!",
     'checkout_canceled' => 'Il pagamento è stato annullato. Puoi sottoscrivere un abbonamento in qualsiasi momento.',
+
+    // SaaS admin enhancements
+    'saas_admin_subtitle' => 'Gestisci organizzazioni, abbonamenti e piani.',
+    'saas_admin_confirm_title' => 'Verifica accesso admin',
+    'saas_admin_confirm_desc' => 'Inserisci il codice di autenticazione a due fattori per accedere al pannello admin. La sessione sarà valida per 30 minuti.',
+    'verify_and_continue' => 'Verifica e continua',
+    'back_to_dashboard' => 'Torna alla dashboard',
+    'plans_overview' => 'Panoramica piani',
+    'free' => 'Gratuito',
+    'since' => 'Dal',
+    'actions' => 'Azioni',
+    'no_active_subscriptions' => 'Nessun abbonamento attivo.',
+    'canceled_subscriptions' => 'Abbonamenti annullati',
+    'ended_at' => 'Terminato il',
+    'reactivate' => 'Riattivare',
+    'grant' => 'Concedere',
+    'revoke' => 'Revocare',
+    'revoke_subscription' => 'Revoca abbonamento',
+    'revoke_subscription_confirm' => 'Sei sicuro di voler annullare l\'abbonamento di :org? Questa azione avrà effetto immediato.',
+    'unsubscribed_orgs' => 'Organizzazioni senza abbonamento',
+    'select_plan' => 'Seleziona piano',
+
+    // Privacy & Terms
+    'accept_privacy_prefix' => 'Accetto la',
+    'privacy_policy' => 'Politica sulla privacy',
+    'terms_of_service' => 'Termini di servizio',
+    'and' => 'e i',
+
+    // Data & Account
+    'data_privacy' => 'Dati e privacy',
+    'data_privacy_desc' => 'Esporta i tuoi dati o elimina il tuo account.',
+    'export_my_data' => 'Esporta i miei dati',
+    'export_data_desc' => 'Scarica un file JSON contenente tutti i tuoi dati personali.',
+    'downloading' => 'Download in corso…',
+    'danger_zone' => 'Zona pericolosa',
+    'delete_account' => 'Elimina account',
+    'delete_account_desc' => 'Elimina definitivamente il tuo account e tutti i dati associati. Questa azione non può essere annullata.',
+    'delete_account_confirm' => 'Sei sicuro di voler eliminare il tuo account? Questa azione è irreversibile. Tutti i tuoi dati verranno eliminati definitivamente.',
+    'deleting' => 'Eliminazione…',
 ];

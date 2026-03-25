@@ -147,6 +147,42 @@ const passkeyError = ref('')
 const deletePasskeyForm = useForm({ current_password: '' })
 const deletingPasskeyId = ref(null)
 
+// --- Data export & Account deletion ---
+const exportLoading = ref(false)
+const showDeleteConfirm = ref(false)
+const deleteAccountForm = useForm({ current_password: '' })
+
+async function exportData() {
+  exportLoading.value = true
+  try {
+    const res = await fetch('/profile/export', {
+      headers: { 'Accept': 'application/json' },
+      credentials: 'same-origin',
+    })
+    if (!res.ok) throw new Error('Export failed')
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'gaeld-data-export.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    // silently fail
+  } finally {
+    exportLoading.value = false
+  }
+}
+
+function confirmDeleteAccount() {
+  deleteAccountForm.delete('/profile', {
+    preserveScroll: true,
+    onSuccess: () => {
+      showDeleteConfirm.value = false
+    },
+  })
+}
+
 async function loadPasskeys() {
   try {
     const res = await fetch('/profile/passkeys', {
@@ -476,6 +512,58 @@ function confirmDeletePasskey() {
               <Button type="submit" :disabled="passwordForm.processing">{{ t('update_password') }}</Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      <!-- Data & Privacy -->
+      <Card>
+        <CardHeader>
+          <CardTitle>{{ t('data_privacy') }}</CardTitle>
+          <CardDescription>{{ t('data_privacy_desc') }}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="space-y-6">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('export_my_data') }}</p>
+                <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('export_data_desc') }}</p>
+              </div>
+              <Button variant="outline" :disabled="exportLoading" @click="exportData">
+                {{ exportLoading ? t('downloading') : t('export_my_data') }}
+              </Button>
+            </div>
+
+            <div class="border-t border-[hsl(var(--border))] pt-4">
+              <p class="text-sm font-medium text-[hsl(var(--destructive))]">{{ t('danger_zone') }}</p>
+              <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{{ t('delete_account_desc') }}</p>
+
+              <div v-if="!showDeleteConfirm" class="mt-3">
+                <Button variant="destructive" @click="showDeleteConfirm = true">
+                  {{ t('delete_account') }}
+                </Button>
+              </div>
+
+              <div v-else class="mt-3 space-y-3 rounded-md border border-[hsl(var(--destructive))] p-4">
+                <p class="text-sm font-medium text-[hsl(var(--destructive))]">{{ t('delete_account_confirm') }}</p>
+                <form class="flex items-end gap-2" @submit.prevent="confirmDeleteAccount">
+                  <FormInput
+                    id="delete_account_password"
+                    v-model="deleteAccountForm.current_password"
+                    type="password"
+                    :label="t('current_password')"
+                    :error="deleteAccountForm.errors.current_password"
+                    required
+                  />
+                  <Button type="submit" variant="destructive" :disabled="deleteAccountForm.processing">
+                    {{ deleteAccountForm.processing ? t('deleting') : t('delete_account') }}
+                  </Button>
+                  <Button type="button" variant="ghost" @click="showDeleteConfirm = false">
+                    {{ t('cancel') }}
+                  </Button>
+                </form>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

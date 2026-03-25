@@ -29,7 +29,7 @@ class UserPolicy
 
     public function delete(User $user, User $target): bool
     {
-        return false;
+        return $user->id === $target->id;
     }
 
     private function sharesOrganization(User $user, User $target): bool

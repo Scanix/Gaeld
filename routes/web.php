@@ -139,6 +139,8 @@ Route::middleware(['auth', 'verified', 'org', 'org-2fa'])->group(function () {
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profile/toggle-help', [UserController::class, 'toggleHelp'])->name('profile.toggle-help');
+    Route::get('/profile/export', [UserController::class, 'exportData'])->name('profile.export');
+    Route::delete('/profile', [UserController::class, 'destroyAccount'])->name('profile.destroy');
 
     // Two-factor authentication management
     Route::post('/profile/two-factor', [TwoFactorController::class, 'enable'])->name('two-factor.enable');

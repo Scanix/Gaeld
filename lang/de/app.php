@@ -469,4 +469,43 @@ return [
     'choose_plan' => 'Tarif wählen',
     'checkout_success' => 'Ihr Abonnement ist jetzt aktiv. Herzlich willkommen!',
     'checkout_canceled' => 'Die Zahlung wurde abgebrochen. Sie können jederzeit ein Abonnement abschließen.',
+
+    // SaaS admin enhancements
+    'saas_admin_subtitle' => 'Organisationen, Abonnements und Tarife verwalten.',
+    'saas_admin_confirm_title' => 'Admin-Zugangsverifizierung',
+    'saas_admin_confirm_desc' => 'Geben Sie Ihren Zwei-Faktor-Authentifizierungscode ein, um auf das Admin-Panel zuzugreifen. Die Sitzung gilt 30 Minuten.',
+    'verify_and_continue' => 'Verifizieren & fortfahren',
+    'back_to_dashboard' => 'Zurück zum Dashboard',
+    'plans_overview' => 'Tarifübersicht',
+    'free' => 'Kostenlos',
+    'since' => 'Seit',
+    'actions' => 'Aktionen',
+    'no_active_subscriptions' => 'Noch keine aktiven Abonnements.',
+    'canceled_subscriptions' => 'Gekündigte Abonnements',
+    'ended_at' => 'Beendet am',
+    'reactivate' => 'Reaktivieren',
+    'grant' => 'Gewähren',
+    'revoke' => 'Widerrufen',
+    'revoke_subscription' => 'Abonnement widerrufen',
+    'revoke_subscription_confirm' => 'Sind Sie sicher, dass Sie das Abonnement von :org kündigen möchten? Dies wird sofort wirksam.',
+    'unsubscribed_orgs' => 'Organisationen ohne Abonnement',
+    'select_plan' => 'Tarif wählen',
+
+    // Privacy & Terms
+    'accept_privacy_prefix' => 'Ich akzeptiere die',
+    'privacy_policy' => 'Datenschutzrichtlinie',
+    'terms_of_service' => 'Nutzungsbedingungen',
+    'and' => 'und die',
+
+    // Data & Account
+    'data_privacy' => 'Daten & Datenschutz',
+    'data_privacy_desc' => 'Exportieren Sie Ihre Daten oder löschen Sie Ihr Konto.',
+    'export_my_data' => 'Meine Daten exportieren',
+    'export_data_desc' => 'Laden Sie eine JSON-Datei mit all Ihren persönlichen Daten herunter.',
+    'downloading' => 'Wird heruntergeladen…',
+    'danger_zone' => 'Gefahrenzone',
+    'delete_account' => 'Konto löschen',
+    'delete_account_desc' => 'Löschen Sie Ihr Konto und alle zugehörigen Daten dauerhaft. Diese Aktion kann nicht rückgängig gemacht werden.',
+    'delete_account_confirm' => 'Sind Sie sicher, dass Sie Ihr Konto löschen möchten? Diese Aktion ist unwiderruflich. Alle Ihre Daten werden dauerhaft entfernt.',
+    'deleting' => 'Wird gelöscht…',
 ];

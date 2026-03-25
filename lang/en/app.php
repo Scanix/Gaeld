@@ -471,4 +471,43 @@ return [
     'choose_plan' => 'Choose a plan',
     'checkout_success' => 'Your subscription is now active. Welcome aboard!',
     'checkout_canceled' => 'Checkout was canceled. You can start a subscription anytime.',
+
+    // SaaS admin enhancements
+    'saas_admin_subtitle' => 'Manage organizations, subscriptions, and plans.',
+    'saas_admin_confirm_title' => 'Admin Access Verification',
+    'saas_admin_confirm_desc' => 'Enter your two-factor authentication code to access the admin panel. This session will be valid for 30 minutes.',
+    'verify_and_continue' => 'Verify & Continue',
+    'back_to_dashboard' => 'Back to dashboard',
+    'plans_overview' => 'Plans Overview',
+    'free' => 'Free',
+    'since' => 'Since',
+    'actions' => 'Actions',
+    'no_active_subscriptions' => 'No active subscriptions yet.',
+    'canceled_subscriptions' => 'Canceled Subscriptions',
+    'ended_at' => 'Ended',
+    'reactivate' => 'Reactivate',
+    'grant' => 'Grant',
+    'revoke' => 'Revoke',
+    'revoke_subscription' => 'Revoke Subscription',
+    'revoke_subscription_confirm' => 'Are you sure you want to cancel the subscription for :org? This will take effect immediately.',
+    'unsubscribed_orgs' => 'Organizations Without Subscription',
+    'select_plan' => 'Select plan',
+
+    // Privacy & Terms
+    'accept_privacy_prefix' => 'I agree to the',
+    'privacy_policy' => 'Privacy Policy',
+    'terms_of_service' => 'Terms of Service',
+    'and' => 'and',
+
+    // Data & Account
+    'data_privacy' => 'Data & Privacy',
+    'data_privacy_desc' => 'Export your data or delete your account.',
+    'export_my_data' => 'Export my data',
+    'export_data_desc' => 'Download a JSON file containing all your personal data.',
+    'downloading' => 'Downloading…',
+    'danger_zone' => 'Danger Zone',
+    'delete_account' => 'Delete Account',
+    'delete_account_desc' => 'Permanently delete your account and all associated data. This action cannot be undone.',
+    'delete_account_confirm' => 'Are you sure you want to delete your account? This action is irreversible. All your data will be permanently removed.',
+    'deleting' => 'Deleting…',
 ];
