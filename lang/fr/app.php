@@ -147,6 +147,7 @@ return [
     'due' => 'Échéance',
     'issued' => 'Émise le',
     'amount_due' => 'Montant dû :',
+    'invoice' => 'Facture',
     'record_payment' => 'Enregistrer un paiement',
     'download_qr_invoice' => 'Télécharger facture QR',
     'payment_date' => 'Date de paiement',
@@ -210,6 +211,11 @@ return [
     'new_customer' => 'Nouveau client',
     'create_customer' => 'Créer le client',
     'manage_customers' => 'Gérez et consultez vos clients.',
+    'edit_customer' => 'Modifier le client',
+    'delete_customer' => 'Supprimer le client',
+    'phone' => 'Téléphone',
+    'internal_notes' => 'Notes internes',
+    'default_category' => 'Catégorie par défaut',
     'no_customers_yet' => 'Aucun client pour le moment. Ajoutez votre premier client pour commencer.',
 
     // Suppliers
@@ -217,6 +223,8 @@ return [
     'create_supplier' => 'Créer le fournisseur',
     'select_supplier' => 'Sélectionner un fournisseur',
     'manage_suppliers' => 'Gérez et consultez vos fournisseurs.',
+    'edit_supplier' => 'Modifier le fournisseur',
+    'delete_supplier' => 'Supprimer le fournisseur',
     'no_suppliers_yet' => 'Aucun fournisseur pour le moment. Ajoutez votre premier fournisseur pour commencer.',
 
     // Accounting
@@ -287,6 +295,7 @@ return [
     'enter_expense_id' => 'Sélectionner ou saisir l\'ID de dépense',
     'file' => 'Fichier',
     'import' => 'Importer',
+    'export' => 'Exporter',
     'manual' => 'Manuel',
 
     // Organizations
@@ -368,6 +377,8 @@ return [
     'two_factor_recovery_desc' => 'Entrez l\'un de vos codes de récupération d\'urgence.',
     'use_recovery_code' => 'Utiliser un code de récupération',
     'use_auth_code' => 'Utiliser un code d\'authentification',
+    'recovery_code' => 'Code de récupération',
+    'verify' => 'Vérifier',
     'two_factor_required_by_org' => 'Votre organisation exige l\'authentification à deux facteurs. Veuillez l\'activer ci-dessous.',
     'invalid_two_factor_code' => 'Le code d\'authentification à deux facteurs fourni est invalide.',
     'passkeys' => 'Passkeys',
@@ -383,6 +394,8 @@ return [
     // Topbar
     'help' => 'Aide',
     'sign_out' => 'Se déconnecter',
+    'dark_mode' => 'Mode sombre',
+    'light_mode' => 'Mode clair',
 
     // Help sidebar
     'documentation' => 'Documentation',
@@ -424,8 +437,39 @@ return [
     'create_organization_btn' => 'Créer l\'organisation',
     // Chart of accounts
     'chart_swiss_sme' => 'PME suisse (Kontenrahmen KMU)',
+    'chart_swiss_sme_desc' => 'Plan comptable standard pour les petites et moyennes entreprises avec ~60 comptes.',
+    'chart_swiss_freelancer' => 'Indépendant / Entreprise individuelle',
+    'chart_swiss_freelancer_desc' => 'Plan comptable simplifié pour les indépendants avec ~30 comptes essentiels.',
+    'chart_swiss_association' => 'Association (Verein)',
+    'chart_swiss_association_desc' => 'Adapté aux associations avec cotisations, dons et comptes d\'événements.',
     'chart_none' => 'Vide \u2014 je cr\u00e9erai le mien',
-    'chart_of_accounts_help' => 'Le modèle PME suisse inclut les comptes standards et les taux de TVA. Vous pourrez toujours ajouter ou supprimer des comptes plus tard.',
+    'chart_of_accounts_help' => 'Choisissez un modèle adapté à votre type d\'organisation. Les comptes standards et les taux de TVA seront créés automatiquement. Vous pourrez toujours ajouter ou supprimer des comptes plus tard.',
+
+    // Account management
+    'add_account' => 'Ajouter un compte',
+    'edit_account' => 'Modifier le compte',
+    'delete_account_confirm' => 'Êtes-vous sûr de vouloir supprimer le compte :code ? Cette action est irréversible.',
+    'account_has_transactions' => 'Ce compte a des transactions. Le code et le type ne peuvent pas être modifiés.',
+    'account_has_transactions_nodelete' => 'Ce compte a des transactions et ne peut pas être supprimé. Vous pouvez le désactiver à la place.',
+    'account_code' => 'Code du compte',
+    'account_type' => 'Type de compte',
+    'parent_account' => 'Compte parent',
+    'no_parent' => 'Aucun parent (niveau supérieur)',
+    'deactivate' => 'Désactiver',
+    'import_accounts' => 'Importer des comptes',
+    'export_accounts' => 'Exporter les comptes',
+    'import_file' => 'Fichier',
+    'import_format_help' => 'CSV (code, nom, type) ou tableau JSON d\'objets avec les champs code, name, type.',
+    'import_mode' => 'Mode d\'importation',
+    'import_mode_add' => 'Ajouter au plan existant',
+    'import_mode_replace' => 'Remplacer tout le plan comptable',
+    'import_mode_replace_warning' => 'Cela supprimera tous les comptes existants sans transactions et les remplacera par les comptes importés.',
+    'import_success' => ':count comptes importés avec succès.',
+    'import_validation_error' => 'Erreur de validation à la ligne :row : :message',
+    'export_format' => 'Format',
+    'account_created' => 'Compte créé.',
+    'account_updated' => 'Compte mis à jour.',
+    'account_deleted' => 'Compte supprimé.',
 
     // Help preferences
     'help_preferences' => 'Aide et conseils',
@@ -452,6 +496,16 @@ return [
     'help_profit_loss_text' => 'Le compte de résultat montre combien votre entreprise a gagné et dépensé sur une période. Revenus moins charges égalent votre bénéfice net (ou perte). Cela vous indique si votre entreprise est rentable.',
     'help_reconciliation_title' => 'Qu\'est-ce que le rapprochement bancaire ?',
     'help_reconciliation_text' => 'Le rapprochement consiste à faire correspondre vos transactions bancaires avec les écritures de votre comptabilité. Cela garantit que vos livres reflètent fidèlement ce qui s\'est passé sur votre compte bancaire. Importez votre relevé bancaire et associez chaque transaction à une facture, une dépense ou une écriture manuelle.',
+    'help_trial_balance_title' => 'Qu\'est-ce qu\'une balance de vérification ?',
+    'help_trial_balance_text' => 'La balance de vérification liste tous les comptes avec leurs soldes débiteurs ou créditeurs à une date donnée. Elle vérifie que le total des débits est égal au total des crédits — un contrôle fondamental de la comptabilité en partie double. Utilisez le filtre de date pour voir les soldes à n\'importe quel moment.',
+    'help_year_end_closing_title' => 'Comprendre le bouclement annuel',
+    'help_year_end_closing_text' => 'Le bouclement annuel transfère tous les soldes de revenus et de charges vers un compte de résultat, les remettant à zéro pour le nouvel exercice. Cette opération est irréversible — assurez-vous que toutes les écritures de l\'année sont comptabilisées avant de boucler.',
+    'help_banking_title' => 'Gérer les comptes bancaires',
+    'help_banking_text' => 'Ajoutez vos comptes bancaires ici pour suivre leurs soldes et rapprocher les transactions. Chaque compte bancaire est lié à un compte du plan comptable, gardant vos livres synchronisés avec vos soldes bancaires réels.',
+    'help_customers_title' => 'Gérer les clients',
+    'help_customers_text' => 'Les clients sont les personnes et entreprises auxquelles vous facturez vos biens ou services. Ajoutez vos clients ici pour créer rapidement des factures et suivre les paiements. Chaque client peut avoir sa propre adresse, ses coordonnées et ses conditions de paiement.',
+    'help_suppliers_title' => 'Gérer les fournisseurs',
+    'help_suppliers_text' => 'Les fournisseurs sont les personnes et entreprises auprès desquelles vous achetez. Ajoutez vos fournisseurs ici pour suivre les dépenses et gérer les paiements. Chaque fournisseur peut avoir sa propre adresse, ses coordonnées et ses conditions de paiement.',
 
     // Signup / SaaS
     'signup_title' => 'Commencez votre essai gratuit de :days jours',

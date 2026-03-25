@@ -27,6 +27,8 @@ class FeatureFlagTest extends TestCase
 
     public function test_community_edition_by_default(): void
     {
+        config(['features.saas' => false]);
+
         $this->assertTrue(FeatureFlag::isCommunity());
         $this->assertFalse(FeatureFlag::isSaas());
     }

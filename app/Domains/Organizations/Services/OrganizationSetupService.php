@@ -2,20 +2,34 @@
 
 namespace App\Domains\Organizations\Services;
 
+use App\Domains\Accounting\Services\ChartTemplateService;
 use App\Domains\Organizations\Models\Organization;
-use Database\Seeders\SwissChartOfAccountsSeeder;
 use Database\Seeders\SwissVatRatesSeeder;
 
 class OrganizationSetupService
 {
     public function __construct(
-        private readonly SwissChartOfAccountsSeeder $chartOfAccountsSeeder,
+        private readonly ChartTemplateService $chartTemplateService,
         private readonly SwissVatRatesSeeder $vatRatesSeeder,
     ) {}
 
+    /**
+     * Seed a chart of accounts (and optionally VAT rates) for the organization.
+     */
+    public function seedChartOfAccounts(Organization $organization, string $templateKey): void
+    {
+        $this->chartTemplateService->seedTemplate($organization, $templateKey);
+
+        if ($this->chartTemplateService->templateSeedsVatRates($templateKey)) {
+            $this->vatRatesSeeder->run($organization);
+        }
+    }
+
+    /**
+     * @deprecated Use seedChartOfAccounts() instead.
+     */
     public function seedSwissDefaults(Organization $organization): void
     {
-        $this->chartOfAccountsSeeder->run($organization);
-        $this->vatRatesSeeder->run($organization);
+        $this->seedChartOfAccounts($organization, 'swiss_sme');
     }
 }

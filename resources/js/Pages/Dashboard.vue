@@ -41,10 +41,10 @@ const props = defineProps({
 const profit = computed(() => props.revenue - props.expenses)
 
 const summaryCards = computed(() => [
-  { title: t('cash_balance'), value: formatCurrency(props.cashBalance), icon: Wallet, color: props.cashBalance >= 0 ? 'text-green-600' : 'text-red-600' },
-  { title: t('revenue'), value: formatCurrency(props.revenue), icon: TrendingUp, color: 'text-green-600' },
-  { title: t('expenses'), value: formatCurrency(props.expenses), icon: TrendingDown, color: 'text-red-600' },
-  { title: t('profit'), value: formatCurrency(profit.value), icon: ArrowRightLeft, color: profit.value >= 0 ? 'text-green-600' : 'text-red-600' },
+  { title: t('cash_balance'), value: formatCurrency(props.cashBalance), icon: Wallet, color: props.cashBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' },
+  { title: t('revenue'), value: formatCurrency(props.revenue), icon: TrendingUp, color: 'text-green-600 dark:text-green-400' },
+  { title: t('expenses'), value: formatCurrency(props.expenses), icon: TrendingDown, color: 'text-red-600 dark:text-red-400' },
+  { title: t('profit'), value: formatCurrency(profit.value), icon: ArrowRightLeft, color: profit.value >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' },
 ])
 
 const chartData = computed(() => ({
@@ -200,22 +200,22 @@ const transactionColumns = computed(() => [
 
     <!-- Action Cards -->
     <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <Card v-if="unpaidInvoices.count > 0" class="border-amber-200 bg-amber-50/50">
+      <Card v-if="unpaidInvoices.count > 0" class="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30">
         <CardContent class="flex items-center justify-between pt-6">
           <div>
-            <p class="text-sm font-medium text-amber-800">{{ t('unpaid_invoice', { count: unpaidInvoices.count }) }}</p>
-            <p class="text-lg font-bold text-amber-900">{{ formatCurrency(unpaidInvoices.total) }}</p>
+            <p class="text-sm font-medium text-amber-800 dark:text-amber-200">{{ t('unpaid_invoice', { count: unpaidInvoices.count }) }}</p>
+            <p class="text-lg font-bold text-amber-900 dark:text-amber-100">{{ formatCurrency(unpaidInvoices.total) }}</p>
           </div>
-          <a href="/invoices" class="text-sm font-medium text-amber-700 hover:underline">{{ t('view') }}</a>
+          <a href="/invoices" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
         </CardContent>
       </Card>
-      <Card v-if="pendingExpenses.count > 0" class="border-blue-200 bg-blue-50/50">
+      <Card v-if="pendingExpenses.count > 0" class="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30">
         <CardContent class="flex items-center justify-between pt-6">
           <div>
-            <p class="text-sm font-medium text-blue-800">{{ t('pending_expense', { count: pendingExpenses.count }) }}</p>
-            <p class="text-lg font-bold text-blue-900">{{ formatCurrency(pendingExpenses.total) }}</p>
+            <p class="text-sm font-medium text-blue-800 dark:text-blue-200">{{ t('pending_expense', { count: pendingExpenses.count }) }}</p>
+            <p class="text-lg font-bold text-blue-900 dark:text-blue-100">{{ formatCurrency(pendingExpenses.total) }}</p>
           </div>
-          <a href="/expenses" class="text-sm font-medium text-blue-700 hover:underline">{{ t('view') }}</a>
+          <a href="/expenses" class="text-sm font-medium text-blue-700 hover:underline dark:text-blue-300">{{ t('view') }}</a>
         </CardContent>
       </Card>
     </div>
@@ -244,7 +244,7 @@ const transactionColumns = computed(() => [
           <button
             v-if="selectedMonth"
             @click="clearMonthFilter"
-            class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+            class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 transition-colors dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <X class="h-3 w-3" />
             {{ t('clear_filter') }}
@@ -258,7 +258,7 @@ const transactionColumns = computed(() => [
           :empty-message="selectedMonth ? t('no_transactions_in_month', { month: selectedMonth }) : t('no_transactions_yet')"
         >
           <template #cell-amount="{ row }">
-            <span :class="['font-medium', row.type === 'income' ? 'text-green-600' : row.type === 'expense' ? 'text-red-600' : 'text-gray-600']">
+            <span :class="['font-medium', row.type === 'income' ? 'text-green-600 dark:text-green-400' : row.type === 'expense' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400']">
               <template v-if="row.type === 'income'">+</template>
               <template v-else-if="row.type === 'expense'">&minus;</template>
               {{ formatCurrency(row.amount) }}

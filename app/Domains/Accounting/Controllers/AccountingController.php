@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Controllers;
 
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
@@ -17,10 +18,24 @@ class AccountingController extends Controller
     {
         $this->authorize('viewAny', Account::class);
 
-        $accounts = Account::orderBy('code')->get();
+        $accounts = Account::withCount('transactionLines')
+            ->orderBy('code')
+            ->get()
+            ->map(fn (Account $a) => [
+                ...$a->toArray(),
+                'has_transactions' => $a->transaction_lines_count > 0,
+            ]);
+
+        $user = $request->user();
 
         return Inertia::render('Accounting/ChartOfAccounts', [
             'accounts' => $accounts,
+            'can' => [
+                'create' => $user->can('create', Account::class),
+                'edit' => $user->hasPermissionTo(\App\Domains\Organizations\Enums\Permission::AccountingEdit),
+                'delete' => $user->hasPermissionTo(\App\Domains\Organizations\Enums\Permission::AccountingDelete),
+            ],
+            'accountTypes' => array_map(fn ($t) => ['value' => $t->value, 'label' => $t->value], AccountType::cases()),
         ]);
     }
 

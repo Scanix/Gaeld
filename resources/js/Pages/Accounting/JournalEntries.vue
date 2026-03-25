@@ -32,14 +32,14 @@ const columns = computed(() => [
     <Card>
       <CardHeader><CardTitle>{{ t('journal_entries') }}</CardTitle></CardHeader>
       <CardContent>
-        <DataTable :columns="columns" :rows="entries">
+        <DataTable :columns="columns" :rows="entries?.data ?? []" :pagination="entries">
           <template #cell-is_posted="{ value }">
             <Badge :variant="value ? 'success' : 'warning'">{{ value ? t('posted') : t('draft') }}</Badge>
           </template>
         </DataTable>
 
         <!-- Expanded lines for each entry -->
-        <div v-for="entry in (entries.data || entries)" :key="entry.id" class="mt-4 border rounded-md p-3" v-if="entry.lines?.length">
+        <div v-for="entry in (entries?.data ?? [])" :key="entry.id" class="mt-4 border rounded-md p-3" v-if="entry.lines?.length">
           <p class="mb-2 text-sm font-medium">{{ entry.reference }} — {{ entry.description }}</p>
           <table class="w-full text-sm">
             <thead>

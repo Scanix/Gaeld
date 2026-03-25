@@ -10,6 +10,7 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import Button from '@/Components/UI/Button.vue'
 import { formatCurrency } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
+import HelpText from '@/Components/HelpText.vue'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -26,18 +27,22 @@ function applyFilter() {
 }
 
 const columns = computed(() => [
-  { key: 'code', label: t('code') },
-  { key: 'name', label: t('account') },
-  { key: 'debit', label: t('debit'), format: v => v > 0 ? formatCurrency(v) : '' },
-  { key: 'credit', label: t('credit'), format: v => v > 0 ? formatCurrency(v) : '' },
+  { key: 'account_code', label: t('code') },
+  { key: 'account_name', label: t('account') },
+  { key: 'debit', label: t('debit'), format: v => parseFloat(v) > 0 ? formatCurrency(v) : '' },
+  { key: 'credit', label: t('credit'), format: v => parseFloat(v) > 0 ? formatCurrency(v) : '' },
 ])
 
-const totalDebit = computed(() => (props.balances || []).reduce((s, b) => s + (b.debit || 0), 0))
-const totalCredit = computed(() => (props.balances || []).reduce((s, b) => s + (b.credit || 0), 0))
+const totalDebit = computed(() => (props.balances || []).reduce((s, b) => s + (parseFloat(b.debit) || 0), 0))
+const totalCredit = computed(() => (props.balances || []).reduce((s, b) => s + (parseFloat(b.credit) || 0), 0))
 </script>
 
 <template>
   <AppLayout :title="t('trial_balance')" help-page="accounting-basics">
+    <HelpText :title="t('help_trial_balance_title')" class="mb-6">
+      <p>{{ t('help_trial_balance_text') }}</p>
+    </HelpText>
+
     <div class="mb-6 flex items-end gap-4">
       <FormInput id="as_of_date" v-model="date" type="date" :label="t('as_of_date')" />
       <Button @click="applyFilter">{{ t('apply') }}</Button>

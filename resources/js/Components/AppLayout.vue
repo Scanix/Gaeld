@@ -31,6 +31,7 @@ const collapsed = ref(false)
 const mobileOpen = ref(false)
 
 const subscription = computed(() => page.props.auth?.subscription ?? null)
+const flash = computed(() => page.props.flash || {})
 const trialDaysLeft = computed(() => {
   if (subscription.value?.status !== 'trialing' || !subscription.value?.trial_ends_at) return null
   const diff = Math.ceil((new Date(subscription.value.trial_ends_at) - new Date()) / 86400000)
@@ -104,6 +105,12 @@ const showPastDueBanner = computed(() => subscription.value?.status === 'past_du
       </Topbar>
 
       <main class="p-4 sm:p-6">
+        <div v-if="flash.success" class="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+          {{ flash.success }}
+        </div>
+        <div v-if="flash.error" class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+          {{ flash.error }}
+        </div>
         <slot />
       </main>
     </div>

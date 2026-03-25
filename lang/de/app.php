@@ -147,6 +147,7 @@ return [
     'due' => 'Fällig',
     'issued' => 'Ausgestellt',
     'amount_due' => 'Offener Betrag:',
+    'invoice' => 'Rechnung',
     'record_payment' => 'Zahlung erfassen',
     'download_qr_invoice' => 'QR-Rechnung herunterladen',
     'payment_date' => 'Zahlungsdatum',
@@ -210,6 +211,11 @@ return [
     'new_customer' => 'Neuer Kunde',
     'create_customer' => 'Kunde erstellen',
     'manage_customers' => 'Verwalten und anzeigen Ihrer Kunden.',
+    'edit_customer' => 'Kunde bearbeiten',
+    'delete_customer' => 'Kunde löschen',
+    'phone' => 'Telefon',
+    'internal_notes' => 'Interne Notizen',
+    'default_category' => 'Standardkategorie',
     'no_customers_yet' => 'Noch keine Kunden vorhanden. Fügen Sie Ihren ersten Kunden hinzu.',
 
     // Suppliers
@@ -217,6 +223,8 @@ return [
     'create_supplier' => 'Lieferant erstellen',
     'select_supplier' => 'Lieferant auswählen',
     'manage_suppliers' => 'Verwalten und anzeigen Ihrer Lieferanten.',
+    'edit_supplier' => 'Lieferant bearbeiten',
+    'delete_supplier' => 'Lieferant löschen',
     'no_suppliers_yet' => 'Noch keine Lieferanten vorhanden. Fügen Sie Ihren ersten Lieferanten hinzu.',
 
     // Accounting
@@ -287,6 +295,7 @@ return [
     'enter_expense_id' => 'Ausgaben-ID auswählen oder eingeben',
     'file' => 'Datei',
     'import' => 'Importieren',
+    'export' => 'Exportieren',
     'manual' => 'Manuell',
 
     // Organizations
@@ -368,6 +377,8 @@ return [
     'two_factor_recovery_desc' => 'Geben Sie einen Ihrer Notfall-Wiederherstellungscodes ein.',
     'use_recovery_code' => 'Einen Wiederherstellungscode verwenden',
     'use_auth_code' => 'Einen Authentifizierungscode verwenden',
+    'recovery_code' => 'Wiederherstellungscode',
+    'verify' => 'Bestätigen',
     'two_factor_required_by_org' => 'Ihre Organisation verlangt die Zwei-Faktor-Authentifizierung. Bitte aktivieren Sie sie unten.',
     'invalid_two_factor_code' => 'Der eingegebene Zwei-Faktor-Authentifizierungscode ist ungültig.',
     'passkeys' => 'Passkeys',
@@ -383,6 +394,8 @@ return [
     // Topbar
     'help' => 'Hilfe',
     'sign_out' => 'Abmelden',
+    'dark_mode' => 'Dunkelmodus',
+    'light_mode' => 'Hellmodus',
 
     // Help sidebar
     'documentation' => 'Dokumentation',
@@ -425,8 +438,39 @@ return [
 
     // Chart of accounts
     'chart_swiss_sme' => 'Schweizer KMU (Kontenrahmen KMU)',
+    'chart_swiss_sme_desc' => 'Standard-Kontenrahmen für kleine und mittlere Unternehmen mit ~60 Konten.',
+    'chart_swiss_freelancer' => 'Freiberufler / Einzelfirma',
+    'chart_swiss_freelancer_desc' => 'Vereinfachter Kontenrahmen für Selbständige mit ~30 wesentlichen Konten.',
+    'chart_swiss_association' => 'Verein',
+    'chart_swiss_association_desc' => 'Angepasst für Vereine mit Mitgliederbeiträgen, Spenden und Veranstaltungskonten.',
     'chart_none' => 'Leer — ich erstelle meinen eigenen',
-    'chart_of_accounts_help' => 'Die Schweizer KMU-Vorlage enthält Standardkonten und Mehrwertsteuersätze. Sie können später jederzeit Konten hinzufügen oder entfernen.',
+    'chart_of_accounts_help' => 'Wählen Sie eine Vorlage, die zu Ihrem Organisationstyp passt. Standardkonten und Mehrwertsteuersätze werden automatisch erstellt. Sie können Konten jederzeit hinzufügen oder entfernen.',
+
+    // Account management
+    'add_account' => 'Konto hinzufügen',
+    'edit_account' => 'Konto bearbeiten',
+    'delete_account_confirm' => 'Sind Sie sicher, dass Sie das Konto :code löschen möchten? Dies kann nicht rückgängig gemacht werden.',
+    'account_has_transactions' => 'Dieses Konto hat Buchungen. Code und Typ können nicht geändert werden.',
+    'account_has_transactions_nodelete' => 'Dieses Konto hat Buchungen und kann nicht gelöscht werden. Sie können es stattdessen deaktivieren.',
+    'account_code' => 'Kontonummer',
+    'account_type' => 'Kontotyp',
+    'parent_account' => 'Übergeordnetes Konto',
+    'no_parent' => 'Kein übergeordnetes Konto (oberste Ebene)',
+    'deactivate' => 'Deaktivieren',
+    'import_accounts' => 'Konten importieren',
+    'export_accounts' => 'Konten exportieren',
+    'import_file' => 'Datei',
+    'import_format_help' => 'CSV (Code, Name, Typ) oder JSON-Array von Objekten mit den Feldern code, name, type.',
+    'import_mode' => 'Importmodus',
+    'import_mode_add' => 'Zum bestehenden Kontenrahmen hinzufügen',
+    'import_mode_replace' => 'Gesamten Kontenrahmen ersetzen',
+    'import_mode_replace_warning' => 'Dies löscht alle bestehenden Konten ohne Buchungen und ersetzt sie durch die importierten.',
+    'import_success' => ':count Konten erfolgreich importiert.',
+    'import_validation_error' => 'Validierungsfehler in Zeile :row: :message',
+    'export_format' => 'Format',
+    'account_created' => 'Konto erstellt.',
+    'account_updated' => 'Konto aktualisiert.',
+    'account_deleted' => 'Konto gelöscht.',
 
     // Help preferences
     'help_preferences' => 'Hilfe & Anleitung',
@@ -453,6 +497,16 @@ return [
     'help_profit_loss_text' => 'Die Erfolgsrechnung zeigt, wie viel Ihr Unternehmen über einen Zeitraum verdient und ausgegeben hat. Ertrag minus Aufwand ergibt Ihren Reingewinn (oder Verlust). Dies zeigt Ihnen, ob Ihr Unternehmen rentabel ist.',
     'help_reconciliation_title' => 'Was ist Bankabstimmung?',
     'help_reconciliation_text' => 'Abstimmung bedeutet, Ihre Banktransaktionen mit den Einträgen in Ihrer Buchhaltung abzugleichen. Dies stellt sicher, dass Ihre Bücher genau widerspiegeln, was tatsächlich auf Ihrem Bankkonto passiert ist. Importieren Sie Ihren Kontoauszug und ordnen Sie jede Transaktion einer Rechnung, Ausgabe oder manuellen Buchung zu.',
+    'help_trial_balance_title' => 'Was ist eine Probebilanz?',
+    'help_trial_balance_text' => 'Die Probebilanz listet alle Konten mit ihren Soll- oder Habensalden zu einem bestimmten Datum auf. Sie überprüft, ob die Summe der Soll-Buchungen der Summe der Haben-Buchungen entspricht — eine grundlegende Kontrolle der doppelten Buchführung. Verwenden Sie den Datumsfilter, um Salden zu jedem Zeitpunkt anzuzeigen.',
+    'help_year_end_closing_title' => 'Jahresabschluss verstehen',
+    'help_year_end_closing_text' => 'Der Jahresabschluss überträgt alle Ertrags- und Aufwandssalden auf ein Ergebniskonto und setzt sie für das neue Geschäftsjahr auf null zurück. Dieser Vorgang ist unwiderruflich — stellen Sie sicher, dass alle Buchungen des Jahres verbucht sind, bevor Sie abschliessen.',
+    'help_banking_title' => 'Bankkonten verwalten',
+    'help_banking_text' => 'Fügen Sie hier Ihre Bankkonten hinzu, um deren Salden zu verfolgen und Transaktionen abzustimmen. Jedes Bankkonto ist mit einem Konto in Ihrem Kontenplan verknüpft, sodass Ihre Bücher mit Ihren tatsächlichen Banksalden synchron bleiben.',
+    'help_customers_title' => 'Kunden verwalten',
+    'help_customers_text' => 'Kunden sind die Personen und Unternehmen, denen Sie Rechnungen für Ihre Waren oder Dienstleistungen stellen. Fügen Sie Ihre Kunden hier hinzu, um schnell Rechnungen zu erstellen und Zahlungen zu verfolgen. Jeder Kunde kann eine eigene Adresse, Kontaktdaten und Zahlungsbedingungen haben.',
+    'help_suppliers_title' => 'Lieferanten verwalten',
+    'help_suppliers_text' => 'Lieferanten sind die Personen und Unternehmen, bei denen Sie einkaufen. Fügen Sie Ihre Lieferanten hier hinzu, um Ausgaben zu verfolgen und Zahlungen zu verwalten. Jeder Lieferant kann eine eigene Adresse, Kontaktdaten und Zahlungsbedingungen haben.',
 
     // Signup / SaaS
     'signup_title' => 'Starten Sie Ihre :days-tägige kostenlose Testphase',

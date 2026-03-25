@@ -4,8 +4,9 @@ import AppLayout from '@/Components/AppLayout.vue'
 import Button from '@/Components/UI/Button.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
+import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Eye } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
@@ -62,7 +63,7 @@ const columns = computed(() => [
   { key: 'city', label: t('city'), sortable: true },
   { key: 'country', label: t('country'), sortable: true },
   { key: 'default_expense_category', label: t('category') },
-  { key: 'actions', label: '', class: 'text-right w-28' },
+  { key: 'actions', label: '', class: 'text-right w-32' },
 ])
 
 const countryFilters = computed(() => [
@@ -83,6 +84,10 @@ const countryFilters = computed(() => [
 
 <template>
   <AppLayout :title="t('suppliers')" help-page="suppliers">
+    <HelpText :title="t('help_suppliers_title')" class="mb-6">
+      <p>{{ t('help_suppliers_text') }}</p>
+    </HelpText>
+
     <div class="mb-6 flex items-center justify-between">
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('manage_suppliers') }}
@@ -110,6 +115,16 @@ const countryFilters = computed(() => [
     >
       <template #cell-actions="{ row }">
         <div class="flex justify-end gap-1">
+          <Button
+            as="a"
+            :href="`/suppliers/${row.id}`"
+            variant="ghost"
+            size="icon"
+            :title="t('view')"
+            @click.stop
+          >
+            <Eye class="h-4 w-4" />
+          </Button>
           <Button
             as="a"
             :href="`/suppliers/${row.id}/edit`"

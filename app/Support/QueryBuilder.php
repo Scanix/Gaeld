@@ -2,8 +2,10 @@
 
 namespace App\Support;
 
+use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Laravel\Scout\Searchable;
 
 /**
  * Shared infrastructure for building filterable, sortable, and searchable
@@ -103,12 +105,48 @@ class QueryBuilder
         }
 
         $search = trim($search);
+        $model = $this->query->getModel();
+
+        // Use MeiliSearch when available and the model is searchable
+        if (config('scout.driver') === 'meilisearch' && in_array(Searchable::class, class_uses_recursive($model))) {
+            $this->applyMeiliSearch($search, $model);
+
+            return;
+        }
+
+        $this->applyDatabaseSearch($search);
+    }
+
+    private function applyMeiliSearch(string $search, $model): void
+    {
+        $scoutQuery = $model::search($search);
+
+        // Tenant isolation: filter by current organization
+        $currentOrg = app(CurrentOrganization::class);
+        if ($currentOrg->isBound()) {
+            $scoutQuery->where('organization_id', $currentOrg->id());
+        }
+
+        $ids = $scoutQuery->keys()->all();
+
+        if (empty($ids)) {
+            // No results — force empty result set
+            $this->query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $table = $model->getTable();
+        $this->query->whereIn("{$table}.id", $ids);
+    }
+
+    private function applyDatabaseSearch(string $search): void
+    {
         $likeOperator = $this->likeOperator();
 
         $this->query->where(function (Builder $q) use ($search, $likeOperator) {
             foreach ($this->searchColumns as $column) {
                 if (str_contains($column, '.')) {
-                    // Relation search: e.g. 'client.name'
                     [$relation, $field] = explode('.', $column, 2);
                     $q->orWhereHas($relation, function (Builder $rq) use ($field, $search, $likeOperator) {
                         $rq->where($field, $likeOperator, "%{$search}%");

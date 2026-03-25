@@ -15,6 +15,12 @@ class EnsureOrganizationTwoFactor
 
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip the check when the user is already on the profile page
+        // to avoid an infinite redirect loop.
+        if ($request->routeIs('profile', 'two-factor.*', 'passkeys.*', 'profile.*')) {
+            return $next($request);
+        }
+
         $user = $request->user();
         $org = $this->currentOrganization->isBound()
             ? $this->currentOrganization->get()

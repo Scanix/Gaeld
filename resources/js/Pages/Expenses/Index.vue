@@ -7,7 +7,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Eye } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import { ref, computed } from 'vue'
@@ -67,7 +67,7 @@ const columns = computed(() => [
   { key: 'vendor', label: t('vendor'), sortable: true },
   { key: 'amount', label: t('amount'), class: 'text-right', format: (v) => formatCurrency(v), sortable: true },
   { key: 'status', label: t('status'), sortable: true },
-  { key: 'actions', label: '', class: 'text-right w-24' },
+  { key: 'actions', label: '', class: 'text-right w-28' },
 ])
 
 const statusVariant = {
@@ -128,6 +128,16 @@ const statusFilters = computed(() => [
       </template>
       <template #cell-actions="{ row }">
         <div class="flex justify-end gap-1">
+          <Button
+            as="a"
+            :href="`/expenses/${row.id}`"
+            variant="ghost"
+            size="icon"
+            :title="t('view')"
+            @click.stop
+          >
+            <Eye class="h-4 w-4" />
+          </Button>
           <Button
             v-if="row.status !== 'posted'"
             as="a"

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Organizations\Controllers;
 
+use App\Domains\Accounting\Services\ChartTemplateService;
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
 use App\Domains\Organizations\Services\OrganizationService;
 use App\Domains\Organizations\Services\OrganizationSetupService;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,7 +29,10 @@ class OnboardingController extends Controller
         Request $request,
         OrganizationService $organizationService,
         OrganizationSetupService $setupService,
+        ChartTemplateService $chartTemplateService,
     ): RedirectResponse {
+        $validTemplateKeys = $chartTemplateService->validKeys();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'legal_name' => 'nullable|string|max:255',
@@ -38,7 +43,7 @@ class OnboardingController extends Controller
             'vat_number' => 'nullable|string|max:50',
             'currency' => 'required|string|size:3',
             'locale' => 'required|string|in:en,fr,de,it,rm',
-            'chart_of_accounts' => 'required|string|in:swiss_sme,none',
+            'chart_of_accounts' => ['required', 'string', Rule::in([...$validTemplateKeys, 'none'])],
         ]);
 
         $org = DB::transaction(function () use ($request, $validated, $organizationService, $setupService) {
@@ -47,8 +52,8 @@ class OnboardingController extends Controller
                 CreateOrganizationData::fromArray($validated),
             );
 
-            if ($validated['chart_of_accounts'] === 'swiss_sme') {
-                $setupService->seedSwissDefaults($org);
+            if ($validated['chart_of_accounts'] !== 'none') {
+                $setupService->seedChartOfAccounts($org, $validated['chart_of_accounts']);
             }
 
             return $org;

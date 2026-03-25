@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Actions;
 
+use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\SwissQrInvoiceService;
 use App\Domains\Organizations\Models\Organization;
@@ -41,6 +42,11 @@ class GenerateQrInvoicePdfAction
         $this->renderTotals($tcpdf, $invoice);
 
         // --- QR PAYMENT SLIP (bottom of page) ---
+        $violations = $this->qrService->validate($invoice, $organization);
+        if ($violations !== []) {
+            throw new QrBillValidationException($violations);
+        }
+
         $qrBill = $this->qrService->buildQrBill($invoice, $organization);
         $langMap = ['en' => 'en', 'de' => 'de', 'fr' => 'fr', 'it' => 'it', 'rm' => 'de'];
         $qrLang = $langMap[$language] ?? 'en';

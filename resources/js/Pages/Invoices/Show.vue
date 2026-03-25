@@ -101,7 +101,7 @@ const paymentMethodOptions = [
 
 <template>
   <AppLayout :title="`Invoice ${invoice?.number}`" help-page="invoices">
-    <div class="max-w-3xl space-y-6">
+    <div class="max-w-5xl space-y-6">
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">

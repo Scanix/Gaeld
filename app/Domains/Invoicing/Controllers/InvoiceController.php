@@ -11,6 +11,7 @@ use App\Domains\Invoicing\Actions\RecordPaymentAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
+use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
@@ -253,14 +254,18 @@ class InvoiceController extends Controller
         );
     }
 
-    public function downloadQrPdf(Invoice $invoice, GenerateQrInvoicePdfAction $action, CurrentOrganization $currentOrg): HttpResponse
+    public function downloadQrPdf(Invoice $invoice, GenerateQrInvoicePdfAction $action, CurrentOrganization $currentOrg): HttpResponse|RedirectResponse
     {
         $this->authorize('view', $invoice);
 
         $organization = $currentOrg->get();
         $locale = $organization->locale ?? app()->getLocale();
 
-        $pdf = $action->execute($invoice, $organization, $locale);
+        try {
+            $pdf = $action->execute($invoice, $organization, $locale);
+        } catch (QrBillValidationException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         $filename = 'invoice-' . ($invoice->number ?? $invoice->id) . '.pdf';
 

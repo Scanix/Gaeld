@@ -35,7 +35,7 @@ function submit() {
 
       <Card>
         <CardContent class="pt-6">
-          <div v-if="status" class="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">
+          <div v-if="status" class="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
             {{ status }}
           </div>
 

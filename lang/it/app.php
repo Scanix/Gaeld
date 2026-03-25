@@ -147,6 +147,7 @@ return [
     'due' => 'Scadenza',
     'issued' => 'Emessa il',
     'amount_due' => 'Importo dovuto:',
+    'invoice' => 'Fattura',
     'record_payment' => 'Registra pagamento',
     'download_qr_invoice' => 'Scarica fattura QR',
     'payment_date' => 'Data di pagamento',
@@ -210,6 +211,11 @@ return [
     'new_customer' => 'Nuovo cliente',
     'create_customer' => 'Crea cliente',
     'manage_customers' => 'Gestisci e visualizza i tuoi clienti.',
+    'edit_customer' => 'Modifica cliente',
+    'delete_customer' => 'Elimina cliente',
+    'phone' => 'Telefono',
+    'internal_notes' => 'Note interne',
+    'default_category' => 'Categoria predefinita',
     'no_customers_yet' => 'Nessun cliente presente. Aggiungi il tuo primo cliente per iniziare.',
 
     // Suppliers
@@ -217,6 +223,8 @@ return [
     'create_supplier' => 'Crea fornitore',
     'select_supplier' => 'Seleziona un fornitore',
     'manage_suppliers' => 'Gestisci e visualizza i tuoi fornitori.',
+    'edit_supplier' => 'Modifica fornitore',
+    'delete_supplier' => 'Elimina fornitore',
     'no_suppliers_yet' => 'Nessun fornitore presente. Aggiungi il tuo primo fornitore per iniziare.',
 
     // Accounting
@@ -287,6 +295,7 @@ return [
     'enter_expense_id' => 'Seleziona o inserisci ID spesa',
     'file' => 'File',
     'import' => 'Importa',
+    'export' => 'Esportare',
     'manual' => 'Manuale',
 
     // Organizations
@@ -368,6 +377,8 @@ return [
     'two_factor_recovery_desc' => 'Inserisci uno dei tuoi codici di recupero di emergenza.',
     'use_recovery_code' => 'Usa un codice di recupero',
     'use_auth_code' => 'Usa un codice di autenticazione',
+    'recovery_code' => 'Codice di recupero',
+    'verify' => 'Verifica',
     'two_factor_required_by_org' => 'La tua organizzazione richiede l\'autenticazione a due fattori. Attivala qui sotto.',
     'invalid_two_factor_code' => 'Il codice di autenticazione a due fattori fornito non è valido.',
     'passkeys' => 'Passkey',
@@ -383,6 +394,8 @@ return [
     // Topbar
     'help' => 'Aiuto',
     'sign_out' => 'Esci',
+    'dark_mode' => 'Modalità scura',
+    'light_mode' => 'Modalità chiara',
 
     // Help sidebar
     'documentation' => 'Documentazione',
@@ -425,8 +438,39 @@ return [
 
     // Chart of accounts
     'chart_swiss_sme' => 'PMI svizzera (Kontenrahmen KMU)',
+    'chart_swiss_sme_desc' => 'Piano dei conti standard per piccole e medie imprese con ~60 conti.',
+    'chart_swiss_freelancer' => 'Libero professionista / Ditta individuale',
+    'chart_swiss_freelancer_desc' => 'Piano dei conti semplificato per lavoratori autonomi con ~30 conti essenziali.',
+    'chart_swiss_association' => 'Associazione (Verein)',
+    'chart_swiss_association_desc' => 'Adattato per le associazioni con quote associative, donazioni e conti per eventi.',
     'chart_none' => 'Vuoto \u2014 creer\u00f2 il mio',
-    'chart_of_accounts_help' => 'Il modello PMI svizzera include conti standard e aliquote IVA. Potrai sempre aggiungere o rimuovere conti in seguito.',
+    'chart_of_accounts_help' => 'Scegli un modello adatto al tipo di organizzazione. I conti standard e le aliquote IVA verranno creati automaticamente. Potrai sempre aggiungere o rimuovere conti in seguito.',
+
+    // Account management
+    'add_account' => 'Aggiungi conto',
+    'edit_account' => 'Modifica conto',
+    'delete_account_confirm' => 'Sei sicuro di voler eliminare il conto :code? Questa azione è irreversibile.',
+    'account_has_transactions' => 'Questo conto ha transazioni. Il codice e il tipo non possono essere modificati.',
+    'account_has_transactions_nodelete' => 'Questo conto ha transazioni e non può essere eliminato. Puoi disattivarlo.',
+    'account_code' => 'Codice conto',
+    'account_type' => 'Tipo di conto',
+    'parent_account' => 'Conto padre',
+    'no_parent' => 'Nessun padre (livello superiore)',
+    'deactivate' => 'Disattiva',
+    'import_accounts' => 'Importa conti',
+    'export_accounts' => 'Esporta conti',
+    'import_file' => 'File',
+    'import_format_help' => 'CSV (codice, nome, tipo) o array JSON di oggetti con i campi code, name, type.',
+    'import_mode' => 'Modalità importazione',
+    'import_mode_add' => 'Aggiungi al piano esistente',
+    'import_mode_replace' => 'Sostituisci l\'intero piano dei conti',
+    'import_mode_replace_warning' => 'Questo eliminerà tutti i conti esistenti senza transazioni e li sostituirà con quelli importati.',
+    'import_success' => ':count conti importati con successo.',
+    'import_validation_error' => 'Errore di validazione alla riga :row: :message',
+    'export_format' => 'Formato',
+    'account_created' => 'Conto creato.',
+    'account_updated' => 'Conto aggiornato.',
+    'account_deleted' => 'Conto eliminato.',
 
     // Help preferences
     'help_preferences' => 'Aiuto e suggerimenti',
@@ -453,6 +497,16 @@ return [
     'help_profit_loss_text' => 'Il conto economico mostra quanto la tua azienda ha guadagnato e speso in un periodo. Ricavi meno costi uguale il tuo utile netto (o perdita). Questo ti dice se la tua azienda è redditizia.',
     'help_reconciliation_title' => 'Cos\'è la riconciliazione bancaria?',
     'help_reconciliation_text' => 'La riconciliazione consiste nel far corrispondere le tue transazioni bancarie con le registrazioni nella tua contabilità. Questo garantisce che i tuoi libri riflettano accuratamente ciò che è realmente accaduto sul tuo conto bancario. Importa il tuo estratto conto e associa ogni transazione a una fattura, una spesa o una registrazione manuale.',
+    'help_trial_balance_title' => 'Cos\'è un bilancio di verifica?',
+    'help_trial_balance_text' => 'Il bilancio di verifica elenca tutti i conti con i loro saldi dare o avere a una data specifica. Verifica che il totale dei debiti sia uguale al totale dei crediti — un controllo fondamentale della partita doppia. Usa il filtro data per visualizzare i saldi in qualsiasi momento.',
+    'help_year_end_closing_title' => 'Comprendere la chiusura annuale',
+    'help_year_end_closing_text' => 'La chiusura annuale trasferisce tutti i saldi di ricavi e costi su un conto risultato, azzerandoli per il nuovo esercizio. Questa operazione è irreversibile — assicurati che tutte le registrazioni dell\'anno siano contabilizzate prima di chiudere.',
+    'help_banking_title' => 'Gestire i conti bancari',
+    'help_banking_text' => 'Aggiungi i tuoi conti bancari qui per monitorare i saldi e riconciliare le transazioni. Ogni conto bancario è collegato a un conto nel piano dei conti, mantenendo i tuoi libri sincronizzati con i saldi bancari reali.',
+    'help_customers_title' => 'Gestire i clienti',
+    'help_customers_text' => 'I clienti sono le persone e le aziende a cui fatturi beni o servizi. Aggiungi i tuoi clienti qui per creare rapidamente fatture e monitorare i pagamenti. Ogni cliente può avere il proprio indirizzo, dati di contatto e condizioni di pagamento.',
+    'help_suppliers_title' => 'Gestire i fornitori',
+    'help_suppliers_text' => 'I fornitori sono le persone e le aziende da cui acquisti. Aggiungi i tuoi fornitori qui per monitorare le spese e gestire i pagamenti. Ogni fornitore può avere il proprio indirizzo, dati di contatto e condizioni di pagamento.',
 
     // Signup / SaaS
     'signup_title' => 'Inizia la tua prova gratuita di :days giorni',

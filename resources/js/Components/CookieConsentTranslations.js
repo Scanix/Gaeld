@@ -6,7 +6,7 @@ export default function getTranslations() {
       consentModal: {
         title: 'Cookies & Privacy',
         description:
-          'Our website uses essential cookies to ensure its proper functioning. <a href="/privacy" class="cc-link">Privacy Policy</a>',
+          'Our website uses essential cookies to ensure its proper functioning. <a href="https://gaeld.ch/privacy" class="cc-link">Privacy Policy</a>',
         acceptAllBtn: 'Accept',
         showPreferencesBtn: 'More info',
       },
@@ -19,7 +19,7 @@ export default function getTranslations() {
           {
             title: 'Cookie usage',
             description:
-              'We use cookies to ensure the basic functionalities of the website. For more details about cookies and other sensitive data, please read the full <a href="/privacy" class="cc-link">privacy policy</a>.',
+              'We use cookies to ensure the basic functionalities of the website. For more details about cookies and other sensitive data, please read the full <a href="https://gaeld.ch/privacy" class="cc-link">privacy policy</a>',
           },
           {
             title: 'Strictly necessary cookies',
@@ -58,7 +58,7 @@ export default function getTranslations() {
           {
             title: 'More information',
             description:
-              'For any questions regarding our cookie policy and your choices, please <a class="cc-link" href="/privacy">contact us</a>.',
+              'For any questions regarding our cookie policy and your choices, please <a class="cc-link" href="https://gaeld.ch/privacy">contact us</a>',
           },
         ],
       },
@@ -68,7 +68,7 @@ export default function getTranslations() {
       consentModal: {
         title: 'Cookies & Confidentialit\u00e9',
         description:
-          'Notre site web utilise des cookies essentiels pour assurer son bon fonctionnement. <a href="/privacy" class="cc-link">Politique de confidentialit\u00e9</a>',
+          'Notre site web utilise des cookies essentiels pour assurer son bon fonctionnement. <a href="https://gaeld.ch/fr/privacy" class="cc-link">Politique de confidentialit\u00e9</a>',
         acceptAllBtn: 'Accepter',
         showPreferencesBtn: "Plus d\'infos",
       },
@@ -81,7 +81,7 @@ export default function getTranslations() {
           {
             title: 'Utilisation des cookies',
             description:
-              'Nous utilisons des cookies pour assurer les fonctionnalit\u00e9s de base du site. Pour plus de d\u00e9tails sur les cookies et autres donn\u00e9es sensibles, veuillez lire la <a href="/privacy" class="cc-link">politique de confidentialit\u00e9</a>.',
+              'Nous utilisons des cookies pour assurer les fonctionnalit\u00e9s de base du site. Pour plus de d\u00e9tails sur les cookies et autres donn\u00e9es sensibles, veuillez lire la <a href="https://gaeld.ch/fr/privacy" class="cc-link">politique de confidentialit\u00e9</a>',
           },
           {
             title: 'Cookies strictement n\u00e9cessaires',
@@ -120,7 +120,7 @@ export default function getTranslations() {
           {
             title: "Plus d\'informations",
             description:
-              'Pour toute question concernant notre politique de cookies et vos choix, veuillez <a class="cc-link" href="/privacy">nous contacter</a>.',
+              'Pour toute question concernant notre politique de cookies et vos choix, veuillez <a class="cc-link" href="https://gaeld.ch/fr/privacy">nous contacter</a>',
           },
         ],
       },
@@ -130,7 +130,7 @@ export default function getTranslations() {
       consentModal: {
         title: 'Cookies & Datenschutz',
         description:
-          'Unsere Website verwendet essentielle Cookies, um deren ordnungsgem\u00e4sses Funktionieren sicherzustellen. <a href="/privacy" class="cc-link">Datenschutzerkl\u00e4rung</a>',
+          'Unsere Website verwendet essentielle Cookies, um deren ordnungsgem\u00e4sses Funktionieren sicherzustellen. <a href="https://gaeld.ch/de/privacy" class="cc-link">Datenschutzerkl\u00e4rung</a>',
         acceptAllBtn: 'Akzeptieren',
         showPreferencesBtn: 'Mehr Infos',
       },
@@ -143,7 +143,7 @@ export default function getTranslations() {
           {
             title: 'Cookie-Nutzung',
             description:
-              'Wir verwenden Cookies, um die grundlegenden Funktionen der Website sicherzustellen. Weitere Details zu Cookies und anderen sensiblen Daten finden Sie in unserer <a href="/privacy" class="cc-link">Datenschutzerkl\u00e4rung</a>.',
+              'Wir verwenden Cookies, um die grundlegenden Funktionen der Website sicherzustellen. Weitere Details zu Cookies und anderen sensiblen Daten finden Sie in unserer <a href="https://gaeld.ch/de/privacy" class="cc-link">Datenschutzerkl\u00e4rung</a>',
           },
           {
             title: 'Unbedingt erforderliche Cookies',
@@ -182,7 +182,7 @@ export default function getTranslations() {
           {
             title: 'Weitere Informationen',
             description:
-              'Bei Fragen zu unserer Cookie-Richtlinie und Ihren Wahlm\u00f6glichkeiten <a class="cc-link" href="/privacy">kontaktieren Sie uns</a>.',
+              'Bei Fragen zu unserer Cookie-Richtlinie und Ihren Wahlm\u00f6glichkeiten <a class="cc-link" href="https://gaeld.ch/de/privacy">kontaktieren Sie uns</a>',
           },
         ],
       },
@@ -192,7 +192,7 @@ export default function getTranslations() {
       consentModal: {
         title: 'Cookie e Privacy',
         description:
-          'Il nostro sito web utilizza cookie essenziali per garantirne il corretto funzionamento. <a href="/it/privacy" class="cc-link">Informativa sulla privacy</a>',
+          'Il nostro sito web utilizza cookie essenziali per garantirne il corretto funzionamento. <a href="https://gaeld.ch/it/privacy" class="cc-link">Informativa sulla privacy</a>',
         acceptAllBtn: 'Accetta',
         showPreferencesBtn: "Pi\u00f9 info",
       },
@@ -205,7 +205,7 @@ export default function getTranslations() {
           {
             title: 'Utilizzo dei cookie',
             description:
-              "Utilizziamo i cookie per garantire le funzionalit\u00e0 di base del sito. Per maggiori dettagli sui cookie e altri dati sensibili, leggete l\'<a href=\"/it/privacy\" class=\"cc-link\">informativa sulla privacy</a>.",
+              "Utilizziamo i cookie per garantire le funzionalit\u00e0 di base del sito. Per maggiori dettagli sui cookie e altri dati sensibili, leggete l\'<a href=\"https://gaeld.ch/it/privacy\" class=\"cc-link\">informativa sulla privacy</a>.",
           },
           {
             title: 'Cookie strettamente necessari',
@@ -244,7 +244,7 @@ export default function getTranslations() {
           {
             title: 'Maggiori informazioni',
             description:
-              'Per qualsiasi domanda sulla nostra politica dei cookie e le vostre scelte, <a class="cc-link" href="/it/privacy">contattateci</a>.',
+              'Per qualsiasi domanda sulla nostra politica dei cookie e le vostre scelte, <a class="cc-link" href="https://gaeld.ch/it/privacy">contattateci</a>.',
           },
         ],
       },

@@ -10,6 +10,7 @@ import Button from '@/Components/UI/Button.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
+import HelpText from '@/Components/HelpText.vue'
 import { formatCurrency } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
@@ -63,7 +64,11 @@ function runClosing() {
 </script>
 
 <template>
-  <AppLayout :title="t('year_end_closing')">
+  <AppLayout :title="t('year_end_closing')" help-page="accounting-basics">
+    <HelpText :title="t('help_year_end_closing_title')" class="mb-6">
+      <p>{{ t('help_year_end_closing_text') }}</p>
+    </HelpText>
+
     <!-- Year selector -->
     <div class="mb-6 flex items-end gap-4">
       <FormInput

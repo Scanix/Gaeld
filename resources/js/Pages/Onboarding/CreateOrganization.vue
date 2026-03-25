@@ -29,8 +29,16 @@ const form = useForm({
 
 const chartOptions = [
   { value: 'swiss_sme', label: t('chart_swiss_sme') },
+  { value: 'swiss_freelancer', label: t('chart_swiss_freelancer') },
+  { value: 'swiss_association', label: t('chart_swiss_association') },
   { value: 'none', label: t('chart_none') },
 ]
+
+const chartDescriptions = {
+  swiss_sme: t('chart_swiss_sme_desc'),
+  swiss_freelancer: t('chart_swiss_freelancer_desc'),
+  swiss_association: t('chart_swiss_association_desc'),
+}
 
 function submit() {
   form.post('/onboarding')
@@ -90,6 +98,9 @@ const localeOptions = [
                 <FormSelect id="locale" v-model="form.locale" :label="t('language')" :options="localeOptions" required />
               </div>
               <FormSelect id="chart_of_accounts" v-model="form.chart_of_accounts" :label="t('chart_of_accounts')" :options="chartOptions" required />
+              <p v-if="chartDescriptions[form.chart_of_accounts]" class="text-xs text-[hsl(var(--muted-foreground))]">
+                {{ chartDescriptions[form.chart_of_accounts] }}
+              </p>
               <p class="text-xs text-[hsl(var(--muted-foreground))]">
                 {{ t('chart_of_accounts_help') }}
               </p>

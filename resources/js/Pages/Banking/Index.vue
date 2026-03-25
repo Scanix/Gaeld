@@ -10,6 +10,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import { Plus, Landmark } from 'lucide-vue-next'
+import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
 
@@ -41,7 +42,11 @@ const columns = computed(() => [
 </script>
 
 <template>
-  <AppLayout :title="t('banking')">
+  <AppLayout :title="t('banking')" help-page="banking">
+    <HelpText :title="t('help_banking_title')" class="mb-6">
+      <p>{{ t('help_banking_text') }}</p>
+    </HelpText>
+
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-xl font-semibold">{{ t('bank_accounts') }}</h2>
       <Button @click="showModal = true"><Plus class="mr-2 h-4 w-4" /> {{ t('add_account') }}</Button>

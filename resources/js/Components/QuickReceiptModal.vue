@@ -223,7 +223,7 @@ function resetAndClose() {
         <span class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">JPG, PNG — max 10 MB</span>
       </div>
 
-      <div v-if="error" class="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
+      <div v-if="error" class="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
         <AlertCircle class="h-4 w-4 shrink-0" />
         {{ error }}
       </div>
@@ -247,12 +247,12 @@ function resetAndClose() {
         />
       </div>
 
-      <div class="rounded-md bg-green-50 p-3">
-        <div class="flex items-center gap-2 text-sm font-medium text-green-700">
+      <div class="rounded-md bg-green-50 p-3 dark:bg-green-950">
+        <div class="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-300">
           <Check class="h-4 w-4" />
           {{ t('scan_complete') }}
         </div>
-        <p class="mt-1 text-xs text-green-600">{{ t('review_and_adjust') }}</p>
+        <p class="mt-1 text-xs text-green-600 dark:text-green-400">{{ t('review_and_adjust') }}</p>
       </div>
 
       <!-- Editable form fields -->
@@ -286,7 +286,7 @@ function resetAndClose() {
         />
       </div>
 
-      <div v-if="error" class="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
+      <div v-if="error" class="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
         <AlertCircle class="h-4 w-4 shrink-0" />
         {{ error }}
       </div>

@@ -146,6 +146,7 @@ return [
     'due' => 'Due',
     'issued' => 'Issued',
     'amount_due' => 'Amount Due:',
+    'invoice' => 'Invoice',
     'record_payment' => 'Record Payment',
     'download_qr_invoice' => 'Download QR Invoice',
     'payment_date' => 'Payment Date',
@@ -210,6 +211,11 @@ return [
     'create_customer' => 'Create Customer',
     'manage_customers' => 'Manage and view your customers.',
     'no_customers_yet' => 'No customers yet. Add your first customer to get started.',
+    'edit_customer' => 'Edit Customer',
+    'delete_customer' => 'Delete Customer',
+    'phone' => 'Phone',
+    'internal_notes' => 'Internal Notes',
+    'default_category' => 'Default Category',
 
     // Suppliers
     'new_supplier' => 'New Supplier',
@@ -217,6 +223,8 @@ return [
     'select_supplier' => 'Select a supplier',
     'manage_suppliers' => 'Manage and view your suppliers.',
     'no_suppliers_yet' => 'No suppliers yet. Add your first supplier to get started.',
+    'edit_supplier' => 'Edit Supplier',
+    'delete_supplier' => 'Delete Supplier',
 
     // Accounting
     'posted' => 'Posted',
@@ -287,6 +295,7 @@ return [
     'enter_expense_id' => 'Select or enter expense ID',
     'file' => 'File',
     'import' => 'Import',
+    'export' => 'Export',
     'manual' => 'Manual',
 
     // Organizations
@@ -368,6 +377,8 @@ return [
     'two_factor_recovery_desc' => 'Enter one of your emergency recovery codes.',
     'use_recovery_code' => 'Use a recovery code',
     'use_auth_code' => 'Use an authentication code',
+    'recovery_code' => 'Recovery Code',
+    'verify' => 'Verify',
     'two_factor_required_by_org' => 'Your organization requires two-factor authentication. Please enable it below.',
     'invalid_two_factor_code' => 'The provided two-factor authentication code was invalid.',
     'passkeys' => 'Passkeys',
@@ -383,6 +394,8 @@ return [
     // Topbar
     'help' => 'Help',
     'sign_out' => 'Sign out',
+    'dark_mode' => 'Dark mode',
+    'light_mode' => 'Light mode',
 
     // Help sidebar
     'documentation' => 'Documentation',
@@ -425,8 +438,39 @@ return [
 
     // Chart of accounts
     'chart_swiss_sme' => 'Swiss SME (Kontenrahmen KMU)',
+    'chart_swiss_sme_desc' => 'Standard chart of accounts for small and medium enterprises with ~60 accounts.',
+    'chart_swiss_freelancer' => 'Freelancer / Sole Proprietorship',
+    'chart_swiss_freelancer_desc' => 'Simplified chart for self-employed individuals with ~30 essential accounts.',
+    'chart_swiss_association' => 'Association (Verein)',
+    'chart_swiss_association_desc' => 'Tailored for associations with membership fees, donations, and event accounts.',
     'chart_none' => 'Empty — I\'ll create my own',
-    'chart_of_accounts_help' => 'The Swiss SME template includes standard accounts and VAT rates. You can always add or remove accounts later.',
+    'chart_of_accounts_help' => 'Choose a template that fits your organization type. Standard accounts and VAT rates will be created automatically. You can always add or remove accounts later.',
+
+    // Account management
+    'add_account' => 'Add account',
+    'edit_account' => 'Edit account',
+    'delete_account_confirm' => 'Are you sure you want to delete account :code? This cannot be undone.',
+    'account_has_transactions' => 'This account has transactions. Code and type cannot be changed.',
+    'account_has_transactions_nodelete' => 'This account has transactions and cannot be deleted. You can deactivate it instead.',
+    'account_code' => 'Account code',
+    'account_type' => 'Account type',
+    'parent_account' => 'Parent account',
+    'no_parent' => 'No parent (top-level)',
+    'deactivate' => 'Deactivate',
+    'import_accounts' => 'Import accounts',
+    'export_accounts' => 'Export accounts',
+    'import_file' => 'File',
+    'import_format_help' => 'CSV (code, name, type) or JSON array of objects with code, name, type fields.',
+    'import_mode' => 'Import mode',
+    'import_mode_add' => 'Add to existing chart',
+    'import_mode_replace' => 'Replace entire chart',
+    'import_mode_replace_warning' => 'This will delete all existing accounts without transactions and replace them with the imported ones.',
+    'import_success' => ':count accounts imported successfully.',
+    'import_validation_error' => 'Validation error on row :row: :message',
+    'export_format' => 'Format',
+    'account_created' => 'Account created.',
+    'account_updated' => 'Account updated.',
+    'account_deleted' => 'Account deleted.',
 
     // Help preferences
     'help_preferences' => 'Help & Guidance',
@@ -453,6 +497,16 @@ return [
     'help_profit_loss_text' => 'The profit and loss report (also called income statement) shows how much money your business earned and spent over a period. Revenue minus expenses equals your net profit (or loss). This tells you whether your business is profitable.',
     'help_reconciliation_title' => 'What is bank reconciliation?',
     'help_reconciliation_text' => 'Reconciliation means matching your bank transactions with entries in your accounting records. This ensures your books accurately reflect what actually happened in your bank account. Import your bank statement and match each transaction to an invoice, expense, or manual entry.',
+    'help_trial_balance_title' => 'What is a trial balance?',
+    'help_trial_balance_text' => 'The trial balance lists all accounts with their debit or credit balances at a given date. It verifies that total debits equal total credits — a fundamental check of double-entry bookkeeping. Use the date filter to view balances at any point in time.',
+    'help_year_end_closing_title' => 'Understanding year-end closing',
+    'help_year_end_closing_text' => 'Year-end closing transfers all revenue and expense balances to a result account, resetting them to zero for the new fiscal year. This is an irreversible operation — make sure all entries for the year are posted before closing.',
+    'help_banking_title' => 'Managing bank accounts',
+    'help_banking_text' => 'Add your bank accounts here to track their balances and reconcile transactions. Each bank account is linked to a ledger account in your chart of accounts, keeping your books in sync with your actual bank balances.',
+    'help_customers_title' => 'Managing customers',
+    'help_customers_text' => 'Customers are the people and companies you invoice for your goods or services. Add your customers here to quickly create invoices and track payments. Each customer can have their own address, contact details, and payment terms.',
+    'help_suppliers_title' => 'Managing suppliers',
+    'help_suppliers_text' => 'Suppliers are the people and companies you purchase from. Add your suppliers here to track expenses and manage payments. Each supplier can have their own address, contact details, and payment terms.',
 
     // Signup / SaaS
     'signup_title' => 'Start your :days-day free trial',

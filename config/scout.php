@@ -42,7 +42,7 @@ return [
     |
     */
 
-    'queue' => env('SCOUT_QUEUE', false),
+    'queue' => env('SCOUT_QUEUE', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -140,9 +140,22 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
-            // 'users' => [
-            //     'filterableAttributes'=> ['id', 'name', 'email'],
-            // ],
+            'invoices' => [
+                'filterableAttributes' => ['organization_id', 'status', 'currency'],
+                'sortableAttributes' => ['total', 'number'],
+            ],
+            'customers' => [
+                'filterableAttributes' => ['organization_id'],
+                'sortableAttributes' => ['name'],
+            ],
+            'suppliers' => [
+                'filterableAttributes' => ['organization_id'],
+                'sortableAttributes' => ['name'],
+            ],
+            'expenses' => [
+                'filterableAttributes' => ['organization_id', 'status', 'category'],
+                'sortableAttributes' => ['amount'],
+            ],
         ],
     ],
 
