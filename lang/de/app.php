@@ -622,4 +622,11 @@ return [
     'default_payment_terms_desc' => 'Standardanzahl der Tage für Rechnungszahlungsbedingungen.',
     'payment_terms_days' => ':days Tage',
     'organization_settings' => 'Einstellungen',
+
+    // Global search
+    'global_search' => 'Suchen…',
+    'global_search_placeholder' => 'Rechnungen, Kunden, Lieferanten, Ausgaben suchen…',
+    'no_results_found' => 'Keine Ergebnisse gefunden.',
+    'navigate' => 'Navigieren',
+    'open' => 'Öffnen',
 ];

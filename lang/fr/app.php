@@ -621,4 +621,11 @@ return [
     'default_payment_terms_desc' => 'Nombre de jours par défaut pour les conditions de paiement des factures.',
     'payment_terms_days' => ':days jours',
     'organization_settings' => 'Paramètres',
+
+    // Global search
+    'global_search' => 'Rechercher…',
+    'global_search_placeholder' => 'Rechercher factures, clients, fournisseurs, dépenses…',
+    'no_results_found' => 'Aucun résultat trouvé.',
+    'navigate' => 'Naviguer',
+    'open' => 'Ouvrir',
 ];

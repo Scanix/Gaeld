@@ -624,4 +624,11 @@ return [
     'default_payment_terms_desc' => 'Default number of days for invoice payment terms.',
     'payment_terms_days' => ':days days',
     'organization_settings' => 'Settings',
+
+    // Global search
+    'global_search' => 'Search…',
+    'global_search_placeholder' => 'Search invoices, customers, suppliers, expenses…',
+    'no_results_found' => 'No results found.',
+    'navigate' => 'Navigate',
+    'open' => 'Open',
 ];

@@ -623,4 +623,11 @@ return [
     'privacy_policy' => 'Directivas da protecziun da datas',
     'terms_of_service' => 'Cundiziuns generalas',
     'and' => 'e',
+
+    // Global search
+    'global_search' => 'Tschertgar…',
+    'global_search_placeholder' => 'Tschertgar fatschentas, clients, furnidurs, expensas…',
+    'no_results_found' => 'Nagins resultats chattads.',
+    'navigate' => 'Navigar',
+    'open' => 'Avrir',
 ];

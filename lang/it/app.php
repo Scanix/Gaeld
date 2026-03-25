@@ -622,4 +622,11 @@ return [
     'default_payment_terms_desc' => 'Numero di giorni predefinito per i termini di pagamento delle fatture.',
     'payment_terms_days' => ':days giorni',
     'organization_settings' => 'Impostazioni',
+
+    // Global search
+    'global_search' => 'Cerca…',
+    'global_search_placeholder' => 'Cerca fatture, clienti, fornitori, spese…',
+    'no_results_found' => 'Nessun risultato trovato.',
+    'navigate' => 'Naviga',
+    'open' => 'Apri',
 ];

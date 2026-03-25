@@ -24,6 +24,7 @@ use App\Domains\Users\Controllers\TwoFactorController;
 use App\Domains\Users\Controllers\UserController;
 use App\Domains\Reporting\Controllers\DashboardController;
 use App\Domains\Organizations\Controllers\SetupWizardController;
+use App\Http\Controllers\GlobalSearchController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -85,6 +86,9 @@ Route::middleware('auth')->post('/logout', [AuthenticatedSessionController::clas
 // Authenticated routes
 Route::middleware(['auth', 'verified', 'org', 'org-2fa'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Global search
+    Route::get('/search', GlobalSearchController::class)->name('search');
 
     // Accounting
     Route::get('/accounting/chart-of-accounts', [AccountingController::class, 'chartOfAccounts'])->name('accounting.chart');

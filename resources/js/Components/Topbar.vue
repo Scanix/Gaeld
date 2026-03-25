@@ -3,6 +3,7 @@ import { useForm, usePage, router } from '@inertiajs/vue3'
 import { LogOut, User, HelpCircle, BookOpen, Menu, Sun, Moon, ShieldCheck } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import Button from './UI/Button.vue'
+import GlobalSearch from './GlobalSearch.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useTheme } from '@/lib/useTheme'
 
@@ -51,6 +52,7 @@ function logout() {
     </div>
 
     <div class="flex items-center gap-2">
+      <GlobalSearch />
       <Button
         variant="ghost"
         size="icon"
