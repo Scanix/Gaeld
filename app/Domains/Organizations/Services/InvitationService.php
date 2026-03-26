@@ -40,25 +40,29 @@ class InvitationService
             ->whereNull('accepted_at')
             ->delete();
 
+        $plainToken = Str::random(64);
+
         $invitation = $organization->invitations()->create([
             'email' => $email,
             'role' => $role->value,
-            'token' => Str::random(64),
+            'token' => hash('sha256', $plainToken),
             'invited_by' => $inviter->id,
             'expires_at' => now()->addDays(7),
         ]);
 
+        // Store the plain token temporarily so the notification can include it
+        $invitation->plain_token = $plainToken;
         $invitation->load('organization');
 
         Notification::route('mail', $email)
-            ->notify((new InvitationNotification($invitation))->locale($organization->locale));
+            ->notify((new InvitationNotification($invitation, $plainToken))->locale($organization->locale));
 
         return $invitation;
     }
 
     public function accept(string $token): Organization
     {
-        $invitation = OrganizationInvitation::where('token', $token)
+        $invitation = OrganizationInvitation::where('token', hash('sha256', $token))
             ->whereNull('accepted_at')
             ->firstOrFail();
 

@@ -108,7 +108,7 @@ class ReconciliationController extends Controller
         if ($xml === false) {
             return redirect()->back()->with('error', 'Could not read the uploaded file.');
         }
-        $filename = $file->getClientOriginalName();
+        $filename = preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($file->getClientOriginalName()));
 
         try {
             $import = $this->importService->importCamtFile($bankAccount, $xml, $filename);

@@ -40,3 +40,8 @@ yarn-error.log
 # Deployment script contains private server/repo defaults — keep in private GitLab only
 # A template is provided as deploy.php.example
 deploy.php
+
+# Production docker configs — templates provided as *.example
+docker/nginx/default.conf
+docker/supervisor/gaeld-worker.conf
+docker/systemd/gaeld-worker.service

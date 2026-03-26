@@ -56,6 +56,16 @@ class OrganizationService
     {
         $organization->users()->detach($user->id);
 
+        // Revoke any API tokens scoped to this organization
+        $user->tokens()
+            ->where('name', 'like', '%')
+            ->each(function ($token) use ($organization) {
+                $abilities = $token->abilities ?? [];
+                if (in_array("org:{$organization->id}", $abilities)) {
+                    $token->delete();
+                }
+            });
+
         app()[PermissionRegistrar::class]->setPermissionsTeamId($organization->id);
         $user->roles()->detach();
     }
