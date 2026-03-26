@@ -1,0 +1,1393 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Accounting/Models/Account.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Accounting/Models/JournalEntry.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: App\\Domains\\Accounting\\DTOs\\JournalLineData, Closure\(App\\Domains\\Accounting\\Models\\TransactionLine\)\: App\\Domains\\Accounting\\DTOs\\JournalLineData given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Accounting/Services/LedgerService.php
+
+		-
+			message: '#^Parameter \$accountId of class App\\Domains\\Accounting\\DTOs\\JournalLineData constructor expects string, int\<0, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Accounting/Services/LedgerService.php
+
+		-
+			message: '#^Call to an undefined method App\\Domains\\Users\\Models\\User\:\:createToken\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Api/Controllers/ApiTokenController.php
+
+		-
+			message: '#^Call to an undefined method App\\Domains\\Users\\Models\\User\:\:tokens\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Domains/Api/Controllers/ApiTokenController.php
+
+		-
+			message: '#^Call to an undefined method App\\Domains\\Users\\Models\\User\:\:createToken\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Api/Controllers/OrgTokenController.php
+
+		-
+			message: '#^Call to an undefined static method App\\Domains\\Api\\Models\\PersonalAccessToken\:\:query\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 2
+			path: app/Domains/Api/Controllers/OrgTokenController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Api/Jobs/DispatchWebhookJob.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Jobs/DispatchWebhookJob.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$secret\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Jobs/DispatchWebhookJob.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Jobs/DispatchWebhookJob.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Models\\PersonalAccessToken\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Models/PersonalAccessToken.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Models\\PersonalAccessToken\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Domains/Api/Models/PersonalAccessToken.php
+
+		-
+			message: '#^App\\Domains\\Api\\Models\\PersonalAccessToken\:\:casts\(\) calls parent\:\:casts\(\) but App\\Domains\\Api\\Models\\PersonalAccessToken does not extend any class\.$#'
+			identifier: class.noParent
+			count: 1
+			path: app/Domains/Api/Models/PersonalAccessToken.php
+
+		-
+			message: '#^Call to an undefined method App\\Domains\\Api\\Models\\PersonalAccessToken\:\:belongsTo\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Api/Models/PersonalAccessToken.php
+
+		-
+			message: '#^Call to an undefined static method App\\Domains\\Api\\Models\\PersonalAccessToken\:\:creating\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: app/Domains/Api/Models/PersonalAccessToken.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\AccountResource\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/AccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\AccountResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/AccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\AccountResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/AccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\AccountResource\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/AccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\AccountResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/AccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\AccountResource\:\:\$parent_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/AccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\AccountResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/AccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\BankAccountResource\:\:\$account_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/BankAccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\BankAccountResource\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/BankAccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\BankAccountResource\:\:\$bank_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/BankAccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\BankAccountResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/BankAccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\BankAccountResource\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/BankAccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\BankAccountResource\:\:\$iban\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/BankAccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\BankAccountResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/BankAccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\BankAccountResource\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/BankAccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\BankAccountResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/BankAccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\BankAccountResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/BankAccountResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ContactPersonResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ContactPersonResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ContactPersonResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ContactPersonResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ContactPersonResource\:\:\$first_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ContactPersonResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ContactPersonResource\:\:\$full_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ContactPersonResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ContactPersonResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ContactPersonResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ContactPersonResource\:\:\$is_primary\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ContactPersonResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ContactPersonResource\:\:\$last_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ContactPersonResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ContactPersonResource\:\:\$notes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ContactPersonResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ContactPersonResource\:\:\$phone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ContactPersonResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ContactPersonResource\:\:\$position\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ContactPersonResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ContactPersonResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ContactPersonResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$city\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$country\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$payment_terms\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$phone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$postal_code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\CustomerResource\:\:\$vat_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$supplier_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$vat_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\ExpenseResource\:\:\$vendor\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/ExpenseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceLineResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceLineResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceLineResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceLineResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceLineResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceLineResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceLineResource\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceLineResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceLineResource\:\:\$sort_order\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceLineResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceLineResource\:\:\$unit_price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceLineResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceLineResource\:\:\$vat_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceLineResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceLineResource\:\:\$vat_rate_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceLineResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoicePaymentResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoicePaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoicePaymentResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoicePaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoicePaymentResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoicePaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoicePaymentResource\:\:\$payment_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoicePaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoicePaymentResource\:\:\$payment_method\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoicePaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoicePaymentResource\:\:\$reference\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoicePaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$due_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$issue_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$notes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$payment_terms\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$subtotal\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\InvoiceResource\:\:\$vat_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Domains\\Api\\Resources\\InvoiceResource\:\:amountDue\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Domains\\Api\\Resources\\InvoiceResource\:\:amountPaid\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Api/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\WebhookResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/WebhookResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\WebhookResource\:\:\$events\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/WebhookResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\WebhookResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/WebhookResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\WebhookResource\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/WebhookResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\WebhookResource\:\:\$last_triggered_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/WebhookResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\WebhookResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/WebhookResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\WebhookResource\:\:\$url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Resources/WebhookResource.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of function in_array expects array, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Api/Services/WebhookService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$bankAccount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Controllers/ReconciliationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Controllers/ReconciliationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Domains/Banking/Controllers/ReconciliationController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:filter\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|null, Closure\(App\\Domains\\Banking\\Models\\BankTransaction\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Controllers/ReconciliationController.php
+
+		-
+			message: '#^Parameter \#1 \$transactions of method App\\Domains\\Banking\\Services\\SuggestionService\:\:generateSuggestionsForTransactions\(\) expects iterable\<App\\Domains\\Banking\\Models\\BankTransaction\>, Illuminate\\Support\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Controllers/ReconciliationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Jobs/ProcessBankImportJob.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Banking/Models/BankAccount.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Rules/QrReferencePaymentRule.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Rules/RecurringEntryRule.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Banking/Rules/SupplierCategoryRule.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ledgerAccount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Services/BankingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Services/BankingService.php
+
+		-
+			message: '#^Parameter \#1 \$bankAccount of method App\\Domains\\Banking\\Services\\BankingService\:\:updateBankAccountBalance\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/BankingService.php
+
+		-
+			message: '#^Parameter \$accountId of class App\\Domains\\Accounting\\DTOs\\JournalLineData constructor expects string, int given\.$#'
+			identifier: argument.type
+			count: 4
+			path: app/Domains/Banking/Services/BankingService.php
+
+		-
+			message: '#^Parameter \#2 \$detail of method App\\Domains\\Banking\\Services\\Camt\\Camt053Parser\:\:parseTxDetail\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/Camt/Camt053Parser.php
+
+		-
+			message: '#^Parameter \#2 \$entryNode of method App\\Domains\\Banking\\Services\\Camt\\Camt053Parser\:\:parseEntry\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/Camt/Camt053Parser.php
+
+		-
+			message: '#^Parameter \#2 \$detail of method App\\Domains\\Banking\\Services\\Camt\\Camt054Parser\:\:parseTxDetail\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/Camt/Camt054Parser.php
+
+		-
+			message: '#^Parameter \#2 \$entryNode of method App\\Domains\\Banking\\Services\\Camt\\Camt054Parser\:\:parseEntry\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/Camt/Camt054Parser.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Banking/Services/MatchingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Services/MatchingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$bankAccount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ledgerAccount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Method App\\Domains\\Banking\\Services\\ReconciliationService\:\:confirmMatch\(\) should return App\\Domains\\Banking\\Models\\BankTransaction but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Parameter \#1 \$bankAccount of method App\\Domains\\Banking\\Services\\BankingService\:\:updateBankAccountBalance\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:isDuplicatePayment\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:recordInvoicePaymentAndReconcile\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:tryAutoReconcileTransaction\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:validateReconciliationPreconditions\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\SuggestionService\:\:generateSuggestions\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Parameter \#2 \$bankAccount of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:validateReconciliationPreconditions\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Parameter \#2 \$invoice of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:isDuplicatePayment\(\) expects App\\Domains\\Invoicing\\Models\\Invoice, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Parameter \#2 \$invoice of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:recordInvoicePaymentAndReconcile\(\) expects App\\Domains\\Invoicing\\Models\\Invoice, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Parameter \#3 \$bankAccount of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:recordInvoicePaymentAndReconcile\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Property App\\Domains\\Banking\\Services\\ReconciliationService\:\:\$matchingService is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: app/Domains/Banking/Services/ReconciliationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Banking/Services/SuggestionService.php
+
+		-
+			message: '#^Method App\\Domains\\Banking\\Services\\SuggestionService\:\:generateSuggestionsForTransactions\(\) should return array\<string, array\{invoices\: Illuminate\\Support\\Collection, expenses\: Illuminate\\Support\\Collection, matches\: Illuminate\\Support\\Collection\}\> but returns array\<int, array\{invoices\: Illuminate\\Support\\Collection, expenses\: Illuminate\\Support\\Collection, matches\: Illuminate\\Support\\Collection\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/Banking/Services/SuggestionService.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Contacts\\Models\\ContactPerson\:\:\$contactable_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Contacts/Controllers/ContactPersonController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Domains/Contacts/Controllers/ContactPersonController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:contactPersons\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: app/Domains/Contacts/Controllers/ContactPersonController.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Contacts\\Models\\ContactPerson\:\:\$first_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Contacts/Models/ContactPerson.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Contacts\\Models\\ContactPerson\:\:\$last_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Contacts/Models/ContactPerson.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Contacts/Models/Customer.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Contacts/Models/Supplier.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Expenses/Models/Expense.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Domains/Expenses/Models/Expense.php
+
+		-
+			message: '#^Parameter \$accountId of class App\\Domains\\Accounting\\DTOs\\JournalLineData constructor expects string, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Domains/Expenses/Services/ExpenseService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/DuplicateInvoiceAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/DuplicateInvoiceAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sort_order\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/DuplicateInvoiceAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit_price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/DuplicateInvoiceAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$vat_rate_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/DuplicateInvoiceAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit_price\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$vatRate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: app/Domains/Invoicing/DTOs/InvoicePayloadData.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Models/Invoice.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Invoicing/Models/Invoice.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Domains/Invoicing/Models/Invoice.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/Invoicing/Models/Invoice.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$rate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Models/InvoiceLine.php
+
+		-
+			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, float given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Domains/Invoicing/Models/InvoiceLine.php
+
+		-
+			message: '#^Parameter \#2 \$num2 of function bcmul expects numeric\-string, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Invoicing/Models/InvoiceLine.php
+
+		-
+			message: '#^Property App\\Domains\\Invoicing\\Models\\InvoiceLine\:\:\$amount \(float\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Domains/Invoicing/Models/InvoiceLine.php
+
+		-
+			message: '#^Property App\\Domains\\Invoicing\\Models\\InvoiceLine\:\:\$vat_amount \(float\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Domains/Invoicing/Models/InvoiceLine.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Services/InvoiceService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Services/InvoiceService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$vatRate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Services/InvoiceService.php
+
+		-
+			message: '#^Parameter \$accountId of class App\\Domains\\Accounting\\DTOs\\JournalLineData constructor expects string, int given\.$#'
+			identifier: argument.type
+			count: 5
+			path: app/Domains/Invoicing/Services/InvoiceService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domains/Invoicing/Services/InvoiceService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Services/SwissQrInvoiceService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Organizations/Controllers/InvitationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Organizations/Controllers/MemberController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:pending\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Organizations/Controllers/OrganizationController.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Organizations/Models/Organization.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domains/Organizations/Models/OrganizationInvitation.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Organizations/Notifications/InvitationNotification.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$locale\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Organizations/Services/InvitationService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Organizations/Services/InvitationService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:pending\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Organizations/Services/InvitationService.php
+
+		-
+			message: '#^Method App\\Domains\\Organizations\\Services\\InvitationService\:\:accept\(\) should return App\\Domains\\Organizations\\Models\\Organization but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 2
+			path: app/Domains/Organizations/Services/InvitationService.php
+
+		-
+			message: '#^Method App\\Domains\\Organizations\\Services\\InvitationService\:\:invite\(\) should return App\\Domains\\Organizations\\Models\\OrganizationInvitation but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/Organizations/Services/InvitationService.php
+
+		-
+			message: '#^Parameter \#1 \$invitation of class App\\Domains\\Organizations\\Notifications\\InvitationNotification constructor expects App\\Domains\\Organizations\\Models\\OrganizationInvitation, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Organizations/Services/InvitationService.php
+
+		-
+			message: '#^Parameter \#1 \$organization of method App\\Domains\\Organizations\\Services\\OrganizationService\:\:addMember\(\) expects App\\Domains\\Organizations\\Models\\Organization, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Organizations/Services/InvitationService.php
+
+		-
+			message: '#^Method App\\Domains\\Organizations\\Services\\OrganizationSwitcher\:\:resolve\(\) should return App\\Domains\\Organizations\\Models\\Organization\|null but returns \(Illuminate\\Database\\Eloquent\\Model&object\{pivot\: Illuminate\\Database\\Eloquent\\Relations\\Pivot\}\)\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/Organizations/Services/OrganizationSwitcher.php
+
+		-
+			message: '#^Method App\\Domains\\Organizations\\Services\\OrganizationSwitcher\:\:resolve\(\) should return App\\Domains\\Organizations\\Models\\Organization\|null but returns Illuminate\\Database\\Eloquent\\Model&object\{pivot\: Illuminate\\Database\\Eloquent\\Relations\\Pivot\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/Organizations/Services/OrganizationSwitcher.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domains/Reporting/Services/DashboardService.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domains/Users/Controllers/PasskeyController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: app/Domains/Users/DTOs/UpdateUserProfileData.php
+
+		-
+			message: '#^Method App\\Domains\\Users\\Models\\User\:\:resolveCurrentOrganization\(\) should return App\\Domains\\Organizations\\Models\\Organization\|null but returns \(Illuminate\\Database\\Eloquent\\Model&object\{pivot\: Illuminate\\Database\\Eloquent\\Relations\\Pivot\}\)\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/Users/Models/User.php
+
+		-
+			message: '#^Method App\\Domains\\Users\\Models\\User\:\:resolveCurrentOrganization\(\) should return App\\Domains\\Organizations\\Models\\Organization\|null but returns Illuminate\\Database\\Eloquent\\Model&object\{pivot\: Illuminate\\Database\\Eloquent\\Relations\\Pivot\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/Users/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$canton\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$city\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$country\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$legal_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$postal_code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$vat_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:customers\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:suppliers\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Domains/Users/Services/DataExportService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Domains/Users/Services/UserService.php
+
+		-
+			message: '#^Call to an undefined static method Illuminate\\Database\\Eloquent\\Model\:\:search\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: app/Http/Controllers/GlobalSearchController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/GlobalSearchController.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Api\\Models\\PersonalAccessToken\:\:\$abilities\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Middleware/EnsureApiOrganization.php
+
+		-
+			message: '#^Call to an undefined method App\\Domains\\Api\\Models\\PersonalAccessToken\:\:can\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Middleware/EnsureApiOrganization.php
+
+		-
+			message: '#^Call to an undefined method App\\Domains\\Users\\Models\\User\:\:currentAccessToken\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Middleware/EnsureApiOrganization.php
+
+		-
+			message: '#^Method App\\Http\\Middleware\\EnsureApiOrganization\:\:resolveOrganization\(\) should return App\\Domains\\Organizations\\Models\\Organization\|null but returns \(Illuminate\\Database\\Eloquent\\Model&object\{pivot\: Illuminate\\Database\\Eloquent\\Relations\\Pivot\}\)\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Middleware/EnsureApiOrganization.php
+
+		-
+			message: '#^Call to an undefined static method Illuminate\\Database\\Eloquent\\Model\:\:search\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: app/Http/Services/GlobalSearchService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Services/GlobalSearchService.php
+
+		-
+			message: '#^Unsafe access to private property App\\Support\\FeatureFlag\:\:\$orgResolver through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: app/Support/FeatureFlag.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Support/Listeners/AuthAuditSubscriber.php
+
+		-
+			message: '#^Parameter \#1 \$modelOrId of method Spatie\\Activitylog\\ActivityLogger\:\:causedBy\(\) expects Illuminate\\Database\\Eloquent\\Model\|int\|string\|null, Illuminate\\Contracts\\Auth\\Authenticatable given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Support/Listeners/AuthAuditSubscriber.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Support/Policies/BasePolicy.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\ConnectionInterface\:\:getDriverName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Support/QueryBuilder.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: app/Support/QueryBuilder.php

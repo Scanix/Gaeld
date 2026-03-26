@@ -8,6 +8,7 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
@@ -89,9 +90,10 @@ const categoryOptions = [
               :label="t('email')"
               :error="form.errors.email"
             />
-            <FormInput
+            <MaskedInput
               id="phone"
               v-model="form.phone"
+              mask="phone"
               :label="t('phone')"
               :error="form.errors.phone"
             />
@@ -108,9 +110,10 @@ const categoryOptions = [
               :label="t('city')"
               :error="form.errors.city"
             />
-            <FormInput
+            <MaskedInput
               id="postal_code"
               v-model="form.postal_code"
+              mask="postal"
               :label="t('postal_code')"
               :error="form.errors.postal_code"
             />
@@ -142,9 +145,10 @@ const categoryOptions = [
               placeholder="30"
               :error="form.errors.payment_terms"
             />
-            <FormInput
+            <MaskedInput
               id="iban"
               v-model="form.iban"
+              mask="iban"
               label="IBAN"
               placeholder="CH56 0483 5012 3456 7800 9"
               :error="form.errors.iban"
