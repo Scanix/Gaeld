@@ -19,6 +19,7 @@ import {
   CreditCard,
 } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
+import Tooltip from '@/Components/UI/Tooltip.vue'
 
 const { t } = useTranslations()
 
@@ -154,21 +155,23 @@ function isGroupActive(item) {
     <nav class="flex-1 overflow-y-auto p-3 space-y-1">
       <template v-for="item in navigation" :key="item.key">
         <div v-if="item.children">
-          <Link
-            :href="item.href"
-            :aria-label="collapsed ? t(item.key) : undefined"
-            :aria-current="isGroupActive(item) ? 'page' : undefined"
-            :aria-expanded="!collapsed ? isGroupActive(item) : undefined"
-            :class="[
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-              isGroupActive(item)
-                ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
-                : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
-            ]"
-          >
-            <component :is="item.icon" class="h-4 w-4 shrink-0" />
-            <span v-if="!collapsed">{{ t(item.key) }}</span>
-          </Link>
+          <Tooltip :content="collapsed ? t(item.key) : ''" side="right">
+            <Link
+              :href="item.href"
+              :aria-label="collapsed ? t(item.key) : undefined"
+              :aria-current="isGroupActive(item) ? 'page' : undefined"
+              :aria-expanded="!collapsed ? isGroupActive(item) : undefined"
+              :class="[
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isGroupActive(item)
+                  ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
+                  : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
+              ]"
+            >
+              <component :is="item.icon" class="h-4 w-4 shrink-0" />
+              <span v-if="!collapsed">{{ t(item.key) }}</span>
+            </Link>
+          </Tooltip>
           <div v-if="!collapsed && isGroupActive(item)" class="ml-7 mt-1 space-y-1">
             <Link
               v-for="child in item.children"
@@ -186,42 +189,48 @@ function isGroupActive(item) {
           </div>
         </div>
 
-        <Link
-          v-else
-          :href="item.href"
-          :aria-label="collapsed ? t(item.key) : undefined"
-          :aria-current="isActive(item.href) ? 'page' : undefined"
-          :class="[
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-            isActive(item.href)
-              ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
-              : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
-          ]"
-        >
-          <component :is="item.icon" class="h-4 w-4 shrink-0" />
-          <span v-if="!collapsed">{{ t(item.key) }}</span>
-        </Link>
+        <Tooltip v-else :content="collapsed ? t(item.key) : ''" side="right">
+          <Link
+            :href="item.href"
+            :aria-label="collapsed ? t(item.key) : undefined"
+            :aria-current="isActive(item.href) ? 'page' : undefined"
+            :class="[
+              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+              isActive(item.href)
+                ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
+                : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
+            ]"
+          >
+            <component :is="item.icon" class="h-4 w-4 shrink-0" />
+            <span v-if="!collapsed">{{ t(item.key) }}</span>
+          </Link>
+        </Tooltip>
       </template>
 
       <!-- Billing (SaaS only) -->
       <template v-if="billingNav.length">
         <div class="my-1 border-t border-[hsl(var(--sidebar-border))]" />
-        <Link
+        <Tooltip
           v-for="item in billingNav"
           :key="item.key"
-          :href="item.href"
-          :aria-label="collapsed ? t(item.key) : undefined"
-          :aria-current="isActive(item.href) ? 'page' : undefined"
-          :class="[
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-            isActive(item.href)
-              ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
-              : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
-          ]"
+          :content="collapsed ? t(item.key) : ''"
+          side="right"
         >
-          <component :is="item.icon" class="h-4 w-4 shrink-0" />
-          <span v-if="!collapsed">{{ t(item.key) }}</span>
-        </Link>
+          <Link
+            :href="item.href"
+            :aria-label="collapsed ? t(item.key) : undefined"
+            :aria-current="isActive(item.href) ? 'page' : undefined"
+            :class="[
+              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+              isActive(item.href)
+                ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
+                : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
+            ]"
+          >
+            <component :is="item.icon" class="h-4 w-4 shrink-0" />
+            <span v-if="!collapsed">{{ t(item.key) }}</span>
+          </Link>
+        </Tooltip>
       </template>
     </nav>
 
