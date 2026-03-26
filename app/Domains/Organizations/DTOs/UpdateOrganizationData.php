@@ -31,6 +31,11 @@ readonly class UpdateOrganizationData
 
     public function toArray(): array
     {
+        // Filter null address fields to avoid NOT NULL constraint violations
+        // (e.g. ConvertEmptyStringsToNull turns "" into null for country).
+        $address = $this->addressData?->toArray(includeCanton: true) ?? [];
+        $address = array_filter($address, fn ($value) => $value !== null);
+
         return [
             'name' => $this->name,
             'legal_name' => $this->legalName,
@@ -38,6 +43,6 @@ readonly class UpdateOrganizationData
             'currency' => $this->currency,
             'locale' => $this->locale,
             'default_payment_terms_days' => $this->defaultPaymentTermsDays,
-        ] + ($this->addressData?->toArray(includeCanton: true) ?? AddressData::empty(includeCanton: true)->toArray(includeCanton: true));
+        ] + $address;
     }
 }
