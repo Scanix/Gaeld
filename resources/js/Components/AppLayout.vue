@@ -13,6 +13,7 @@ import Sidebar from '@/Components/Sidebar.vue'
 import Topbar from '@/Components/Topbar.vue'
 import HelpSidebar from '@/Components/HelpSidebar.vue'
 import ToastContainer from '@/Components/ToastContainer.vue'
+import ErrorBoundary from '@/Components/ErrorBoundary.vue'
 import { useHelp } from '@/lib/useHelp'
 import { useToast } from '@/lib/useToast'
 
@@ -121,7 +122,9 @@ const showPastDueBanner = computed(() => subscription.value?.status === 'past_du
       </Topbar>
 
       <main id="main-content" class="p-4 sm:p-6">
-        <slot />
+        <ErrorBoundary>
+          <slot />
+        </ErrorBoundary>
       </main>
     </div>
 

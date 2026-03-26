@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import Modal from '@/Components/UI/Modal.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 
@@ -140,9 +141,10 @@ async function submit() {
           :label="t('email')"
           :error="errors.email?.[0]"
         />
-        <FormInput
+        <MaskedInput
           id="qc-phone"
           v-model="phone"
+          mask="phone"
           :label="t('phone')"
           :error="errors.phone?.[0]"
         />
@@ -160,9 +162,10 @@ async function submit() {
           :label="t('city')"
           :error="errors.city?.[0]"
         />
-        <FormInput
+        <MaskedInput
           id="qc-postal-code"
           v-model="postalCode"
+          mask="postal"
           :label="t('postal_code')"
           :error="errors.postal_code?.[0]"
         />

@@ -17,6 +17,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
 import { Pencil, Trash2, Copy, Download, Paperclip } from 'lucide-vue-next'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 
 const props = defineProps({
   invoice: Object,
@@ -101,11 +102,14 @@ const paymentMethodOptions = [
 
 <template>
   <AppLayout :title="`Invoice ${invoice?.number}`" help-page="invoices">
+    <Breadcrumb :items="[
+      { label: t('invoices'), href: '/invoices' },
+      { label: invoice?.number },
+    ]" />
     <div class="max-w-5xl space-y-6">
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <Button as="a" href="/invoices" variant="outline" size="sm">{{ t('back') }}</Button>
           <div>
             <Badge :variant="statusVariant[invoice?.status] ?? 'secondary'" class="mb-1">
               {{ invoice?.status }}

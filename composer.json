@@ -22,6 +22,8 @@
     "require-dev": {
         "deployer/deployer": "^7.5",
         "fakerphp/faker": "^1.23",
+        "knuckleswtf/scribe": "^5.9",
+        "larastan/larastan": "^3.0",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.26",
         "laravel/tinker": "^2.9",

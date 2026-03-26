@@ -7,6 +7,7 @@ import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 
@@ -82,7 +83,7 @@ const localeOptions = [
               <FormInput id="address" v-model="form.address" :label="t('address')" :error="form.errors.address" />
               <div class="grid grid-cols-2 gap-4">
                 <FormInput id="city" v-model="form.city" :label="t('city')" :error="form.errors.city" />
-                <FormInput id="postal_code" v-model="form.postal_code" :label="t('postal_code')" :error="form.errors.postal_code" />
+                <MaskedInput id="postal_code" v-model="form.postal_code" mask="postal" :label="t('postal_code')" :error="form.errors.postal_code" />
               </div>
               <div class="grid grid-cols-2 gap-4">
                 <FormSelect id="canton" v-model="form.canton" :label="t('canton')" :options="cantons" :placeholder="t('select')" />

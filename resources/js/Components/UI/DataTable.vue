@@ -1,6 +1,6 @@
 <script setup>
 import { Link, router } from '@inertiajs/vue3'
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown, Search, X } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown, Search, X, Columns3, Download } from 'lucide-vue-next'
 import Button from './Button.vue'
 import Badge from './Badge.vue'
 import { useTranslations } from '@/lib/useTranslations'
@@ -60,9 +60,23 @@ const props = defineProps({
     default: () => [],
     // Each: { key: string, label: string, value: string|null, options: [{ value: string, label: string }] }
   },
+  // Selectable rows (bulk actions)
+  selectable: {
+    type: Boolean,
+    default: false,
+  },
+  // CSV export
+  exportable: {
+    type: Boolean,
+    default: false,
+  },
+  exportFilename: {
+    type: String,
+    default: 'export',
+  },
 })
 
-const emit = defineEmits(['sort', 'search', 'filter'])
+const emit = defineEmits(['sort', 'search', 'filter', 'selection-change'])
 
 const localSearch = ref(props.searchValue || '')
 let searchTimeout = null
@@ -100,12 +114,68 @@ function getSortIcon(column) {
 }
 
 const hasToolbar = computed(() => props.searchable || props.filters.length > 0)
+
+// Column visibility
+const hiddenColumns = ref(new Set())
+const showColumnMenu = ref(false)
+
+const visibleColumns = computed(() =>
+  props.columns.filter((col) => !hiddenColumns.value.has(col.key))
+)
+
+function toggleColumn(key) {
+  const next = new Set(hiddenColumns.value)
+  next.has(key) ? next.delete(key) : next.add(key)
+  hiddenColumns.value = next
+}
+
+// Row selection
+const selectedIds = ref(new Set())
+
+const allSelected = computed(() =>
+  props.rows.length > 0 && props.rows.every((r) => selectedIds.value.has(r.id))
+)
+
+function toggleAll() {
+  if (allSelected.value) {
+    selectedIds.value = new Set()
+  } else {
+    selectedIds.value = new Set(props.rows.map((r) => r.id))
+  }
+  emit('selection-change', [...selectedIds.value])
+}
+
+function toggleRow(id) {
+  const next = new Set(selectedIds.value)
+  next.has(id) ? next.delete(id) : next.add(id)
+  selectedIds.value = next
+  emit('selection-change', [...next])
+}
+
+// CSV export
+function exportCsv() {
+  const cols = visibleColumns.value
+  const header = cols.map((c) => `"${c.label.replace(/"/g, '""')}"`).join(',')
+  const body = props.rows.map((row) =>
+    cols.map((c) => {
+      const val = c.format ? c.format(row[c.key], row) : (row[c.key] ?? '')
+      return `"${String(val).replace(/"/g, '""')}"`
+    }).join(',')
+  ).join('\n')
+  const blob = new Blob([`${header}\n${body}`], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${props.exportFilename}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 </script>
 
 <template>
   <div class="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
-    <!-- Toolbar: Search + Filters -->
-    <div v-if="hasToolbar" class="flex flex-wrap items-center gap-3 border-b border-[hsl(var(--border))] px-4 py-3">
+    <!-- Toolbar: Search + Filters + Column Toggle + Export -->
+    <div v-if="hasToolbar || exportable" class="flex flex-wrap items-center gap-3 border-b border-[hsl(var(--border))] px-4 py-3">
       <!-- Search -->
       <div v-if="searchable" class="relative flex-1 min-w-[200px] max-w-sm">
         <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
@@ -139,14 +209,46 @@ const hasToolbar = computed(() => props.searchable || props.filters.length > 0)
           </option>
         </select>
       </div>
+
+      <div class="ml-auto flex items-center gap-2">
+        <!-- Column visibility toggle -->
+        <div class="relative">
+          <Button variant="outline" size="sm" @click="showColumnMenu = !showColumnMenu">
+            <Columns3 class="h-4 w-4" />
+          </Button>
+          <div v-if="showColumnMenu" class="absolute right-0 top-full z-20 mt-1 min-w-[160px] rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 shadow-md">
+            <label
+              v-for="col in columns"
+              :key="col.key"
+              class="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-[hsl(var(--muted))]/50 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                :checked="!hiddenColumns.has(col.key)"
+                class="rounded border-[hsl(var(--input))]"
+                @change="toggleColumn(col.key)"
+              />
+              {{ col.label }}
+            </label>
+          </div>
+        </div>
+
+        <!-- CSV export -->
+        <Button v-if="exportable" variant="outline" size="sm" @click="exportCsv">
+          <Download class="h-4 w-4" />
+        </Button>
+      </div>
     </div>
 
     <div class="overflow-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/50">
+            <th v-if="selectable" scope="col" class="w-10 px-4 py-3">
+              <input type="checkbox" :checked="allSelected" class="rounded border-[hsl(var(--input))]" @change="toggleAll" />
+            </th>
             <th
-              v-for="col in columns"
+              v-for="col in visibleColumns"
               :key="col.key"
               scope="col"
               :aria-sort="col.sortable ? (sort === col.key ? (direction === 'asc' ? 'ascending' : 'descending') : 'none') : undefined"
@@ -172,8 +274,11 @@ const hasToolbar = computed(() => props.searchable || props.filters.length > 0)
             :key="row.id ?? i"
             class="border-b border-[hsl(var(--border))] last:border-0 transition-colors hover:bg-[hsl(var(--muted))]/50"
           >
+            <td v-if="selectable" class="w-10 px-4 py-3">
+              <input type="checkbox" :checked="selectedIds.has(row.id)" class="rounded border-[hsl(var(--input))]" @change="toggleRow(row.id)" />
+            </td>
             <td
-              v-for="col in columns"
+              v-for="col in visibleColumns"
               :key="col.key"
               :class="['px-4 py-3', col.class]"
             >
@@ -188,12 +293,18 @@ const hasToolbar = computed(() => props.searchable || props.filters.length > 0)
             </td>
           </tr>
           <tr v-if="rows.length === 0">
-            <td :colspan="columns.length" class="px-4 py-8 text-center text-[hsl(var(--muted-foreground))]">
+            <td :colspan="visibleColumns.length + (selectable ? 1 : 0)" class="px-4 py-8 text-center text-[hsl(var(--muted-foreground))]">
               {{ emptyMessage ?? t('no_records') }}
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Selection count -->
+    <div v-if="selectable && selectedIds.size > 0" class="flex items-center gap-3 border-t border-[hsl(var(--border))] px-4 py-2 text-sm text-[hsl(var(--muted-foreground))]">
+      {{ t('n_selected', { count: selectedIds.size }) }}
+      <slot name="bulk-actions" :selected-ids="[...selectedIds]" />
     </div>
 
     <div v-if="pagination && pagination.last_page > 1" class="flex items-center justify-between border-t border-[hsl(var(--border))] px-4 py-3">

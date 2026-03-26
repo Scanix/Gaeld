@@ -30,6 +30,10 @@ yarn-error.log
 /bootstrap/cache/packages.php
 /bootstrap/cache/services.php
 
+# Scribe API docs (generated output)
+/public/docs
+/.scribe
+
 # EE proprietary plugin — distributed via private GitLab repo, cloned on deploy
 /plugins/gaeld-ee/
 

@@ -1,0 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    paths:
+        - app/
+
+    level: 5
+
+    ignoreErrors:
+
+    excludePaths:
+        - app/Console/
+        - app/Domains/Api/Models/PersonalAccessToken.php

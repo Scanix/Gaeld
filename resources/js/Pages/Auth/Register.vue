@@ -2,6 +2,7 @@
 import { Head, useForm, Link, usePage } from '@inertiajs/vue3'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import PasswordStrength from '@/Components/UI/PasswordStrength.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import { useTranslations } from '@/lib/useTranslations'
@@ -67,6 +68,8 @@ function submit() {
               :error="form.errors.password"
               required
             />
+
+            <PasswordStrength :password="form.password" />
 
             <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('password_requirements_hint') }}</p>
 
