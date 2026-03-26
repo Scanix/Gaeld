@@ -7,18 +7,21 @@ use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Domains\Banking\Requests\ImportCamtRequest;
+use App\Domains\Banking\Requests\ReconcileExpenseRequest;
+use App\Domains\Banking\Requests\ReconcileInvoiceRequest;
+use App\Domains\Banking\Requests\ReconcileManualRequest;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Support\Exceptions\FeatureDisabledException;
 use App\Http\Controllers\Controller;
+use App\Support\Exceptions\FeatureDisabledException;
 use App\Support\FeatureFlag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -96,13 +99,9 @@ class ReconciliationController extends Controller
     /**
      * Upload and import a CAMT file.
      */
-    public function import(Request $request, BankAccount $bankAccount): RedirectResponse
+    public function import(ImportCamtRequest $request, BankAccount $bankAccount): RedirectResponse
     {
         $this->authorize('update', $bankAccount);
-
-        $request->validate([
-            'camt_file' => 'required|file|max:'.config('uploads.max_size.document'),
-        ]);
 
         $file = $request->file('camt_file');
         $xml = file_get_contents($file->getRealPath());
@@ -125,18 +124,12 @@ class ReconciliationController extends Controller
     /**
      * Reconcile a transaction with an invoice.
      */
-    public function reconcileInvoice(Request $request, BankTransaction $transaction): RedirectResponse
+    public function reconcileInvoice(ReconcileInvoiceRequest $request, BankTransaction $transaction): RedirectResponse
     {
         $bankAccount = $transaction->bankAccount;
         $this->authorize('update', $bankAccount);
 
-        $validated = $request->validate([
-            'invoice_id' => [
-                'required',
-                'uuid',
-                Rule::exists('invoices', 'id')->where('organization_id', $bankAccount->organization_id),
-            ],
-        ]);
+        $validated = $request->validated();
 
         $invoice = Invoice::where('organization_id', $bankAccount->organization_id)
             ->findOrFail($validated['invoice_id']);
@@ -154,19 +147,12 @@ class ReconciliationController extends Controller
     /**
      * Reconcile a transaction with an expense.
      */
-    public function reconcileExpense(Request $request, BankTransaction $transaction): RedirectResponse
+    public function reconcileExpense(ReconcileExpenseRequest $request, BankTransaction $transaction): RedirectResponse
     {
         $bankAccount = $transaction->bankAccount;
         $this->authorize('update', $bankAccount);
 
-        $validated = $request->validate([
-            'expense_id' => [
-                'required',
-                'uuid',
-                Rule::exists('expenses', 'id')->where('organization_id', $bankAccount->organization_id),
-            ],
-            'expense_account_code' => 'required|string|max:10',
-        ]);
+        $validated = $request->validated();
 
         $expense = Expense::where('organization_id', $bankAccount->organization_id)
             ->findOrFail($validated['expense_id']);
@@ -188,14 +174,12 @@ class ReconciliationController extends Controller
     /**
      * Manually reconcile a transaction with a contra account.
      */
-    public function reconcileManual(Request $request, BankTransaction $transaction): RedirectResponse
+    public function reconcileManual(ReconcileManualRequest $request, BankTransaction $transaction): RedirectResponse
     {
         $bankAccount = $transaction->bankAccount;
         $this->authorize('update', $bankAccount);
 
-        $validated = $request->validate([
-            'contra_account_code' => 'required|string|max:10',
-        ]);
+        $validated = $request->validated();
 
         try {
             $this->reconciliationService->reconcileWithContraAccount(

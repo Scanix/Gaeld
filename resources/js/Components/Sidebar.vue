@@ -156,8 +156,9 @@ function isGroupActive(item) {
         <div v-if="item.children">
           <Link
             :href="item.href"
-            :title="collapsed ? t(item.key) : undefined"
+            :aria-label="collapsed ? t(item.key) : undefined"
             :aria-current="isGroupActive(item) ? 'page' : undefined"
+            :aria-expanded="!collapsed ? isGroupActive(item) : undefined"
             :class="[
               'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
               isGroupActive(item)
@@ -188,7 +189,7 @@ function isGroupActive(item) {
         <Link
           v-else
           :href="item.href"
-          :title="collapsed ? t(item.key) : undefined"
+          :aria-label="collapsed ? t(item.key) : undefined"
           :aria-current="isActive(item.href) ? 'page' : undefined"
           :class="[
             'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
@@ -209,7 +210,7 @@ function isGroupActive(item) {
           v-for="item in billingNav"
           :key="item.key"
           :href="item.href"
-          :title="collapsed ? t(item.key) : undefined"
+          :aria-label="collapsed ? t(item.key) : undefined"
           :aria-current="isActive(item.href) ? 'page' : undefined"
           :class="[
             'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',

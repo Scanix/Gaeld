@@ -12,7 +12,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
-import { useFormValidation } from '@/lib/useFormValidation'
+import { useFormValidation, z } from '@/lib/useFormValidation'
 import { Plus, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -36,12 +36,12 @@ const form = useForm({
 
 useUnsavedChanges(computed(() => form.isDirty))
 
-const { errors: clientErrors, validate, validateField } = useFormValidation({
-  customer_id: { required: true },
-  number: { required: true, maxLength: 50 },
-  issue_date: { required: true },
-  due_date: { required: true },
-})
+const { errors: clientErrors, validate, validateField } = useFormValidation(z.object({
+  customer_id: z.string().min(1, 'This field is required.'),
+  number: z.string().min(1, 'This field is required.').max(50, 'Must be at most 50 characters.'),
+  issue_date: z.string().min(1, 'This field is required.'),
+  due_date: z.string().min(1, 'This field is required.'),
+}))
 
 function addLine() {
   form.lines.push({ description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })

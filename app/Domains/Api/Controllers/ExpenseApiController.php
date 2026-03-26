@@ -2,6 +2,8 @@
 
 namespace App\Domains\Api\Controllers;
 
+use App\Domains\Api\Requests\StoreExpenseApiRequest;
+use App\Domains\Api\Requests\UpdateExpenseApiRequest;
 use App\Domains\Api\Resources\ExpenseResource;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\DeleteExpenseAction;
@@ -11,11 +13,10 @@ use App\Domains\Expenses\DTOs\UpdateExpenseData;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Queries\ExpenseQuery;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Http\Controllers\Controller;
-use Illuminate\Validation\Rule;
 
 class ExpenseApiController extends Controller
 {
@@ -36,25 +37,13 @@ class ExpenseApiController extends Controller
     }
 
     public function store(
-        Request $request,
+        StoreExpenseApiRequest $request,
         CreateExpenseAction $action,
         CurrentOrganization $currentOrg,
     ): JsonResponse {
         $this->authorize('create', Expense::class);
 
-        $validated = $request->validate([
-            'category' => 'required|string|max:100',
-            'amount' => 'required|numeric|min:0.01',
-            'date' => 'required|date',
-            'description' => 'nullable|string',
-            'vat_amount' => 'nullable|numeric|min:0',
-            'vat_rate_id' => [
-                'nullable',
-                Rule::exists('vat_rates', 'id')->where('organization_id', $currentOrg->id()),
-            ],
-            'vendor' => 'nullable|string|max:255',
-            'currency' => 'nullable|string|size:3',
-        ]);
+        $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
 
         $dto = CreateExpenseData::fromArray($validated);
@@ -66,26 +55,13 @@ class ExpenseApiController extends Controller
     }
 
     public function update(
-        Request $request,
+        UpdateExpenseApiRequest $request,
         Expense $expense,
         UpdateExpenseAction $action,
-        CurrentOrganization $currentOrg,
     ): ExpenseResource {
         $this->authorize('update', $expense);
 
-        $validated = $request->validate([
-            'category' => 'required|string|max:100',
-            'amount' => 'required|numeric|min:0.01',
-            'date' => 'required|date',
-            'description' => 'nullable|string',
-            'vat_amount' => 'nullable|numeric|min:0',
-            'vat_rate_id' => [
-                'nullable',
-                Rule::exists('vat_rates', 'id')->where('organization_id', $currentOrg->id()),
-            ],
-            'vendor' => 'nullable|string|max:255',
-            'currency' => 'nullable|string|size:3',
-        ]);
+        $validated = $request->validated();
 
         $dto = UpdateExpenseData::fromArray($validated);
         $action->execute($expense, $dto);

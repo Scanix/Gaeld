@@ -3,6 +3,7 @@
 namespace App\Domains\Users\Controllers;
 
 use App\Domains\Users\Models\User;
+use App\Domains\Users\Requests\TwoFactorChallengeRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,13 +29,8 @@ class TwoFactorChallengeController extends Controller
         return Inertia::render('Auth/TwoFactorChallenge');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(TwoFactorChallengeRequest $request): RedirectResponse
     {
-        $request->validate([
-            'code' => 'nullable|string',
-            'recovery_code' => 'nullable|string',
-        ]);
-
         $userId = $request->session()->get('two_factor:user_id');
         $remember = $request->session()->get('two_factor:remember', false);
 

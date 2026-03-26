@@ -11,6 +11,7 @@
         "inertiajs/inertia-laravel": "^2.0",
         "laragear/webauthn": "^4.1",
         "laravel/framework": "^12.54",
+        "laravel/sanctum": "^4.3",
         "laravel/scout": "^11.0",
         "meilisearch/meilisearch-php": "^1.16",
         "pragmarx/google2fa-laravel": "^3.0",

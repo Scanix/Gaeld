@@ -2,19 +2,20 @@
 
 namespace App\Domains\Expenses\Controllers;
 
+use App\Domains\Accounting\Queries\VatRateQuery;
 use App\Domains\Contacts\Queries\SupplierQuery;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\DeleteExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Actions\UpdateExpenseAction;
+use App\Domains\Expenses\DTOs\CreateExpenseData;
+use App\Domains\Expenses\DTOs\UpdateExpenseData;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Jobs\ProcessReceiptOcrJob;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Queries\ExpenseQuery;
-use App\Domains\Accounting\Queries\VatRateQuery;
-use App\Domains\Expenses\DTOs\CreateExpenseData;
-use App\Domains\Expenses\DTOs\UpdateExpenseData;
+use App\Domains\Expenses\Requests\ScanReceiptRequest;
 use App\Domains\Expenses\Requests\StoreExpenseRequest;
 use App\Domains\Expenses\Requests\UpdateExpenseRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
@@ -28,6 +29,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExpenseController extends Controller
 {
@@ -188,7 +190,7 @@ class ExpenseController extends Controller
             ->with('success', __('app.receipt_removed'));
     }
 
-    public function downloadReceipt(Expense $expense): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function downloadReceipt(Expense $expense): StreamedResponse
     {
         $this->authorize('view', $expense);
 
@@ -202,13 +204,9 @@ class ExpenseController extends Controller
         );
     }
 
-    public function scanReceipt(Request $request, CurrentOrganization $currentOrg): JsonResponse
+    public function scanReceipt(ScanReceiptRequest $request, CurrentOrganization $currentOrg): JsonResponse
     {
         $this->authorize('create', Expense::class);
-
-        $request->validate([
-            'receipt' => 'required|file|mimes:'.config('uploads.allowed_mimes.image').'|max:'.config('uploads.max_size.document'),
-        ]);
 
         $receiptPath = $this->uploadService->store($request->file('receipt'), "receipts/{$currentOrg->id()}");
         $scanId = Str::uuid()->toString();
