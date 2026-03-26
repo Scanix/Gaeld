@@ -4,13 +4,14 @@ namespace App\Domains\Organizations\Controllers;
 
 use App\Domains\Organizations\Actions\UpdateOrganizationAction;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
-use App\Domains\Organizations\Models\Organization;
-use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Organizations\Requests\UpdateCommunicationsRequest;
+use App\Domains\Organizations\Requests\UpdateInvoiceSettingsRequest;
 use App\Domains\Organizations\Requests\UpdateOrganizationSettingsRequest;
+use App\Domains\Organizations\Requests\UploadLogoRequest;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -44,30 +45,21 @@ class OrganizationSettingsController extends Controller
             ->with('success', __('app.organization_updated'));
     }
 
-    public function updateInvoice(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function updateInvoice(UpdateInvoiceSettingsRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $organization = $currentOrg->get();
         $this->authorize('update', $organization);
 
-        $validated = $request->validate([
-            'invoice_header_text' => 'nullable|string|max:1000',
-            'invoice_footer_text' => 'nullable|string|max:1000',
-        ]);
-
-        $organization->update($validated);
+        $organization->update($request->validated());
 
         return redirect()->route('settings')
             ->with('success', __('app.invoice_settings_updated'));
     }
 
-    public function uploadLogo(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function uploadLogo(UploadLogoRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $organization = $currentOrg->get();
         $this->authorize('update', $organization);
-
-        $request->validate([
-            'logo' => 'required|image|mimes:png,jpg,jpeg|max:'.config('uploads.max_size.image'),
-        ]);
 
         // Delete old logo if it exists
         $this->uploadService->delete($organization->logo_path);
@@ -105,17 +97,12 @@ class OrganizationSettingsController extends Controller
         return Storage::disk('local')->download($organization->logo_path);
     }
 
-    public function updateCommunications(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function updateCommunications(UpdateCommunicationsRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $organization = $currentOrg->get();
         $this->authorize('update', $organization);
 
-        $validated = $request->validate([
-            'invoice_email_subject' => 'nullable|string|max:255',
-            'invoice_email_body' => 'nullable|string|max:5000',
-        ]);
-
-        $organization->update($validated);
+        $organization->update($request->validated());
 
         return redirect()->route('settings')
             ->with('success', __('app.communication_settings_updated'));

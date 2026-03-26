@@ -18,7 +18,7 @@ return [
         'CHF', 'EUR', 'USD', 'GBP',
     ],
 
-    'supported_locales' => ['en', 'fr', 'de', 'it', 'rm'],
+    'supported_locales' => ['en', 'fr', 'de', 'it'],
 
     'pagination' => [
         'default' => 20,

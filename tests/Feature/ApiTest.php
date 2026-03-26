@@ -357,7 +357,7 @@ class ApiTest extends TestCase
 
         $this->withToken($this->token)
             ->getJson("/api/v1/customers/{$customer->id}")
-            ->assertStatus(403);
+            ->assertStatus(404);
     }
 
     // ──────────────────────────────────────────────────────────────

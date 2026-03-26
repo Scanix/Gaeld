@@ -4,9 +4,11 @@ namespace App\Domains\Api\Controllers;
 
 use App\Domains\Api\Enums\TokenType;
 use App\Domains\Api\Enums\WebhookEvent;
+use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 
 class ApiTokenController extends Controller
@@ -27,7 +29,7 @@ class ApiTokenController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'abilities' => 'array',
-            'abilities.*' => 'string',
+            'abilities.*' => ['string', Rule::in(array_column(Permission::cases(), 'value'))],
             'expires_in_days' => 'nullable|integer|min:1|max:365',
         ]);
 

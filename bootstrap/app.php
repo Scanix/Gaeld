@@ -7,6 +7,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
+use App\Http\Middleware\EnsureApiOrganization;
 use App\Http\Middleware\EnsureOrganizationTwoFactor;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'org' => EnsureHasOrganization::class,
             'org-2fa' => EnsureOrganizationTwoFactor::class,
+            'api-org' => EnsureApiOrganization::class,
         ]);
 
         $middleware->redirectGuestsTo(static function () {

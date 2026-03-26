@@ -4,13 +4,11 @@ namespace App\Domains\Api\Controllers;
 
 use App\Domains\Api\Enums\TokenType;
 use App\Domains\Api\Models\PersonalAccessToken;
-use App\Domains\Organizations\Enums\Permission;
+use App\Domains\Api\Requests\StoreOrgTokenRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Illuminate\Validation\Rule;
 
 class OrgTokenController extends Controller
 {
@@ -48,16 +46,11 @@ class OrgTokenController extends Controller
         return response()->json(['data' => $data]);
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): JsonResponse
+    public function store(StoreOrgTokenRequest $request, CurrentOrganization $currentOrg): JsonResponse
     {
         $this->authorize('manageUsers', $currentOrg->get());
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'abilities' => 'array',
-            'abilities.*' => ['string', Rule::in(['*', ...Permission::values()])],
-            'expires_in_days' => 'nullable|integer|min:1|max:365',
-        ]);
+        $validated = $request->validated();
 
         $abilities = $validated['abilities'] ?? ['*'];
         $expiresAt = isset($validated['expires_in_days'])

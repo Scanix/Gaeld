@@ -24,6 +24,12 @@ class WebAuthnLoginController
      */
     public function login(AssertedRequest $request): Response
     {
-        return response()->noContent($request->login() ? 204 : 422);
+        $loggedIn = $request->login();
+
+        if ($loggedIn) {
+            $request->session()->regenerate();
+        }
+
+        return response()->noContent($loggedIn ? 204 : 422);
     }
 }

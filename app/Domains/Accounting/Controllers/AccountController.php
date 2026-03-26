@@ -4,43 +4,27 @@ namespace App\Domains\Accounting\Controllers;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Requests\ImportAccountsRequest;
+use App\Domains\Accounting\Requests\StoreAccountRequest;
+use App\Domains\Accounting\Requests\UpdateAccountRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Enum;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AccountController extends Controller
 {
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(StoreAccountRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', Account::class);
 
         $orgId = $currentOrg->id();
 
-        $validated = $request->validate([
-            'code' => [
-                'required',
-                'string',
-                'max:20',
-                Rule::unique('accounts', 'code')->where('organization_id', $orgId),
-            ],
-            'name' => 'required|string|max:255',
-            'type' => ['required', new Enum(AccountType::class)],
-            'parent_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('accounts', 'id')->where('organization_id', $orgId),
-            ],
-            'is_active' => 'boolean',
-            'description' => 'nullable|string|max:1000',
-        ]);
-
+        $validated = $request->validated();
         $validated['organization_id'] = $orgId;
 
         Account::create($validated);
@@ -49,37 +33,11 @@ class AccountController extends Controller
             ->with('success', __('app.account_created'));
     }
 
-    public function update(Request $request, Account $account): RedirectResponse
+    public function update(UpdateAccountRequest $request, Account $account): RedirectResponse
     {
         $this->authorize('update', $account);
 
-        $hasTransactions = $account->transactionLines()->exists();
-
-        $rules = [
-            'name' => 'required|string|max:255',
-            'is_active' => 'boolean',
-            'description' => 'nullable|string|max:1000',
-            'parent_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('accounts', 'id')->where('organization_id', $account->organization_id),
-                Rule::notIn([$account->id]),
-            ],
-        ];
-
-        if (! $hasTransactions) {
-            $rules['code'] = [
-                'required',
-                'string',
-                'max:20',
-                Rule::unique('accounts', 'code')
-                    ->where('organization_id', $account->organization_id)
-                    ->ignore($account->id),
-            ];
-            $rules['type'] = ['required', new Enum(AccountType::class)];
-        }
-
-        $validated = $request->validate($rules);
+        $validated = $request->validated();
 
         $account->update($validated);
 
@@ -97,14 +55,9 @@ class AccountController extends Controller
             ->with('success', __('app.account_deleted'));
     }
 
-    public function import(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function import(ImportAccountsRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', Account::class);
-
-        $request->validate([
-            'file' => 'required|file|mimes:'.config('uploads.allowed_mimes.import').'|max:'.config('uploads.max_size.import'),
-            'mode' => 'required|in:add,replace',
-        ]);
 
         $file = $request->file('file');
         $extension = strtolower($file->getClientOriginalExtension());
