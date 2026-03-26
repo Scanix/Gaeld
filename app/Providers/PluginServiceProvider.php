@@ -8,6 +8,8 @@ use Illuminate\Support\ServiceProvider;
 
 class PluginServiceProvider extends ServiceProvider
 {
+    private array $loadedPlugins = [];
+
     public function register(): void
     {
         if (! config('plugins.enabled')) {
@@ -22,8 +24,18 @@ class PluginServiceProvider extends ServiceProvider
 
         $pluginDirs = File::directories($pluginPath);
 
+        // First pass: collect all manifests
+        $manifests = [];
         foreach ($pluginDirs as $dir) {
-            $this->loadPlugin($dir);
+            $manifest = $this->readManifest($dir);
+            if ($manifest) {
+                $manifests[$manifest['slug']] = ['dir' => $dir, 'manifest' => $manifest];
+            }
+        }
+
+        // Second pass: load in dependency order
+        foreach ($manifests as $slug => $entry) {
+            $this->loadPluginWithDeps($slug, $manifests, []);
         }
     }
 
@@ -32,29 +44,73 @@ class PluginServiceProvider extends ServiceProvider
         //
     }
 
-    private function loadPlugin(string $pluginDir): void
+    private function readManifest(string $pluginDir): ?array
     {
         $manifestPath = $pluginDir . '/plugin.json';
 
         if (! File::exists($manifestPath)) {
             Log::warning("Plugin manifest not found: {$pluginDir}");
 
-            return;
+            return null;
         }
 
         $manifest = json_decode(File::get($manifestPath), true);
 
-        if (! $manifest || empty($manifest['provider'])) {
-            Log::warning("Plugin manifest invalid or missing provider: {$pluginDir}");
+        if (! $manifest || empty($manifest['provider']) || empty($manifest['slug'])) {
+            Log::warning("Plugin manifest invalid or missing provider/slug: {$pluginDir}");
 
-            return;
+            return null;
         }
 
         if (isset($manifest['enabled']) && ! $manifest['enabled']) {
+            return null;
+        }
+
+        return $manifest;
+    }
+
+    private function loadPluginWithDeps(string $slug, array $manifests, array $loading): void
+    {
+        if (isset($this->loadedPlugins[$slug])) {
             return;
         }
 
-        // Register the plugin's service provider
+        if (in_array($slug, $loading, true)) {
+            Log::warning("Circular plugin dependency detected: {$slug}");
+
+            return;
+        }
+
+        if (! isset($manifests[$slug])) {
+            return;
+        }
+
+        $entry = $manifests[$slug];
+        $manifest = $entry['manifest'];
+        $requires = $manifest['requires'] ?? [];
+
+        // Load dependencies first
+        $loading[] = $slug;
+        foreach ($requires as $dep) {
+            if (! isset($manifests[$dep])) {
+                Log::warning("Plugin '{$slug}' requires '{$dep}' which is not installed");
+
+                return;
+            }
+            $this->loadPluginWithDeps($dep, $manifests, $loading);
+            if (! isset($this->loadedPlugins[$dep])) {
+                Log::warning("Plugin '{$slug}' dependency '{$dep}' failed to load");
+
+                return;
+            }
+        }
+
+        $this->loadPlugin($entry['dir'], $manifest);
+        $this->loadedPlugins[$slug] = $manifest['version'] ?? '0.0.0';
+    }
+
+    private function loadPlugin(string $pluginDir, array $manifest): void
+    {
         $providerClass = $manifest['provider'];
 
         if (! str_starts_with($providerClass, 'Plugins\\')) {
