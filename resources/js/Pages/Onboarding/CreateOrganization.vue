@@ -55,7 +55,6 @@ const localeOptions = [
   { value: 'fr', label: t('locale_fr') },
   { value: 'de', label: t('locale_de') },
   { value: 'it', label: t('locale_it') },
-  { value: 'rm', label: t('locale_rm') },
 ]
 </script>
 

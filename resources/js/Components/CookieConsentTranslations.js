@@ -1,4 +1,5 @@
 const COOKIE_NAME = 'gaeld_cookie_consent'
+const COOKIE_DOMAIN = import.meta.env.VITE_COOKIE_DOMAIN || window.location.hostname
 
 export default function getTranslations() {
   return {
@@ -36,19 +37,19 @@ export default function getTranslations() {
               body: [
                 {
                   name: COOKIE_NAME,
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'Stores your cookie consent preferences.',
                   expiration: '1 year',
                 },
                 {
                   name: 'XSRF-TOKEN',
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'CSRF protection token.',
                   expiration: 'Session',
                 },
                 {
                   name: 'gaeld_session',
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'Session identifier.',
                   expiration: 'Session',
                 },
@@ -98,19 +99,19 @@ export default function getTranslations() {
               body: [
                 {
                   name: COOKIE_NAME,
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'Stocke vos pr\u00e9f\u00e9rences de consentement aux cookies.',
                   expiration: '1 an',
                 },
                 {
                   name: 'XSRF-TOKEN',
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'Jeton de protection CSRF.',
                   expiration: 'Session',
                 },
                 {
                   name: 'gaeld_session',
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'Identifiant de session.',
                   expiration: 'Session',
                 },
@@ -160,19 +161,19 @@ export default function getTranslations() {
               body: [
                 {
                   name: COOKIE_NAME,
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'Speichert Ihre Cookie-Einstellungen.',
                   expiration: '1 Jahr',
                 },
                 {
                   name: 'XSRF-TOKEN',
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'CSRF-Schutztoken.',
                   expiration: 'Sitzung',
                 },
                 {
                   name: 'gaeld_session',
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'Sitzungskennung.',
                   expiration: 'Sitzung',
                 },
@@ -222,19 +223,19 @@ export default function getTranslations() {
               body: [
                 {
                   name: COOKIE_NAME,
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'Memorizza le vostre preferenze sui cookie.',
                   expiration: '1 anno',
                 },
                 {
                   name: 'XSRF-TOKEN',
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'Token di protezione CSRF.',
                   expiration: 'Sessione',
                 },
                 {
                   name: 'gaeld_session',
-                  domain: 'gaeld.ch',
+                  domain: COOKIE_DOMAIN,
                   description: 'Identificatore di sessione.',
                   expiration: 'Sessione',
                 },
