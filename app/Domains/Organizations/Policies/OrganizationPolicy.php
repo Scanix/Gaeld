@@ -20,7 +20,9 @@ class OrganizationPolicy
 
     public function create(User $user): bool
     {
-        return true;
+        $max = config('features.max_organizations_per_user', 10);
+
+        return $user->organizations()->count() < $max;
     }
 
     public function update(User $user, Organization $organization): bool

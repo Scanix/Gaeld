@@ -152,7 +152,7 @@ trait CamtXmlHelper
         $previousUseErrors = libxml_use_internal_errors(true);
         $doc = new \DOMDocument();
 
-        if (! $doc->loadXML($xml, LIBXML_NONET | LIBXML_NOENT)) {
+        if (! $doc->loadXML($xml, LIBXML_NONET)) {
             $errors = libxml_get_errors();
             libxml_clear_errors();
             libxml_use_internal_errors($previousUseErrors);
