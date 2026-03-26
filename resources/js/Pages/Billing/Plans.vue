@@ -104,8 +104,8 @@ function openPortal() {
             </div>
           </div>
 
-          <!-- Portal actions -->
-          <div class="border-t border-[hsl(var(--border))] pt-4">
+          <!-- Portal actions (only for Stripe-backed subscriptions) -->
+          <div v-if="currentSubscription.has_stripe" class="border-t border-[hsl(var(--border))] pt-4">
             <p class="text-sm text-[hsl(var(--muted-foreground))] mb-3">{{ t('billing_portal_description') }}</p>
             <div class="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" class="gap-2" @click="openPortal">

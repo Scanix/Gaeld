@@ -36,22 +36,22 @@ function logout() {
 </script>
 
 <template>
-  <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60">
-    <div class="flex items-center gap-4">
+  <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/95 px-3 sm:px-6 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60">
+    <div class="flex items-center gap-2 sm:gap-4 min-w-0">
       <button
-        class="rounded-lg p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] lg:hidden"
+        class="shrink-0 rounded-lg p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] lg:hidden"
         @click="$emit('toggleMobile')"
       >
         <Menu class="h-5 w-5" />
       </button>
       <slot name="title">
-        <h1 class="text-lg font-semibold">
+        <h1 class="truncate text-lg font-semibold">
           <slot name="heading" />
         </h1>
       </slot>
     </div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1 sm:gap-2">
       <GlobalSearch />
       <Button
         variant="ghost"
@@ -67,6 +67,7 @@ function logout() {
         v-if="helpPage"
         variant="ghost"
         size="icon"
+        class="hidden sm:inline-flex"
         :title="t('help')"
         @click="$emit('toggleHelp')"
       >
@@ -77,6 +78,7 @@ function logout() {
         v-if="docsUrl"
         variant="ghost"
         size="icon"
+        class="hidden sm:inline-flex"
         :title="t('documentation')"
         @click="$emit('toggleDocs')"
       >
@@ -91,7 +93,7 @@ function logout() {
           @click="showUserMenu = !showUserMenu"
         >
           <User class="h-4 w-4" />
-          <span class="hidden sm:inline">{{ page.props.auth?.user?.name ?? t('account') }}</span>
+          <span class="hidden md:inline">{{ page.props.auth?.user?.name ?? t('account') }}</span>
         </Button>
 
         <div
@@ -106,6 +108,22 @@ function logout() {
             <User class="h-4 w-4" />
             {{ t('profile') }}
           </a>
+          <button
+            v-if="helpPage"
+            class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] sm:hidden"
+            @click="$emit('toggleHelp'); showUserMenu = false"
+          >
+            <HelpCircle class="h-4 w-4" />
+            {{ t('help') }}
+          </button>
+          <button
+            v-if="docsUrl"
+            class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] sm:hidden"
+            @click="$emit('toggleDocs'); showUserMenu = false"
+          >
+            <BookOpen class="h-4 w-4" />
+            {{ t('documentation') }}
+          </button>
           <a
             v-if="isSaasAdmin"
             href="/saas-admin"
