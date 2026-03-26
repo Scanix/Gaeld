@@ -82,9 +82,9 @@ const statusFilters = computed(() => [
     label: t('all_statuses'),
     value: props.query.filter?.status ?? '',
     options: [
-      { value: 'pending', label: 'Pending' },
-      { value: 'approved', label: 'Approved' },
-      { value: 'posted', label: 'Posted' },
+      { value: 'pending', label: t('expense_status_pending') },
+      { value: 'approved', label: t('expense_status_approved') },
+      { value: 'posted', label: t('expense_status_posted') },
     ],
   },
 ])
@@ -123,7 +123,7 @@ const statusFilters = computed(() => [
     >
       <template #cell-status="{ value }">
         <Badge :variant="statusVariant[value] ?? 'secondary'">
-          {{ value }}
+          {{ t(`expense_status_${value}`) }}
         </Badge>
       </template>
       <template #cell-actions="{ row }">
