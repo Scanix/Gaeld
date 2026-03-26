@@ -90,6 +90,8 @@ function logout() {
           variant="ghost"
           size="sm"
           class="gap-2"
+          aria-haspopup="true"
+          :aria-expanded="showUserMenu"
           @click="showUserMenu = !showUserMenu"
         >
           <User class="h-4 w-4" />
@@ -98,6 +100,7 @@ function logout() {
 
         <div
           v-if="showUserMenu"
+          role="menu"
           class="absolute right-0 top-full mt-1 w-48 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-1 shadow-lg"
           @mouseleave="showUserMenu = false"
         >

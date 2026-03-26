@@ -2,15 +2,14 @@
 
 namespace App\Domains\Api\Controllers;
 
-use App\Domains\Api\Enums\WebhookEvent;
 use App\Domains\Api\Models\Webhook;
+use App\Domains\Api\Requests\StoreWebhookRequest;
+use App\Domains\Api\Requests\UpdateWebhookRequest;
 use App\Domains\Api\Resources\WebhookResource;
 use App\Domains\Organizations\Services\CurrentOrganization;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Http\Controllers\Controller;
-use App\Support\Rules\ValidWebhookUrl;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class WebhookApiController extends Controller
 {
@@ -32,16 +31,11 @@ class WebhookApiController extends Controller
         return new WebhookResource($webhook);
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): JsonResponse
+    public function store(StoreWebhookRequest $request, CurrentOrganization $currentOrg): JsonResponse
     {
         $this->authorize('create', Webhook::class);
 
-        $validated = $request->validate([
-            'url' => ['required', 'url', 'max:2048', new ValidWebhookUrl],
-            'events' => 'required|array|min:1',
-            'events.*' => ['required', 'string', $this->webhookEventRule()],
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $webhook = Webhook::create([
             'organization_id' => $currentOrg->id(),
@@ -57,16 +51,11 @@ class WebhookApiController extends Controller
             ->setStatusCode(201);
     }
 
-    public function update(Request $request, Webhook $webhook): WebhookResource
+    public function update(UpdateWebhookRequest $request, Webhook $webhook): WebhookResource
     {
         $this->authorize('update', $webhook);
 
-        $validated = $request->validate([
-            'url' => ['sometimes', 'url', 'max:2048', new ValidWebhookUrl],
-            'events' => 'sometimes|array|min:1',
-            'events.*' => ['required', 'string', $this->webhookEventRule()],
-            'is_active' => 'sometimes|boolean',
-        ]);
+        $validated = $request->validated();
 
         $webhook->update($validated);
 
@@ -92,14 +81,5 @@ class WebhookApiController extends Controller
             'secret' => $webhook->secret,
             'message' => 'Webhook secret regenerated.',
         ]);
-    }
-
-    private function webhookEventRule(): \Closure
-    {
-        return function (string $attribute, mixed $value, \Closure $fail) {
-            if (! WebhookEvent::isValid($value)) {
-                $fail("The event '{$value}' is not a valid webhook event.");
-            }
-        };
     }
 }

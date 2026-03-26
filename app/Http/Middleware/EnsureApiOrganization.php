@@ -37,12 +37,9 @@ class EnsureApiOrganization
 
         app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($org->id);
 
-        // For organization tokens, register a Gate::before callback so that
-        // policies' org-membership checks (e.g. $user->organizations()->where(...))
-        // are bypassed.  Token abilities are verified via the hasPermissionTo override.
-        if ($token->type === TokenType::Organization) {
-            $this->registerOrgTokenGate();
-        }
+        // Register a Gate::before callback so that token abilities are enforced.
+        // For organization tokens, this also bypasses policies' org-membership checks.
+        $this->registerTokenAbilityGate($token->type);
 
         return $next($request);
     }
@@ -62,22 +59,23 @@ class EnsureApiOrganization
     /**
      * For organization tokens, bypass the policy entirely and let
      * hasPermissionTo (which checks token abilities) be the sole gate.
+     * For personal tokens, additionally check token abilities.
      * Data isolation is enforced by the BelongsToOrganization scope.
      */
-    private function registerOrgTokenGate(): void
+    private function registerTokenAbilityGate(TokenType $tokenType): void
     {
         $permissionMap = TokenPermissionMap::get();
 
-        Gate::before(function (User $user, string $ability, array $arguments) use ($permissionMap) {
+        Gate::before(function (User $user, string $ability, array $arguments) use ($permissionMap, $tokenType) {
             $token = $user->currentAccessToken();
 
-            if (! $token instanceof PersonalAccessToken || ! $token->isOrganization()) {
+            if (! $token instanceof PersonalAccessToken) {
                 return null;
             }
 
             // Wildcard token — allow all actions
             if (in_array('*', $token->abilities)) {
-                return true;
+                return $tokenType === TokenType::Organization ? true : null;
             }
 
             // Resolve the required Spatie permission from the gate context
@@ -89,7 +87,13 @@ class EnsureApiOrganization
                 return null; // unmapped — let the policy decide
             }
 
-            return $token->can($permission->value);
+            if (! $token->can($permission->value)) {
+                return false;
+            }
+
+            // For org tokens, grant access directly (bypass policy)
+            // For personal tokens, return null to let the policy also check
+            return $tokenType === TokenType::Organization ? true : null;
         });
     }
 }

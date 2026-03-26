@@ -4,22 +4,20 @@ namespace App\Domains\Reporting\Controllers;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Reporting\Requests\BalanceSheetRequest;
+use App\Domains\Reporting\Requests\ProfitAndLossRequest;
 use App\Domains\Reporting\Services\ReportingService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ReportController extends Controller
 {
-    public function profitAndLoss(Request $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response
+    public function profitAndLoss(ProfitAndLossRequest $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', Account::class);
 
-        $validated = $request->validate([
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
-        ]);
+        $validated = $request->validated();
 
         $orgId = $currentOrg->id();
         $from = $validated['from'] ?? now()->startOfYear()->toDateString();
@@ -32,13 +30,11 @@ class ReportController extends Controller
         ]);
     }
 
-    public function balanceSheet(Request $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response
+    public function balanceSheet(BalanceSheetRequest $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', Account::class);
 
-        $validated = $request->validate([
-            'as_of_date' => ['nullable', 'date'],
-        ]);
+        $validated = $request->validated();
 
         $orgId = $currentOrg->id();
         $asOfDate = $validated['as_of_date'] ?? now()->toDateString();
