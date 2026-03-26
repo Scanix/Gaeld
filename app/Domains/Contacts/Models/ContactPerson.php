@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Domains\Contacts\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+
+class ContactPerson extends Model
+{
+    use HasUuids;
+
+    protected $fillable = [
+        'contactable_type',
+        'contactable_id',
+        'first_name',
+        'last_name',
+        'email',
+        'phone',
+        'position',
+        'is_primary',
+        'notes',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_primary' => 'boolean',
+        ];
+    }
+
+    public function contactable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->first_name} {$this->last_name}");
+    }
+}
