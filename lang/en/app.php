@@ -230,6 +230,19 @@ return [
     // Accounting
     'posted' => 'Posted',
     'draft' => 'Draft',
+
+    // Invoice statuses
+    'invoice_status_draft' => 'Draft',
+    'invoice_status_sent' => 'Sent',
+    'invoice_status_paid' => 'Paid',
+    'invoice_status_overdue' => 'Overdue',
+    'invoice_status_cancelled' => 'Cancelled',
+
+    // Expense statuses
+    'expense_status_pending' => 'Pending',
+    'expense_status_approved' => 'Approved',
+    'expense_status_posted' => 'Posted',
+
     'year_end_closing_desc' => 'Close income and expense accounts at the end of the fiscal year.',
     'fiscal_year' => 'Fiscal Year',
     'closing_date' => 'Closing Date',

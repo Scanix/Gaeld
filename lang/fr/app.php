@@ -231,6 +231,19 @@ return [
     // Accounting
     'posted' => 'Comptabilisée',
     'draft' => 'Brouillon',
+
+    // Invoice statuses
+    'invoice_status_draft' => 'Brouillon',
+    'invoice_status_sent' => 'Envoyée',
+    'invoice_status_paid' => 'Payée',
+    'invoice_status_overdue' => 'En retard',
+    'invoice_status_cancelled' => 'Annulée',
+
+    // Expense statuses
+    'expense_status_pending' => 'En attente',
+    'expense_status_approved' => 'Approuvée',
+    'expense_status_posted' => 'Comptabilisée',
+
     'year_end_closing_desc' => 'Clôturer les comptes de produits et charges en fin d\'exercice.',
     'fiscal_year' => 'Exercice fiscal',
     'closing_date' => 'Date de clôture',

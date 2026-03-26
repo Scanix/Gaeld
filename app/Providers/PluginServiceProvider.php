@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
 class PluginServiceProvider extends ServiceProvider
@@ -36,12 +37,16 @@ class PluginServiceProvider extends ServiceProvider
         $manifestPath = $pluginDir . '/plugin.json';
 
         if (! File::exists($manifestPath)) {
+            Log::warning("Plugin manifest not found: {$pluginDir}");
+
             return;
         }
 
         $manifest = json_decode(File::get($manifestPath), true);
 
         if (! $manifest || empty($manifest['provider'])) {
+            Log::warning("Plugin manifest invalid or missing provider: {$pluginDir}");
+
             return;
         }
 
@@ -51,6 +56,12 @@ class PluginServiceProvider extends ServiceProvider
 
         // Register the plugin's service provider
         $providerClass = $manifest['provider'];
+
+        if (! str_starts_with($providerClass, 'Plugins\\')) {
+            Log::warning("Plugin provider must be in Plugins\\ namespace, got: {$providerClass}");
+
+            return;
+        }
 
         // Load the plugin's own Composer dependencies if they were installed
         // separately (i.e. `composer install` was run inside the plugin directory).
@@ -80,6 +91,8 @@ class PluginServiceProvider extends ServiceProvider
 
         if (class_exists($providerClass)) {
             $this->app->register($providerClass);
+        } else {
+            Log::warning("Plugin provider class not found: {$providerClass}");
         }
     }
 }

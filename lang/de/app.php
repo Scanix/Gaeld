@@ -231,6 +231,19 @@ return [
     // Accounting
     'posted' => 'Verbucht',
     'draft' => 'Entwurf',
+
+    // Invoice statuses
+    'invoice_status_draft' => 'Entwurf',
+    'invoice_status_sent' => 'Gesendet',
+    'invoice_status_paid' => 'Bezahlt',
+    'invoice_status_overdue' => 'Überfällig',
+    'invoice_status_cancelled' => 'Storniert',
+
+    // Expense statuses
+    'expense_status_pending' => 'Ausstehend',
+    'expense_status_approved' => 'Genehmigt',
+    'expense_status_posted' => 'Verbucht',
+
     'year_end_closing_desc' => 'Aufwand- und Ertragskonten am Ende des Geschäftsjahres abschliessen.',
     'fiscal_year' => 'Geschäftsjahr',
     'closing_date' => 'Abschlussdatum',
