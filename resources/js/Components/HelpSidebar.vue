@@ -25,7 +25,7 @@ defineEmits(['close'])
 
 // Docusaurus i18n: English has no prefix, other languages use /<locale>/docs/<page>
 const localizedPath = computed(() => {
-  const prefix = props.locale && props.locale !== 'en' && props.locale !== 'rm'
+  const prefix = props.locale && props.locale !== 'en'
     ? `/${props.locale}`
     : ''
   return `${prefix}/docs/${props.page}`

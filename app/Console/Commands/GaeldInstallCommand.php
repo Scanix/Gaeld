@@ -58,7 +58,7 @@ class GaeldInstallCommand extends Command
             $adminPassword = $this->secret('Admin password (min 8 chars)') ?? Str::random(16);
             $orgName = $this->ask('Organization name', 'My Company');
             $currency = $this->choice('Default currency', ['CHF', 'EUR', 'USD', 'GBP'], 0);
-            $locale = $this->choice('Default language', ['en', 'fr', 'de', 'it', 'rm'], 0);
+            $locale = $this->choice('Default language', ['en', 'fr', 'de', 'it'], 0);
         }
 
         // Step 4: Create admin + organization
