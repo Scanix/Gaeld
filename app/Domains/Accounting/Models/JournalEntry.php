@@ -60,11 +60,19 @@ class JournalEntry extends Model
 
     public function totalDebit(): string
     {
+        if ($this->relationLoaded('lines')) {
+            return (string) $this->lines->sum('debit');
+        }
+
         return (string) $this->lines()->sum('debit');
     }
 
     public function totalCredit(): string
     {
+        if ($this->relationLoaded('lines')) {
+            return (string) $this->lines->sum('credit');
+        }
+
         return (string) $this->lines()->sum('credit');
     }
 }
