@@ -73,14 +73,18 @@ task('deploy:worker:restart', function () {
 
 task('deploy:ee:plugin', function () {
     $eeRepo = getenv('EE_REPO') ?: 'git@gitlab.nectoria.com:nectoria/products/gaeld/gaeld-ee.git';
+    $cachePath = '{{deploy_path}}/shared/gaeld-ee';
     $pluginPath = '{{release_path}}/plugins/gaeld-ee';
 
-    // Clone or update EE plugin into the release
-    if (test("[ -d {$pluginPath} ]")) {
-        run("cd {$pluginPath} && git pull origin main");
+    // Clone or update cached EE repo in shared dir
+    if (test("[ -d {$cachePath} ]")) {
+        run("cd {$cachePath} && git fetch origin && git reset --hard origin/main");
     } else {
-        run("git clone {$eeRepo} {$pluginPath}");
+        run("git clone {$eeRepo} {$cachePath}");
     }
+
+    // Copy cached repo into the release
+    run("cp -a {$cachePath} {$pluginPath}");
 
     // Install EE plugin dependencies
     run("cd {$pluginPath} && {{bin/composer}} install --no-dev --no-interaction --prefer-dist --optimize-autoloader");
@@ -91,8 +95,12 @@ task('deploy:sync:permissions', function () {
 })->desc('Sync RBAC permissions');
 
 task('deploy:opcache:clear', function () {
-    run('cd {{release_path}} && {{bin/php}} artisan opcache:clear');
+    run('cd {{release_path}} && {{bin/php}} artisan opcache:clear 2>/dev/null || true');
 })->desc('Clear OPcache after deploy');
+
+task('deploy:meilisearch:sync', function () {
+    run('cd {{release_path}} && {{bin/php}} artisan scout:sync-index-settings 2>/dev/null || true');
+})->desc('Sync MeiliSearch index settings');
 
 // --- Deployment flow ---
 task('deploy', [
@@ -108,6 +116,7 @@ task('deploy', [
     'artisan:view:cache',
     'artisan:event:cache',
     'deploy:sync:permissions',
+    'deploy:meilisearch:sync',
     'deploy:permissions',
     'deploy:fpm:restart',
     'deploy:publish',
