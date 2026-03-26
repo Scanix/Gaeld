@@ -18,4 +18,12 @@ return [
         'CHF', 'EUR', 'USD', 'GBP',
     ],
 
+    'supported_locales' => ['en', 'fr', 'de', 'it', 'rm'],
+
+    'pagination' => [
+        'default' => 20,
+        'webhooks' => 25,
+        'reconciliation' => 30,
+    ],
+
 ];

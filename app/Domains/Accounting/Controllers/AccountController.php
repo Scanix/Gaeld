@@ -102,7 +102,7 @@ class AccountController extends Controller
         $this->authorize('create', Account::class);
 
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt,json|max:2048',
+            'file' => 'required|file|mimes:'.config('uploads.allowed_mimes.import').'|max:'.config('uploads.max_size.import'),
             'mode' => 'required|in:add,replace',
         ]);
 

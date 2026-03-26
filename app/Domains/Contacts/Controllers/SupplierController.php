@@ -67,7 +67,7 @@ class SupplierController extends Controller
         }
 
         return redirect()->route('suppliers.show', $supplier)
-            ->with('success', 'Supplier created.');
+            ->with('success', __('app.supplier_created'));
     }
 
     public function show(Supplier $supplier): Response
@@ -97,7 +97,7 @@ class SupplierController extends Controller
         $supplier->update(UpdateSupplierData::fromArray($validated)->toArray());
 
         return redirect()->route('suppliers.show', $supplier)
-            ->with('success', 'Supplier updated.');
+            ->with('success', __('app.supplier_updated'));
     }
 
     public function destroy(Supplier $supplier): RedirectResponse
@@ -107,6 +107,6 @@ class SupplierController extends Controller
         $supplier->delete();
 
         return redirect()->route('suppliers.index')
-            ->with('success', 'Supplier deleted.');
+            ->with('success', __('app.supplier_deleted'));
     }
 }

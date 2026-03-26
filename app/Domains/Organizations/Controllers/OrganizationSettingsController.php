@@ -6,17 +6,22 @@ use App\Domains\Organizations\Actions\UpdateOrganizationAction;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Organizations\Requests\UpdateOrganizationSettingsRequest;
 use App\Http\Controllers\Controller;
+use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrganizationSettingsController extends Controller
 {
+    public function __construct(
+        private FileUploadService $uploadService,
+    ) {}
+
     public function show(CurrentOrganization $currentOrg): Response
     {
         $organization = $currentOrg->get();
@@ -29,27 +34,11 @@ class OrganizationSettingsController extends Controller
         ]);
     }
 
-    public function updateGeneral(Request $request, CurrentOrganization $currentOrg, UpdateOrganizationAction $action): RedirectResponse
+    public function updateGeneral(UpdateOrganizationSettingsRequest $request, CurrentOrganization $currentOrg, UpdateOrganizationAction $action): RedirectResponse
     {
         $organization = $currentOrg->get();
-        $this->authorize('update', $organization);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'legal_name' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:10',
-            'canton' => 'nullable|string|size:2',
-            'country' => 'nullable|string|size:2',
-            'vat_number' => 'nullable|string|max:50',
-            'currency' => 'string|size:3',
-            'locale' => ['string', Rule::in(config('accounting.supported_locales'))],
-            'require_two_factor' => 'sometimes|boolean',
-            'default_payment_terms_days' => 'sometimes|integer|min:0|max:365',
-        ]);
-
-        $action->execute($organization, UpdateOrganizationData::fromArray($validated));
+        $action->execute($organization, UpdateOrganizationData::fromArray($request->validated()));
 
         return redirect()->route('settings')
             ->with('success', __('app.organization_updated'));
@@ -81,11 +70,9 @@ class OrganizationSettingsController extends Controller
         ]);
 
         // Delete old logo if it exists
-        if ($organization->logo_path && Storage::disk('local')->exists($organization->logo_path)) {
-            Storage::disk('local')->delete($organization->logo_path);
-        }
+        $this->uploadService->delete($organization->logo_path);
 
-        $path = $request->file('logo')->store("logos/{$organization->id}", 'local');
+        $path = $this->uploadService->store($request->file('logo'), "logos/{$organization->id}");
 
         $organization->update(['logo_path' => $path]);
 
@@ -98,9 +85,7 @@ class OrganizationSettingsController extends Controller
         $organization = $currentOrg->get();
         $this->authorize('update', $organization);
 
-        if ($organization->logo_path && Storage::disk('local')->exists($organization->logo_path)) {
-            Storage::disk('local')->delete($organization->logo_path);
-        }
+        $this->uploadService->delete($organization->logo_path);
 
         $organization->update(['logo_path' => null]);
 

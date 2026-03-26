@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -11,6 +11,8 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
+import { useFormValidation } from '@/lib/useFormValidation'
 import { Plus, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -32,6 +34,15 @@ const form = useForm({
   justificatif: null,
 })
 
+useUnsavedChanges(computed(() => form.isDirty))
+
+const { errors: clientErrors, validate, validateField } = useFormValidation({
+  customer_id: { required: true },
+  number: { required: true, maxLength: 50 },
+  issue_date: { required: true },
+  due_date: { required: true },
+})
+
 function addLine() {
   form.lines.push({ description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
 }
@@ -43,6 +54,7 @@ function removeLine(index) {
 }
 
 function submit() {
+  if (!validate(form.data())) return
   form.post('/invoices', { forceFormData: true })
 }
 
@@ -83,9 +95,10 @@ const vatOptions = [
                 :label="t('client')"
                 :options="clientOptions"
                 :placeholder="t('select_client')"
-                :error="form.errors.customer_id"
+                :error="form.errors.customer_id || clientErrors.customer_id"
                 required
                 class="flex-1"
+                @blur="validateField('customer_id', form.customer_id)"
               />
               <Button
                 type="button"
@@ -103,24 +116,27 @@ const vatOptions = [
               v-model="form.number"
               :label="t('invoice_number')"
               placeholder="INV-001"
-              :error="form.errors.number"
+              :error="form.errors.number || clientErrors.number"
               required
+              @blur="validateField('number', form.number)"
             />
             <FormInput
               id="issue_date"
               v-model="form.issue_date"
               type="date"
               :label="t('issue_date')"
-              :error="form.errors.issue_date"
+              :error="form.errors.issue_date || clientErrors.issue_date"
               required
+              @blur="validateField('issue_date', form.issue_date)"
             />
             <FormInput
               id="due_date"
               v-model="form.due_date"
               type="date"
               :label="t('due_date')"
-              :error="form.errors.due_date"
+              :error="form.errors.due_date || clientErrors.due_date"
               required
+              @blur="validateField('due_date', form.due_date)"
             />
           </div>
 

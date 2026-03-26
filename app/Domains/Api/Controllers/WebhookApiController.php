@@ -20,7 +20,7 @@ class WebhookApiController extends Controller
 
         $webhooks = Webhook::query()
             ->orderBy('created_at', 'desc')
-            ->paginate(25);
+            ->paginate(config('accounting.pagination.webhooks'));
 
         return WebhookResource::collection($webhooks);
     }

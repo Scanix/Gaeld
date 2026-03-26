@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -9,6 +10,7 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 
 const { t } = useTranslations()
 
@@ -31,6 +33,8 @@ const form = useForm({
   default_expense_category: props.supplier.default_expense_category ?? '',
   internal_notes: props.supplier.internal_notes ?? '',
 })
+
+useUnsavedChanges(computed(() => form.isDirty))
 
 function submit() {
   form.put(`/suppliers/${props.supplier.id}`)

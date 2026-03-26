@@ -49,6 +49,6 @@ class SetupWizardController extends Controller
         Auth::login($user);
 
         return redirect()->route('dashboard')
-            ->with('success', 'Welcome to Gäld! Your organization has been set up.');
+            ->with('success', __('app.welcome_setup'));
     }
 }

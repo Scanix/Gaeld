@@ -66,7 +66,7 @@ class CustomerController extends Controller
         }
 
         return redirect()->route('customers.show', $customer)
-            ->with('success', 'Customer created.');
+            ->with('success', __('app.customer_created'));
     }
 
     public function show(Customer $customer): Response
@@ -96,7 +96,7 @@ class CustomerController extends Controller
         $customer->update(UpdateCustomerData::fromArray($validated)->toArray());
 
         return redirect()->route('customers.show', $customer)
-            ->with('success', 'Customer updated.');
+            ->with('success', __('app.customer_updated'));
     }
 
     public function destroy(Customer $customer): RedirectResponse
@@ -106,6 +106,6 @@ class CustomerController extends Controller
         $customer->delete();
 
         return redirect()->route('customers.index')
-            ->with('success', 'Customer deleted.');
+            ->with('success', __('app.customer_deleted'));
     }
 }

@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -9,6 +10,7 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 
 const { t } = useTranslations()
 
@@ -25,6 +27,8 @@ const form = useForm({
   payment_terms: '',
   internal_notes: '',
 })
+
+useUnsavedChanges(computed(() => form.isDirty))
 
 function submit() {
   form.post('/customers')

@@ -38,7 +38,7 @@ class UserController extends Controller
         $userService->updateProfile($request->user(), UpdateUserProfileData::fromArray($validated));
 
         return redirect()->route('profile')
-            ->with('success', 'Profile updated.');
+            ->with('success', __('app.profile_updated'));
     }
 
     public function updatePassword(Request $request, UserService $userService): RedirectResponse
@@ -53,7 +53,7 @@ class UserController extends Controller
         $userService->updatePassword($request->user(), $validated['password']);
 
         return redirect()->route('profile')
-            ->with('success', 'Password updated.');
+            ->with('success', __('app.password_updated'));
     }
 
     public function toggleHelp(Request $request, UserService $userService): RedirectResponse
@@ -113,6 +113,6 @@ class UserController extends Controller
 
         $userService->deleteAccount($user);
 
-        return redirect('/login')->with('success', 'Your account has been permanently deleted.');
+        return redirect('/login')->with('success', __('app.account_deleted'));
     }
 }

@@ -71,7 +71,7 @@ class ReconciliationController extends Controller
             $transactionsQuery->where('is_reconciled', true);
         }
 
-        $transactions = $transactionsQuery->paginate(30);
+        $transactions = $transactionsQuery->paginate(config('accounting.pagination.reconciliation'));
 
         // Only generate suggestions for unreconciled transactions on the current page
         // to avoid N+1 query storms across already-reconciled items
@@ -101,7 +101,7 @@ class ReconciliationController extends Controller
         $this->authorize('update', $bankAccount);
 
         $request->validate([
-            'camt_file' => 'required|file|max:10240', // 10MB max
+            'camt_file' => 'required|file|max:'.config('uploads.max_size.document'),
         ]);
 
         $file = $request->file('camt_file');
@@ -115,7 +115,7 @@ class ReconciliationController extends Controller
             $import = $this->importService->importCamtFile($bankAccount, $xml, $filename);
 
             return redirect()->route('reconciliation.show', $bankAccount)
-                ->with('success', "{$import->transaction_count} transactions imported from {$filename}.");
+                ->with('success', __('app.transactions_imported', ['count' => $import->transaction_count, 'filename' => $filename]));
         } catch (\InvalidArgumentException|\RuntimeException $e) {
             return redirect()->back()
                 ->with('error', $e->getMessage());
@@ -148,7 +148,7 @@ class ReconciliationController extends Controller
         }
 
         return redirect()->back()
-            ->with('success', "Transaction reconciled with invoice {$invoice->number}.");
+            ->with('success', __('app.transaction_reconciled_invoice', ['number' => $invoice->number]));
     }
 
     /**
@@ -182,7 +182,7 @@ class ReconciliationController extends Controller
         }
 
         return redirect()->back()
-            ->with('success', 'Transaction reconciled with expense.');
+            ->with('success', __('app.transaction_reconciled_expense'));
     }
 
     /**
@@ -207,7 +207,7 @@ class ReconciliationController extends Controller
         }
 
         return redirect()->back()
-            ->with('success', 'Transaction reconciled.');
+            ->with('success', __('app.transaction_reconciled'));
     }
 
     /**
@@ -225,7 +225,7 @@ class ReconciliationController extends Controller
         }
 
         return redirect()->back()
-            ->with('success', "Match confirmed and payment recorded for invoice {$match->invoice->number}.");
+            ->with('success', __('app.match_confirmed', ['number' => $match->invoice->number]));
     }
 
     /**
@@ -242,6 +242,6 @@ class ReconciliationController extends Controller
         }
 
         return redirect()->back()
-            ->with('success', "Auto-reconciliation complete: {$result['matched']} matched, {$result['unmatched']} unmatched.");
+            ->with('success', __('app.auto_reconciliation_complete', ['matched' => $result['matched'], 'unmatched' => $result['unmatched']]));
     }
 }
