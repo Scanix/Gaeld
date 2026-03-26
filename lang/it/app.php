@@ -231,6 +231,19 @@ return [
     // Accounting
     'posted' => 'Registrata',
     'draft' => 'Bozza',
+
+    // Invoice statuses
+    'invoice_status_draft' => 'Bozza',
+    'invoice_status_sent' => 'Inviata',
+    'invoice_status_paid' => 'Pagata',
+    'invoice_status_overdue' => 'Scaduta',
+    'invoice_status_cancelled' => 'Annullata',
+
+    // Expense statuses
+    'expense_status_pending' => 'In attesa',
+    'expense_status_approved' => 'Approvata',
+    'expense_status_posted' => 'Registrata',
+
     'year_end_closing_desc' => 'Chiudere i conti di ricavo e di costo alla fine dell\'esercizio fiscale.',
     'fiscal_year' => 'Esercizio fiscale',
     'closing_date' => 'Data di chiusura',
