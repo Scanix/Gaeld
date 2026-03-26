@@ -10,6 +10,7 @@ class InvitationNotification extends Notification
 {
     public function __construct(
         private readonly OrganizationInvitation $invitation,
+        private readonly string $plainToken = '',
     ) {}
 
     public function via(object $notifiable): array
@@ -20,7 +21,8 @@ class InvitationNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $orgName = $this->invitation->organization->name;
-        $url = url("/invitations/{$this->invitation->token}/accept");
+        $token = $this->plainToken ?: $this->invitation->token;
+        $url = url("/invitations/{$token}/accept");
 
         return (new MailMessage)
             ->subject(__('app.invitation_email_subject', ['organization' => $orgName]))

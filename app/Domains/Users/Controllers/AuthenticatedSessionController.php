@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,6 +29,12 @@ class AuthenticatedSessionController extends Controller
             'email' => $credentials['email'],
             'password' => $credentials['password'],
         ], $remember)) {
+            Log::channel('stack')->warning('Failed login attempt', [
+                'email' => $credentials['email'],
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
             throw ValidationException::withMessages([
                 'email' => 'The provided credentials do not match our records.',
             ]);
@@ -51,6 +58,13 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
+
+        Log::channel('stack')->info('User logged in', [
+            'user_id' => Auth::id(),
+            'email' => Auth::user()->email,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         return redirect()->intended(route('dashboard'));
     }
