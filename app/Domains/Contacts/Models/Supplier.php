@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
@@ -49,6 +50,11 @@ class Supplier extends Model
     public function expenses(): HasMany
     {
         return $this->hasMany(\App\Domains\Expenses\Models\Expense::class);
+    }
+
+    public function contactPersons(): MorphMany
+    {
+        return $this->morphMany(ContactPerson::class, 'contactable');
     }
 
     // ──────────────────────────────────────────────────────────────
