@@ -68,6 +68,7 @@ return [
     'duplicate' => 'Duplicate',
     'finalize' => 'Finalize',
     'search' => 'Search…',
+    'clear_search' => 'Clear search',
     'all_statuses' => 'All statuses',
     'all_countries' => 'All countries',
 

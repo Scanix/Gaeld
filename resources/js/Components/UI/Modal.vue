@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { X } from 'lucide-vue-next'
 import Button from './Button.vue'
 
@@ -15,14 +15,42 @@ const emit = defineEmits(['close'])
 
 const dialogRef = ref(null)
 
+const FOCUSABLE_SELECTORS = [
+  'a[href]',
+  'button:not([disabled])',
+  'textarea:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ')
+
+function getFocusableEls() {
+  return dialogRef.value ? [...dialogRef.value.querySelectorAll(FOCUSABLE_SELECTORS)] : []
+}
+
 function onKeydown(e) {
-  if (e.key === 'Escape') emit('close')
+  if (e.key === 'Escape') {
+    emit('close')
+    return
+  }
+  if (e.key === 'Tab') {
+    const els = getFocusableEls()
+    if (!els.length) { e.preventDefault(); return }
+    const first = els[0]
+    const last = els[els.length - 1]
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus() }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus() }
+    }
+  }
 }
 
 watch(isOpen, (val) => {
   if (val) {
     document.addEventListener('keydown', onKeydown)
     document.body.style.overflow = 'hidden'
+    nextTick(() => dialogRef.value?.focus())
   } else {
     document.removeEventListener('keydown', onKeydown)
     document.body.style.overflow = ''
@@ -44,11 +72,13 @@ onBeforeUnmount(() => {
           ref="dialogRef"
           role="dialog"
           aria-modal="true"
-          class="relative z-50 mx-4 w-full max-w-lg rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-4 shadow-lg sm:mx-auto sm:p-6"
+          aria-labelledby="modal-title"
+          tabindex="-1"
+          class="relative z-50 mx-4 w-full max-w-lg rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-4 shadow-lg sm:mx-auto sm:p-6 outline-none"
         >
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold">{{ title }}</h2>
-            <Button variant="ghost" size="icon" @click="$emit('close')">
+            <h2 id="modal-title" class="text-lg font-semibold">{{ title }}</h2>
+            <Button variant="ghost" size="icon" aria-label="Close" @click="$emit('close')">
               <X class="h-4 w-4" />
             </Button>
           </div>
