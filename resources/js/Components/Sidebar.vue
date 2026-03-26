@@ -109,6 +109,7 @@ function isGroupActive(item) {
       </Link>
       <button
         class="ml-2 rounded p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] lg:hidden"
+        aria-label="Close navigation"
         @click="emit('closeMobile')"
       >
         <X class="h-5 w-5" />
@@ -120,6 +121,8 @@ function isGroupActive(item) {
       <button
         class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-[hsl(var(--sidebar-foreground))] transition-colors hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
         :class="collapsed ? 'justify-center' : ''"
+        :aria-expanded="hasMultipleOrgs ? showOrgMenu : undefined"
+        :aria-haspopup="hasMultipleOrgs ? 'listbox' : undefined"
         @click="hasMultipleOrgs ? (showOrgMenu = !showOrgMenu) : undefined"
       >
         <Building2 class="h-4 w-4 shrink-0" />
@@ -153,6 +156,8 @@ function isGroupActive(item) {
         <div v-if="item.children">
           <Link
             :href="item.href"
+            :title="collapsed ? t(item.key) : undefined"
+            :aria-current="isGroupActive(item) ? 'page' : undefined"
             :class="[
               'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
               isGroupActive(item)
@@ -183,6 +188,8 @@ function isGroupActive(item) {
         <Link
           v-else
           :href="item.href"
+          :title="collapsed ? t(item.key) : undefined"
+          :aria-current="isActive(item.href) ? 'page' : undefined"
           :class="[
             'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
             isActive(item.href)
@@ -202,6 +209,8 @@ function isGroupActive(item) {
           v-for="item in billingNav"
           :key="item.key"
           :href="item.href"
+          :title="collapsed ? t(item.key) : undefined"
+          :aria-current="isActive(item.href) ? 'page' : undefined"
           :class="[
             'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
             isActive(item.href)
@@ -219,6 +228,7 @@ function isGroupActive(item) {
     <div class="hidden border-t border-[hsl(var(--sidebar-border))] p-3 lg:block">
       <button
         class="flex w-full items-center justify-center rounded-lg p-2 text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+        :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
         @click="emit('update:collapsed', !collapsed)"
       >
         <ChevronLeft v-if="!collapsed" class="h-4 w-4" />

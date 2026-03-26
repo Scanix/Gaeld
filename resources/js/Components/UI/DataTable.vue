@@ -119,6 +119,7 @@ const hasToolbar = computed(() => props.searchable || props.filters.length > 0)
         <button
           v-if="localSearch"
           class="absolute right-2 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+          :aria-label="t('clear_search')"
           @click="clearSearch"
         >
           <X class="h-4 w-4" />
@@ -147,6 +148,8 @@ const hasToolbar = computed(() => props.searchable || props.filters.length > 0)
             <th
               v-for="col in columns"
               :key="col.key"
+              scope="col"
+              :aria-sort="col.sortable ? (sort === col.key ? (direction === 'asc' ? 'ascending' : 'descending') : 'none') : undefined"
               :class="[
                 'px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]',
                 col.class,

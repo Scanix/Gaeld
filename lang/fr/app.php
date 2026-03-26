@@ -69,6 +69,7 @@ return [
     'duplicate' => 'Dupliquer',
     'finalize' => 'Finaliser',
     'search' => 'Rechercher…',
+    'clear_search' => 'Effacer la recherche',
     'all_statuses' => 'Tous les statuts',
     'all_countries' => 'Tous les pays',
 

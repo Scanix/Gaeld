@@ -42,6 +42,12 @@ const showPastDueBanner = computed(() => subscription.value?.status === 'past_du
 </script>
 
 <template>
+  <a
+    href="#main-content"
+    class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded focus:bg-[hsl(var(--background))] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:ring-2 focus:ring-[hsl(var(--ring))]"
+  >
+    Skip to content
+  </a>
   <Head :title="title" />
 
   <!-- Early Beta Banner -->
@@ -104,7 +110,7 @@ const showPastDueBanner = computed(() => subscription.value?.status === 'past_du
         </template>
       </Topbar>
 
-      <main class="p-4 sm:p-6">
+      <main id="main-content" class="p-4 sm:p-6">
         <div v-if="flash.success" class="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
           {{ flash.success }}
         </div>
