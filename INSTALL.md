@@ -11,8 +11,8 @@
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/gaeld/gaeld-app.git
-cd gaeld-app
+git clone https://github.com/Scanix/Gaeld.git
+cd Gaeld
 
 # 2. Copy environment file
 cp .env.example .env
@@ -66,8 +66,8 @@ After seeding:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/gaeld/gaeld-app.git
-cd gaeld-app
+git clone https://github.com/Scanix/Gaeld.git
+cd Gaeld
 
 # 2. Install PHP dependencies
 composer install

@@ -9,8 +9,11 @@ use App\Support\Listeners\AuthAuditSubscriber;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +25,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Sanctum::usePersonalAccessTokenModel(\App\Domains\Api\Models\PersonalAccessToken::class);
+
+        RateLimiter::for('api', function (\Illuminate\Http\Request $request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
         Password::defaults(fn () => Password::min(12)
             ->letters()
             ->mixedCase()
@@ -31,5 +39,8 @@ class AppServiceProvider extends ServiceProvider
 
         Event::subscribe(AuthAuditSubscriber::class);
         Event::listen(Registered::class, SendEmailVerificationNotification::class);
+
+        Gate::policy(\App\Domains\Contacts\Models\Customer::class, \App\Domains\Contacts\Policies\ContactPolicy::class);
+        Gate::policy(\App\Domains\Contacts\Models\Supplier::class, \App\Domains\Contacts\Policies\ContactPolicy::class);
     }
 }

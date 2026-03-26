@@ -26,6 +26,7 @@
         "tailwind-merge": "^3.5.0",
         "vanilla-cookieconsent": "^3.1.0",
         "vue": "^3.5.30",
-        "vue-chartjs": "^5.3.3"
+        "vue-chartjs": "^5.3.3",
+        "zod": "^4.3.6"
     }
 }

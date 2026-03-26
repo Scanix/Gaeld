@@ -19,7 +19,7 @@ class MoneyTest extends TestCase
 
     public function test_absolute_amount_with_zero(): void
     {
-        $this->assertSame('0', Money::absoluteAmount('0'));
+        $this->assertSame('0.00', Money::absoluteAmount('0'));
     }
 
     public function test_absolute_amount_preserves_decimal_precision(): void

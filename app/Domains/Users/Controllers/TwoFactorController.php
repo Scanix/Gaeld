@@ -10,6 +10,7 @@ use BaconQrCode\Writer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Google2FA;
 
@@ -70,10 +71,12 @@ class TwoFactorController extends Controller
 
         $recoveryCodes = $this->generateRecoveryCodes();
 
-        $user->forceFill([
-            'two_factor_confirmed_at' => now(),
-            'two_factor_recovery_codes' => $recoveryCodes->all(),
-        ])->save();
+        DB::transaction(function () use ($user, $recoveryCodes) {
+            $user->forceFill([
+                'two_factor_confirmed_at' => now(),
+                'two_factor_recovery_codes' => $recoveryCodes->all(),
+            ])->save();
+        });
 
         return redirect()->route('profile')
             ->with('twoFactor', [
@@ -136,9 +139,11 @@ class TwoFactorController extends Controller
 
         $recoveryCodes = $this->generateRecoveryCodes();
 
-        $user->forceFill([
-            'two_factor_recovery_codes' => $recoveryCodes->all(),
-        ])->save();
+        DB::transaction(function () use ($user, $recoveryCodes) {
+            $user->forceFill([
+                'two_factor_recovery_codes' => $recoveryCodes->all(),
+            ])->save();
+        });
 
         return redirect()->route('profile')
             ->with('twoFactor', [
@@ -149,7 +154,7 @@ class TwoFactorController extends Controller
 
     private function generateRecoveryCodes(): Collection
     {
-        return Collection::times(8, fn () => Str::random(8) . '-' . Str::random(8));
+        return Collection::times(8, fn () => Str::random(16));
     }
 
     private function generateQrCodeSvg(string $url): string

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Contacts\Models;
 
+use App\Domains\Contacts\Enums\ContactType;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
@@ -54,7 +55,8 @@ class Customer extends Model
     protected function casts(): array
     {
         return [
-            'notes' => 'array', // multi-language JSON
+            'notes' => 'array',
+            'type' => ContactType::class,
         ];
     }
 

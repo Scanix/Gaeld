@@ -9,13 +9,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Laragear\WebAuthn\Contracts\WebAuthnAuthenticatable;
 use Laragear\WebAuthn\WebAuthnAuthentication;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, WebAuthnAuthenticatable
 {
-    use HasFactory, HasRoles, Notifiable, WebAuthnAuthentication;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, WebAuthnAuthentication;
 
     protected $fillable = [
         'name',
