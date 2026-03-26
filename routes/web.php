@@ -5,6 +5,7 @@ use App\Domains\Accounting\Controllers\AccountingController;
 use App\Domains\Accounting\Controllers\YearEndClosingController;
 use App\Domains\Banking\Controllers\BankingController;
 use App\Domains\Banking\Controllers\ReconciliationController;
+use App\Domains\Contacts\Controllers\ContactPersonController;
 use App\Domains\Contacts\Controllers\CustomerController;
 use App\Domains\Contacts\Controllers\SupplierController;
 use App\Domains\Expenses\Controllers\ExpenseController;
@@ -12,6 +13,7 @@ use App\Domains\Invoicing\Controllers\InvoiceController;
 use App\Domains\Organizations\Controllers\InvitationController;
 use App\Domains\Organizations\Controllers\MemberController;
 use App\Domains\Organizations\Controllers\OrganizationController;
+use App\Domains\Organizations\Controllers\OrganizationSettingsController;
 use App\Domains\Organizations\Controllers\OnboardingController;
 use App\Domains\Reporting\Controllers\ReportController;
 use App\Domains\Users\Controllers\AuthenticatedSessionController;
@@ -107,9 +109,9 @@ Route::middleware(['auth', 'verified', 'org', 'org-2fa'])->group(function () {
     Route::post('/invoices/{invoice}/finalize', [InvoiceController::class, 'finalize'])->name('invoices.finalize');
     Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment'])->name('invoices.payment');
     Route::post('/invoices/{invoice}/duplicate', [InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
-    Route::get('/invoices/{invoice}/qr-pdf', [InvoiceController::class, 'downloadQrPdf'])->name('invoices.qr-pdf');
+    Route::get('/invoices/{invoice}/qr-pdf', [InvoiceController::class, 'downloadQrPdf'])->middleware('throttle:30,1')->name('invoices.qr-pdf');
     Route::delete('/invoices/{invoice}/justificatif', [InvoiceController::class, 'removeJustificatif'])->name('invoices.justificatif.remove');
-    Route::get('/invoices/{invoice}/justificatif', [InvoiceController::class, 'downloadJustificatif'])->name('invoices.justificatif.download');
+    Route::get('/invoices/{invoice}/justificatif', [InvoiceController::class, 'downloadJustificatif'])->middleware('throttle:30,1')->name('invoices.justificatif.download');
 
     // Expenses
     Route::post('/expenses/scan-receipt', [ExpenseController::class, 'scanReceipt'])->name('expenses.scan-receipt');
@@ -118,7 +120,7 @@ Route::middleware(['auth', 'verified', 'org', 'org-2fa'])->group(function () {
     Route::post('/expenses/{expense}/approve', [ExpenseController::class, 'approve'])->name('expenses.approve');
     Route::post('/expenses/{expense}/post', [ExpenseController::class, 'postToLedger'])->name('expenses.post');
     Route::delete('/expenses/{expense}/receipt', [ExpenseController::class, 'removeReceipt'])->name('expenses.receipt.remove');
-    Route::get('/expenses/{expense}/receipt', [ExpenseController::class, 'downloadReceipt'])->name('expenses.receipt.download');
+    Route::get('/expenses/{expense}/receipt', [ExpenseController::class, 'downloadReceipt'])->middleware('throttle:30,1')->name('expenses.receipt.download');
 
     // Reports
     Route::get('/reports/profit-and-loss', [ReportController::class, 'profitAndLoss'])->name('reports.pnl');
@@ -153,13 +155,22 @@ Route::middleware(['auth', 'verified', 'org', 'org-2fa'])->group(function () {
     Route::resource('organizations', OrganizationController::class)->only(['index', 'show', 'store', 'update']);
     Route::post('/organizations/{organization}/switch', [OrganizationController::class, 'switchOrganization'])->name('organizations.switch');
 
+    // Organization settings
+    Route::get('/settings', [OrganizationSettingsController::class, 'show'])->name('settings');
+    Route::put('/settings/general', [OrganizationSettingsController::class, 'updateGeneral'])->name('settings.general');
+    Route::put('/settings/invoice', [OrganizationSettingsController::class, 'updateInvoice'])->name('settings.invoice');
+    Route::post('/settings/invoice/logo', [OrganizationSettingsController::class, 'uploadLogo'])->name('settings.logo.upload');
+    Route::delete('/settings/invoice/logo', [OrganizationSettingsController::class, 'deleteLogo'])->name('settings.logo.delete');
+    Route::get('/settings/logo', [OrganizationSettingsController::class, 'serveLogo'])->name('settings.logo');
+    Route::put('/settings/communications', [OrganizationSettingsController::class, 'updateCommunications'])->name('settings.communications');
+
     // Organization members
     Route::post('/organizations/{organization}/members/{user}/role', [MemberController::class, 'updateRole'])->name('organizations.members.updateRole');
     Route::delete('/organizations/{organization}/members/{user}', [MemberController::class, 'remove'])->name('organizations.members.remove');
     Route::post('/organizations/{organization}/leave', [MemberController::class, 'leave'])->name('organizations.leave');
 
     // Organization invitations
-    Route::post('/organizations/{organization}/invitations', [InvitationController::class, 'store'])->name('organizations.invitations.store');
+    Route::post('/organizations/{organization}/invitations', [InvitationController::class, 'store'])->middleware('throttle:10,60')->name('organizations.invitations.store');
     Route::delete('/organizations/{organization}/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('organizations.invitations.destroy');
     Route::post('/organizations/{organization}/invitations/{invitation}/resend', [InvitationController::class, 'resend'])->name('organizations.invitations.resend');
 
@@ -190,4 +201,15 @@ Route::middleware(['auth', 'verified', 'org', 'org-2fa'])->group(function () {
 
     // Contacts — Suppliers (CE)
     Route::resource('suppliers', SupplierController::class);
+
+    // Contact persons (nested under customers/suppliers)
+    Route::post('/{contactableType}/{contactableId}/contact-persons', [ContactPersonController::class, 'store'])
+        ->where('contactableType', 'customers|suppliers')
+        ->name('contact-persons.store');
+    Route::put('/{contactableType}/{contactableId}/contact-persons/{contactPerson}', [ContactPersonController::class, 'update'])
+        ->where('contactableType', 'customers|suppliers')
+        ->name('contact-persons.update');
+    Route::delete('/{contactableType}/{contactableId}/contact-persons/{contactPerson}', [ContactPersonController::class, 'destroy'])
+        ->where('contactableType', 'customers|suppliers')
+        ->name('contact-persons.destroy');
 });

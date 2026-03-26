@@ -72,6 +72,14 @@ task('deploy:worker:restart', function () {
     run('sudo systemctl restart gaeld-worker');
 })->desc('Restart gaeld-worker systemd service after deploy');
 
+task('deploy:sync:permissions', function () {
+    run('cd {{release_path}} && {{bin/php}} artisan gaeld:sync-permissions');
+})->desc('Sync RBAC permissions');
+
+task('deploy:meilisearch:sync', function () {
+    run('cd {{release_path}} && {{bin/php}} artisan scout:sync-index-settings 2>/dev/null || true');
+})->desc('Sync MeiliSearch index settings (skipped if driver is not meilisearch)');
+
 // --- Deployment flow ---
 task('deploy', [
     'deploy:prepare',
@@ -84,6 +92,8 @@ task('deploy', [
     'artisan:route:cache',
     'artisan:view:cache',
     'artisan:event:cache',
+    'deploy:sync:permissions',
+    'deploy:meilisearch:sync',
     'deploy:permissions',
     'deploy:fpm:restart',
     'deploy:publish',
