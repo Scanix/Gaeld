@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Head, usePage, Link } from '@inertiajs/vue3'
 
 const betaDismissed = ref(
@@ -12,7 +12,9 @@ function dismissBeta() {
 import Sidebar from '@/Components/Sidebar.vue'
 import Topbar from '@/Components/Topbar.vue'
 import HelpSidebar from '@/Components/HelpSidebar.vue'
+import ToastContainer from '@/Components/ToastContainer.vue'
 import { useHelp } from '@/lib/useHelp'
+import { useToast } from '@/lib/useToast'
 
 const props = defineProps({
   title: String,
@@ -32,6 +34,14 @@ const mobileOpen = ref(false)
 
 const subscription = computed(() => page.props.auth?.subscription ?? null)
 const flash = computed(() => page.props.flash || {})
+
+// Convert flash messages to toasts
+const { toast } = useToast()
+watch(flash, (f) => {
+  if (f.success) toast(f.success, 'success')
+  if (f.error) toast(f.error, 'error')
+}, { immediate: true })
+
 const trialDaysLeft = computed(() => {
   if (subscription.value?.status !== 'trialing' || !subscription.value?.trial_ends_at) return null
   const diff = Math.ceil((new Date(subscription.value.trial_ends_at) - new Date()) / 86400000)
@@ -111,15 +121,11 @@ const showPastDueBanner = computed(() => subscription.value?.status === 'past_du
       </Topbar>
 
       <main id="main-content" class="p-4 sm:p-6">
-        <div v-if="flash.success" class="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-          {{ flash.success }}
-        </div>
-        <div v-if="flash.error" class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
-          {{ flash.error }}
-        </div>
         <slot />
       </main>
     </div>
+
+    <ToastContainer />
 
     <HelpSidebar
       v-if="helpPage && showDocs"

@@ -5,12 +5,13 @@ namespace App\Domains\Banking\Controllers;
 use App\Domains\Banking\DTOs\CreateBankAccountData;
 use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Models\BankAccount;
+use App\Domains\Banking\Requests\RecordTransactionRequest;
+use App\Domains\Banking\Requests\StoreBankAccountRequest;
 use App\Domains\Banking\Services\BankingService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,7 +37,7 @@ class BankingController extends Controller
         $transactions = $bankAccount->transactions()
             ->with('journalEntry')
             ->orderByDesc('date')
-            ->paginate(20);
+            ->paginate(config('accounting.pagination.default'));
 
         return Inertia::render('Banking/Show', [
             'bankAccount' => $bankAccount->load('ledgerAccount'),
@@ -44,43 +45,23 @@ class BankingController extends Controller
         ]);
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(StoreBankAccountRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
-        $this->authorize('create', BankAccount::class);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'iban' => 'nullable|string|max:34',
-            'bank_name' => 'nullable|string|max:255',
-            'account_id' => [
-                'nullable',
-                Rule::exists('accounts', 'id')->where('organization_id', $currentOrg->id()),
-            ],
-            'currency' => 'string|size:3',
-        ]);
+        $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
 
         $bankAccount = BankAccount::create(CreateBankAccountData::fromArray($validated)->toArray());
 
         return redirect()->route('banking.show', $bankAccount)
-            ->with('success', 'Bank account created.');
+            ->with('success', __('app.bank_account_created'));
     }
 
     public function recordTransaction(
-        Request $request,
+        RecordTransactionRequest $request,
         BankAccount $bankAccount,
         BankingService $bankingService,
     ): RedirectResponse {
-        $this->authorize('update', $bankAccount);
-
-        $validated = $request->validate([
-            'date' => 'required|date',
-            'description' => 'nullable|string|max:500',
-            'amount' => 'required|numeric|min:0.01',
-            'type' => 'required|in:credit,debit',
-            'reference' => 'nullable|string|max:100',
-            'contra_account_code' => 'required|string|max:10',
-        ]);
+        $validated = $request->validated();
 
         $bankingService->recordTransaction(
             $bankAccount,
@@ -88,6 +69,6 @@ class BankingController extends Controller
         );
 
         return redirect()->route('banking.show', $bankAccount)
-            ->with('success', 'Transaction recorded.');
+            ->with('success', __('app.transaction_recorded'));
     }
 }

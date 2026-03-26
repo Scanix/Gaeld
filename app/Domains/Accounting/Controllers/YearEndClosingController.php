@@ -135,7 +135,7 @@ class YearEndClosingController extends Controller
         }
 
         return redirect()->route('accounting.closing')
-            ->with('success', 'Bouclement de compte effectué.');
+            ->with('success', __('app.year_end_closing_done'));
     }
 
     // ──────────────────────────────────────────────────────────────

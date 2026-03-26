@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -11,6 +11,7 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { Plus } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -30,6 +31,8 @@ const form = useForm({
   currency: 'CHF',
   receipt: null,
 })
+
+useUnsavedChanges(computed(() => form.isDirty))
 
 function submit() {
   form.post('/expenses', { forceFormData: true })

@@ -45,7 +45,7 @@ class AccountingController extends Controller
 
         $entries = JournalEntry::with('lines.account')
             ->orderByDesc('date')
-            ->paginate(20);
+            ->paginate(config('accounting.pagination.default'));
 
         return Inertia::render('Accounting/JournalEntries', [
             'entries' => $entries,

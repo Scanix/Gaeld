@@ -23,35 +23,7 @@ class HandleInertiaRequests extends Middleware
         }
 
         return array_merge(parent::share($request), [
-            'auth' => $user ? [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'locale' => $user->locale,
-                    'show_help' => $user->show_help,
-                    'two_factor_enabled' => $user->hasTwoFactorEnabled(),
-                    'has_passkeys' => $user->webAuthnCredentials()->exists(),
-                ],
-                'currentOrganization' => ($this->currentOrganization->isBound()
-                    ? $this->currentOrganization->get()
-                    : $user->resolveCurrentOrganization()
-                )?->only('id', 'name', 'currency', 'locale', 'require_two_factor'),
-                'subscription' => $this->resolveSubscription($user),
-                'role' => fn () => $this->resolveCurrentRole($user),
-                'permissions' => fn () => $this->resolvePermissions($user),
-                'organizations' => $user->organizations()
-                    ->select('organizations.id', 'organizations.name')
-                    ->get()
-                    ->map(fn ($org) => [
-                        'id' => $org->id,
-                        'name' => $org->name,
-                        'role' => $org->pivot->role,
-                    ]),
-                'is_saas_admin' => FeatureFlag::isSaas()
-                    && config('ee.saas_admin_email')
-                    && $user->email === config('ee.saas_admin_email'),
-            ] : null,
+            'auth' => $user ? $this->resolveAuth($user) : null,
             'locale' => App::getLocale(),
             'translations' => fn () => trans('app'),
             'features' => FeatureFlag::all(),
@@ -62,6 +34,39 @@ class HandleInertiaRequests extends Middleware
             ],
             'twoFactor' => fn () => $request->session()->get('twoFactor'),
         ]);
+    }
+
+    private function resolveAuth($user): array
+    {
+        return [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'locale' => $user->locale,
+                'show_help' => $user->show_help,
+                'two_factor_enabled' => $user->hasTwoFactorEnabled(),
+                'has_passkeys' => $user->webAuthnCredentials()->exists(),
+            ],
+            'currentOrganization' => ($this->currentOrganization->isBound()
+                ? $this->currentOrganization->get()
+                : $user->resolveCurrentOrganization()
+            )?->only('id', 'name', 'currency', 'locale', 'require_two_factor'),
+            'subscription' => $this->resolveSubscription($user),
+            'role' => fn () => $this->resolveCurrentRole($user),
+            'permissions' => fn () => $this->resolvePermissions($user),
+            'organizations' => $user->organizations()
+                ->select('organizations.id', 'organizations.name')
+                ->get()
+                ->map(fn ($org) => [
+                    'id' => $org->id,
+                    'name' => $org->name,
+                    'role' => $org->pivot->role,
+                ]),
+            'is_saas_admin' => FeatureFlag::isSaas()
+                && config('ee.saas_admin_email')
+                && $user->email === config('ee.saas_admin_email'),
+        ];
     }
 
     private function resolveSubscription($user): ?array

@@ -63,7 +63,7 @@ class OrganizationController extends Controller
         $org = $action->execute($request->user(), CreateOrganizationData::fromArray($validated));
 
         return redirect()->route('organizations.show', $org)
-            ->with('success', 'Organization created.');
+            ->with('success', __('app.organization_created'));
     }
 
     public function update(Request $request, Organization $organization, UpdateOrganizationAction $action): RedirectResponse
@@ -88,7 +88,7 @@ class OrganizationController extends Controller
         $action->execute($organization, UpdateOrganizationData::fromArray($validated));
 
         return redirect()->route('organizations.show', $organization)
-            ->with('success', 'Organization updated.');
+            ->with('success', __('app.organization_updated'));
     }
 
     public function switchOrganization(Request $request, Organization $organization): RedirectResponse
@@ -98,6 +98,6 @@ class OrganizationController extends Controller
         $request->user()->switchOrganization($organization);
 
         return redirect()->route('dashboard')
-            ->with('success', "Switched to {$organization->name}.");
+            ->with('success', __('app.organization_switched', ['name' => $organization->name]));
     }
 }

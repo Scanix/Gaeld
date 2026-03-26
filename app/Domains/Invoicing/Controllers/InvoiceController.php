@@ -15,35 +15,28 @@ use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
-use App\Domains\Invoicing\Enums\PaymentMethod;
+use App\Domains\Invoicing\Requests\RecordPaymentRequest;
+use App\Domains\Invoicing\Requests\StoreInvoiceRequest;
+use App\Domains\Invoicing\Requests\UpdateInvoiceRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Contacts\Queries\CustomerQuery;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
 use App\Domains\Accounting\Queries\VatRateQuery;
 use App\Http\Controllers\Controller;
+use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class InvoiceController extends Controller
 {
-    private const VALIDATION_RULES = [
-        'number' => 'required|string|max:50',
-        'issue_date' => 'required|date',
-        'due_date' => 'required|date|after_or_equal:issue_date',
-        'currency' => 'string|size:3',
-        'notes' => 'nullable|string',
-        'payment_terms' => 'nullable|string',
-        'lines' => 'required|array|min:1',
-        'lines.*.description' => 'required|string',
-        'lines.*.quantity' => 'required|numeric|min:0.01',
-        'lines.*.unit_price' => 'required|numeric|min:0',
-    ];
+    public function __construct(
+        private FileUploadService $uploadService,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -70,27 +63,15 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function store(Request $request, CreateInvoiceAction $action, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(StoreInvoiceRequest $request, CreateInvoiceAction $action, CurrentOrganization $currentOrg): RedirectResponse
     {
-        $this->authorize('create', Invoice::class);
-
-        $validated = $request->validate(array_merge(self::VALIDATION_RULES, [
-            'customer_id' => [
-                'required',
-                Rule::exists('customers', 'id')->where('organization_id', $currentOrg->id()),
-            ],
-            'lines.*.vat_rate_id' => [
-                'nullable',
-                Rule::exists('vat_rates', 'id')->where('organization_id', $currentOrg->id()),
-            ],
-            'justificatif' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
-        ]));
+        $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
 
         if ($request->hasFile('justificatif')) {
-            $validated['justificatif_path'] = $this->storeJustificatif(
+            $validated['justificatif_path'] = $this->uploadService->store(
                 $request->file('justificatif'),
-                $currentOrg->id(),
+                "justificatifs/{$currentOrg->id()}",
             );
         }
 
@@ -99,7 +80,7 @@ class InvoiceController extends Controller
         $invoice = $action->execute($dto);
 
         return redirect()->route('invoices.show', $invoice)
-            ->with('success', 'Invoice created.');
+            ->with('success', __('app.invoice_created'));
     }
 
     public function show(Invoice $invoice): Response
@@ -128,28 +109,16 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function update(Request $request, Invoice $invoice, UpdateInvoiceAction $action): RedirectResponse
+    public function update(UpdateInvoiceRequest $request, Invoice $invoice, UpdateInvoiceAction $action): RedirectResponse
     {
-        $this->authorize('update', $invoice);
-
-        $validated = $request->validate(array_merge(self::VALIDATION_RULES, [
-            'customer_id' => [
-                'required',
-                Rule::exists('customers', 'id')->where('organization_id', $invoice->organization_id),
-            ],
-            'lines.*.vat_rate_id' => [
-                'nullable',
-                Rule::exists('vat_rates', 'id')->where('organization_id', $invoice->organization_id),
-            ],
-            'justificatif' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
-        ]));
+        $validated = $request->validated();
         $validated['organization_id'] = $invoice->organization_id;
 
         if ($request->hasFile('justificatif')) {
-            $this->deleteJustificatifIfExists($invoice->justificatif_path);
-            $validated['justificatif_path'] = $this->storeJustificatif(
+            $this->uploadService->delete($invoice->justificatif_path);
+            $validated['justificatif_path'] = $this->uploadService->store(
                 $request->file('justificatif'),
-                $invoice->organization_id,
+                "justificatifs/{$invoice->organization_id}",
             );
         }
 
@@ -162,7 +131,7 @@ class InvoiceController extends Controller
         }
 
         return redirect()->route('invoices.show', $invoice)
-            ->with('success', 'Invoice updated.');
+            ->with('success', __('app.invoice_updated'));
     }
 
     public function destroy(Invoice $invoice, DeleteInvoiceAction $action): RedirectResponse
@@ -176,7 +145,7 @@ class InvoiceController extends Controller
         }
 
         return redirect()->route('invoices.index')
-            ->with('success', 'Invoice deleted.');
+            ->with('success', __('app.invoice_deleted'));
     }
 
     public function finalize(Invoice $invoice, FinalizeInvoiceAction $action): RedirectResponse
@@ -190,20 +159,12 @@ class InvoiceController extends Controller
         }
 
         return redirect()->route('invoices.show', $invoice)
-            ->with('success', 'Invoice finalized and posted to ledger.');
+            ->with('success', __('app.invoice_finalized'));
     }
 
-    public function recordPayment(Request $request, Invoice $invoice, RecordPaymentAction $action): RedirectResponse
+    public function recordPayment(RecordPaymentRequest $request, Invoice $invoice, RecordPaymentAction $action): RedirectResponse
     {
-        $this->authorize('view', $invoice);
-
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'payment_date' => 'required|date',
-            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
-            'reference' => 'nullable|string|max:100',
-            'bank_account_code' => 'nullable|string|max:20',
-        ]);
+        $validated = $request->validated();
 
         $dto = RecordPaymentData::fromArray($validated);
 
@@ -214,7 +175,7 @@ class InvoiceController extends Controller
         }
 
         return redirect()->route('invoices.show', $invoice)
-            ->with('success', 'Payment recorded.');
+            ->with('success', __('app.payment_recorded'));
     }
 
     public function duplicate(Invoice $invoice, DuplicateInvoiceAction $action): RedirectResponse
@@ -224,7 +185,7 @@ class InvoiceController extends Controller
         $newInvoice = $action->execute($invoice);
 
         return redirect()->route('invoices.show', $newInvoice)
-            ->with('success', 'Invoice duplicated.');
+            ->with('success', __('app.invoice_duplicated'));
     }
 
     public function removeJustificatif(Invoice $invoice): RedirectResponse
@@ -232,12 +193,12 @@ class InvoiceController extends Controller
         $this->authorize('update', $invoice);
 
         if ($invoice->justificatif_path) {
-            $this->deleteJustificatifIfExists($invoice->justificatif_path);
+            $this->uploadService->delete($invoice->justificatif_path);
             $invoice->update(['justificatif_path' => null]);
         }
 
         return redirect()->route('invoices.show', $invoice)
-            ->with('success', 'Justificatif removed.');
+            ->with('success', __('app.justificatif_removed'));
     }
 
     public function downloadJustificatif(Invoice $invoice): \Symfony\Component\HttpFoundation\StreamedResponse|\Illuminate\Http\RedirectResponse
@@ -275,15 +236,4 @@ class InvoiceController extends Controller
         ]);
     }
 
-    private function storeJustificatif(\Illuminate\Http\UploadedFile $file, string $orgId): string
-    {
-        return $file->store("justificatifs/{$orgId}", 'local');
-    }
-
-    private function deleteJustificatifIfExists(?string $path): void
-    {
-        if ($path) {
-            Storage::delete($path);
-        }
-    }
 }
