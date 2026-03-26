@@ -145,9 +145,9 @@ const vatOptions = [
               <div
                 v-for="(line, i) in form.lines"
                 :key="i"
-                class="grid grid-cols-12 items-end gap-2 rounded-lg border border-[hsl(var(--border))] p-3"
+                class="grid grid-cols-1 gap-3 rounded-lg border border-[hsl(var(--border))] p-3 sm:grid-cols-12 sm:items-end sm:gap-2"
               >
-                <div class="col-span-4">
+                <div class="sm:col-span-4">
                   <FormInput
                     :id="`line-desc-${i}`"
                     v-model="line.description"
@@ -156,44 +156,48 @@ const vatOptions = [
                     required
                   />
                 </div>
-                <div class="col-span-2">
-                  <FormInput
-                    :id="`line-qty-${i}`"
-                    v-model="line.quantity"
-                    type="number"
-                    :label="t('qty')"
-                    :error="form.errors[`lines.${i}.quantity`]"
-                    required
-                  />
+                <div class="grid grid-cols-2 gap-3 sm:contents">
+                  <div class="sm:col-span-2">
+                    <FormInput
+                      :id="`line-qty-${i}`"
+                      v-model="line.quantity"
+                      type="number"
+                      :label="t('qty')"
+                      :error="form.errors[`lines.${i}.quantity`]"
+                      required
+                    />
+                  </div>
+                  <div class="sm:col-span-2">
+                    <FormInput
+                      :id="`line-price-${i}`"
+                      v-model="line.unit_price"
+                      type="number"
+                      :label="t('unit_price')"
+                      :error="form.errors[`lines.${i}.unit_price`]"
+                      required
+                    />
+                  </div>
                 </div>
-                <div class="col-span-2">
-                  <FormInput
-                    :id="`line-price-${i}`"
-                    v-model="line.unit_price"
-                    type="number"
-                    :label="t('unit_price')"
-                    :error="form.errors[`lines.${i}.unit_price`]"
-                    required
-                  />
-                </div>
-                <div class="col-span-3">
-                  <FormSelect
-                    :id="`line-vat-${i}`"
-                    v-model="line.vat_rate_id"
-                    :label="t('vat')"
-                    :options="vatOptions"
-                  />
-                </div>
-                <div class="col-span-1 flex justify-end pb-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    :disabled="form.lines.length <= 1"
-                    @click="removeLine(i)"
-                  >
-                    <Trash2 class="h-4 w-4" />
-                  </Button>
+                <div class="flex items-end gap-3 sm:contents">
+                  <div class="flex-1 sm:col-span-3">
+                    <FormSelect
+                      :id="`line-vat-${i}`"
+                      v-model="line.vat_rate_id"
+                      :label="t('vat')"
+                      :options="vatOptions"
+                    />
+                  </div>
+                  <div class="sm:col-span-1 flex justify-end pb-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      :disabled="form.lines.length <= 1"
+                      @click="removeLine(i)"
+                    >
+                      <Trash2 class="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

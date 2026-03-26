@@ -44,7 +44,7 @@ onBeforeUnmount(() => {
           ref="dialogRef"
           role="dialog"
           aria-modal="true"
-          class="relative z-50 w-full max-w-lg rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-6 shadow-lg"
+          class="relative z-50 mx-4 w-full max-w-lg rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-4 shadow-lg sm:mx-auto sm:p-6"
         >
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold">{{ title }}</h2>
