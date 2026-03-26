@@ -149,7 +149,7 @@ class TwoFactorController extends Controller
 
     private function generateRecoveryCodes(): Collection
     {
-        return Collection::times(8, fn () => Str::random(10));
+        return Collection::times(8, fn () => Str::random(8) . '-' . Str::random(8));
     }
 
     private function generateQrCodeSvg(string $url): string

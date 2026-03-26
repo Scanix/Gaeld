@@ -45,6 +45,8 @@ class PasskeyController extends Controller
             ], 422);
         }
 
+        $request->session()->regenerate();
+
         // Passkey login counts as 2FA — skip the TOTP challenge
         $request->session()->put('two_factor_authenticated', true);
 

@@ -44,6 +44,9 @@ class AuthenticatedSessionController extends Controller
 
             Auth::guard('web')->logout();
 
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
             $request->session()->put('two_factor:user_id', $userId);
             $request->session()->put('two_factor:remember', $remember);
 

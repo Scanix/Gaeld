@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -76,20 +77,23 @@ class TwoFactorChallengeController extends Controller
 
     private function validateRecoveryCode(User $user, string $code): bool
     {
-        $codes = $user->two_factor_recovery_codes ?? [];
+        return DB::transaction(function () use ($user, $code) {
+            $user = User::lockForUpdate()->findOrFail($user->id);
+            $codes = $user->two_factor_recovery_codes ?? [];
 
-        $index = array_search($code, $codes, true);
+            $index = array_search($code, $codes, true);
 
-        if ($index === false) {
-            return false;
-        }
+            if ($index === false) {
+                return false;
+            }
 
-        unset($codes[$index]);
+            unset($codes[$index]);
 
-        $user->forceFill([
-            'two_factor_recovery_codes' => array_values($codes),
-        ])->save();
+            $user->forceFill([
+                'two_factor_recovery_codes' => array_values($codes),
+            ])->save();
 
-        return true;
+            return true;
+        });
     }
 }
