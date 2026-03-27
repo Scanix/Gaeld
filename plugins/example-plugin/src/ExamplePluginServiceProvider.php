@@ -14,12 +14,12 @@ class ExamplePluginServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Load plugin routes
-        $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
         // Load plugin migrations
-        $this->loadMigrationsFrom(__DIR__ . '/../migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../migrations');
 
         // Load plugin views
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'example-plugin');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'example-plugin');
     }
 }

@@ -1,6 +1,18 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Domains/Accounting/Controllers/AccountingController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/Accounting/Controllers/AccountingController.php
+
+		-
 			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
 			identifier: property.notFound
 			count: 2
@@ -13,40 +25,46 @@ parameters:
 			path: app/Domains/Accounting/Models/JournalEntry.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: App\\Domains\\Accounting\\DTOs\\JournalLineData, Closure\(App\\Domains\\Accounting\\Models\\TransactionLine\)\: App\\Domains\\Accounting\\DTOs\\JournalLineData given\.$#'
+			message: '#^Parameter \$accountId of class App\\Domains\\Accounting\\DTOs\\JournalLineData constructor expects string, int given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Accounting/Services/LedgerService.php
 
 		-
-			message: '#^Parameter \$accountId of class App\\Domains\\Accounting\\DTOs\\JournalLineData constructor expects string, int\<0, max\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Accounting/Services/LedgerService.php
-
-		-
-			message: '#^Call to an undefined method App\\Domains\\Users\\Models\\User\:\:createToken\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Domains/Api/Controllers/ApiTokenController.php
-
-		-
-			message: '#^Call to an undefined method App\\Domains\\Users\\Models\\User\:\:tokens\(\)\.$#'
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\MorphMany\<Laravel\\Sanctum\\PersonalAccessToken, App\\Domains\\Users\\Models\\User\>\:\:personal\(\)\.$#'
 			identifier: method.notFound
 			count: 2
 			path: app/Domains/Api/Controllers/ApiTokenController.php
 
 		-
-			message: '#^Call to an undefined method App\\Domains\\Users\\Models\\User\:\:createToken\(\)\.$#'
-			identifier: method.notFound
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
 			count: 1
 			path: app/Domains/Api/Controllers/OrgTokenController.php
 
 		-
-			message: '#^Call to an undefined static method App\\Domains\\Api\\Models\\PersonalAccessToken\:\:query\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 2
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domains\\Api\\Models\\PersonalAccessToken\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
 			path: app/Domains/Api/Controllers/OrgTokenController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Api/Controllers/TokenSettingsController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\MorphMany\<Laravel\\Sanctum\\PersonalAccessToken, App\\Domains\\Users\\Models\\User\>\:\:personal\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Domains/Api/Controllers/TokenSettingsController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domains\\Api\\Models\\PersonalAccessToken\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Domains/Api/Controllers/TokenSettingsController.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
@@ -71,36 +89,6 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: app/Domains/Api/Jobs/DispatchWebhookJob.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\Api\\Models\\PersonalAccessToken\:\:\$organization_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Api/Models/PersonalAccessToken.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\Api\\Models\\PersonalAccessToken\:\:\$type\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Domains/Api/Models/PersonalAccessToken.php
-
-		-
-			message: '#^App\\Domains\\Api\\Models\\PersonalAccessToken\:\:casts\(\) calls parent\:\:casts\(\) but App\\Domains\\Api\\Models\\PersonalAccessToken does not extend any class\.$#'
-			identifier: class.noParent
-			count: 1
-			path: app/Domains/Api/Models/PersonalAccessToken.php
-
-		-
-			message: '#^Call to an undefined method App\\Domains\\Api\\Models\\PersonalAccessToken\:\:belongsTo\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Domains/Api/Models/PersonalAccessToken.php
-
-		-
-			message: '#^Call to an undefined static method App\\Domains\\Api\\Models\\PersonalAccessToken\:\:creating\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 1
-			path: app/Domains/Api/Models/PersonalAccessToken.php
 
 		-
 			message: '#^Access to an undefined property App\\Domains\\Api\\Resources\\AccountResource\:\:\$code\.$#'
@@ -649,6 +637,12 @@ parameters:
 			path: app/Domains/Api/Services/WebhookService.php
 
 		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Assets/Models/FixedAsset.php
+
+		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$bankAccount\.$#'
 			identifier: property.notFound
 			count: 1
@@ -755,12 +749,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Banking/Services/Camt/Camt054Parser.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Banking/Services/MatchingService.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
@@ -925,10 +913,34 @@ parameters:
 			path: app/Domains/Expenses/Models/Expense.php
 
 		-
-			message: '#^Parameter \$accountId of class App\\Domains\\Accounting\\DTOs\\JournalLineData constructor expects string, int given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Expenses/Services/ExpenseService.php
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/CreateCreditNoteAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/CreateCreditNoteAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sort_order\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/CreateCreditNoteAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit_price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/CreateCreditNoteAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$vat_rate_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Actions/CreateCreditNoteAction.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
@@ -961,19 +973,7 @@ parameters:
 			path: app/Domains/Invoicing/Actions/DuplicateInvoiceAction.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$address\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
@@ -1015,12 +1015,6 @@ parameters:
 			path: app/Domains/Invoicing/DTOs/InvoicePayloadData.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
 			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
 			identifier: property.notFound
 			count: 2
@@ -1045,37 +1039,13 @@ parameters:
 			path: app/Domains/Invoicing/Models/InvoiceLine.php
 
 		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, float given\.$#'
-			identifier: argument.type
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
 			count: 2
-			path: app/Domains/Invoicing/Models/InvoiceLine.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcmul expects numeric\-string, float given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Invoicing/Models/InvoiceLine.php
-
-		-
-			message: '#^Property App\\Domains\\Invoicing\\Models\\InvoiceLine\:\:\$amount \(float\) does not accept string\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: app/Domains/Invoicing/Models/InvoiceLine.php
-
-		-
-			message: '#^Property App\\Domains\\Invoicing\\Models\\InvoiceLine\:\:\$vat_amount \(float\) does not accept string\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: app/Domains/Invoicing/Models/InvoiceLine.php
+			path: app/Domains/Invoicing/Models/RecurringInvoice.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$amount\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Invoicing/Services/InvoiceService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Domains/Invoicing/Services/InvoiceService.php
@@ -1087,22 +1057,10 @@ parameters:
 			path: app/Domains/Invoicing/Services/InvoiceService.php
 
 		-
-			message: '#^Parameter \$accountId of class App\\Domains\\Accounting\\DTOs\\JournalLineData constructor expects string, int given\.$#'
-			identifier: argument.type
-			count: 5
-			path: app/Domains/Invoicing/Services/InvoiceService.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
 			path: app/Domains/Invoicing/Services/InvoiceService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Invoicing/Services/SwissQrInvoiceService.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$role\.$#'
@@ -1142,6 +1100,12 @@ parameters:
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$locale\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Organizations/Services/InvitationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$plain_token\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Domains/Organizations/Services/InvitationService.php
@@ -1195,6 +1159,30 @@ parameters:
 			path: app/Domains/Organizations/Services/OrganizationSwitcher.php
 
 		-
+			message: '#^Method App\\Domains\\Payroll\\Controllers\\SalarySlipController\:\:downloadPdf\(\) should return Illuminate\\Http\\Response but returns Symfony\\Component\\HttpFoundation\\Response\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/Payroll/Controllers/SalarySlipController.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Payroll/Models/Employee.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Payroll/Models/SalarySlip.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Reporting/Services/DashboardService.php
+
+		-
 			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
@@ -1205,6 +1193,24 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 2
 			path: app/Domains/Users/Controllers/PasskeyController.php
+
+		-
+			message: '#^Empty array passed to foreach\.$#'
+			identifier: foreach.emptyArray
+			count: 1
+			path: app/Domains/Users/Controllers/TwoFactorChallengeController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between null and null will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: app/Domains/Users/Controllers/TwoFactorChallengeController.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Domains/Users/Controllers/TwoFactorChallengeController.php
 
 		-
 			message: '#^Unsafe usage of new static\(\)\.$#'
@@ -1321,26 +1327,14 @@ parameters:
 			path: app/Http/Controllers/GlobalSearchController.php
 
 		-
-			message: '#^Access to an undefined property App\\Domains\\Api\\Models\\PersonalAccessToken\:\:\$abilities\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
-			message: '#^Call to an undefined method App\\Domains\\Api\\Models\\PersonalAccessToken\:\:can\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
-			message: '#^Call to an undefined method App\\Domains\\Users\\Models\\User\:\:currentAccessToken\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
 			message: '#^Method App\\Http\\Middleware\\EnsureApiOrganization\:\:resolveOrganization\(\) should return App\\Domains\\Organizations\\Models\\Organization\|null but returns \(Illuminate\\Database\\Eloquent\\Model&object\{pivot\: Illuminate\\Database\\Eloquent\\Relations\\Pivot\}\)\|null\.$#'
 			identifier: return.type
+			count: 1
+			path: app/Http/Middleware/EnsureApiOrganization.php
+
+		-
+			message: '#^Parameter \#1 \$tokenType of method App\\Http\\Middleware\\EnsureApiOrganization\:\:registerTokenAbilityGate\(\) expects App\\Domains\\Api\\Enums\\TokenType, string given\.$#'
+			identifier: argument.type
 			count: 1
 			path: app/Http/Middleware/EnsureApiOrganization.php
 
@@ -1391,3 +1385,29 @@ parameters:
 			identifier: new.static
 			count: 1
 			path: app/Support/QueryBuilder.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Reporting/Services/AccountingExportService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/Reporting/Services/AccountingExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Reporting/Services/AccountingExportService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/Reporting/Services/AccountingExportService.php
+
+

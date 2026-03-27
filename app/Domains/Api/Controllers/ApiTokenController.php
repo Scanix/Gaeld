@@ -6,10 +6,10 @@ use App\Domains\Api\Enums\TokenType;
 use App\Domains\Api\Enums\WebhookEvent;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use App\Http\Controllers\Controller;
 
 class ApiTokenController extends Controller
 {

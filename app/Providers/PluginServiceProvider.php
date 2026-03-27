@@ -46,7 +46,7 @@ class PluginServiceProvider extends ServiceProvider
 
     private function readManifest(string $pluginDir): ?array
     {
-        $manifestPath = $pluginDir . '/plugin.json';
+        $manifestPath = $pluginDir.'/plugin.json';
 
         if (! File::exists($manifestPath)) {
             Log::warning("Plugin manifest not found: {$pluginDir}");
@@ -121,7 +121,7 @@ class PluginServiceProvider extends ServiceProvider
 
         // Load the plugin's own Composer dependencies if they were installed
         // separately (i.e. `composer install` was run inside the plugin directory).
-        $pluginAutoload = $pluginDir . '/vendor/autoload.php';
+        $pluginAutoload = $pluginDir.'/vendor/autoload.php';
         if (File::exists($pluginAutoload)) {
             require_once $pluginAutoload;
         }
@@ -129,15 +129,15 @@ class PluginServiceProvider extends ServiceProvider
         // Dynamically register a PSR-4 autoloader for this plugin's src/ directory.
         // This decouples directory naming (e.g. kebab-case slugs) from PHP namespaces
         // and allows plugins distributed as Composer packages OR dropped in manually.
-        $srcPath = $pluginDir . '/src/';
+        $srcPath = $pluginDir.'/src/';
         if (is_dir($srcPath)) {
             $parts = explode('\\', $providerClass);
             // Build namespace root from the first two segments: "Plugins\PluginName\"
-            $namespaceRoot = implode('\\', array_slice($parts, 0, 2)) . '\\';
+            $namespaceRoot = implode('\\', array_slice($parts, 0, 2)).'\\';
             spl_autoload_register(function (string $class) use ($namespaceRoot, $srcPath): void {
                 if (str_starts_with($class, $namespaceRoot)) {
                     $relative = str_replace('\\', DIRECTORY_SEPARATOR, substr($class, strlen($namespaceRoot)));
-                    $file = $srcPath . $relative . '.php';
+                    $file = $srcPath.$relative.'.php';
                     if (file_exists($file)) {
                         require_once $file;
                     }

@@ -20,22 +20,22 @@ class GaeldReleaseCommand extends Command
      */
     private const EDITION_FLAGS = [
         'community' => [
-            'FEATURE_BANK_SYNC'           => 'false',
-            'FEATURE_SAAS'                => 'false',
-            'FEATURE_AUTOMATION'          => 'false',
-            'FEATURE_MULTI_CURRENCY'      => 'false',
-            'FEATURE_API_ACCESS'          => 'false',
+            'FEATURE_BANK_SYNC' => 'false',
+            'FEATURE_SAAS' => 'false',
+            'FEATURE_AUTOMATION' => 'false',
+            'FEATURE_MULTI_CURRENCY' => 'false',
+            'FEATURE_API_ACCESS' => 'false',
             'FEATURE_AUTO_RECONCILIATION' => 'false',
-            'FEATURE_RULE_ENGINE'         => 'false',
+            'FEATURE_RULE_ENGINE' => 'false',
         ],
         'saas' => [
-            'FEATURE_BANK_SYNC'           => 'true',
-            'FEATURE_SAAS'                => 'true',
-            'FEATURE_AUTOMATION'          => 'true',
-            'FEATURE_MULTI_CURRENCY'      => 'true',
-            'FEATURE_API_ACCESS'          => 'true',
+            'FEATURE_BANK_SYNC' => 'true',
+            'FEATURE_SAAS' => 'true',
+            'FEATURE_AUTOMATION' => 'true',
+            'FEATURE_MULTI_CURRENCY' => 'true',
+            'FEATURE_API_ACCESS' => 'true',
             'FEATURE_AUTO_RECONCILIATION' => 'true',
-            'FEATURE_RULE_ENGINE'         => 'true',
+            'FEATURE_RULE_ENGINE' => 'true',
         ],
     ];
 

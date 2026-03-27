@@ -91,6 +91,9 @@ class SwissFreelancerTemplate implements ChartTemplateInterface
             ['code' => '3400', 'type' => AccountType::Revenue->value, 'name' => [
                 'en' => 'Other Revenue', 'fr' => 'Autres produits', 'de' => 'Übrige Erlöse', 'it' => 'Altri ricavi', 'rm' => 'Autras entradas',
             ]],
+            ['code' => '3900', 'type' => AccountType::Revenue->value, 'name' => [
+                'en' => 'Revenue Corrections', 'fr' => 'Corrections de produits', 'de' => 'Erlösberichtigungen', 'it' => 'Rettifiche di ricavi', 'rm' => 'Correcturas d\'entradas',
+            ]],
 
             // Class 4-5: Simplified expenses (no subcontractors, no temp staff)
             ['code' => '4200', 'type' => AccountType::Expense->value, 'name' => [

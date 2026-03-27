@@ -2,6 +2,7 @@
 
 namespace App\Domains\Contacts\Models;
 
+use App\Domains\Expenses\Models\Expense;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
@@ -49,7 +50,7 @@ class Supplier extends Model
 
     public function expenses(): HasMany
     {
-        return $this->hasMany(\App\Domains\Expenses\Models\Expense::class);
+        return $this->hasMany(Expense::class);
     }
 
     public function contactPersons(): MorphMany

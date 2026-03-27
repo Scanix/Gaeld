@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -12,7 +13,7 @@ class AuthenticationTest extends TestCase
 
     public function test_login_page_is_available_when_organization_exists(): void
     {
-        \App\Domains\Organizations\Models\Organization::create([
+        Organization::create([
             'name' => 'Test Org',
             'currency' => 'CHF',
         ]);
@@ -23,7 +24,7 @@ class AuthenticationTest extends TestCase
 
     public function test_user_can_log_in_with_valid_credentials(): void
     {
-        \App\Domains\Organizations\Models\Organization::create([
+        Organization::create([
             'name' => 'Test Org',
             'currency' => 'CHF',
         ]);
@@ -42,7 +43,7 @@ class AuthenticationTest extends TestCase
 
     public function test_guest_is_redirected_to_login_when_app_is_initialized(): void
     {
-        \App\Domains\Organizations\Models\Organization::create([
+        Organization::create([
             'name' => 'Test Org',
             'currency' => 'CHF',
         ]);

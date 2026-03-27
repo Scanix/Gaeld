@@ -39,7 +39,7 @@ class GaeldReleaseCommandTest extends TestCase
 
     public function test_it_exposes_expected_command_metadata(): void
     {
-        $command = new GaeldReleaseCommand();
+        $command = new GaeldReleaseCommand;
 
         $this->assertSame('gaeld:release', $command->getName());
         $this->assertStringContainsString('Prepare a release build', $command->getDescription());

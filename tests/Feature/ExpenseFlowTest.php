@@ -21,6 +21,7 @@ class ExpenseFlowTest extends TestCase
     use RefreshDatabase;
 
     private Organization $org;
+
     private User $user;
 
     protected function setUp(): void
@@ -51,7 +52,7 @@ class ExpenseFlowTest extends TestCase
 
     private function createExpense(array $overrides = []): Expense
     {
-        $action = new CreateExpenseAction();
+        $action = new CreateExpenseAction;
 
         return $action->execute(CreateExpenseData::fromArray(array_merge([
             'organization_id' => $this->org->id,
@@ -72,7 +73,7 @@ class ExpenseFlowTest extends TestCase
         $this->assertEquals('700.00', $expense->amount);
 
         // 2. Approve expense
-        $approveAction = new ApproveExpenseAction();
+        $approveAction = new ApproveExpenseAction;
         $expense = $approveAction->execute($expense);
         $this->assertEquals(ExpenseStatus::Approved, $expense->status);
 
@@ -104,7 +105,7 @@ class ExpenseFlowTest extends TestCase
         $this->assertEquals(ExpenseStatus::Pending, $expense->status);
 
         // Approve expense first (state machine: Pending → Approved → Posted)
-        $approveAction = new ApproveExpenseAction();
+        $approveAction = new ApproveExpenseAction;
         $expense = $approveAction->execute($expense);
         $this->assertEquals(ExpenseStatus::Approved, $expense->status);
 
@@ -143,7 +144,7 @@ class ExpenseFlowTest extends TestCase
             'description' => null,
         ]);
 
-        $approveAction = new ApproveExpenseAction();
+        $approveAction = new ApproveExpenseAction;
         $expense = $approveAction->execute($expense);
 
         $postAction = app(PostExpenseAction::class);

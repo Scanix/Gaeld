@@ -10,9 +10,10 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
+import Tooltip from '@/Components/UI/Tooltip.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
-import { Plus } from 'lucide-vue-next'
+import { Plus, HelpCircle } from 'lucide-vue-next'
 
 const props = defineProps({
   vatRates: { type: Array, default: () => [] },
@@ -89,15 +90,20 @@ function onSupplierCreated(supplier) {
       <CardContent>
         <form class="space-y-4" @submit.prevent="submit">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormSelect
-              id="category"
-              v-model="form.category"
-              :label="t('category')"
-              :options="categoryOptions"
-              :placeholder="t('select_category')"
-              :error="form.errors.category"
-              required
-            />
+            <div class="relative">
+              <FormSelect
+                id="category"
+                v-model="form.category"
+                :label="t('category')"
+                :options="categoryOptions"
+                :placeholder="t('select_category')"
+                :error="form.errors.category"
+                required
+              />
+              <Tooltip :content="t('tooltip_expense_category')" side="top" class="absolute right-0 top-0">
+                <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
+              </Tooltip>
+            </div>
             <div class="flex items-end gap-2">
               <FormSelect
                 id="supplier_id"
@@ -135,12 +141,17 @@ function onSupplierCreated(supplier) {
               :error="form.errors.date"
               required
             />
-            <FormSelect
-              id="vat_rate_id"
-              v-model="form.vat_rate_id"
-              :label="t('vat_rate')"
-              :options="vatOptions"
-            />
+            <div class="relative">
+              <FormSelect
+                id="vat_rate_id"
+                v-model="form.vat_rate_id"
+                :label="t('vat_rate')"
+                :options="vatOptions"
+              />
+              <Tooltip :content="t('tooltip_vat_rate')" side="top" class="absolute right-0 top-0">
+                <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
+              </Tooltip>
+            </div>
             <FormInput
               id="vat_amount"
               v-model="form.vat_amount"

@@ -1,14 +1,13 @@
 <?php
 
 use App\Domains\Organizations\Models\Organization;
+use App\Http\Middleware\EnsureApiOrganization;
 use App\Http\Middleware\EnsureHasOrganization;
+use App\Http\Middleware\EnsureOrganizationTwoFactor;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-
-use App\Http\Middleware\EnsureApiOrganization;
-use App\Http\Middleware\EnsureOrganizationTwoFactor;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -33,7 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->renderable(function (\DomainException $e) {
+        $exceptions->renderable(function (DomainException $e) {
             if (request()->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 422);
             }

@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
+use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\OrganizationService;
 use App\Domains\Organizations\Services\OrganizationSetupService;
-use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\DTOs\CreateUserData;
 use App\Domains\Users\Services\UserService;
 use Illuminate\Console\Command;
@@ -86,7 +86,7 @@ class GaeldInstallCommand extends Command
 
         // Step 5: Seed chart of accounts
         $this->components->task('Seeding Swiss chart of accounts and VAT rates', function () {
-            $org = \App\Domains\Organizations\Models\Organization::latest()->first();
+            $org = Organization::latest()->first();
             $this->organizationSetupService->seedSwissDefaults($org);
         });
 

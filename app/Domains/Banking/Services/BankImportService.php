@@ -23,9 +23,9 @@ class BankImportService
      * parses entries, deduplicates them, and persists
      * as BankTransaction records linked to a BankImport.
      *
-     * @return BankImport  The created import with its transactions
+     * @return BankImport The created import with its transactions
      *
-     * @throws \InvalidArgumentException  When the file format is unsupported
+     * @throws \InvalidArgumentException When the file format is unsupported
      */
     public function importCamtFile(
         BankAccount $bankAccount,
@@ -105,13 +105,13 @@ class BankImportService
     private function parseEntries(string $xml, CamtFormat $format): array
     {
         if ($format === CamtFormat::Camt053) {
-            $parser = new Camt053Parser();
+            $parser = new Camt053Parser;
             $parser->parse($xml);
 
             return ['entries' => $parser->getEntries(), 'statementId' => $parser->getStatementId()];
         }
 
-        $parser = new Camt054Parser();
+        $parser = new Camt054Parser;
         $parser->parse($xml);
 
         return ['entries' => $parser->getEntries(), 'statementId' => $parser->getNotificationId()];

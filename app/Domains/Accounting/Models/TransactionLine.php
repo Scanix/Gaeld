@@ -6,6 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property string $journal_entry_id
+ * @property int $account_id
+ * @property string $debit
+ * @property string $credit
+ * @property string|null $description
+ */
 class TransactionLine extends Model
 {
     use HasFactory;

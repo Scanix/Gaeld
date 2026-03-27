@@ -13,7 +13,8 @@ import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { useFormValidation, z } from '@/lib/useFormValidation'
-import { Plus, Trash2 } from 'lucide-vue-next'
+import { Plus, Trash2, HelpCircle } from 'lucide-vue-next'
+import Tooltip from '@/Components/UI/Tooltip.vue'
 
 const props = defineProps({
   customers: { type: Array, default: () => [] },
@@ -195,13 +196,16 @@ const vatOptions = [
                   </div>
                 </div>
                 <div class="flex items-end gap-3 sm:contents">
-                  <div class="flex-1 sm:col-span-3">
+                  <div class="flex-1 sm:col-span-3 relative">
                     <FormSelect
                       :id="`line-vat-${i}`"
                       v-model="line.vat_rate_id"
                       :label="t('vat')"
                       :options="vatOptions"
                     />
+                    <Tooltip :content="t('tooltip_vat_rate')" side="top" class="absolute right-0 top-0">
+                      <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
+                    </Tooltip>
                   </div>
                   <div class="sm:col-span-1 flex justify-end pb-2">
                     <Button

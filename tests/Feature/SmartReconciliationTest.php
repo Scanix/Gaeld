@@ -11,8 +11,8 @@ use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
-use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Contacts\Models\Customer;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
@@ -84,7 +84,7 @@ class SmartReconciliationTest extends TestCase
     public function test_camt053_extracts_structured_qr_reference(): void
     {
         $importService = app(BankImportService::class);
-        $xml = file_get_contents(__DIR__ . '/../fixtures/camt053_qr_sample.xml');
+        $xml = file_get_contents(__DIR__.'/../fixtures/camt053_qr_sample.xml');
 
         $import = $importService->importCamtFile($this->bankAccount, $xml, 'qr_test.xml');
 

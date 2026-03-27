@@ -14,6 +14,7 @@ namespace App\Domains\Banking\Services\Camt;
 class Camt054Parser
 {
     use CamtXmlHelper;
+
     /** @var CamtEntry[] */
     private array $entries = [];
 
@@ -27,9 +28,8 @@ class Camt054Parser
      * Parse a CAMT.054 XML string.
      *
      * @param  string  $xml  Raw XML content of the CAMT.054 file
-     * @return self
      *
-     * @throws \InvalidArgumentException  When the XML is invalid or not a CAMT.054
+     * @throws \InvalidArgumentException When the XML is invalid or not a CAMT.054
      */
     public function parse(string $xml): self
     {
@@ -86,5 +86,4 @@ class Camt054Parser
     {
         return $this->creationDate;
     }
-
 }

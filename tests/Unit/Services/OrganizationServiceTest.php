@@ -17,10 +17,9 @@ class OrganizationServiceTest extends TestCase
 
     public function test_create_attaches_owner_and_persists_address_fields(): void
     {
-        $service = new OrganizationService();
+        $service = new OrganizationService;
         $owner = User::factory()->create();
         /** @var User $owner */
-
         $organization = $service->create($owner, new CreateOrganizationData(
             name: 'Service Org',
             legalName: 'Service Org SA',
@@ -54,7 +53,7 @@ class OrganizationServiceTest extends TestCase
 
     public function test_update_persists_new_details(): void
     {
-        $service = new OrganizationService();
+        $service = new OrganizationService;
         $organization = Organization::create([
             'name' => 'Before Update',
             'currency' => 'CHF',
@@ -88,14 +87,13 @@ class OrganizationServiceTest extends TestCase
 
     public function test_add_and_remove_member_manage_pivot_membership(): void
     {
-        $service = new OrganizationService();
+        $service = new OrganizationService;
         $organization = Organization::create([
             'name' => 'Membership Org',
             'currency' => 'CHF',
         ]);
         $user = User::factory()->create();
         /** @var User $user */
-
         $service->addMember($organization, $user, 'member');
 
         $this->assertDatabaseHas('organization_users', [

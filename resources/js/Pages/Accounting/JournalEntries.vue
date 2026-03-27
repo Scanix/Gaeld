@@ -6,10 +6,13 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
+import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
+import Tooltip from '@/Components/UI/Tooltip.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { computed } from 'vue'
 import HelpText from '@/Components/HelpText.vue'
+import { HelpCircle } from 'lucide-vue-next'
 
 defineProps({ entries: Object })
 
@@ -29,6 +32,10 @@ const columns = computed(() => [
       <p>{{ t('help_journal_text') }}</p>
     </HelpText>
 
+    <div class="mb-4 flex justify-end">
+      <ExportDropdown base-url="/accounting/journal-entries/export" />
+    </div>
+
     <Card>
       <CardHeader><CardTitle>{{ t('journal_entries') }}</CardTitle></CardHeader>
       <CardContent>
@@ -45,7 +52,14 @@ const columns = computed(() => [
             <thead>
               <tr class="border-b text-left text-muted-foreground">
                 <th class="pb-1">{{ t('account') }}</th>
-                <th class="pb-1 text-right">{{ t('debit') }}</th>
+                <th class="pb-1 text-right">
+                  <span class="inline-flex items-center gap-1">
+                    {{ t('debit') }}
+                    <Tooltip :content="t('tooltip_journal_balance')" side="top">
+                      <HelpCircle class="h-3 w-3 text-[hsl(var(--muted-foreground))]" />
+                    </Tooltip>
+                  </span>
+                </th>
                 <th class="pb-1 text-right">{{ t('credit') }}</th>
               </tr>
             </thead>

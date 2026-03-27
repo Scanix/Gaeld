@@ -11,7 +11,7 @@ class FileUploadService
     public function store(UploadedFile $file, string $directory, string $disk = 'local'): string
     {
         $extension = $file->getClientOriginalExtension();
-        $filename = Str::uuid() . '.' . $extension;
+        $filename = Str::uuid().'.'.$extension;
 
         return $file->storeAs($directory, $filename, $disk);
     }

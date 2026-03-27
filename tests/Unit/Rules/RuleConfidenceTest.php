@@ -27,7 +27,7 @@ class RuleConfidenceTest extends TestCase
 
     public function test_supplier_category_rule_has_confidence_90(): void
     {
-        $rule = new SupplierCategoryRule();
+        $rule = new SupplierCategoryRule;
 
         $this->assertEquals(90, $rule->confidence());
         $this->assertEquals('Supplier Category Suggestion', $rule->name());
@@ -35,7 +35,7 @@ class RuleConfidenceTest extends TestCase
 
     public function test_recurring_entry_rule_has_confidence_70(): void
     {
-        $rule = new RecurringEntryRule();
+        $rule = new RecurringEntryRule;
 
         $this->assertEquals(70, $rule->confidence());
         $this->assertEquals('Recurring Entry Detection', $rule->name());
@@ -48,7 +48,7 @@ class RuleConfidenceTest extends TestCase
         $invoiceService = $this->createMock(InvoiceService::class);
         $rule = new QrReferencePaymentRule($matchingService, $reconciliation, $invoiceService);
 
-        $transaction = new BankTransaction();
+        $transaction = new BankTransaction;
         $transaction->type = BankTransactionType::Debit;
 
         $this->assertFalse($rule->matches($transaction));
@@ -61,7 +61,7 @@ class RuleConfidenceTest extends TestCase
         $invoiceService = $this->createMock(InvoiceService::class);
         $rule = new QrReferencePaymentRule($matchingService, $reconciliation, $invoiceService);
 
-        $transaction = new BankTransaction();
+        $transaction = new BankTransaction;
         $transaction->type = BankTransactionType::Credit;
         $transaction->structured_reference = null;
 
@@ -70,9 +70,9 @@ class RuleConfidenceTest extends TestCase
 
     public function test_supplier_rule_rejects_credit_transaction(): void
     {
-        $rule = new SupplierCategoryRule();
+        $rule = new SupplierCategoryRule;
 
-        $transaction = new BankTransaction();
+        $transaction = new BankTransaction;
         $transaction->type = BankTransactionType::Credit;
 
         $this->assertFalse($rule->matches($transaction));
@@ -80,9 +80,9 @@ class RuleConfidenceTest extends TestCase
 
     public function test_supplier_rule_rejects_debit_without_creditor(): void
     {
-        $rule = new SupplierCategoryRule();
+        $rule = new SupplierCategoryRule;
 
-        $transaction = new BankTransaction();
+        $transaction = new BankTransaction;
         $transaction->type = BankTransactionType::Debit;
         $transaction->creditor_name = null;
 
@@ -91,9 +91,9 @@ class RuleConfidenceTest extends TestCase
 
     public function test_recurring_rule_rejects_credit_transaction(): void
     {
-        $rule = new RecurringEntryRule();
+        $rule = new RecurringEntryRule;
 
-        $transaction = new BankTransaction();
+        $transaction = new BankTransaction;
         $transaction->type = BankTransactionType::Credit;
 
         $this->assertFalse($rule->matches($transaction));
@@ -101,9 +101,9 @@ class RuleConfidenceTest extends TestCase
 
     public function test_recurring_rule_rejects_debit_without_description(): void
     {
-        $rule = new RecurringEntryRule();
+        $rule = new RecurringEntryRule;
 
-        $transaction = new BankTransaction();
+        $transaction = new BankTransaction;
         $transaction->type = BankTransactionType::Debit;
         $transaction->description = null;
         $transaction->amount = '100.00';
@@ -113,9 +113,9 @@ class RuleConfidenceTest extends TestCase
 
     public function test_recurring_rule_rejects_debit_without_amount(): void
     {
-        $rule = new RecurringEntryRule();
+        $rule = new RecurringEntryRule;
 
-        $transaction = new BankTransaction();
+        $transaction = new BankTransaction;
         $transaction->type = BankTransactionType::Debit;
         $transaction->description = 'GitHub subscription';
         $transaction->amount = null;
@@ -132,7 +132,7 @@ class RuleConfidenceTest extends TestCase
 
         $rule = new QrReferencePaymentRule($matchingService, $reconciliation, $invoiceService);
 
-        $transaction = new BankTransaction();
+        $transaction = new BankTransaction;
         $transaction->forceFill(['is_reconciled' => true]);
 
         $rule->apply($transaction);

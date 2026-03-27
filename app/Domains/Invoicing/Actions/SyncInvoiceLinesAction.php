@@ -9,7 +9,7 @@ use App\Domains\Invoicing\Models\InvoiceLine;
 class SyncInvoiceLinesAction
 {
     /**
-     * @param array<int, InvoiceLineData> $lines
+     * @param  array<int, InvoiceLineData>  $lines
      */
     public function create(Invoice $invoice, array $lines): void
     {
@@ -28,7 +28,7 @@ class SyncInvoiceLinesAction
     }
 
     /**
-     * @param array<int, InvoiceLineData> $lines
+     * @param  array<int, InvoiceLineData>  $lines
      */
     public function replace(Invoice $invoice, array $lines): void
     {

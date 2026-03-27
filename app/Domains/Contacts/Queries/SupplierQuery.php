@@ -30,7 +30,7 @@ class SupplierQuery
     {
         return Supplier::where('organization_id', $organizationId)
             ->whereNotNull('default_expense_category')
-            ->where('name', 'ilike', '%' . $creditorName . '%')
+            ->where('name', 'ilike', '%'.$creditorName.'%')
             ->exists();
     }
 
@@ -38,7 +38,7 @@ class SupplierQuery
     {
         return Supplier::where('organization_id', $organizationId)
             ->whereNotNull('default_expense_category')
-            ->where('name', 'ilike', '%' . $creditorName . '%')
+            ->where('name', 'ilike', '%'.$creditorName.'%')
             ->first();
     }
 }

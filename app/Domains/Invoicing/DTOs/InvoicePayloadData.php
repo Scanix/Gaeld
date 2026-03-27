@@ -5,7 +5,7 @@ namespace App\Domains\Invoicing\DTOs;
 abstract readonly class InvoicePayloadData
 {
     /**
-     * @param array<int, InvoiceLineData> $lines
+     * @param  array<int, InvoiceLineData>  $lines
      */
     public function __construct(
         public string $organizationId,
