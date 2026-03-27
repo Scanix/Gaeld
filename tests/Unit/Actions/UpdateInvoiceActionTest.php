@@ -60,7 +60,6 @@ class UpdateInvoiceActionTest extends TestCase
         $invoice = Mockery::mock(Invoice::class)->makePartial();
         $invoice->status = InvoiceStatus::Draft;
         /** @var Invoice $invoice */
-
         $data = $this->makeData();
 
         $invoice->shouldReceive('update')->once()->with([

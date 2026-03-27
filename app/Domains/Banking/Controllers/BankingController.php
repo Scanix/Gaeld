@@ -2,6 +2,7 @@
 
 namespace App\Domains\Banking\Controllers;
 
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\DTOs\CreateBankAccountData;
 use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Models\BankAccount;
@@ -9,7 +10,6 @@ use App\Domains\Banking\Requests\RecordTransactionRequest;
 use App\Domains\Banking\Requests\StoreBankAccountRequest;
 use App\Domains\Banking\Requests\UpdateBankAccountRequest;
 use App\Domains\Banking\Services\BankingService;
-use App\Domains\Accounting\Models\Account;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;

@@ -24,7 +24,7 @@ class PostExpenseAction
      *   Debit  {expenseAccountCode} Expense account  (expense amount)
      *   Credit {bankAccountCode}    Bank / Cash       (expense amount)
      *
-     * @throws InvalidExpenseStateException  When expense is already posted
+     * @throws InvalidExpenseStateException When expense is already posted
      */
     public function execute(Expense $expense, string $expenseAccountCode, string $bankAccountCode = AccountCode::BANK_CASH): Expense
     {
@@ -35,7 +35,7 @@ class PostExpenseAction
         $this->expenseService->postToLedger($expense, new RecordExpensePaymentData(
             amount: (string) $expense->amount,
             paymentDate: $expense->date->toDateString(),
-            reference: self::REFERENCE_PREFIX_EXPENSE . $expense->id,
+            reference: self::REFERENCE_PREFIX_EXPENSE.$expense->id,
             description: $expense->description ?? $expense->category,
             expenseAccountCode: $expenseAccountCode,
             bankAccountCode: $bankAccountCode,

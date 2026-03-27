@@ -2,12 +2,12 @@
 
 namespace Tests\Unit\Services;
 
-use App\Support\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
 use App\Domains\Banking\Rules\RecurringEntryRule;
 use App\Domains\Banking\Rules\SupplierCategoryRule;
 use App\Domains\Banking\Services\RuleEngineService;
+use App\Support\Exceptions\FeatureDisabledException;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 

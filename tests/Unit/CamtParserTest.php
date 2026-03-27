@@ -15,9 +15,9 @@ class CamtParserTest extends TestCase
 
     public function test_camt053_parses_statement_metadata(): void
     {
-        $xml = file_get_contents(__DIR__ . '/../fixtures/camt053_sample.xml');
+        $xml = file_get_contents(__DIR__.'/../fixtures/camt053_sample.xml');
 
-        $parser = new Camt053Parser();
+        $parser = new Camt053Parser;
         $parser->parse($xml);
 
         $this->assertEquals('STMT-2026-001', $parser->getStatementId());
@@ -27,9 +27,9 @@ class CamtParserTest extends TestCase
 
     public function test_camt053_parses_credit_entry_with_details(): void
     {
-        $xml = file_get_contents(__DIR__ . '/../fixtures/camt053_sample.xml');
+        $xml = file_get_contents(__DIR__.'/../fixtures/camt053_sample.xml');
 
-        $parser = new Camt053Parser();
+        $parser = new Camt053Parser;
         $parser->parse($xml);
 
         $entries = $parser->getEntries();
@@ -49,9 +49,9 @@ class CamtParserTest extends TestCase
 
     public function test_camt053_parses_debit_entry(): void
     {
-        $xml = file_get_contents(__DIR__ . '/../fixtures/camt053_sample.xml');
+        $xml = file_get_contents(__DIR__.'/../fixtures/camt053_sample.xml');
 
-        $parser = new Camt053Parser();
+        $parser = new Camt053Parser;
         $parser->parse($xml);
 
         $entries = $parser->getEntries();
@@ -66,9 +66,9 @@ class CamtParserTest extends TestCase
 
     public function test_camt053_parses_entry_without_tx_details(): void
     {
-        $xml = file_get_contents(__DIR__ . '/../fixtures/camt053_sample.xml');
+        $xml = file_get_contents(__DIR__.'/../fixtures/camt053_sample.xml');
 
-        $parser = new Camt053Parser();
+        $parser = new Camt053Parser;
         $parser->parse($xml);
 
         $entries = $parser->getEntries();
@@ -85,7 +85,7 @@ class CamtParserTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $parser = new Camt053Parser();
+        $parser = new Camt053Parser;
         $parser->parse('not xml at all');
     }
 
@@ -96,7 +96,7 @@ class CamtParserTest extends TestCase
 
         $xml = '<?xml version="1.0"?><root><data>test</data></root>';
 
-        $parser = new Camt053Parser();
+        $parser = new Camt053Parser;
         $parser->parse($xml);
     }
 
@@ -106,9 +106,9 @@ class CamtParserTest extends TestCase
 
     public function test_camt054_parses_notification_metadata(): void
     {
-        $xml = file_get_contents(__DIR__ . '/../fixtures/camt054_sample.xml');
+        $xml = file_get_contents(__DIR__.'/../fixtures/camt054_sample.xml');
 
-        $parser = new Camt054Parser();
+        $parser = new Camt054Parser;
         $parser->parse($xml);
 
         $this->assertEquals('NOTIF-2026-001', $parser->getNotificationId());
@@ -118,9 +118,9 @@ class CamtParserTest extends TestCase
 
     public function test_camt054_parses_credit_notification(): void
     {
-        $xml = file_get_contents(__DIR__ . '/../fixtures/camt054_sample.xml');
+        $xml = file_get_contents(__DIR__.'/../fixtures/camt054_sample.xml');
 
-        $parser = new Camt054Parser();
+        $parser = new Camt054Parser;
         $parser->parse($xml);
 
         $entries = $parser->getEntries();
@@ -136,9 +136,9 @@ class CamtParserTest extends TestCase
 
     public function test_camt054_strips_notprovided_end_to_end_id(): void
     {
-        $xml = file_get_contents(__DIR__ . '/../fixtures/camt054_sample.xml');
+        $xml = file_get_contents(__DIR__.'/../fixtures/camt054_sample.xml');
 
-        $parser = new Camt054Parser();
+        $parser = new Camt054Parser;
         $parser->parse($xml);
 
         $entries = $parser->getEntries();
@@ -158,7 +158,7 @@ class CamtParserTest extends TestCase
 
         $xml = '<?xml version="1.0"?><root><data>test</data></root>';
 
-        $parser = new Camt054Parser();
+        $parser = new Camt054Parser;
         $parser->parse($xml);
     }
 }

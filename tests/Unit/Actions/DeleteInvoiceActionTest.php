@@ -18,7 +18,7 @@ class DeleteInvoiceActionTest extends TestCase
     {
         parent::setUp();
 
-        $this->action = new DeleteInvoiceAction();
+        $this->action = new DeleteInvoiceAction;
     }
 
     public function test_rejects_sent_invoice(): void
@@ -56,7 +56,6 @@ class DeleteInvoiceActionTest extends TestCase
         $invoice = Mockery::mock(Invoice::class)->makePartial();
         $invoice->status = InvoiceStatus::Draft;
         /** @var Invoice $invoice */
-
         $linesRelation = Mockery::mock(HasMany::class);
         $linesRelation->shouldReceive('delete')->once();
 

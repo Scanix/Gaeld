@@ -21,10 +21,10 @@ class ActivityLogController extends Controller
         $query = Activity::query()
             ->where(function ($q) use ($orgId) {
                 $q->where('properties->organization_id', $orgId)
-                  ->orWhere(function ($q2) use ($orgId) {
-                      $q2->where('subject_type', 'App\\Domains\\Organizations\\Models\\Organization')
-                         ->where('subject_id', $orgId);
-                  });
+                    ->orWhere(function ($q2) use ($orgId) {
+                        $q2->where('subject_type', 'App\\Domains\\Organizations\\Models\\Organization')
+                            ->where('subject_id', $orgId);
+                    });
             })
             ->with('causer:id,name,email')
             ->orderBy('created_at', 'desc');
@@ -46,7 +46,7 @@ class ActivityLogController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('log_name', 'like', "%{$search}%");
+                    ->orWhere('log_name', 'like', "%{$search}%");
             });
         }
 

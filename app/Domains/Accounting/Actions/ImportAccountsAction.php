@@ -22,9 +22,9 @@ class ImportAccountsAction
         foreach ($rows as $i => $row) {
             $line = $i + 1;
             $rowValidator = Validator::make($row, [
-                'code'        => 'required|string|max:20',
-                'name'        => 'required|string|max:255',
-                'type'        => ['required', Rule::in($validTypes)],
+                'code' => 'required|string|max:20',
+                'name' => 'required|string|max:255',
+                'type' => ['required', Rule::in($validTypes)],
                 'description' => 'nullable|string|max:1000',
             ]);
 
@@ -60,13 +60,13 @@ class ImportAccountsAction
                 Account::updateOrCreate(
                     [
                         'organization_id' => $orgId,
-                        'code'            => $row['code'],
+                        'code' => $row['code'],
                     ],
                     [
-                        'name'        => $row['name'],
-                        'type'        => $row['type'],
+                        'name' => $row['name'],
+                        'type' => $row['type'],
                         'description' => $row['description'] ?? null,
-                        'is_active'   => $row['is_active'] ?? true,
+                        'is_active' => $row['is_active'] ?? true,
                     ]
                 );
             }
@@ -76,7 +76,7 @@ class ImportAccountsAction
     /**
      * Parse CSV content into an array of rows keyed by header names.
      *
-     * @return array<array<string, mixed>>|null  null on parse failure
+     * @return array<array<string, mixed>>|null null on parse failure
      */
     public function parseCsv(string $content): ?array
     {

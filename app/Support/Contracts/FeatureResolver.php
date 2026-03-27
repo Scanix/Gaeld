@@ -13,7 +13,7 @@ interface FeatureResolver
      * Determine if a feature is enabled for a specific organization.
      *
      * @param  string  $feature  Feature flag name
-     * @param  mixed   $org      An Organization model instance
+     * @param  mixed  $org  An Organization model instance
      */
     public function enabledForOrg(string $feature, mixed $org): bool;
 }

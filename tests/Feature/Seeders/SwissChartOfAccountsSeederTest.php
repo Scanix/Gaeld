@@ -22,7 +22,7 @@ class SwissChartOfAccountsSeederTest extends TestCase
             'country' => 'CH',
         ]);
 
-        (new SwissChartOfAccountsSeeder())->run($organization);
+        (new SwissChartOfAccountsSeeder)->run($organization);
 
         $this->assertGreaterThan(40, Account::where('organization_id', $organization->id)->count());
         $this->assertDatabaseHas('accounts', [
@@ -39,7 +39,7 @@ class SwissChartOfAccountsSeederTest extends TestCase
 
     public function test_it_does_nothing_when_no_organization_exists(): void
     {
-        (new SwissChartOfAccountsSeeder())->run();
+        (new SwissChartOfAccountsSeeder)->run();
 
         $this->assertSame(0, Account::count());
     }

@@ -10,13 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int $bank_account_id
  * @property int|null $bank_import_id
  * @property string|null $journal_entry_id
- * @property \Illuminate\Support\Carbon $date
+ * @property Carbon $date
  * @property string|null $description
  * @property string $amount
  * @property BankTransactionType $type
@@ -30,8 +31,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $matched_invoice_id
  * @property string|null $matched_expense_id
  * @property string|null $suggested_expense_category
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class BankTransaction extends Model
 {

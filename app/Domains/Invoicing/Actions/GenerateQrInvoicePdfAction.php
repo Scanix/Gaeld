@@ -52,7 +52,7 @@ class GenerateQrInvoicePdfAction
         $qrLang = $langMap[$language] ?? 'en';
 
         $output = new TcPdfOutput($qrBill, $qrLang, $tcpdf);
-        $displayOptions = (new DisplayOptions())->setPrintable(false);
+        $displayOptions = (new DisplayOptions)->setPrintable(false);
         $output->setDisplayOptions($displayOptions)->getPaymentPart();
 
         return $tcpdf->Output('', 'S');
@@ -68,7 +68,7 @@ class GenerateQrInvoicePdfAction
         $tcpdf->SetFont('Helvetica', '', 8);
         $orgAddress = array_filter([
             $organization->address,
-            trim(($organization->postal_code ?? '') . ' ' . ($organization->city ?? '')),
+            trim(($organization->postal_code ?? '').' '.($organization->city ?? '')),
             $organization->country ?? 'CH',
         ]);
         foreach ($orgAddress as $line) {
@@ -90,7 +90,7 @@ class GenerateQrInvoicePdfAction
             $tcpdf->SetFont('Helvetica', '', 9);
             $customerAddress = array_filter([
                 $customer->address,
-                trim(($customer->postal_code ?? '') . ' ' . ($customer->city ?? '')),
+                trim(($customer->postal_code ?? '').' '.($customer->city ?? '')),
                 $customer->country ?? 'CH',
             ]);
             foreach ($customerAddress as $line) {
@@ -101,18 +101,18 @@ class GenerateQrInvoicePdfAction
         // Invoice title
         $tcpdf->SetXY(15, 80);
         $tcpdf->SetFont('Helvetica', 'B', 16);
-        $tcpdf->Cell(0, 8, 'Invoice ' . ($invoice->number ?? ''), 0, 1);
+        $tcpdf->Cell(0, 8, 'Invoice '.($invoice->number ?? ''), 0, 1);
 
         // Invoice meta
         $tcpdf->SetFont('Helvetica', '', 9);
         $tcpdf->SetTextColor(100, 100, 100);
-        $tcpdf->Cell(0, 5, 'Date: ' . ($invoice->issue_date?->format('d.m.Y') ?? '') . '    Due: ' . ($invoice->due_date?->format('d.m.Y') ?? '') . '    Currency: ' . ($invoice->currency ?? 'CHF'), 0, 1);
+        $tcpdf->Cell(0, 5, 'Date: '.($invoice->issue_date?->format('d.m.Y') ?? '').'    Due: '.($invoice->due_date?->format('d.m.Y') ?? '').'    Currency: '.($invoice->currency ?? 'CHF'), 0, 1);
         $tcpdf->SetTextColor(0, 0, 0);
 
         if ($invoice->qr_reference) {
             $tcpdf->SetFont('Helvetica', '', 8);
             $tcpdf->SetTextColor(100, 100, 100);
-            $tcpdf->Cell(0, 4, 'Ref: ' . $invoice->qr_reference, 0, 1);
+            $tcpdf->Cell(0, 4, 'Ref: '.$invoice->qr_reference, 0, 1);
             $tcpdf->SetTextColor(0, 0, 0);
         }
 
@@ -136,7 +136,7 @@ class GenerateQrInvoicePdfAction
         $tcpdf->SetFont('Helvetica', '', 8);
         foreach ($invoice->lines as $line) {
             $lineTotal = bcmul((string) $line->quantity, (string) $line->unit_price, 2);
-            $vatLabel = $line->vatRate ? ($line->vatRate->rate . '%') : '-';
+            $vatLabel = $line->vatRate ? ($line->vatRate->rate.'%') : '-';
 
             $tcpdf->Cell(80, 5, $line->description, 0, 0, 'L');
             $tcpdf->Cell(20, 5, number_format((float) $line->quantity, 2), 0, 0, 'R');
@@ -166,7 +166,7 @@ class GenerateQrInvoicePdfAction
 
         // Total
         $tcpdf->SetFont('Helvetica', 'B', 11);
-        $tcpdf->Cell(155, 7, 'Total ' . ($invoice->currency ?? 'CHF'), 0, 0, 'R');
+        $tcpdf->Cell(155, 7, 'Total '.($invoice->currency ?? 'CHF'), 0, 0, 'R');
         $tcpdf->Cell(25, 7, number_format((float) $invoice->total, 2), 0, 1, 'R');
 
         // Notes

@@ -663,6 +663,7 @@ return [
     'invoice_finalized' => 'Invoice finalized and posted to ledger.',
     'invoice_duplicated' => 'Invoice duplicated.',
     'payment_recorded' => 'Payment recorded.',
+    'reminder_sent' => 'Payment reminder sent.',
     'justificatif_removed' => 'Justificatif removed.',
     'expense_created' => 'Expense created.',
     'expense_updated' => 'Expense updated.',

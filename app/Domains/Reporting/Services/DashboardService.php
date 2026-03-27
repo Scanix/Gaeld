@@ -7,6 +7,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Invoicing\Services\InvoiceService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -17,8 +18,9 @@ class DashboardService
         private readonly InvoiceService $invoiceService,
         private readonly ExpenseService $expenseService,
     ) {}
+
     /**
-     * @return array{revenue: string, expenses: string, cashBalance: string, unpaidInvoices: array{count: int, total: string}, pendingExpenses: array{count: int, total: string}, balance: string, recentTransactions: \Illuminate\Support\Collection, monthlyBreakdown: array}
+     * @return array{revenue: string, expenses: string, cashBalance: string, unpaidInvoices: array{count: int, total: string}, pendingExpenses: array{count: int, total: string}, balance: string, recentTransactions: Collection, monthlyBreakdown: array}
      */
     public function metrics(string $organizationId): array
     {
@@ -54,7 +56,7 @@ class DashboardService
     {
         try {
             $bankAccount = $this->ledgerService->resolveAccount($organizationId, AccountCode::BANK_CASH);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             return '0.00';
         }
 
@@ -111,9 +113,9 @@ class DashboardService
                 'revenue' => (string) $monthPaid->sum('total'),
                 'expenses' => (string) $monthExpenses->sum('amount'),
                 'forecast' => (string) $monthForecast->sum('total'),
-                'revenueItems' => $monthPaid->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"))->values(),
-                'expenseItems' => $monthExpenses->map(fn ($e) => $e->description . ': ' . number_format((float) $e->amount, 2, '.', "'"))->values(),
-                'forecastItems' => $monthForecast->map(fn ($i) => $i->number . ': ' . number_format((float) $i->total, 2, '.', "'"))->values(),
+                'revenueItems' => $monthPaid->map(fn ($i) => $i->number.': '.number_format((float) $i->total, 2, '.', "'"))->values(),
+                'expenseItems' => $monthExpenses->map(fn ($e) => $e->description.': '.number_format((float) $e->amount, 2, '.', "'"))->values(),
+                'forecastItems' => $monthForecast->map(fn ($i) => $i->number.': '.number_format((float) $i->total, 2, '.', "'"))->values(),
             ];
         });
 

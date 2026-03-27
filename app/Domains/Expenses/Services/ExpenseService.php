@@ -11,6 +11,9 @@ use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Support\DTOs\SummaryResult;
+use App\Support\Money;
+use App\Support\SwissRounding;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -29,7 +32,7 @@ class ExpenseService
      *
      * Marks the expense as Posted.
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException  When account code not found
+     * @throws ModelNotFoundException When account code not found
      */
     public function postToLedger(Expense $expense, RecordExpensePaymentData $data): JournalEntry
     {
@@ -40,14 +43,51 @@ class ExpenseService
             $expenseAccount = $this->ledgerService->resolveAccount($orgId, $data->expenseAccountCode);
             $bankAccount = $this->ledgerService->resolveAccount($orgId, $bankAccountCode);
 
+            $amount = $data->amount;
+            $lines = [
+                new JournalLineData(accountId: (string) $expenseAccount->id, debit: $amount, credit: '0', description: $expense->description ?? 'Expense'),
+                new JournalLineData(accountId: (string) $bankAccount->id, debit: '0', credit: $amount, description: 'Bank withdrawal'),
+            ];
+
+            // Apply Swiss 5-centime rounding for CHF expenses
+            if (strtoupper($expense->currency) === 'CHF') {
+                $roundedAmount = SwissRounding::roundToFiveCents($amount);
+                $roundingDiff = SwissRounding::difference($amount, $roundedAmount);
+
+                if (bccomp($roundingDiff, '0', 2) !== 0) {
+                    $roundingAccount = $this->ledgerService->resolveAccount($orgId, AccountCode::ROUNDING_DIFFERENCE);
+
+                    // Adjust the bank credit to the rounded amount
+                    $lines = [
+                        new JournalLineData(accountId: (string) $expenseAccount->id, debit: $amount, credit: '0', description: $expense->description ?? 'Expense'),
+                        new JournalLineData(accountId: (string) $bankAccount->id, debit: '0', credit: $roundedAmount, description: 'Bank withdrawal'),
+                    ];
+
+                    if (bccomp($roundingDiff, '0', 2) > 0) {
+                        // Rounded up → debit rounding (more to pay)
+                        $lines[] = new JournalLineData(
+                            accountId: (string) $roundingAccount->id,
+                            debit: $roundingDiff,
+                            credit: '0',
+                            description: 'Rounding difference (5ct)',
+                        );
+                    } else {
+                        // Rounded down → credit rounding (less to pay)
+                        $lines[] = new JournalLineData(
+                            accountId: (string) $roundingAccount->id,
+                            debit: '0',
+                            credit: Money::absoluteAmount($roundingDiff),
+                            description: 'Rounding difference (5ct)',
+                        );
+                    }
+                }
+            }
+
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
                 date: $data->paymentDate,
                 reference: $data->reference,
                 description: $data->description,
-                lines: [
-                    new JournalLineData(accountId: $expenseAccount->id, debit: $data->amount, credit: '0', description: $expense->description ?? 'Expense'),
-                    new JournalLineData(accountId: $bankAccount->id, debit: '0', credit: $data->amount, description: 'Bank withdrawal'),
-                ],
+                lines: $lines,
             ));
 
             $expense->update([

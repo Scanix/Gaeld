@@ -2,6 +2,7 @@
 
 namespace App\Domains\Banking\Models;
 
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -21,9 +23,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $currency
  * @property string $balance
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  */
 class BankAccount extends Model
 {
@@ -55,7 +57,7 @@ class BankAccount extends Model
 
     public function ledgerAccount(): BelongsTo
     {
-        return $this->belongsTo(\App\Domains\Accounting\Models\Account::class, 'account_id');
+        return $this->belongsTo(Account::class, 'account_id');
     }
 
     public function transactions(): HasMany

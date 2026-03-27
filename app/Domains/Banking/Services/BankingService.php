@@ -2,9 +2,9 @@
 
 namespace App\Domains\Banking\Services;
 
-use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Enums\BankTransactionType;
@@ -58,7 +58,7 @@ class BankingService
      *   Debit  Contra account          (amount)
      *   Credit Bank account (1020)     (amount)
      *
-     * @throws UnlinkedBankAccountException  When bank account has no linked ledger account
+     * @throws UnlinkedBankAccountException When bank account has no linked ledger account
      */
     public function postBankTransaction(BankTransaction $transaction, string $contraAccountCode): BankTransaction
     {
@@ -68,7 +68,7 @@ class BankingService
 
             $bankLedgerAccount = $bankAccount->ledgerAccount;
             if (! $bankLedgerAccount) {
-                throw new UnlinkedBankAccountException();
+                throw new UnlinkedBankAccountException;
             }
 
             $contraAccount = $this->ledgerService->resolveAccount($orgId, $contraAccountCode);
@@ -79,7 +79,7 @@ class BankingService
 
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
                 date: $transaction->date->toDateString(),
-                reference: $transaction->reference ?? self::REFERENCE_PREFIX_BANK . $transaction->id,
+                reference: $transaction->reference ?? self::REFERENCE_PREFIX_BANK.$transaction->id,
                 description: $transaction->description,
                 lines: $lines,
             ));

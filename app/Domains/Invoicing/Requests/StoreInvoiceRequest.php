@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Requests;
 
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -10,7 +11,7 @@ class StoreInvoiceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create', \App\Domains\Invoicing\Models\Invoice::class);
+        return $this->user()->can('create', Invoice::class);
     }
 
     public function rules(): array

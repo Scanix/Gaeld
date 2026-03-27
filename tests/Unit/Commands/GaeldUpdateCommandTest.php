@@ -28,7 +28,7 @@ class GaeldUpdateCommandTest extends TestCase
 
     public function test_it_exposes_expected_command_metadata(): void
     {
-        $command = new GaeldUpdateCommand();
+        $command = new GaeldUpdateCommand;
 
         $this->assertSame('gaeld:update', $command->getName());
         $this->assertStringContainsString('Update Gäld', $command->getDescription());

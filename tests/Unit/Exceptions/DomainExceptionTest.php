@@ -2,15 +2,15 @@
 
 namespace Tests\Unit\Exceptions;
 
-use App\Support\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Support\Exceptions\FeatureDisabledException;
 use PHPUnit\Framework\TestCase;
 
 class DomainExceptionTest extends TestCase
 {
     public function test_already_reconciled_has_default_message(): void
     {
-        $exception = new AlreadyReconciledException();
+        $exception = new AlreadyReconciledException;
 
         $this->assertInstanceOf(\DomainException::class, $exception);
         $this->assertEquals('Transaction is already reconciled.', $exception->getMessage());

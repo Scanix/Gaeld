@@ -1,0 +1,71 @@
+<?php
+
+namespace App\Domains\Invoicing\Models;
+
+use App\Domains\Contacts\Models\Customer;
+use App\Domains\Invoicing\Enums\RecurrenceFrequency;
+use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
+use App\Support\Traits\BelongsToOrganization;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+/**
+ * @property int $id
+ * @property string $organization_id
+ * @property int $customer_id
+ * @property RecurrenceFrequency $frequency
+ * @property Carbon $next_issue_date
+ * @property Carbon|null $end_date
+ * @property array $template_data
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
+class RecurringInvoice extends Model
+{
+    use Auditable, BelongsToOrganization;
+
+    protected $fillable = [
+        'organization_id',
+        'customer_id',
+        'frequency',
+        'next_issue_date',
+        'end_date',
+        'template_data',
+        'is_active',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'frequency' => RecurrenceFrequency::class,
+            'next_issue_date' => 'date',
+            'end_date' => 'date',
+            'template_data' => 'array',
+            'is_active' => 'boolean',
+        ];
+    }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeDue(Builder $query, Carbon $date): Builder
+    {
+        return $query->where('next_issue_date', '<=', $date);
+    }
+}

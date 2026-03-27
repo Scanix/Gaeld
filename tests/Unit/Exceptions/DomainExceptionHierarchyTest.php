@@ -42,7 +42,7 @@ class DomainExceptionHierarchyTest extends TestCase
 
     public function test_unlinked_bank_account_has_default_message(): void
     {
-        $e = new UnlinkedBankAccountException();
+        $e = new UnlinkedBankAccountException;
         $this->assertSame('Bank account is not linked to a ledger account.', $e->getMessage());
     }
 }

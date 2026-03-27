@@ -26,6 +26,7 @@ class ValidWebhookUrl implements ValidationRule
 
         if (! $host) {
             $fail('The :attribute must contain a valid host.');
+
             return;
         }
 
@@ -33,6 +34,7 @@ class ValidWebhookUrl implements ValidationRule
         $lower = strtolower($host);
         if (in_array($lower, ['localhost', 'host.docker.internal', 'kubernetes.default.svc'], true)) {
             $fail('The :attribute must not point to an internal address.');
+
             return;
         }
 
@@ -42,6 +44,7 @@ class ValidWebhookUrl implements ValidationRule
         // If DNS resolution failed gethostbyname returns the input
         if ($ip === $host && ! filter_var($host, FILTER_VALIDATE_IP)) {
             $fail('The :attribute could not be resolved to an IP address.');
+
             return;
         }
 
@@ -52,12 +55,14 @@ class ValidWebhookUrl implements ValidationRule
                     $fail('The :attribute must not point to an internal address.');
                 }
             }
+
             return;
         }
 
         foreach (self::BLOCKED_CIDRS as $cidr) {
             if ($this->ipInCidr($ip, $cidr)) {
                 $fail('The :attribute must not point to an internal or reserved address.');
+
                 return;
             }
         }

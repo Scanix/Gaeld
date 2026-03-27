@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Domains\Banking\Models\BankAccount;
+use App\Domains\Organizations\Models\Organization;
+use App\Domains\Users\Models\User;
 use App\Support\FeatureFlag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -70,8 +73,8 @@ class FeatureFlagTest extends TestCase
         $this->seedPermissions();
 
         // Banking is CE — no feature flag needed
-        $user = \App\Domains\Users\Models\User::factory()->create();
-        $org = \App\Domains\Organizations\Models\Organization::create([
+        $user = User::factory()->create();
+        $org = Organization::create([
             'name' => 'Test Org',
             'currency' => 'CHF',
         ]);
@@ -89,14 +92,14 @@ class FeatureFlagTest extends TestCase
 
         config(['features.auto_reconciliation' => false]);
 
-        $user = \App\Domains\Users\Models\User::factory()->create();
-        $org = \App\Domains\Organizations\Models\Organization::create([
+        $user = User::factory()->create();
+        $org = Organization::create([
             'name' => 'Test Org',
             'currency' => 'CHF',
         ]);
         $org->users()->attach($user->id, ['role' => 'owner']);
         $this->assignOrganizationRole($user, $org, 'owner');
-        $bankAccount = \App\Domains\Banking\Models\BankAccount::create([
+        $bankAccount = BankAccount::create([
             'organization_id' => $org->id,
             'name' => 'Test',
             'currency' => 'CHF',
@@ -114,14 +117,14 @@ class FeatureFlagTest extends TestCase
 
         config(['features.auto_reconciliation' => true]);
 
-        $user = \App\Domains\Users\Models\User::factory()->create();
-        $org = \App\Domains\Organizations\Models\Organization::create([
+        $user = User::factory()->create();
+        $org = Organization::create([
             'name' => 'Test Org',
             'currency' => 'CHF',
         ]);
         $org->users()->attach($user->id, ['role' => 'owner']);
         $this->assignOrganizationRole($user, $org, 'owner');
-        $bankAccount = \App\Domains\Banking\Models\BankAccount::create([
+        $bankAccount = BankAccount::create([
             'organization_id' => $org->id,
             'name' => 'Test',
             'currency' => 'CHF',

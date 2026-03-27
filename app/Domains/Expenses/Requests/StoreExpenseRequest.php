@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Requests;
 
+use App\Domains\Expenses\Models\Expense;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -10,7 +11,7 @@ class StoreExpenseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create', \App\Domains\Expenses\Models\Expense::class);
+        return $this->user()->can('create', Expense::class);
     }
 
     public function rules(): array

@@ -2,12 +2,12 @@
 
 namespace App\Domains\Users\Controllers;
 
+use App\Domains\Users\Notifications\TwoFactorDisabledNotification;
 use App\Http\Controllers\Controller;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
-use App\Domains\Users\Notifications\TwoFactorDisabledNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -100,7 +100,7 @@ class TwoFactorController extends Controller
             'two_factor_recovery_codes' => null,
         ])->save();
 
-        $request->user()->notify(new TwoFactorDisabledNotification());
+        $request->user()->notify(new TwoFactorDisabledNotification);
 
         return redirect()->route('profile')
             ->with('success', trans('app.two_factor_disabled'));
@@ -164,7 +164,7 @@ class TwoFactorController extends Controller
     {
         $renderer = new ImageRenderer(
             new RendererStyle(192),
-            new SvgImageBackEnd(),
+            new SvgImageBackEnd,
         );
 
         return (new Writer($renderer))->writeString($url);

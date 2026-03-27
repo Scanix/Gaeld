@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
 
 /**
@@ -25,15 +26,15 @@ use Laravel\Scout\Searchable;
  * @property string|null $description
  * @property string $amount
  * @property string $vat_amount
- * @property \Illuminate\Support\Carbon $date
+ * @property Carbon $date
  * @property string|null $vendor
  * @property string|null $receipt_path
  * @property ExpenseStatus $status
  * @property string $currency
  * @property int|null $supplier_id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  */
 class Expense extends Model
 {

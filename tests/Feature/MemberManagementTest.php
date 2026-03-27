@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Organizations\Models\OrganizationInvitation;
 use App\Domains\Organizations\Notifications\InvitationNotification;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,9 +15,13 @@ class MemberManagementTest extends TestCase
     use RefreshDatabase, WithOrganizationPermissions;
 
     private User $owner;
+
     private User $admin;
+
     private User $member;
+
     private User $outsider;
+
     private Organization $organization;
 
     protected function setUp(): void

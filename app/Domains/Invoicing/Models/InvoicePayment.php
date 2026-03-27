@@ -8,17 +8,18 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property string $id
  * @property string $invoice_id
  * @property string|null $journal_entry_id
  * @property string $amount
- * @property \Illuminate\Support\Carbon $payment_date
+ * @property Carbon $payment_date
  * @property PaymentMethod $payment_method
  * @property string|null $reference
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class InvoicePayment extends Model
 {

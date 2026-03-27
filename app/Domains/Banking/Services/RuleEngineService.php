@@ -2,12 +2,12 @@
 
 namespace App\Domains\Banking\Services;
 
-use App\Support\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\BaseRule;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
 use App\Domains\Banking\Rules\RecurringEntryRule;
 use App\Domains\Banking\Rules\SupplierCategoryRule;
+use App\Support\Exceptions\FeatureDisabledException;
 use App\Support\FeatureFlag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -43,7 +43,7 @@ class RuleEngineService
      * Run all rules against a transaction.
      *
      * Returns a Collection of matching rules sorted by confidence (desc).
-        * Rules at or above AUTO_APPLY_THRESHOLD are applied immediately.
+     * Rules at or above AUTO_APPLY_THRESHOLD are applied immediately.
      *
      * @return Collection<array{rule: BaseRule, confidence: int, applied: bool}>
      *

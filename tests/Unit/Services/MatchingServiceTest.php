@@ -193,7 +193,7 @@ class MatchingServiceTest extends TestCase
     }
 
     /**
-     * @param array<string, mixed> $overrides
+     * @param  array<string, mixed>  $overrides
      */
     private function createTransaction(array $overrides = []): BankTransaction
     {

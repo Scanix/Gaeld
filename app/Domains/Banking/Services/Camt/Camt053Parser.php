@@ -27,9 +27,8 @@ class Camt053Parser
      * Parse a CAMT.053 XML string.
      *
      * @param  string  $xml  Raw XML content of the CAMT.053 file
-     * @return self
      *
-     * @throws \InvalidArgumentException  When the XML is malformed or not a valid CAMT.053
+     * @throws \InvalidArgumentException When the XML is malformed or not a valid CAMT.053
      */
     public function parse(string $xml): self
     {
@@ -88,5 +87,4 @@ class Camt053Parser
     {
         return $this->creationDate;
     }
-
 }

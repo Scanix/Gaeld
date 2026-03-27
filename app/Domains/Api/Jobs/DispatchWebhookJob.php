@@ -2,7 +2,6 @@
 
 namespace App\Domains\Api\Jobs;
 
-use App\Domains\Api\Models\Webhook;
 use App\Domains\Api\Models\WebhookCall;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

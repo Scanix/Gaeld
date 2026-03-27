@@ -150,7 +150,7 @@ trait CamtXmlHelper
     private function loadXml(string $xml): \DOMDocument
     {
         $previousUseErrors = libxml_use_internal_errors(true);
-        $doc = new \DOMDocument();
+        $doc = new \DOMDocument;
 
         if (! $doc->loadXML($xml, LIBXML_NONET)) {
             $errors = libxml_get_errors();
@@ -158,7 +158,7 @@ trait CamtXmlHelper
             libxml_use_internal_errors($previousUseErrors);
 
             $msg = ! empty($errors) ? $errors[0]->message : 'Unknown XML error';
-            throw new \InvalidArgumentException('Invalid XML: ' . trim($msg));
+            throw new \InvalidArgumentException('Invalid XML: '.trim($msg));
         }
 
         libxml_clear_errors();

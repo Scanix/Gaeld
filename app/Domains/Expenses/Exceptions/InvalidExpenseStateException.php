@@ -4,6 +4,4 @@ namespace App\Domains\Expenses\Exceptions;
 
 use DomainException;
 
-class InvalidExpenseStateException extends DomainException
-{
-}
+class InvalidExpenseStateException extends DomainException {}

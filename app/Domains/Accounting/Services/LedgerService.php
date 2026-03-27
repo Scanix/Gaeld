@@ -12,6 +12,9 @@ use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -42,13 +45,13 @@ class LedgerService
      * must have a matching credit — the method validates this before
      * persisting. The resulting JournalEntry is immediately marked as posted.
      *
-     * @param  string            $organizationId  UUID of the owning organization
-     * @param  JournalEntryData  $entry           Header + balanced lines
-     * @return JournalEntry  The posted journal entry with lines eager-loaded
+     * @param  string  $organizationId  UUID of the owning organization
+     * @param  JournalEntryData  $entry  Header + balanced lines
+     * @return JournalEntry The posted journal entry with lines eager-loaded
      *
-     * @throws UnbalancedEntryException      When SUM(debit) ≠ SUM(credit)
-     * @throws InvalidEntryDataException     When amounts are zero or accounts invalid
-     * @throws DuplicateReferenceException   When a posted entry with the same reference already exists
+     * @throws UnbalancedEntryException When SUM(debit) ≠ SUM(credit)
+     * @throws InvalidEntryDataException When amounts are zero or accounts invalid
+     * @throws DuplicateReferenceException When a posted entry with the same reference already exists
      */
     public function postEntry(string $organizationId, JournalEntryData $entry): JournalEntry
     {
@@ -76,8 +79,8 @@ class LedgerService
     /**
      * Post a previously draft journal entry.
      *
-     * @throws AlreadyPostedException  When the entry is already posted
-     * @throws UnbalancedEntryException  When the entry lines are unbalanced
+     * @throws AlreadyPostedException When the entry is already posted
+     * @throws UnbalancedEntryException When the entry lines are unbalanced
      */
     public function postDraft(JournalEntry $journalEntry): JournalEntry
     {
@@ -100,7 +103,7 @@ class LedgerService
      * Swaps debit ↔ credit on every line and posts a new entry
      * with a REV- reference prefix.
      *
-     * @throws \App\Domains\Accounting\Exceptions\DuplicateReferenceException if this entry has already been reversed
+     * @throws DuplicateReferenceException if this entry has already been reversed
      */
     public function reverseEntry(JournalEntry $journalEntry, ?string $description = null): JournalEntry
     {
@@ -108,13 +111,13 @@ class LedgerService
             accountId: $line->account_id,
             debit: (string) $line->credit,
             credit: (string) $line->debit,
-            description: 'Reversal: ' . ($line->description ?? ''),
+            description: 'Reversal: '.($line->description ?? ''),
         ))->all();
 
         return $this->postEntry($journalEntry->organization_id, new JournalEntryData(
             date: now()->toDateString(),
-            reference: self::REFERENCE_PREFIX_REVERSAL . $journalEntry->reference,
-            description: $description ?? 'Reversal of ' . $journalEntry->reference,
+            reference: self::REFERENCE_PREFIX_REVERSAL.$journalEntry->reference,
+            description: $description ?? 'Reversal of '.$journalEntry->reference,
             lines: $lines,
         ));
     }
@@ -132,10 +135,10 @@ class LedgerService
      *
      * Results are cached per account + date range (tag: org:{orgId}:ledger).
      *
-     * @param  int          $accountId  The account's primary key
-     * @param  string|null  $fromDate   Start date (inclusive, Y-m-d)
-     * @param  string|null  $toDate     End date (inclusive, Y-m-d)
-     * @return string  The calculated balance (bcmath-compatible string, 2 decimal places)
+     * @param  int  $accountId  The account's primary key
+     * @param  string|null  $fromDate  Start date (inclusive, Y-m-d)
+     * @param  string|null  $toDate  End date (inclusive, Y-m-d)
+     * @return string The calculated balance (bcmath-compatible string, 2 decimal places)
      */
     public function accountBalance(int $accountId, ?string $fromDate = null, ?string $toDate = null): string
     {
@@ -163,9 +166,9 @@ class LedgerService
     /**
      * Get the most recent posted journal entries for an organization.
      *
-     * @return \Illuminate\Support\Collection<int, JournalEntry>
+     * @return Collection<int, JournalEntry>
      */
-    public function recentEntries(string $organizationId, int $limit = 10): \Illuminate\Support\Collection
+    public function recentEntries(string $organizationId, int $limit = 10): Collection
     {
         return JournalEntry::where('organization_id', $organizationId)
             ->with('lines.account')
@@ -181,8 +184,8 @@ class LedgerService
      * Returns all accounts with non-zero posted balances, ordered by code.
      * Results cached per organization (tag: org:{orgId}:ledger).
      *
-     * @param  string       $organizationId  UUID of the organization
-     * @param  string|null  $asOfDate        Cut-off date (inclusive)
+     * @param  string  $organizationId  UUID of the organization
+     * @param  string|null  $asOfDate  Cut-off date (inclusive)
      * @return array<array{account_code: string, account_name: string, account_type: string, debit: string, credit: string}>
      */
     public function trialBalance(string $organizationId, ?string $asOfDate = null): array
@@ -197,7 +200,7 @@ class LedgerService
         });
     }
 
-    private function buildTrialBalanceQuery(string $organizationId, ?string $asOfDate): \Illuminate\Database\Eloquent\Builder
+    private function buildTrialBalanceQuery(string $organizationId, ?string $asOfDate): Builder
     {
         return Account::where('accounts.organization_id', $organizationId)
             ->where('accounts.is_active', true)
@@ -214,7 +217,7 @@ class LedgerService
             ->selectRaw('accounts.id, accounts.code, accounts.name, accounts.type, COALESCE(SUM(transaction_lines.debit), 0) as total_debit, COALESCE(SUM(transaction_lines.credit), 0) as total_credit');
     }
 
-    private function computeTrialBalances(\Illuminate\Support\Collection $rows): array
+    private function computeTrialBalances(Collection $rows): array
     {
         $balances = [];
 
@@ -256,10 +259,9 @@ class LedgerService
     /**
      * Validate that all account IDs in the lines exist and belong to the organization.
      *
-     * @param  string  $organizationId
      * @param  JournalLineData[]  $lines
      *
-     * @throws InvalidEntryDataException  When an account is missing or belongs to another org
+     * @throws InvalidEntryDataException When an account is missing or belongs to another org
      */
     private function validateAccounts(string $organizationId, array $lines): void
     {
@@ -294,7 +296,7 @@ class LedgerService
     /**
      * Resolve an account by its chart-of-accounts code within an organization.
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function resolveAccount(string $organizationId, string $code): Account
     {
@@ -347,8 +349,8 @@ class LedgerService
      *
      * Uses bcmath for precision — no floating-point rounding errors.
      *
-     * @throws UnbalancedEntryException  When debits ≠ credits
-     * @throws InvalidEntryDataException  When all amounts are zero
+     * @throws UnbalancedEntryException When debits ≠ credits
+     * @throws InvalidEntryDataException When all amounts are zero
      */
     private function validateBalance(array $lines): void
     {
@@ -376,7 +378,7 @@ class LedgerService
      *
      * Null references are always allowed (e.g. bank imports without ref).
      *
-     * @throws DuplicateReferenceException  When a posted entry with the same reference exists
+     * @throws DuplicateReferenceException When a posted entry with the same reference exists
      */
     private function throwIfDuplicateReference(string $organizationId, ?string $reference): void
     {

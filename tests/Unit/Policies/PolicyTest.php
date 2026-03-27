@@ -7,11 +7,11 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Policies\AccountPolicy;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Policies\BankAccountPolicy;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Policies\ExpensePolicy;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Policies\InvoicePolicy;
 use App\Domains\Organizations\Models\Organization;
@@ -25,7 +25,9 @@ class PolicyTest extends TestCase
     use RefreshDatabase, WithOrganizationPermissions;
 
     private User $memberUser;
+
     private User $outsiderUser;
+
     private Organization $organization;
 
     protected function setUp(): void
@@ -52,7 +54,7 @@ class PolicyTest extends TestCase
 
     public function test_account_policy_viewany_requires_organization_membership(): void
     {
-        $policy = new AccountPolicy();
+        $policy = new AccountPolicy;
 
         $this->assertTrue($policy->viewAny($this->memberUser));
         $this->assertFalse($policy->viewAny($this->outsiderUser));
@@ -60,7 +62,7 @@ class PolicyTest extends TestCase
 
     public function test_account_policy_view_requires_same_organization(): void
     {
-        $policy = new AccountPolicy();
+        $policy = new AccountPolicy;
 
         $account = Account::create([
             'organization_id' => $this->organization->id,
@@ -75,7 +77,7 @@ class PolicyTest extends TestCase
 
     public function test_account_policy_delete_denied_when_has_transaction_lines(): void
     {
-        $policy = new AccountPolicy();
+        $policy = new AccountPolicy;
 
         $account = Account::create([
             'organization_id' => $this->organization->id,
@@ -94,7 +96,7 @@ class PolicyTest extends TestCase
 
     public function test_invoice_policy_view_requires_same_organization(): void
     {
-        $policy = new InvoicePolicy();
+        $policy = new InvoicePolicy;
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -120,7 +122,7 @@ class PolicyTest extends TestCase
 
     public function test_invoice_policy_update_denied_for_non_editable_status(): void
     {
-        $policy = new InvoicePolicy();
+        $policy = new InvoicePolicy;
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -145,7 +147,7 @@ class PolicyTest extends TestCase
 
     public function test_invoice_policy_update_allowed_for_draft(): void
     {
-        $policy = new InvoicePolicy();
+        $policy = new InvoicePolicy;
 
         $client = Customer::create([
             'organization_id' => $this->organization->id,
@@ -174,7 +176,7 @@ class PolicyTest extends TestCase
 
     public function test_expense_policy_view_requires_same_organization(): void
     {
-        $policy = new ExpensePolicy();
+        $policy = new ExpensePolicy;
 
         $expense = Expense::create([
             'organization_id' => $this->organization->id,
@@ -192,7 +194,7 @@ class PolicyTest extends TestCase
 
     public function test_expense_policy_update_denied_for_posted_expense(): void
     {
-        $policy = new ExpensePolicy();
+        $policy = new ExpensePolicy;
 
         $expense = Expense::create([
             'organization_id' => $this->organization->id,
@@ -213,7 +215,7 @@ class PolicyTest extends TestCase
 
     public function test_bank_account_policy_view_requires_same_organization(): void
     {
-        $policy = new BankAccountPolicy();
+        $policy = new BankAccountPolicy;
 
         $bankAccount = BankAccount::create([
             'organization_id' => $this->organization->id,
@@ -229,7 +231,7 @@ class PolicyTest extends TestCase
 
     public function test_bank_account_policy_delete_denied_when_has_transactions(): void
     {
-        $policy = new BankAccountPolicy();
+        $policy = new BankAccountPolicy;
 
         $bankAccount = BankAccount::create([
             'organization_id' => $this->organization->id,

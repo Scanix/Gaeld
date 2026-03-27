@@ -13,7 +13,7 @@ class InvoiceQuery
     {
         return QueryBuilder::for(Invoice::with(['customer'])->withSum('payments', 'amount'), $request)
             ->allowedSorts(['issue_date', 'due_date', 'total', 'number', 'status'], 'issue_date', 'desc')
-            ->allowedFilters(['status'])
+            ->allowedFilters(['status', 'type'])
             ->searchable(['number', 'customer.name'])
             ->apply()
             ->paginate($perPage)

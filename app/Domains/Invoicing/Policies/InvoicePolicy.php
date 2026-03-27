@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Policies;
 
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Users\Models\User;
@@ -57,6 +58,6 @@ class InvoicePolicy extends BasePolicy
     {
         return $this->belongsToOrganization($user, $invoice)
             && $user->hasPermissionTo(Permission::InvoicingEdit)
-            && $invoice->status->canTransitionTo(\App\Domains\Invoicing\Enums\InvoiceStatus::Cancelled);
+            && $invoice->status->canTransitionTo(InvoiceStatus::Cancelled);
     }
 }

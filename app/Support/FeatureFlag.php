@@ -48,7 +48,7 @@ class FeatureFlag
      * The EE plugin overrides this to enforce per-org plan limits.
      *
      * @param  string  $feature  Feature flag name (e.g. 'bank_sync')
-     * @param  mixed   $org      An Organization model instance
+     * @param  mixed  $org  An Organization model instance
      */
     public static function enabledForOrg(string $feature, mixed $org): bool
     {

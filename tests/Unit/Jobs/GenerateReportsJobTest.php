@@ -38,7 +38,7 @@ class GenerateReportsJobTest extends TestCase
         Log::shouldReceive('info')->twice();
         Log::shouldReceive('warning')->never();
 
-        (new GenerateReportsJob())->handle($reportingService);
+        (new GenerateReportsJob)->handle($reportingService);
     }
 
     public function test_job_continues_after_one_organization_fails(): void
@@ -64,6 +64,6 @@ class GenerateReportsJobTest extends TestCase
                 && $context['organization_id'] === $orgB->id;
         });
 
-        (new GenerateReportsJob())->handle($reportingService);
+        (new GenerateReportsJob)->handle($reportingService);
     }
 }

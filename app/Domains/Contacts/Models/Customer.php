@@ -3,6 +3,7 @@
 namespace App\Domains\Contacts\Models;
 
 use App\Domains\Contacts\Enums\ContactType;
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
 
 /**
@@ -29,9 +31,9 @@ use Laravel\Scout\Searchable;
  * @property string|null $payment_terms
  * @property array|null $notes
  * @property string|null $internal_notes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  */
 class Customer extends Model
 {
@@ -68,7 +70,7 @@ class Customer extends Model
 
     public function invoices(): HasMany
     {
-        return $this->hasMany(\App\Domains\Invoicing\Models\Invoice::class);
+        return $this->hasMany(Invoice::class);
     }
 
     public function contactPersons(): MorphMany

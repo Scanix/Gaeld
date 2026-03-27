@@ -558,7 +558,7 @@ return [
     'view_invoices' => 'Visualizza fatture',
     'change_plan' => 'Cambia piano',
     'choose_plan' => 'Scegli un piano',
-    'checkout_success' => "Il tuo abbonamento è ora attivo. Benvenuto!",
+    'checkout_success' => 'Il tuo abbonamento è ora attivo. Benvenuto!',
     'checkout_canceled' => 'Il pagamento è stato annullato. Puoi sottoscrivere un abbonamento in qualsiasi momento.',
 
     // SaaS admin enhancements

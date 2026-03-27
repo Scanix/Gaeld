@@ -17,11 +17,17 @@ use Laravel\Scout\Searchable;
 class QueryBuilder
 {
     private Builder $query;
+
     private Request $request;
+
     private array $allowedSorts = [];
+
     private array $allowedFilters = [];
+
     private array $searchColumns = [];
+
     private string $defaultSort = 'created_at';
+
     private string $defaultDirection = 'desc';
 
     public function __construct(Builder $query, Request $request)
@@ -38,7 +44,7 @@ class QueryBuilder
     /**
      * Define which columns can be sorted by.
      *
-     * @param array<string> $columns
+     * @param  array<string>  $columns
      */
     public function allowedSorts(array $columns, string $default = 'created_at', string $defaultDirection = 'desc'): static
     {
@@ -52,7 +58,7 @@ class QueryBuilder
     /**
      * Define which columns can be filtered (exact match).
      *
-     * @param array<string> $columns
+     * @param  array<string>  $columns
      */
     public function allowedFilters(array $columns): static
     {
@@ -64,7 +70,7 @@ class QueryBuilder
     /**
      * Define which columns are searched via LIKE.
      *
-     * @param array<string> $columns
+     * @param  array<string>  $columns
      */
     public function searchable(array $columns): static
     {

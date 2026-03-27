@@ -5,15 +5,18 @@ namespace App\Domains\Invoicing\Models;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
 
 /**
@@ -23,8 +26,8 @@ use Laravel\Scout\Searchable;
  * @property string|null $journal_entry_id
  * @property string|null $number
  * @property InvoiceStatus $status
- * @property \Illuminate\Support\Carbon $issue_date
- * @property \Illuminate\Support\Carbon $due_date
+ * @property Carbon $issue_date
+ * @property Carbon $due_date
  * @property string $subtotal
  * @property string $vat_amount
  * @property string $total
@@ -35,9 +38,11 @@ use Laravel\Scout\Searchable;
  * @property string|null $qr_type
  * @property string|null $qr_iban
  * @property string|null $justificatif_path
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property InvoiceType $type
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property-read Customer|null $customer
  */
 class Invoice extends Model
 {
@@ -49,6 +54,8 @@ class Invoice extends Model
         'journal_entry_id',
         'number',
         'status',
+        'type',
+        'related_invoice_id',
         'issue_date',
         'due_date',
         'subtotal',
@@ -61,6 +68,8 @@ class Invoice extends Model
         'qr_type',
         'qr_iban',
         'justificatif_path',
+        'reminder_count',
+        'last_reminded_at',
     ];
 
     protected function casts(): array
@@ -72,6 +81,9 @@ class Invoice extends Model
             'vat_amount' => 'decimal:2',
             'total' => 'decimal:2',
             'status' => InvoiceStatus::class,
+            'type' => InvoiceType::class,
+            'reminder_count' => 'integer',
+            'last_reminded_at' => 'datetime',
         ];
     }
 
@@ -100,6 +112,33 @@ class Invoice extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(InvoicePayment::class);
+    }
+
+    public function relatedInvoice(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'related_invoice_id');
+    }
+
+    public function creditNotes(): HasMany
+    {
+        return $this->hasMany(self::class, 'related_invoice_id');
+    }
+
+    public function scopeOfType(Builder $query, InvoiceType $type): Builder
+    {
+        return $query->where('type', $type->value);
+    }
+
+    public function scopeOverdue(Builder $query): Builder
+    {
+        return $query->where('status', InvoiceStatus::Sent)
+            ->where('due_date', '<', now()->toDateString());
+    }
+
+    public function isOverdue(): bool
+    {
+        return $this->status === InvoiceStatus::Sent
+            && $this->due_date->isBefore(now()->startOfDay());
     }
 
     public function amountPaid(): string

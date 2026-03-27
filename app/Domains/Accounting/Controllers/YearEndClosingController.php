@@ -22,20 +22,20 @@ class YearEndClosingController extends Controller
     {
         $this->authorize('viewAny', Account::class);
 
-        $orgId   = $currentOrg->id();
-        $year    = $request->integer('year', now()->subYear()->year);
-        $from    = "{$year}-01-01";
-        $to      = "{$year}-12-31";
+        $orgId = $currentOrg->id();
+        $year = $request->integer('year', now()->subYear()->year);
+        $from = "{$year}-01-01";
+        $to = "{$year}-12-31";
 
         [$income, $expenses, $netResult] = $this->computeClosingAccounts($orgId, $from, $to);
 
         return Inertia::render('Accounting/YearEndClosing', [
-            'year'        => $year,
-            'fromDate'    => $from,
-            'toDate'      => $to,
-            'income'      => $income,
-            'expenses'    => $expenses,
-            'netResult'   => $netResult,
+            'year' => $year,
+            'fromDate' => $from,
+            'toDate' => $to,
+            'income' => $income,
+            'expenses' => $expenses,
+            'netResult' => $netResult,
         ]);
     }
 
@@ -46,15 +46,15 @@ class YearEndClosingController extends Controller
         $orgId = $currentOrg->id();
 
         $validated = $request->validate([
-            'year'                => 'required|integer|min:2000|max:2100',
-            'closing_date'        => 'required|date',
-            'reference'           => 'required|string|max:50',
+            'year' => 'required|integer|min:2000|max:2100',
+            'closing_date' => 'required|date',
+            'reference' => 'required|string|max:50',
             'result_account_code' => 'required|string|max:20',
         ]);
 
-        $year  = (int) $validated['year'];
-        $from  = "{$year}-01-01";
-        $to    = "{$year}-12-31";
+        $year = (int) $validated['year'];
+        $from = "{$year}-01-01";
+        $to = "{$year}-12-31";
 
         [$income, $expenses] = $this->computeClosingAccounts($orgId, $from, $to);
 
@@ -81,7 +81,7 @@ class YearEndClosingController extends Controller
                 // Revenue (credit-normal): debit the account, credit result
                 // Expense (debit-normal):  credit the account, debit result
                 $lines = [];
-                $netDebitOnResult  = '0';  // debits to result account (for expenses)
+                $netDebitOnResult = '0';  // debits to result account (for expenses)
                 $netCreditOnResult = '0';  // credits to result account (for revenues)
 
                 foreach ($income as $row) {
@@ -90,9 +90,9 @@ class YearEndClosingController extends Controller
                     }
                     $lines[] = new JournalLineData(
                         accountId: (string) $row['account_id'],
-                        debit:     (string) $row['balance'],
-                        credit:    '0',
-                        description: "Bouclement {$year} — clôture " . $row['code'],
+                        debit: (string) $row['balance'],
+                        credit: '0',
+                        description: "Bouclement {$year} — clôture ".$row['code'],
                     );
                     $netCreditOnResult = bcadd($netCreditOnResult, (string) $row['balance'], 2);
                 }
@@ -103,29 +103,29 @@ class YearEndClosingController extends Controller
                     }
                     $lines[] = new JournalLineData(
                         accountId: (string) $row['account_id'],
-                        debit:     '0',
-                        credit:    (string) $row['balance'],
-                        description: "Bouclement {$year} — clôture " . $row['code'],
+                        debit: '0',
+                        credit: (string) $row['balance'],
+                        description: "Bouclement {$year} — clôture ".$row['code'],
                     );
                     $netDebitOnResult = bcadd($netDebitOnResult, (string) $row['balance'], 2);
                 }
 
                 // Add result account line (net debit or credit)
-                $netDebit  = $netDebitOnResult;
+                $netDebit = $netDebitOnResult;
                 $netCredit = $netCreditOnResult;
 
                 $lines[] = new JournalLineData(
                     accountId: (string) $resultAccount->id,
-                    debit:     $netDebit,
-                    credit:    $netCredit,
+                    debit: $netDebit,
+                    credit: $netCredit,
                     description: "Bouclement {$year} — résultat de l'exercice",
                 );
 
                 $entry = new JournalEntryData(
-                    date:        $validated['closing_date'],
-                    reference:   $validated['reference'],
+                    date: $validated['closing_date'],
+                    reference: $validated['reference'],
                     description: "Bouclement de compte {$year}",
-                    lines:       $lines,
+                    lines: $lines,
                 );
 
                 $ledger->postEntry($orgId, $entry);
@@ -153,9 +153,9 @@ class YearEndClosingController extends Controller
             ->orderBy('code')
             ->get();
 
-        $income   = [];
+        $income = [];
         $expenses = [];
-        $net      = '0';
+        $net = '0';
 
         foreach ($accounts as $account) {
             $query = TransactionLine::where('account_id', $account->id)
@@ -165,7 +165,7 @@ class YearEndClosingController extends Controller
                     ->where('date', '<=', $to)
                 );
 
-            $debits  = (string) (clone $query)->sum('debit');
+            $debits = (string) (clone $query)->sum('debit');
             $credits = (string) (clone $query)->sum('credit');
 
             // Revenue is credit-normal: balance = credits − debits
@@ -181,9 +181,9 @@ class YearEndClosingController extends Controller
 
             $row = [
                 'account_id' => $account->id,
-                'code'       => $account->code,
-                'name'       => $account->name,
-                'balance'    => $balance,
+                'code' => $account->code,
+                'name' => $account->name,
+                'balance' => $balance,
             ];
 
             if ($account->type === AccountType::Revenue) {
