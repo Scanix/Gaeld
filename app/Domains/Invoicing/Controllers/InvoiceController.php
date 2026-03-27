@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Controllers;
 
+use App\Domains\Invoicing\Actions\CancelInvoiceAction;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DeleteInvoiceAction;
 use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
@@ -18,6 +19,7 @@ use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
 use App\Domains\Invoicing\Requests\RecordPaymentRequest;
 use App\Domains\Invoicing\Requests\StoreInvoiceRequest;
 use App\Domains\Invoicing\Requests\UpdateInvoiceRequest;
+use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Contacts\Queries\CustomerQuery;
 use App\Domains\Invoicing\Models\Invoice;
@@ -92,6 +94,11 @@ class InvoiceController extends Controller
             'justificatifUrl' => $invoice->justificatif_path
                 ? route('invoices.justificatif.download', $invoice)
                 : null,
+            'bankAccounts' => BankAccount::where('organization_id', $invoice->organization_id)
+                ->where('is_active', true)
+                ->select('id', 'name', 'iban', 'currency')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
@@ -150,7 +157,7 @@ class InvoiceController extends Controller
 
     public function finalize(Invoice $invoice, FinalizeInvoiceAction $action): RedirectResponse
     {
-        $this->authorize('update', $invoice);
+        $this->authorize('finalize', $invoice);
 
         try {
             $action->execute($invoice);
@@ -160,6 +167,20 @@ class InvoiceController extends Controller
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', __('app.invoice_finalized'));
+    }
+
+    public function cancel(Invoice $invoice, CancelInvoiceAction $action): RedirectResponse
+    {
+        $this->authorize('cancel', $invoice);
+
+        try {
+            $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('success', __('app.invoice_cancelled'));
     }
 
     public function recordPayment(RecordPaymentRequest $request, Invoice $invoice, RecordPaymentAction $action): RedirectResponse

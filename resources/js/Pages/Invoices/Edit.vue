@@ -78,6 +78,13 @@ function onCustomerCreated(customer) {
   form.customer_id = customer.id
 }
 
+const currencyOptions = [
+  { value: 'CHF', label: 'CHF' },
+  { value: 'EUR', label: 'EUR' },
+  { value: 'USD', label: 'USD' },
+  { value: 'GBP', label: 'GBP' },
+]
+
 const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
@@ -138,6 +145,13 @@ const vatOptions = [
               :label="t('due_date')"
               :error="form.errors.due_date"
               required
+            />
+            <FormSelect
+              id="currency"
+              v-model="form.currency"
+              :label="t('currency')"
+              :options="currencyOptions"
+              :error="form.errors.currency"
             />
           </div>
 
