@@ -288,6 +288,16 @@ return [
     'add_first_account' => 'Ajouter votre premier compte',
     'transactions' => 'Transactions',
     'no_transactions_recorded' => 'Aucune transaction enregistrée.',
+    'bank_account' => 'Compte bancaire',
+    'select_bank_account' => 'Sélectionner un compte bancaire',
+    'record_transaction' => 'Enregistrer une transaction',
+    'select_account' => 'Sélectionner un compte',
+    'edit_bank_account' => 'Modifier le compte bancaire',
+    'delete_bank_account' => 'Supprimer le compte bancaire',
+    'delete_bank_account_confirm' => 'Êtes-vous sûr de vouloir supprimer le compte bancaire ":name" ? Cette action est irréversible.',
+    'bank_account_updated' => 'Compte bancaire mis à jour.',
+    'bank_account_deleted' => 'Compte bancaire supprimé.',
+    'supplier' => 'Fournisseur',
 
     // Reconciliation
     'unreconciled' => 'Non rapproché',
@@ -642,4 +652,28 @@ return [
     'no_results_found' => 'Aucun résultat trouvé.',
     'navigate' => 'Naviguer',
     'open' => 'Ouvrir',
+
+    // Invoice cancel
+    'invoice_cancelled' => 'Facture annulée.',
+    'cancel_invoice' => 'Annuler la facture',
+    'cancel_invoice_confirm' => 'Êtes-vous sûr de vouloir annuler la facture :number ? Cette action est irréversible.',
+
+    // Contact persons
+    'contact_persons' => 'Personnes de contact',
+    'contact_person' => 'Personne de contact',
+    'add_contact_person' => 'Ajouter une personne de contact',
+    'edit_contact_person' => 'Modifier la personne de contact',
+    'delete_contact_person' => 'Supprimer la personne de contact',
+    'delete_contact_person_confirm' => 'Êtes-vous sûr de vouloir supprimer cette personne de contact ?',
+    'no_contact_persons' => 'Aucune personne de contact.',
+    'first_name' => 'Prénom',
+    'last_name' => 'Nom',
+    'position' => 'Poste',
+    'primary_contact' => 'Contact principal',
+    'notes' => 'Notes',
+
+    // Contact type
+    'contact_type' => 'Type de contact',
+    'organization' => 'Organisation',
+    'individual' => 'Particulier',
 ];

@@ -20,6 +20,7 @@ const props = defineProps({
 })
 
 const form = useForm({
+  type: props.customer.type ?? 'organization',
   name: props.customer.name,
   email: props.customer.email ?? '',
   phone: props.customer.phone ?? '',
@@ -54,6 +55,11 @@ const currencyOptions = [
   { value: 'USD', label: 'USD' },
   { value: 'GBP', label: 'GBP' },
 ]
+
+const typeOptions = [
+  { value: 'organization', label: t('organization') },
+  { value: 'individual', label: t('individual') },
+]
 </script>
 
 <template>
@@ -65,6 +71,14 @@ const currencyOptions = [
       <CardContent>
         <form class="space-y-6" @submit.prevent="submit">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormSelect
+              id="type"
+              v-model="form.type"
+              :label="t('contact_type')"
+              :options="typeOptions"
+              :error="form.errors.type"
+              class="sm:col-span-2"
+            />
             <FormInput
               id="name"
               v-model="form.name"

@@ -288,6 +288,16 @@ return [
     'add_first_account' => 'Erstes Konto hinzufügen',
     'transactions' => 'Transaktionen',
     'no_transactions_recorded' => 'Noch keine Transaktionen erfasst.',
+    'bank_account' => 'Bankkonto',
+    'select_bank_account' => 'Bankkonto auswählen',
+    'record_transaction' => 'Transaktion erfassen',
+    'select_account' => 'Konto auswählen',
+    'edit_bank_account' => 'Bankkonto bearbeiten',
+    'delete_bank_account' => 'Bankkonto löschen',
+    'delete_bank_account_confirm' => 'Möchten Sie das Bankkonto ":name" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+    'bank_account_updated' => 'Bankkonto aktualisiert.',
+    'bank_account_deleted' => 'Bankkonto gelöscht.',
+    'supplier' => 'Lieferant',
 
     // Reconciliation
     'unreconciled' => 'Nicht abgeglichen',
@@ -643,4 +653,28 @@ return [
     'no_results_found' => 'Keine Ergebnisse gefunden.',
     'navigate' => 'Navigieren',
     'open' => 'Öffnen',
+
+    // Invoice cancel
+    'invoice_cancelled' => 'Rechnung storniert.',
+    'cancel_invoice' => 'Rechnung stornieren',
+    'cancel_invoice_confirm' => 'Möchten Sie die Rechnung :number wirklich stornieren? Diese Aktion kann nicht rückgängig gemacht werden.',
+
+    // Contact persons
+    'contact_persons' => 'Kontaktpersonen',
+    'contact_person' => 'Kontaktperson',
+    'add_contact_person' => 'Kontaktperson hinzufügen',
+    'edit_contact_person' => 'Kontaktperson bearbeiten',
+    'delete_contact_person' => 'Kontaktperson löschen',
+    'delete_contact_person_confirm' => 'Möchten Sie diese Kontaktperson wirklich löschen?',
+    'no_contact_persons' => 'Noch keine Kontaktpersonen.',
+    'first_name' => 'Vorname',
+    'last_name' => 'Nachname',
+    'position' => 'Position',
+    'primary_contact' => 'Hauptkontakt',
+    'notes' => 'Notizen',
+
+    // Contact type
+    'contact_type' => 'Kontakttyp',
+    'organization' => 'Organisation',
+    'individual' => 'Privatperson',
 ];
