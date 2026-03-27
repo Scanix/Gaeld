@@ -32,6 +32,7 @@ const form = useForm({
   currency: props.customer.currency ?? 'CHF',
   payment_terms: props.customer.payment_terms ?? '',
   internal_notes: props.customer.internal_notes ?? '',
+  notes: props.customer.notes?.default ?? '',
 })
 
 useUnsavedChanges(computed(() => form.isDirty))
@@ -154,6 +155,13 @@ const typeOptions = [
               v-model="form.internal_notes"
               :label="t('internal_notes')"
               :error="form.errors.internal_notes"
+              class="sm:col-span-2"
+            />
+            <FormInput
+              id="notes"
+              v-model="form.notes"
+              :label="t('notes')"
+              :error="form.errors.notes"
               class="sm:col-span-2"
             />
           </div>

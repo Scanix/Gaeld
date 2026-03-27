@@ -34,6 +34,7 @@ const form = useForm({
   iban: props.supplier.iban ?? '',
   default_expense_category: props.supplier.default_expense_category ?? '',
   internal_notes: props.supplier.internal_notes ?? '',
+  notes: props.supplier.notes?.default ?? '',
 })
 
 useUnsavedChanges(computed(() => form.isDirty))
@@ -184,6 +185,12 @@ const typeOptions = [
               v-model="form.internal_notes"
               :label="t('internal_notes')"
               :error="form.errors.internal_notes"
+            />
+            <FormInput
+              id="notes"
+              v-model="form.notes"
+              :label="t('notes')"
+              :error="form.errors.notes"
             />
           </div>
 

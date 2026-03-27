@@ -29,6 +29,7 @@ class CustomerController extends Controller
         'currency' => 'nullable|string|size:3',
         'payment_terms' => 'nullable|string|max:255',
         'internal_notes' => 'nullable|string',
+        'notes' => 'nullable|string|max:2000',
     ];
 
     public function index(Request $request): Response
