@@ -28,11 +28,11 @@ enum InvoiceStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Draft => 'Draft',
-            self::Sent => 'Sent',
-            self::Paid => 'Paid',
-            self::Overdue => 'Overdue',
-            self::Cancelled => 'Cancelled',
+            self::Draft => __('app.invoice_status_draft'),
+            self::Sent => __('app.invoice_status_sent'),
+            self::Paid => __('app.invoice_status_paid'),
+            self::Overdue => __('app.invoice_status_overdue'),
+            self::Cancelled => __('app.invoice_status_cancelled'),
         };
     }
 

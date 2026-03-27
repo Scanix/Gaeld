@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Organizations\Controllers\ActivityLogController;
 use App\Domains\Organizations\Controllers\InvitationController;
 use App\Domains\Organizations\Controllers\MemberController;
 use App\Domains\Organizations\Controllers\OrganizationController;
@@ -17,6 +18,9 @@ Route::post('/settings/invoice/logo', [OrganizationSettingsController::class, 'u
 Route::delete('/settings/invoice/logo', [OrganizationSettingsController::class, 'deleteLogo'])->name('settings.logo.delete');
 Route::get('/settings/logo', [OrganizationSettingsController::class, 'serveLogo'])->name('settings.logo');
 Route::put('/settings/communications', [OrganizationSettingsController::class, 'updateCommunications'])->name('settings.communications');
+
+// Activity log
+Route::get('/settings/activity-log', [ActivityLogController::class, 'index'])->name('settings.activity-log');
 
 // Organization members
 Route::post('/organizations/{organization}/members/{user}/role', [MemberController::class, 'updateRole'])->name('organizations.members.updateRole');

@@ -6,9 +6,14 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
+import Modal from '@/Components/UI/Modal.vue'
+import FormInput from '@/Components/UI/FormInput.vue'
+import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
-import { Pencil } from 'lucide-vue-next'
+import { ref, reactive } from 'vue'
+import { Pencil, Plus, Trash2, Star } from 'lucide-vue-next'
+import axios from 'axios'
 
 const { t } = useTranslations()
 
@@ -22,6 +27,115 @@ const statusVariant = {
   approved: 'default',
   paid: 'success',
   rejected: 'destructive',
+}
+
+// Contact persons state
+const contactPersons = ref(props.supplier.contact_persons ?? [])
+const showContactModal = ref(false)
+const showDeleteContactDialog = ref(false)
+const contactToDelete = ref(null)
+const editingContact = ref(null)
+const contactErrors = ref({})
+const contactProcessing = ref(false)
+
+const contactForm = reactive({
+  first_name: '',
+  last_name: '',
+  email: '',
+  phone: '',
+  position: '',
+  is_primary: false,
+  notes: '',
+})
+
+function resetContactForm() {
+  Object.assign(contactForm, {
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    position: '',
+    is_primary: false,
+    notes: '',
+  })
+  contactErrors.value = {}
+  editingContact.value = null
+}
+
+function openAddContact() {
+  resetContactForm()
+  showContactModal.value = true
+}
+
+function openEditContact(contact) {
+  editingContact.value = contact
+  Object.assign(contactForm, {
+    first_name: contact.first_name,
+    last_name: contact.last_name,
+    email: contact.email ?? '',
+    phone: contact.phone ?? '',
+    position: contact.position ?? '',
+    is_primary: contact.is_primary ?? false,
+    notes: contact.notes ?? '',
+  })
+  contactErrors.value = {}
+  showContactModal.value = true
+}
+
+async function submitContact() {
+  contactProcessing.value = true
+  contactErrors.value = {}
+  try {
+    if (editingContact.value) {
+      const { data } = await axios.put(
+        `/suppliers/${props.supplier.id}/contact-persons/${editingContact.value.id}`,
+        contactForm,
+      )
+      const idx = contactPersons.value.findIndex(c => c.id === editingContact.value.id)
+      if (idx !== -1) contactPersons.value[idx] = data.contact_person
+      if (data.contact_person.is_primary) {
+        contactPersons.value.forEach((c, i) => {
+          if (i !== idx) c.is_primary = false
+        })
+      }
+    } else {
+      const { data } = await axios.post(
+        `/suppliers/${props.supplier.id}/contact-persons`,
+        contactForm,
+      )
+      if (data.contact_person.is_primary) {
+        contactPersons.value.forEach(c => { c.is_primary = false })
+      }
+      contactPersons.value.push(data.contact_person)
+    }
+    showContactModal.value = false
+    resetContactForm()
+  } catch (err) {
+    if (err.response?.status === 422) {
+      contactErrors.value = err.response.data.errors ?? {}
+    }
+  } finally {
+    contactProcessing.value = false
+  }
+}
+
+function confirmDeleteContact(contact) {
+  contactToDelete.value = contact
+  showDeleteContactDialog.value = true
+}
+
+async function executeDeleteContact() {
+  contactProcessing.value = true
+  try {
+    await axios.delete(
+      `/suppliers/${props.supplier.id}/contact-persons/${contactToDelete.value.id}`,
+    )
+    contactPersons.value = contactPersons.value.filter(c => c.id !== contactToDelete.value.id)
+    showDeleteContactDialog.value = false
+    contactToDelete.value = null
+  } finally {
+    contactProcessing.value = false
+  }
 }
 </script>
 
@@ -119,5 +233,119 @@ const statusVariant = {
         </CardContent>
       </Card>
     </div>
+
+    <!-- Contact Persons -->
+    <Card class="mt-6">
+      <CardHeader>
+        <div class="flex items-center justify-between">
+          <CardTitle>{{ t('contact_persons') }}</CardTitle>
+          <Button size="sm" @click="openAddContact">
+            <Plus class="mr-1 h-4 w-4" />
+            {{ t('add_contact_person') }}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div v-if="!contactPersons.length" class="text-sm text-[hsl(var(--muted-foreground))]">
+          {{ t('no_contact_persons') }}
+        </div>
+        <div v-else class="space-y-3">
+          <div
+            v-for="contact in contactPersons"
+            :key="contact.id"
+            class="flex items-start justify-between rounded-lg border p-3"
+          >
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-medium">{{ contact.first_name }} {{ contact.last_name }}</span>
+                <Star v-if="contact.is_primary" class="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <span v-if="contact.position" class="text-sm text-[hsl(var(--muted-foreground))]">
+                  — {{ contact.position }}
+                </span>
+              </div>
+              <div class="mt-1 flex gap-4 text-sm text-[hsl(var(--muted-foreground))]">
+                <a v-if="contact.email" :href="`mailto:${contact.email}`" class="underline">{{ contact.email }}</a>
+                <span v-if="contact.phone">{{ contact.phone }}</span>
+              </div>
+              <p v-if="contact.notes" class="mt-1 text-sm italic text-[hsl(var(--muted-foreground))]">{{ contact.notes }}</p>
+            </div>
+            <div class="flex gap-1">
+              <Button variant="ghost" size="sm" @click="openEditContact(contact)">
+                <Pencil class="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" @click="confirmDeleteContact(contact)">
+                <Trash2 class="h-4 w-4 text-[hsl(var(--destructive))]" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- Contact Person Modal -->
+    <Modal :open="showContactModal" :title="editingContact ? t('edit_contact_person') : t('add_contact_person')" @close="showContactModal = false">
+      <form class="space-y-4" @submit.prevent="submitContact">
+        <div class="grid grid-cols-2 gap-4">
+          <FormInput
+            id="cp-first-name"
+            v-model="contactForm.first_name"
+            :label="t('first_name')"
+            :error="contactErrors.first_name?.[0]"
+            required
+          />
+          <FormInput
+            id="cp-last-name"
+            v-model="contactForm.last_name"
+            :label="t('last_name')"
+            :error="contactErrors.last_name?.[0]"
+            required
+          />
+        </div>
+        <FormInput
+          id="cp-email"
+          v-model="contactForm.email"
+          type="email"
+          :label="t('email')"
+          :error="contactErrors.email?.[0]"
+        />
+        <FormInput
+          id="cp-phone"
+          v-model="contactForm.phone"
+          :label="t('phone')"
+          :error="contactErrors.phone?.[0]"
+        />
+        <FormInput
+          id="cp-position"
+          v-model="contactForm.position"
+          :label="t('position')"
+          :error="contactErrors.position?.[0]"
+        />
+        <FormInput
+          id="cp-notes"
+          v-model="contactForm.notes"
+          :label="t('notes')"
+          :error="contactErrors.notes?.[0]"
+        />
+        <label class="flex items-center gap-2 text-sm">
+          <input v-model="contactForm.is_primary" type="checkbox" class="rounded border-[hsl(var(--border))]" />
+          {{ t('primary_contact') }}
+        </label>
+        <div class="flex justify-end gap-3">
+          <Button type="button" variant="outline" @click="showContactModal = false">{{ t('cancel') }}</Button>
+          <Button type="submit" :disabled="contactProcessing">{{ editingContact ? t('save_changes') : t('create') }}</Button>
+        </div>
+      </form>
+    </Modal>
+
+    <!-- Delete Contact Person Confirmation -->
+    <ConfirmDialog
+      :open="showDeleteContactDialog"
+      :title="t('delete_contact_person')"
+      :message="t('delete_contact_person_confirm')"
+      :confirm-label="t('delete')"
+      :processing="contactProcessing"
+      @confirm="executeDeleteContact"
+      @cancel="showDeleteContactDialog = false"
+    />
   </AppLayout>
 </template>

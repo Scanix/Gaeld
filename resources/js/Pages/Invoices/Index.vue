@@ -87,11 +87,11 @@ const statusFilters = computed(() => [
     label: t('all_statuses'),
     value: props.query.filter?.status ?? '',
     options: [
-      { value: 'draft', label: 'Draft' },
-      { value: 'sent', label: 'Sent' },
-      { value: 'paid', label: 'Paid' },
-      { value: 'overdue', label: 'Overdue' },
-      { value: 'cancelled', label: 'Cancelled' },
+      { value: 'draft', label: t('invoice_status_draft') },
+      { value: 'sent', label: t('invoice_status_sent') },
+      { value: 'paid', label: t('invoice_status_paid') },
+      { value: 'overdue', label: t('invoice_status_overdue') },
+      { value: 'cancelled', label: t('invoice_status_cancelled') },
     ],
   },
 ])
@@ -130,7 +130,7 @@ const statusFilters = computed(() => [
     >
       <template #cell-status="{ value }">
         <Badge :variant="statusVariant[value] ?? 'secondary'">
-          {{ value }}
+          {{ t(`invoice_status_${value}`) }}
         </Badge>
       </template>
       <template #cell-actions="{ row }">

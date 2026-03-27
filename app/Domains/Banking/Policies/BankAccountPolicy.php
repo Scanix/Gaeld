@@ -5,36 +5,37 @@ namespace App\Domains\Banking\Policies;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Users\Models\User;
+use App\Support\Policies\BasePolicy;
 
-class BankAccountPolicy
+class BankAccountPolicy extends BasePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->resolveCurrentOrganization() !== null
+        return $this->hasCurrentOrganization($user)
             && $user->hasPermissionTo(Permission::BankingView);
     }
 
     public function view(User $user, BankAccount $bankAccount): bool
     {
-        return $user->organizations()->where('organizations.id', $bankAccount->organization_id)->exists()
+        return $this->belongsToOrganization($user, $bankAccount)
             && $user->hasPermissionTo(Permission::BankingView);
     }
 
     public function create(User $user): bool
     {
-        return $user->resolveCurrentOrganization() !== null
+        return $this->hasCurrentOrganization($user)
             && $user->hasPermissionTo(Permission::BankingCreate);
     }
 
     public function update(User $user, BankAccount $bankAccount): bool
     {
-        return $user->organizations()->where('organizations.id', $bankAccount->organization_id)->exists()
+        return $this->belongsToOrganization($user, $bankAccount)
             && $user->hasPermissionTo(Permission::BankingEdit);
     }
 
     public function delete(User $user, BankAccount $bankAccount): bool
     {
-        return $user->organizations()->where('organizations.id', $bankAccount->organization_id)->exists()
+        return $this->belongsToOrganization($user, $bankAccount)
             && $user->hasPermissionTo(Permission::BankingDelete)
             && $bankAccount->transactions()->doesntExist();
     }

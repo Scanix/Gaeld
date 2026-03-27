@@ -5,44 +5,45 @@ namespace App\Domains\Expenses\Policies;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Users\Models\User;
+use App\Support\Policies\BasePolicy;
 
-class ExpensePolicy
+class ExpensePolicy extends BasePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->resolveCurrentOrganization() !== null
+        return $this->hasCurrentOrganization($user)
             && $user->hasPermissionTo(Permission::ExpensesView);
     }
 
     public function view(User $user, Expense $expense): bool
     {
-        return $user->organizations()->where('organizations.id', $expense->organization_id)->exists()
+        return $this->belongsToOrganization($user, $expense)
             && $user->hasPermissionTo(Permission::ExpensesView);
     }
 
     public function create(User $user): bool
     {
-        return $user->resolveCurrentOrganization() !== null
+        return $this->hasCurrentOrganization($user)
             && $user->hasPermissionTo(Permission::ExpensesCreate);
     }
 
     public function update(User $user, Expense $expense): bool
     {
-        return $user->organizations()->where('organizations.id', $expense->organization_id)->exists()
+        return $this->belongsToOrganization($user, $expense)
             && $user->hasPermissionTo(Permission::ExpensesEdit)
             && $expense->status->isEditable();
     }
 
     public function delete(User $user, Expense $expense): bool
     {
-        return $user->organizations()->where('organizations.id', $expense->organization_id)->exists()
+        return $this->belongsToOrganization($user, $expense)
             && $user->hasPermissionTo(Permission::ExpensesDelete)
             && $expense->status->isDeletable();
     }
 
     public function approve(User $user, Expense $expense): bool
     {
-        return $user->organizations()->where('organizations.id', $expense->organization_id)->exists()
+        return $this->belongsToOrganization($user, $expense)
             && $user->hasPermissionTo(Permission::ExpensesApprove);
     }
 }

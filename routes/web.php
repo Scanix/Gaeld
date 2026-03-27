@@ -14,7 +14,10 @@ use App\Domains\Organizations\Controllers\InvitationController;
 use App\Domains\Organizations\Controllers\MemberController;
 use App\Domains\Organizations\Controllers\OrganizationController;
 use App\Domains\Organizations\Controllers\OrganizationSettingsController;
+use App\Domains\Organizations\Controllers\ActivityLogController;
 use App\Domains\Organizations\Controllers\OnboardingController;
+use App\Domains\Api\Controllers\TokenSettingsController;
+use App\Domains\Api\Controllers\WebhookSettingsController;
 use App\Domains\Reporting\Controllers\ReportController;
 use App\Domains\Users\Controllers\AuthenticatedSessionController;
 use App\Domains\Users\Controllers\EmailVerificationController;
@@ -52,9 +55,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/two-factor-challenge', [TwoFactorChallengeController::class, 'store'])->middleware('throttle:5,1')->name('two-factor.store');
 
     Route::get('/forgot-password', [PasswordResetController::class, 'requestForm'])->name('password.request');
-    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->middleware('throttle:3,1')->name('password.email');
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'resetForm'])->name('password.reset');
-    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1')->name('password.update');
 
     Route::get('/setup', [SetupWizardController::class, 'index'])->name('setup.index');
     Route::post('/setup', [SetupWizardController::class, 'store'])->name('setup.store');
@@ -163,6 +166,24 @@ Route::middleware(['auth', 'verified', 'org', 'org-2fa'])->group(function () {
     Route::delete('/settings/invoice/logo', [OrganizationSettingsController::class, 'deleteLogo'])->name('settings.logo.delete');
     Route::get('/settings/logo', [OrganizationSettingsController::class, 'serveLogo'])->name('settings.logo');
     Route::put('/settings/communications', [OrganizationSettingsController::class, 'updateCommunications'])->name('settings.communications');
+
+    // Activity log
+    Route::get('/settings/activity-log', [ActivityLogController::class, 'index'])->name('settings.activity-log');
+
+    // API tokens & webhooks settings (EE only)
+    Route::middleware('feature:api_access')->group(function () {
+        Route::get('/settings/api-tokens', [TokenSettingsController::class, 'index'])->name('settings.api-tokens');
+        Route::post('/settings/api-tokens/personal', [TokenSettingsController::class, 'storePersonal'])->name('settings.api-tokens.personal.store');
+        Route::post('/settings/api-tokens/organization', [TokenSettingsController::class, 'storeOrganization'])->name('settings.api-tokens.organization.store');
+        Route::delete('/settings/api-tokens/personal/{token}', [TokenSettingsController::class, 'destroyPersonal'])->name('settings.api-tokens.personal.destroy');
+        Route::delete('/settings/api-tokens/organization/{token}', [TokenSettingsController::class, 'destroyOrganization'])->name('settings.api-tokens.organization.destroy');
+
+        Route::get('/settings/webhooks', [WebhookSettingsController::class, 'index'])->name('settings.webhooks');
+        Route::post('/settings/webhooks', [WebhookSettingsController::class, 'store'])->name('settings.webhooks.store');
+        Route::put('/settings/webhooks/{webhook}', [WebhookSettingsController::class, 'update'])->name('settings.webhooks.update');
+        Route::delete('/settings/webhooks/{webhook}', [WebhookSettingsController::class, 'destroy'])->name('settings.webhooks.destroy');
+        Route::post('/settings/webhooks/{webhook}/regenerate-secret', [WebhookSettingsController::class, 'regenerateSecret'])->name('settings.webhooks.regenerate-secret');
+    });
 
     // Organization members
     Route::post('/organizations/{organization}/members/{user}/role', [MemberController::class, 'updateRole'])->name('organizations.members.updateRole');

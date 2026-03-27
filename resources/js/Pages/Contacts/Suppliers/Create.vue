@@ -16,6 +16,7 @@ import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 const { t } = useTranslations()
 
 const form = useForm({
+  type: 'organization',
   name: '',
   email: '',
   phone: '',
@@ -29,6 +30,7 @@ const form = useForm({
   iban: '',
   default_expense_category: '',
   internal_notes: '',
+  notes: '',
 })
 
 useUnsavedChanges(computed(() => form.isDirty))
@@ -64,6 +66,11 @@ const categoryOptions = [
   { value: 'equipment', label: 'Equipment' },
   { value: 'other', label: 'Other' },
 ]
+
+const typeOptions = [
+  { value: 'organization', label: t('organization') },
+  { value: 'individual', label: t('individual') },
+]
 </script>
 
 <template>
@@ -75,6 +82,14 @@ const categoryOptions = [
       <CardContent>
         <form class="space-y-6" @submit.prevent="submit">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormSelect
+              id="type"
+              v-model="form.type"
+              :label="t('contact_type')"
+              :options="typeOptions"
+              :error="form.errors.type"
+              class="sm:col-span-2"
+            />
             <FormInput
               id="name"
               v-model="form.name"
@@ -166,6 +181,12 @@ const categoryOptions = [
               v-model="form.internal_notes"
               :label="t('internal_notes')"
               :error="form.errors.internal_notes"
+            />
+            <FormInput
+              id="notes"
+              v-model="form.notes"
+              :label="t('notes')"
+              :error="form.errors.notes"
             />
           </div>
 

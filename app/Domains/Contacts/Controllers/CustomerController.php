@@ -17,6 +17,7 @@ use Inertia\Response;
 class CustomerController extends Controller
 {
     private const VALIDATION_RULES = [
+        'type' => 'nullable|string|in:organization,individual',
         'name' => 'required|string|max:255',
         'email' => 'nullable|email|max:255',
         'phone' => 'nullable|string|max:50',
@@ -28,6 +29,7 @@ class CustomerController extends Controller
         'currency' => 'nullable|string|size:3',
         'payment_terms' => 'nullable|string|max:255',
         'internal_notes' => 'nullable|string',
+        'notes' => 'nullable|string|max:2000',
     ];
 
     public function index(Request $request): Response
@@ -74,7 +76,7 @@ class CustomerController extends Controller
         $this->authorize('view', $customer);
 
         return Inertia::render('Contacts/Customers/Show', [
-            'customer' => $customer->load('invoices'),
+            'customer' => $customer->load(['invoices', 'contactPersons']),
         ]);
     }
 

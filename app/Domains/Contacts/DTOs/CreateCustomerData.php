@@ -9,6 +9,7 @@ readonly class CreateCustomerData
     public function __construct(
         public string $organizationId,
         public string $name,
+        public ?string $type = 'organization',
         public ?AddressData $addressData = null,
         public ?string $email = null,
         public ?string $phone = null,
@@ -16,6 +17,7 @@ readonly class CreateCustomerData
         public ?string $currency = null,
         public ?string $paymentTerms = null,
         public ?string $internalNotes = null,
+        public ?string $notes = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -23,6 +25,7 @@ readonly class CreateCustomerData
         return new self(
             organizationId: $data['organization_id'],
             name: $data['name'],
+            type: $data['type'] ?? 'organization',
             addressData: AddressData::fromArray($data),
             email: $data['email'] ?? null,
             phone: $data['phone'] ?? null,
@@ -30,6 +33,7 @@ readonly class CreateCustomerData
             currency: $data['currency'] ?? null,
             paymentTerms: $data['payment_terms'] ?? null,
             internalNotes: $data['internal_notes'] ?? null,
+            notes: $data['notes'] ?? null,
         );
     }
 
@@ -38,12 +42,14 @@ readonly class CreateCustomerData
         return [
             'organization_id' => $this->organizationId,
             'name' => $this->name,
+            'type' => $this->type,
             'email' => $this->email,
             'phone' => $this->phone,
             'vat_number' => $this->vatNumber,
             'currency' => $this->currency,
             'payment_terms' => $this->paymentTerms,
             'internal_notes' => $this->internalNotes,
+            'notes' => $this->notes ? ['default' => $this->notes] : null,
         ] + ($this->addressData?->toArray() ?? AddressData::empty()->toArray());
     }
 }

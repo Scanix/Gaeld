@@ -16,6 +16,7 @@ import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 const { t } = useTranslations()
 
 const form = useForm({
+  type: 'organization',
   name: '',
   email: '',
   phone: '',
@@ -27,6 +28,7 @@ const form = useForm({
   currency: 'CHF',
   payment_terms: '',
   internal_notes: '',
+  notes: '',
 })
 
 useUnsavedChanges(computed(() => form.isDirty))
@@ -50,6 +52,11 @@ const currencyOptions = [
   { value: 'USD', label: 'USD' },
   { value: 'GBP', label: 'GBP' },
 ]
+
+const typeOptions = [
+  { value: 'organization', label: t('organization') },
+  { value: 'individual', label: t('individual') },
+]
 </script>
 
 <template>
@@ -61,6 +68,14 @@ const currencyOptions = [
       <CardContent>
         <form class="space-y-6" @submit.prevent="submit">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormSelect
+              id="type"
+              v-model="form.type"
+              :label="t('contact_type')"
+              :options="typeOptions"
+              :error="form.errors.type"
+              class="sm:col-span-2"
+            />
             <FormInput
               id="name"
               v-model="form.name"
@@ -136,6 +151,13 @@ const currencyOptions = [
               v-model="form.internal_notes"
               :label="t('internal_notes')"
               :error="form.errors.internal_notes"
+              class="sm:col-span-2"
+            />
+            <FormInput
+              id="notes"
+              v-model="form.notes"
+              :label="t('notes')"
+              :error="form.errors.notes"
               class="sm:col-span-2"
             />
           </div>
