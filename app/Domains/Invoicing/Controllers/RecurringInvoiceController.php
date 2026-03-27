@@ -46,7 +46,7 @@ class RecurringInvoiceController extends Controller
         $this->authorize('create', Invoice::class);
 
         $validated = $request->validate([
-            'customer_id' => ['required', 'exists:clients,id'],
+            'customer_id' => ['required', 'exists:customers,id'],
             'frequency' => ['required', 'string', 'in:weekly,monthly,quarterly,yearly'],
             'next_issue_date' => ['required', 'date', 'after_or_equal:today'],
             'end_date' => ['nullable', 'date', 'after:next_issue_date'],
@@ -92,7 +92,7 @@ class RecurringInvoiceController extends Controller
         $this->authorize('update', Invoice::class);
 
         $validated = $request->validate([
-            'customer_id' => ['required', 'exists:clients,id'],
+            'customer_id' => ['required', 'exists:customers,id'],
             'frequency' => ['required', 'string', 'in:weekly,monthly,quarterly,yearly'],
             'next_issue_date' => ['required', 'date'],
             'end_date' => ['nullable', 'date', 'after:next_issue_date'],

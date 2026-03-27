@@ -10,8 +10,10 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import Tooltip from '@/Components/UI/Tooltip.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
+import { HelpCircle } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 
@@ -160,15 +162,19 @@ const typeOptions = [
               placeholder="30"
               :error="form.errors.payment_terms"
             />
-            <MaskedInput
-              id="iban"
-              v-model="form.iban"
-              mask="iban"
-              label="IBAN"
-              placeholder="CH56 0483 5012 3456 7800 9"
-              :error="form.errors.iban"
-              class="sm:col-span-2"
-            />
+            <div class="relative sm:col-span-2">
+              <MaskedInput
+                id="iban"
+                v-model="form.iban"
+                mask="iban"
+                label="IBAN / QR-IBAN"
+                placeholder="CH56 0483 5012 3456 7800 9"
+                :error="form.errors.iban"
+              />
+              <Tooltip :content="t('tooltip_qr_iban')" side="top" class="absolute right-0 top-0">
+                <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
+              </Tooltip>
+            </div>
             <FormSelect
               id="default_expense_category"
               v-model="form.default_expense_category"

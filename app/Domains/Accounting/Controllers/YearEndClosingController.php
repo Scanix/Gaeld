@@ -128,7 +128,9 @@ class YearEndClosingController extends Controller
                     lines: $lines,
                 );
 
-                $ledger->postEntry($orgId, $entry);
+                $journalEntry = $ledger->postEntry($orgId, $entry);
+
+                $journalEntry->update(['type' => 'year_end_closing']);
             });
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', $e->getMessage());

@@ -26,6 +26,7 @@ use Laravel\Scout\Searchable;
  * @property string|null $journal_entry_id
  * @property string|null $number
  * @property InvoiceStatus $status
+ * @property InvoiceType $type
  * @property Carbon $issue_date
  * @property Carbon $due_date
  * @property string $subtotal
@@ -38,11 +39,13 @@ use Laravel\Scout\Searchable;
  * @property string|null $qr_type
  * @property string|null $qr_iban
  * @property string|null $justificatif_path
- * @property InvoiceType $type
+ * @property int $reminder_count
+ * @property Carbon|null $last_reminded_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  * @property-read Customer|null $customer
+ * @property-read Organization $organization
  */
 class Invoice extends Model
 {

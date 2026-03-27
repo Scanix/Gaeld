@@ -17,6 +17,9 @@ import {
   Users,
   X,
   CreditCard,
+  Repeat,
+  Package,
+  Briefcase,
 } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 import Tooltip from '@/Components/UI/Tooltip.vue'
@@ -44,9 +47,12 @@ function switchOrg(orgId) {
   form.post(`/organizations/${orgId}/switch`)
 }
 
-const navigation = [
+const navigation = computed(() => [
   { key: 'dashboard', href: '/', icon: LayoutDashboard },
-  { key: 'invoices', href: '/invoices', icon: FileText },
+  { key: 'invoices', href: '/invoices', icon: FileText, children: [
+    { key: 'invoices', href: '/invoices' },
+    { key: 'recurring', href: '/invoices/recurring', icon: Repeat },
+  ]},
   { key: 'expenses', href: '/expenses', icon: Receipt },
   { key: 'contacts', href: '/customers', icon: Users, children: [
     { key: 'customers', href: '/customers' },
@@ -56,16 +62,48 @@ const navigation = [
     { key: 'chart_of_accounts', href: '/accounting/chart-of-accounts' },
     { key: 'journal_entries', href: '/accounting/journal-entries' },
     { key: 'trial_balance', href: '/accounting/trial-balance' },
+    { key: 'social_charges', href: '/accounting/social-charges' },
+    { key: 'budget', href: '/accounting/budgets' },
     { key: 'year_end_closing', href: '/accounting/year-end-closing' },
+    { key: 'fiduciary_export', href: '/accounting/export' },
+    { key: 'lettrage', href: '/accounting/lettrage' },
+    { key: 'legal_archives', href: '/accounting/archives' },
+    ...(features.value.analytical ? [
+      { key: 'cost_centers', href: '/accounting/cost-centers' },
+      { key: 'analytical_report', href: '/accounting/analytical-report' },
+    ] : []),
+    ...(features.value.tax_declaration ? [
+      { key: 'tax_declarations', href: '/accounting/tax-declarations' },
+    ] : []),
+    ...(features.value.consolidation ? [
+      { key: 'consolidation', href: '/accounting/consolidation' },
+    ] : []),
+    ...(features.value.multi_currency ? [
+      { key: 'exchange_rates', href: '/accounting/exchange-rates' },
+    ] : []),
   ]},
+  { key: 'assets', href: '/assets', icon: Package },
+  ...(features.value.payroll !== false ? [
+    { key: 'payroll', href: '/payroll/employees', icon: Briefcase, children: [
+      { key: 'employees', href: '/payroll/employees' },
+      { key: 'salary_slips', href: '/payroll/salary-slips' },
+      { key: 'run_payroll', href: '/payroll/run' },
+      ...(features.value.withholding_tax ? [
+        { key: 'withholding_tax', href: '/payroll/withholding-tax' },
+      ] : []),
+    ]},
+  ] : []),
   { key: 'reports', href: '/reports/profit-and-loss', icon: BarChart3, children: [
     { key: 'profit_and_loss', href: '/reports/profit-and-loss' },
     { key: 'balance_sheet', href: '/reports/balance-sheet' },
+    { key: 'cash_flow', href: '/reports/cash-flow' },
+    { key: 'vat_report', href: '/reports/vat' },
+    { key: 'aging_report', href: '/reports/aging' },
   ]},
   { key: 'banking', href: '/banking', icon: Landmark },
   { key: 'reconciliation', href: '/reconciliation', icon: ArrowLeftRight },
   { key: 'organization', href: '/organizations', icon: Building2 },
-]
+])
 
 const billingNav = computed(() =>
   features.value.saas ? [{ key: 'billing', href: '/billing', icon: CreditCard }] : []

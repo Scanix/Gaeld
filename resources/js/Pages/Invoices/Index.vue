@@ -13,6 +13,16 @@ import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
 
+function daysOverdue(dueDate) {
+  if (!dueDate) return 0
+  const diff = new Date() - new Date(dueDate)
+  return Math.floor(diff / (1000 * 60 * 60 * 24))
+}
+
+function isInvoiceOverdue(row) {
+  return row.status === 'sent' && row.due_date && new Date(row.due_date) < new Date()
+}
+
 const props = defineProps({
   invoices: Object,
   query: {
@@ -94,6 +104,15 @@ const statusFilters = computed(() => [
       { value: 'cancelled', label: t('invoice_status_cancelled') },
     ],
   },
+  {
+    key: 'type',
+    label: t('all_types'),
+    value: props.query.filter?.type ?? '',
+    options: [
+      { value: 'invoice', label: t('invoice') },
+      { value: 'credit_note', label: t('credit_note') },
+    ],
+  },
 ])
 </script>
 
@@ -132,6 +151,22 @@ const statusFilters = computed(() => [
         <Badge :variant="statusVariant[value] ?? 'secondary'">
           {{ t(`invoice_status_${value}`) }}
         </Badge>
+      </template>
+      <template #cell-due_date="{ value, row }">
+        <span class="flex flex-wrap items-center gap-1.5">
+          {{ formatDate(value) }}
+          <Badge v-if="isInvoiceOverdue(row)" variant="destructive" class="text-xs">
+            {{ daysOverdue(value) }}d
+          </Badge>
+        </span>
+      </template>
+      <template #cell-number="{ value, row }">
+        <span class="flex items-center gap-1.5">
+          {{ value }}
+          <Badge v-if="row.type === 'credit_note'" variant="destructive" class="text-xs">
+            {{ t('credit_note') }}
+          </Badge>
+        </span>
       </template>
       <template #cell-actions="{ row }">
         <div class="flex justify-end gap-1">

@@ -28,7 +28,7 @@ class PayrollRunController extends Controller
         ]);
     }
 
-    public function generate(Request $request, PayrollCalculator $calculator, PostPayrollAction $postAction): RedirectResponse
+    public function generate(Request $request, CurrentOrganization $currentOrg, PayrollCalculator $calculator, PostPayrollAction $postAction): RedirectResponse
     {
         $validated = $request->validate([
             'month' => ['required', 'integer', 'min:1', 'max:12'],

@@ -73,6 +73,8 @@ jobs:
           DB_DATABASE: gaeld_test
           DB_USERNAME: gaeld
           DB_PASSWORD: password
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
         run: php artisan migrate --force
 
       - name: Run tests
