@@ -52,4 +52,11 @@ class InvoicePolicy extends BasePolicy
         return $this->belongsToOrganization($user, $invoice)
             && $user->hasPermissionTo(Permission::InvoicingRecordPayment);
     }
+
+    public function cancel(User $user, Invoice $invoice): bool
+    {
+        return $this->belongsToOrganization($user, $invoice)
+            && $user->hasPermissionTo(Permission::InvoicingEdit)
+            && $invoice->status->canTransitionTo(\App\Domains\Invoicing\Enums\InvoiceStatus::Cancelled);
+    }
 }
