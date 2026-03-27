@@ -30,6 +30,7 @@ class SupplierController extends Controller
         'currency' => 'nullable|string|size:3',
         'iban' => 'nullable|string|max:34',
         'internal_notes' => 'nullable|string',
+        'notes' => 'nullable|string|max:2000',
     ];
 
     public function index(Request $request): Response

@@ -17,6 +17,7 @@ readonly class UpdateSupplierData
         public ?string $currency = null,
         public ?string $iban = null,
         public ?string $internalNotes = null,
+        public ?string $notes = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -32,6 +33,7 @@ readonly class UpdateSupplierData
             currency: $data['currency'] ?? null,
             iban: $data['iban'] ?? null,
             internalNotes: $data['internal_notes'] ?? null,
+            notes: $data['notes'] ?? null,
         );
     }
 
@@ -47,6 +49,7 @@ readonly class UpdateSupplierData
             'currency' => $this->currency,
             'iban' => $this->iban,
             'internal_notes' => $this->internalNotes,
+            'notes' => $this->notes ? ['default' => $this->notes] : null,
         ] + ($this->addressData?->toArray() ?? AddressData::empty()->toArray()), fn ($value) => $value !== null);
     }
 }

@@ -17,6 +17,7 @@ readonly class CreateCustomerData
         public ?string $currency = null,
         public ?string $paymentTerms = null,
         public ?string $internalNotes = null,
+        public ?string $notes = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -32,6 +33,7 @@ readonly class CreateCustomerData
             currency: $data['currency'] ?? null,
             paymentTerms: $data['payment_terms'] ?? null,
             internalNotes: $data['internal_notes'] ?? null,
+            notes: $data['notes'] ?? null,
         );
     }
 
@@ -47,6 +49,7 @@ readonly class CreateCustomerData
             'currency' => $this->currency,
             'payment_terms' => $this->paymentTerms,
             'internal_notes' => $this->internalNotes,
+            'notes' => $this->notes ? ['default' => $this->notes] : null,
         ] + ($this->addressData?->toArray() ?? AddressData::empty()->toArray());
     }
 }
