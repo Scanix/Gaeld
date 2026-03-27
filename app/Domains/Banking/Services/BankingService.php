@@ -84,6 +84,8 @@ class BankingService
                 lines: $lines,
             ));
 
+            $journalEntry->update(['type' => 'bank_match']);
+
             $transaction->update(['journal_entry_id' => $journalEntry->id]);
 
             $this->updateBankAccountBalance($bankAccount, $amount, $isDeposit);

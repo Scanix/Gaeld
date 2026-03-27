@@ -186,7 +186,7 @@ class LedgerService
      *
      * @param  string  $organizationId  UUID of the organization
      * @param  string|null  $asOfDate  Cut-off date (inclusive)
-     * @return array<array{account_code: string, account_name: string, account_type: string, debit: string, credit: string}>
+     * @return array<array{account_code: string, account_name: string, account_type: AccountType|string, debit: string, credit: string}>
      */
     public function trialBalance(string $organizationId, ?string $asOfDate = null): array
     {

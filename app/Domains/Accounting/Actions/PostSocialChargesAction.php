@@ -39,6 +39,10 @@ final class PostSocialChargesAction
             ],
         );
 
-        return $this->ledgerService->postEntry($organizationId, $entry);
+        $journalEntry = $this->ledgerService->postEntry($organizationId, $entry);
+
+        $journalEntry->update(['type' => 'social_charges']);
+
+        return $journalEntry;
     }
 }

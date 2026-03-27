@@ -6,11 +6,15 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\LegalArchivingService;
 use Illuminate\Support\Facades\DB;
 
 class YearEndClosingAction
 {
-    public function __construct(private readonly LedgerService $ledger) {}
+    public function __construct(
+        private readonly LedgerService $ledger,
+        private readonly LegalArchivingService $archiving,
+    ) {}
 
     /**
      * Post the year-end closing journal entry.
@@ -76,5 +80,8 @@ class YearEndClosingAction
 
             $this->ledger->postEntry($orgId, $entry);
         });
+
+        // Archive all documents for the closed fiscal year (Swiss OR Art. 958f CO)
+        $this->archiving->archiveFiscalYear($orgId, $year);
     }
 }

@@ -129,7 +129,7 @@ class AccountingExportService
             array_map(fn (array $row) => [
                 $row['account_code'],
                 $row['account_name'],
-                $row['account_type'] instanceof \BackedEnum ? $row['account_type']->value : (string) $row['account_type'],
+                $row['account_type']->value,
                 $row['debit'],
                 $row['credit'],
             ], $rows),

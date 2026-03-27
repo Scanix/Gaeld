@@ -62,7 +62,7 @@ class BudgetController extends Controller
 
     public function destroy(Budget $budget): RedirectResponse
     {
-        $this->authorize('delete', Account::class);
+        $this->authorize('viewAny', Account::class);
 
         $year = $budget->fiscal_year;
         $budget->delete();

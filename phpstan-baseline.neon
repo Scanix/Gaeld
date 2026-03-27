@@ -1159,12 +1159,6 @@ parameters:
 			path: app/Domains/Organizations/Services/OrganizationSwitcher.php
 
 		-
-			message: '#^Undefined variable\: \$currentOrg$#'
-			identifier: variable.undefined
-			count: 1
-			path: app/Domains/Payroll/Controllers/PayrollRunController.php
-
-		-
 			message: '#^Method App\\Domains\\Payroll\\Controllers\\SalarySlipController\:\:downloadPdf\(\) should return Illuminate\\Http\\Response but returns Symfony\\Component\\HttpFoundation\\Response\.$#'
 			identifier: return.type
 			count: 1
@@ -1375,12 +1369,6 @@ parameters:
 			path: app/Support/Listeners/AuthAuditSubscriber.php
 
 		-
-			message: '#^Call to static method loadView\(\) on an unknown class Barryvdh\\DomPDF\\Facade\\Pdf\.$#'
-			identifier: class.notFound
-			count: 2
-			path: app/Support/PdfExportService.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
 			identifier: property.notFound
 			count: 1
@@ -1422,8 +1410,4 @@ parameters:
 			count: 1
 			path: app/Domains/Reporting/Services/AccountingExportService.php
 
-		-
-			message: '#^Call to static method loadView\(\) on an unknown class Barryvdh\\DomPDF\\Facade\\Pdf\.$#'
-			identifier: class.notFound
-			count: 3
-			path: app/Domains/Reporting/Services/AccountingExportService.php
+

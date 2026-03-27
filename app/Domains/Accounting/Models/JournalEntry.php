@@ -34,6 +34,7 @@ class JournalEntry extends Model
         'reference',
         'description',
         'is_posted',
+        'type',
     ];
 
     protected function casts(): array

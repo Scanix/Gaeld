@@ -12,6 +12,7 @@ import { useTranslations } from '@/lib/useTranslations'
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
+import AccountingChecklist from '@/Components/AccountingChecklist.vue'
 import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -36,6 +37,7 @@ const props = defineProps({
   pendingExpenses: { type: Object, default: () => ({ count: 0, total: 0 }) },
   recentTransactions: { type: Array, default: () => [] },
   monthlyBreakdown: { type: Object, default: () => ({ labels: [], revenue: [], expenses: [], forecast: [], revenueItems: [], expenseItems: [], forecastItems: [] }) },
+  checklist: { type: Array, default: () => [] },
 })
 
 const profit = computed(() => props.revenue - props.expenses)
@@ -196,6 +198,11 @@ const transactionColumns = computed(() => [
           <div class="text-2xl font-bold">{{ card.value }}</div>
         </CardContent>
       </Card>
+    </div>
+
+    <!-- Accounting Checklist -->
+    <div v-if="checklist.length" class="mt-6">
+      <AccountingChecklist :items="checklist" />
     </div>
 
     <!-- Action Cards -->

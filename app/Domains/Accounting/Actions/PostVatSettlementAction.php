@@ -74,11 +74,15 @@ final class PostVatSettlementAction
 
         $reference = "VAT-SETTLEMENT-{$fromDate}-{$toDate}";
 
-        return $this->ledgerService->postEntry($orgId, new JournalEntryData(
+        $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
             date: now()->toDateString(),
             reference: $reference,
             description: "VAT settlement for period {$fromDate} to {$toDate}",
             lines: $lines,
         ));
+
+        $journalEntry->update(['type' => 'vat_settlement']);
+
+        return $journalEntry;
     }
 }

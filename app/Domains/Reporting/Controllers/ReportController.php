@@ -156,12 +156,12 @@ class ReportController extends Controller
     //  VAT Report
     // ──────────────────────────────────────────────────────────────
 
-    public function vatReport(VatReportRequest $request, VatReportService $vatReportService, CurrentOrganization $currentOrg): Response
+    public function vatReport(VatReportRequest $request, VatReportService $service, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', Account::class);
 
         $validated = $request->validated();
-        $report = $vatReportService->generate($currentOrg->id(), $validated['from_date'], $validated['to_date']);
+        $report = $service->generate($currentOrg->id(), $validated['from_date'], $validated['to_date']);
 
         return Inertia::render('Reports/VatReport', [
             'report' => $report,
@@ -170,7 +170,7 @@ class ReportController extends Controller
 
     public function exportVatReport(
         VatReportRequest $request,
-        VatReportService $vatReportService,
+        VatReportService $service,
         CurrentOrganization $currentOrg,
         PdfExportService $pdf,
         CsvExportService $csv,
@@ -181,27 +181,26 @@ class ReportController extends Controller
         abort_unless(in_array($format, ['pdf', 'csv'], true), 404);
 
         $validated = $request->validated();
-        $orgId = $currentOrg->id();
-        $from = $validated['from_date'];
-        $to = $validated['to_date'];
-
-        $report = $vatReportService->generate($orgId, $from, $to);
+        $report = $service->generate($currentOrg->id(), $validated['from_date'], $validated['to_date']);
         $orgName = $currentOrg->get()->name;
 
         if ($format === 'csv') {
-            $headers = ['Chiffre', 'Description', 'Amount'];
+            $headers = ['Chiffre', 'Description', 'Base amount', 'VAT amount'];
             $rows = [];
-            foreach ($report['revenue_by_rate'] as $row) {
-                $rows[] = ['200', "Revenue {$row['rate_name']} ({$row['rate']}%)", $row['base_amount']];
+            foreach ($report['revenue_by_rate'] as $line) {
+                $rows[] = ['200', $line['rate'].'%', $line['base_amount'], $line['vat_amount']];
             }
-            $rows[] = ['299', 'Total Revenue', $report['total_revenue']];
-            foreach ($report['output_vat_by_rate'] as $row) {
-                $rows[] = ['300', "Output VAT {$row['rate_name']} ({$row['rate']}%)", $row['amount']];
+            $rows[] = ['299', 'Total revenue', $report['total_revenue'], ''];
+            foreach ($report['output_vat_by_rate'] as $line) {
+                $rows[] = ['300', $line['rate'].'%', $line['base_amount'], $line['vat_amount']];
             }
-            $rows[] = ['399', 'Total Output VAT', $report['total_output_vat']];
-            $rows[] = ['400', 'Input VAT (deductible)', $report['input_vat']];
-            $rows[] = ['500', 'Net VAT', $report['net_vat']];
-            $rows[] = ['510', 'VAT Payable', $report['vat_payable']];
+            $rows[] = ['399', 'Total output VAT', '', $report['total_output_vat']];
+            $rows[] = ['400', 'Input VAT', '', $report['input_vat']];
+            $rows[] = ['500', 'Net VAT', '', $report['net_vat']];
+            $rows[] = ['510', 'VAT payable', '', $report['vat_payable']];
+
+            $from = $validated['from_date'];
+            $to = $validated['to_date'];
 
             return $csv->export($headers, $rows, "vat-report-{$from}-{$to}.csv");
         }
@@ -209,7 +208,7 @@ class ReportController extends Controller
         return $pdf->download('exports.vat-report', [
             'organizationName' => $orgName,
             'report' => $report,
-        ], "vat-report-{$from}-{$to}.pdf");
+        ], "vat-report-{$validated['from_date']}-{$validated['to_date']}.pdf");
     }
 
     public function postVatSettlement(
@@ -225,11 +224,11 @@ class ReportController extends Controller
         return redirect()->route('reports.vat', [
             'from_date' => $validated['from_date'],
             'to_date' => $validated['to_date'],
-        ])->with('success', 'VAT settlement posted successfully.');
+        ])->with('success', __('app.vat_settlement_posted'));
     }
 
     // ──────────────────────────────────────────────────────────────
-    //  Cash Flow Report
+    //  Cash Flow
     // ──────────────────────────────────────────────────────────────
 
     public function cashFlow(Request $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response
@@ -260,15 +259,15 @@ class ReportController extends Controller
 
         $from = $request->input('from', now()->startOfYear()->toDateString());
         $to = $request->input('to', now()->toDateString());
-        $orgId = $currentOrg->id();
 
-        $report = $reportingService->cashFlow($orgId, $from, $to);
+        $report = $reportingService->cashFlow($currentOrg->id(), $from, $to);
         $orgName = $currentOrg->get()->name;
 
         if ($format === 'csv') {
-            $headers = ['Section', 'Description', 'Amount'];
+            $headers = ['Section', 'Item', 'Amount'];
             $rows = [];
-            $rows[] = ['Operating', 'Net Income', $report['net_income']];
+            $rows[] = ['', 'Net Income', $report['net_income']];
+            $rows[] = ['Operating', '--- Adjustments ---', ''];
             foreach ($report['operating']['adjustments'] as $adj) {
                 $rows[] = ['Operating', $adj['label'], $adj['amount']];
             }
@@ -281,9 +280,9 @@ class ReportController extends Controller
                 $rows[] = ['Financing', $item['label'], $item['amount']];
             }
             $rows[] = ['Financing', 'Total Financing', $report['financing']['total']];
-            $rows[] = ['Summary', 'Beginning Cash', $report['beginning_cash']];
-            $rows[] = ['Summary', 'Net Change in Cash', $report['net_change']];
-            $rows[] = ['Summary', 'Ending Cash', $report['ending_cash']];
+            $rows[] = ['', 'Net Change', $report['net_change']];
+            $rows[] = ['', 'Beginning Cash', $report['beginning_cash']];
+            $rows[] = ['', 'Ending Cash', $report['ending_cash']];
 
             return $csv->export($headers, $rows, "cash-flow-{$from}-{$to}.csv");
         }
@@ -299,7 +298,7 @@ class ReportController extends Controller
     //  Aging Report
     // ──────────────────────────────────────────────────────────────
 
-    public function aging(Request $request, AgingReportService $agingService, CurrentOrganization $currentOrg): Response
+    public function aging(Request $request, AgingReportService $service, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', Account::class);
 
@@ -308,7 +307,7 @@ class ReportController extends Controller
 
         $asOfDate = $request->input('as_of_date');
 
-        $report = $agingService->generate($currentOrg->id(), $type, $asOfDate);
+        $report = $service->generate($currentOrg->id(), $type, $asOfDate);
 
         return Inertia::render('Reports/Aging', [
             'report' => $report,
@@ -317,7 +316,7 @@ class ReportController extends Controller
 
     public function exportAging(
         Request $request,
-        AgingReportService $agingService,
+        AgingReportService $service,
         CurrentOrganization $currentOrg,
         PdfExportService $pdf,
         CsvExportService $csv,
@@ -331,37 +330,44 @@ class ReportController extends Controller
         abort_unless(in_array($type, ['receivables', 'payables'], true), 422);
 
         $asOfDate = $request->input('as_of_date');
-        $orgId = $currentOrg->id();
 
-        $report = $agingService->generate($orgId, $type, $asOfDate);
+        $report = $service->generate($currentOrg->id(), $type, $asOfDate);
         $orgName = $currentOrg->get()->name;
 
         if ($format === 'csv') {
-            $headers = ['Bracket', 'Document #', 'Name', 'Date', 'Due Date', 'Amount', 'Days Overdue'];
+            $headers = ['Name', 'Document #', 'Date', 'Due Date', 'Current', '1-30', '31-60', '61-90', '90+', 'Total'];
             $rows = [];
-            $bracketLabels = ['current' => 'Current', '1_30' => '1–30 days', '31_60' => '31–60 days', '61_90' => '61–90 days', '90_plus' => '90+ days'];
-            foreach ($report['brackets'] as $key => $bracket) {
+            foreach ($report['brackets'] as $bracket) {
                 foreach ($bracket['items'] as $item) {
                     $rows[] = [
-                        $bracketLabels[$key] ?? $key,
-                        $item['document_number'],
                         $item['name'],
+                        $item['document_number'],
                         $item['date'],
                         $item['due_date'],
+                        $item['bracket'] === 'current' ? $item['amount'] : '',
+                        $item['bracket'] === '1_30' ? $item['amount'] : '',
+                        $item['bracket'] === '31_60' ? $item['amount'] : '',
+                        $item['bracket'] === '61_90' ? $item['amount'] : '',
+                        $item['bracket'] === '90_plus' ? $item['amount'] : '',
                         $item['amount'],
-                        $item['days_overdue'],
                     ];
                 }
-                $rows[] = [$bracketLabels[$key] ?? $key, '', 'Subtotal', '', '', $bracket['total'], ''];
             }
-            $rows[] = ['', '', 'Grand Total', '', '', $report['grand_total'], ''];
+            $rows[] = ['', '', '', 'TOTAL',
+                $report['brackets']['current']['total'] ?? '0.00',
+                $report['brackets']['1_30']['total'] ?? '0.00',
+                $report['brackets']['31_60']['total'] ?? '0.00',
+                $report['brackets']['61_90']['total'] ?? '0.00',
+                $report['brackets']['90_plus']['total'] ?? '0.00',
+                $report['grand_total'],
+            ];
 
-            return $csv->export($headers, $rows, "aging-{$type}-{$report['as_of_date']}.csv");
+            return $csv->export($headers, $rows, "aging-{$type}.csv");
         }
 
         return $pdf->download('exports.aging', [
             'organizationName' => $orgName,
             'report' => $report,
-        ], "aging-{$type}-{$report['as_of_date']}.pdf");
+        ], "aging-{$type}.pdf");
     }
 }
