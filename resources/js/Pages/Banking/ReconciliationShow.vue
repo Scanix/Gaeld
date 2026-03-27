@@ -14,7 +14,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Upload, Check, Link2, RotateCcw } from 'lucide-vue-next'
+import { Upload, Check, Link2, RotateCcw, Loader2 } from 'lucide-vue-next'
 
 const props = defineProps({
   bankAccount: Object,
@@ -84,8 +84,14 @@ function quickMatch(transaction, type, id) {
   }
 }
 
+const confirming = ref(null)
+
 function confirmMatch(matchId) {
-  router.post(`/reconciliation/matches/${matchId}/confirm`)
+  if (confirming.value) return
+  confirming.value = matchId
+  router.post(`/reconciliation/matches/${matchId}/confirm`, {}, {
+    onFinish: () => { confirming.value = null },
+  })
 }
 
 function confidenceColor(score) {
@@ -108,8 +114,14 @@ function closeMatchModal() {
   matchManualForm.reset()
 }
 
+const autoReconciling = ref(false)
+
 function autoReconcile() {
-  router.post(`/reconciliation/${props.bankAccount.id}/auto`)
+  if (autoReconciling.value) return
+  autoReconciling.value = true
+  router.post(`/reconciliation/${props.bankAccount.id}/auto`, {}, {
+    onFinish: () => { autoReconciling.value = false },
+  })
 }
 
 function changeFilter(newFilter) {
@@ -131,8 +143,10 @@ const currentSuggestions = computed(() => {
         <Badge variant="secondary">{{ formatCurrency(bankAccount.balance, bankAccount.currency) }}</Badge>
       </div>
       <div class="flex items-center gap-2">
-        <Button v-if="pageFeatures.auto_reconciliation" @click="autoReconcile" variant="outline">
-          <RotateCcw class="mr-2 h-4 w-4" /> {{ t('auto_reconcile') || 'Auto Reconcile' }}
+        <Button v-if="pageFeatures.auto_reconciliation" @click="autoReconcile" variant="outline" :disabled="autoReconciling">
+          <Loader2 v-if="autoReconciling" class="mr-2 h-4 w-4 animate-spin" />
+          <RotateCcw v-else class="mr-2 h-4 w-4" />
+          {{ t('auto_reconcile') || 'Auto Reconcile' }}
         </Button>
         <Button @click="showUploadModal = true">
           <Upload class="mr-2 h-4 w-4" /> {{ t('import_camt') || 'Import CAMT' }}
@@ -217,6 +231,7 @@ const currentSuggestions = computed(() => {
                           ? 'border-yellow-300 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-300'
                           : 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300',
                     ]"
+                    :disabled="confirming === inv.match_id"
                     @click="inv.match_id ? confirmMatch(inv.match_id) : quickMatch(tx, 'invoice', inv.id)"
                   >
                     <Check class="h-3 w-3" />
