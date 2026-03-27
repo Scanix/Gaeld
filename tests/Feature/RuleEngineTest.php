@@ -10,15 +10,15 @@ use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Rules\QrReferencePaymentRule;
 use App\Domains\Banking\Rules\RecurringEntryRule;
 use App\Domains\Banking\Rules\SupplierCategoryRule;
-use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\RuleEngineService;
-use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Contacts\Models\Customer;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class RuleEngineTest extends TestCase
@@ -145,7 +145,7 @@ class RuleEngineTest extends TestCase
 
     public function test_supplier_rule_confidence_is_90(): void
     {
-        $rule = new SupplierCategoryRule();
+        $rule = new SupplierCategoryRule;
         $this->assertEquals(90, $rule->confidence());
     }
 
@@ -162,7 +162,7 @@ class RuleEngineTest extends TestCase
             'is_reconciled' => false,
         ]);
 
-        $rule = new SupplierCategoryRule();
+        $rule = new SupplierCategoryRule;
         $this->assertFalse($rule->matches($transaction));
     }
 
@@ -172,7 +172,7 @@ class RuleEngineTest extends TestCase
 
     public function test_recurring_rule_confidence_is_70(): void
     {
-        $rule = new RecurringEntryRule();
+        $rule = new RecurringEntryRule;
         $this->assertEquals(70, $rule->confidence());
     }
 
@@ -203,7 +203,7 @@ class RuleEngineTest extends TestCase
             'is_reconciled' => false,
         ]);
 
-        $rule = new RecurringEntryRule();
+        $rule = new RecurringEntryRule;
         $this->assertTrue($rule->matches($transaction));
     }
 
@@ -254,7 +254,7 @@ class RuleEngineTest extends TestCase
         // Should not throw — returns an empty collection (no rules match)
         $results = $ruleEngine->evaluateRules($transaction);
 
-        $this->assertInstanceOf(\Illuminate\Support\Collection::class, $results);
+        $this->assertInstanceOf(Collection::class, $results);
     }
 
     public function test_rule_engine_skip_reconciled_transactions(): void

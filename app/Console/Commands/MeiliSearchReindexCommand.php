@@ -2,6 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Console\Command;
 
 class MeiliSearchReindexCommand extends Command
@@ -13,10 +17,10 @@ class MeiliSearchReindexCommand extends Command
     protected $description = 'Re-index searchable models into MeiliSearch';
 
     private const MODELS = [
-        'invoices' => \App\Domains\Invoicing\Models\Invoice::class,
-        'customers' => \App\Domains\Contacts\Models\Customer::class,
-        'suppliers' => \App\Domains\Contacts\Models\Supplier::class,
-        'expenses' => \App\Domains\Expenses\Models\Expense::class,
+        'invoices' => Invoice::class,
+        'customers' => Customer::class,
+        'suppliers' => Supplier::class,
+        'expenses' => Expense::class,
     ];
 
     public function handle(): int

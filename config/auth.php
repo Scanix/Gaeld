@@ -1,5 +1,7 @@
 <?php
 
+use App\Domains\Users\Models\User;
+
 return [
     'defaults' => [
         'guard' => env('AUTH_GUARD', 'web'),
@@ -16,7 +18,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\Domains\Users\Models\User::class,
+            'model' => User::class,
         ],
     ],
 

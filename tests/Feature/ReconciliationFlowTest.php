@@ -11,15 +11,16 @@ use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 use Tests\Traits\WithOrganizationPermissions;
 
@@ -87,7 +88,7 @@ class ReconciliationFlowTest extends TestCase
     public function test_import_camt053_creates_transactions(): void
     {
         $importService = app(BankImportService::class);
-        $xml = file_get_contents(__DIR__ . '/../fixtures/camt053_sample.xml');
+        $xml = file_get_contents(__DIR__.'/../fixtures/camt053_sample.xml');
 
         $import = $importService->importCamtFile($this->bankAccount, $xml, 'test.xml');
 
@@ -106,7 +107,7 @@ class ReconciliationFlowTest extends TestCase
     public function test_import_camt054_creates_transactions(): void
     {
         $importService = app(BankImportService::class);
-        $xml = file_get_contents(__DIR__ . '/../fixtures/camt054_sample.xml');
+        $xml = file_get_contents(__DIR__.'/../fixtures/camt054_sample.xml');
 
         $import = $importService->importCamtFile($this->bankAccount, $xml, 'notification.xml');
 
@@ -118,7 +119,7 @@ class ReconciliationFlowTest extends TestCase
     public function test_duplicate_import_skips_existing_transactions(): void
     {
         $importService = app(BankImportService::class);
-        $xml = file_get_contents(__DIR__ . '/../fixtures/camt053_sample.xml');
+        $xml = file_get_contents(__DIR__.'/../fixtures/camt053_sample.xml');
 
         $import1 = $importService->importCamtFile($this->bankAccount, $xml, 'test1.xml');
         $import2 = $importService->importCamtFile($this->bankAccount, $xml, 'test2.xml');
@@ -441,8 +442,8 @@ class ReconciliationFlowTest extends TestCase
 
     public function test_camt_upload_route(): void
     {
-        $xmlContent = file_get_contents(__DIR__ . '/../fixtures/camt053_sample.xml');
-        $file = \Illuminate\Http\UploadedFile::fake()->createWithContent('test.xml', $xmlContent);
+        $xmlContent = file_get_contents(__DIR__.'/../fixtures/camt053_sample.xml');
+        $file = UploadedFile::fake()->createWithContent('test.xml', $xmlContent);
 
         $response = $this->actingAs($this->user)
             ->post("/reconciliation/{$this->bankAccount->id}/import", [

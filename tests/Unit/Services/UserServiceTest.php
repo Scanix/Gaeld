@@ -17,14 +17,13 @@ class UserServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->service = new UserService();
+        $this->service = new UserService;
     }
 
     public function test_update_profile_only_persists_name_and_locale(): void
     {
         $user = Mockery::mock(User::class)->makePartial();
         /** @var User $user */
-
         $user->shouldReceive('update')->once()->with([
             'name' => 'Updated Name',
             'locale' => 'fr',
@@ -60,7 +59,6 @@ class UserServiceTest extends TestCase
     {
         $user = Mockery::mock(User::class)->makePartial();
         /** @var User $user */
-
         Hash::shouldReceive('make')->once()->with('new-secret')->andReturn('hashed-secret');
         $user->shouldReceive('update')->once()->with(['password' => 'hashed-secret']);
 

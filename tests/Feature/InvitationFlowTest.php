@@ -17,6 +17,7 @@ class InvitationFlowTest extends TestCase
     use RefreshDatabase, WithOrganizationPermissions;
 
     private User $owner;
+
     private Organization $organization;
 
     protected function setUp(): void

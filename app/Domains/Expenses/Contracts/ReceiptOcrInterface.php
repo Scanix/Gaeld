@@ -10,7 +10,6 @@ interface ReceiptOcrInterface
      * Extract text and structured fields from a receipt image.
      *
      * @param  string  $imagePath  Absolute path to the image file on disk.
-     * @return ReceiptOcrResult
      */
     public function extract(string $imagePath): ReceiptOcrResult;
 }

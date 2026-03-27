@@ -2,7 +2,6 @@
 
 namespace Tests\Traits;
 
-use App\Domains\Organizations\Enums\Role;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;

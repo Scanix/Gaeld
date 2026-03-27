@@ -5,10 +5,10 @@ namespace App\Domains\Invoicing\Services;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use Sprain\SwissQrBill\DataGroup\Element\AdditionalInformation;
-use Sprain\SwissQrBill\DataGroup\Element\StructuredAddress;
 use Sprain\SwissQrBill\DataGroup\Element\CreditorInformation;
 use Sprain\SwissQrBill\DataGroup\Element\PaymentAmountInformation;
 use Sprain\SwissQrBill\DataGroup\Element\PaymentReference;
+use Sprain\SwissQrBill\DataGroup\Element\StructuredAddress;
 use Sprain\SwissQrBill\QrBill;
 use Sprain\SwissQrBill\QrCode\QrCode;
 use Sprain\SwissQrBill\Reference\QrPaymentReferenceGenerator;
@@ -16,7 +16,9 @@ use Sprain\SwissQrBill\Reference\QrPaymentReferenceGenerator;
 class SwissQrInvoiceService
 {
     private const DEFAULT_COUNTRY = 'CH';
+
     private const DEFAULT_CURRENCY = 'CHF';
+
     private const ALLOWED_CURRENCIES = ['CHF', 'EUR'];
 
     /**

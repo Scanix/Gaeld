@@ -7,10 +7,11 @@ use App\Domains\Contacts\DTOs\CreateCustomerData;
 use App\Domains\Contacts\DTOs\UpdateCustomerData;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Queries\CustomerQuery;
+use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Http\Controllers\Controller;
 
 class CustomerApiController extends Controller
 {
@@ -27,6 +28,7 @@ class CustomerApiController extends Controller
         'payment_terms' => 'nullable|string|max:255',
         'internal_notes' => 'nullable|string',
     ];
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Customer::class);
@@ -48,7 +50,7 @@ class CustomerApiController extends Controller
         $this->authorize('create', Customer::class);
 
         $validated = $request->validate(self::VALIDATION_RULES);
-        $validated['organization_id'] = app(\App\Domains\Organizations\Services\CurrentOrganization::class)->id();
+        $validated['organization_id'] = app(CurrentOrganization::class)->id();
 
         $customer = Customer::create(
             CreateCustomerData::fromArray($validated)->toArray()

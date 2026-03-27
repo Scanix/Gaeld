@@ -92,7 +92,7 @@ class DashboardServiceTest extends TestCase
         $expenseService->shouldReceive('yearlyTotal')->once()->andReturn('0.00');
         $invoiceService->shouldReceive('unpaidSummary')->once()->andReturn(new SummaryResult(0, '0.00'));
         $expenseService->shouldReceive('pendingSummary')->once()->andReturn(new SummaryResult(0, '0.00'));
-        $ledgerService->shouldReceive('resolveAccount')->once()->andThrow(new ModelNotFoundException());
+        $ledgerService->shouldReceive('resolveAccount')->once()->andThrow(new ModelNotFoundException);
         $ledgerService->shouldReceive('recentEntries')->once()->andReturn(collect());
         $invoiceService->shouldReceive('paidInYear')->once()->andReturn(collect());
         $expenseService->shouldReceive('inYear')->once()->andReturn(collect());

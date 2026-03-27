@@ -2,23 +2,23 @@
 
 namespace Tests\Unit;
 
-use App\Domains\Accounting\Exceptions\AlreadyPostedException;
-use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Exceptions\AlreadyPostedException;
+use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankingService;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Organizations\Models\Organization;
@@ -31,14 +31,16 @@ class LedgerServiceTest extends TestCase
     use RefreshDatabase;
 
     private LedgerService $ledgerService;
+
     private Organization $organization;
+
     private array $accounts = [];
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->ledgerService = new LedgerService();
+        $this->ledgerService = new LedgerService;
 
         $user = User::factory()->create();
         $this->organization = Organization::create([
@@ -287,7 +289,7 @@ class LedgerServiceTest extends TestCase
             ],
         ));
 
-        $this->expectException(\App\Domains\Accounting\Exceptions\AlreadyPostedException::class);
+        $this->expectException(AlreadyPostedException::class);
         $this->ledgerService->postDraft($entry);
     }
 

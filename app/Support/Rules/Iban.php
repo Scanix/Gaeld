@@ -63,7 +63,7 @@ class Iban implements ValidationRule
 
         // MOD-97 checksum (ISO 7064)
         // Move first 4 chars to end, convert letters to numbers (A=10, B=11, …, Z=35)
-        $rearranged = substr($iban, 4) . substr($iban, 0, 4);
+        $rearranged = substr($iban, 4).substr($iban, 0, 4);
         $numeric = '';
         foreach (str_split($rearranged) as $char) {
             $numeric .= ctype_alpha($char) ? (string) (ord($char) - 55) : $char;

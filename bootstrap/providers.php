@@ -1,7 +1,11 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\FeatureFlagServiceProvider;
+use App\Providers\PluginServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\FeatureFlagServiceProvider::class,
-    App\Providers\PluginServiceProvider::class,
+    AppServiceProvider::class,
+    FeatureFlagServiceProvider::class,
+    PluginServiceProvider::class,
 ];

@@ -1,0 +1,71 @@
+<?php
+
+namespace App\Domains\Payroll\Models;
+
+use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
+use App\Support\Traits\BelongsToOrganization;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
+
+/**
+ * @property string $id
+ * @property string $organization_id
+ * @property string $first_name
+ * @property string $last_name
+ * @property string|null $email
+ * @property string|null $ahv_number
+ * @property Carbon $entry_date
+ * @property Carbon|null $exit_date
+ * @property string $gross_salary
+ * @property bool $is_active
+ * @property bool $is_source_tax_subject
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
+class Employee extends Model
+{
+    use Auditable, BelongsToOrganization, HasUuids;
+
+    protected $fillable = [
+        'organization_id',
+        'first_name',
+        'last_name',
+        'email',
+        'ahv_number',
+        'entry_date',
+        'exit_date',
+        'gross_salary',
+        'is_active',
+        'is_source_tax_subject',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'entry_date' => 'date',
+            'exit_date' => 'date',
+            'gross_salary' => 'decimal:2',
+            'is_active' => 'boolean',
+            'is_source_tax_subject' => 'boolean',
+        ];
+    }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function salarySlips(): HasMany
+    {
+        return $this->hasMany(SalarySlip::class);
+    }
+
+    public function fullName(): string
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+}

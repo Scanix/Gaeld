@@ -159,7 +159,7 @@ class SuggestionService
                 ]);
 
                 if ($transaction->creditor_name) {
-                    $q->orWhere('vendor', 'like', '%' . $transaction->creditor_name . '%');
+                    $q->orWhere('vendor', 'like', '%'.$transaction->creditor_name.'%');
                 }
             })
             ->limit(self::MAX_EXPENSE_CANDIDATES)

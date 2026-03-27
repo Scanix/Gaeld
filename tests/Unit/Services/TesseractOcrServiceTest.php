@@ -12,7 +12,7 @@ class TesseractOcrServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new TesseractOcrService();
+        $this->service = new TesseractOcrService;
     }
 
     public function test_extracts_amount_with_chf_prefix(): void
@@ -57,7 +57,7 @@ class TesseractOcrServiceTest extends TestCase
 
     public function test_returns_null_for_no_amount(): void
     {
-        $amount = $this->service->extractAmount("Hello world no numbers");
+        $amount = $this->service->extractAmount('Hello world no numbers');
         $this->assertNull($amount);
     }
 
@@ -87,7 +87,7 @@ class TesseractOcrServiceTest extends TestCase
 
     public function test_returns_null_for_no_date(): void
     {
-        $date = $this->service->extractDate("Just some text without dates");
+        $date = $this->service->extractDate('Just some text without dates');
         $this->assertNull($date);
     }
 
@@ -117,7 +117,7 @@ class TesseractOcrServiceTest extends TestCase
 
     public function test_returns_null_for_empty_text(): void
     {
-        $vendor = $this->service->extractVendor("");
+        $vendor = $this->service->extractVendor('');
         $this->assertNull($vendor);
     }
 
@@ -131,7 +131,7 @@ class TesseractOcrServiceTest extends TestCase
 
     public function test_full_receipt_parsing(): void
     {
-        $text = <<<TEXT
+        $text = <<<'TEXT'
         Migros Zürich HB
         Bahnhofstrasse 42
         8001 Zürich

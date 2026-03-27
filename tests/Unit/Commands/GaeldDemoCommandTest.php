@@ -4,7 +4,6 @@ namespace Tests\Unit\Commands;
 
 use App\Console\Commands\GaeldDemoCommand;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

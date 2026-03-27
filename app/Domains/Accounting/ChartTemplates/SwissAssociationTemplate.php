@@ -104,6 +104,9 @@ class SwissAssociationTemplate implements ChartTemplateInterface
             ['code' => '3800', 'type' => AccountType::Revenue->value, 'name' => [
                 'en' => 'Other Revenue', 'fr' => 'Autres produits', 'de' => 'Übrige Erlöse', 'it' => 'Altri ricavi', 'rm' => 'Autras entradas',
             ]],
+            ['code' => '3900', 'type' => AccountType::Revenue->value, 'name' => [
+                'en' => 'Revenue Corrections', 'fr' => 'Corrections de produits', 'de' => 'Erlösberichtigungen', 'it' => 'Rettifiche di ricavi', 'rm' => 'Correcturas d\'entradas',
+            ]],
 
             // Class 4-5: Expenses (association-specific)
             ['code' => '4000', 'type' => AccountType::Expense->value, 'name' => [

@@ -7,6 +7,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property string $invoice_id
+ * @property string $description
+ * @property string $quantity
+ * @property string $unit_price
+ * @property string $amount
+ * @property string|null $vat_rate_id
+ * @property string|null $vat_amount
+ * @property int $sort_order
+ */
 class InvoiceLine extends Model
 {
     use HasFactory;

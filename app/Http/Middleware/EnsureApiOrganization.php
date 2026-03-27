@@ -11,6 +11,7 @@ use App\Http\Middleware\Api\TokenPermissionMap;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureApiOrganization
@@ -35,7 +36,7 @@ class EnsureApiOrganization
 
         $this->currentOrganization->set($org);
 
-        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($org->id);
+        app(PermissionRegistrar::class)->setPermissionsTeamId($org->id);
 
         // Register a Gate::before callback so that token abilities are enforced.
         // For organization tokens, this also bypasses policies' org-membership checks.
@@ -97,4 +98,3 @@ class EnsureApiOrganization
         });
     }
 }
-

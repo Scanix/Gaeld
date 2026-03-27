@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
-use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Organizations\Models\Organization;
@@ -27,7 +27,7 @@ class CacheInvalidationTest extends TestCase
     {
         parent::setUp();
 
-        $this->ledgerService = new LedgerService();
+        $this->ledgerService = new LedgerService;
 
         $user = User::factory()->create();
         $this->organization = Organization::create(['name' => 'Cache Test Org', 'currency' => 'CHF']);

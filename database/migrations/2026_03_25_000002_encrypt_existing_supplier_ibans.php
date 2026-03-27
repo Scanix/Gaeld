@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,7 @@ return new class extends Migration
                     Crypt::decryptString($supplier->iban);
 
                     return; // Already encrypted — skip.
-                } catch (\Illuminate\Contracts\Encryption\DecryptException) {
+                } catch (DecryptException) {
                     // Not encrypted yet — encrypt below.
                 }
 
@@ -41,7 +42,7 @@ return new class extends Migration
             ->each(function (object $supplier) {
                 try {
                     $plain = Crypt::decryptString($supplier->iban);
-                } catch (\Illuminate\Contracts\Encryption\DecryptException) {
+                } catch (DecryptException) {
                     return; // Already plaintext — skip.
                 }
 

@@ -11,6 +11,8 @@ class ProfitAndLossRequest extends FormRequest
         return [
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
+            'compare_from' => ['nullable', 'date'],
+            'compare_to' => ['nullable', 'date', 'required_with:compare_from', 'after_or_equal:compare_from'],
         ];
     }
 }
