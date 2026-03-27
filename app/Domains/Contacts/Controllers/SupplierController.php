@@ -17,6 +17,7 @@ use Inertia\Response;
 class SupplierController extends Controller
 {
     private const VALIDATION_RULES = [
+        'type' => 'nullable|string|in:organization,individual',
         'name' => 'required|string|max:255',
         'email' => 'nullable|email|max:255',
         'phone' => 'nullable|string|max:50',
@@ -75,7 +76,7 @@ class SupplierController extends Controller
         $this->authorize('view', $supplier);
 
         return Inertia::render('Contacts/Suppliers/Show', [
-            'supplier' => $supplier->load('expenses'),
+            'supplier' => $supplier->load(['expenses', 'contactPersons']),
         ]);
     }
 

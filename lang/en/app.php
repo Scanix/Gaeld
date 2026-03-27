@@ -287,6 +287,16 @@ return [
     'add_first_account' => 'Add Your First Account',
     'transactions' => 'Transactions',
     'no_transactions_recorded' => 'No transactions recorded yet.',
+    'bank_account' => 'Bank Account',
+    'select_bank_account' => 'Select bank account',
+    'record_transaction' => 'Record Transaction',
+    'select_account' => 'Select account',
+    'edit_bank_account' => 'Edit Bank Account',
+    'delete_bank_account' => 'Delete Bank Account',
+    'delete_bank_account_confirm' => 'Are you sure you want to delete the bank account ":name"? This action cannot be undone.',
+    'bank_account_updated' => 'Bank account updated.',
+    'bank_account_deleted' => 'Bank account deleted.',
+    'supplier' => 'Supplier',
 
     // Reconciliation
     'reconciliation' => 'Reconciliation',
@@ -683,4 +693,28 @@ return [
     'welcome_setup' => 'Welcome to Gäld! Your organization has been set up.',
     'welcome_onboarding' => 'Welcome to Gäld! Your organization is ready.',
     'year_end_closing_done' => 'Year-end closing completed.',
+
+    // Invoice cancel
+    'invoice_cancelled' => 'Invoice cancelled.',
+    'cancel_invoice' => 'Cancel Invoice',
+    'cancel_invoice_confirm' => 'Are you sure you want to cancel invoice :number? This action cannot be undone.',
+
+    // Contact persons
+    'contact_persons' => 'Contact Persons',
+    'contact_person' => 'Contact Person',
+    'add_contact_person' => 'Add Contact Person',
+    'edit_contact_person' => 'Edit Contact Person',
+    'delete_contact_person' => 'Delete Contact Person',
+    'delete_contact_person_confirm' => 'Are you sure you want to delete this contact person?',
+    'no_contact_persons' => 'No contact persons yet.',
+    'first_name' => 'First Name',
+    'last_name' => 'Last Name',
+    'position' => 'Position',
+    'primary_contact' => 'Primary contact',
+    'notes' => 'Notes',
+
+    // Contact type
+    'contact_type' => 'Contact Type',
+    'organization' => 'Organization',
+    'individual' => 'Individual',
 ];

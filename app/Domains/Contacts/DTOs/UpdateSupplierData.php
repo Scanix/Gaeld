@@ -8,6 +8,7 @@ readonly class UpdateSupplierData
 {
     public function __construct(
         public string $name,
+        public ?string $type = null,
         public ?AddressData $addressData = null,
         public ?string $email = null,
         public ?string $phone = null,
@@ -22,6 +23,7 @@ readonly class UpdateSupplierData
     {
         return new self(
             name: $data['name'],
+            type: $data['type'] ?? null,
             addressData: AddressData::fromArray($data),
             email: $data['email'] ?? null,
             phone: $data['phone'] ?? null,
@@ -37,6 +39,7 @@ readonly class UpdateSupplierData
     {
         return array_filter([
             'name' => $this->name,
+            'type' => $this->type,
             'email' => $this->email,
             'phone' => $this->phone,
             'vat_number' => $this->vatNumber,

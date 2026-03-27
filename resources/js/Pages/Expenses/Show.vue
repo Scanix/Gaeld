@@ -140,6 +140,13 @@ const journalColumns = computed(() => [
             <dd>{{ formatDate(expense.date) }}</dd>
             <dt class="text-muted-foreground">{{ t('vendor') }}</dt>
             <dd>{{ expense.vendor || '—' }}</dd>
+            <dt class="text-muted-foreground">{{ t('supplier') }}</dt>
+            <dd>
+              <a v-if="expense.supplier" :href="`/contacts/suppliers/${expense.supplier.id}`" class="text-[hsl(var(--primary))] hover:underline">
+                {{ expense.supplier.name }}
+              </a>
+              <span v-else>—</span>
+            </dd>
             <dt class="text-muted-foreground">{{ t('description') }}</dt>
             <dd>{{ expense.description || '—' }}</dd>
           </dl>

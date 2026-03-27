@@ -91,7 +91,7 @@ class ExpenseController extends Controller
         $this->authorize('view', $expense);
 
         return Inertia::render('Expenses/Show', [
-            'expense' => $expense->load(['vatRate', 'journalEntry.lines.account']),
+            'expense' => $expense->load(['vatRate', 'supplier', 'journalEntry.lines.account']),
             'receiptUrl' => $expense->receipt_path ? route('expenses.receipt.download', $expense) : null,
         ]);
     }

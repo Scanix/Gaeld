@@ -288,6 +288,16 @@ return [
     'add_first_account' => 'Aggiungi il tuo primo conto',
     'transactions' => 'Transazioni',
     'no_transactions_recorded' => 'Nessuna transazione registrata.',
+    'bank_account' => 'Conto bancario',
+    'select_bank_account' => 'Seleziona conto bancario',
+    'record_transaction' => 'Registra transazione',
+    'select_account' => 'Seleziona conto',
+    'edit_bank_account' => 'Modifica conto bancario',
+    'delete_bank_account' => 'Elimina conto bancario',
+    'delete_bank_account_confirm' => 'Sei sicuro di voler eliminare il conto bancario ":name"? Questa azione non può essere annullata.',
+    'bank_account_updated' => 'Conto bancario aggiornato.',
+    'bank_account_deleted' => 'Conto bancario eliminato.',
+    'supplier' => 'Fornitore',
 
     // Reconciliation
     'unreconciled' => 'Non riconciliata',
@@ -643,4 +653,28 @@ return [
     'no_results_found' => 'Nessun risultato trovato.',
     'navigate' => 'Naviga',
     'open' => 'Apri',
+
+    // Invoice cancel
+    'invoice_cancelled' => 'Fattura annullata.',
+    'cancel_invoice' => 'Annulla fattura',
+    'cancel_invoice_confirm' => 'Sei sicuro di voler annullare la fattura :number? Questa azione non può essere annullata.',
+
+    // Contact persons
+    'contact_persons' => 'Persone di contatto',
+    'contact_person' => 'Persona di contatto',
+    'add_contact_person' => 'Aggiungi persona di contatto',
+    'edit_contact_person' => 'Modifica persona di contatto',
+    'delete_contact_person' => 'Elimina persona di contatto',
+    'delete_contact_person_confirm' => 'Sei sicuro di voler eliminare questa persona di contatto?',
+    'no_contact_persons' => 'Nessuna persona di contatto.',
+    'first_name' => 'Nome',
+    'last_name' => 'Cognome',
+    'position' => 'Posizione',
+    'primary_contact' => 'Contatto principale',
+    'notes' => 'Note',
+
+    // Contact type
+    'contact_type' => 'Tipo di contatto',
+    'organization' => 'Organizzazione',
+    'individual' => 'Privato',
 ];

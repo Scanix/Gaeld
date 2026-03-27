@@ -9,6 +9,7 @@ readonly class CreateCustomerData
     public function __construct(
         public string $organizationId,
         public string $name,
+        public ?string $type = 'organization',
         public ?AddressData $addressData = null,
         public ?string $email = null,
         public ?string $phone = null,
@@ -23,6 +24,7 @@ readonly class CreateCustomerData
         return new self(
             organizationId: $data['organization_id'],
             name: $data['name'],
+            type: $data['type'] ?? 'organization',
             addressData: AddressData::fromArray($data),
             email: $data['email'] ?? null,
             phone: $data['phone'] ?? null,
@@ -38,6 +40,7 @@ readonly class CreateCustomerData
         return [
             'organization_id' => $this->organizationId,
             'name' => $this->name,
+            'type' => $this->type,
             'email' => $this->email,
             'phone' => $this->phone,
             'vat_number' => $this->vatNumber,
