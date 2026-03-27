@@ -171,16 +171,20 @@ const eventOptions = [
                   {{ t('view_changes') || 'View changes' }}
                 </summary>
                 <div class="mt-1 space-y-1">
-                  <div v-if="value.old" v-for="(val, key) in value.attributes" :key="key" class="flex gap-1">
-                    <span class="font-medium">{{ key }}:</span>
-                    <span class="line-through text-muted-foreground">{{ value.old?.[key] ?? '—' }}</span>
-                    <span>→</span>
-                    <span>{{ val ?? '—' }}</span>
-                  </div>
-                  <div v-else-if="value.attributes" v-for="(val, key) in value.attributes" :key="key" class="flex gap-1">
-                    <span class="font-medium">{{ key }}:</span>
-                    <span>{{ val }}</span>
-                  </div>
+                  <template v-if="value.old">
+                    <div v-for="(val, key) in value.attributes" :key="key" class="flex gap-1">
+                      <span class="font-medium">{{ key }}:</span>
+                      <span class="line-through text-muted-foreground">{{ value.old?.[key] ?? '—' }}</span>
+                      <span>→</span>
+                      <span>{{ val ?? '—' }}</span>
+                    </div>
+                  </template>
+                  <template v-else-if="value.attributes">
+                    <div v-for="(val, key) in value.attributes" :key="key" class="flex gap-1">
+                      <span class="font-medium">{{ key }}:</span>
+                      <span>{{ val }}</span>
+                    </div>
+                  </template>
                 </div>
               </details>
             </div>
