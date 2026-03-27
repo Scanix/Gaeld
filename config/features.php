@@ -24,5 +24,10 @@ return [
     'api_access' => env('FEATURE_API_ACCESS', false),
     'rule_engine' => env('FEATURE_RULE_ENGINE', false),
     'advanced_permissions' => env('FEATURE_ADVANCED_PERMISSIONS', false),
+    'analytical' => env('FEATURE_ANALYTICAL', false),
+    'withholding_tax' => env('FEATURE_WITHHOLDING_TAX', false),
+    'tax_declaration' => env('FEATURE_TAX_DECLARATION', false),
+    'e_invoicing' => env('FEATURE_E_INVOICING', false),
+    'consolidation' => env('FEATURE_CONSOLIDATION', false),
 
 ];

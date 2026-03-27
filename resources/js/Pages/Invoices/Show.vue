@@ -16,13 +16,18 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, Copy, Download, Paperclip, Ban } from 'lucide-vue-next'
+import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
+import HelpText from '@/Components/HelpText.vue'
 
 const props = defineProps({
   invoice: Object,
   justificatifUrl: { type: String, default: null },
   bankAccounts: { type: Array, default: () => [] },
+  creditNotes: { type: Array, default: () => [] },
+  relatedInvoice: { type: Object, default: null },
+  reminderCount: { type: Number, default: 0 },
+  lastRemindedAt: { type: String, default: null },
 })
 
 const { t } = useTranslations()
@@ -32,6 +37,17 @@ const showDeleteDialog = ref(false)
 const showCancelDialog = ref(false)
 const deleting = ref(false)
 const cancelling = ref(false)
+
+const creditNoteForm = useForm({})
+const reminderForm = useForm({})
+
+function createCreditNote() {
+  creditNoteForm.post(`/invoices/${props.invoice.id}/credit-note`)
+}
+
+function sendReminder() {
+  reminderForm.post(`/invoices/${props.invoice.id}/reminder`)
+}
 
 const finalizeForm = useForm({})
 const paymentForm = useForm({
@@ -45,6 +61,11 @@ const paymentForm = useForm({
 const amountDue = computed(() => {
   const paid = (props.invoice?.payments ?? []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0)
   return Math.max(0, parseFloat(props.invoice?.total || 0) - paid)
+})
+
+const isOverdue = computed(() => {
+  if (!props.invoice?.due_date) return false
+  return props.invoice.status === 'sent' && new Date(props.invoice.due_date) < new Date()
 })
 
 function finalize() {
@@ -124,6 +145,11 @@ const bankAccountOptions = computed(() =>
       { label: t('invoices'), href: '/invoices' },
       { label: invoice?.number },
     ]" />
+
+    <HelpText :title="t('help_reminders_title')" class="mb-6">
+      <p>{{ t('help_reminders_text') }}</p>
+    </HelpText>
+
     <div class="max-w-5xl space-y-6">
       <!-- Header -->
       <div class="flex items-center justify-between">
@@ -179,6 +205,26 @@ const bankAccountOptions = computed(() =>
           >
             <Download class="mr-1 h-4 w-4" />
             {{ t('download_qr_invoice') }}
+          </Button>
+          <Button
+            v-if="isOverdue"
+            variant="outline"
+            size="sm"
+            :disabled="reminderForm.processing"
+            @click="sendReminder"
+          >
+            <Bell class="mr-1 h-4 w-4" />
+            {{ t('send_reminder') }}
+          </Button>
+          <Button
+            v-if="invoice?.type !== 'credit_note' && (invoice?.status === 'sent' || invoice?.status === 'paid')"
+            variant="outline"
+            size="sm"
+            :disabled="creditNoteForm.processing"
+            @click="createCreditNote"
+          >
+            <FileMinus class="mr-1 h-4 w-4" />
+            {{ t('create_credit_note') }}
           </Button>
           <Button
             v-if="invoice?.status === 'draft'"
@@ -246,6 +292,49 @@ const bankAccountOptions = computed(() =>
             ]"
             :rows="invoice.journal_entry.lines ?? []"
           />
+        </CardContent>
+      </Card>
+
+      <!-- Reminder Info -->
+      <Card v-if="reminderCount > 0 || isOverdue">
+        <CardHeader>
+          <CardTitle class="flex items-center gap-2">
+            <Bell class="h-4 w-4" />
+            {{ t('reminders_sent') }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent class="space-y-1 text-sm">
+          <p>{{ t('reminders_sent') }}: <span class="font-medium">{{ reminderCount }}</span></p>
+          <p v-if="lastRemindedAt">{{ t('last_reminded') }}: <span class="font-medium">{{ formatDate(lastRemindedAt) }}</span></p>
+        </CardContent>
+      </Card>
+
+      <!-- Original Invoice (when viewing a credit note) -->
+      <Card v-if="relatedInvoice">
+        <CardHeader>
+          <CardTitle>{{ t('original_invoice') }}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <a :href="`/invoices/${relatedInvoice.id}`" class="text-sm text-[hsl(var(--primary))] hover:underline">
+            {{ relatedInvoice.number }}
+          </a>
+        </CardContent>
+      </Card>
+
+      <!-- Related Credit Notes -->
+      <Card v-if="creditNotes?.length">
+        <CardHeader>
+          <CardTitle>{{ t('related_credit_notes') }}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div class="space-y-1">
+            <div v-for="cn in creditNotes" :key="cn.id">
+              <a :href="`/invoices/${cn.id}`" class="text-sm text-[hsl(var(--primary))] hover:underline">
+                {{ cn.number }}
+              </a>
+              <span class="ml-2 text-sm text-[hsl(var(--muted-foreground))]">{{ formatCurrency(cn.total) }}</span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

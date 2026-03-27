@@ -2,6 +2,7 @@
 
 namespace App\Support\Traits;
 
+use Spatie\Activitylog\Contracts\Activity;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -27,7 +28,7 @@ trait Auditable
             ->setDescriptionForEvent(fn (string $event) => class_basename($this)." {$event}");
     }
 
-    public function tapActivity(\Spatie\Activitylog\Contracts\Activity $activity): void
+    public function tapActivity(Activity $activity): void
     {
         if (property_exists($this, 'organization_id') && $this->organization_id) {
             $activity->properties = $activity->properties->merge([

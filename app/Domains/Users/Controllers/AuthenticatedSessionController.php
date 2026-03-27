@@ -57,7 +57,8 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('two-factor.create');
         }
 
-        $request->session()->regenerate();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         Log::channel('stack')->info('User logged in', [
             'user_id' => Auth::id(),

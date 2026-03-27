@@ -2,12 +2,18 @@
 
 namespace App\Providers;
 
+use App\Domains\Api\Models\PersonalAccessToken;
+use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Policies\ContactPolicy;
 use App\Domains\Expenses\Contracts\ReceiptOcrInterface;
 use App\Domains\Expenses\Services\TesseractOcrService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Support\Listeners\AuthAuditSubscriber;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -25,10 +31,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Sanctum::usePersonalAccessTokenModel(\App\Domains\Api\Models\PersonalAccessToken::class);
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
-        RateLimiter::for('api', function (\Illuminate\Http\Request $request) {
-            return \Illuminate\Cache\RateLimiting\Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
         Password::defaults(fn () => Password::min(12)
             ->letters()
@@ -40,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
         Event::subscribe(AuthAuditSubscriber::class);
         Event::listen(Registered::class, SendEmailVerificationNotification::class);
 
-        Gate::policy(\App\Domains\Contacts\Models\Customer::class, \App\Domains\Contacts\Policies\ContactPolicy::class);
-        Gate::policy(\App\Domains\Contacts\Models\Supplier::class, \App\Domains\Contacts\Policies\ContactPolicy::class);
+        Gate::policy(Customer::class, ContactPolicy::class);
+        Gate::policy(Supplier::class, ContactPolicy::class);
     }
 }

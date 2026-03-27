@@ -3,7 +3,6 @@
 namespace App\Domains\Users\Services;
 
 use App\Domains\Users\Models\User;
-use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 
 class DataExportService

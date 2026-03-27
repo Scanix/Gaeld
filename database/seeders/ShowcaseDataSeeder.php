@@ -72,10 +72,10 @@ class ShowcaseDataSeeder extends Seeder
                     ['name' => 'BergBau Immobilien AG',   'email' => 'kontakt@bergbau-immo.ch',    'address' => 'Seestrasse 45',       'city' => 'Luzern',      'postal_code' => '6004', 'phone' => '+41 41 320 12 34', 'vat_number' => 'CHE-111.222.333 MWST', 'payment_terms' => 'Net 30'],
                     ['name' => 'Alpenkäserei Bucher KlG', 'email' => 'info@alpenkaeserei.ch',      'address' => 'Dorfstrasse 8',        'city' => 'Entlebuch',   'postal_code' => '6162', 'phone' => '+41 41 480 55 66'],
                     ['name' => 'Klinik Sonnenberg',       'email' => 'it@klinik-sonnenberg.ch',    'address' => 'Sonnenbergstrasse 12', 'city' => 'Kriens',      'postal_code' => '6010', 'phone' => '+41 41 329 88 00', 'vat_number' => 'CHE-444.555.666 MWST', 'payment_terms' => 'Net 45'],
-                    ['name' => 'Luzern Tourismus',        'email' => 'digital@luzern-tourismus.ch','address' => 'Zentralstrasse 5',     'city' => 'Luzern',      'postal_code' => '6003', 'phone' => '+41 41 227 17 17'],
+                    ['name' => 'Luzern Tourismus',        'email' => 'digital@luzern-tourismus.ch', 'address' => 'Zentralstrasse 5',     'city' => 'Luzern',      'postal_code' => '6003', 'phone' => '+41 41 227 17 17'],
                     ['name' => 'Rüegg Schreinerei GmbH', 'email' => 'info@rueegg-schreinerei.ch', 'address' => 'Industriestrasse 20',  'city' => 'Emmenbrücke', 'postal_code' => '6020', 'phone' => '+41 41 260 33 44'],
                     ['name' => 'SwissFinServ AG',         'email' => 'projekte@swissfinserv.ch',   'address' => 'Alpenquai 30',         'city' => 'Luzern',      'postal_code' => '6005', 'phone' => '+41 41 368 90 00', 'vat_number' => 'CHE-777.888.999 MWST', 'payment_terms' => 'Net 30'],
-                    ['name' => 'Velostation Brunner',     'email' => 'hallo@velostation-brunner.ch','address' => 'Baselstrasse 2',      'city' => 'Luzern',      'postal_code' => '6003', 'phone' => '+41 41 210 67 89'],
+                    ['name' => 'Velostation Brunner',     'email' => 'hallo@velostation-brunner.ch', 'address' => 'Baselstrasse 2',      'city' => 'Luzern',      'postal_code' => '6003', 'phone' => '+41 41 210 67 89'],
                 ],
                 'suppliers' => [
                     ['name' => 'Immobilien Luzern AG', 'email' => 'verwaltung@immo-luzern.ch',  'default_expense_category' => 'Rent'],
@@ -115,7 +115,7 @@ class ShowcaseDataSeeder extends Seeder
                     ['desc' => 'Lohn Thomas Keller',   'gross' => 7000, 'social' => 910],
                     ['desc' => 'Lohn Leila Ammann',    'gross' => 6800, 'social' => 884],
                 ],
-                'salaryLabel'  => 'Sozialversicherungsbeiträge',
+                'salaryLabel' => 'Sozialversicherungsbeiträge',
                 'occasionalExpenses' => [
                     ['month' => '2024-01', 'category' => 'IT Equipment',              'desc' => 'MacBook Pro 14" M3 — Arbeitsplatz Sophie',   'amount' => 2899, 'vendor' => 'Apple Store',            'account' => '1520'],
                     ['month' => '2024-02', 'category' => 'Office Supplies',            'desc' => 'Bürostühle (3×)',                              'amount' => 1470, 'vendor' => 'IKEA',                   'account' => '1510'],
@@ -135,10 +135,10 @@ class ShowcaseDataSeeder extends Seeder
                     ['month' => '2026-02', 'category' => 'Software and Subscriptions', 'desc' => 'Notion Team Plan (Jahreslizenz)',              'amount' => 288,  'vendor' => 'Notion Labs Inc.',       'account' => '6530'],
                     ['month' => '2026-03', 'category' => 'Travel Expenses',            'desc' => 'Kundenbesuch Bern — SBB + Hotel',              'amount' => 465,  'vendor' => 'SBB CFF FFS',            'account' => '6700'],
                 ],
-                'invoiceNotes'    => 'Vielen Dank für die Zusammenarbeit.',
-                'cancelledNotes'  => 'Annuliert — Projektumfang geändert',
-                'partialRef'      => 'Teilzahlung',
-                'draftProjects'   => [
+                'invoiceNotes' => 'Vielen Dank für die Zusammenarbeit.',
+                'cancelledNotes' => 'Annuliert — Projektumfang geändert',
+                'partialRef' => 'Teilzahlung',
+                'draftProjects' => [
                     ['cust' => 2, 'desc' => 'Patientenportal Phase 3 — Entwurf', 'hours' => 35, 'rate' => 185],
                     ['cust' => 5, 'desc' => 'Dashboard Analytics Erweiterung',   'hours' => 20, 'rate' => 200],
                 ],
@@ -167,7 +167,7 @@ class ShowcaseDataSeeder extends Seeder
                     ['name' => 'Genève Événements SA',     'email' => 'contact@ge-events.ch',       'address' => 'Quai du Mont-Blanc 2',    'city' => 'Genève',    'postal_code' => '1201', 'phone' => '+41 22 310 12 34', 'vat_number' => 'CHE-222.333.444 TVA', 'payment_terms' => 'Net 30'],
                     ['name' => 'Fromagerie du Léman',      'email' => 'info@fromagerie-leman.ch',   'address' => 'Route de Lausanne 50',    'city' => 'Nyon',      'postal_code' => '1260', 'phone' => '+41 22 361 55 66'],
                     ['name' => 'Clinique Belle-Rive',      'email' => 'it@clinique-bellerive.ch',   'address' => 'Avenue de la Gare 15',    'city' => 'Lausanne',  'postal_code' => '1003', 'phone' => '+41 21 329 88 00', 'vat_number' => 'CHE-555.666.777 TVA', 'payment_terms' => 'Net 45'],
-                    ['name' => 'Office du Tourisme Genève','email' => 'digital@tourisme-geneve.ch', 'address' => 'Rue du Rhône 8',          'city' => 'Genève',    'postal_code' => '1204', 'phone' => '+41 22 909 70 00'],
+                    ['name' => 'Office du Tourisme Genève', 'email' => 'digital@tourisme-geneve.ch', 'address' => 'Rue du Rhône 8',          'city' => 'Genève',    'postal_code' => '1204', 'phone' => '+41 22 909 70 00'],
                     ['name' => 'Menuiserie Rochat & Fils', 'email' => 'info@rochat-menuiserie.ch',  'address' => 'Chemin des Ateliers 4',   'city' => 'Carouge',   'postal_code' => '1227', 'phone' => '+41 22 342 33 44'],
                     ['name' => 'FinanceSwiss SA',          'email' => 'projets@financeswiss.ch',    'address' => 'Place Longemalle 1',      'city' => 'Genève',    'postal_code' => '1204', 'phone' => '+41 22 818 90 00', 'vat_number' => 'CHE-888.999.000 TVA', 'payment_terms' => 'Net 30'],
                     ['name' => 'Cycles du Lac',            'email' => 'contact@cyclesdulac.ch',     'address' => 'Avenue de Frontenex 12',  'city' => 'Genève',    'postal_code' => '1207', 'phone' => '+41 22 735 67 89'],
@@ -199,7 +199,7 @@ class ShowcaseDataSeeder extends Seeder
                     ['cust' => 2, 'desc' => 'Module de prise de rendez-vous',     'rate' => 180, 'hMin' => 20, 'hMax' => 50],
                     ['cust' => 3, 'desc' => 'Application calendrier événements',  'rate' => 175, 'hMin' => 25, 'hMax' => 60],
                     ['cust' => 3, 'desc' => 'Site web multilingue',               'rate' => 160, 'hMin' => 30, 'hMax' => 70],
-                    ['cust' => 4, 'desc' => 'Digitalisation saisie des commandes','rate' => 155, 'hMin' => 15, 'hMax' => 35],
+                    ['cust' => 4, 'desc' => 'Digitalisation saisie des commandes', 'rate' => 155, 'hMin' => 15, 'hMax' => 35],
                     ['cust' => 5, 'desc' => 'Tableau de bord conformité',         'rate' => 205, 'hMin' => 40, 'hMax' => 100],
                     ['cust' => 5, 'desc' => 'Automatisation workflow KYC',        'rate' => 200, 'hMin' => 30, 'hMax' => 80],
                     ['cust' => 6, 'desc' => 'Plateforme de réservation en ligne', 'rate' => 160, 'hMin' => 20, 'hMax' => 45],
@@ -210,17 +210,17 @@ class ShowcaseDataSeeder extends Seeder
                     ['desc' => 'Salaire Marc Favre',    'gross' => 7200, 'social' => 936],
                     ['desc' => 'Salaire Nadia Berset',  'gross' => 7000, 'social' => 910],
                 ],
-                'salaryLabel'  => 'Cotisations sociales',
+                'salaryLabel' => 'Cotisations sociales',
                 'occasionalExpenses' => [
                     ['month' => '2024-01', 'category' => 'IT Equipment',              'desc' => 'MacBook Pro 14" M3 — poste Claire',           'amount' => 2899, 'vendor' => 'Apple Store',            'account' => '1520'],
                     ['month' => '2024-02', 'category' => 'Office Supplies',            'desc' => 'Chaises de bureau (3×)',                       'amount' => 1470, 'vendor' => 'IKEA',                   'account' => '1510'],
                     ['month' => '2024-03', 'category' => 'Software and Subscriptions', 'desc' => 'Figma Professional (licence annuelle)',         'amount' => 540,  'vendor' => 'Figma Inc.',             'account' => '6530'],
                     ['month' => '2024-05', 'category' => 'Office Supplies',            'desc' => 'Écrans Dell 27" (2×)',                         'amount' => 980,  'vendor' => 'Digitec Galaxus SA',     'account' => '1510'],
                     ['month' => '2024-07', 'category' => 'Travel Expenses',            'desc' => 'Abonnement demi-tarif Marc',                   'amount' => 185,  'vendor' => 'CFF',                    'account' => '6700'],
-                    ['month' => '2024-09', 'category' => 'Professional Services',      'desc' => 'Authentification notariale modification contrat','amount' => 350, 'vendor' => 'Notaire Genève',         'account' => '6570'],
+                    ['month' => '2024-09', 'category' => 'Professional Services',      'desc' => 'Authentification notariale modification contrat', 'amount' => 350, 'vendor' => 'Notaire Genève',         'account' => '6570'],
                     ['month' => '2024-11', 'category' => 'Advertising and Marketing',  'desc' => 'Imprimerie — cartes de visite & flyers',       'amount' => 420,  'vendor' => 'Imprimerie Genevoise',   'account' => '6600'],
                     ['month' => '2025-01', 'category' => 'IT Equipment',               'desc' => 'NAS Synology DS923+ + disques durs',           'amount' => 1350, 'vendor' => 'Digitec Galaxus SA',     'account' => '1520'],
-                    ['month' => '2025-03', 'category' => 'Software and Subscriptions', 'desc' => 'JetBrains All Products Pack (licence annuelle)','amount' => 649,  'vendor' => 'JetBrains s.r.o.',       'account' => '6530'],
+                    ['month' => '2025-03', 'category' => 'Software and Subscriptions', 'desc' => 'JetBrains All Products Pack (licence annuelle)', 'amount' => 649,  'vendor' => 'JetBrains s.r.o.',       'account' => '6530'],
                     ['month' => '2025-04', 'category' => 'Travel Expenses',            'desc' => 'Conférence WordCamp Zürich — 2 billets',       'amount' => 390,  'vendor' => 'WordCamp Suisse',        'account' => '6700'],
                     ['month' => '2025-06', 'category' => 'IT Equipment',               'desc' => 'MacBook Air M3 — poste Nadia',                 'amount' => 1599, 'vendor' => 'Apple Store',            'account' => '1520'],
                     ['month' => '2025-08', 'category' => 'Office Supplies',            'desc' => 'Papier imprimante + toner (6 mois)',           'amount' => 180,  'vendor' => 'Lyreco',                 'account' => '6500'],
@@ -230,10 +230,10 @@ class ShowcaseDataSeeder extends Seeder
                     ['month' => '2026-02', 'category' => 'Software and Subscriptions', 'desc' => 'Notion Team Plan (licence annuelle)',           'amount' => 288,  'vendor' => 'Notion Labs Inc.',       'account' => '6530'],
                     ['month' => '2026-03', 'category' => 'Travel Expenses',            'desc' => 'Visite client Berne — CFF + hôtel',            'amount' => 465,  'vendor' => 'CFF',                    'account' => '6700'],
                 ],
-                'invoiceNotes'    => 'Merci pour votre confiance.',
-                'cancelledNotes'  => 'Annulée — périmètre du projet modifié',
-                'partialRef'      => 'Paiement partiel',
-                'draftProjects'   => [
+                'invoiceNotes' => 'Merci pour votre confiance.',
+                'cancelledNotes' => 'Annulée — périmètre du projet modifié',
+                'partialRef' => 'Paiement partiel',
+                'draftProjects' => [
                     ['cust' => 2, 'desc' => 'Portail patient Phase 3 — ébauche',     'hours' => 35, 'rate' => 190],
                     ['cust' => 5, 'desc' => 'Extension analytics du tableau de bord', 'hours' => 20, 'rate' => 205],
                 ],
@@ -263,7 +263,7 @@ class ShowcaseDataSeeder extends Seeder
                     ['name' => 'Caseificio Alpino Sagl', 'email' => 'info@caseificio-alpino.ch',  'address' => 'Via del Borgo 5',      'city' => 'Bellinzona',  'postal_code' => '6500', 'phone' => '+41 91 825 55 66'],
                     ['name' => 'Clinica Lago Ceresio',   'email' => 'it@clinica-ceresio.ch',      'address' => 'Via al Lido 8',        'city' => 'Paradiso',    'postal_code' => '6902', 'phone' => '+41 91 985 88 00', 'vat_number' => 'CHE-666.777.888 IVA', 'payment_terms' => 'Net 45'],
                     ['name' => 'Ente Turistico Lugano',  'email' => 'digital@turismo-lugano.ch',  'address' => 'Piazza della Riforma', 'city' => 'Lugano',      'postal_code' => '6900', 'phone' => '+41 91 913 32 32'],
-                    ['name' => 'Falegnameria Bentivoglio','email' => 'info@bentivoglio-legno.ch', 'address' => 'Via Industria 14',     'city' => 'Manno',       'postal_code' => '6928', 'phone' => '+41 91 611 33 44'],
+                    ['name' => 'Falegnameria Bentivoglio', 'email' => 'info@bentivoglio-legno.ch', 'address' => 'Via Industria 14',     'city' => 'Manno',       'postal_code' => '6928', 'phone' => '+41 91 611 33 44'],
                     ['name' => 'TicinoFinanza SA',       'email' => 'progetti@ticinofinanza.ch',  'address' => 'Corso Elvezia 16',     'city' => 'Lugano',      'postal_code' => '6900', 'phone' => '+41 91 910 90 00', 'vat_number' => 'CHE-999.000.111 IVA', 'payment_terms' => 'Net 30'],
                     ['name' => 'Ciclofficina del Lago',  'email' => 'ciao@ciclofficina.ch',       'address' => 'Via Cattori 3',        'city' => 'Lugano',      'postal_code' => '6900', 'phone' => '+41 91 971 67 89'],
                 ],
@@ -305,7 +305,7 @@ class ShowcaseDataSeeder extends Seeder
                     ['desc' => 'Stipendio Marco Bentivoglio', 'gross' => 6900, 'social' => 897],
                     ['desc' => 'Stipendio Elena Fontana',     'gross' => 6700, 'social' => 871],
                 ],
-                'salaryLabel'  => 'Contributi sociali',
+                'salaryLabel' => 'Contributi sociali',
                 'occasionalExpenses' => [
                     ['month' => '2024-01', 'category' => 'IT Equipment',              'desc' => 'MacBook Pro 14" M3 — postazione Giulia',    'amount' => 2899, 'vendor' => 'Apple Store',            'account' => '1520'],
                     ['month' => '2024-02', 'category' => 'Office Supplies',            'desc' => 'Sedie ufficio (3×)',                         'amount' => 1470, 'vendor' => 'IKEA',                   'account' => '1510'],
@@ -313,9 +313,9 @@ class ShowcaseDataSeeder extends Seeder
                     ['month' => '2024-05', 'category' => 'Office Supplies',            'desc' => 'Monitor Dell 27" (2×)',                      'amount' => 980,  'vendor' => 'Digitec Galaxus SA',     'account' => '1510'],
                     ['month' => '2024-07', 'category' => 'Travel Expenses',            'desc' => 'Abbonamento metà-prezzo Marco',              'amount' => 185,  'vendor' => 'FFS',                    'account' => '6700'],
                     ['month' => '2024-09', 'category' => 'Professional Services',      'desc' => 'Autenticazione notarile modifica contratto', 'amount' => 350,  'vendor' => 'Notaio Lugano',          'account' => '6570'],
-                    ['month' => '2024-11', 'category' => 'Advertising and Marketing',  'desc' => 'Tipografia — biglietti da visita & volantini','amount' => 420, 'vendor' => 'Tipografia Luganese',    'account' => '6600'],
+                    ['month' => '2024-11', 'category' => 'Advertising and Marketing',  'desc' => 'Tipografia — biglietti da visita & volantini', 'amount' => 420, 'vendor' => 'Tipografia Luganese',    'account' => '6600'],
                     ['month' => '2025-01', 'category' => 'IT Equipment',               'desc' => 'NAS Synology DS923+ + dischi rigidi',        'amount' => 1350, 'vendor' => 'Digitec Galaxus SA',     'account' => '1520'],
-                    ['month' => '2025-03', 'category' => 'Software and Subscriptions', 'desc' => 'JetBrains All Products Pack (licenza annuale)','amount' => 649, 'vendor' => 'JetBrains s.r.o.',       'account' => '6530'],
+                    ['month' => '2025-03', 'category' => 'Software and Subscriptions', 'desc' => 'JetBrains All Products Pack (licenza annuale)', 'amount' => 649, 'vendor' => 'JetBrains s.r.o.',       'account' => '6530'],
                     ['month' => '2025-04', 'category' => 'Travel Expenses',            'desc' => 'Conferenza WordCamp Zurigo — 2 biglietti',   'amount' => 390,  'vendor' => 'WordCamp Svizzera',      'account' => '6700'],
                     ['month' => '2025-06', 'category' => 'IT Equipment',               'desc' => 'MacBook Air M3 — postazione Elena',          'amount' => 1599, 'vendor' => 'Apple Store',            'account' => '1520'],
                     ['month' => '2025-08', 'category' => 'Office Supplies',            'desc' => 'Carta da stampa + toner (fornitura 6 mesi)', 'amount' => 180,  'vendor' => 'Lyreco',                 'account' => '6500'],
@@ -325,10 +325,10 @@ class ShowcaseDataSeeder extends Seeder
                     ['month' => '2026-02', 'category' => 'Software and Subscriptions', 'desc' => 'Notion Team Plan (licenza annuale)',          'amount' => 288,  'vendor' => 'Notion Labs Inc.',       'account' => '6530'],
                     ['month' => '2026-03', 'category' => 'Travel Expenses',            'desc' => 'Visita cliente Berna — FFS + hotel',          'amount' => 465,  'vendor' => 'FFS',                    'account' => '6700'],
                 ],
-                'invoiceNotes'    => 'Grazie per la collaborazione.',
-                'cancelledNotes'  => 'Annullata — ambito del progetto modificato',
-                'partialRef'      => 'Pagamento parziale',
-                'draftProjects'   => [
+                'invoiceNotes' => 'Grazie per la collaborazione.',
+                'cancelledNotes' => 'Annullata — ambito del progetto modificato',
+                'partialRef' => 'Pagamento parziale',
+                'draftProjects' => [
                     ['cust' => 2, 'desc' => 'Portale pazienti Fase 3 — bozza',      'hours' => 35, 'rate' => 190],
                     ['cust' => 5, 'desc' => 'Estensione analytics della dashboard',  'hours' => 20, 'rate' => 200],
                 ],
@@ -356,7 +356,7 @@ class ShowcaseDataSeeder extends Seeder
                 'customers' => [
                     ['name' => 'Alpine Properties AG',    'email' => 'contact@alpine-properties.ch',  'address' => 'Bahnhofstrasse 50',       'city' => 'Zürich',      'postal_code' => '8001', 'phone' => '+41 44 210 12 34', 'vat_number' => 'CHE-100.200.300 MWST', 'payment_terms' => 'Net 30'],
                     ['name' => 'Swiss Dairy Collective',  'email' => 'orders@swissdairy.ch',          'address' => 'Bergstrasse 12',           'city' => 'Winterthur',  'postal_code' => '8400', 'phone' => '+41 52 215 55 66'],
-                    ['name' => 'Lake View Medical Centre','email' => 'it@lakeview-medical.ch',        'address' => 'Seestrasse 80',            'city' => 'Zürich',      'postal_code' => '8002', 'phone' => '+41 44 386 88 00', 'vat_number' => 'CHE-400.500.600 MWST', 'payment_terms' => 'Net 45'],
+                    ['name' => 'Lake View Medical Centre', 'email' => 'it@lakeview-medical.ch',        'address' => 'Seestrasse 80',            'city' => 'Zürich',      'postal_code' => '8002', 'phone' => '+41 44 386 88 00', 'vat_number' => 'CHE-400.500.600 MWST', 'payment_terms' => 'Net 45'],
                     ['name' => 'Zürich Tourism Board',    'email' => 'digital@zurich-tourism.ch',     'address' => 'Stampfenbachstrasse 52',   'city' => 'Zürich',      'postal_code' => '8006', 'phone' => '+41 44 215 40 00'],
                     ['name' => 'Steiner Woodworks GmbH',  'email' => 'info@steiner-woodworks.ch',     'address' => 'Gewerbestrasse 11',        'city' => 'Uster',       'postal_code' => '8610', 'phone' => '+41 44 940 33 44'],
                     ['name' => 'ZuriFinance AG',          'email' => 'projects@zurifinance.ch',       'address' => 'Paradeplatz 6',            'city' => 'Zürich',      'postal_code' => '8001', 'phone' => '+41 44 225 90 00', 'vat_number' => 'CHE-700.800.900 MWST', 'payment_terms' => 'Net 30'],
@@ -377,7 +377,7 @@ class ShowcaseDataSeeder extends Seeder
                 ],
                 'quarterlyExpenses' => [
                     ['category' => 'Accounting and Legal Fees', 'desc' => 'Quarterly accounting advisory',     'amount' => 720, 'vendor' => 'BWL Treuhand AG',   'account' => '6570'],
-                    ['category' => 'Advertising and Marketing', 'desc' => 'Google Ads campaign',               'amount' => 500, 'vendor' => 'Google Ireland Ltd.','account' => '6600'],
+                    ['category' => 'Advertising and Marketing', 'desc' => 'Google Ads campaign',               'amount' => 500, 'vendor' => 'Google Ireland Ltd.', 'account' => '6600'],
                 ],
                 'projects' => [
                     ['cust' => 0, 'desc' => 'Website redesign',                   'rate' => 175, 'hMin' => 20, 'hMax' => 60],
@@ -400,7 +400,7 @@ class ShowcaseDataSeeder extends Seeder
                     ['desc' => 'Salary James Hartmann', 'gross' => 7500, 'social' => 975],
                     ['desc' => 'Salary Priya Sharma',   'gross' => 7200, 'social' => 936],
                 ],
-                'salaryLabel'  => 'Social security contributions',
+                'salaryLabel' => 'Social security contributions',
                 'occasionalExpenses' => [
                     ['month' => '2024-01', 'category' => 'IT Equipment',              'desc' => 'MacBook Pro 14" M3 — Anna\'s workstation',   'amount' => 2899, 'vendor' => 'Apple Store',            'account' => '1520'],
                     ['month' => '2024-02', 'category' => 'Office Supplies',            'desc' => 'Office chairs (3×)',                          'amount' => 1470, 'vendor' => 'IKEA',                   'account' => '1510'],
@@ -410,7 +410,7 @@ class ShowcaseDataSeeder extends Seeder
                     ['month' => '2024-09', 'category' => 'Professional Services',      'desc' => 'Notarial certification — contract amendment', 'amount' => 350,  'vendor' => 'Notary Zürich',          'account' => '6570'],
                     ['month' => '2024-11', 'category' => 'Advertising and Marketing',  'desc' => 'Print shop — business cards & flyers',        'amount' => 420,  'vendor' => 'Print Solutions AG',     'account' => '6600'],
                     ['month' => '2025-01', 'category' => 'IT Equipment',               'desc' => 'NAS Synology DS923+ with hard drives',        'amount' => 1350, 'vendor' => 'Digitec Galaxus AG',     'account' => '1520'],
-                    ['month' => '2025-03', 'category' => 'Software and Subscriptions', 'desc' => 'JetBrains All Products Pack (annual license)','amount' => 649,  'vendor' => 'JetBrains s.r.o.',       'account' => '6530'],
+                    ['month' => '2025-03', 'category' => 'Software and Subscriptions', 'desc' => 'JetBrains All Products Pack (annual license)', 'amount' => 649,  'vendor' => 'JetBrains s.r.o.',       'account' => '6530'],
                     ['month' => '2025-04', 'category' => 'Travel Expenses',            'desc' => 'WordCamp Zürich conference — 2 tickets',      'amount' => 390,  'vendor' => 'WordCamp Switzerland',   'account' => '6700'],
                     ['month' => '2025-06', 'category' => 'IT Equipment',               'desc' => 'MacBook Air M3 — Priya\'s workstation',       'amount' => 1599, 'vendor' => 'Apple Store',            'account' => '1520'],
                     ['month' => '2025-08', 'category' => 'Office Supplies',            'desc' => 'Printer paper + toner (6-month supply)',      'amount' => 180,  'vendor' => 'Office World AG',        'account' => '6500'],
@@ -420,10 +420,10 @@ class ShowcaseDataSeeder extends Seeder
                     ['month' => '2026-02', 'category' => 'Software and Subscriptions', 'desc' => 'Notion Team Plan (annual license)',            'amount' => 288,  'vendor' => 'Notion Labs Inc.',       'account' => '6530'],
                     ['month' => '2026-03', 'category' => 'Travel Expenses',            'desc' => 'Client visit Bern — train + hotel',           'amount' => 465,  'vendor' => 'SBB CFF FFS',            'account' => '6700'],
                 ],
-                'invoiceNotes'    => 'Thank you for your business.',
-                'cancelledNotes'  => 'Cancelled — project scope changed',
-                'partialRef'      => 'Partial payment',
-                'draftProjects'   => [
+                'invoiceNotes' => 'Thank you for your business.',
+                'cancelledNotes' => 'Cancelled — project scope changed',
+                'partialRef' => 'Partial payment',
+                'draftProjects' => [
                     ['cust' => 2, 'desc' => 'Patient portal Phase 3 — draft',        'hours' => 35, 'rate' => 195],
                     ['cust' => 5, 'desc' => 'Dashboard analytics extension',         'hours' => 20, 'rate' => 210],
                 ],
@@ -476,10 +476,10 @@ class ShowcaseDataSeeder extends Seeder
         // ── Organization ─────────────────────────────────────────
         $org = Organization::where('name', $pack['org']['name'])->first()
             ?? Organization::create(array_merge($pack['org'], [
-                'country'  => 'CH',
+                'country' => 'CH',
                 'currency' => 'CHF',
-                'locale'   => $locale,
-                'fiscal_year_start'         => 1,
+                'locale' => $locale,
+                'fiscal_year_start' => 1,
                 'default_payment_terms_days' => 30,
             ]));
 
@@ -497,15 +497,16 @@ class ShowcaseDataSeeder extends Seeder
 
         // Chart of accounts & VAT
         if ($org->accounts()->count() === 0) {
-            (new SwissChartOfAccountsSeeder())->run($org);
+            (new SwissChartOfAccountsSeeder)->run($org);
         }
         if (VatRate::where('organization_id', $org->id)->count() === 0) {
-            (new SwissVatRatesSeeder())->run($org);
+            (new SwissVatRatesSeeder)->run($org);
         }
 
         // Abort if already seeded
         if (Invoice::where('organization_id', $org->id)->exists()) {
             $this->command?->info("  {$pack['org']['name']} — already seeded, skipping.");
+
             return;
         }
 
@@ -517,10 +518,10 @@ class ShowcaseDataSeeder extends Seeder
             ['organization_id' => $org->id, 'iban' => $pack['bank']['iban']],
             [
                 'account_id' => $bankLedger->id,
-                'name'       => $pack['bank']['name'],
-                'bank_name'  => $pack['bank']['bank_name'],
-                'currency'   => 'CHF',
-                'balance'    => 30000.00,
+                'name' => $pack['bank']['name'],
+                'bank_name' => $pack['bank']['bank_name'],
+                'currency' => 'CHF',
+                'balance' => 30000.00,
             ]
         );
 
@@ -546,7 +547,7 @@ class ShowcaseDataSeeder extends Seeder
         // ──────────────────────────────────────────────────────────
 
         $invoiceNum = 0;
-        $bankTxNum  = 0;
+        $bankTxNum = 0;
 
         mt_srand(crc32($locale)); // reproducible but different per locale
 
@@ -579,24 +580,24 @@ class ShowcaseDataSeeder extends Seeder
                     $bankTxNum++;
                     $tx = BankTransaction::create([
                         'bank_account_id' => $bankAccount->id,
-                        'date'            => $salaryDate,
-                        'description'     => $sal['desc'] . ' — ' . $monthStart->translatedFormat('F Y'),
-                        'amount'          => $sal['gross'],
-                        'type'            => BankTransactionType::Debit,
-                        'reference'       => sprintf('SAL-%04d-%03d', $year, $bankTxNum),
+                        'date' => $salaryDate,
+                        'description' => $sal['desc'].' — '.$monthStart->translatedFormat('F Y'),
+                        'amount' => $sal['gross'],
+                        'type' => BankTransactionType::Debit,
+                        'reference' => sprintf('SAL-%04d-%03d', $year, $bankTxNum),
                     ]);
                     $this->bankingService->postBankTransaction($tx, '5000');
 
                     $bankTxNum++;
                     $nameParts = explode(' ', $sal['desc']);
-                    $shortName = $nameParts[count($nameParts) - 2] . ' ' . $nameParts[count($nameParts) - 1];
+                    $shortName = $nameParts[count($nameParts) - 2].' '.$nameParts[count($nameParts) - 1];
                     $txSocial = BankTransaction::create([
                         'bank_account_id' => $bankAccount->id,
-                        'date'            => $salaryDate,
-                        'description'     => $pack['salaryLabel'] . ' — ' . $shortName,
-                        'amount'          => $sal['social'],
-                        'type'            => BankTransactionType::Debit,
-                        'reference'       => sprintf('SOC-%04d-%03d', $year, $bankTxNum),
+                        'date' => $salaryDate,
+                        'description' => $pack['salaryLabel'].' — '.$shortName,
+                        'amount' => $sal['social'],
+                        'type' => BankTransactionType::Debit,
+                        'reference' => sprintf('SOC-%04d-%03d', $year, $bankTxNum),
                     ]);
                     $this->bankingService->postBankTransaction($txSocial, '5700');
                 }
@@ -605,40 +606,40 @@ class ShowcaseDataSeeder extends Seeder
                 $invoiceCount = mt_rand(2, 4);
                 for ($i = 0; $i < $invoiceCount; $i++) {
                     $invoiceNum++;
-                    $project   = $pack['projects'][mt_rand(0, count($pack['projects']) - 1)];
-                    $customer  = $customers[$project['cust']];
-                    $hours     = mt_rand($project['hMin'], $project['hMax']);
-                    $subtotal  = round($hours * $project['rate'], 2);
+                    $project = $pack['projects'][mt_rand(0, count($pack['projects']) - 1)];
+                    $customer = $customers[$project['cust']];
+                    $hours = mt_rand($project['hMin'], $project['hMax']);
+                    $subtotal = round($hours * $project['rate'], 2);
                     $vatAmount = round($subtotal * 0.081, 2);
-                    $total     = round($subtotal + $vatAmount, 2);
+                    $total = round($subtotal + $vatAmount, 2);
                     $issueDate = $monthStart->copy()->addDays(mt_rand(0, 20));
-                    $dueDate   = $issueDate->copy()->addDays(30);
+                    $dueDate = $issueDate->copy()->addDays(30);
                     $invNumber = sprintf('%s-%04d-%03d', $pack['prefix'], $year, $invoiceNum);
 
                     $invoice = Invoice::create([
                         'organization_id' => $org->id,
-                        'customer_id'     => $customer->id,
-                        'number'          => $invNumber,
-                        'status'          => InvoiceStatus::Draft->value,
-                        'issue_date'      => $issueDate,
-                        'due_date'        => $dueDate,
-                        'subtotal'        => $subtotal,
-                        'vat_amount'      => $vatAmount,
-                        'total'           => $total,
-                        'currency'        => 'CHF',
-                        'notes'           => $pack['invoiceNotes'],
-                        'payment_terms'   => 'Net 30',
+                        'customer_id' => $customer->id,
+                        'number' => $invNumber,
+                        'status' => InvoiceStatus::Draft->value,
+                        'issue_date' => $issueDate,
+                        'due_date' => $dueDate,
+                        'subtotal' => $subtotal,
+                        'vat_amount' => $vatAmount,
+                        'total' => $total,
+                        'currency' => 'CHF',
+                        'notes' => $pack['invoiceNotes'],
+                        'payment_terms' => 'Net 30',
                     ]);
 
                     InvoiceLine::create([
-                        'invoice_id'  => $invoice->id,
-                        'description' => $project['desc'] . ' — ' . $monthStart->translatedFormat('F Y'),
-                        'quantity'    => $hours,
-                        'unit_price'  => $project['rate'],
-                        'amount'      => $subtotal,
+                        'invoice_id' => $invoice->id,
+                        'description' => $project['desc'].' — '.$monthStart->translatedFormat('F Y'),
+                        'quantity' => $hours,
+                        'unit_price' => $project['rate'],
+                        'amount' => $subtotal,
                         'vat_rate_id' => $vatNormal?->id,
-                        'vat_amount'  => $vatAmount,
-                        'sort_order'  => 1,
+                        'vat_amount' => $vatAmount,
+                        'sort_order' => 1,
                     ]);
 
                     // Extra line item ~33% of the time
@@ -646,19 +647,19 @@ class ShowcaseDataSeeder extends Seeder
                         $extraAmt = mt_rand(1, 5) * 50;
                         $extraVat = round($extraAmt * 0.081, 2);
                         InvoiceLine::create([
-                            'invoice_id'  => $invoice->id,
+                            'invoice_id' => $invoice->id,
                             'description' => $pack['extraLines'][mt_rand(0, count($pack['extraLines']) - 1)],
-                            'quantity'    => 1,
-                            'unit_price'  => $extraAmt,
-                            'amount'      => $extraAmt,
+                            'quantity' => 1,
+                            'unit_price' => $extraAmt,
+                            'amount' => $extraAmt,
                             'vat_rate_id' => $vatNormal?->id,
-                            'vat_amount'  => $extraVat,
-                            'sort_order'  => 2,
+                            'vat_amount' => $extraVat,
+                            'sort_order' => 2,
                         ]);
                         $invoice->update([
-                            'subtotal'   => $subtotal + $extraAmt,
+                            'subtotal' => $subtotal + $extraAmt,
                             'vat_amount' => $vatAmount + $extraVat,
-                            'total'      => $total + $extraAmt + $extraVat,
+                            'total' => $total + $extraAmt + $extraVat,
                         ]);
                         $total = $total + $extraAmt + $extraVat;
                     }
@@ -673,7 +674,7 @@ class ShowcaseDataSeeder extends Seeder
                             $invoice->refresh();
                             $payDate = $issueDate->copy()->addDays(mt_rand(15, 35));
                             $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
-                                amount: (string)$total,
+                                amount: (string) $total,
                                 paymentDate: $payDate->toDateString(),
                                 paymentMethod: mt_rand(1, 4) === 1 ? PaymentMethod::Card : PaymentMethod::Bank,
                                 reference: null,
@@ -681,11 +682,11 @@ class ShowcaseDataSeeder extends Seeder
                             $bankTxNum++;
                             BankTransaction::create([
                                 'bank_account_id' => $bankAccount->id,
-                                'date'            => $payDate,
-                                'description'     => $pack['paymentLabel'] . ' ' . $invNumber . ' — ' . $customer->name,
-                                'amount'          => $total,
-                                'type'            => BankTransactionType::Credit,
-                                'reference'       => sprintf('DEP-%04d-%03d', $year, $bankTxNum),
+                                'date' => $payDate,
+                                'description' => $pack['paymentLabel'].' '.$invNumber.' — '.$customer->name,
+                                'amount' => $total,
+                                'type' => BankTransactionType::Credit,
+                                'reference' => sprintf('DEP-%04d-%03d', $year, $bankTxNum),
                             ]);
                         }
                     } elseif ($daysSince > 30) {
@@ -694,7 +695,7 @@ class ShowcaseDataSeeder extends Seeder
                             $invoice->refresh();
                             $payDate = $issueDate->copy()->addDays(mt_rand(25, 40));
                             $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
-                                amount: (string)$total,
+                                amount: (string) $total,
                                 paymentDate: $payDate->toDateString(),
                                 paymentMethod: PaymentMethod::Bank,
                                 reference: null,
@@ -702,18 +703,18 @@ class ShowcaseDataSeeder extends Seeder
                             $bankTxNum++;
                             BankTransaction::create([
                                 'bank_account_id' => $bankAccount->id,
-                                'date'            => $payDate,
-                                'description'     => $pack['paymentLabel'] . ' ' . $invNumber . ' — ' . $customer->name,
-                                'amount'          => $total,
-                                'type'            => BankTransactionType::Credit,
-                                'reference'       => sprintf('DEP-%04d-%03d', $year, $bankTxNum),
+                                'date' => $payDate,
+                                'description' => $pack['paymentLabel'].' '.$invNumber.' — '.$customer->name,
+                                'amount' => $total,
+                                'type' => BankTransactionType::Credit,
+                                'reference' => sprintf('DEP-%04d-%03d', $year, $bankTxNum),
                             ]);
                         } elseif ($roll <= 7) {
                             $partAmt = round($total * (mt_rand(30, 60) / 100), 2);
                             $invoice->refresh();
                             $payDate = $issueDate->copy()->addDays(mt_rand(20, 35));
                             $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
-                                amount: (string)$partAmt,
+                                amount: (string) $partAmt,
                                 paymentDate: $payDate->toDateString(),
                                 paymentMethod: PaymentMethod::Bank,
                                 reference: $pack['partialRef'],
@@ -721,11 +722,11 @@ class ShowcaseDataSeeder extends Seeder
                             $bankTxNum++;
                             BankTransaction::create([
                                 'bank_account_id' => $bankAccount->id,
-                                'date'            => $payDate,
-                                'description'     => $pack['partialLabel'] . ' ' . $invNumber . ' — ' . $customer->name,
-                                'amount'          => $partAmt,
-                                'type'            => BankTransactionType::Credit,
-                                'reference'       => sprintf('DEP-%04d-%03d', $year, $bankTxNum),
+                                'date' => $payDate,
+                                'description' => $pack['partialLabel'].' '.$invNumber.' — '.$customer->name,
+                                'amount' => $partAmt,
+                                'type' => BankTransactionType::Credit,
+                                'reference' => sprintf('DEP-%04d-%03d', $year, $bankTxNum),
                             ]);
                         }
                     }
@@ -742,27 +743,27 @@ class ShowcaseDataSeeder extends Seeder
 
                     $cancelInv = Invoice::create([
                         'organization_id' => $org->id,
-                        'customer_id'     => $cc->id,
-                        'number'          => sprintf('%s-%04d-%03d', $pack['prefix'], $year, $invoiceNum),
-                        'status'          => InvoiceStatus::Cancelled,
-                        'issue_date'      => $monthStart->copy()->addDays(mt_rand(0, 10)),
-                        'due_date'        => $monthStart->copy()->addDays(40),
-                        'subtotal'        => $cs,
-                        'vat_amount'      => $cv,
-                        'total'           => $cs + $cv,
-                        'currency'        => 'CHF',
-                        'notes'           => $pack['cancelledNotes'],
+                        'customer_id' => $cc->id,
+                        'number' => sprintf('%s-%04d-%03d', $pack['prefix'], $year, $invoiceNum),
+                        'status' => InvoiceStatus::Cancelled,
+                        'issue_date' => $monthStart->copy()->addDays(mt_rand(0, 10)),
+                        'due_date' => $monthStart->copy()->addDays(40),
+                        'subtotal' => $cs,
+                        'vat_amount' => $cv,
+                        'total' => $cs + $cv,
+                        'currency' => 'CHF',
+                        'notes' => $pack['cancelledNotes'],
                     ]);
 
                     InvoiceLine::create([
-                        'invoice_id'  => $cancelInv->id,
-                        'description' => $cp['desc'] . ' (' . ($locale === 'de' ? 'annuliert' : ($locale === 'fr' ? 'annulée' : ($locale === 'it' ? 'annullata' : 'cancelled'))) . ')',
-                        'quantity'    => $ch,
-                        'unit_price'  => $cp['rate'],
-                        'amount'      => $cs,
+                        'invoice_id' => $cancelInv->id,
+                        'description' => $cp['desc'].' ('.($locale === 'de' ? 'annuliert' : ($locale === 'fr' ? 'annulée' : ($locale === 'it' ? 'annullata' : 'cancelled'))).')',
+                        'quantity' => $ch,
+                        'unit_price' => $cp['rate'],
+                        'amount' => $cs,
                         'vat_rate_id' => $vatNormal?->id,
-                        'vat_amount'  => $cv,
-                        'sort_order'  => 1,
+                        'vat_amount' => $cv,
+                        'sort_order' => 1,
                     ]);
                 }
             }
@@ -773,7 +774,7 @@ class ShowcaseDataSeeder extends Seeder
         // ── Occasional one-off expenses ──────────────────────────
         foreach ($pack['occasionalExpenses'] as $oe) {
             [$y, $m] = explode('-', $oe['month']);
-            $date = Carbon::create((int)$y, (int)$m, mt_rand(1, 20));
+            $date = Carbon::create((int) $y, (int) $m, mt_rand(1, 20));
             $this->createPostedExpense($org, $oe, $date, $vatNormal, $bankAccount, $bankTxNum);
         }
 
@@ -783,43 +784,43 @@ class ShowcaseDataSeeder extends Seeder
             $vat = round($sub * 0.081, 2);
             Invoice::create([
                 'organization_id' => $org->id,
-                'customer_id'     => $customers[$dp['cust']]->id,
-                'number'          => sprintf('%s-2026-D%02d', $pack['prefix'], $idx + 1),
-                'status'          => InvoiceStatus::Draft->value,
-                'issue_date'      => now(),
-                'due_date'        => now()->addDays(30),
-                'subtotal'        => $sub,
-                'vat_amount'      => $vat,
-                'total'           => $sub + $vat,
-                'currency'        => 'CHF',
-                'payment_terms'   => 'Net 30',
+                'customer_id' => $customers[$dp['cust']]->id,
+                'number' => sprintf('%s-2026-D%02d', $pack['prefix'], $idx + 1),
+                'status' => InvoiceStatus::Draft->value,
+                'issue_date' => now(),
+                'due_date' => now()->addDays(30),
+                'subtotal' => $sub,
+                'vat_amount' => $vat,
+                'total' => $sub + $vat,
+                'currency' => 'CHF',
+                'payment_terms' => 'Net 30',
             ]);
         }
 
         // ── Pending / approved expenses ──────────────────────────
         Expense::create([
             'organization_id' => $org->id,
-            'category'        => $pack['pendingExpenses'][0]['category'],
-            'description'     => $pack['pendingExpenses'][0]['desc'],
-            'amount'          => $pack['pendingExpenses'][0]['amount'],
-            'vat_amount'      => round($pack['pendingExpenses'][0]['amount'] * 0.081, 2),
-            'date'            => now()->subDays(2),
-            'vendor'          => $pack['pendingExpenses'][0]['vendor'],
-            'status'          => ExpenseStatus::Pending->value,
-            'currency'        => 'CHF',
+            'category' => $pack['pendingExpenses'][0]['category'],
+            'description' => $pack['pendingExpenses'][0]['desc'],
+            'amount' => $pack['pendingExpenses'][0]['amount'],
+            'vat_amount' => round($pack['pendingExpenses'][0]['amount'] * 0.081, 2),
+            'date' => now()->subDays(2),
+            'vendor' => $pack['pendingExpenses'][0]['vendor'],
+            'status' => ExpenseStatus::Pending->value,
+            'currency' => 'CHF',
         ]);
 
         $approvedExp = Expense::create([
             'organization_id' => $org->id,
-            'vat_rate_id'     => $vatNormal?->id,
-            'category'        => $pack['pendingExpenses'][1]['category'],
-            'description'     => $pack['pendingExpenses'][1]['desc'],
-            'amount'          => $pack['pendingExpenses'][1]['amount'],
-            'vat_amount'      => round($pack['pendingExpenses'][1]['amount'] * 0.081, 2),
-            'date'            => now()->subDays(5),
-            'vendor'          => $pack['pendingExpenses'][1]['vendor'],
-            'status'          => ExpenseStatus::Pending->value,
-            'currency'        => 'CHF',
+            'vat_rate_id' => $vatNormal?->id,
+            'category' => $pack['pendingExpenses'][1]['category'],
+            'description' => $pack['pendingExpenses'][1]['desc'],
+            'amount' => $pack['pendingExpenses'][1]['amount'],
+            'vat_amount' => round($pack['pendingExpenses'][1]['amount'] * 0.081, 2),
+            'date' => now()->subDays(5),
+            'vendor' => $pack['pendingExpenses'][1]['vendor'],
+            'status' => ExpenseStatus::Pending->value,
+            'currency' => 'CHF',
         ]);
         $this->approveExpense->execute($approvedExp);
 
@@ -827,11 +828,11 @@ class ShowcaseDataSeeder extends Seeder
         foreach ($pack['unmatchedBankTx'] as $utx) {
             BankTransaction::create([
                 'bank_account_id' => $bankAccount->id,
-                'date'            => now()->subDays(mt_rand(1, 5)),
-                'description'     => $utx['desc'],
-                'amount'          => $utx['amount'],
-                'type'            => $utx['type'] === 'credit' ? BankTransactionType::Credit : BankTransactionType::Debit,
-                'reference'       => $utx['ref'],
+                'date' => now()->subDays(mt_rand(1, 5)),
+                'description' => $utx['desc'],
+                'amount' => $utx['amount'],
+                'type' => $utx['type'] === 'credit' ? BankTransactionType::Credit : BankTransactionType::Debit,
+                'reference' => $utx['ref'],
             ]);
         }
 
@@ -853,15 +854,15 @@ class ShowcaseDataSeeder extends Seeder
 
         $expense = Expense::create([
             'organization_id' => $org->id,
-            'vat_rate_id'     => $vatRate?->id,
-            'category'        => $data['category'],
-            'description'     => $data['desc'],
-            'amount'          => $data['amount'],
-            'vat_amount'      => $vatAmount,
-            'date'            => $date,
-            'vendor'          => $data['vendor'],
-            'status'          => ExpenseStatus::Pending->value,
-            'currency'        => 'CHF',
+            'vat_rate_id' => $vatRate?->id,
+            'category' => $data['category'],
+            'description' => $data['desc'],
+            'amount' => $data['amount'],
+            'vat_amount' => $vatAmount,
+            'date' => $date,
+            'vendor' => $data['vendor'],
+            'status' => ExpenseStatus::Pending->value,
+            'currency' => 'CHF',
         ]);
 
         $this->approveExpense->execute($expense);
@@ -870,11 +871,11 @@ class ShowcaseDataSeeder extends Seeder
         $bankTxNum++;
         BankTransaction::create([
             'bank_account_id' => $bankAccount->id,
-            'date'            => $date,
-            'description'     => $data['desc'],
-            'amount'          => $data['amount'],
-            'type'            => BankTransactionType::Debit,
-            'reference'       => sprintf('EXP-%04d-%03d', $date->year, $bankTxNum),
+            'date' => $date,
+            'description' => $data['desc'],
+            'amount' => $data['amount'],
+            'type' => BankTransactionType::Debit,
+            'reference' => sprintf('EXP-%04d-%03d', $date->year, $bankTxNum),
         ]);
     }
 }

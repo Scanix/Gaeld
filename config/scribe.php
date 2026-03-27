@@ -1,6 +1,6 @@
 <?php
 
-if (! class_exists(\Knuckles\Scribe\Config\AuthIn::class)) {
+if (! class_exists(AuthIn::class)) {
     return [];
 }
 

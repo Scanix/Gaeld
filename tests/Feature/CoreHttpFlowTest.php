@@ -10,7 +10,9 @@ use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Expenses\Enums\ExpenseStatus;
+use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -106,7 +108,7 @@ class CoreHttpFlowTest extends TestCase
             ],
         ]);
 
-        $invoice = \App\Domains\Invoicing\Models\Invoice::where('number', 'INV-HTTP-001')->firstOrFail();
+        $invoice = Invoice::where('number', 'INV-HTTP-001')->firstOrFail();
 
         $create->assertRedirect(route('invoices.show', $invoice));
         $this->assertSame(InvoiceStatus::Draft, $invoice->status);
@@ -141,7 +143,7 @@ class CoreHttpFlowTest extends TestCase
             'currency' => 'CHF',
         ]);
 
-        $expense = \App\Domains\Expenses\Models\Expense::where('description', 'HTTP expense')->firstOrFail();
+        $expense = Expense::where('description', 'HTTP expense')->firstOrFail();
 
         $create->assertRedirect(route('expenses.show', $expense));
         $this->assertSame(ExpenseStatus::Pending, $expense->status);

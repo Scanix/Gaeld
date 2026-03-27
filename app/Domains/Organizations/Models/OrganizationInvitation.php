@@ -11,6 +11,12 @@ class OrganizationInvitation extends Model
 {
     use HasUuids;
 
+    /**
+     * Transient plain-text token set after creation for notification purposes.
+     * Not persisted — the hashed token is stored in `token` column.
+     */
+    public ?string $plain_token = null;
+
     protected $fillable = [
         'organization_id',
         'email',

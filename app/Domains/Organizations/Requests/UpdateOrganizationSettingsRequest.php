@@ -2,6 +2,7 @@
 
 namespace App\Domains\Organizations\Requests;
 
+use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,7 @@ class UpdateOrganizationSettingsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('organization') ?? app(\App\Domains\Organizations\Services\CurrentOrganization::class)->get());
+        return $this->user()->can('update', $this->route('organization') ?? app(CurrentOrganization::class)->get());
     }
 
     public function rules(): array

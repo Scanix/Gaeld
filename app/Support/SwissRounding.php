@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Support;
+
+/**
+ * Swiss 5-centime rounding helper.
+ *
+ * Swiss francs are rounded to the nearest 0.05 CHF.
+ * Example: 12.37 → 12.35, 12.38 → 12.40, 12.425 → 12.45
+ */
+class SwissRounding
+{
+    /**
+     * Round an amount to the nearest 5 centimes (0.05 CHF).
+     *
+     * Algorithm: round(amount * 20) / 20
+     * Uses bcmath for arbitrary-precision arithmetic.
+     */
+    public static function roundToFiveCents(string $amount): string
+    {
+        // Multiply by 20, round to nearest integer, divide by 20
+        $multiplied = bcmul($amount, '20', 4);
+        $rounded = (string) round((float) $multiplied);
+
+        return bcdiv($rounded, '20', 2);
+    }
+
+    /**
+     * Calculate the rounding difference (rounded - original).
+     *
+     * Positive = rounded up, negative = rounded down.
+     */
+    public static function difference(string $original, string $rounded): string
+    {
+        return bcsub($rounded, $original, 2);
+    }
+}

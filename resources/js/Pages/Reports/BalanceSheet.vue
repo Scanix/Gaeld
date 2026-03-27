@@ -8,6 +8,7 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Button from '@/Components/UI/Button.vue'
+import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
 import { formatCurrency } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
@@ -42,9 +43,12 @@ const sections = computed(() => [
       <p>{{ t('help_balance_sheet_text') }}</p>
     </HelpText>
 
-    <div class="mb-6 flex items-end gap-4">
-      <FormInput id="as_of_date" v-model="asOfDate" type="date" :label="t('as_of_date')" />
-      <Button @click="applyFilter">{{ t('apply') }}</Button>
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div class="flex items-end gap-4">
+        <FormInput id="as_of_date" v-model="asOfDate" type="date" :label="t('as_of_date')" />
+        <Button @click="applyFilter">{{ t('apply') }}</Button>
+      </div>
+      <ExportDropdown base-url="/reports/balance-sheet/export" :params="{ as_of_date: asOfDate }" />
     </div>
 
     <div class="space-y-6">

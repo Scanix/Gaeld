@@ -2,6 +2,4 @@
 
 namespace App\Domains\Invoicing\DTOs;
 
-readonly class UpdateInvoiceData extends InvoicePayloadData
-{
-}
+readonly class UpdateInvoiceData extends InvoicePayloadData {}

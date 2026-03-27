@@ -142,10 +142,10 @@ class MatchingService
                 ]);
 
                 if ($transaction->reference) {
-                    $q->orWhere('number', 'like', '%' . $transaction->reference . '%');
+                    $q->orWhere('number', 'like', '%'.$transaction->reference.'%');
                 }
                 if ($transaction->end_to_end_id) {
-                    $q->orWhere('number', 'like', '%' . $transaction->end_to_end_id . '%');
+                    $q->orWhere('number', 'like', '%'.$transaction->end_to_end_id.'%');
                 }
             })
             ->orderBy('total')

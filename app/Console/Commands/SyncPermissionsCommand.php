@@ -3,8 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Domains\Organizations\Enums\Role;
+use App\Domains\Users\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role as SpatieRole;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -66,13 +68,13 @@ class SyncPermissionsCommand extends Command
 
     private function debug(): int
     {
-        $roles = \Spatie\Permission\Models\Role::with('permissions')->get();
+        $roles = SpatieRole::with('permissions')->get();
         $this->info("Roles: {$roles->count()}");
         foreach ($roles as $r) {
             $this->line("  {$r->name} => {$r->permissions->count()} permissions");
         }
 
-        $permCount = \Spatie\Permission\Models\Permission::count();
+        $permCount = Permission::count();
         $this->info("Total permissions: {$permCount}");
 
         $userRoles = DB::table('model_has_roles')->get();
@@ -86,12 +88,12 @@ class SyncPermissionsCommand extends Command
         $first = $userRoles->first();
         if ($first) {
             app()[PermissionRegistrar::class]->setPermissionsTeamId($first->organization_id);
-            $user = \App\Domains\Users\Models\User::find($first->model_id);
+            $user = User::find($first->model_id);
             if ($user) {
                 $this->info("Testing user {$user->email}:");
-                $this->line("  Roles: " . $user->getRoleNames()->implode(', '));
-                $this->line("  Permissions: " . $user->getAllPermissions()->pluck('name')->implode(', '));
-                $this->line("  hasPermissionTo(accounting.view): " . ($user->hasPermissionTo('accounting.view') ? 'YES' : 'NO'));
+                $this->line('  Roles: '.$user->getRoleNames()->implode(', '));
+                $this->line('  Permissions: '.$user->getAllPermissions()->pluck('name')->implode(', '));
+                $this->line('  hasPermissionTo(accounting.view): '.($user->hasPermissionTo('accounting.view') ? 'YES' : 'NO'));
             }
         }
 

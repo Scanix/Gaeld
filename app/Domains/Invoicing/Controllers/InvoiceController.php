@@ -2,29 +2,31 @@
 
 namespace App\Domains\Invoicing\Controllers;
 
+use App\Domains\Accounting\Queries\VatRateQuery;
+use App\Domains\Banking\Models\BankAccount;
+use App\Domains\Contacts\Queries\CustomerQuery;
 use App\Domains\Invoicing\Actions\CancelInvoiceAction;
+use App\Domains\Invoicing\Actions\CreateCreditNoteAction;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DeleteInvoiceAction;
 use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
+use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
-use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
-use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
-use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
+use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
+use App\Domains\Invoicing\Exceptions\QrBillValidationException;
+use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Queries\InvoiceQuery;
 use App\Domains\Invoicing\Requests\RecordPaymentRequest;
 use App\Domains\Invoicing\Requests\StoreInvoiceRequest;
 use App\Domains\Invoicing\Requests\UpdateInvoiceRequest;
-use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Organizations\Services\CurrentOrganization;
-use App\Domains\Contacts\Queries\CustomerQuery;
-use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Invoicing\Queries\InvoiceQuery;
-use App\Domains\Accounting\Queries\VatRateQuery;
 use App\Http\Controllers\Controller;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
@@ -33,6 +35,7 @@ use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceController extends Controller
 {
@@ -222,7 +225,7 @@ class InvoiceController extends Controller
             ->with('success', __('app.justificatif_removed'));
     }
 
-    public function downloadJustificatif(Invoice $invoice): \Symfony\Component\HttpFoundation\StreamedResponse|\Illuminate\Http\RedirectResponse
+    public function downloadJustificatif(Invoice $invoice): StreamedResponse|RedirectResponse
     {
         $this->authorize('view', $invoice);
 
@@ -249,12 +252,39 @@ class InvoiceController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         }
 
-        $filename = 'invoice-' . ($invoice->number ?? $invoice->id) . '.pdf';
+        $filename = 'invoice-'.($invoice->number ?? $invoice->id).'.pdf';
 
         return new HttpResponse($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
+    public function sendReminder(Invoice $invoice, SendInvoiceReminderAction $action): RedirectResponse
+    {
+        $this->authorize('update', $invoice);
+
+        try {
+            $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('success', __('app.reminder_sent'));
+    }
+
+    public function creditNote(Invoice $invoice, CreateCreditNoteAction $action): RedirectResponse
+    {
+        $this->authorize('view', $invoice);
+
+        try {
+            $creditNote = $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('invoices.show', $creditNote)
+            ->with('success', __('app.credit_note_created'));
+    }
 }

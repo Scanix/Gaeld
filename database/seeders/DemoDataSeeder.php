@@ -8,20 +8,20 @@ use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankingService;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
-use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
-use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Expenses\Enums\ExpenseStatus;
-use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
-use App\Domains\Organizations\Models\Organization;
+use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Organizations\Enums\Role;
+use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -113,8 +113,8 @@ class DemoDataSeeder extends Seeder
         $member->syncRoles([Role::Member->value]);
 
         // Seed chart of accounts and VAT rates for org1
-        $chartsSeeder = new SwissChartOfAccountsSeeder();
-        $vatSeeder = new SwissVatRatesSeeder();
+        $chartsSeeder = new SwissChartOfAccountsSeeder;
+        $vatSeeder = new SwissVatRatesSeeder;
 
         if ($org1->accounts()->count() === 0) {
             $chartsSeeder->run($org1);

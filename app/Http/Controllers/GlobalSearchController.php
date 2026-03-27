@@ -7,8 +7,11 @@ use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Laravel\Scout\Searchable;
 
 class GlobalSearchController extends Controller
 {
@@ -33,7 +36,7 @@ class GlobalSearchController extends Controller
                 'type' => 'invoice',
                 'id' => $invoice->id,
                 'title' => $invoice->number ?? __('app.draft'),
-                'subtitle' => ($invoice->customer?->name ?? '') . ' · ' . $invoice->currency . ' ' . number_format((float) $invoice->total, 2),
+                'subtitle' => ($invoice->customer?->name ?? '').' · '.$invoice->currency.' '.number_format((float) $invoice->total, 2),
                 'status' => $invoice->status?->value,
                 'url' => "/invoices/{$invoice->id}",
             ];
@@ -70,7 +73,7 @@ class GlobalSearchController extends Controller
                 'type' => 'expense',
                 'id' => $expense->id,
                 'title' => $expense->description ?? $expense->category,
-                'subtitle' => ($expense->vendor ?? $expense->supplier?->name ?? '') . ' · ' . $expense->currency . ' ' . number_format((float) $expense->amount, 2),
+                'subtitle' => ($expense->vendor ?? $expense->supplier?->name ?? '').' · '.$expense->currency.' '.number_format((float) $expense->amount, 2),
                 'status' => $expense->status?->value,
                 'url' => "/expenses/{$expense->id}",
             ];
@@ -80,12 +83,12 @@ class GlobalSearchController extends Controller
     }
 
     /**
-     * @param class-string<\Illuminate\Database\Eloquent\Model> $modelClass
-     * @param string[] $with
+     * @param  class-string<Model>  $modelClass
+     * @param  string[]  $with
      */
-    private function searchModel(string $modelClass, string $query, string $orgId, array $with = []): \Illuminate\Support\Collection
+    private function searchModel(string $modelClass, string $query, string $orgId, array $with = []): Collection
     {
-        $usesScout = in_array(\Laravel\Scout\Searchable::class, class_uses_recursive($modelClass));
+        $usesScout = in_array(Searchable::class, class_uses_recursive($modelClass));
 
         if ($usesScout && config('scout.driver') === 'meilisearch') {
             $ids = $modelClass::search($query)

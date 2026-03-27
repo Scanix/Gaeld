@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\Middleware\CheckFeatureFlag;
+use App\Support\FeatureFlag;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,7 +16,7 @@ class FeatureFlagServiceProvider extends ServiceProvider
 
         // Blade directives for feature flags
         Blade::if('feature', function (string $feature) {
-            return \App\Support\FeatureFlag::enabled($feature);
+            return FeatureFlag::enabled($feature);
         });
     }
 }

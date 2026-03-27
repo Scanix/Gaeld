@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
@@ -13,7 +14,6 @@ use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\PaymentMethod;
-use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceService;
 use App\Domains\Organizations\Models\Organization;
@@ -27,8 +27,11 @@ class InvoiceFlowTest extends TestCase
     use RefreshDatabase, WithOrganizationPermissions;
 
     private Organization $org;
+
     private User $user;
+
     private Customer $customer;
+
     private VatRate $vatRate;
 
     protected function setUp(): void

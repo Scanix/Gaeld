@@ -26,7 +26,7 @@ Route::middleware('feature:auto_reconciliation')->group(function () {
     Route::post('/reconciliation/{bankAccount}/auto', [ReconciliationController::class, 'autoReconcile'])->name('reconciliation.auto');
 });
 
-// Bank sync (EE only — future routes)
+// Bank sync (EE only — feature:bank_sync, routes defined in EE plugin routes/web.php)
 Route::middleware('feature:bank_sync')->group(function () {
-    // Future: bank API sync routes
+    // EE routes loaded from gaeld-ee plugin
 });

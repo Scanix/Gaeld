@@ -58,7 +58,6 @@ class OrganizationSetupFlowTest extends TestCase
             'email_verified_at' => now(),
         ]);
         /** @var User $user */
-
         $response = $this->actingAs($user)->post('/onboarding', [
             'name' => 'Onboarding Org',
             'legal_name' => 'Onboarding Org AG',
@@ -103,7 +102,6 @@ class OrganizationSetupFlowTest extends TestCase
             'email_verified_at' => now(),
         ]);
         /** @var User $user */
-
         $response = $this->actingAs($user)->get('/');
 
         $response->assertRedirect('/onboarding');

@@ -4,9 +4,9 @@ namespace App\Domains\Api\Controllers;
 
 use App\Domains\Api\Resources\BankAccountResource;
 use App\Domains\Banking\Models\BankAccount;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Http\Controllers\Controller;
 
 class BankAccountApiController extends Controller
 {

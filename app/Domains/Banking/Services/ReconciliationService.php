@@ -4,7 +4,6 @@ namespace App\Domains\Banking\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Services\LedgerService;
-use App\Support\Exceptions\FeatureDisabledException;
 use App\Domains\Banking\Enums\MatchConfidence;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
@@ -19,6 +18,7 @@ use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceService;
+use App\Support\Exceptions\FeatureDisabledException;
 use App\Support\FeatureFlag;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
@@ -47,11 +47,11 @@ class ReconciliationService
     private function validateReconciliationPreconditions(BankTransaction $transaction, BankAccount $bankAccount): void
     {
         if (! $bankAccount->ledgerAccount) {
-            throw new UnlinkedBankAccountException();
+            throw new UnlinkedBankAccountException;
         }
 
         if ($transaction->is_reconciled) {
-            throw new AlreadyReconciledException();
+            throw new AlreadyReconciledException;
         }
     }
 
@@ -60,10 +60,10 @@ class ReconciliationService
      */
     private function buildReconciliationReference(string $orgId, BankTransaction $transaction): string
     {
-        $reference = self::REFERENCE_PREFIX_RECONCILIATION . ($transaction->reference ?? $transaction->id);
+        $reference = self::REFERENCE_PREFIX_RECONCILIATION.($transaction->reference ?? $transaction->id);
 
         if ($this->ledgerService->isDuplicateReference($orgId, $reference)) {
-            $reference .= '-' . Str::uuid()->toString();
+            $reference .= '-'.Str::uuid()->toString();
         }
 
         return $reference;
@@ -126,8 +126,8 @@ class ReconciliationService
      * (debit bank, credit AR), creates an InvoicePayment record, and marks the
      * invoice as Paid when fully settled.
      *
-     * @throws AlreadyReconciledException  When transaction is already reconciled
-     * @throws UnlinkedBankAccountException  When bank account is not linked to a ledger account
+     * @throws AlreadyReconciledException When transaction is already reconciled
+     * @throws UnlinkedBankAccountException When bank account is not linked to a ledger account
      */
     public function reconcileWithInvoice(
         BankTransaction $transaction,
@@ -145,15 +145,14 @@ class ReconciliationService
         });
     }
 
-
     /**
      * Manually reconcile a bank transaction with an expense.
      *
      * Posts the bank transaction to the ledger (debit expense account, credit bank)
      * and marks the transaction as reconciled.
      *
-     * @throws AlreadyReconciledException  When transaction is already reconciled
-     * @throws UnlinkedBankAccountException  When bank account is not linked to a ledger account
+     * @throws AlreadyReconciledException When transaction is already reconciled
+     * @throws UnlinkedBankAccountException When bank account is not linked to a ledger account
      */
     public function reconcileWithExpense(
         BankTransaction $transaction,
@@ -194,8 +193,8 @@ class ReconciliationService
     /**
      * Manually reconcile a bank transaction with a contra account (no invoice/expense match).
      *
-     * @throws AlreadyReconciledException  When transaction is already reconciled
-     * @throws UnlinkedBankAccountException  When bank account has no linked ledger account
+     * @throws AlreadyReconciledException When transaction is already reconciled
+     * @throws UnlinkedBankAccountException When bank account has no linked ledger account
      */
     public function reconcileWithContraAccount(
         BankTransaction $transaction,
@@ -226,9 +225,9 @@ class ReconciliationService
      * (debit bank, credit AR). Does NOT also call reconcileWithInvoice()
      * to avoid double-posting the same accounting entry.
      *
-     * @throws AlreadyReconciledException  When transaction is already reconciled
-     * @throws InvalidPaymentException  When duplicate payment detected
-     * @throws UnlinkedBankAccountException  When bank account is not linked to a ledger account
+     * @throws AlreadyReconciledException When transaction is already reconciled
+     * @throws InvalidPaymentException When duplicate payment detected
+     * @throws UnlinkedBankAccountException When bank account is not linked to a ledger account
      */
     public function confirmMatch(BankMatch $match): BankTransaction
     {
@@ -290,7 +289,7 @@ class ReconciliationService
      *
      * @return array{matched: int, unmatched: int}
      *
-     * @throws FeatureDisabledException  When auto reconciliation feature is disabled
+     * @throws FeatureDisabledException When auto reconciliation feature is disabled
      */
     public function autoReconcile(BankAccount $bankAccount): array
     {

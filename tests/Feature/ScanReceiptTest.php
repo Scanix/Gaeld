@@ -22,6 +22,7 @@ class ScanReceiptTest extends TestCase
     use RefreshDatabase, WithOrganizationPermissions;
 
     private Organization $org;
+
     private User $user;
 
     protected function setUp(): void
@@ -40,7 +41,8 @@ class ScanReceiptTest extends TestCase
 
         // Mock the OCR service to avoid Tesseract dependency in tests
         $this->app->bind(ReceiptOcrInterface::class, function () {
-            return new class implements ReceiptOcrInterface {
+            return new class implements ReceiptOcrInterface
+            {
                 public function extract(string $imagePath): ReceiptOcrResult
                 {
                     return new ReceiptOcrResult(

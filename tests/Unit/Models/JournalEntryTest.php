@@ -105,7 +105,7 @@ class JournalEntryTest extends TestCase
     }
 
     /**
-     * @param array<int, array<string, string>> $lines
+     * @param  array<int, array<string, string>>  $lines
      */
     private function createEntry(array $lines): JournalEntry
     {

@@ -2,10 +2,10 @@
 
 namespace Tests\Unit;
 
-use App\Support\QueryBuilder;
-use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Contacts\Models\Customer;
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\QueryBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Tests\TestCase;

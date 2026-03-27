@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
-use App\Domains\Invoicing\Services\SwissQrInvoiceService;
-use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Contacts\Models\Customer;
+use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Services\SwissQrInvoiceService;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -14,14 +14,16 @@ class SwissQrInvoiceServiceTest extends TestCase
     use RefreshDatabase;
 
     private SwissQrInvoiceService $service;
+
     private Organization $org;
+
     private Customer $client;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->service = new SwissQrInvoiceService();
+        $this->service = new SwissQrInvoiceService;
 
         $this->org = Organization::create([
             'name' => 'Test GmbH',
@@ -84,7 +86,7 @@ class SwissQrInvoiceServiceTest extends TestCase
         $this->assertNotNull($qrBill);
 
         $violations = $qrBill->getViolations();
-        $this->assertCount(0, $violations, 'QR Bill should have no violations: ' . implode(', ', array_map(fn ($v) => $v->getMessage(), iterator_to_array($violations))));
+        $this->assertCount(0, $violations, 'QR Bill should have no violations: '.implode(', ', array_map(fn ($v) => $v->getMessage(), iterator_to_array($violations))));
     }
 
     public function test_validate_returns_no_errors_for_valid_invoice(): void
@@ -107,7 +109,7 @@ class SwissQrInvoiceServiceTest extends TestCase
 
         $errors = $this->service->validate($invoice, $this->org);
 
-        $this->assertEmpty($errors, 'Expected no validation errors but got: ' . implode(', ', $errors));
+        $this->assertEmpty($errors, 'Expected no validation errors but got: '.implode(', ', $errors));
     }
 
     public function test_supports_non_reference_type(): void
@@ -130,7 +132,7 @@ class SwissQrInvoiceServiceTest extends TestCase
         $qrBill = $this->service->buildQrBill($invoice, $this->org);
         $violations = $qrBill->getViolations();
 
-        $this->assertCount(0, $violations, 'NON ref violations: ' . implode(', ', array_map(fn ($v) => $v->getMessage(), iterator_to_array($violations))));
+        $this->assertCount(0, $violations, 'NON ref violations: '.implode(', ', array_map(fn ($v) => $v->getMessage(), iterator_to_array($violations))));
     }
 
     public function test_supports_eur_currency(): void
@@ -153,6 +155,6 @@ class SwissQrInvoiceServiceTest extends TestCase
         $qrBill = $this->service->buildQrBill($invoice, $this->org);
         $violations = $qrBill->getViolations();
 
-        $this->assertCount(0, $violations, 'EUR violations: ' . implode(', ', array_map(fn ($v) => $v->getMessage(), iterator_to_array($violations))));
+        $this->assertCount(0, $violations, 'EUR violations: '.implode(', ', array_map(fn ($v) => $v->getMessage(), iterator_to_array($violations))));
     }
 }

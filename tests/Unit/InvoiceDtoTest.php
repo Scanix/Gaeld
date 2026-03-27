@@ -70,8 +70,8 @@ class InvoiceDtoTest extends TestCase
         $this->assertEquals('customer-1', $array['customer_id']);
         $this->assertEquals('EUR', $array['currency']);
         $this->assertEquals('Note', $array['notes']);
-    $this->assertCount(1, $array['lines']);
-    $this->assertEquals('Service', $array['lines'][0]['description']);
+        $this->assertCount(1, $array['lines']);
+        $this->assertEquals('Service', $array['lines'][0]['description']);
     }
 
     public function test_record_payment_data_from_valid_request(): void

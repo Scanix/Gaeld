@@ -78,6 +78,63 @@ class ReportingServiceTest extends TestCase
         $this->assertSame('1020', $report['assets']['accounts'][0]['code']);
     }
 
+    public function test_profit_and_loss_without_comparison_returns_null_comparison(): void
+    {
+        $revenue = $this->makeAccount('3000', 'Revenue', AccountType::Revenue);
+        $expense = $this->makeAccount('6530', 'Software', AccountType::Expense);
+
+        $ledgerService = Mockery::mock(LedgerService::class);
+        $ledgerService->shouldReceive('accountBalance')->with($revenue->id, '2026-01-01', '2026-03-31')->andReturn('1000.00');
+        $ledgerService->shouldReceive('accountBalance')->with($expense->id, '2026-01-01', '2026-03-31')->andReturn('400.00');
+
+        $service = new ReportingService($ledgerService);
+        $report = $service->profitAndLoss($this->organization->id, '2026-01-01', '2026-03-31');
+
+        $this->assertNull($report['comparison']);
+        $this->assertNull($report['variance']);
+    }
+
+    public function test_profit_and_loss_with_comparison_returns_variance(): void
+    {
+        $revenue = $this->makeAccount('3000', 'Revenue', AccountType::Revenue);
+        $expense = $this->makeAccount('6530', 'Software', AccountType::Expense);
+
+        $ledgerService = Mockery::mock(LedgerService::class);
+
+        // Current period
+        $ledgerService->shouldReceive('accountBalance')->with($revenue->id, '2026-01-01', '2026-12-31')->andReturn('12000.00');
+        $ledgerService->shouldReceive('accountBalance')->with($expense->id, '2026-01-01', '2026-12-31')->andReturn('8000.00');
+
+        // Comparison period (previous year)
+        $ledgerService->shouldReceive('accountBalance')->with($revenue->id, '2025-01-01', '2025-12-31')->andReturn('10000.00');
+        $ledgerService->shouldReceive('accountBalance')->with($expense->id, '2025-01-01', '2025-12-31')->andReturn('7000.00');
+
+        $service = new ReportingService($ledgerService);
+        $report = $service->profitAndLoss(
+            $this->organization->id,
+            '2026-01-01',
+            '2026-12-31',
+            '2025-01-01',
+            '2025-12-31',
+        );
+
+        // Comparison data present
+        $this->assertNotNull($report['comparison']);
+        $this->assertSame('2025-01-01', $report['comparison']['period']['from']);
+        $this->assertEquals('10000.00', $report['comparison']['total_revenue']);
+        $this->assertEquals('7000.00', $report['comparison']['total_expenses']);
+        $this->assertSame('3000.00', $report['comparison']['net_profit']);
+
+        // Variance data
+        $this->assertNotNull($report['variance']);
+        $this->assertSame('2000.00', $report['variance']['total_revenue']['amount']);
+        $this->assertSame('20.00', $report['variance']['total_revenue']['percentage']);
+        $this->assertSame('1000.00', $report['variance']['total_expenses']['amount']);
+        $this->assertSame('1000.00', $report['variance']['net_profit']['amount']);
+        // Net profit: 4000 - 3000 = 1000, 1000/3000 * 100 = 33.33%
+        $this->assertSame('33.33', $report['variance']['net_profit']['percentage']);
+    }
+
     private function makeAccount(string $code, string $name, AccountType $type): Account
     {
         return Account::create([

@@ -10,12 +10,13 @@ use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Contacts\Models\Customer;
-use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class TenantIsolationTest extends TestCase
@@ -148,8 +149,8 @@ class TenantIsolationTest extends TestCase
             'currency' => 'CHF',
         ]);
 
-        $xmlContent = file_get_contents(__DIR__ . '/../fixtures/camt053_sample.xml');
-        $file = \Illuminate\Http\UploadedFile::fake()->createWithContent('test.xml', $xmlContent);
+        $xmlContent = file_get_contents(__DIR__.'/../fixtures/camt053_sample.xml');
+        $file = UploadedFile::fake()->createWithContent('test.xml', $xmlContent);
 
         $response = $this->actingAs($this->userA)
             ->post("/reconciliation/{$bankAccountB->id}/import", [

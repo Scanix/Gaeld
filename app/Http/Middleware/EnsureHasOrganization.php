@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Closure;
 use Illuminate\Http\Request;
+use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureHasOrganization
@@ -23,7 +24,7 @@ class EnsureHasOrganization
 
         $this->currentOrganization->set($org);
 
-        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($org->id);
+        app(PermissionRegistrar::class)->setPermissionsTeamId($org->id);
 
         return $next($request);
     }
