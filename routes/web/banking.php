@@ -8,8 +8,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/banking', [BankingController::class, 'index'])->name('banking.index');
 Route::get('/banking/{bankAccount}', [BankingController::class, 'show'])->name('banking.show');
 Route::post('/banking', [BankingController::class, 'store'])->name('banking.store');
+Route::put('/banking/{bankAccount}', [BankingController::class, 'update'])->name('banking.update');
+Route::delete('/banking/{bankAccount}', [BankingController::class, 'destroy'])->name('banking.destroy');
 Route::post('/banking/{bankAccount}/transactions', [BankingController::class, 'recordTransaction'])->name('banking.transactions.store');
-Route::post('/banking/{bankAccount}/import', [BankingController::class, 'import'])->name('banking.import');
 
 // Manual reconciliation + CAMT import (CE)
 Route::get('/reconciliation', [ReconciliationController::class, 'index'])->name('reconciliation.index');

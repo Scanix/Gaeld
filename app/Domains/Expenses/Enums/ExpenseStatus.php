@@ -25,9 +25,9 @@ enum ExpenseStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Pending => 'Pending',
-            self::Approved => 'Approved',
-            self::Posted => 'Posted',
+            self::Pending => __('app.expense_status_pending'),
+            self::Approved => __('app.expense_status_approved'),
+            self::Posted => __('app.expense_status_posted'),
         };
     }
 

@@ -104,6 +104,10 @@ class Invoice extends Model
 
     public function amountPaid(): string
     {
+        if (isset($this->attributes['payments_sum_amount'])) {
+            return (string) $this->attributes['payments_sum_amount'];
+        }
+
         return (string) $this->payments()->sum('amount');
     }
 
@@ -141,8 +145,12 @@ class Invoice extends Model
 
     public function recalculate(): void
     {
-        $this->subtotal = $this->lines()->sum('amount');
-        $this->vat_amount = $this->lines()->sum('vat_amount');
+        $totals = $this->lines()
+            ->selectRaw('SUM(amount) as total_amount, SUM(vat_amount) as total_vat')
+            ->first();
+
+        $this->subtotal = $totals->total_amount ?? '0';
+        $this->vat_amount = $totals->total_vat ?? '0';
         $this->total = bcadd($this->subtotal, $this->vat_amount, 2);
         $this->save();
     }

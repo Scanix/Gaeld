@@ -41,3 +41,8 @@ yarn-error.log
 # On the `production` branch (GitLab), deploy.php is tracked — un-ignored below.
 # deploy.php
 !deploy.php
+
+# Production docker configs — templates provided as *.example
+docker/nginx/default.conf
+docker/supervisor/gaeld-worker.conf
+docker/systemd/gaeld-worker.service

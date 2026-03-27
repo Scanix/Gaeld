@@ -81,17 +81,18 @@ class InvitationFlowTest extends TestCase
     {
         $invitedUser = User::factory()->create(['email' => 'invited@example.com']);
 
+        $plainToken = Str::random(64);
         $invitation = OrganizationInvitation::create([
             'organization_id' => $this->organization->id,
             'email' => 'invited@example.com',
             'role' => 'member',
-            'token' => Str::random(64),
+            'token' => hash('sha256', $plainToken),
             'invited_by' => $this->owner->id,
             'expires_at' => now()->addDays(7),
         ]);
 
         $response = $this->actingAs($invitedUser)
-            ->get("/invitations/{$invitation->token}/accept");
+            ->get("/invitations/{$plainToken}/accept");
 
         $response->assertRedirect('/');
 
@@ -106,16 +107,17 @@ class InvitationFlowTest extends TestCase
 
     public function test_unauthenticated_accept_redirects_to_login(): void
     {
+        $plainToken = Str::random(64);
         $invitation = OrganizationInvitation::create([
             'organization_id' => $this->organization->id,
             'email' => 'new@example.com',
             'role' => 'member',
-            'token' => Str::random(64),
+            'token' => hash('sha256', $plainToken),
             'invited_by' => $this->owner->id,
             'expires_at' => now()->addDays(7),
         ]);
 
-        $response = $this->get("/invitations/{$invitation->token}/accept");
+        $response = $this->get("/invitations/{$plainToken}/accept");
 
         $response->assertRedirect('/login');
     }
@@ -124,17 +126,18 @@ class InvitationFlowTest extends TestCase
     {
         $invitedUser = User::factory()->create(['email' => 'expired@example.com']);
 
+        $plainToken = Str::random(64);
         $invitation = OrganizationInvitation::create([
             'organization_id' => $this->organization->id,
             'email' => 'expired@example.com',
             'role' => 'member',
-            'token' => Str::random(64),
+            'token' => hash('sha256', $plainToken),
             'invited_by' => $this->owner->id,
             'expires_at' => now()->subDay(),
         ]);
 
         $response = $this->actingAs($invitedUser)
-            ->get("/invitations/{$invitation->token}/accept");
+            ->get("/invitations/{$plainToken}/accept");
 
         $response->assertSessionHasErrors('token');
     }
@@ -165,11 +168,12 @@ class InvitationFlowTest extends TestCase
     {
         Notification::fake();
 
+        $oldPlainToken = Str::random(64);
         $invitation = OrganizationInvitation::create([
             'organization_id' => $this->organization->id,
             'email' => 'resend@example.com',
             'role' => 'member',
-            'token' => $oldToken = Str::random(64),
+            'token' => hash('sha256', $oldPlainToken),
             'invited_by' => $this->owner->id,
             'expires_at' => now()->addDays(3),
         ]);
@@ -181,7 +185,7 @@ class InvitationFlowTest extends TestCase
         $response->assertRedirect();
 
         $freshInvitation = $invitation->fresh();
-        $this->assertNotEquals($oldToken, $freshInvitation->token);
+        $this->assertNotEquals(hash('sha256', $oldPlainToken), $freshInvitation->token);
 
         Notification::assertSentOnDemand(InvitationNotification::class);
     }

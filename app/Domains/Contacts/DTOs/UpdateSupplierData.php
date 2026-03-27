@@ -8,6 +8,7 @@ readonly class UpdateSupplierData
 {
     public function __construct(
         public string $name,
+        public ?string $type = null,
         public ?AddressData $addressData = null,
         public ?string $email = null,
         public ?string $phone = null,
@@ -16,12 +17,14 @@ readonly class UpdateSupplierData
         public ?string $currency = null,
         public ?string $iban = null,
         public ?string $internalNotes = null,
+        public ?string $notes = null,
     ) {}
 
     public static function fromArray(array $data): self
     {
         return new self(
             name: $data['name'],
+            type: $data['type'] ?? null,
             addressData: AddressData::fromArray($data),
             email: $data['email'] ?? null,
             phone: $data['phone'] ?? null,
@@ -30,6 +33,7 @@ readonly class UpdateSupplierData
             currency: $data['currency'] ?? null,
             iban: $data['iban'] ?? null,
             internalNotes: $data['internal_notes'] ?? null,
+            notes: $data['notes'] ?? null,
         );
     }
 
@@ -37,6 +41,7 @@ readonly class UpdateSupplierData
     {
         return array_filter([
             'name' => $this->name,
+            'type' => $this->type,
             'email' => $this->email,
             'phone' => $this->phone,
             'vat_number' => $this->vatNumber,
@@ -44,6 +49,7 @@ readonly class UpdateSupplierData
             'currency' => $this->currency,
             'iban' => $this->iban,
             'internal_notes' => $this->internalNotes,
+            'notes' => $this->notes ? ['default' => $this->notes] : null,
         ] + ($this->addressData?->toArray() ?? AddressData::empty()->toArray()), fn ($value) => $value !== null);
     }
 }

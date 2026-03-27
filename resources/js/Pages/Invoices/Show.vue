@@ -16,19 +16,22 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, Copy, Download, Paperclip } from 'lucide-vue-next'
+import { Pencil, Trash2, Copy, Download, Paperclip, Ban } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 
 const props = defineProps({
   invoice: Object,
   justificatifUrl: { type: String, default: null },
+  bankAccounts: { type: Array, default: () => [] },
 })
 
 const { t } = useTranslations()
 
 const showPaymentModal = ref(false)
 const showDeleteDialog = ref(false)
+const showCancelDialog = ref(false)
 const deleting = ref(false)
+const cancelling = ref(false)
 
 const finalizeForm = useForm({})
 const paymentForm = useForm({
@@ -36,6 +39,7 @@ const paymentForm = useForm({
   payment_date: new Date().toISOString().slice(0, 10),
   payment_method: 'bank',
   reference: '',
+  bank_account_code: '',
 })
 
 const amountDue = computed(() => {
@@ -71,6 +75,16 @@ function executeDelete() {
   })
 }
 
+function executeCancel() {
+  cancelling.value = true
+  router.post(`/invoices/${props.invoice.id}/cancel`, {}, {
+    onFinish: () => {
+      cancelling.value = false
+      showCancelDialog.value = false
+    },
+  })
+}
+
 const lineColumns = computed(() => [
   { key: 'description', label: t('description') },
   { key: 'quantity', label: t('qty'), class: 'text-right' },
@@ -98,6 +112,10 @@ const paymentMethodOptions = [
   { value: 'cash', label: t('cash') },
   { value: 'card', label: t('card') },
 ]
+
+const bankAccountOptions = computed(() =>
+  props.bankAccounts.map(ba => ({ value: ba.id.toString(), label: `${ba.name}${ba.iban ? ` (${ba.iban})` : ''}` }))
+)
 </script>
 
 <template>
@@ -170,6 +188,15 @@ const paymentMethodOptions = [
           >
             <Trash2 class="mr-1 h-4 w-4" />
             {{ t('delete') }}
+          </Button>
+          <Button
+            v-if="invoice?.status !== 'paid' && invoice?.status !== 'cancelled'"
+            variant="outline"
+            size="sm"
+            @click="showCancelDialog = true"
+          >
+            <Ban class="mr-1 h-4 w-4" />
+            {{ t('cancel_invoice') }}
           </Button>
         </div>
       </div>
@@ -281,6 +308,15 @@ const paymentMethodOptions = [
           :label="t('reference_optional')"
           :error="paymentForm.errors.reference"
         />
+        <FormSelect
+          v-if="paymentForm.payment_method === 'bank' && bankAccountOptions.length"
+          id="payment-bank-account"
+          v-model="paymentForm.bank_account_code"
+          :label="t('bank_account')"
+          :options="bankAccountOptions"
+          :placeholder="t('select_bank_account')"
+          :error="paymentForm.errors.bank_account_code"
+        />
         <div class="flex justify-end gap-3">
           <Button type="button" variant="outline" @click="showPaymentModal = false">{{ t('cancel') }}</Button>
           <Button type="submit" :disabled="paymentForm.processing">{{ t('record') }}</Button>
@@ -297,6 +333,17 @@ const paymentMethodOptions = [
       :processing="deleting"
       @confirm="executeDelete"
       @cancel="showDeleteDialog = false"
+    />
+
+    <!-- Cancel Confirmation -->
+    <ConfirmDialog
+      :open="showCancelDialog"
+      :title="t('cancel_invoice')"
+      :message="t('cancel_invoice_confirm', { number: invoice?.number })"
+      :confirm-label="t('cancel_invoice')"
+      :processing="cancelling"
+      @confirm="executeCancel"
+      @cancel="showCancelDialog = false"
     />
   </AppLayout>
 </template>

@@ -77,9 +77,15 @@ class TwoFactorChallengeController extends Controller
             $user = User::lockForUpdate()->findOrFail($user->id);
             $codes = $user->two_factor_recovery_codes ?? [];
 
-            $index = array_search($code, $codes, true);
+            $index = null;
+            foreach ($codes as $i => $storedCode) {
+                if (hash_equals($storedCode, $code)) {
+                    $index = $i;
+                    break;
+                }
+            }
 
-            if ($index === false) {
+            if ($index === null) {
                 return false;
             }
 

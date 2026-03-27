@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::resource('invoices', InvoiceController::class);
 Route::post('/invoices/{invoice}/finalize', [InvoiceController::class, 'finalize'])->name('invoices.finalize');
+Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
 Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment'])->name('invoices.payment');
 Route::post('/invoices/{invoice}/duplicate', [InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
 Route::get('/invoices/{invoice}/qr-pdf', [InvoiceController::class, 'downloadQrPdf'])->middleware('throttle:30,1')->name('invoices.qr-pdf');

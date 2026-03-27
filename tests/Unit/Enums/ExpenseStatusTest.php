@@ -3,7 +3,7 @@
 namespace Tests\Unit\Enums;
 
 use App\Domains\Expenses\Enums\ExpenseStatus;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class ExpenseStatusTest extends TestCase
 {
