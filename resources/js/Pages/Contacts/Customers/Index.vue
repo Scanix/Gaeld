@@ -72,11 +72,11 @@ const countryFilters = computed(() => [
     label: t('all_countries'),
     value: props.query.filter?.country ?? '',
     options: [
-      { value: 'CH', label: 'Switzerland' },
-      { value: 'DE', label: 'Germany' },
-      { value: 'AT', label: 'Austria' },
-      { value: 'FR', label: 'France' },
-      { value: 'IT', label: 'Italy' },
+      { value: 'CH', label: t('country_switzerland') },
+      { value: 'DE', label: t('country_germany') },
+      { value: 'AT', label: t('country_austria') },
+      { value: 'FR', label: t('country_france') },
+      { value: 'IT', label: t('country_italy') },
     ],
   },
 ])
@@ -150,7 +150,7 @@ const countryFilters = computed(() => [
     <ConfirmDialog
       :open="!!deleteTarget"
       :title="t('delete_customer')"
-      :message="`Are you sure you want to delete ${deleteTarget?.name}?`"
+      :message="t('confirm_delete_customer', { name: deleteTarget?.name ?? '' })"
       :confirm-label="t('delete')"
       :processing="deleting"
       @confirm="executeDelete"

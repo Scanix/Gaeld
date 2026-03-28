@@ -16,7 +16,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell } from 'lucide-vue-next'
+import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import HelpText from '@/Components/HelpText.vue'
 
@@ -39,10 +39,15 @@ const deleting = ref(false)
 const cancelling = ref(false)
 
 const creditNoteForm = useForm({})
+const sendForm = useForm({})
 const reminderForm = useForm({})
 
 function createCreditNote() {
   creditNoteForm.post(`/invoices/${props.invoice.id}/credit-note`)
+}
+
+function sendInvoice() {
+  sendForm.post(`/invoices/${props.invoice.id}/send`)
 }
 
 function sendReminder() {
@@ -205,6 +210,16 @@ const bankAccountOptions = computed(() =>
           >
             <Download class="mr-1 h-4 w-4" />
             {{ t('download_qr_invoice') }}
+          </Button>
+          <Button
+            v-if="invoice?.status === 'sent'"
+            variant="outline"
+            size="sm"
+            :disabled="sendForm.processing"
+            @click="sendInvoice"
+          >
+            <Mail class="mr-1 h-4 w-4" />
+            {{ t('send_invoice_email') }}
           </Button>
           <Button
             v-if="isOverdue"

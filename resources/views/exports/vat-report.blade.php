@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>Décompte TVA / VAT Declaration</title>
+    <title>{{ __('exports.vat.title') }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 20mm 15mm; }
@@ -26,20 +26,20 @@
 <body>
     <div class="header">
         <h1>{{ $organizationName }}</h1>
-        <h2>Décompte TVA / VAT Declaration (AFC/ESTV)</h2>
-        <div class="period">Période / Period: {{ $report['period']['from'] }} to {{ $report['period']['to'] }}</div>
+        <h2>{{ __('exports.vat.subtitle') }}</h2>
+        <div class="period">{{ __('exports.vat.period', ['from' => $report['period']['from'], 'to' => $report['period']['to']]) }}</div>
     </div>
 
     {{-- Chiffres 200–299: Revenue by rate --}}
     <div class="section">
-        <div class="section-title">I. Chiffre d'affaires imposable / Taxable Turnover (Chiffres 200–299)</div>
+        <div class="section-title">{{ __('exports.vat.section_1') }}</div>
         <table>
             <thead>
                 <tr>
-                    <th class="num">Chiffre</th>
-                    <th>Taux / Rate</th>
-                    <th class="num">Base imposable / Base Amount</th>
-                    <th class="num">TVA calculée / VAT Amount</th>
+                    <th class="num">{{ __('exports.vat.code') }}</th>
+                    <th>{{ __('exports.vat.rate') }}</th>
+                    <th class="num">{{ __('exports.vat.base_amount') }}</th>
+                    <th class="num">{{ __('exports.vat.vat_amount') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,7 +53,7 @@
                 @endforeach
                 <tr class="total">
                     <td class="chiffre">299</td>
-                    <td>Total chiffre d'affaires imposable</td>
+                    <td>{{ __('exports.vat.taxable_turnover_total') }}</td>
                     <td class="amount">{{ number_format((float) $report['total_revenue'], 2, '.', "'") }}</td>
                     <td class="amount"></td>
                 </tr>
@@ -63,13 +63,13 @@
 
     {{-- Chiffres 300–399: Output VAT --}}
     <div class="section">
-        <div class="section-title">II. TVA collectée / Output VAT (Chiffres 300–399)</div>
+        <div class="section-title">{{ __('exports.vat.section_2') }}</div>
         <table>
             <thead>
                 <tr>
-                    <th class="num">Chiffre</th>
-                    <th>Taux / Rate</th>
-                    <th class="num">Montant TVA</th>
+                    <th class="num">{{ __('exports.vat.code') }}</th>
+                    <th>{{ __('exports.vat.rate') }}</th>
+                    <th class="num">{{ __('exports.vat.vat_amount') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -82,7 +82,7 @@
                 @endforeach
                 <tr class="total">
                     <td class="chiffre">399</td>
-                    <td>Total TVA collectée</td>
+                    <td>{{ __('exports.vat.output_vat_total') }}</td>
                     <td class="amount">{{ number_format((float) $report['total_output_vat'], 2, '.', "'") }}</td>
                 </tr>
             </tbody>
@@ -91,12 +91,12 @@
 
     {{-- Chiffre 400: Input VAT --}}
     <div class="section">
-        <div class="section-title">III. TVA déductible / Input VAT (Chiffre 400)</div>
+        <div class="section-title">{{ __('exports.vat.section_3') }}</div>
         <table>
             <tbody>
                 <tr>
                     <td class="chiffre">400</td>
-                    <td>TVA déductible (impôt préalable / Vorsteuer)</td>
+                    <td>{{ __('exports.vat.input_vat') }}</td>
                     <td class="amount">{{ number_format((float) $report['input_vat'], 2, '.', "'") }}</td>
                 </tr>
             </tbody>
@@ -105,17 +105,17 @@
 
     {{-- Chiffres 500–510: Net VAT --}}
     <div class="section">
-        <div class="section-title">IV. Montant dû / VAT Due (Chiffres 500–510)</div>
+        <div class="section-title">{{ __('exports.vat.section_4') }}</div>
         <table>
             <tbody>
                 <tr>
                     <td class="chiffre">500</td>
-                    <td>TVA nette (chiffre 399 – chiffre 400)</td>
+                    <td>{{ __('exports.vat.net_vat') }}</td>
                     <td class="amount">{{ number_format((float) $report['net_vat'], 2, '.', "'") }}</td>
                 </tr>
                 <tr class="payable">
                     <td class="chiffre">510</td>
-                    <td>TVA à payer à l'AFC / VAT payable to AFC</td>
+                    <td>{{ __('exports.vat.vat_payable') }}</td>
                     <td class="amount">{{ number_format((float) $report['vat_payable'], 2, '.', "'") }}</td>
                 </tr>
             </tbody>
@@ -123,7 +123,7 @@
     </div>
 
     <div class="footer">
-        Generated by Gäld &mdash; {{ now()->format('d.m.Y H:i') }}
+        {{ __('exports.common.generated_by') }} &mdash; {{ now()->format('d.m.Y H:i') }}
     </div>
 </body>
 </html>

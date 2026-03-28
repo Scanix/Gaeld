@@ -79,6 +79,7 @@ const columns = computed(() => [
       :columns="columns"
       :rows="slips?.data ?? []"
       :pagination="slips"
+      :empty-message="t('no_salary_slips_yet')"
     >
       <template #cell-period="{ row }">{{ row.month_label }}</template>
       <template #cell-employee="{ row }">

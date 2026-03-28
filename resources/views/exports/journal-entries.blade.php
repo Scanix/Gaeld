@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>Journal Entries</title>
+    <title>{{ __('exports.journal_entries.title') }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 9pt; color: #1a1a1a; padding: 20mm 15mm; }
@@ -22,17 +22,17 @@
 <body>
     <div class="header">
         <h1>{{ $organizationName }}</h1>
-        <div class="period">Journal Entries — {{ $fromDate }} to {{ $toDate }}</div>
+        <div class="period">{{ __('exports.journal_entries.period', ['from' => $fromDate, 'to' => $toDate]) }}</div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Reference</th>
-                <th>Description / Account</th>
-                <th class="amount">Debit</th>
-                <th class="amount">Credit</th>
+                <th>{{ __('exports.common.date') }}</th>
+                <th>{{ __('exports.common.reference') }}</th>
+                <th>{{ __('exports.common.description_account') }}</th>
+                <th class="amount">{{ __('exports.common.debit') }}</th>
+                <th class="amount">{{ __('exports.common.credit') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -58,7 +58,7 @@
     </table>
 
     <div class="footer">
-        Generated on {{ now()->format('d.m.Y H:i') }} — {{ $organizationName }}
+        {{ __('exports.common.generated_on') }} {{ now()->format('d.m.Y H:i') }} — {{ $organizationName }}
     </div>
 </body>
 </html>

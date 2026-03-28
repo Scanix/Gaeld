@@ -2,8 +2,6 @@
 
 namespace App\Support\Exceptions;
 
-use DomainException;
-
 class FeatureDisabledException extends DomainException
 {
     public function __construct(string $featureName)

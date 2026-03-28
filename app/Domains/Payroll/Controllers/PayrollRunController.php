@@ -17,19 +17,27 @@ class PayrollRunController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
+        $this->authorize('viewAny', Employee::class);
+
         $employees = Employee::query()
             ->where('organization_id', $currentOrg->id())
             ->where('is_active', true)
             ->orderBy('last_name')
             ->get();
 
-        return Inertia::render('Payroll/Run/Index', [
+        $currentYear = now()->year;
+        $fiscalYears = range($currentYear, $currentYear - 4);
+
+        return Inertia::render('Payroll/Run', [
             'employees' => $employees,
+            'fiscalYears' => $fiscalYears,
         ]);
     }
 
     public function generate(Request $request, CurrentOrganization $currentOrg, PayrollCalculator $calculator, PostPayrollAction $postAction): RedirectResponse
     {
+        $this->authorize('create', Employee::class);
+
         $validated = $request->validate([
             'month' => ['required', 'integer', 'min:1', 'max:12'],
             'year' => ['required', 'integer', 'min:2000'],

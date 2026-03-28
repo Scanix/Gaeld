@@ -90,6 +90,11 @@ enum Role: string
 
             // Reporting
             Permission::ReportingView,
+
+            // Payroll
+            Permission::PayrollView,
+            Permission::PayrollCreate,
+            Permission::PayrollEdit,
         ];
     }
 
@@ -106,6 +111,7 @@ enum Role: string
             Permission::InvoicingView,
             Permission::OrganizationView,
             Permission::ReportingView,
+            Permission::PayrollView,
         ];
     }
 }

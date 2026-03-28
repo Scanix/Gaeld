@@ -71,6 +71,7 @@ const columns = computed(() => [
       :direction="query.direction"
       :search="query.search"
       :search-placeholder="t('search_employees')"
+      :empty-message="t('no_employees_yet')"
       @sort="({ sort, direction }) => applyQuery({ sort, direction })"
       @search="(search) => applyQuery({ search })"
     >

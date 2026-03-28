@@ -19,6 +19,8 @@ class SalarySlipController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
+        $this->authorize('viewAny', Employee::class);
+
         $slips = SalarySlip::query()
             ->where('organization_id', $currentOrg->id())
             ->with('employee')
@@ -27,19 +29,23 @@ class SalarySlipController extends Controller
             ->paginate(25);
 
         return Inertia::render('Payroll/SalarySlips/Index', [
-            'salarySlips' => $slips,
+            'slips' => $slips,
         ]);
     }
 
     public function show(SalarySlip $slip): Response
     {
+        $this->authorize('view', $slip->employee);
+
         return Inertia::render('Payroll/SalarySlips/Show', [
-            'salarySlip' => $slip->load(['employee', 'journalEntry.lines.account']),
+            'slip' => $slip->load(['employee', 'journalEntry.lines.account']),
         ]);
     }
 
     public function generate(Request $request, PayrollCalculator $calculator): RedirectResponse
     {
+        $this->authorize('create', Employee::class);
+
         $validated = $request->validate([
             'employee_id' => ['required', 'exists:employees,id'],
             'month' => ['required', 'integer', 'min:1', 'max:12'],
@@ -56,6 +62,8 @@ class SalarySlipController extends Controller
 
     public function post(SalarySlip $slip, PostPayrollAction $action): RedirectResponse
     {
+        $this->authorize('update', $slip->employee);
+
         if ($slip->isPosted()) {
             return redirect()->back()->with('error', __('app.salary_slip_already_posted'));
         }
@@ -68,6 +76,8 @@ class SalarySlipController extends Controller
 
     public function downloadPdf(SalarySlip $slip, PdfExportService $pdf): HttpResponse
     {
+        $this->authorize('view', $slip->employee);
+
         $slip->load('employee');
 
         return $pdf->download(
