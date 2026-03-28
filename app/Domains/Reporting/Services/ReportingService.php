@@ -179,29 +179,8 @@ class ReportingService
         $accountIdsByCode = Account::where('organization_id', $organizationId)
             ->pluck('id', 'code');
 
-        $addBudgetToAccounts = function (array &$accounts) use ($budgets, $accountIdsByCode, $months): void {
-            foreach ($accounts as &$account) {
-                $accountId = $accountIdsByCode[$account['code']] ?? null;
-                $budget = $accountId ? $budgets->get($accountId) : null;
-
-                if ($budget) {
-                    $budgetAmount = bcmul((string) $budget->monthly_amount, (string) $months, 2);
-                    $variance = bcsub((string) $account['balance'], $budgetAmount, 2);
-                    $account['budget_amount'] = $budgetAmount;
-                    $account['budget_variance'] = $variance;
-                    $account['budget_variance_percentage'] = bccomp($budgetAmount, '0', 2) !== 0
-                        ? bcmul(bcdiv($variance, $budgetAmount, 4), '100', 2)
-                        : null;
-                } else {
-                    $account['budget_amount'] = null;
-                    $account['budget_variance'] = null;
-                    $account['budget_variance_percentage'] = null;
-                }
-            }
-        };
-
-        $addBudgetToAccounts($result['revenue']);
-        $addBudgetToAccounts($result['expenses']);
+        $this->applyBudgetToAccounts($result['revenue'], $budgets, $accountIdsByCode, $months);
+        $this->applyBudgetToAccounts($result['expenses'], $budgets, $accountIdsByCode, $months);
 
         $budgetRevenue = '0.00';
         $budgetExpenses = '0.00';
@@ -253,24 +232,8 @@ class ReportingService
             $pnl = $this->profitAndLoss($organizationId, $fromDate, $toDate);
             $netIncome = $pnl['net_profit'];
 
-            // Helper: get account balance change between beginning and end of period
             // "beginning" = up to the day before fromDate
             $beginDate = Carbon::parse($fromDate)->subDay()->toDateString();
-
-            $balanceDelta = function (string $code) use ($organizationId, $beginDate, $toDate): string {
-                $account = Account::where('organization_id', $organizationId)
-                    ->where('code', $code)
-                    ->first();
-
-                if (! $account) {
-                    return '0.00';
-                }
-
-                $begin = $this->ledgerService->accountBalance($account->id, null, $beginDate);
-                $end = $this->ledgerService->accountBalance($account->id, null, $toDate);
-
-                return bcsub($end, $begin, 2);
-            };
 
             // ── Operating Activities ──────────────────────────────
             // Depreciation: sum DepreciationEntry amounts in period (non-cash add-back)
@@ -283,11 +246,11 @@ class ReportingService
             }
 
             // AR change (increase in AR = cash decrease)
-            $arDelta = $balanceDelta('1100');
+            $arDelta = $this->accountBalanceDelta($organizationId, '1100', $beginDate, $toDate);
             $arAdjustment = bcmul($arDelta, '-1', 2); // negate: AR up → less cash
 
             // AP change (increase in AP = cash increase)
-            $apDelta = $balanceDelta('2000');
+            $apDelta = $this->accountBalanceDelta($organizationId, '2000', $beginDate, $toDate);
             $apAdjustment = $apDelta; // AP up → more cash
 
             $operatingAdjustments = [];
@@ -384,5 +347,53 @@ class ReportingService
                 'ending_cash' => $endingCash,
             ];
         });
+    }
+
+    /**
+     * Get the change in an account's balance between a beginning date and an end date.
+     */
+    private function accountBalanceDelta(string $organizationId, string $code, string $beginDate, string $toDate): string
+    {
+        $account = Account::where('organization_id', $organizationId)
+            ->where('code', $code)
+            ->first();
+
+        if (! $account) {
+            return '0.00';
+        }
+
+        $begin = $this->ledgerService->accountBalance($account->id, null, $beginDate);
+        $end = $this->ledgerService->accountBalance($account->id, null, $toDate);
+
+        return bcsub($end, $begin, 2);
+    }
+
+    /**
+     * Annotate each account row with budget amount, variance, and variance percentage.
+     *
+     * @param  array<int, array<string, mixed>>  $accounts
+     * @param  \Illuminate\Support\Collection<string, \App\Domains\Accounting\Models\Budget>  $budgets
+     * @param  \Illuminate\Support\Collection<string, string>  $accountIdsByCode
+     */
+    private function applyBudgetToAccounts(array &$accounts, $budgets, $accountIdsByCode, int $months): void
+    {
+        foreach ($accounts as &$account) {
+            $accountId = $accountIdsByCode[$account['code']] ?? null;
+            $budget = $accountId ? $budgets->get($accountId) : null;
+
+            if ($budget) {
+                $budgetAmount = bcmul((string) $budget->monthly_amount, (string) $months, 2);
+                $variance = bcsub((string) $account['balance'], $budgetAmount, 2);
+                $account['budget_amount'] = $budgetAmount;
+                $account['budget_variance'] = $variance;
+                $account['budget_variance_percentage'] = bccomp($budgetAmount, '0', 2) !== 0
+                    ? bcmul(bcdiv($variance, $budgetAmount, 4), '100', 2)
+                    : null;
+            } else {
+                $account['budget_amount'] = null;
+                $account['budget_variance'] = null;
+                $account['budget_variance_percentage'] = null;
+            }
+        }
     }
 }

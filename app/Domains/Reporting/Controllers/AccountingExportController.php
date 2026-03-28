@@ -28,7 +28,7 @@ class AccountingExportController extends Controller
 
         return Inertia::render('Accounting/Export', [
             'fiscalYears' => $fiscalYears,
-            'currentYear' => (string) $currentYear,
+            'currentFiscalYear' => (string) $currentYear,
         ]);
     }
 

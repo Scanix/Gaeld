@@ -87,7 +87,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             'status' => $sub->status,
-            'plan_slug' => $sub->plan->slug ?? null,
+            'plan_slug' => $sub->plan?->slug,
             'trial_ends_at' => $sub->trial_ends_at?->toDateString(),
             'ends_at' => $sub->ends_at?->toDateString(),
         ];

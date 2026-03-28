@@ -20,4 +20,14 @@ return [
     'reminder_days_overdue' => 'Days overdue',
     'reminder_closing' => 'Please disregard this message if payment has already been made.',
     'reminder_regards' => 'Kind regards',
+
+    // Initial invoice email
+    'invoice_subject' => 'Invoice :number',
+    'invoice_greeting' => 'Invoice',
+    'invoice_body' => 'Please find attached invoice :number for :currency :total, due on :due_date.',
+    'invoice_number_label' => 'Invoice',
+    'invoice_amount_label' => 'Amount',
+    'invoice_due_date_label' => 'Due date',
+    'invoice_closing' => 'Please contact us if you have any questions.',
+    'invoice_regards' => 'Kind regards',
 ];

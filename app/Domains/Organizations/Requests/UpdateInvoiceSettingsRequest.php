@@ -11,6 +11,7 @@ class UpdateInvoiceSettingsRequest extends FormRequest
         return [
             'invoice_header_text' => 'nullable|string|max:1000',
             'invoice_footer_text' => 'nullable|string|max:1000',
+            'qr_iban' => 'nullable|string|max:50',
         ];
     }
 }

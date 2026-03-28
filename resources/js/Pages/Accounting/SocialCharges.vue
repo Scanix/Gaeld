@@ -179,5 +179,9 @@ function postToLedger() {
       @confirm="postToLedger"
       @cancel="showPost = false"
     />
+
+    <p v-if="postForm.hasErrors" class="mt-4 text-sm text-[hsl(var(--destructive))]">
+      {{ Object.values(postForm.errors).join(', ') }}
+    </p>
   </AppLayout>
 </template>

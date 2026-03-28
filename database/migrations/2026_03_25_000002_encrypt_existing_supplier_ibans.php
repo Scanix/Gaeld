@@ -18,12 +18,16 @@ return new class extends Migration
             ->orderBy('id')
             ->each(function (object $supplier) {
                 // Skip values that are already encrypted (idempotent).
+                $alreadyEncrypted = false;
                 try {
                     Crypt::decryptString($supplier->iban);
-
-                    return; // Already encrypted — skip.
+                    $alreadyEncrypted = true;
                 } catch (DecryptException) {
-                    // Not encrypted yet — encrypt below.
+                    $alreadyEncrypted = false;
+                }
+
+                if ($alreadyEncrypted) {
+                    return;
                 }
 
                 DB::table('suppliers')

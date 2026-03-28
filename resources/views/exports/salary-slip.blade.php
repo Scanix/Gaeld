@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>Fiche de salaire — {{ $slip->employee->fullName() }}</title>
+    <title>{{ __('exports.salary_slip.title') }} — {{ $slip->employee->fullName() }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 20mm; }
@@ -25,7 +25,7 @@
 <body>
     <div class="header">
         <div>
-            <h1>Fiche de salaire</h1>
+            <h1>{{ __('exports.salary_slip.title') }}</h1>
         </div>
         <div class="period">
             {{ str_pad($slip->period_month, 2, '0', STR_PAD_LEFT) }}/{{ $slip->period_year }}
@@ -33,43 +33,43 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Collaborateur</div>
+        <div class="section-title">{{ __('exports.salary_slip.employee') }}</div>
         <table class="employee-info">
-            <tr><td style="width:30%;">Nom</td><td>{{ $slip->employee->fullName() }}</td></tr>
+            <tr><td style="width:30%;">{{ __('exports.salary_slip.name') }}</td><td>{{ $slip->employee->fullName() }}</td></tr>
             @if($slip->employee->ahv_number)
-                <tr><td>N° AVS</td><td>{{ $slip->employee->ahv_number }}</td></tr>
+                <tr><td>{{ __('exports.salary_slip.ahv_number') }}</td><td>{{ $slip->employee->ahv_number }}</td></tr>
             @endif
         </table>
     </div>
 
     <div class="section">
-        <div class="section-title">Salaire</div>
+        <div class="section-title">{{ __('exports.salary_slip.salary') }}</div>
         <table>
             <tr>
-                <td>Salaire brut</td>
+                <td>{{ __('exports.salary_slip.gross_salary') }}</td>
                 <td class="right">{{ number_format((float) $slip->gross_salary, 2, '.', "'") }}</td>
             </tr>
         </table>
     </div>
 
     <div class="section">
-        <div class="section-title">Déductions employé</div>
+        <div class="section-title">{{ __('exports.salary_slip.employee_deductions') }}</div>
         <table>
             @php $deductions = $slip->deductions; @endphp
             @if(isset($deductions['avs_employee']) && bccomp($deductions['avs_employee'], '0', 2) > 0)
-                <tr><td>AVS/AI/APG</td><td class="right">-{{ number_format((float) $deductions['avs_employee'], 2, '.', "'") }}</td></tr>
+                <tr><td>{{ __('exports.salary_slip.avs_ai_apg') }}</td><td class="right">-{{ number_format((float) $deductions['avs_employee'], 2, '.', "'") }}</td></tr>
             @endif
             @if(isset($deductions['ac_employee']) && bccomp($deductions['ac_employee'], '0', 2) > 0)
-                <tr><td>AC (assurance chômage)</td><td class="right">-{{ number_format((float) $deductions['ac_employee'], 2, '.', "'") }}</td></tr>
+                <tr><td>{{ __('exports.salary_slip.unemployment_insurance') }}</td><td class="right">-{{ number_format((float) $deductions['ac_employee'], 2, '.', "'") }}</td></tr>
             @endif
             @if(isset($deductions['aanp_employee']) && bccomp($deductions['aanp_employee'], '0', 2) > 0)
-                <tr><td>AANP</td><td class="right">-{{ number_format((float) $deductions['aanp_employee'], 2, '.', "'") }}</td></tr>
+                <tr><td>{{ __('exports.salary_slip.aanp') }}</td><td class="right">-{{ number_format((float) $deductions['aanp_employee'], 2, '.', "'") }}</td></tr>
             @endif
             @if(isset($deductions['lpp_employee']) && bccomp($deductions['lpp_employee'], '0', 2) > 0)
-                <tr><td>LPP (prévoyance)</td><td class="right">-{{ number_format((float) $deductions['lpp_employee'], 2, '.', "'") }}</td></tr>
+                <tr><td>{{ __('exports.salary_slip.pension_lpp') }}</td><td class="right">-{{ number_format((float) $deductions['lpp_employee'], 2, '.', "'") }}</td></tr>
             @endif
             <tr class="total-row">
-                <td>Total déductions</td>
+                <td>{{ __('exports.salary_slip.total_deductions') }}</td>
                 <td class="right">-{{ number_format((float) ($deductions['total_employee'] ?? '0'), 2, '.', "'") }}</td>
             </tr>
         </table>
@@ -78,33 +78,33 @@
     <div class="section">
         <table>
             <tr class="net-row">
-                <td>Salaire net</td>
+                <td>{{ __('exports.salary_slip.net_salary') }}</td>
                 <td class="right">{{ number_format((float) $slip->net_salary, 2, '.', "'") }}</td>
             </tr>
         </table>
     </div>
 
     <div class="section">
-        <div class="section-title">Charges patronales</div>
+        <div class="section-title">{{ __('exports.salary_slip.employer_charges') }}</div>
         <table>
             @if(isset($deductions['avs_employer']) && bccomp($deductions['avs_employer'], '0', 2) > 0)
-                <tr><td>AVS/AI/APG (employeur)</td><td class="right">{{ number_format((float) $deductions['avs_employer'], 2, '.', "'") }}</td></tr>
+                <tr><td>{{ __('exports.salary_slip.avs_ai_apg_employer') }}</td><td class="right">{{ number_format((float) $deductions['avs_employer'], 2, '.', "'") }}</td></tr>
             @endif
             @if(isset($deductions['ac_employer']) && bccomp($deductions['ac_employer'], '0', 2) > 0)
-                <tr><td>AC (employeur)</td><td class="right">{{ number_format((float) $deductions['ac_employer'], 2, '.', "'") }}</td></tr>
+                <tr><td>{{ __('exports.salary_slip.unemployment_insurance_employer') }}</td><td class="right">{{ number_format((float) $deductions['ac_employer'], 2, '.', "'") }}</td></tr>
             @endif
             @if(isset($deductions['lpp_employer']) && bccomp($deductions['lpp_employer'], '0', 2) > 0)
-                <tr><td>LPP (employeur)</td><td class="right">{{ number_format((float) $deductions['lpp_employer'], 2, '.', "'") }}</td></tr>
+                <tr><td>{{ __('exports.salary_slip.pension_lpp_employer') }}</td><td class="right">{{ number_format((float) $deductions['lpp_employer'], 2, '.', "'") }}</td></tr>
             @endif
             <tr class="total-row">
-                <td>Total charges patronales</td>
+                <td>{{ __('exports.salary_slip.total_employer_charges') }}</td>
                 <td class="right">{{ number_format((float) ($deductions['total_employer'] ?? '0'), 2, '.', "'") }}</td>
             </tr>
         </table>
     </div>
 
     <div class="footer">
-        Généré par Gäld &mdash; {{ now()->format('d.m.Y H:i') }}
+        {{ __('exports.common.generated_by') }} &mdash; {{ now()->format('d.m.Y H:i') }}
     </div>
 </body>
 </html>

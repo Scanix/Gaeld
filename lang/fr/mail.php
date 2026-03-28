@@ -20,4 +20,14 @@ return [
     'reminder_days_overdue' => 'Jours de retard',
     'reminder_closing' => 'Si le paiement a déjà été effectué, veuillez ne pas tenir compte de ce message.',
     'reminder_regards' => 'Cordialement',
+
+    // E-mail initial de facture
+    'invoice_subject' => 'Facture :number',
+    'invoice_greeting' => 'Facture',
+    'invoice_body' => 'Veuillez trouver ci-joint la facture :number de :currency :total, échéance au :due_date.',
+    'invoice_number_label' => 'Facture',
+    'invoice_amount_label' => 'Montant',
+    'invoice_due_date_label' => 'Date d\'échéance',
+    'invoice_closing' => 'N\'hésitez pas à nous contacter si vous avez des questions.',
+    'invoice_regards' => 'Cordialement',
 ];

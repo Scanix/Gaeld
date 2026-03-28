@@ -1,15 +1,16 @@
 <?php
 
-if (! class_exists(AuthIn::class)) {
-    return [];
-}
-
 use Knuckles\Scribe\Config\AuthIn;
 use Knuckles\Scribe\Config\Defaults;
 use Knuckles\Scribe\Extracting\Strategies;
 
 use function Knuckles\Scribe\Config\configureStrategy;
 use function Knuckles\Scribe\Config\removeStrategies;
+
+// Scribe ≥ 5.x is only available in dev; safe-guard for prod (no-dev install).
+if (! class_exists(AuthIn::class)) {
+    return [];
+}
 
 // Only the most common configs are shown. See the https://scribe.knuckles.wtf/laravel/reference/config for all.
 

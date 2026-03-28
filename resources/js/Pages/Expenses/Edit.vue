@@ -10,6 +10,7 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
+import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { Plus } from 'lucide-vue-next'
@@ -194,5 +195,7 @@ function onReceiptChange(e) {
       @close="showCreateSupplier = false"
       @created="onSupplierCreated"
     />
+
+    <QuickReceiptButton />
   </AppLayout>
 </template>

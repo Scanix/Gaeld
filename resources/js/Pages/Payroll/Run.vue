@@ -28,6 +28,7 @@ const preview = ref([])
 const generatedSlipIds = ref([])
 const generating = ref(false)
 const posting = ref(false)
+const errorMessage = ref('')
 
 const monthOptions = computed(() =>
   Array.from({ length: 12 }, (_, i) => ({
@@ -90,6 +91,7 @@ function formatSwiss(v) {
 
 async function generateSlips() {
   generating.value = true
+  errorMessage.value = ''
   try {
     const response = await fetch('/payroll/run/generate', {
       method: 'POST',
@@ -99,9 +101,16 @@ async function generateSlips() {
       },
       body: JSON.stringify({ employee_ids: selectedEmployeeIds.value, month: month.value, year: year.value }),
     })
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      errorMessage.value = err.message || t('payroll_generate_error')
+      return
+    }
     const data = await response.json()
     generatedSlipIds.value = data.slip_ids ?? []
     step.value = 3
+  } catch {
+    errorMessage.value = t('payroll_generate_error')
   } finally {
     generating.value = false
   }
@@ -109,8 +118,9 @@ async function generateSlips() {
 
 async function postSlips() {
   posting.value = true
+  errorMessage.value = ''
   try {
-    await fetch('/payroll/run/post', {
+    const response = await fetch('/payroll/run/post', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -118,7 +128,14 @@ async function postSlips() {
       },
       body: JSON.stringify({ slip_ids: generatedSlipIds.value }),
     })
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      errorMessage.value = err.message || t('payroll_post_error')
+      return
+    }
     step.value = 4
+  } catch {
+    errorMessage.value = t('payroll_post_error')
   } finally {
     posting.value = false
   }
@@ -127,6 +144,8 @@ async function postSlips() {
 
 <template>
   <AppLayout :title="t('run_payroll')" help-page="payroll">
+    <p v-if="errorMessage" class="mb-4 text-sm text-[hsl(var(--destructive))]">{{ errorMessage }}</p>
+
     <!-- Step indicator -->
     <nav class="mb-8">
       <ol class="flex items-center gap-0">
