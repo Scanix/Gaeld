@@ -49,6 +49,12 @@ enum Permission: string
     // Reporting
     case ReportingView = 'reporting.view';
 
+    // Payroll
+    case PayrollView = 'payroll.view';
+    case PayrollCreate = 'payroll.create';
+    case PayrollEdit = 'payroll.edit';
+    case PayrollDelete = 'payroll.delete';
+
     /**
      * @return string[]
      */

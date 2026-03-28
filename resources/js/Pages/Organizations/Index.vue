@@ -10,6 +10,7 @@ import Badge from '@/Components/UI/Badge.vue'
 import { Building2, ArrowRightLeft } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 import { usePage } from '@inertiajs/vue3'
+import { ref } from 'vue'
 
 const props = defineProps({
   organizations: { type: Array, default: () => [] },
@@ -17,10 +18,16 @@ const props = defineProps({
 
 const page = usePage()
 const currentOrgId = page.props.auth?.currentOrganization?.id
+const switchError = ref('')
 
 function switchForm(orgId) {
+  switchError.value = ''
   const form = useForm({})
-  form.post(`/organizations/${orgId}/switch`)
+  form.post(`/organizations/${orgId}/switch`, {
+    onError: (errors) => {
+      switchError.value = Object.values(errors).flat().join(' ')
+    },
+  })
 }
 
 const { t } = useTranslations()
@@ -33,6 +40,8 @@ const { t } = useTranslations()
         {{ t('your_organizations') }}
       </p>
     </div>
+
+    <p v-if="switchError" class="mb-4 text-sm text-[hsl(var(--destructive))]">{{ switchError }}</p>
 
     <div v-if="organizations.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Card

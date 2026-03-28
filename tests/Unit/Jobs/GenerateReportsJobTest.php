@@ -39,6 +39,8 @@ class GenerateReportsJobTest extends TestCase
         Log::shouldReceive('warning')->never();
 
         (new GenerateReportsJob)->handle($reportingService);
+
+        $this->assertGreaterThan(0, Mockery::getContainer()->mockery_getExpectationCount());
     }
 
     public function test_job_continues_after_one_organization_fails(): void
@@ -65,5 +67,7 @@ class GenerateReportsJobTest extends TestCase
         });
 
         (new GenerateReportsJob)->handle($reportingService);
+
+        $this->assertGreaterThan(0, Mockery::getContainer()->mockery_getExpectationCount());
     }
 }

@@ -16,21 +16,37 @@ class LettrageController extends Controller
     public function __construct(private readonly LettrageService $service) {}
 
     /**
-     * Show open items for an account.
+     * Show open items for an account (or an account picker if none selected).
      */
-    public function index(Request $request, Account $account): Response
+    public function index(Request $request): Response
     {
-        $this->authorize('view', $account);
+        $orgId = $request->user()->current_organization_id;
+        $accounts = Account::where('organization_id', $orgId)
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'type']);
+
+        $accountId = $request->query('account');
+        $account = $accountId
+            ? Account::where('organization_id', $orgId)->findOrFail($accountId)
+            : null;
+
+        if ($account) {
+            $this->authorize('view', $account);
+        }
 
         $date = $request->query('date');
-        $openItems = $this->service->getOpenItems($account, $date);
+        $openItems = $account ? $this->service->getOpenItems($account, $date) : [];
 
-        $lots = LettrageLot::where('account_id', $account->id)
-            ->where('is_reversed', false)
-            ->orderBy('letter_key')
-            ->get();
+        $lots = $account
+            ? LettrageLot::where('account_id', $account->id)
+                ->where('is_reversed', false)
+                ->orderBy('letter_key')
+                ->get()
+            : [];
 
         return Inertia::render('Accounting/Lettrage', [
+            'accounts' => $accounts,
             'account' => $account,
             'openItems' => $openItems,
             'lots' => $lots,
@@ -41,14 +57,18 @@ class LettrageController extends Controller
     /**
      * Letter a set of transaction lines.
      */
-    public function store(Request $request, Account $account): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $this->authorize('manage', $account);
-
         $validated = $request->validate([
+            'account_id' => ['required', 'integer'],
             'line_ids' => ['required', 'array', 'min:2'],
             'line_ids.*' => ['required', 'integer'],
         ]);
+
+        $account = Account::where('organization_id', $request->user()->current_organization_id)
+            ->findOrFail($validated['account_id']);
+
+        $this->authorize('manage', $account);
 
         try {
             $this->service->letterLines($account, $validated['line_ids'], $request->user()->id);

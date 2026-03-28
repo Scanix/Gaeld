@@ -2,6 +2,8 @@
 
 namespace App\Domains\Api\Controllers;
 
+use App\Domains\Api\Requests\StoreInvoiceApiRequest;
+use App\Domains\Api\Requests\UpdateInvoiceApiRequest;
 use App\Domains\Api\Resources\InvoiceResource;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DeleteInvoiceAction;
@@ -15,23 +17,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Validation\Rule;
 
 class InvoiceApiController extends Controller
 {
-    private const VALIDATION_RULES = [
-        'number' => 'nullable|string|max:50',
-        'issue_date' => 'required|date',
-        'due_date' => 'nullable|date|after_or_equal:issue_date',
-        'currency' => 'string|size:3',
-        'notes' => 'nullable|string',
-        'payment_terms' => 'nullable|string',
-        'lines' => 'required|array|min:1',
-        'lines.*.description' => 'required|string',
-        'lines.*.quantity' => 'required|numeric|min:0.01',
-        'lines.*.unit_price' => 'required|numeric|min:0',
-    ];
-
     public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Invoice::class);
@@ -51,22 +39,13 @@ class InvoiceApiController extends Controller
     }
 
     public function store(
-        Request $request,
+        StoreInvoiceApiRequest $request,
         CreateInvoiceAction $action,
         CurrentOrganization $currentOrg,
     ): JsonResponse {
         $this->authorize('create', Invoice::class);
 
-        $validated = $request->validate(array_merge(self::VALIDATION_RULES, [
-            'customer_id' => [
-                'required',
-                Rule::exists('customers', 'id')->where('organization_id', $currentOrg->id()),
-            ],
-            'lines.*.vat_rate_id' => [
-                'nullable',
-                Rule::exists('vat_rates', 'id')->where('organization_id', $currentOrg->id()),
-            ],
-        ]));
+        $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
 
         $dto = CreateInvoiceData::fromArray($validated);
@@ -78,23 +57,14 @@ class InvoiceApiController extends Controller
     }
 
     public function update(
-        Request $request,
+        UpdateInvoiceApiRequest $request,
         Invoice $invoice,
         UpdateInvoiceAction $action,
         CurrentOrganization $currentOrg,
     ): InvoiceResource {
         $this->authorize('update', $invoice);
 
-        $validated = $request->validate(array_merge(self::VALIDATION_RULES, [
-            'customer_id' => [
-                'required',
-                Rule::exists('customers', 'id')->where('organization_id', $currentOrg->id()),
-            ],
-            'lines.*.vat_rate_id' => [
-                'nullable',
-                Rule::exists('vat_rates', 'id')->where('organization_id', $currentOrg->id()),
-            ],
-        ]));
+        $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
 
         $dto = UpdateInvoiceData::fromArray($validated);

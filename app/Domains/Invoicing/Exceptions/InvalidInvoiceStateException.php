@@ -2,6 +2,6 @@
 
 namespace App\Domains\Invoicing\Exceptions;
 
-use DomainException;
+use App\Support\Exceptions\DomainException;
 
 class InvalidInvoiceStateException extends DomainException {}

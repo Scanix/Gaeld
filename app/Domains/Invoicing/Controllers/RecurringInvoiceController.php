@@ -122,4 +122,22 @@ class RecurringInvoiceController extends Controller
         return redirect()->route('invoices.recurring.index')
             ->with('success', __('Recurring invoice deleted successfully.'));
     }
+
+    public function pause(RecurringInvoice $recurring): RedirectResponse
+    {
+        $this->authorize('update', Invoice::class);
+
+        $recurring->update(['is_active' => false]);
+
+        return back()->with('success', __('app.recurring_paused'));
+    }
+
+    public function resume(RecurringInvoice $recurring): RedirectResponse
+    {
+        $this->authorize('update', Invoice::class);
+
+        $recurring->update(['is_active' => true]);
+
+        return back()->with('success', __('app.recurring_resumed'));
+    }
 }

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>Balance Sheet</title>
+    <title>{{ __('exports.balance_sheet.title') }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 20mm 15mm; }
@@ -22,20 +22,20 @@
 <body>
     <div class="header">
         <h1>{{ $organizationName }}</h1>
-        <div class="date">Balance Sheet as of {{ $asOfDate }}</div>
+        <div class="date">{{ __('exports.balance_sheet.as_of', ['date' => $asOfDate]) }}</div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Account</th>
+                <th>{{ __('exports.common.account') }}</th>
                 <th></th>
-                <th class="amount">Amount</th>
+                <th class="amount">{{ __('exports.common.amount') }}</th>
             </tr>
         </thead>
         <tbody>
             <tr class="section-header">
-                <td colspan="3">Assets</td>
+                <td colspan="3">{{ __('exports.balance_sheet.assets') }}</td>
             </tr>
             @foreach ($assets['accounts'] as $account)
                 <tr>
@@ -45,12 +45,12 @@
                 </tr>
             @endforeach
             <tr class="total">
-                <td colspan="2">Total Assets</td>
+                <td colspan="2">{{ __('exports.balance_sheet.total_assets') }}</td>
                 <td class="amount">{{ number_format((float) $assets['total'], 2, '.', "'") }}</td>
             </tr>
 
             <tr class="section-header">
-                <td colspan="3">Liabilities</td>
+                <td colspan="3">{{ __('exports.balance_sheet.liabilities') }}</td>
             </tr>
             @foreach ($liabilities['accounts'] as $account)
                 <tr>
@@ -60,12 +60,12 @@
                 </tr>
             @endforeach
             <tr class="total">
-                <td colspan="2">Total Liabilities</td>
+                <td colspan="2">{{ __('exports.balance_sheet.total_liabilities') }}</td>
                 <td class="amount">{{ number_format((float) $liabilities['total'], 2, '.', "'") }}</td>
             </tr>
 
             <tr class="section-header">
-                <td colspan="3">Equity</td>
+                <td colspan="3">{{ __('exports.balance_sheet.equity') }}</td>
             </tr>
             @foreach ($equity['accounts'] as $account)
                 <tr>
@@ -75,14 +75,14 @@
                 </tr>
             @endforeach
             <tr class="total">
-                <td colspan="2">Total Equity</td>
+                <td colspan="2">{{ __('exports.balance_sheet.total_equity') }}</td>
                 <td class="amount">{{ number_format((float) $equity['total'], 2, '.', "'") }}</td>
             </tr>
         </tbody>
     </table>
 
     <div class="footer">
-        Generated on {{ now()->format('d.m.Y H:i') }} — {{ $organizationName }}
+        {{ __('exports.common.generated_on') }} {{ now()->format('d.m.Y H:i') }} — {{ $organizationName }}
     </div>
 </body>
 </html>

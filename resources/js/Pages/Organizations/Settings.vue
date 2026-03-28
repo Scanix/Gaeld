@@ -54,6 +54,7 @@ function submitGeneral() {
 const invoiceForm = useForm({
   invoice_header_text: props.organization.invoice_header_text || '',
   invoice_footer_text: props.organization.invoice_footer_text || '',
+  qr_iban: props.organization.qr_iban || '',
 })
 
 function submitInvoice() {
@@ -356,6 +357,14 @@ const cantonOptions = [
                 />
                 <p v-if="invoiceForm.errors.invoice_footer_text" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ invoiceForm.errors.invoice_footer_text }}</p>
               </div>
+
+              <FormInput
+                id="qr_iban"
+                v-model="invoiceForm.qr_iban"
+                :label="t('qr_iban')"
+                :error="invoiceForm.errors.qr_iban"
+                :placeholder="t('qr_iban_placeholder')"
+              />
 
               <div class="flex justify-end">
                 <Button type="submit" :disabled="invoiceForm.processing">

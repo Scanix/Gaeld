@@ -28,10 +28,17 @@ class BudgetController extends Controller
             ->orderBy('code')
             ->get(['id', 'code', 'name', 'type']);
 
-        return Inertia::render('Accounting/Budgets', [
+        $currentYear = now()->year;
+        $fiscalYears = collect(range($currentYear, $currentYear - 4))
+            ->map(fn (int $y) => ['value' => $y, 'label' => (string) $y])
+            ->values()
+            ->all();
+
+        return Inertia::render('Accounting/Budgets/Index', [
             'budgets' => $budgets,
             'accounts' => $accounts,
-            'year' => $year,
+            'fiscalYears' => $fiscalYears,
+            'selectedYear' => $year,
         ]);
     }
 
@@ -69,5 +76,19 @@ class BudgetController extends Controller
 
         return redirect()->route('accounting.budgets', ['year' => $year])
             ->with('success', __('Budget deleted successfully.'));
+    }
+
+    public function update(Request $request, Budget $budget): RedirectResponse
+    {
+        $this->authorize('update', Account::findOrFail($budget->account_id));
+
+        $validated = $request->validate([
+            'monthly_amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+        ]);
+
+        $budget->update($validated);
+
+        return redirect()->route('accounting.budgets', ['year' => $budget->fiscal_year])
+            ->with('success', __('Budget updated successfully.'));
     }
 }

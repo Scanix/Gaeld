@@ -2,7 +2,7 @@
 
 namespace App\Domains\Banking\Exceptions;
 
-use DomainException;
+use App\Support\Exceptions\DomainException;
 
 class UnlinkedBankAccountException extends DomainException
 {

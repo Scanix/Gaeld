@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>Profit & Loss Statement</title>
+    <title>{{ __('exports.profit_loss.title') }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 20mm 15mm; }
@@ -23,20 +23,20 @@
 <body>
     <div class="header">
         <h1>{{ $organizationName }}</h1>
-        <div class="period">Profit & Loss Statement — {{ $period['from'] }} to {{ $period['to'] }}</div>
+        <div class="period">{{ __('exports.profit_loss.period', ['from' => $period['from'], 'to' => $period['to']]) }}</div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Account</th>
+                <th>{{ __('exports.common.account') }}</th>
                 <th></th>
-                <th class="amount">Amount</th>
+                <th class="amount">{{ __('exports.common.amount') }}</th>
             </tr>
         </thead>
         <tbody>
             <tr class="section-header">
-                <td colspan="3">Revenue</td>
+                <td colspan="3">{{ __('exports.profit_loss.revenue') }}</td>
             </tr>
             @foreach ($revenue as $account)
                 <tr>
@@ -46,12 +46,12 @@
                 </tr>
             @endforeach
             <tr class="total">
-                <td colspan="2">Total Revenue</td>
+                <td colspan="2">{{ __('exports.profit_loss.total_revenue') }}</td>
                 <td class="amount">{{ number_format((float) $totalRevenue, 2, '.', "'") }}</td>
             </tr>
 
             <tr class="section-header">
-                <td colspan="3">Expenses</td>
+                <td colspan="3">{{ __('exports.profit_loss.expenses') }}</td>
             </tr>
             @foreach ($expenses as $account)
                 <tr>
@@ -61,19 +61,19 @@
                 </tr>
             @endforeach
             <tr class="total">
-                <td colspan="2">Total Expenses</td>
+                <td colspan="2">{{ __('exports.profit_loss.total_expenses') }}</td>
                 <td class="amount">{{ number_format((float) $totalExpenses, 2, '.', "'") }}</td>
             </tr>
 
             <tr class="net-profit">
-                <td colspan="2">Net Profit / (Loss)</td>
+                <td colspan="2">{{ __('exports.profit_loss.net_profit_loss') }}</td>
                 <td class="amount">{{ number_format((float) $netProfit, 2, '.', "'") }}</td>
             </tr>
         </tbody>
     </table>
 
     <div class="footer">
-        Generated on {{ now()->format('d.m.Y H:i') }} — {{ $organizationName }}
+        {{ __('exports.common.generated_on') }} {{ now()->format('d.m.Y H:i') }} — {{ $organizationName }}
     </div>
 </body>
 </html>

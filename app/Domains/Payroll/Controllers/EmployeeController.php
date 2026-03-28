@@ -14,6 +14,8 @@ class EmployeeController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
+        $this->authorize('viewAny', Employee::class);
+
         $employees = Employee::query()
             ->where('organization_id', $currentOrg->id())
             ->orderBy('last_name')
@@ -26,11 +28,15 @@ class EmployeeController extends Controller
 
     public function create(): Response
     {
+        $this->authorize('create', Employee::class);
+
         return Inertia::render('Payroll/Employees/Create');
     }
 
     public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
+        $this->authorize('create', Employee::class);
+
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
@@ -53,6 +59,8 @@ class EmployeeController extends Controller
 
     public function show(Employee $employee): Response
     {
+        $this->authorize('view', $employee);
+
         return Inertia::render('Payroll/Employees/Show', [
             'employee' => $employee->load('salarySlips'),
         ]);
@@ -60,6 +68,8 @@ class EmployeeController extends Controller
 
     public function edit(Employee $employee): Response
     {
+        $this->authorize('update', $employee);
+
         return Inertia::render('Payroll/Employees/Edit', [
             'employee' => $employee,
         ]);
@@ -67,6 +77,8 @@ class EmployeeController extends Controller
 
     public function update(Request $request, Employee $employee): RedirectResponse
     {
+        $this->authorize('update', $employee);
+
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
@@ -87,6 +99,8 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee): RedirectResponse
     {
+        $this->authorize('delete', $employee);
+
         $employee->delete();
 
         return redirect()->route('payroll.employees.index')

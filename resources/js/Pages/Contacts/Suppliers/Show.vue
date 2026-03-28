@@ -173,11 +173,11 @@ async function executeDeleteContact() {
             </span>
           </div>
           <div v-if="supplier.vat_number">
-            <span class="text-[hsl(var(--muted-foreground))]">VAT:</span>
+            <span class="text-[hsl(var(--muted-foreground))]">{{ t('vat_number') }}:</span>
             <span class="ml-2 font-mono">{{ supplier.vat_number }}</span>
           </div>
           <div v-if="supplier.iban">
-            <span class="text-[hsl(var(--muted-foreground))]">IBAN:</span>
+            <span class="text-[hsl(var(--muted-foreground))]">{{ t('iban') }}:</span>
             <span class="ml-2 font-mono">{{ supplier.iban }}</span>
           </div>
           <div v-if="supplier.default_expense_category">

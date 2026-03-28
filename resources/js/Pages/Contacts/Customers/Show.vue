@@ -174,7 +174,7 @@ async function executeDeleteContact() {
             </span>
           </div>
           <div v-if="customer.vat_number">
-            <span class="text-[hsl(var(--muted-foreground))]">VAT:</span>
+            <span class="text-[hsl(var(--muted-foreground))]">{{ t('vat_number') }}:</span>
             <span class="ml-2 font-mono">{{ customer.vat_number }}</span>
           </div>
           <div>
@@ -183,7 +183,7 @@ async function executeDeleteContact() {
           </div>
           <div v-if="customer.payment_terms">
             <span class="text-[hsl(var(--muted-foreground))]">{{ t('payment_terms') }}:</span>
-            <span class="ml-2">{{ customer.payment_terms }} days</span>
+            <span class="ml-2">{{ t('days_count', { count: customer.payment_terms }) }}</span>
           </div>
           <div v-if="customer.internal_notes" class="border-t pt-3">
             <p class="text-[hsl(var(--muted-foreground))] mb-1">{{ t('internal_notes') }}</p>

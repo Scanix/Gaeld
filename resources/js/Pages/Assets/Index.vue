@@ -80,6 +80,7 @@ const columns = computed(() => [
       :direction="query.direction"
       :search="query.search"
       :search-placeholder="t('search_assets')"
+      :empty-message="t('no_assets_yet')"
       @sort="handleSort"
       @search="handleSearch"
     >

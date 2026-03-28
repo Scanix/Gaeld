@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>Trial Balance</title>
+    <title>{{ __('exports.trial_balance.title') }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 20mm 15mm; }
@@ -21,17 +21,17 @@
 <body>
     <div class="header">
         <h1>{{ $organizationName }}</h1>
-        <div class="date">Trial Balance as of {{ $asOfDate }}</div>
+        <div class="date">{{ __('exports.trial_balance.as_of', ['date' => $asOfDate]) }}</div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Code</th>
-                <th>Account</th>
-                <th>Type</th>
-                <th class="amount">Debit</th>
-                <th class="amount">Credit</th>
+                <th>{{ __('exports.common.code') }}</th>
+                <th>{{ __('exports.common.account') }}</th>
+                <th>{{ __('exports.common.type') }}</th>
+                <th class="amount">{{ __('exports.common.debit') }}</th>
+                <th class="amount">{{ __('exports.common.credit') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -47,7 +47,7 @@
                 @php $totalDebit = bcadd($totalDebit, $row['debit'], 2); $totalCredit = bcadd($totalCredit, $row['credit'], 2); @endphp
             @endforeach
             <tr class="total">
-                <td colspan="3">Total</td>
+                <td colspan="3">{{ __('exports.common.total') }}</td>
                 <td class="amount">{{ number_format((float) $totalDebit, 2, '.', "'") }}</td>
                 <td class="amount">{{ number_format((float) $totalCredit, 2, '.', "'") }}</td>
             </tr>
@@ -55,7 +55,7 @@
     </table>
 
     <div class="footer">
-        Generated on {{ now()->format('d.m.Y H:i') }} — {{ $organizationName }}
+        {{ __('exports.common.generated_on') }} {{ now()->format('d.m.Y H:i') }} — {{ $organizationName }}
     </div>
 </body>
 </html>

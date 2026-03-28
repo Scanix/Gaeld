@@ -13,9 +13,9 @@ class UpdateExpenseApiRequest extends FormRequest
         $orgId = app(CurrentOrganization::class)->id();
 
         return [
-            'category' => 'required|string|max:100',
-            'amount' => 'required|numeric|min:0.01',
-            'date' => 'required|date',
+            'category' => 'sometimes|string|max:100',
+            'amount' => 'sometimes|numeric|min:0.01',
+            'date' => 'sometimes|date',
             'description' => 'nullable|string',
             'vat_amount' => 'nullable|numeric|min:0',
             'vat_rate_id' => [

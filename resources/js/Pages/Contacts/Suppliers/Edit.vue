@@ -12,6 +12,7 @@ import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
+import { countryOptions, currencyOptions } from '@/lib/contactOptions'
 
 const { t } = useTranslations()
 
@@ -43,32 +44,16 @@ function submit() {
   form.put(`/suppliers/${props.supplier.id}`)
 }
 
-const countryOptions = [
-  { value: 'CH', label: 'Switzerland' },
-  { value: 'DE', label: 'Germany' },
-  { value: 'AT', label: 'Austria' },
-  { value: 'FR', label: 'France' },
-  { value: 'IT', label: 'Italy' },
-  { value: 'LI', label: 'Liechtenstein' },
-]
-
-const currencyOptions = [
-  { value: 'CHF', label: 'CHF' },
-  { value: 'EUR', label: 'EUR' },
-  { value: 'USD', label: 'USD' },
-  { value: 'GBP', label: 'GBP' },
-]
-
 const categoryOptions = [
   { value: '', label: '—' },
-  { value: 'office', label: 'Office' },
-  { value: 'utilities', label: 'Utilities' },
-  { value: 'software', label: 'Software' },
-  { value: 'travel', label: 'Travel' },
-  { value: 'marketing', label: 'Marketing' },
-  { value: 'professional_services', label: 'Professional Services' },
-  { value: 'equipment', label: 'Equipment' },
-  { value: 'other', label: 'Other' },
+  { value: 'office', label: t('cat_office') },
+  { value: 'utilities', label: t('cat_utilities') },
+  { value: 'software', label: t('cat_software') },
+  { value: 'travel', label: t('cat_travel') },
+  { value: 'marketing', label: t('cat_marketing') },
+  { value: 'professional_services', label: t('cat_professional_services') },
+  { value: 'equipment', label: t('cat_equipment') },
+  { value: 'other', label: t('cat_other') },
 ]
 
 const typeOptions = [
@@ -140,36 +125,36 @@ const typeOptions = [
               id="country"
               v-model="form.country"
               :label="t('country')"
-              :options="countryOptions"
+              :options="countryOptions(t)"
               :error="form.errors.country"
             />
             <FormSelect
               id="currency"
               v-model="form.currency"
               :label="t('currency')"
-              :options="currencyOptions"
+              :options="currencyOptions(t)"
               :error="form.errors.currency"
             />
             <FormInput
               id="vat_number"
               v-model="form.vat_number"
-              label="VAT Number"
-              placeholder="CHE-123.456.789"
+              :label="t('vat_number')"
+              :placeholder="t('vat_number_placeholder')"
               :error="form.errors.vat_number"
             />
             <FormInput
               id="payment_terms"
               v-model="form.payment_terms"
               :label="t('payment_terms')"
-              placeholder="30"
+              :placeholder="t('payment_terms_placeholder')"
               :error="form.errors.payment_terms"
             />
             <MaskedInput
               id="iban"
               v-model="form.iban"
               mask="iban"
-              label="IBAN"
-              placeholder="CH56 0483 5012 3456 7800 9"
+              :label="t('iban')"
+              :placeholder="t('qr_iban_placeholder')"
               :error="form.errors.iban"
               class="sm:col-span-2"
             />
