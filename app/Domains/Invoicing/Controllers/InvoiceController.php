@@ -13,6 +13,7 @@ use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
+use App\Domains\Invoicing\Actions\SendInvoiceAction;
 use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
@@ -102,6 +103,14 @@ class InvoiceController extends Controller
                 ->select('id', 'name', 'iban', 'currency')
                 ->orderBy('name')
                 ->get(),
+            'creditNotes' => $invoice->creditNotes()
+                ->select('id', 'number', 'total')
+                ->get(),
+            'relatedInvoice' => $invoice->relatedInvoice
+                ? $invoice->relatedInvoice->only('id', 'number')
+                : null,
+            'reminderCount' => $invoice->reminder_count ?? 0,
+            'lastRemindedAt' => $invoice->last_reminded_at?->toISOString(),
         ]);
     }
 
@@ -258,6 +267,20 @@ class InvoiceController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
+    }
+
+    public function sendInvoice(Invoice $invoice, SendInvoiceAction $action): RedirectResponse
+    {
+        $this->authorize('update', $invoice);
+
+        try {
+            $action->execute($invoice->load('customer'));
+        } catch (InvalidInvoiceStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('success', __('app.invoice_sent'));
     }
 
     public function sendReminder(Invoice $invoice, SendInvoiceReminderAction $action): RedirectResponse

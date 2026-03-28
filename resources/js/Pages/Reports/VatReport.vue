@@ -261,5 +261,9 @@ function postSettlement() {
       @confirm="postSettlement"
       @cancel="showSettle = false"
     />
+
+    <p v-if="settleForm.hasErrors" class="mt-4 text-sm text-[hsl(var(--destructive))]">
+      {{ Object.values(settleForm.errors).join(', ') }}
+    </p>
   </AppLayout>
 </template>

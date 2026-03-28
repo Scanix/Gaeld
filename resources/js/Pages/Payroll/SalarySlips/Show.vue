@@ -132,6 +132,10 @@ function deductionRow(label, employee, employer) {
           </span>
         </p>
       </div>
+
+      <p v-if="postForm.hasErrors" class="text-sm text-[hsl(var(--destructive))]">
+        {{ Object.values(postForm.errors).join(', ') }}
+      </p>
     </div>
   </AppLayout>
 </template>

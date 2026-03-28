@@ -60,6 +60,10 @@ function resend() {
               {{ t('logout') }}
             </Link>
           </div>
+
+          <p v-if="form.hasErrors" class="mt-3 text-sm text-[hsl(var(--destructive))]">
+            {{ Object.values(form.errors).join(', ') }}
+          </p>
         </CardContent>
       </Card>
     </div>

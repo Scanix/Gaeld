@@ -21,9 +21,12 @@ const props = defineProps({
 
 // Show success banner when returning from Stripe checkout
 const checkoutResult = computed(() => {
-  const params = new URLSearchParams(window.location.search)
+  const [, query = ''] = (page.url || '').split('?')
+  const params = new URLSearchParams(query)
   return params.get('checkout') // 'success' | 'canceled' | null
 })
+
+const hasPlans = computed(() => props.plans.length > 0)
 
 const statusBadgeClass = {
   active: 'text-[hsl(var(--primary))] bg-[hsl(var(--accent))]',
@@ -130,6 +133,12 @@ function openPortal() {
         <h2 class="text-base font-semibold mb-4">
           {{ currentSubscription ? t('change_plan') : t('choose_plan') }}
         </h2>
+        <div
+          v-if="!hasPlans"
+          class="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.4)] p-4 text-sm text-[hsl(var(--muted-foreground))]"
+        >
+          {{ t('no_plans_available') }}
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card
             v-for="plan in plans"
@@ -175,9 +184,14 @@ function openPortal() {
               <Button
                 v-if="currentSubscription?.plan_slug !== plan.slug"
                 class="w-full"
+                :disabled="!plan.is_checkout_available"
                 @click="checkout(plan.id)"
               >
-                {{ currentSubscription ? t('switch_plan') : t('start_trial') }}
+                {{
+                  plan.is_checkout_available
+                    ? (currentSubscription ? t('switch_plan') : t('start_trial'))
+                    : t('plan_checkout_unavailable')
+                }}
               </Button>
             </CardContent>
           </Card>

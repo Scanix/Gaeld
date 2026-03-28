@@ -39,7 +39,7 @@ function executeDelete() {
 }
 
 function togglePause(item) {
-  if (item.status === 'paused') {
+  if (!item.is_active) {
     router.post(`/invoices/recurring/${item.id}/resume`)
   } else {
     router.post(`/invoices/recurring/${item.id}/pause`)
@@ -55,7 +55,7 @@ const columns = computed(() => [
   { key: 'customer', label: t('client'), format: (v) => v?.name ?? '—' },
   { key: 'frequency', label: t('frequency'), format: (v) => t(`frequency_${v}`) },
   { key: 'next_issue_date', label: t('next_issue_date'), format: (v) => v ? formatDate(v) : '—' },
-  { key: 'status', label: t('status') },
+  { key: 'is_active', label: t('status') },
   { key: 'actions', label: '', class: 'text-right w-32' },
 ])
 </script>
@@ -79,9 +79,9 @@ const columns = computed(() => [
           :pagination="recurringInvoices"
           :empty-message="t('no_recurring_invoices')"
         >
-          <template #cell-status="{ value }">
-            <Badge :variant="statusVariant[value] ?? 'secondary'">
-              {{ t(`recurring_status_${value}`) }}
+          <template #cell-is_active="{ row }">
+            <Badge :variant="row.is_active ? 'success' : 'warning'">
+              {{ t(row.is_active ? 'recurring_status_active' : 'recurring_status_paused') }}
             </Badge>
           </template>
           <template #cell-actions="{ row }">
@@ -98,10 +98,10 @@ const columns = computed(() => [
               <Button
                 variant="ghost"
                 size="icon"
-                :title="row.status === 'paused' ? t('active') : t('paused')"
+                :title="row.is_active ? t('pause') : t('resume')"
                 @click="togglePause(row)"
               >
-                <Pause v-if="row.status === 'active'" class="h-4 w-4" />
+                <Pause v-if="row.is_active" class="h-4 w-4" />
                 <Play v-else class="h-4 w-4" />
               </Button>
               <Button

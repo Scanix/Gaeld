@@ -2,6 +2,6 @@
 
 namespace App\Domains\Accounting\Exceptions;
 
-use DomainException;
+use App\Support\Exceptions\DomainException;
 
 class UnbalancedEntryException extends DomainException {}

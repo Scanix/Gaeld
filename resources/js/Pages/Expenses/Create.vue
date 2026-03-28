@@ -10,6 +10,7 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
+import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
@@ -197,5 +198,7 @@ function onSupplierCreated(supplier) {
       @close="showCreateSupplier = false"
       @created="onSupplierCreated"
     />
+
+    <QuickReceiptButton />
   </AppLayout>
 </template>

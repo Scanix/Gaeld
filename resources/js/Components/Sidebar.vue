@@ -20,6 +20,7 @@ import {
   Repeat,
   Package,
   Briefcase,
+  Settings,
 } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 import Tooltip from '@/Components/UI/Tooltip.vue'
@@ -68,6 +69,7 @@ const navigation = computed(() => [
     { key: 'fiduciary_export', href: '/accounting/export' },
     { key: 'lettrage', href: '/accounting/lettrage' },
     { key: 'legal_archives', href: '/accounting/archives' },
+    { key: 'vat_rates', href: '/accounting/vat-rates' },
     ...(features.value.analytical ? [
       { key: 'cost_centers', href: '/accounting/cost-centers' },
       { key: 'analytical_report', href: '/accounting/analytical-report' },
@@ -103,6 +105,14 @@ const navigation = computed(() => [
   { key: 'banking', href: '/banking', icon: Landmark },
   { key: 'reconciliation', href: '/reconciliation', icon: ArrowLeftRight },
   { key: 'organization', href: '/organizations', icon: Building2 },
+  { key: 'settings', href: '/settings', icon: Settings, children: [
+    { key: 'settings_general', href: '/settings' },
+    { key: 'activity_log', href: '/settings/activity-log' },
+    ...(features.value.api_access ? [
+      { key: 'api_tokens', href: '/settings/api-tokens' },
+      { key: 'webhooks', href: '/settings/webhooks' },
+    ] : []),
+  ]},
 ])
 
 const billingNav = computed(() =>

@@ -2,6 +2,6 @@
 
 namespace App\Domains\Expenses\Exceptions;
 
-use DomainException;
+use App\Support\Exceptions\DomainException;
 
 class InvalidExpenseStateException extends DomainException {}
