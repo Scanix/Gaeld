@@ -1124,6 +1124,8 @@ return [
     'error_404_description' => 'La pagina che stai cercando non esiste o è stata spostata.',
     'error_419_title' => 'Sessione scaduta',
     'error_419_description' => 'La tua sessione è scaduta. Aggiorna la pagina e riprova.',
+    'error_429_title' => 'Troppe richieste',
+    'error_429_description' => 'Hai effettuato troppe richieste. Attendi un momento e riprova.',
     'error_500_title' => 'Errore del server',
     'error_500_description' => 'Qualcosa è andato storto da parte nostra. Riprova più tardi.',
     'error_503_title' => 'Servizio non disponibile',

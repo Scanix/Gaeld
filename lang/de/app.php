@@ -1124,6 +1124,8 @@ return [
     'error_404_description' => 'Die gesuchte Seite existiert nicht oder wurde verschoben.',
     'error_419_title' => 'Sitzung abgelaufen',
     'error_419_description' => 'Ihre Sitzung ist abgelaufen. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.',
+    'error_429_title' => 'Zu viele Anfragen',
+    'error_429_description' => 'Sie haben zu viele Anfragen gestellt. Bitte warten Sie einen Moment und versuchen Sie es erneut.',
     'error_500_title' => 'Serverfehler',
     'error_500_description' => 'Auf unserer Seite ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.',
     'error_503_title' => 'Dienst nicht verfügbar',
