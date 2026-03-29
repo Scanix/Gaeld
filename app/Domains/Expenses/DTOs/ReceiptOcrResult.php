@@ -2,8 +2,17 @@
 
 namespace App\Domains\Expenses\DTOs;
 
+use App\Support\MapsToSnakeCase;
+
+/**
+ * Structured result returned by the receipt OCR pipeline.
+ *
+ * Contains the raw extracted text and optional parsed fields
+ * (amount, date, vendor) with a confidence score.
+ */
 readonly class ReceiptOcrResult
 {
+    use MapsToSnakeCase;
     public function __construct(
         public string $rawText,
         public ?float $amount = null,
@@ -12,14 +21,4 @@ readonly class ReceiptOcrResult
         public ?float $confidence = null,
     ) {}
 
-    public function toArray(): array
-    {
-        return [
-            'amount' => $this->amount,
-            'date' => $this->date,
-            'vendor' => $this->vendor,
-            'raw_text' => $this->rawText,
-            'confidence' => $this->confidence,
-        ];
-    }
 }

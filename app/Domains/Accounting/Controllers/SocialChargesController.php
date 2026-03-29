@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Swiss AVS/AI/APG social charges calculator for independent workers.
+ */
 class SocialChargesController extends Controller
 {
     public function index(SocialChargesService $service): Response

@@ -3,9 +3,15 @@
 namespace App\Domains\Organizations\DTOs;
 
 use App\Support\AddressData;
+use App\Support\ValidatesFromArray;
 
+/**
+ * DTO for creating a new organization during setup or provisioning.
+ */
 readonly class CreateOrganizationData
 {
+    use ValidatesFromArray;
+
     public function __construct(
         public string $name,
         public ?string $legalName = null,
@@ -19,6 +25,8 @@ readonly class CreateOrganizationData
 
     public static function fromArray(array $data): self
     {
+        self::assertRequired($data, ['name']);
+
         return new self(
             name: $data['name'],
             legalName: $data['legal_name'] ?? null,

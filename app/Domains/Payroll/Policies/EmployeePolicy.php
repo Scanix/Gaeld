@@ -7,6 +7,9 @@ use App\Domains\Payroll\Models\Employee;
 use App\Domains\Users\Models\User;
 use App\Support\Policies\BasePolicy;
 
+/**
+ * Authorization policy for employee record management.
+ */
 class EmployeePolicy extends BasePolicy
 {
     public function viewAny(User $user): bool

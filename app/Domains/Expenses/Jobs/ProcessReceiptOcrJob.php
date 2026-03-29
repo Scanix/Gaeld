@@ -39,7 +39,7 @@ class ProcessReceiptOcrJob implements ShouldQueue
                 'receipt_path' => $this->receiptPath,
                 'extracted' => $result->toArray(),
             ], now()->addMinutes(30));
-        } catch (\Throwable $e) {
+        } catch (\DomainException|\RuntimeException|\InvalidArgumentException $e) {
             Log::warning('ProcessReceiptOcrJob failed', [
                 'scan_id' => $this->scanId,
                 'error' => $e->getMessage(),

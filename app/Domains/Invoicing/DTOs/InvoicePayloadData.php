@@ -2,8 +2,17 @@
 
 namespace App\Domains\Invoicing\DTOs;
 
+use App\Support\ValidatesFromArray;
+
+/**
+ * Abstract base DTO shared by CreateInvoiceData and UpdateInvoiceData.
+ *
+ * Contains the common invoice header fields and an array of line items.
+ */
 abstract readonly class InvoicePayloadData
 {
+    use ValidatesFromArray;
+
     /**
      * @param  array<int, InvoiceLineData>  $lines
      */
@@ -21,6 +30,8 @@ abstract readonly class InvoicePayloadData
 
     public static function fromArray(array $data): static
     {
+        static::assertRequired($data, ['organization_id', 'customer_id', 'number', 'issue_date', 'due_date', 'lines']);
+
         return new static(
             organizationId: $data['organization_id'],
             customerId: $data['customer_id'],

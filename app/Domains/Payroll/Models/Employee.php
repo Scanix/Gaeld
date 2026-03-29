@@ -12,6 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
+ * Employee record within an organization's payroll module.
+ *
+ * Tracks AHV number, salary, entry/exit dates, and source-tax liability.
+ *
  * @property string $id
  * @property string $organization_id
  * @property string $first_name

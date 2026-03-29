@@ -6,6 +6,9 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 
+/**
+ * Transitions an expense from pending to approved status.
+ */
 class ApproveExpenseAction
 {
     public function execute(Expense $expense): Expense

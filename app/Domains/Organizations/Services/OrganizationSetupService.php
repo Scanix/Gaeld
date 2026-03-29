@@ -6,6 +6,10 @@ use App\Domains\Accounting\Services\ChartTemplateService;
 use App\Domains\Organizations\Models\Organization;
 use Database\Seeders\SwissVatRatesSeeder;
 
+/**
+ * Seeds initial accounting data (chart of accounts, VAT rates) when
+ * a new organization is created during setup or provisioning.
+ */
 class OrganizationSetupService
 {
     public function __construct(

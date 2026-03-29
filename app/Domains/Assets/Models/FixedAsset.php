@@ -16,6 +16,11 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Carbon;
 
 /**
+ * Capitalized fixed asset tracked for depreciation (e.g. equipment, vehicles).
+ *
+ * Links to three ledger accounts (asset, depreciation expense, accumulated
+ * depreciation) and uses a configurable depreciation method and useful life.
+ *
  * @property string $id
  * @property string $organization_id
  * @property string $name

@@ -3,8 +3,16 @@
 namespace App\Domains\Payroll\Services;
 
 use App\Domains\Payroll\Models\DeductionRate;
+use App\Support\Money;
 use Illuminate\Support\Collection;
 
+/**
+ * Provides Swiss payroll deduction rates (AVS, AC, LPP, AANP, etc.)
+ * and calculates employee/employer deduction amounts from gross salary.
+ *
+ * Falls back to built-in 2026 rate defaults when the organization
+ * has not configured custom deduction rates.
+ */
 class SwissDeductionService
 {
     /**
@@ -35,19 +43,19 @@ class SwissDeductionService
         $totalEmployer = '0.00';
 
         foreach ($rateMap as $code => $rate) {
-            $amount = bcdiv(bcmul($grossSalary, $rate['rate'], 4), '100', 2);
+            $amount = Money::percentage($grossSalary, $rate['rate']);
             $deductions[$code] = $amount;
 
             if ($rate['type'] === 'employee') {
-                $totalEmployee = bcadd($totalEmployee, $amount, 2);
+                $totalEmployee = Money::add($totalEmployee, $amount);
             } else {
-                $totalEmployer = bcadd($totalEmployer, $amount, 2);
+                $totalEmployer = Money::add($totalEmployer, $amount);
             }
         }
 
         $deductions['total_employee'] = $totalEmployee;
         $deductions['total_employer'] = $totalEmployer;
-        $deductions['net_salary'] = bcsub($grossSalary, $totalEmployee, 2);
+        $deductions['net_salary'] = Money::subtract($grossSalary, $totalEmployee);
 
         return $deductions;
     }

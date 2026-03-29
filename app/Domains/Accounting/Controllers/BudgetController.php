@@ -11,6 +11,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Manages monthly budget targets per account and fiscal year.
+ */
 class BudgetController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response

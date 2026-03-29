@@ -17,6 +17,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Bank account and transaction management, including CAMT file import.
+ */
 class BankingController extends Controller
 {
     public function index(Request $request): Response

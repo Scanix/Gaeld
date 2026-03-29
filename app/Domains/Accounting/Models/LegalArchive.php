@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
+ * Archived accounting document retained for Swiss legal compliance.
+ *
+ * Stores a SHA-256 checksum, the storage path, and a mandatory
+ * retention expiry date (typically 10 years per Swiss CO).
+ *
  * @property int $id
  * @property string $organization_id
  * @property string $document_type

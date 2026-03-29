@@ -6,6 +6,7 @@ use App\Domains\Contacts\DTOs\CreateCustomerData;
 use App\Domains\Contacts\DTOs\UpdateCustomerData;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Queries\CustomerQuery;
+use App\Domains\Contacts\Requests\StoreCustomerRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -14,24 +15,11 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Customer CRUD with full-text search and soft-delete support.
+ */
 class CustomerController extends Controller
 {
-    private const VALIDATION_RULES = [
-        'type' => 'nullable|string|in:organization,individual',
-        'name' => 'required|string|max:255',
-        'email' => 'nullable|email|max:255',
-        'phone' => 'nullable|string|max:50',
-        'address' => 'nullable|string|max:500',
-        'city' => 'nullable|string|max:100',
-        'postal_code' => 'nullable|string|max:10',
-        'country' => 'nullable|string|size:2',
-        'vat_number' => 'nullable|string|max:50',
-        'currency' => 'nullable|string|size:3',
-        'payment_terms' => 'nullable|string|max:255',
-        'internal_notes' => 'nullable|string',
-        'notes' => 'nullable|string|max:2000',
-    ];
-
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Customer::class);
@@ -54,11 +42,11 @@ class CustomerController extends Controller
         return Inertia::render('Contacts/Customers/Create');
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse|JsonResponse
+    public function store(StoreCustomerRequest $request, CurrentOrganization $currentOrg): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Customer::class);
 
-        $validated = $request->validate(self::VALIDATION_RULES);
+        $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
 
         $customer = Customer::create(CreateCustomerData::fromArray($validated)->toArray());
@@ -89,11 +77,11 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function update(Request $request, Customer $customer): RedirectResponse
+    public function update(StoreCustomerRequest $request, Customer $customer): RedirectResponse
     {
         $this->authorize('update', $customer);
 
-        $validated = $request->validate(self::VALIDATION_RULES);
+        $validated = $request->validated();
 
         $customer->update(UpdateCustomerData::fromArray($validated)->toArray());
 

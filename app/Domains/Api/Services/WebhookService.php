@@ -7,6 +7,10 @@ use App\Domains\Api\Models\Webhook;
 use App\Domains\Api\Models\WebhookCall;
 use App\Support\FeatureFlag;
 
+/**
+ * Dispatches webhook events to all active subscribers of an organization
+ * and manages delivery retries for failed calls.
+ */
 class WebhookService
 {
     /**

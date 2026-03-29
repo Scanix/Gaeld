@@ -3,9 +3,17 @@
 namespace App\Domains\Accounting\DTOs;
 
 use App\Domains\Accounting\Enums\AccountType;
+use App\Support\MapsToSnakeCase;
+use App\Support\ValidatesFromArray;
 
+/**
+ * DTO for creating a new chart-of-accounts entry.
+ */
 readonly class CreateAccountData
 {
+    use MapsToSnakeCase;
+    use ValidatesFromArray;
+
     public function __construct(
         public string $organizationId,
         public string $code,
@@ -18,6 +26,8 @@ readonly class CreateAccountData
 
     public static function fromArray(array $data): self
     {
+        self::assertRequired($data, ['organization_id', 'code', 'name', 'type']);
+
         return new self(
             organizationId: $data['organization_id'],
             code: $data['code'],
@@ -29,16 +39,4 @@ readonly class CreateAccountData
         );
     }
 
-    public function toArray(): array
-    {
-        return [
-            'organization_id' => $this->organizationId,
-            'code' => $this->code,
-            'name' => $this->name,
-            'type' => $this->type->value,
-            'parent_id' => $this->parentId,
-            'description' => $this->description,
-            'is_active' => $this->isActive,
-        ];
-    }
 }

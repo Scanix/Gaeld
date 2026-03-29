@@ -7,6 +7,9 @@ use App\Domains\Users\Models\User;
 use App\Support\Policies\BasePolicy;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Authorization policy for customer and supplier contact records.
+ */
 class ContactPolicy extends BasePolicy
 {
     public function viewAny(User $user): bool

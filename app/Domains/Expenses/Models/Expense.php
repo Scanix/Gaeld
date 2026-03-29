@@ -18,6 +18,11 @@ use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
 
 /**
+ * Business expense (purchase, receipt) recorded by the organization.
+ *
+ * May be linked to a supplier, a VAT rate, and an accounting journal entry.
+ * Supports receipt OCR, full-text search, and soft-deletes.
+ *
  * @property string $id
  * @property string $organization_id
  * @property string|null $journal_entry_id

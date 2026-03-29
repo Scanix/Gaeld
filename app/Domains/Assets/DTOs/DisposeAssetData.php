@@ -2,6 +2,9 @@
 
 namespace App\Domains\Assets\DTOs;
 
+/**
+ * DTO carrying disposal amount and date when retiring a fixed asset.
+ */
 readonly class DisposeAssetData
 {
     public function __construct(

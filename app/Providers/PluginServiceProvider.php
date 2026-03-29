@@ -6,9 +6,14 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Discovers and loads third-party plugins from the plugins directory at boot time.
+ */
 class PluginServiceProvider extends ServiceProvider
 {
     private array $loadedPlugins = [];
+
+    private array $manifests = [];
 
     public function register(): void
     {
@@ -22,26 +27,19 @@ class PluginServiceProvider extends ServiceProvider
             return;
         }
 
-        $pluginDirs = File::directories($pluginPath);
-
-        // First pass: collect all manifests
-        $manifests = [];
-        foreach ($pluginDirs as $dir) {
+        foreach (File::directories($pluginPath) as $dir) {
             $manifest = $this->readManifest($dir);
             if ($manifest) {
-                $manifests[$manifest['slug']] = ['dir' => $dir, 'manifest' => $manifest];
+                $this->manifests[$manifest['slug']] = ['dir' => $dir, 'manifest' => $manifest];
             }
-        }
-
-        // Second pass: load in dependency order
-        foreach ($manifests as $slug => $entry) {
-            $this->loadPluginWithDeps($slug, $manifests, []);
         }
     }
 
     public function boot(): void
     {
-        //
+        foreach ($this->manifests as $slug => $entry) {
+            $this->loadPluginWithDeps($slug, $this->manifests, []);
+        }
     }
 
     private function readManifest(string $pluginDir): ?array

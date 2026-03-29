@@ -3,9 +3,14 @@
 namespace App\Domains\Banking\DTOs;
 
 use App\Domains\Banking\Enums\BankTransactionType;
+use App\Support\MapsToSnakeCase;
 
+/**
+ * DTO for manually recording a bank transaction.
+ */
 readonly class RecordBankTransactionData
 {
+    use MapsToSnakeCase;
     public function __construct(
         public string $date,
         public string $amount,
@@ -27,15 +32,4 @@ readonly class RecordBankTransactionData
         );
     }
 
-    public function toArray(): array
-    {
-        return [
-            'date' => $this->date,
-            'amount' => $this->amount,
-            'type' => $this->type->value,
-            'description' => $this->description,
-            'reference' => $this->reference,
-            'contra_account_code' => $this->contraAccountCode,
-        ];
-    }
 }

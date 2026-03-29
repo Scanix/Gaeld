@@ -5,6 +5,11 @@ namespace App\Domains\Organizations\Services;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 
+/**
+ * Resolves and switches the active organization for the current user.
+ *
+ * Used by both web (session-backed) and API (middleware-backed) contexts.
+ */
 class OrganizationSwitcher
 {
     public function __construct(

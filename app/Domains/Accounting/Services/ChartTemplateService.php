@@ -2,13 +2,22 @@
 
 namespace App\Domains\Accounting\Services;
 
+use App\Domains\Accounting\ChartTemplates\AccountDefinition;
 use App\Domains\Accounting\ChartTemplates\ChartTemplateInterface;
 use App\Domains\Accounting\ChartTemplates\SwissAssociationTemplate;
 use App\Domains\Accounting\ChartTemplates\SwissFreelancerTemplate;
 use App\Domains\Accounting\ChartTemplates\SwissSmeTemplate;
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Organizations\Models\Organization;
 
+/**
+ * Manages chart-of-accounts templates and applies them to organizations.
+ *
+ * Provides a registry of available Swiss accounting templates (Freelancer,
+ * SME, Association) and seeds the selected template into an organization's
+ * account table.
+ */
 class ChartTemplateService
 {
     /** @var array<string, ChartTemplateInterface> */
@@ -70,13 +79,19 @@ class ChartTemplateService
         $locale = $organization->locale ?? 'en';
 
         foreach ($template->accounts() as $account) {
-            $name = $account['name'][$locale] ?? $account['name']['en'];
+            $def = new AccountDefinition(
+                code: $account['code'],
+                type: AccountType::from($account['type']),
+                name: $account['name'],
+            );
+
+            $name = $def->name[$locale] ?? $def->name['en'];
 
             Account::create([
                 'organization_id' => $organization->id,
-                'code' => $account['code'],
+                'code' => $def->code,
                 'name' => $name,
-                'type' => $account['type'],
+                'type' => $def->type->value,
             ]);
         }
     }

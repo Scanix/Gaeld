@@ -7,6 +7,9 @@ use App\Http\Services\GlobalSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Cross-domain full-text search endpoint (Meilisearch-backed).
+ */
 class GlobalSearchController extends Controller
 {
     public function __invoke(Request $request, CurrentOrganization $org, GlobalSearchService $searchService): JsonResponse

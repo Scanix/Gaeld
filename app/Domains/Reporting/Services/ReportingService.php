@@ -11,6 +11,10 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * Generates financial reports: balance sheet, income statement,
+ * trial balance, account statements, and budget variance analysis.
+ */
 class ReportingService
 {
     public function __construct(
@@ -21,6 +25,8 @@ class ReportingService
      * Generate a profit & loss statement, optionally with a comparison period.
      *
      * Results are cached per organization + period (tag: org:{orgId}:reports).
+     *
+     * @return array{period: array{from: string, to: string}, revenue: array<int, array{code: string, name: string, balance: string}>, expenses: array<int, array{code: string, name: string, balance: string}>, total_revenue: string, total_expenses: string, net_profit: string, comparison: array|null, variance: array|null, budget: array|null}
      */
     public function profitAndLoss(
         string $organizationId,
@@ -107,6 +113,8 @@ class ReportingService
      * Generate a balance sheet.
      *
      * Results are cached per organization + as-of date (tag: org:{orgId}:reports).
+     *
+     * @return array{as_of_date: string, assets: array<int, array{code: string, name: string, balance: string}>, liabilities: array<int, array{code: string, name: string, balance: string}>, equity: array<int, array{code: string, name: string, balance: string}>}
      */
     public function balanceSheet(string $organizationId, string $asOfDate): array
     {
@@ -179,8 +187,8 @@ class ReportingService
         $accountIdsByCode = Account::where('organization_id', $organizationId)
             ->pluck('id', 'code');
 
-        $this->applyBudgetToAccounts($result['revenue'], $budgets, $accountIdsByCode, $months);
-        $this->applyBudgetToAccounts($result['expenses'], $budgets, $accountIdsByCode, $months);
+        $result['revenue'] = $this->applyBudgetToAccounts($result['revenue'], $budgets, $accountIdsByCode, $months);
+        $result['expenses'] = $this->applyBudgetToAccounts($result['expenses'], $budgets, $accountIdsByCode, $months);
 
         $budgetRevenue = '0.00';
         $budgetExpenses = '0.00';
@@ -375,9 +383,12 @@ class ReportingService
      * @param  \Illuminate\Support\Collection<string, \App\Domains\Accounting\Models\Budget>  $budgets
      * @param  \Illuminate\Support\Collection<string, string>  $accountIdsByCode
      */
-    private function applyBudgetToAccounts(array &$accounts, $budgets, $accountIdsByCode, int $months): void
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function applyBudgetToAccounts(array $accounts, $budgets, $accountIdsByCode, int $months): array
     {
-        foreach ($accounts as &$account) {
+        return array_map(function (array $account) use ($budgets, $accountIdsByCode, $months): array {
             $accountId = $accountIdsByCode[$account['code']] ?? null;
             $budget = $accountId ? $budgets->get($accountId) : null;
 
@@ -394,6 +405,8 @@ class ReportingService
                 $account['budget_variance'] = null;
                 $account['budget_variance_percentage'] = null;
             }
-        }
+
+            return $account;
+        }, $accounts);
     }
 }

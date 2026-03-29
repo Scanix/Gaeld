@@ -5,6 +5,9 @@ namespace App\Support\Rules;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
+/**
+ * Validation rule that ensures a webhook URL uses HTTPS and points to a public host.
+ */
 class ValidWebhookUrl implements ValidationRule
 {
     /**

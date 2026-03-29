@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * Individual contact person attached to a Customer or Supplier (polymorphic).
+ *
+ * One contact person may be flagged as `is_primary` for its parent entity.
+ */
 class ContactPerson extends Model
 {
     use HasUuids;

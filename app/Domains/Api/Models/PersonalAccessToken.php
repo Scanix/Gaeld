@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Sanctum\PersonalAccessToken as SanctumToken;
 
+/**
+ * Sanctum API token scoped to an organization.
+ *
+ * Extends Laravel Sanctum's default token model to add an organization
+ * foreign key and a type discriminator (personal vs. organization token).
+ */
 class PersonalAccessToken extends SanctumToken
 {
     protected $fillable = [

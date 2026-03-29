@@ -11,6 +11,9 @@ use Laragear\WebAuthn\Http\Requests\AssertionRequest;
 use Laragear\WebAuthn\Http\Requests\AttestationRequest;
 use Laragear\WebAuthn\Http\Requests\AttestedRequest;
 
+/**
+ * WebAuthn passkey registration and removal.
+ */
 class PasskeyController extends Controller
 {
     public function registerOptions(AttestationRequest $request)

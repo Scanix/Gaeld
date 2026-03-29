@@ -16,6 +16,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
+/**
+ * Journal entry management: listing, creating, posting, and reversing entries.
+ */
 class AccountingController extends Controller
 {
     public function chartOfAccounts(Request $request): Response

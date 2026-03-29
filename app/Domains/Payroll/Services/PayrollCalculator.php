@@ -5,8 +5,13 @@ namespace App\Domains\Payroll\Services;
 use App\Domains\Payroll\Models\DeductionRate;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
+use App\Support\Money;
 use Carbon\Carbon;
 
+/**
+ * Calculates employee salary slips including gross-to-net computation,
+ * Swiss social deductions, and pro-rata handling for partial months.
+ */
 class PayrollCalculator
 {
     public function __construct(
@@ -67,10 +72,9 @@ class PayrollCalculator
         }
 
         // Pro-rata: gross * workedDays / totalDays
-        return bcdiv(
-            bcmul($employee->gross_salary, (string) $workedDays, 4),
+        return Money::divide(
+            Money::multiply($employee->gross_salary, (string) $workedDays),
             (string) $totalDays,
-            2,
         );
     }
 }

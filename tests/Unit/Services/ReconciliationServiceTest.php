@@ -7,6 +7,8 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Enums\BankMatchType;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\MatchConfidence;
+use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
@@ -148,5 +150,76 @@ class ReconciliationServiceTest extends TestCase
         $this->expectExceptionMessage('This payment has already been recorded for this invoice.');
 
         $service->confirmMatch($match);
+    }
+
+    public function test_reconcile_with_invoice_rejects_already_reconciled_transaction(): void
+    {
+        $service = app(ReconciliationService::class);
+
+        $invoice = Invoice::create([
+            'organization_id' => $this->organization->id,
+            'customer_id' => $this->customer->id,
+            'number' => 'INV-2026-300',
+            'status' => InvoiceStatus::Sent,
+            'issue_date' => '2026-03-01',
+            'due_date' => '2026-03-31',
+            'subtotal' => 100.00,
+            'vat_amount' => 0,
+            'total' => 100.00,
+            'currency' => 'CHF',
+        ]);
+
+        $transaction = BankTransaction::create([
+            'bank_account_id' => $this->bankAccount->id,
+            'date' => '2026-03-10',
+            'description' => 'Already reconciled',
+            'amount' => 100.00,
+            'type' => BankTransactionType::Credit,
+            'reference' => 'INV-2026-300',
+            'is_reconciled' => true,
+        ]);
+
+        $this->expectException(AlreadyReconciledException::class);
+
+        $service->reconcileWithInvoice($transaction, $invoice);
+    }
+
+    public function test_reconcile_rejects_unlinked_bank_account(): void
+    {
+        $service = app(ReconciliationService::class);
+
+        $unlinkedAccount = BankAccount::create([
+            'organization_id' => $this->organization->id,
+            'account_id' => null,
+            'name' => 'Unlinked Bank',
+            'currency' => 'CHF',
+            'balance' => 500.00,
+        ]);
+
+        $invoice = Invoice::create([
+            'organization_id' => $this->organization->id,
+            'customer_id' => $this->customer->id,
+            'number' => 'INV-2026-301',
+            'status' => InvoiceStatus::Sent,
+            'issue_date' => '2026-03-01',
+            'due_date' => '2026-03-31',
+            'subtotal' => 100.00,
+            'vat_amount' => 0,
+            'total' => 100.00,
+            'currency' => 'CHF',
+        ]);
+
+        $transaction = BankTransaction::create([
+            'bank_account_id' => $unlinkedAccount->id,
+            'date' => '2026-03-10',
+            'description' => 'Unlinked account payment',
+            'amount' => 100.00,
+            'type' => BankTransactionType::Credit,
+            'reference' => 'INV-2026-301',
+        ]);
+
+        $this->expectException(UnlinkedBankAccountException::class);
+
+        $service->reconcileWithInvoice($transaction, $invoice);
     }
 }

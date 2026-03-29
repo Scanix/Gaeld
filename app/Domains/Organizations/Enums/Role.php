@@ -2,6 +2,7 @@
 
 namespace App\Domains\Organizations\Enums;
 
+/** Organization membership roles (owner, admin, member). */
 enum Role: string
 {
     case Owner = 'owner';

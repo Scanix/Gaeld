@@ -7,6 +7,9 @@ use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Users\Models\User;
 use App\Support\Policies\BasePolicy;
 
+/**
+ * Authorization policy for fixed asset management and depreciation.
+ */
 class FixedAssetPolicy extends BasePolicy
 {
     public function viewAny(User $user): bool

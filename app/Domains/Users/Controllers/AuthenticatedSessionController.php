@@ -2,6 +2,7 @@
 
 namespace App\Domains\Users\Controllers;
 
+use App\Domains\Users\Models\User;
 use App\Domains\Users\Requests\LoginRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +13,9 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Handles login and logout (session-based authentication).
+ */
 class AuthenticatedSessionController extends Controller
 {
     public function create(): Response
@@ -40,6 +44,7 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
+        /** @var User $user */
         $user = Auth::user();
 
         // If user has 2FA enabled, redirect to challenge instead of completing login
@@ -57,8 +62,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('two-factor.create');
         }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $request->session()->regenerate();
 
         Log::channel('stack')->info('User logged in', [
             'user_id' => Auth::id(),

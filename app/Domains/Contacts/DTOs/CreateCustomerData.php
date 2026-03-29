@@ -3,9 +3,15 @@
 namespace App\Domains\Contacts\DTOs;
 
 use App\Support\AddressData;
+use App\Support\ValidatesFromArray;
 
+/**
+ * DTO for creating a new customer record.
+ */
 readonly class CreateCustomerData
 {
+    use ValidatesFromArray;
+
     public function __construct(
         public string $organizationId,
         public string $name,
@@ -22,6 +28,8 @@ readonly class CreateCustomerData
 
     public static function fromArray(array $data): self
     {
+        self::assertRequired($data, ['organization_id', 'name']);
+
         return new self(
             organizationId: $data['organization_id'],
             name: $data['name'],

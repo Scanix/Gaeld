@@ -2,6 +2,7 @@
 
 namespace App\Domains\Organizations\Enums;
 
+/** Spatie permission names used for fine-grained authorization. */
 enum Permission: string
 {
     // Accounting

@@ -5,6 +5,9 @@ namespace App\Support;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Renders Blade views to PDF using DomPDF.
+ */
 class PdfExportService
 {
     public function __construct(

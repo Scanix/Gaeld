@@ -13,6 +13,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * CRUD operations for chart-of-accounts entries.
+ */
 class AccountController extends Controller
 {
     public function store(StoreAccountRequest $request, CurrentOrganization $currentOrg): RedirectResponse
@@ -52,37 +55,17 @@ class AccountController extends Controller
             ->with('success', __('app.account_deleted'));
     }
 
-    public function import(ImportAccountsRequest $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function import(ImportAccountsRequest $request, CurrentOrganization $currentOrg, ImportAccountsAction $action): RedirectResponse
     {
         $this->authorize('create', Account::class);
 
-        $file = $request->file('file');
-        $extension = strtolower($file->getClientOriginalExtension());
-        $content = $file->get();
-        $orgId = $currentOrg->id();
+        $result = $action->parseFile($request->file('file'));
 
-        $action = new ImportAccountsAction;
-
-        if ($extension === 'json') {
-            $rows = json_decode($content, true);
-            if (! is_array($rows)) {
-                return back()->withErrors(['file' => __('app.import_validation_error')]);
-            }
-        } else {
-            $rows = $action->parseCsv($content);
+        if (! empty($result['errors'])) {
+            return back()->withErrors(['file' => implode("\n", array_slice($result['errors'], 0, 20))]);
         }
 
-        if (empty($rows)) {
-            return back()->withErrors(['file' => __('app.import_validation_error')]);
-        }
-
-        $errors = $action->validate($rows);
-
-        if (! empty($errors)) {
-            return back()->withErrors(['file' => implode("\n", array_slice($errors, 0, 20))]);
-        }
-
-        $action->execute($orgId, $rows, $request->input('mode', 'merge'));
+        $action->execute($currentOrg->id(), $result['rows'], $request->input('mode', 'merge'));
 
         return redirect()->route('accounting.chart')
             ->with('success', __('app.import_success'));

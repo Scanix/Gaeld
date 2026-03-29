@@ -8,6 +8,8 @@ use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Inertia\Inertia;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -38,5 +40,15 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return back()->with('error', $e->getMessage());
+        });
+
+        $exceptions->renderable(function (HttpExceptionInterface $e) {
+            if (request()->is('api/*') || request()->expectsJson()) {
+                return null;
+            }
+
+            return Inertia::render('Error', [
+                'status' => $e->getStatusCode(),
+            ])->toResponse(request())->setStatusCode($e->getStatusCode());
         });
     })->create();

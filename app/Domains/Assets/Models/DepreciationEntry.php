@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
+ * Monthly depreciation entry generated for a fixed asset.
+ *
  * @property int $id
  * @property string $fixed_asset_id
  * @property string $journal_entry_id

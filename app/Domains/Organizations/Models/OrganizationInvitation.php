@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Pending invitation for a user to join an organization.
+ *
+ * Stores a hashed token (the plain-text version is only available
+ * transiently after creation for the notification e-mail), an expiry
+ * date, and acceptance state.
+ */
 class OrganizationInvitation extends Model
 {
     use HasUuids;

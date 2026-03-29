@@ -2,8 +2,14 @@
 
 namespace App\Domains\Contacts\DTOs;
 
+use App\Support\MapsToSnakeCase;
+
+/**
+ * DTO for updating an existing contact person's details.
+ */
 readonly class UpdateContactPersonData
 {
+    use MapsToSnakeCase;
     public function __construct(
         public string $firstName,
         public string $lastName,
@@ -27,16 +33,4 @@ readonly class UpdateContactPersonData
         );
     }
 
-    public function toArray(): array
-    {
-        return [
-            'first_name' => $this->firstName,
-            'last_name' => $this->lastName,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'position' => $this->position,
-            'is_primary' => $this->isPrimary,
-            'notes' => $this->notes,
-        ];
-    }
 }

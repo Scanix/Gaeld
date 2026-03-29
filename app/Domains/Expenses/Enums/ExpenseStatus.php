@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Enums;
 
+/** Expense lifecycle status: pending → approved → posted (or rejected). */
 enum ExpenseStatus: string
 {
     case Pending = 'pending';

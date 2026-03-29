@@ -6,6 +6,9 @@ use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 
+/**
+ * Cancels a sent or overdue invoice.
+ */
 class CancelInvoiceAction
 {
     public function execute(Invoice $invoice): Invoice

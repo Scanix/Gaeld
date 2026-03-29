@@ -7,7 +7,6 @@ use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\MatchConfidence;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
-use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Support\Money;
 use Illuminate\Support\Collection;
@@ -79,7 +78,7 @@ class MatchingService
 
         $invoice = Invoice::where('organization_id', $orgId)
             ->where('qr_reference', $ref)
-            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
+            ->open()
             ->first();
 
         if (! $invoice) {
@@ -104,11 +103,8 @@ class MatchingService
         }
 
         $invoices = Invoice::where('organization_id', $orgId)
-            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
-            ->whereBetween('total', [
-                bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
-                bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
-            ])
+            ->open()
+            ->byAmountRange($amount, MatchConfidence::AMOUNT_TOLERANCE)
             ->with(['customer'])
             ->get();
 
@@ -134,7 +130,7 @@ class MatchingService
     private function matchByHeuristics(string $orgId, BankTransaction $transaction, string $amount): Collection
     {
         $query = Invoice::where('organization_id', $orgId)
-            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
+            ->open()
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('total', [
                     bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),

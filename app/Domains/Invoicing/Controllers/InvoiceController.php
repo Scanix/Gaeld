@@ -38,6 +38,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * Invoice lifecycle: creating, editing, sending, payment recording,
+ * PDF generation, credit notes, and reminders.
+ */
 class InvoiceController extends Controller
 {
     public function __construct(

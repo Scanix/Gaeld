@@ -10,6 +10,9 @@ use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Creates a credit note linked to an existing invoice.
+ */
 class CreateCreditNoteAction
 {
     public function __construct(

@@ -11,25 +11,25 @@ use Tests\Security\SecurityTestCase;
  * - Session regeneration on login (anti-fixation)
  * - Session invalidation on logout
  * - CSRF protection on state-changing routes
- * - Pre-login session data is discarded after authentication
+ * - Authentication survives the post-login redirect boundary
  */
 class SessionSecurityTest extends SecurityTestCase
 {
     // ──────────────────────────────────────────────────────────────
-    //  Session fixation — pre-login session data must be gone
-    //  after login because AuthenticatedSessionController calls
-    //  $request->session()->regenerate() which changes the session ID.
-    //  We verify the observable consequence: any value placed in the
-    //  session by an attacker before login is gone after login.
+    //  Session fixation — the session ID must rotate on login
+    //  without dropping the authenticated user from the new session.
     // ──────────────────────────────────────────────────────────────
 
-    public function test_pre_login_session_data_is_discarded_on_login(): void
+    public function test_login_regenerates_session_and_keeps_user_authenticated(): void
     {
         $user = User::factory()->create(['password' => Hash::make('ValidPass1!')]);
         $this->orgA->users()->attach($user->id, ['role' => 'member']);
 
-        // Attacker pre-sets a marker in the session (session fixation attempt)
-        $response = $this->withSession(['attacker_marker' => 'injected'])
+        $this->withSession(['attacker_marker' => 'injected'])->get('/login');
+
+        $oldSessionId = session()->getId();
+
+        $response = $this
             ->post('/login', [
                 'email'    => $user->email,
                 'password' => 'ValidPass1!',
@@ -37,8 +37,8 @@ class SessionSecurityTest extends SecurityTestCase
 
         $response->assertRedirect();
 
-        // After login with session invalidate(), the pre-login marker must be gone.
-        $response->assertSessionMissing('attacker_marker');
+        $this->assertAuthenticatedAs($user);
+        $this->assertNotSame($oldSessionId, session()->getId());
     }
 
     // ──────────────────────────────────────────────────────────────

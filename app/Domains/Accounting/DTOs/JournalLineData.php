@@ -2,6 +2,9 @@
 
 namespace App\Domains\Accounting\DTOs;
 
+use App\Support\MapsToSnakeCase;
+use App\Support\ValidatesFromArray;
+
 /**
  * Value object representing a single debit/credit line in a journal entry.
  *
@@ -10,6 +13,9 @@ namespace App\Domains\Accounting\DTOs;
  */
 readonly class JournalLineData
 {
+    use MapsToSnakeCase;
+    use ValidatesFromArray;
+
     public function __construct(
         public string $accountId,
         public string $debit,
@@ -19,6 +25,8 @@ readonly class JournalLineData
 
     public static function fromArray(array $data): self
     {
+        self::assertRequired($data, ['account_id', 'debit', 'credit']);
+
         return new self(
             accountId: $data['account_id'],
             debit: (string) $data['debit'],
@@ -27,13 +35,4 @@ readonly class JournalLineData
         );
     }
 
-    public function toArray(): array
-    {
-        return [
-            'account_id' => $this->accountId,
-            'debit' => $this->debit,
-            'credit' => $this->credit,
-            'description' => $this->description,
-        ];
-    }
 }

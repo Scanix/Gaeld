@@ -10,6 +10,9 @@ use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Domains\Invoicing\Services\InvoiceService;
 
+/**
+ * Records a payment against an invoice and updates its status (partial or fully paid).
+ */
 class RecordPaymentAction
 {
     public function __construct(

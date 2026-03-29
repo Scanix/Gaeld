@@ -7,6 +7,9 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Events\Dispatcher;
 
+/**
+ * Logs authentication events (login, logout, failed attempts) via Spatie activity log.
+ */
 class AuthAuditSubscriber
 {
     public function handleLogin(Login $event): void

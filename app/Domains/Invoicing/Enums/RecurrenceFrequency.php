@@ -4,6 +4,7 @@ namespace App\Domains\Invoicing\Enums;
 
 use Carbon\Carbon;
 
+/** Frequency at which a recurring invoice is generated. */
 enum RecurrenceFrequency: string
 {
     case Weekly = 'weekly';

@@ -4,6 +4,9 @@ namespace App\Domains\Organizations\DTOs;
 
 use App\Domains\Users\DTOs\CreateUserData;
 
+/**
+ * Composite DTO wrapping user and organization data for the initial setup wizard.
+ */
 readonly class CompleteSetupData
 {
     public function __construct(

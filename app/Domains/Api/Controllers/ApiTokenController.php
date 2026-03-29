@@ -4,16 +4,20 @@ namespace App\Domains\Api\Controllers;
 
 use App\Domains\Api\Enums\TokenType;
 use App\Domains\Api\Enums\WebhookEvent;
-use App\Domains\Organizations\Enums\Permission;
+use App\Domains\Api\Requests\StoreApiTokenRequest;
+use App\Domains\Api\Resources\ApiTokenResource;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Personal API token management (create, list, revoke).
+ */
 class ApiTokenController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         $tokens = $request->user()
             ->tokens()
@@ -21,17 +25,12 @@ class ApiTokenController extends Controller
             ->where('organization_id', app(CurrentOrganization::class)->id())
             ->get(['id', 'name', 'abilities', 'last_used_at', 'expires_at', 'created_at']);
 
-        return response()->json(['data' => $tokens]);
+        return ApiTokenResource::collection($tokens);
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): JsonResponse
+    public function store(StoreApiTokenRequest $request, CurrentOrganization $currentOrg): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'abilities' => 'array',
-            'abilities.*' => ['string', Rule::in(array_column(Permission::cases(), 'value'))],
-            'expires_in_days' => 'nullable|integer|min:1|max:365',
-        ]);
+        $validated = $request->validated();
 
         $abilities = $validated['abilities'] ?? ['*'];
         $expiresAt = isset($validated['expires_in_days'])

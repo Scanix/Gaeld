@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Enums;
 
+/** Chart-of-accounts category (asset, liability, equity, revenue, expense). */
 enum AccountType: string
 {
     case Asset = 'asset';
