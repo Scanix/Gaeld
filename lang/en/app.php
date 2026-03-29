@@ -1262,6 +1262,8 @@ return [
     'error_404_description' => 'The page you\'re looking for doesn\'t exist or has been moved.',
     'error_419_title' => 'Session Expired',
     'error_419_description' => 'Your session has expired. Please refresh and try again.',
+    'error_429_title' => 'Too Many Requests',
+    'error_429_description' => 'You have made too many requests. Please wait a moment and try again.',
     'error_500_title' => 'Server Error',
     'error_500_description' => 'Something went wrong on our end. Please try again later.',
     'error_503_title' => 'Service Unavailable',

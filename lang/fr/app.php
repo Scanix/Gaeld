@@ -1271,6 +1271,8 @@ return [
     'error_404_description' => 'La page que vous recherchez n\'existe pas ou a été déplacée.',
     'error_419_title' => 'Session expirée',
     'error_419_description' => 'Votre session a expiré. Veuillez rafraîchir la page et réessayer.',
+    'error_429_title' => 'Trop de requêtes',
+    'error_429_description' => 'Vous avez effectué trop de requêtes. Veuillez patienter un instant et réessayer.',
     'error_500_title' => 'Erreur serveur',
     'error_500_description' => 'Un problème est survenu de notre côté. Veuillez réessayer plus tard.',
     'error_503_title' => 'Service indisponible',
