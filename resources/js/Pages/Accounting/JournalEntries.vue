@@ -46,7 +46,8 @@ const columns = computed(() => [
         </DataTable>
 
         <!-- Expanded lines for each entry -->
-        <div v-for="entry in (entries?.data ?? [])" :key="entry.id" class="mt-4 border rounded-md p-3" v-if="entry.lines?.length">
+        <template v-for="entry in (entries?.data ?? [])" :key="entry.id">
+        <div v-if="entry.lines?.length" class="mt-4 border rounded-md p-3">
           <p class="mb-2 text-sm font-medium">{{ entry.reference }} — {{ entry.description }}</p>
           <table class="w-full text-sm">
             <thead>
@@ -72,6 +73,7 @@ const columns = computed(() => [
             </tbody>
           </table>
         </div>
+        </template>
       </CardContent>
     </Card>
   </AppLayout>

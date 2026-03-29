@@ -10,6 +10,4 @@ namespace App\Support\Exceptions;
  * Extend this class to create domain-specific exceptions that can be
  * caught at a single catch point: catch (DomainException $e).
  */
-class DomainException extends \DomainException
-{
-}
+class DomainException extends \DomainException {}

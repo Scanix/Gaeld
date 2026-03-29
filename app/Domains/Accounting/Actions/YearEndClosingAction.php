@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\LegalArchivingService;
+use App\Domains\Organizations\Models\Organization;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,6 +19,7 @@ class YearEndClosingAction
     public function __construct(
         private readonly LedgerService $ledger,
         private readonly LegalArchivingService $archiving,
+        private readonly GenerateOpeningBalancesAction $openingBalances,
     ) {}
 
     /**
@@ -87,5 +89,11 @@ class YearEndClosingAction
 
         // Archive all documents for the closed fiscal year (Swiss OR Art. 958f CO)
         $this->archiving->archiveFiscalYear($orgId, $year);
+
+        // Lock the fiscal year to prevent further postings
+        Organization::findOrFail($orgId)->closeFiscalYear($year);
+
+        // Generate opening balance entries for the next fiscal year
+        $this->openingBalances->execute($orgId, $year);
     }
 }

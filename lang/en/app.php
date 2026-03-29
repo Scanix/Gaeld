@@ -1068,6 +1068,12 @@ return [
     'lettrage_account' => 'Account',
     'lettrage_lettered_by' => 'Matched by',
     'lettrage_lettered_at' => 'Matched on',
+    'help_lettrage_text' => 'Select an account and match open debit/credit lines that offset each other.',
+    'balanced' => 'Balanced',
+    'unbalanced' => 'Unbalanced',
+    'no_open_items' => 'No open items for this account.',
+    'lines' => 'Lines',
+    'select_account_to_start' => 'Select an account above to view open items.',
 
     // Legal Archiving (10-year retention)
     'legal_archives' => 'Legal Archives',
@@ -1080,6 +1086,9 @@ return [
     'archive_fiscal_year' => 'Archive Fiscal Year',
     'archive_expires_at' => 'Retention expires',
     'archive_expiring_soon' => 'Expiring within 1 year',
+    'archived' => 'Archived',
+    'verified' => 'Verified',
+    'no_archives' => 'No archived documents yet.',
 
     // Exchange rates (multi-currency)
     'exchange_rates' => 'Exchange Rates',

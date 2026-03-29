@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Actions;
 
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Mail\InvoiceMail;
 use App\Domains\Invoicing\Models\Invoice;
@@ -19,7 +20,7 @@ class SendInvoiceAction
 
     public function execute(Invoice $invoice): void
     {
-        if ($invoice->status !== 'sent' && $invoice->status !== 'overdue') {
+        if ($invoice->status !== InvoiceStatus::Sent && $invoice->status !== InvoiceStatus::Overdue) {
             throw new InvalidInvoiceStateException('Invoice must be finalized before sending.');
         }
 

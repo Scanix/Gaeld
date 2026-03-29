@@ -32,17 +32,21 @@ class ExpenseService
     /**
      * Post the ledger entry for an expense payment.
      *
-     * Accounting effect:
+     * For regular expenses:
      *   Debit  {expenseAccountCode} Expense account  (payment amount)
      *   Credit {bankAccountCode}    Bank account     (payment amount)
+     *
+     * For credit notes (reversed):
+     *   Debit  {bankAccountCode}    Bank account     (refund amount)
+     *   Credit {expenseAccountCode} Expense account  (refund amount)
      *
      * Marks the expense as Posted.
      *
      * @throws ModelNotFoundException When account code not found
      */
-    public function postToLedger(Expense $expense, RecordExpensePaymentData $data): JournalEntry
+    public function postToLedger(Expense $expense, RecordExpensePaymentData $data, bool $isCreditNote = false): JournalEntry
     {
-        return DB::transaction(function () use ($expense, $data) {
+        return DB::transaction(function () use ($expense, $data, $isCreditNote) {
             $orgId = $expense->organization_id;
             $bankAccountCode = $data->bankAccountCode ?? AccountCode::BANK_CASH;
 
@@ -50,13 +54,22 @@ class ExpenseService
             $bankAccount = $this->ledgerService->resolveAccount($orgId, $bankAccountCode);
 
             $amount = $data->amount;
-            $lines = [
-                new JournalLineData(accountId: (string) $expenseAccount->id, debit: $amount, credit: '0', description: $expense->description ?? 'Expense'),
-                new JournalLineData(accountId: (string) $bankAccount->id, debit: '0', credit: $amount, description: 'Bank withdrawal'),
-            ];
 
-            // Apply Swiss 5-centime rounding for CHF expenses
-            if (strtoupper($expense->currency) === 'CHF') {
+            if ($isCreditNote) {
+                // Credit note: reverse the normal flow (bank receives, expense account credited)
+                $lines = [
+                    new JournalLineData(accountId: (string) $bankAccount->id, debit: $amount, credit: '0', description: 'Supplier credit note — bank refund'),
+                    new JournalLineData(accountId: (string) $expenseAccount->id, debit: '0', credit: $amount, description: $expense->description ?? 'Credit note'),
+                ];
+            } else {
+                $lines = [
+                    new JournalLineData(accountId: (string) $expenseAccount->id, debit: $amount, credit: '0', description: $expense->description ?? 'Expense'),
+                    new JournalLineData(accountId: (string) $bankAccount->id, debit: '0', credit: $amount, description: 'Bank withdrawal'),
+                ];
+            }
+
+            // Apply Swiss 5-centime rounding for CHF expenses (regular invoices only)
+            if (! $isCreditNote && strtoupper($expense->currency) === 'CHF') {
                 $roundedAmount = SwissRounding::roundToFiveCents($amount);
                 $roundingDiff = SwissRounding::difference($amount, $roundedAmount);
 

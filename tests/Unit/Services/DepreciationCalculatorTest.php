@@ -15,7 +15,7 @@ class DepreciationCalculatorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->calculator = new DepreciationCalculator();
+        $this->calculator = new DepreciationCalculator;
     }
 
     private function makeAsset(

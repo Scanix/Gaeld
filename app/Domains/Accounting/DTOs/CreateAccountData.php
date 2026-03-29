@@ -38,5 +38,4 @@ readonly class CreateAccountData
             isActive: $data['is_active'] ?? true,
         );
     }
-
 }

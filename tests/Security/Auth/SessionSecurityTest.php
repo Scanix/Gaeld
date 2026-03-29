@@ -3,6 +3,8 @@
 namespace Tests\Security\Auth;
 
 use App\Domains\Users\Models\User;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Hash;
 use Tests\Security\SecurityTestCase;
 
@@ -31,7 +33,7 @@ class SessionSecurityTest extends SecurityTestCase
 
         $response = $this
             ->post('/login', [
-                'email'    => $user->email,
+                'email' => $user->email,
                 'password' => 'ValidPass1!',
             ]);
 
@@ -72,8 +74,8 @@ class SessionSecurityTest extends SecurityTestCase
     {
         // withoutMiddleware() approach: test the inverse — that CSRF IS enforced
         // by submitting without the token through the default client (no token injected)
-        $this->app[\Illuminate\Contracts\Http\Kernel::class]
-             ->pushMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+        $this->app[Kernel::class]
+            ->pushMiddleware(VerifyCsrfToken::class);
 
         // The TestCase normally injects a CSRF token automatically via $this->post().
         // To test that CSRF is enforced we use the raw HTTP client without the helper.

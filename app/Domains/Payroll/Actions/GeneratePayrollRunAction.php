@@ -5,7 +5,6 @@ namespace App\Domains\Payroll\Actions;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Payroll\Services\PayrollCalculator;
-use Illuminate\Support\Collection;
 
 /**
  * Generates salary slips for all active employees in a given payroll period.

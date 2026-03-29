@@ -17,13 +17,13 @@ readonly class UpdateOrganizationData
     use ValidatesFromArray;
 
     /**
-     * @param  string          $name                    Display name of the organization (required).
-     * @param  string|null     $legalName               Official registered legal name, if different from display name.
-     * @param  AddressData|null $addressData             Structured address (street, city, postal code, country, canton).
-     * @param  string|null     $vatNumber               VAT / tax identification number.
-     * @param  string          $currency                ISO 4217 currency code used as the organization default (e.g. 'CHF').
-     * @param  string          $locale                  BCP 47 locale tag for UI language and number formatting (e.g. 'en').
-     * @param  int             $defaultPaymentTermsDays Number of days after invoice date before payment is due.
+     * @param  string  $name  Display name of the organization (required).
+     * @param  string|null  $legalName  Official registered legal name, if different from display name.
+     * @param  AddressData|null  $addressData  Structured address (street, city, postal code, country, canton).
+     * @param  string|null  $vatNumber  VAT / tax identification number.
+     * @param  string  $currency  ISO 4217 currency code used as the organization default (e.g. 'CHF').
+     * @param  string  $locale  BCP 47 locale tag for UI language and number formatting (e.g. 'en').
+     * @param  int  $defaultPaymentTermsDays  Number of days after invoice date before payment is due.
      */
     public function __construct(
         public string $name,
@@ -41,7 +41,8 @@ readonly class UpdateOrganizationData
      * The key `name` is mandatory; all other keys are optional and fall back to
      * the constructor defaults when absent.
      *
-     * @param  array<string, mixed> $data
+     * @param  array<string, mixed>  $data
+     *
      * @throws \InvalidArgumentException when the `name` key is missing.
      */
     public static function fromArray(array $data): self

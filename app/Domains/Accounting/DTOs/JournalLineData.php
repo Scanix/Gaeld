@@ -34,5 +34,4 @@ readonly class JournalLineData
             description: $data['description'] ?? null,
         );
     }
-
 }
