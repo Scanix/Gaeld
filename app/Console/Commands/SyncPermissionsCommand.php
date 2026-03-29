@@ -19,7 +19,7 @@ class SyncPermissionsCommand extends Command
     public function handle(): int
     {
         // Ensure roles exist
-        $this->callSilently('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
+        $this->callSilently('db:seed', ['--class' => 'RolesAndPermissionsSeeder', '--force' => true]);
 
         if ($this->option('debug')) {
             return $this->debug();
