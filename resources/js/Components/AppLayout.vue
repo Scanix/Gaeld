@@ -50,6 +50,7 @@ const trialDaysLeft = computed(() => {
 })
 const showTrialBanner = computed(() => trialDaysLeft.value !== null && trialDaysLeft.value <= 7)
 const showPastDueBanner = computed(() => subscription.value?.status === 'past_due')
+const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
 </script>
 
 <template>
@@ -60,6 +61,21 @@ const showPastDueBanner = computed(() => subscription.value?.status === 'past_du
     Skip to content
   </a>
   <Head :title="title" />
+
+  <!-- SaaS Admin Banner -->
+  <div
+    v-if="isSaasAdmin"
+    class="relative z-50 bg-red-600 text-white text-sm font-semibold"
+    role="alert"
+  >
+    <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
+      <span class="inline-flex items-center gap-1.5">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        SaaS Admin Mode — With great power comes great responsibility
+      </span>
+      <Link href="/saas-admin" class="underline underline-offset-2 hover:text-red-100 whitespace-nowrap">Admin Dashboard</Link>
+    </div>
+  </div>
 
   <!-- Early Beta Banner -->
   <div

@@ -7,7 +7,7 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { TrendingUp, Users, AlertCircle, CreditCard, Clock, ShieldCheck, Ban, ArrowRightLeft } from 'lucide-vue-next'
+import { TrendingUp, Users, AlertCircle, CreditCard, Clock, ShieldCheck, Ban, ArrowRightLeft, Settings, Save } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 
@@ -70,6 +70,30 @@ function revokePlan() {
       showRevokeConfirm.value = false
       revokeTarget.value = null
     },
+  })
+}
+
+// Plan configuration (Stripe price IDs)
+const planForms = ref({})
+
+function initPlanForm(plan) {
+  if (!planForms.value[plan.id]) {
+    planForms.value[plan.id] = { stripe_price_id: plan.stripe_price_id ?? '' }
+  }
+  return planForms.value[plan.id]
+}
+
+const savingPlan = ref({})
+
+function updatePlan(plan) {
+  const form = planForms.value[plan.id]
+  if (!form) return
+  savingPlan.value[plan.id] = true
+  router.put(`/saas-admin/plans/${plan.id}`, {
+    stripe_price_id: form.stripe_price_id || null,
+  }, {
+    preserveScroll: true,
+    onFinish: () => { savingPlan.value[plan.id] = false },
   })
 }
 </script>
@@ -162,23 +186,43 @@ function revokePlan() {
         </Card>
       </div>
 
-      <!-- Plans breakdown -->
+      <!-- Plans breakdown & configuration -->
       <Card>
         <CardHeader>
-          <CardTitle>{{ t('plans_overview') }}</CardTitle>
+          <CardTitle class="flex items-center gap-2">
+            <Settings class="h-4 w-4" />
+            {{ t('plans_overview') }}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div v-for="plan in plans" :key="plan.id" class="rounded-lg border border-[hsl(var(--border))] p-4">
+            <div v-for="plan in plans" :key="plan.id" class="rounded-lg border border-[hsl(var(--border))] p-4 space-y-3">
               <div class="flex items-center justify-between">
                 <span class="font-semibold">{{ plan.name }}</span>
                 <span class="text-sm text-[hsl(var(--muted-foreground))]">
                   {{ plan.price_chf > 0 ? `CHF ${plan.price_chf}/mo` : t('free') }}
                 </span>
               </div>
-              <div class="mt-2 flex items-baseline gap-1">
+              <div class="flex items-baseline gap-1">
                 <span class="text-2xl font-bold tabular-nums">{{ plan.active_count }}</span>
                 <span class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('active_subscriptions').toLowerCase() }}</span>
+              </div>
+              <div class="border-t border-[hsl(var(--border))] pt-3">
+                <label class="block text-xs font-medium text-[hsl(var(--muted-foreground))] mb-1">Stripe Price ID</label>
+                <div class="flex gap-2">
+                  <input
+                    v-model="initPlanForm(plan).stripe_price_id"
+                    type="text"
+                    placeholder="price_..."
+                    class="flex-1 text-xs border border-[hsl(var(--border))] rounded-md px-2 py-1.5 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] font-mono"
+                  />
+                  <Button size="sm" variant="outline" @click="updatePlan(plan)" :disabled="savingPlan[plan.id]">
+                    <Save class="h-3 w-3" />
+                  </Button>
+                </div>
+                <p v-if="!initPlanForm(plan).stripe_price_id" class="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                  ⚠ Checkout disabled — no Stripe Price ID
+                </p>
               </div>
             </div>
           </div>
