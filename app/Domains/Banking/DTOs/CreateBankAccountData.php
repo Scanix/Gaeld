@@ -10,6 +10,7 @@ use App\Support\MapsToSnakeCase;
 readonly class CreateBankAccountData
 {
     use MapsToSnakeCase;
+
     public function __construct(
         public string $organizationId,
         public string $name,
@@ -32,5 +33,4 @@ readonly class CreateBankAccountData
             balance: isset($data['balance']) ? (string) $data['balance'] : '0',
         );
     }
-
 }

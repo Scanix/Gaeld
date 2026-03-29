@@ -10,6 +10,7 @@ use App\Domains\Payroll\Actions\PostPayrollAction;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
 use Mockery;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class PostPayrollActionTest extends TestCase
@@ -106,7 +107,7 @@ class PostPayrollActionTest extends TestCase
         int $periodYear = 2026,
         int $periodMonth = 1,
     ): SalarySlip {
-        /** @var SalarySlip&\Mockery\MockInterface $slip */
+        /** @var SalarySlip&MockInterface $slip */
         $slip = Mockery::mock(SalarySlip::class)->makePartial();
         $slip->organization_id = 'org-1';
         $slip->employee_id = $employeeId;
@@ -137,7 +138,7 @@ class PostPayrollActionTest extends TestCase
 
     private function makeAccount(string $id): Account
     {
-        /** @var Account&\Mockery\MockInterface $account */
+        /** @var Account&MockInterface $account */
         $account = Mockery::mock(Account::class)->makePartial();
         $account->id = $id;
         $account->code = AccountCode::SALARIES;
@@ -147,7 +148,7 @@ class PostPayrollActionTest extends TestCase
 
     private function makeJournalEntry(int $id): JournalEntry
     {
-        /** @var JournalEntry&\Mockery\MockInterface $entry */
+        /** @var JournalEntry&MockInterface $entry */
         $entry = Mockery::mock(JournalEntry::class)->makePartial();
         $entry->id = $id;
 

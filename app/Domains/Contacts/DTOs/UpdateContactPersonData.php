@@ -10,6 +10,7 @@ use App\Support\MapsToSnakeCase;
 readonly class UpdateContactPersonData
 {
     use MapsToSnakeCase;
+
     public function __construct(
         public string $firstName,
         public string $lastName,
@@ -32,5 +33,4 @@ readonly class UpdateContactPersonData
             notes: $data['notes'] ?? null,
         );
     }
-
 }

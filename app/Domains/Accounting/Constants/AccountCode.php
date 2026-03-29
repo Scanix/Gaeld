@@ -32,6 +32,8 @@ final class AccountCode
 
     public const LPP_PAYABLE = '2272';
 
+    public const OPENING_BALANCE = '9000';
+
     public const REVENUE_PREFIX = '3';
 
     public const EXPENSE_PREFIXES = ['4', '5', '6'];

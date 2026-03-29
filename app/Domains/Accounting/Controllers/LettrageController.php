@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Controllers;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\LettrageLot;
 use App\Domains\Accounting\Services\LettrageService;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,9 +22,9 @@ class LettrageController extends Controller
     /**
      * Show open items for an account (or an account picker if none selected).
      */
-    public function index(Request $request): Response
+    public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
-        $orgId = $request->user()->current_organization_id;
+        $orgId = $currentOrg->id();
         $accounts = Account::where('organization_id', $orgId)
             ->where('is_active', true)
             ->orderBy('code')
@@ -60,7 +61,7 @@ class LettrageController extends Controller
     /**
      * Letter a set of transaction lines.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $validated = $request->validate([
             'account_id' => ['required', 'integer'],
@@ -68,7 +69,7 @@ class LettrageController extends Controller
             'line_ids.*' => ['required', 'integer'],
         ]);
 
-        $account = Account::where('organization_id', $request->user()->current_organization_id)
+        $account = Account::where('organization_id', $currentOrg->id())
             ->findOrFail($validated['account_id']);
 
         $this->authorize('manage', $account);

@@ -16,7 +16,7 @@ class ExpenseSearchProvider extends BaseSearchProvider
                 'type' => 'expense',
                 'id' => $expense->id,
                 'title' => $expense->description ?? $expense->category,
-                'subtitle' => ($expense->vendor ?? $expense->supplier?->name ?? '').' · '.$expense->currency.' '.number_format((float) $expense->amount, 2),
+                'subtitle' => ($expense->vendor ?? $expense->supplier->name ?? '').' · '.$expense->currency.' '.number_format((float) $expense->amount, 2),
                 'status' => $expense->status?->value,
                 'url' => route('expenses.show', $expense),
             ];

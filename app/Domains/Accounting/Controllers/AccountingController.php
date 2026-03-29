@@ -143,7 +143,7 @@ class AccountingController extends Controller
             foreach ($entries as $entry) {
                 foreach ($entry->lines as $line) {
                     $rows[] = [
-                        $entry->date?->format('Y-m-d') ?? (string) $entry->date,
+                        $entry->date->format('Y-m-d'),
                         $entry->reference,
                         $entry->description,
                         $line->account->code ?? '',

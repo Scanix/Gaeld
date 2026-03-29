@@ -4,6 +4,7 @@ namespace App\Domains\Accounting\Actions;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -18,7 +19,7 @@ class ImportAccountsAction
      *
      * @return array{rows: array<array<string, mixed>>, errors: array<string>}
      */
-    public function parseFile(\Illuminate\Http\UploadedFile $file): array
+    public function parseFile(UploadedFile $file): array
     {
         $extension = strtolower($file->getClientOriginalExtension());
         $content = $file->get();

@@ -1203,6 +1203,12 @@ return [
     'lettrage_account' => 'Konto',
     'lettrage_lettered_by' => 'Zugeordnet von',
     'lettrage_lettered_at' => 'Zugeordnet am',
+    'help_lettrage_text' => 'Wählen Sie ein Konto und ordnen Sie offene Soll-/Habenzeilen zu, die sich gegenseitig ausgleichen.',
+    'balanced' => 'Ausgeglichen',
+    'unbalanced' => 'Nicht ausgeglichen',
+    'no_open_items' => 'Keine offenen Posten für dieses Konto.',
+    'lines' => 'Zeilen',
+    'select_account_to_start' => 'Wählen Sie oben ein Konto, um offene Posten anzuzeigen.',
 
     // Gesetzliche Archivierung (10 Jahre)
     'legal_archives' => 'Gesetzliche Archive',
@@ -1215,6 +1221,9 @@ return [
     'archive_fiscal_year' => 'Geschäftsjahr archivieren',
     'archive_expires_at' => 'Aufbewahrung läuft ab am',
     'archive_expiring_soon' => 'Läuft in weniger als 1 Jahr ab',
+    'archived' => 'Archiviert',
+    'verified' => 'Verifiziert',
+    'no_archives' => 'Noch keine archivierten Dokumente.',
 
     'exchange_rate_ecb_fetched' => ':count Wechselkurse von der EZB abgerufen.',
     'feature_analytical' => 'Analytische Buchhaltung',

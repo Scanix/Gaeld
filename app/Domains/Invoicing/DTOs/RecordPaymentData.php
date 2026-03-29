@@ -34,5 +34,4 @@ readonly class RecordPaymentData
             bankAccountCode: $data['bank_account_code'] ?? null,
         );
     }
-
 }
