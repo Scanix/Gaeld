@@ -14,6 +14,7 @@ use App\Domains\Organizations\Models\Organization;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class DepreciateAssetActionTest extends TestCase
@@ -141,7 +142,7 @@ class DepreciateAssetActionTest extends TestCase
         ?Carbon $disposedAt = null,
         bool $isFullyDepreciated = false,
     ): FixedAsset {
-        /** @var FixedAsset&\Mockery\MockInterface $asset */
+        /** @var FixedAsset&MockInterface $asset */
         $asset = Mockery::mock(FixedAsset::class)->makePartial();
         $asset->is_active = $isActive;
         $asset->disposed_at = $disposedAt;

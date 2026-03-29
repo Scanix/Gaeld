@@ -23,6 +23,7 @@ readonly class UpdateExpenseData
         public ?string $vendor = null,
         public ?string $receiptPath = null,
         public ?string $currency = null,
+        public ?string $type = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -39,7 +40,7 @@ readonly class UpdateExpenseData
             vendor: $data['vendor'] ?? null,
             receiptPath: $data['receipt_path'] ?? null,
             currency: $data['currency'] ?? null,
+            type: $data['type'] ?? null,
         );
     }
-
 }

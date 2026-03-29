@@ -14,7 +14,7 @@ import { formatCurrency } from '@/lib/utils'
 
 const props = defineProps({
   report: Object,
-  type: { type: String, default: 'receivable' },
+  type: { type: String, default: 'receivables' },
 })
 const { t } = useTranslations()
 
@@ -65,22 +65,22 @@ function grandTotal() {
         <button
           :class="[
             'rounded-md px-4 py-1.5 text-sm font-medium transition-colors',
-            selectedType === 'receivable'
+            selectedType === 'receivables'
               ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
               : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
           ]"
-          @click="switchType('receivable')"
+          @click="switchType('receivables')"
         >
           {{ t('receivables') }}
         </button>
         <button
           :class="[
             'rounded-md px-4 py-1.5 text-sm font-medium transition-colors',
-            selectedType === 'payable'
+            selectedType === 'payables'
               ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
               : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
           ]"
-          @click="switchType('payable')"
+          @click="switchType('payables')"
         >
           {{ t('payables') }}
         </button>

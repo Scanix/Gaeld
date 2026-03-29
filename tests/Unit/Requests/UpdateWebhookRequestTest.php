@@ -44,7 +44,7 @@ class UpdateWebhookRequestTest extends TestCase
 
     public function test_url_max_length_is_2048(): void
     {
-        $validator = $this->validate(['url' => 'https://example.com/' . str_repeat('a', 2030)]);
+        $validator = $this->validate(['url' => 'https://example.com/'.str_repeat('a', 2030)]);
 
         $this->assertTrue($validator->fails());
         $this->assertArrayHasKey('url', $validator->errors()->toArray());

@@ -13,6 +13,7 @@ use App\Support\MapsToSnakeCase;
 readonly class ReceiptOcrResult
 {
     use MapsToSnakeCase;
+
     public function __construct(
         public string $rawText,
         public ?float $amount = null,

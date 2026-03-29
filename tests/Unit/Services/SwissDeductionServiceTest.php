@@ -12,7 +12,7 @@ class SwissDeductionServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new SwissDeductionService();
+        $this->service = new SwissDeductionService;
     }
 
     public function test_calculate_deductions_with_default_rates(): void

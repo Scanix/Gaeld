@@ -54,5 +54,4 @@ readonly class RecordExpensePaymentData
             bankAccountCode: $bankAccountCode,
         );
     }
-
 }

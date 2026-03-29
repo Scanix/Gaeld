@@ -1052,6 +1052,12 @@ return [
     'lettrage_account' => 'Compte',
     'lettrage_lettered_by' => 'Lettré par',
     'lettrage_lettered_at' => 'Lettré le',
+    'help_lettrage_text' => 'Sélectionnez un compte et associez les lignes de débit/crédit ouvertes qui se compensent.',
+    'balanced' => 'Équilibré',
+    'unbalanced' => 'Déséquilibré',
+    'no_open_items' => 'Aucun élément ouvert pour ce compte.',
+    'lines' => 'Lignes',
+    'select_account_to_start' => 'Sélectionnez un compte ci-dessus pour voir les éléments ouverts.',
 
     // Archivage légal (10 ans)
     'legal_archives' => 'Archives légales',
@@ -1064,6 +1070,9 @@ return [
     'archive_fiscal_year' => 'Archiver l\'exercice',
     'archive_expires_at' => 'Conservation expire le',
     'archive_expiring_soon' => 'Expire dans moins d\'un an',
+    'archived' => 'Archivé',
+    'verified' => 'Vérifié',
+    'no_archives' => 'Aucun document archivé pour le moment.',
 
     // Taux de change (multi-devises)
     'exchange_rates' => 'Taux de change',

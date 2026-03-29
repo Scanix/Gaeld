@@ -11,6 +11,7 @@ use App\Support\MapsToSnakeCase;
 readonly class RecordBankTransactionData
 {
     use MapsToSnakeCase;
+
     public function __construct(
         public string $date,
         public string $amount,
@@ -31,5 +32,4 @@ readonly class RecordBankTransactionData
             contraAccountCode: $data['contra_account_code'],
         );
     }
-
 }

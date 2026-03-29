@@ -6,6 +6,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Expenses\Enums\ExpenseStatus;
+use App\Domains\Expenses\Enums\ExpenseType;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
@@ -36,6 +37,7 @@ use Laravel\Scout\Searchable;
  * @property string|null $receipt_path
  * @property ExpenseStatus $status
  * @property string $currency
+ * @property ExpenseType $type
  * @property int|null $supplier_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -58,6 +60,7 @@ class Expense extends Model
         'receipt_path',
         'status',
         'currency',
+        'type',
         'supplier_id',
     ];
 
@@ -68,6 +71,7 @@ class Expense extends Model
             'amount' => 'decimal:2',
             'vat_amount' => 'decimal:2',
             'status' => ExpenseStatus::class,
+            'type' => ExpenseType::class,
         ];
     }
 

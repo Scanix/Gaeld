@@ -24,6 +24,7 @@ readonly class CreateExpenseData
         public ?string $vendor = null,
         public ?string $receiptPath = null,
         public string $currency = 'CHF',
+        public string $type = 'invoice',
     ) {}
 
     public static function fromArray(array $data): self
@@ -41,7 +42,7 @@ readonly class CreateExpenseData
             vendor: $data['vendor'] ?? null,
             receiptPath: $data['receipt_path'] ?? null,
             currency: $data['currency'] ?? 'CHF',
+            type: $data['type'] ?? 'invoice',
         );
     }
-
 }

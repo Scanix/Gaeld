@@ -35,7 +35,14 @@ const defaultRates = {
   ai: 1.40,
   apg: 0.495,
 }
-const effectiveRates = computed(() => ({ ...defaultRates, ...props.rates }))
+const effectiveRates = computed(() => {
+  const merged = { ...defaultRates, ...props.rates }
+  return {
+    avs: Number(merged.avs),
+    ai: Number(merged.ai),
+    apg: Number(merged.apg),
+  }
+})
 
 // Breakdown calculation
 const breakdown = computed(() => {

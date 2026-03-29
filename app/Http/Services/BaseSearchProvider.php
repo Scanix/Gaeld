@@ -2,11 +2,12 @@
 
 namespace App\Http\Services;
 
+use App\Http\Contracts\SearchProvider;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Laravel\Scout\Searchable;
 
-abstract class BaseSearchProvider implements \App\Http\Contracts\SearchProvider
+abstract class BaseSearchProvider implements SearchProvider
 {
     /**
      * @param  class-string<Model>  $modelClass

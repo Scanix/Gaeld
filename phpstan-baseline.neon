@@ -1,18 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Expression on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.expr
-			count: 1
-			path: app/Domains/Accounting/Controllers/AccountingController.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Domains/Accounting/Controllers/AccountingController.php
-
-		-
 			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
 			identifier: property.notFound
 			count: 2
@@ -23,12 +11,6 @@ parameters:
 			identifier: property.notFound
 			count: 2
 			path: app/Domains/Accounting/Models/JournalEntry.php
-
-		-
-			message: '#^Parameter \$accountId of class App\\Domains\\Accounting\\DTOs\\JournalLineData constructor expects string, int given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Accounting/Services/LedgerService.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\MorphMany\<Laravel\\Sanctum\\PersonalAccessToken, App\\Domains\\Users\\Models\\User\>\:\:personal\(\)\.$#'
@@ -673,12 +655,6 @@ parameters:
 			path: app/Domains/Banking/Controllers/ReconciliationController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Banking/Jobs/ProcessBankImportJob.php
-
-		-
 			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
 			identifier: property.notFound
 			count: 2
@@ -1021,18 +997,6 @@ parameters:
 			path: app/Domains/Invoicing/Models/Invoice.php
 
 		-
-			message: '#^Expression on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.expr
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$rate\.$#'
 			identifier: property.notFound
 			count: 1
@@ -1318,13 +1282,7 @@ parameters:
 			message: '#^Call to an undefined static method Illuminate\\Database\\Eloquent\\Model\:\:search\(\)\.$#'
 			identifier: staticMethod.notFound
 			count: 1
-			path: app/Http/Controllers/GlobalSearchController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Controllers/GlobalSearchController.php
+			path: app/Http/Services/BaseSearchProvider.php
 
 		-
 			message: '#^Method App\\Http\\Middleware\\EnsureApiOrganization\:\:resolveOrganization\(\) should return App\\Domains\\Organizations\\Models\\Organization\|null but returns \(Illuminate\\Database\\Eloquent\\Model&object\{pivot\: Illuminate\\Database\\Eloquent\\Relations\\Pivot\}\)\|null\.$#'
@@ -1337,18 +1295,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
-			message: '#^Call to an undefined static method Illuminate\\Database\\Eloquent\\Model\:\:search\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 1
-			path: app/Http/Services/GlobalSearchService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Services/GlobalSearchService.php
 
 		-
 			message: '#^Unsafe access to private property App\\Support\\FeatureFlag\:\:\$orgResolver through static\:\:\.$#'

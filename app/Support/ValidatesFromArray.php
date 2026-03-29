@@ -9,6 +9,7 @@ trait ValidatesFromArray
 {
     /**
      * @param  array<string>  $required
+     *
      * @throws \InvalidArgumentException
      */
     protected static function assertRequired(array $data, array $required): void

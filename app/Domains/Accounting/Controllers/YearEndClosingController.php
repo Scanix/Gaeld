@@ -2,12 +2,14 @@
 
 namespace App\Domains\Accounting\Controllers;
 
+use App\Domains\Accounting\Actions\GenerateOpeningBalancesAction;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -135,6 +137,13 @@ class YearEndClosingController extends Controller
 
                 $journalEntry->update(['type' => 'year_end_closing']);
             });
+
+            // Lock the fiscal year to prevent further postings
+            $org = Organization::findOrFail($orgId);
+            $org->closeFiscalYear($year);
+
+            // Generate opening balance entries for the next fiscal year
+            app(GenerateOpeningBalancesAction::class)->execute($orgId, $year);
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
