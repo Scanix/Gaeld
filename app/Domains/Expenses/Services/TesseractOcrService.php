@@ -4,9 +4,16 @@ namespace App\Domains\Expenses\Services;
 
 use App\Domains\Expenses\Contracts\ReceiptOcrInterface;
 use App\Domains\Expenses\DTOs\ReceiptOcrResult;
+use App\Domains\Expenses\Exceptions\OcrProcessException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 
+/**
+ * Receipt OCR implementation using the Tesseract binary.
+ *
+ * Extracts text from receipt images and attempts to parse
+ * vendor name, date, total amount, and currency.
+ */
 class TesseractOcrService implements ReceiptOcrInterface
 {
     private string $binary;
@@ -52,7 +59,10 @@ class TesseractOcrService implements ReceiptOcrInterface
                 'error' => $result->errorOutput(),
             ]);
 
-            return '';
+            throw OcrProcessException::processFailed(
+                $result->exitCode(),
+                $result->errorOutput(),
+            );
         }
 
         return trim($result->output());

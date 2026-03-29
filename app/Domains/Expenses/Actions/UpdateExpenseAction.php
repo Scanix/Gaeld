@@ -6,6 +6,9 @@ use App\Domains\Expenses\DTOs\UpdateExpenseData;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 
+/**
+ * Updates an editable expense (only pending expenses can be modified).
+ */
 class UpdateExpenseAction
 {
     public function execute(Expense $expense, UpdateExpenseData $data): Expense

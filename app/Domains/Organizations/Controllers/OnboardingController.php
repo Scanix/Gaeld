@@ -14,6 +14,9 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Post-setup onboarding flow and getting-started checklist.
+ */
 class OnboardingController extends Controller
 {
     public function create(Request $request): RedirectResponse|Response

@@ -25,6 +25,10 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Bank reconciliation: matching transactions to invoices/expenses
+ * and confirming or rejecting suggested matches.
+ */
 class ReconciliationController extends Controller
 {
     public function __construct(

@@ -3,13 +3,20 @@
 namespace App\Domains\Payroll\Controllers;
 
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Payroll\Actions\CreateEmployeeAction;
+use App\Domains\Payroll\Actions\UpdateEmployeeAction;
 use App\Domains\Payroll\Models\Employee;
+use App\Domains\Payroll\Requests\StoreEmployeeRequest;
+use App\Domains\Payroll\Requests\UpdateEmployeeRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Employee record CRUD within the payroll module.
+ */
 class EmployeeController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response
@@ -33,25 +40,11 @@ class EmployeeController extends Controller
         return Inertia::render('Payroll/Employees/Create');
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(StoreEmployeeRequest $request, CurrentOrganization $currentOrg, CreateEmployeeAction $action): RedirectResponse
     {
         $this->authorize('create', Employee::class);
 
-        $validated = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'ahv_number' => ['nullable', 'string', 'max:16'],
-            'entry_date' => ['required', 'date'],
-            'exit_date' => ['nullable', 'date', 'after_or_equal:entry_date'],
-            'gross_salary' => ['required', 'numeric', 'min:0'],
-            'is_active' => ['boolean'],
-            'is_source_tax_subject' => ['boolean'],
-        ]);
-
-        $validated['organization_id'] = $currentOrg->id();
-
-        $employee = Employee::create($validated);
+        $employee = $action->execute($currentOrg->id(), $request->validated());
 
         return redirect()->route('payroll.employees.show', $employee)
             ->with('success', __('app.employee_created'));
@@ -75,23 +68,11 @@ class EmployeeController extends Controller
         ]);
     }
 
-    public function update(Request $request, Employee $employee): RedirectResponse
+    public function update(UpdateEmployeeRequest $request, Employee $employee, UpdateEmployeeAction $action): RedirectResponse
     {
         $this->authorize('update', $employee);
 
-        $validated = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'ahv_number' => ['nullable', 'string', 'max:16'],
-            'entry_date' => ['required', 'date'],
-            'exit_date' => ['nullable', 'date', 'after_or_equal:entry_date'],
-            'gross_salary' => ['required', 'numeric', 'min:0'],
-            'is_active' => ['boolean'],
-            'is_source_tax_subject' => ['boolean'],
-        ]);
-
-        $employee->update($validated);
+        $action->execute($employee, $request->validated());
 
         return redirect()->route('payroll.employees.show', $employee)
             ->with('success', __('app.employee_updated'));

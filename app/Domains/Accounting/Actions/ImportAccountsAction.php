@@ -8,8 +8,39 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
+/**
+ * Imports chart-of-accounts entries from an uploaded CSV or JSON file.
+ */
 class ImportAccountsAction
 {
+    /**
+     * Import accounts from an uploaded file (CSV or JSON).
+     *
+     * @return array{rows: array<array<string, mixed>>, errors: array<string>}
+     */
+    public function parseFile(\Illuminate\Http\UploadedFile $file): array
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $content = $file->get();
+
+        if ($extension === 'json') {
+            $rows = json_decode($content, true);
+            if (! is_array($rows)) {
+                return ['rows' => [], 'errors' => [__('app.import_validation_error')]];
+            }
+        } else {
+            $rows = $this->parseCsv($content);
+        }
+
+        if (empty($rows)) {
+            return ['rows' => [], 'errors' => [__('app.import_validation_error')]];
+        }
+
+        $errors = $this->validate($rows);
+
+        return ['rows' => $rows, 'errors' => $errors];
+    }
+
     /**
      * @param  array<array<string, mixed>>  $rows
      * @return array<string> validation errors (empty on success)

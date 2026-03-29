@@ -7,6 +7,9 @@ use App\Domains\Invoicing\Mail\InvoiceReminderMail;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Support\Facades\Mail;
 
+/**
+ * Sends a payment reminder e-mail for an overdue invoice.
+ */
 class SendInvoiceReminderAction
 {
     public function execute(Invoice $invoice): void

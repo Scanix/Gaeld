@@ -9,6 +9,9 @@ use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Services\ExpenseService;
 
+/**
+ * Posts an approved expense to the ledger and records the payment journal entry.
+ */
 class PostExpenseAction
 {
     private const REFERENCE_PREFIX_EXPENSE = 'EXP-';

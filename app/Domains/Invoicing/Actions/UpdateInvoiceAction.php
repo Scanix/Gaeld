@@ -6,6 +6,9 @@ use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 
+/**
+ * Updates a draft invoice and re-syncs its line items.
+ */
 class UpdateInvoiceAction
 {
     public function __construct(

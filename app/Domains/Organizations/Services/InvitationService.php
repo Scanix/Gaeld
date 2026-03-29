@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Handles organization membership invitations: creating, sending,
+ * accepting, and revoking invite tokens.
+ */
 class InvitationService
 {
     public function __construct(

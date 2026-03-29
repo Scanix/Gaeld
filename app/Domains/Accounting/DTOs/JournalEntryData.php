@@ -2,6 +2,8 @@
 
 namespace App\Domains\Accounting\DTOs;
 
+use App\Support\ValidatesFromArray;
+
 /**
  * Value object bundling a journal entry header with its balanced lines.
  *
@@ -10,8 +12,9 @@ namespace App\Domains\Accounting\DTOs;
  */
 readonly class JournalEntryData
 {
+    use ValidatesFromArray;
     /**
-     * @param  JournalLineData[]  $lines  At least two lines; debits must equal credits.
+     * @param  array<int, JournalLineData>  $lines  At least two lines; debits must equal credits.
      */
     public function __construct(
         public string $date,
@@ -22,6 +25,8 @@ readonly class JournalEntryData
 
     public static function fromArray(array $data): self
     {
+        self::assertRequired($data, ['date', 'lines']);
+
         return new self(
             date: $data['date'],
             reference: $data['reference'] ?? null,

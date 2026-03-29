@@ -5,6 +5,9 @@ namespace App\Domains\Users\Policies;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Users\Models\User;
 
+/**
+ * Authorization policy for user account management.
+ */
 class UserPolicy
 {
     public function viewAny(User $user): bool

@@ -18,6 +18,13 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Business logic for the full invoice lifecycle: creation, sending,
+ * payment recording, cancellation, credit notes, and reminders.
+ *
+ * Coordinates with the LedgerService for journal entries and
+ * applies Swiss rounding to totals.
+ */
 class InvoiceService
 {
     public function __construct(

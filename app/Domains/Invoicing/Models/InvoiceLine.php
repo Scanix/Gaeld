@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
+ * Single line item on an invoice (description, quantity, unit price, VAT).
+ *
  * @property int $id
- * @property string $invoice_id
- * @property string $description
  * @property string $quantity
  * @property string $unit_price
  * @property string $amount

@@ -4,6 +4,11 @@ namespace App\Domains\Invoicing\Services;
 
 use App\Domains\Invoicing\Models\Invoice;
 
+/**
+ * Generates sequential invoice numbers scoped to an organization and year.
+ *
+ * Default format: {PREFIX}-YYYY-NNN (e.g. INV-2026-001, CN-2026-001).
+ */
 class InvoiceNumberGenerator
 {
     /**

@@ -10,6 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
+/**
+ * Outbound webhook endpoint registered by an organization.
+ *
+ * Subscribes to one or more event types and delivers signed payloads
+ * to the configured URL. The shared secret is stored encrypted.
+ */
 class Webhook extends Model
 {
     use BelongsToOrganization, HasUuids;

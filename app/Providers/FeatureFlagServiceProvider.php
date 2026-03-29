@@ -7,6 +7,9 @@ use App\Support\FeatureFlag;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Registers feature flag middleware and Blade directives for conditional feature toggling.
+ */
 class FeatureFlagServiceProvider extends ServiceProvider
 {
     public function boot(): void

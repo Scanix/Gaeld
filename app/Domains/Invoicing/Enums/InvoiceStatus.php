@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Enums;
 
+/** Invoice lifecycle status: draft → sent → paid / overdue / cancelled. */
 enum InvoiceStatus: string
 {
     case Draft = 'draft';

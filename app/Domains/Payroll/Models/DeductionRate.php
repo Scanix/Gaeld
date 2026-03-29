@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
+ * Payroll deduction rate definition (e.g. AVS, LPP, AC) for salary calculations.
+ *
  * @property int $id
  * @property string $organization_id
  * @property string $name

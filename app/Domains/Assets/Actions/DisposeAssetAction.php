@@ -9,6 +9,9 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Assets\Models\FixedAsset;
 use Carbon\Carbon;
 
+/**
+ * Disposes of a fixed asset: records the disposal journal entry and deactivates the asset.
+ */
 class DisposeAssetAction
 {
     public function __construct(

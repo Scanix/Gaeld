@@ -30,6 +30,13 @@ use Illuminate\Support\Facades\DB;
  * Domain actions (FinalizeInvoiceAction, PostExpenseAction, BankingService)
  * call postEntry() for the actual ledger write.
  */
+/**
+ * Core double-entry accounting service.
+ *
+ * Creates, posts, and reverses journal entries while enforcing balanced
+ * debits/credits, unique references, and organization scoping.
+ * Also provides account balance and ledger queries.
+ */
 class LedgerService
 {
     private const REFERENCE_PREFIX_REVERSAL = 'REV-';

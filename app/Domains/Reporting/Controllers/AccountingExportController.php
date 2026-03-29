@@ -13,6 +13,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
+/**
+ * Generates and downloads end-of-year accounting export packages.
+ */
 class AccountingExportController extends Controller
 {
     public function index(CurrentOrganization $currentOrg): Response

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Enums;
 
+/** Payment method used to settle an invoice or expense. */
 enum PaymentMethod: string
 {
     case Bank = 'bank';

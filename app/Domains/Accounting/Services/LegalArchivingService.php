@@ -11,6 +11,10 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Archives accounting documents (invoices, expenses, journal entries, salary slips)
+ * for Swiss legal retention compliance (10-year CO requirement).
+ */
 class LegalArchivingService
 {
     private const RETENTION_YEARS = 10;

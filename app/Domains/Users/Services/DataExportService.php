@@ -5,6 +5,12 @@ namespace App\Domains\Users\Services;
 use App\Domains\Users\Models\User;
 use Spatie\Activitylog\Models\Activity;
 
+/**
+ * GDPR data export service (Art. 15 & Art. 20).
+ *
+ * Exports all personal data held for a user as a structured array
+ * suitable for JSON download or archival.
+ */
 class DataExportService
 {
     /**

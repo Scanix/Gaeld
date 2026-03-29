@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Inertia\Middleware;
 
+/**
+ * Inertia.js middleware: shares common data (user, organization, translations,
+ * locale, flash messages) with every Vue page component.
+ */
 class HandleInertiaRequests extends Middleware
 {
     public function __construct(

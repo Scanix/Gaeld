@@ -5,7 +5,7 @@ body {
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
     -webkit-text-size-adjust: none;
     background-color: #ffffff;
-    color: #52525b;
+    color: #171717;
     height: 100%;
     line-height: 1.4;
     margin: 0;
@@ -22,7 +22,7 @@ blockquote {
 }
 
 a {
-    color: #18181b;
+    color: #28a352;
 }
 
 a img {
@@ -32,7 +32,7 @@ a img {
 /* Typography */
 
 h1 {
-    color: #18181b;
+    color: #171717;
     font-size: 18px;
     font-weight: bold;
     margin-top: 0;
@@ -74,7 +74,7 @@ img {
     -premailer-cellpadding: 0;
     -premailer-cellspacing: 0;
     -premailer-width: 100%;
-    background-color: #fafafa;
+    background-color: #f2f2f2;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -97,7 +97,7 @@ img {
 }
 
 .header a {
-    color: #18181b;
+    color: #171717;
     font-size: 19px;
     font-weight: bold;
     text-decoration: none;
@@ -106,11 +106,12 @@ img {
 /* Logo */
 
 .logo {
-    height: 75px;
+    height: 48px;
     margin-top: 15px;
     margin-bottom: 10px;
-    max-height: 75px;
-    width: 75px;
+    max-height: 48px;
+    width: 48px;
+    border-radius: 8px;
 }
 
 /* Body */
@@ -119,9 +120,9 @@ img {
     -premailer-cellpadding: 0;
     -premailer-cellspacing: 0;
     -premailer-width: 100%;
-    background-color: #fafafa;
-    border-bottom: 1px solid #fafafa;
-    border-top: 1px solid #fafafa;
+    background-color: #f2f2f2;
+    border-bottom: 1px solid #f2f2f2;
+    border-top: 1px solid #f2f2f2;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -132,7 +133,8 @@ img {
     -premailer-cellspacing: 0;
     -premailer-width: 570px;
     background-color: #ffffff;
-    border: 1px solid #e4e4e7;
+    border: 1px solid #dbdbdb;
+    border-radius: 8px;
     margin: 0 auto;
     padding: 0;
     width: 570px;
@@ -141,7 +143,7 @@ img {
 /* Subcopy */
 
 .subcopy {
-    border-top: 1px solid #e4e4e7;
+    border-top: 1px solid #dbdbdb;
     margin-top: 25px;
     padding-top: 25px;
 }
@@ -163,13 +165,13 @@ img {
 }
 
 .footer p {
-    color: #a1a1aa;
+    color: #5c5c5c;
     font-size: 12px;
     text-align: center;
 }
 
 .footer a {
-    color: #a1a1aa;
+    color: #28a352;
     text-decoration: underline;
 }
 
@@ -184,13 +186,13 @@ img {
 }
 
 .table th {
-    border-bottom: 1px solid #e4e4e7;
+    border-bottom: 1px solid #dbdbdb;
     margin: 0;
     padding-bottom: 8px;
 }
 
 .table td {
-    color: #52525b;
+    color: #171717;
     font-size: 15px;
     line-height: 18px;
     margin: 0;
@@ -215,17 +217,18 @@ img {
 
 .button {
     -webkit-text-size-adjust: none;
+    border-radius: 6px;
     color: #fff;
     text-decoration: none;
 }
 
 .button-blue,
 .button-primary {
-    background-color: #18181b;
-    border-bottom: 8px solid #18181b;
-    border-left: 18px solid #18181b;
-    border-right: 18px solid #18181b;
-    border-top: 8px solid #18181b;
+    background-color: #33cc66;
+    border-bottom: 8px solid #33cc66;
+    border-left: 18px solid #33cc66;
+    border-right: 18px solid #33cc66;
+    border-top: 8px solid #33cc66;
 }
 
 .button-green,
@@ -249,18 +252,18 @@ img {
 /* Panels */
 
 .panel {
-    border-left: #18181b solid 4px;
+    border-left: #33cc66 solid 4px;
     margin: 21px 0;
 }
 
 .panel-content {
-    background-color: #fafafa;
-    color: #52525b;
+    background-color: #f2f2f2;
+    color: #171717;
     padding: 16px;
 }
 
 .panel-content p {
-    color: #52525b;
+    color: #171717;
 }
 
 .panel-item {

@@ -25,6 +25,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+/**
+ * Reconciles bank transactions against invoices or expenses.
+ *
+ * Confirms matches, posts accounting entries via the LedgerService,
+ * and records payments on the matched document.
+ */
 class ReconciliationService
 {
     private const REFERENCE_PREFIX_RECONCILIATION = 'REC-';

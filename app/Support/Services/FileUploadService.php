@@ -6,6 +6,9 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * Handles file uploads to local or cloud storage with validation.
+ */
 class FileUploadService
 {
     public function store(UploadedFile $file, string $directory, string $disk = 'local'): string

@@ -6,6 +6,7 @@ use App\Domains\Contacts\DTOs\CreateSupplierData;
 use App\Domains\Contacts\DTOs\UpdateSupplierData;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Contacts\Queries\SupplierQuery;
+use App\Domains\Contacts\Requests\StoreSupplierRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -14,25 +15,11 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Supplier CRUD with full-text search and soft-delete support.
+ */
 class SupplierController extends Controller
 {
-    private const VALIDATION_RULES = [
-        'type' => 'nullable|string|in:organization,individual',
-        'name' => 'required|string|max:255',
-        'email' => 'nullable|email|max:255',
-        'phone' => 'nullable|string|max:50',
-        'address' => 'nullable|string|max:500',
-        'city' => 'nullable|string|max:100',
-        'postal_code' => 'nullable|string|max:10',
-        'country' => 'nullable|string|size:2',
-        'vat_number' => 'nullable|string|max:50',
-        'default_expense_category' => 'nullable|string|max:100',
-        'currency' => 'nullable|string|size:3',
-        'iban' => 'nullable|string|max:34',
-        'internal_notes' => 'nullable|string',
-        'notes' => 'nullable|string|max:2000',
-    ];
-
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Supplier::class);
@@ -55,11 +42,11 @@ class SupplierController extends Controller
         return Inertia::render('Contacts/Suppliers/Create');
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse|JsonResponse
+    public function store(StoreSupplierRequest $request, CurrentOrganization $currentOrg): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Supplier::class);
 
-        $validated = $request->validate(self::VALIDATION_RULES);
+        $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
 
         $supplier = Supplier::create(CreateSupplierData::fromArray($validated)->toArray());
@@ -90,11 +77,11 @@ class SupplierController extends Controller
         ]);
     }
 
-    public function update(Request $request, Supplier $supplier): RedirectResponse
+    public function update(StoreSupplierRequest $request, Supplier $supplier): RedirectResponse
     {
         $this->authorize('update', $supplier);
 
-        $validated = $request->validate(self::VALIDATION_RULES);
+        $validated = $request->validated();
 
         $supplier->update(UpdateSupplierData::fromArray($validated)->toArray());
 

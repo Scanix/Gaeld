@@ -7,6 +7,10 @@ use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Models\VatRate;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * Generates Swiss VAT declaration data (AFC/ESTV form chiffres 200–510)
+ * from posted journal entries for a given reporting period.
+ */
 class VatReportService
 {
     /**

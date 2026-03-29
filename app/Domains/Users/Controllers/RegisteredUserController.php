@@ -14,6 +14,9 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * User self-registration.
+ */
 class RegisteredUserController extends Controller
 {
     public function create(): Response

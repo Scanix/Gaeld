@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Activitylog\Models\Activity;
 
+/**
+ * User account management: creation, profile updates, and password changes.
+ */
 class UserService
 {
     public function create(CreateUserData $data): User

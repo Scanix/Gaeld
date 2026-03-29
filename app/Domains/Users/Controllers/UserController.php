@@ -15,6 +15,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * User profile management, password changes, locale, and data export.
+ */
 class UserController extends Controller
 {
     public function profile(Request $request): Response

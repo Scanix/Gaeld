@@ -14,6 +14,10 @@ use App\Domains\Banking\Models\BankTransaction;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Service for recording manual bank transactions and creating
+ * the corresponding accounting journal entries.
+ */
 class BankingService
 {
     private const REFERENCE_PREFIX_BANK = 'BNK-';

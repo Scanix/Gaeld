@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Initial setup wizard: creates the first user and organization.
+ *
+ * Only accessible when no organization exists in the database.
+ */
 class SetupWizardController extends Controller
 {
     public function index(): Response|RedirectResponse

@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\PermissionRegistrar;
 
+/**
+ * CRUD operations for organizations and organization membership management.
+ */
 class OrganizationService
 {
     /**

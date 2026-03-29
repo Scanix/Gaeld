@@ -9,6 +9,10 @@ use App\Domains\Users\Models\User;
 use App\Domains\Users\Services\UserService;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Orchestrates the initial setup wizard: creates user, organization,
+ * and seeds default accounting data in a single transaction.
+ */
 class CompleteSetupAction
 {
     public function __construct(

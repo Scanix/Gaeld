@@ -31,7 +31,7 @@ class GenerateRecurringInvoicesJob implements ShouldQueue
             try {
                 $this->generateInvoice($recurring, $createInvoice, $numberGenerator);
                 $this->advanceSchedule($recurring);
-            } catch (\Throwable $e) {
+            } catch (\DomainException|\RuntimeException|\InvalidArgumentException $e) {
                 Log::error('GenerateRecurringInvoicesJob: failed to generate', [
                     'recurring_invoice_id' => $recurring->id,
                     'organization_id' => $recurring->organization_id,

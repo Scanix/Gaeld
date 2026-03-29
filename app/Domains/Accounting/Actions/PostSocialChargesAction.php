@@ -8,6 +8,9 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
 
+/**
+ * Posts a journal entry for Swiss social charges (AVS/AI/APG) on independent income.
+ */
 final class PostSocialChargesAction
 {
     public function __construct(

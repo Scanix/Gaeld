@@ -11,6 +11,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Settings page for personal and organization API tokens.
+ */
 class TokenSettingsController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response

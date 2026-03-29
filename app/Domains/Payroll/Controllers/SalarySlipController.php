@@ -15,6 +15,9 @@ use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Salary slip viewing, posting, and PDF download.
+ */
 class SalarySlipController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response

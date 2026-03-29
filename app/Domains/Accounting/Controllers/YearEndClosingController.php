@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Handles fiscal year-end closing: generates closing entries and archives.
+ */
 class YearEndClosingController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response

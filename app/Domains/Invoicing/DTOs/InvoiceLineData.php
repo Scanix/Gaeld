@@ -2,8 +2,17 @@
 
 namespace App\Domains\Invoicing\DTOs;
 
+use App\Support\MapsToSnakeCase;
+use App\Support\ValidatesFromArray;
+
+/**
+ * DTO for a single line item on an invoice.
+ */
 readonly class InvoiceLineData
 {
+    use MapsToSnakeCase;
+    use ValidatesFromArray;
+
     public function __construct(
         public string $description,
         public string $quantity,
@@ -14,6 +23,8 @@ readonly class InvoiceLineData
 
     public static function fromArray(array $data): self
     {
+        self::assertRequired($data, ['description', 'quantity', 'unit_price']);
+
         return new self(
             description: $data['description'],
             quantity: $data['quantity'],
@@ -23,14 +34,4 @@ readonly class InvoiceLineData
         );
     }
 
-    public function toArray(): array
-    {
-        return [
-            'description' => $this->description,
-            'quantity' => $this->quantity,
-            'unit_price' => $this->unitPrice,
-            'vat_rate_id' => $this->vatRateId,
-            'sort_order' => $this->sortOrder,
-        ];
-    }
 }

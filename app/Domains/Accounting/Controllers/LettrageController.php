@@ -11,6 +11,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Open-item lettrage (clearing) operations on ledger accounts.
+ */
 class LettrageController extends Controller
 {
     public function __construct(private readonly LettrageService $service) {}

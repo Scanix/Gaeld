@@ -8,6 +8,9 @@ use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Users\Models\User;
 use App\Support\Policies\BasePolicy;
 
+/**
+ * Authorization policy for invoice lifecycle operations including status transitions.
+ */
 class InvoicePolicy extends BasePolicy
 {
     public function viewAny(User $user): bool

@@ -6,6 +6,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Application health-check endpoint for load balancers and monitoring.
+ */
 class HealthController extends Controller
 {
     public function __invoke(): JsonResponse
