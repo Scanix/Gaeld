@@ -87,4 +87,4 @@ jobs:
           DB_PASSWORD: password
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
-        run: php artisan test --parallel
+        run: php artisan test

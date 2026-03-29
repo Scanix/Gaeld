@@ -45,10 +45,10 @@ class InvoiceMail extends Mailable
         return str_replace(
             ['{customer_name}', '{invoice_number}', '{amount}', '{due_date}', '{organization_name}'],
             [
-                $this->invoice->customer->name ?? '',
+                $this->invoice->customer?->name ?? '',
                 $this->invoice->number ?? '',
-                number_format($this->invoice->total ?? 0, 2).' '.($this->invoice->currency ?? 'CHF'),
-                $this->invoice->due_date->format('d.m.Y'),
+                number_format($this->invoice->total ?? 0, 2) . ' ' . ($this->invoice->currency ?? 'CHF'),
+                $this->invoice->due_date?->format('d.m.Y') ?? '',
                 $this->organization->name ?? '',
             ],
             $text,
