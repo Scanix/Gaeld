@@ -11,6 +11,12 @@ use App\Domains\Banking\Services\Camt\Camt054Parser;
 use App\Domains\Banking\Services\Camt\CamtEntry;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Imports CAMT XML bank statement files and persists the resulting transactions.
+ *
+ * Handles both camt.053 (statements) and camt.054 (notifications),
+ * with deduplication via import hashes to prevent double-imports.
+ */
 class BankImportService
 {
     /** Delimiter used to separate fields in the deduplication hash input. */

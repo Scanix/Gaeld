@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
+ * Monthly budget target for a ledger account in a given fiscal year.
+ *
  * @property int $id
  * @property string $organization_id
  * @property int $account_id

@@ -13,6 +13,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
+ * Individual transaction row parsed from a CAMT bank statement.
+ *
+ * Carries debtor/creditor details, structured references, and
+ * reconciliation state (matched invoice or expense, journal entry link).
+ *
  * @property int $id
  * @property int $bank_account_id
  * @property int|null $bank_import_id

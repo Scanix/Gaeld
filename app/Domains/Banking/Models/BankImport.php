@@ -12,6 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
+ * Record of a CAMT file (camt.053 / camt.054) imported for a bank account.
+ *
+ * Serves as the parent grouping for the individual {@see BankTransaction}
+ * rows parsed from the XML statements.
+ *
  * @property string $id
  * @property string $organization_id
  * @property int $bank_account_id

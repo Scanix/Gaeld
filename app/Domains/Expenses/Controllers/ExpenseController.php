@@ -31,6 +31,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * Expense CRUD, receipt upload, OCR processing, and approval workflow.
+ */
 class ExpenseController extends Controller
 {
     public function __construct(

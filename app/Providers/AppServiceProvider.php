@@ -6,12 +6,14 @@ use App\Domains\Api\Models\PersonalAccessToken;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Contacts\Policies\ContactPolicy;
+use App\Domains\Contacts\Search\ContactSearchProvider;
 use App\Domains\Expenses\Contracts\ReceiptOcrInterface;
+use App\Domains\Expenses\Search\ExpenseSearchProvider;
 use App\Domains\Expenses\Services\TesseractOcrService;
+use App\Domains\Invoicing\Search\InvoiceSearchProvider;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Services\GlobalSearchService;
 use App\Support\Listeners\AuthAuditSubscriber;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -21,12 +23,23 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Sanctum\Sanctum;
 
+/**
+ * Core application service provider — registers bindings, gates, policies, and global search providers.
+ */
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->app->scoped(CurrentOrganization::class);
         $this->app->singleton(ReceiptOcrInterface::class, TesseractOcrService::class);
+
+        $this->app->singleton(GlobalSearchService::class, function ($app) {
+            return new GlobalSearchService(
+                $app->make(InvoiceSearchProvider::class),
+                $app->make(ContactSearchProvider::class),
+                $app->make(ExpenseSearchProvider::class),
+            );
+        });
     }
 
     public function boot(): void
@@ -44,7 +57,6 @@ class AppServiceProvider extends ServiceProvider
             ->uncompromised());
 
         Event::subscribe(AuthAuditSubscriber::class);
-        Event::listen(Registered::class, SendEmailVerificationNotification::class);
 
         Gate::policy(Customer::class, ContactPolicy::class);
         Gate::policy(Supplier::class, ContactPolicy::class);

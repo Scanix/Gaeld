@@ -15,9 +15,12 @@ trait CamtXmlHelper
      */
     private function parseEntry(\DOMXPath $xpath, \DOMElement $entryNode, string $prefix): void
     {
+        // Stage 1: Extract entry-level amounts and indicators
         $amount = $this->contextText($xpath, "{$prefix}Amt", $entryNode);
         $currency = $this->contextAttr($xpath, "{$prefix}Amt", $entryNode, 'Ccy');
         $creditDebitIndicator = $this->contextText($xpath, "{$prefix}CdtDbtInd", $entryNode);
+
+        // Stage 2: Resolve the effective date (booking > value > today)
         $bookingDate = $this->contextText($xpath, "{$prefix}BookgDt/{$prefix}Dt", $entryNode)
             ?? $this->contextText($xpath, "{$prefix}BookgDt/{$prefix}DtTm", $entryNode);
         $valueDate = $this->contextText($xpath, "{$prefix}ValDt/{$prefix}Dt", $entryNode)
@@ -47,7 +50,7 @@ trait CamtXmlHelper
 
         $type = strtoupper($creditDebitIndicator) === 'CRDT' ? BankTransactionType::Credit : BankTransactionType::Debit;
 
-        // Try to extract transaction details from NtryDtls/TxDtls
+        // Stage 3: Branch on transaction details — entries may contain multiple sub-transactions
         $transactionDetails = $xpath->query("{$prefix}NtryDtls/{$prefix}TxDtls", $entryNode);
 
         if ($transactionDetails->length > 0) {
@@ -81,9 +84,11 @@ trait CamtXmlHelper
      */
     private function parseTxDetail(\DOMXPath $xpath, \DOMElement $detail, string $prefix, string $date, string $fallbackAmount, ?string $fallbackCurrency, BankTransactionType $type): CamtEntry
     {
+        // Stage 1: Amount — use detail-level if available, otherwise fall back to entry-level
         $txAmount = $this->contextText($xpath, "{$prefix}Amt", $detail) ?? $fallbackAmount;
         $txCurrency = $this->contextAttr($xpath, "{$prefix}Amt", $detail, 'Ccy') ?? $fallbackCurrency ?? 'CHF';
 
+        // Stage 2: Reference identifiers (EndToEndId > AcctSvcrRef > PmtInfId)
         $endToEndId = $this->contextText($xpath, "{$prefix}Refs/{$prefix}EndToEndId", $detail);
 
         // Strip NOTPROVIDED end-to-end IDs
@@ -95,12 +100,14 @@ trait CamtXmlHelper
             ?? $this->contextText($xpath, "{$prefix}Refs/{$prefix}AcctSvcrRef", $detail)
             ?? $this->contextText($xpath, "{$prefix}Refs/{$prefix}PmtInfId", $detail);
 
+        // Stage 3: Related parties — debtor/creditor names from two possible XML paths
         $debtorName = $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Dbtr/{$prefix}Nm", $detail)
             ?? $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Dbtr/{$prefix}Pty/{$prefix}Nm", $detail);
 
         $creditorName = $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Cdtr/{$prefix}Nm", $detail)
             ?? $this->contextText($xpath, "{$prefix}RltdPties/{$prefix}Cdtr/{$prefix}Pty/{$prefix}Nm", $detail);
 
+        // Stage 4: Remittance info — description and structured reference (Swiss QR)
         $description = $this->contextText($xpath, "{$prefix}RmtInf/{$prefix}Ustrd", $detail)
             ?? $this->contextText($xpath, "{$prefix}AddtlTxInf", $detail);
 

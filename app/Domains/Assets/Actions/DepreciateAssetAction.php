@@ -10,6 +10,9 @@ use App\Domains\Assets\Models\FixedAsset;
 use App\Domains\Assets\Services\DepreciationCalculator;
 use Carbon\Carbon;
 
+/**
+ * Records a monthly depreciation entry for a fixed asset and posts the journal entry.
+ */
 class DepreciateAssetAction
 {
     public function __construct(

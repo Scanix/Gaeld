@@ -8,6 +8,12 @@ use App\Domains\Accounting\Models\TransactionLine;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Open-item lettrage (clearing) service for accounts receivable/payable.
+ *
+ * Groups balanced sets of transaction lines under a unique letter key
+ * so that cleared items can be hidden from open-item reports.
+ */
 class LettrageService
 {
     /**

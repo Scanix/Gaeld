@@ -8,6 +8,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * REST API: bank account listing.
+ */
 class BankAccountApiController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection

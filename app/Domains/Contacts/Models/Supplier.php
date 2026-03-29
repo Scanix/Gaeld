@@ -14,6 +14,12 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
+/**
+ * A vendor / supplier from whom the organization purchases goods or services.
+ *
+ * Linked to expenses and optionally to a default expense category.
+ * Supports full-text search via Laravel Scout and soft-deletes.
+ */
 class Supplier extends Model
 {
     use Auditable, BelongsToOrganization, HasFactory, Searchable, SoftDeletes;

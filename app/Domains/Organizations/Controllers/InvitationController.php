@@ -11,6 +11,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Enum;
 
+/**
+ * Invite users to an organization and accept/revoke invitations.
+ */
 class InvitationController extends Controller
 {
     public function __construct(

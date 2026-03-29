@@ -2,8 +2,17 @@
 
 namespace App\Domains\Expenses\DTOs;
 
+use App\Support\MapsToSnakeCase;
+use App\Support\ValidatesFromArray;
+
+/**
+ * DTO for recording a payment against an expense.
+ */
 readonly class RecordExpensePaymentData
 {
+    use MapsToSnakeCase;
+    use ValidatesFromArray;
+
     public function __construct(
         public string $amount,
         public string $paymentDate,
@@ -15,6 +24,8 @@ readonly class RecordExpensePaymentData
 
     public static function fromArray(array $data): self
     {
+        self::assertRequired($data, ['amount', 'payment_date', 'reference', 'description', 'expense_account_code']);
+
         return new self(
             amount: (string) $data['amount'],
             paymentDate: $data['payment_date'],
@@ -44,15 +55,4 @@ readonly class RecordExpensePaymentData
         );
     }
 
-    public function toArray(): array
-    {
-        return [
-            'amount' => $this->amount,
-            'payment_date' => $this->paymentDate,
-            'reference' => $this->reference,
-            'description' => $this->description,
-            'expense_account_code' => $this->expenseAccountCode,
-            'bank_account_code' => $this->bankAccountCode,
-        ];
-    }
 }

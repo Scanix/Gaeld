@@ -14,6 +14,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * Bank account linked to the organization (e.g. current account, savings).
+ *
+ * Optionally tied to a ledger {@see Account} for automatic journal entries.
+ * Supports soft-deletes and audit logging.
+ *
  * @property int $id
  * @property string $organization_id
  * @property int|null $account_id

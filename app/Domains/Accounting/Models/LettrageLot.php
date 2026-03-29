@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
+ * Lettrage (clearing) lot that groups related transaction lines
+ * under a unique letter key for open-item account reconciliation.
+ *
  * @property int $id
  * @property string $organization_id
  * @property int $account_id

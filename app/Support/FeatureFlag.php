@@ -4,6 +4,9 @@ namespace App\Support;
 
 use Illuminate\Support\Facades\Config;
 
+/**
+ * Feature flag facade: checks whether a feature (CE or EE) is enabled.
+ */
 class FeatureFlag
 {
     /**

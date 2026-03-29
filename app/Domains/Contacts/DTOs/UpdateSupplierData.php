@@ -4,6 +4,9 @@ namespace App\Domains\Contacts\DTOs;
 
 use App\Support\AddressData;
 
+/**
+ * DTO for updating an existing supplier record.
+ */
 readonly class UpdateSupplierData
 {
     public function __construct(

@@ -17,6 +17,10 @@ use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
 
 /**
+ * Customer to whom the organization issues invoices.
+ *
+ * Supports multi-language notes, soft-deletes, and full-text search via Scout.
+ *
  * @property int $id
  * @property string $organization_id
  * @property string $name

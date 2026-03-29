@@ -2,8 +2,14 @@
 
 namespace App\Domains\Banking\DTOs;
 
+use App\Support\MapsToSnakeCase;
+
+/**
+ * DTO for creating a new bank account linked to an organization.
+ */
 readonly class CreateBankAccountData
 {
+    use MapsToSnakeCase;
     public function __construct(
         public string $organizationId,
         public string $name,
@@ -27,16 +33,4 @@ readonly class CreateBankAccountData
         );
     }
 
-    public function toArray(): array
-    {
-        return [
-            'organization_id' => $this->organizationId,
-            'account_id' => $this->accountId,
-            'name' => $this->name,
-            'iban' => $this->iban,
-            'bank_name' => $this->bankName,
-            'currency' => $this->currency,
-            'balance' => $this->balance,
-        ];
-    }
 }

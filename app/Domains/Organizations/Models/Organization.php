@@ -13,6 +13,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Multi-tenant organization (company / business entity).
+ *
+ * Every domain model is scoped to an organization via `organization_id`.
+ * Stores company details (legal name, address, VAT), default currency,
+ * locale, fiscal year start, and QR-IBAN for Swiss QR invoices.
+ */
 class Organization extends Model
 {
     use Auditable, HasFactory, HasUuids;

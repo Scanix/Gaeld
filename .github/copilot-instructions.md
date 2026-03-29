@@ -7,6 +7,33 @@ description: >
   fixing individual bugs.
 ---
 
+---
+name: desloppify
+description: >
+  Multi-language codebase health scanner. Use when the user explicitly asks
+  to run desloppify, scan for technical debt, get a health score, or create
+  a cleanup plan. Do NOT trigger for general code review, renaming, or
+  fixing individual bugs.
+---
+
+---
+name: desloppify
+description: >
+  Multi-language codebase health scanner. Use when the user explicitly asks
+  to run desloppify, scan for technical debt, get a health score, or create
+  a cleanup plan. Do NOT trigger for general code review, renaming, or
+  fixing individual bugs.
+---
+
+---
+name: desloppify
+description: >
+  Multi-language codebase health scanner. Use when the user explicitly asks
+  to run desloppify, scan for technical debt, get a health score, or create
+  a cleanup plan. Do NOT trigger for general code review, renaming, or
+  fixing individual bugs.
+---
+
 <!-- desloppify-begin -->
 <!-- desloppify-skill-version: 6 -->
 
@@ -315,3 +342,4 @@ Split dimensions across `desloppify-reviewer` calls (Copilot runs them concurren
 
 <!-- desloppify-overlay: copilot -->
 <!-- desloppify-end -->
+

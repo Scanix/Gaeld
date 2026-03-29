@@ -14,6 +14,13 @@ use Laragear\WebAuthn\WebAuthnAuthentication;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * Authenticated user account.
+ *
+ * Belongs to one or more organizations via the `organization_users` pivot table.
+ * Supports two-factor authentication (TOTP & WebAuthn), Sanctum API tokens,
+ * role-based permissions (Spatie), and per-user locale preference.
+ */
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, WebAuthnAuthenticatable
 {
     use HasApiTokens, HasFactory, HasRoles, Notifiable, WebAuthnAuthentication;

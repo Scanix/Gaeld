@@ -20,12 +20,13 @@ use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
 
 /**
+ * Sales invoice (or credit note) issued to a customer.
+ *
+ * Tracks status lifecycle (draft → sent → paid / overdue / cancelled),
+ * Swiss QR payment data, reminder history, and links to the accounting
+ * journal entry created on posting.
+ *
  * @property string $id
- * @property string $organization_id
- * @property string|null $customer_id
- * @property string|null $journal_entry_id
- * @property string|null $number
- * @property InvoiceStatus $status
  * @property InvoiceType $type
  * @property Carbon $issue_date
  * @property Carbon $due_date
@@ -130,6 +131,19 @@ class Invoice extends Model
     public function scopeOfType(Builder $query, InvoiceType $type): Builder
     {
         return $query->where('type', $type->value);
+    }
+
+    public function scopeOpen(Builder $query): Builder
+    {
+        return $query->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue]);
+    }
+
+    public function scopeByAmountRange(Builder $query, string $amount, string $tolerance): Builder
+    {
+        return $query->whereBetween('total', [
+            bcsub($amount, $tolerance, 2),
+            bcadd($amount, $tolerance, 2),
+        ]);
     }
 
     public function scopeOverdue(Builder $query): Builder

@@ -5,6 +5,10 @@ namespace App\Support\Traits;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Trait that automatically scopes queries to the current organization
+ * via a global scope applied in the model's `booted()` method.
+ */
 trait BelongsToOrganization
 {
     public static function bootBelongsToOrganization(): void

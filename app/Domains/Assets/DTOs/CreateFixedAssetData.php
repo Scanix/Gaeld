@@ -2,8 +2,15 @@
 
 namespace App\Domains\Assets\DTOs;
 
+use App\Support\ValidatesFromArray;
+
+/**
+ * DTO for registering a new fixed asset for depreciation tracking.
+ */
 readonly class CreateFixedAssetData
 {
+    use ValidatesFromArray;
+
     public function __construct(
         public string $organizationId,
         public string $name,
@@ -20,6 +27,8 @@ readonly class CreateFixedAssetData
 
     public static function fromArray(array $data): self
     {
+        self::assertRequired($data, ['organization_id', 'name', 'purchase_date', 'purchase_amount', 'useful_life_years', 'asset_account_id', 'depreciation_expense_account_id', 'accumulated_depreciation_account_id']);
+
         return new self(
             organizationId: $data['organization_id'],
             name: $data['name'],

@@ -1245,4 +1245,18 @@ return [
     'unexpected_error_occurred' => 'An unexpected error occurred.',
     'something_went_wrong' => 'Something went wrong',
     'try_again' => 'Try again',
+
+    // Error pages
+    'error_403_title' => 'Forbidden',
+    'error_403_description' => 'You don\'t have permission to access this page.',
+    'error_404_title' => 'Page Not Found',
+    'error_404_description' => 'The page you\'re looking for doesn\'t exist or has been moved.',
+    'error_419_title' => 'Session Expired',
+    'error_419_description' => 'Your session has expired. Please refresh and try again.',
+    'error_500_title' => 'Server Error',
+    'error_500_description' => 'Something went wrong on our end. Please try again later.',
+    'error_503_title' => 'Service Unavailable',
+    'error_503_description' => 'We\'re currently performing maintenance. Please check back soon.',
+    'go_to_dashboard' => 'Go to Dashboard',
+    'go_back' => 'Go Back',
 ];

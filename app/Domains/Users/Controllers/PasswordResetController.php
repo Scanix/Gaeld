@@ -14,6 +14,9 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Password reset flow: request link, show form, and apply reset.
+ */
 class PasswordResetController extends Controller
 {
     public function requestForm(): Response

@@ -4,6 +4,9 @@ namespace App\Domains\Contacts\DTOs;
 
 use App\Support\AddressData;
 
+/**
+ * DTO for updating an existing customer record.
+ */
 readonly class UpdateCustomerData
 {
     public function __construct(

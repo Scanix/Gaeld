@@ -2,8 +2,17 @@
 
 namespace App\Domains\Contacts\DTOs;
 
+use App\Support\MapsToSnakeCase;
+use App\Support\ValidatesFromArray;
+
+/**
+ * DTO for adding a contact person to a customer or supplier.
+ */
 readonly class CreateContactPersonData
 {
+    use MapsToSnakeCase;
+    use ValidatesFromArray;
+
     public function __construct(
         public string $contactableType,
         public string $contactableId,
@@ -18,6 +27,8 @@ readonly class CreateContactPersonData
 
     public static function fromArray(array $data): self
     {
+        self::assertRequired($data, ['contactable_type', 'contactable_id', 'first_name', 'last_name']);
+
         return new self(
             contactableType: $data['contactable_type'],
             contactableId: $data['contactable_id'],
@@ -31,18 +42,4 @@ readonly class CreateContactPersonData
         );
     }
 
-    public function toArray(): array
-    {
-        return [
-            'contactable_type' => $this->contactableType,
-            'contactable_id' => $this->contactableId,
-            'first_name' => $this->firstName,
-            'last_name' => $this->lastName,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'position' => $this->position,
-            'is_primary' => $this->isPrimary,
-            'notes' => $this->notes,
-        ];
-    }
 }

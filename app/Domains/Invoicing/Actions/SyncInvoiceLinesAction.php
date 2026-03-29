@@ -6,6 +6,9 @@ use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
 
+/**
+ * Syncs invoice line items: creates or replaces all lines for an invoice.
+ */
 class SyncInvoiceLinesAction
 {
     /**

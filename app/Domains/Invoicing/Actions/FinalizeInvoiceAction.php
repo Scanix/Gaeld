@@ -7,6 +7,9 @@ use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceService;
 
+/**
+ * Finalizes a draft invoice: assigns invoice number, posts journal entry, and marks as sent.
+ */
 class FinalizeInvoiceAction
 {
     public function __construct(

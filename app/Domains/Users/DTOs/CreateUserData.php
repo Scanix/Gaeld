@@ -4,6 +4,9 @@ namespace App\Domains\Users\DTOs;
 
 use DateTimeInterface;
 
+/**
+ * DTO for user account creation (registration or admin-provisioned).
+ */
 readonly class CreateUserData
 {
     public function __construct(

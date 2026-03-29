@@ -6,6 +6,9 @@ use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\OrganizationService;
 
+/**
+ * Applies validated changes to an existing organization.
+ */
 class UpdateOrganizationAction
 {
     public function __construct(

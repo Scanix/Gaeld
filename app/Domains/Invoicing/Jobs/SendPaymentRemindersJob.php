@@ -39,7 +39,7 @@ class SendPaymentRemindersJob implements ShouldQueue
                     'invoice_id' => $invoice->id,
                     'reminder_count' => $invoice->reminder_count,
                 ]);
-            } catch (\Throwable $e) {
+            } catch (\DomainException|\RuntimeException|\InvalidArgumentException $e) {
                 Log::error('SendPaymentRemindersJob: failed', [
                     'invoice_id' => $invoice->id,
                     'error' => $e->getMessage(),

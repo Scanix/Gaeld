@@ -10,6 +10,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * Organization-scoped API token management.
+ */
 class OrgTokenController extends Controller
 {
     use AuthorizesRequests;

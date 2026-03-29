@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Delivery attempt log for a webhook event.
+ *
+ * Each row represents one HTTP call to the parent Webhook's URL,
+ * tracking the response status, body, retry state, and attempt number.
+ */
 class WebhookCall extends Model
 {
     use HasUuids;

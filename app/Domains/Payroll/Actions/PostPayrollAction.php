@@ -7,7 +7,11 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Payroll\Models\SalarySlip;
+use App\Support\Money;
 
+/**
+ * Posts a salary slip to the accounting ledger (gross salary, deductions, net pay).
+ */
 class PostPayrollAction
 {
     public function __construct(
@@ -31,24 +35,21 @@ class PostPayrollAction
         $lppAccount = $this->ledger->resolveAccount($orgId, AccountCode::LPP_PAYABLE);
 
         // Calculate aggregated amounts for liability accounts
-        $avsTotal = bcadd(
+        $avsTotal = Money::add(
             $deductions['avs_employee'] ?? '0',
             $deductions['avs_employer'] ?? '0',
-            2,
         );
         // Include AANP in AVS payable if present
-        $avsTotal = bcadd($avsTotal, $deductions['aanp_employee'] ?? '0', 2);
+        $avsTotal = Money::add($avsTotal, $deductions['aanp_employee'] ?? '0');
 
-        $acTotal = bcadd(
+        $acTotal = Money::add(
             $deductions['ac_employee'] ?? '0',
             $deductions['ac_employer'] ?? '0',
-            2,
         );
 
-        $lppTotal = bcadd(
+        $lppTotal = Money::add(
             $deductions['lpp_employee'] ?? '0',
             $deductions['lpp_employer'] ?? '0',
-            2,
         );
 
         $lines = [];

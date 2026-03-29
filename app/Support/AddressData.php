@@ -2,6 +2,11 @@
 
 namespace App\Support;
 
+/**
+ * Reusable value object for a physical address (street, city, postal code, country, canton).
+ *
+ * Shared by organization, customer, and supplier DTOs.
+ */
 readonly class AddressData
 {
     public function __construct(

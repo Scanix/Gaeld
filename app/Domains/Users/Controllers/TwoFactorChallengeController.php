@@ -14,6 +14,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 use PragmaRX\Google2FA\Google2FA;
 
+/**
+ * Handles the two-factor authentication challenge during login.
+ */
 class TwoFactorChallengeController extends Controller
 {
     public function __construct(

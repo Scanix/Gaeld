@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Resolves the organization for API requests from the Sanctum token's
+ * `organization_id` and binds it to the CurrentOrganization singleton.
+ */
 class EnsureApiOrganization
 {
     public function __construct(

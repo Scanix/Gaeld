@@ -9,6 +9,10 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\LegalArchivingService;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Performs fiscal year-end closing: transfers P&L balances to equity
+ * and archives documents for legal retention.
+ */
 class YearEndClosingAction
 {
     public function __construct(

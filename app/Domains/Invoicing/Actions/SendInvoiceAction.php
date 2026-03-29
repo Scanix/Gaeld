@@ -8,6 +8,9 @@ use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Support\Facades\Mail;
 
+/**
+ * Sends an invoice to the customer by e-mail.
+ */
 class SendInvoiceAction
 {
     public function __construct(

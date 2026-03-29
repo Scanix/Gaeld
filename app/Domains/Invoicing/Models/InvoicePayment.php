@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
+ * Payment recorded against an invoice (partial or full).
+ *
  * @property string $id
- * @property string $invoice_id
- * @property string|null $journal_entry_id
  * @property string $amount
  * @property Carbon $payment_date
  * @property PaymentMethod $payment_method

@@ -13,6 +13,12 @@ use Sprain\SwissQrBill\QrBill;
 use Sprain\SwissQrBill\QrCode\QrCode;
 use Sprain\SwissQrBill\Reference\QrPaymentReferenceGenerator;
 
+/**
+ * Builds Swiss QR-bill payment slips for invoices.
+ *
+ * Generates the QR code data structure, structured creditor address,
+ * and returns the QR payment part as a rendered PNG or PDF.
+ */
 class SwissQrInvoiceService
 {
     private const DEFAULT_COUNTRY = 'CH';

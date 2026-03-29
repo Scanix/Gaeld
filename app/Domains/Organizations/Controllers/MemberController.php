@@ -11,6 +11,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Enum;
 
+/**
+ * Organization member management: listing, role changes, and removal.
+ */
 class MemberController extends Controller
 {
     public function __construct(

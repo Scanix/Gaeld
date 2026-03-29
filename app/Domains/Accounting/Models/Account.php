@@ -13,6 +13,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
+ * Chart-of-accounts entry (ledger account) scoped to an organization.
+ *
+ * Supports a hierarchical parent–child structure for grouping
+ * and an active/inactive flag for soft-disabling unused accounts.
+ *
  * @property int $id
  * @property string $organization_id
  * @property string $code

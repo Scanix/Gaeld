@@ -8,6 +8,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * REST API: chart-of-accounts (read-only listing and detail).
+ */
 class AccountApiController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection

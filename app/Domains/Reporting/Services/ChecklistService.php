@@ -9,6 +9,10 @@ use App\Domains\Banking\Models\BankImport;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 
+/**
+ * Provides a guided getting-started checklist for new organizations,
+ * checking completion of key onboarding steps (accounts, invoices, etc.).
+ */
 class ChecklistService
 {
     /**

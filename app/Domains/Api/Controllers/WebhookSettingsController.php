@@ -13,6 +13,9 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Web UI for managing outbound webhook subscriptions.
+ */
 class WebhookSettingsController extends Controller
 {
     public function index(CurrentOrganization $currentOrg): Response
