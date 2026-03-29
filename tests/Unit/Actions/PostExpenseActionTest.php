@@ -7,6 +7,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
+use App\Domains\Expenses\Enums\ExpenseType;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Services\ExpenseService;
@@ -98,5 +99,67 @@ class PostExpenseActionTest extends TestCase
         $expense->shouldReceive('fresh')->once()->andReturn($expense);
 
         $this->action->execute($expense, AccountCode::GENERAL_EXPENSE);
+    }
+
+    public function test_credit_note_uses_expcn_prefix_and_passes_flag(): void
+    {
+        $expense = Mockery::mock(Expense::class)->makePartial();
+        $expense->status = ExpenseStatus::Approved;
+        $expense->type = ExpenseType::CreditNote;
+        $expense->organization_id = 'org-1';
+        $expense->amount = 150;
+        $expense->description = 'Supplier refund';
+        $expense->category = 'Refunds';
+        $expense->id = 99;
+        $expense->date = now();
+
+        $journalEntry = Mockery::mock(JournalEntry::class)->makePartial();
+        $journalEntry->id = 200;
+
+        $this->expenseService
+            ->shouldReceive('postToLedger')
+            ->once()
+            ->withArgs(function ($exp, RecordExpensePaymentData $data, bool $isCreditNote) {
+                return $isCreditNote === true
+                    && $data->reference === 'EXPCN-99'
+                    && $data->amount === '150'
+                    && $data->description === 'Supplier refund';
+            })
+            ->andReturn($journalEntry);
+
+        $expense->shouldReceive('fresh')->once()->andReturn($expense);
+
+        $result = $this->action->execute($expense, AccountCode::GENERAL_EXPENSE);
+        $this->assertSame($expense, $result);
+    }
+
+    public function test_regular_invoice_uses_exp_prefix(): void
+    {
+        $expense = Mockery::mock(Expense::class)->makePartial();
+        $expense->status = ExpenseStatus::Approved;
+        $expense->type = ExpenseType::Invoice;
+        $expense->organization_id = 'org-1';
+        $expense->amount = 300;
+        $expense->description = 'Normal expense';
+        $expense->category = 'Office';
+        $expense->id = 55;
+        $expense->date = now();
+
+        $journalEntry = Mockery::mock(JournalEntry::class)->makePartial();
+        $journalEntry->id = 201;
+
+        $this->expenseService
+            ->shouldReceive('postToLedger')
+            ->once()
+            ->withArgs(function ($exp, RecordExpensePaymentData $data, bool $isCreditNote) {
+                return $isCreditNote === false
+                    && $data->reference === 'EXP-55';
+            })
+            ->andReturn($journalEntry);
+
+        $expense->shouldReceive('fresh')->once()->andReturn($expense);
+
+        $result = $this->action->execute($expense, AccountCode::GENERAL_EXPENSE);
+        $this->assertSame($expense, $result);
     }
 }

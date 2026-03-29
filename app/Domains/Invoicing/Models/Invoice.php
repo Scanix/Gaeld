@@ -27,6 +27,8 @@ use Laravel\Scout\Searchable;
  * journal entry created on posting.
  *
  * @property string $id
+ * @property string|null $number
+ * @property InvoiceStatus $status
  * @property InvoiceType $type
  * @property Carbon $issue_date
  * @property Carbon $due_date
@@ -187,8 +189,8 @@ class Invoice extends Model
             'id' => $this->id,
             'organization_id' => $this->organization_id,
             'number' => $this->number ?? '',
-            'status' => $this->status?->value ?? '',
-            'customer_name' => $this->customer?->name ?? '',
+            'status' => $this->status->value,
+            'customer_name' => $this->customer->name ?? '',
             'total' => (float) $this->total,
             'currency' => $this->currency,
         ];

@@ -13,6 +13,7 @@ use App\Support\ValidatesFromArray;
 readonly class JournalEntryData
 {
     use ValidatesFromArray;
+
     /**
      * @param  array<int, JournalLineData>  $lines  At least two lines; debits must equal credits.
      */

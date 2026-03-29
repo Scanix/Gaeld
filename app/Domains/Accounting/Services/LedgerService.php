@@ -7,11 +7,13 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Exceptions\AlreadyPostedException;
 use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
+use App\Domains\Accounting\Exceptions\FiscalYearClosedException;
 use App\Domains\Accounting\Exceptions\InvalidEntryDataException;
 use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Organizations\Models\Organization;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
@@ -59,9 +61,11 @@ class LedgerService
      * @throws UnbalancedEntryException When SUM(debit) ≠ SUM(credit)
      * @throws InvalidEntryDataException When amounts are zero or accounts invalid
      * @throws DuplicateReferenceException When a posted entry with the same reference already exists
+     * @throws FiscalYearClosedException When the entry date falls in a closed fiscal year
      */
     public function postEntry(string $organizationId, JournalEntryData $entry): JournalEntry
     {
+        $this->guardClosedFiscalYear($organizationId, $entry->date);
         $this->validateBalance($entry->lines);
         $this->validateAccounts($organizationId, $entry->lines);
         $this->throwIfDuplicateReference($organizationId, $entry->reference);
@@ -115,7 +119,7 @@ class LedgerService
     public function reverseEntry(JournalEntry $journalEntry, ?string $description = null): JournalEntry
     {
         $lines = $journalEntry->lines->map(fn (TransactionLine $line) => new JournalLineData(
-            accountId: $line->account_id,
+            accountId: (string) $line->account_id,
             debit: (string) $line->credit,
             credit: (string) $line->debit,
             description: 'Reversal: '.($line->description ?? ''),
@@ -397,6 +401,21 @@ class LedgerService
             throw new DuplicateReferenceException(
                 "A posted journal entry with reference '{$reference}' already exists in this organization."
             );
+        }
+    }
+
+    /**
+     * Prevent posting entries into a closed fiscal year.
+     *
+     * @throws FiscalYearClosedException
+     */
+    private function guardClosedFiscalYear(string $organizationId, string $date): void
+    {
+        $year = (int) date('Y', strtotime($date));
+        $org = Organization::find($organizationId);
+
+        if ($org && $org->isFiscalYearClosed($year)) {
+            throw new FiscalYearClosedException($year);
         }
     }
 }

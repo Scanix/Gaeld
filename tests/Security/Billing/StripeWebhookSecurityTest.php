@@ -4,6 +4,7 @@ namespace Tests\Security\Billing;
 
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Facades\Route;
+use Stripe\Webhook;
 use Tests\Security\SecurityTestCase;
 
 /**
@@ -30,7 +31,7 @@ class StripeWebhookSecurityTest extends SecurityTestCase
 
     private function skipIfStripeNotInstalled(): void
     {
-        if (! class_exists(\Stripe\Webhook::class)) {
+        if (! class_exists(Webhook::class)) {
             $this->markTestSkipped('stripe/stripe-php not installed — run: composer require stripe/stripe-php');
         }
     }
@@ -76,8 +77,8 @@ class StripeWebhookSecurityTest extends SecurityTestCase
             [],
             [
                 'HTTP_STRIPE_SIGNATURE' => 't='.time().',v1=attacker_forged_signature_goes_here',
-                'CONTENT_TYPE'          => 'application/json',
-                'HTTP_ACCEPT'           => 'application/json',
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => 'application/json',
             ],
             $payload
         );
@@ -114,7 +115,7 @@ class StripeWebhookSecurityTest extends SecurityTestCase
             [],
             [
                 'HTTP_STRIPE_SIGNATURE' => $fakeSignature,
-                'CONTENT_TYPE'          => 'application/json',
+                'CONTENT_TYPE' => 'application/json',
             ],
             $payload
         );

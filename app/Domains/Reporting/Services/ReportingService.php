@@ -114,7 +114,7 @@ class ReportingService
      *
      * Results are cached per organization + as-of date (tag: org:{orgId}:reports).
      *
-     * @return array{as_of_date: string, assets: array<int, array{code: string, name: string, balance: string}>, liabilities: array<int, array{code: string, name: string, balance: string}>, equity: array<int, array{code: string, name: string, balance: string}>}
+     * @return array{as_of_date: string, assets: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, liabilities: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, equity: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}}
      */
     public function balanceSheet(string $organizationId, string $asOfDate): array
     {
@@ -380,8 +380,8 @@ class ReportingService
      * Annotate each account row with budget amount, variance, and variance percentage.
      *
      * @param  array<int, array<string, mixed>>  $accounts
-     * @param  \Illuminate\Support\Collection<string, \App\Domains\Accounting\Models\Budget>  $budgets
-     * @param  \Illuminate\Support\Collection<string, string>  $accountIdsByCode
+     * @param  Collection<string, Budget>  $budgets
+     * @param  Collection<string, string>  $accountIdsByCode
      */
     /**
      * @return array<int, array<string, mixed>>

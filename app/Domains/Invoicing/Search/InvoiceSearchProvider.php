@@ -16,7 +16,7 @@ class InvoiceSearchProvider extends BaseSearchProvider
                 'type' => 'invoice',
                 'id' => $invoice->id,
                 'title' => $invoice->number ?? __('app.draft'),
-                'subtitle' => ($invoice->customer?->name ?? '').' · '.$invoice->currency.' '.number_format((float) $invoice->total, 2),
+                'subtitle' => ($invoice->customer->name ?? '').' · '.$invoice->currency.' '.number_format((float) $invoice->total, 2),
                 'status' => $invoice->status?->value,
                 'url' => route('invoices.show', $invoice),
             ];

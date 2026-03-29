@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Requests;
 
+use App\Domains\Expenses\Enums\ExpenseType;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Http\FormRequest;
@@ -34,6 +35,7 @@ class StoreExpenseRequest extends FormRequest
             'date' => 'required|date',
             'vendor' => 'nullable|string|max:255',
             'currency' => 'string|size:3',
+            'type' => ['sometimes', Rule::enum(ExpenseType::class)],
             'receipt' => 'nullable|file|mimes:'.config('uploads.allowed_mimes.receipt').'|max:'.config('uploads.max_size.receipt'),
         ];
     }

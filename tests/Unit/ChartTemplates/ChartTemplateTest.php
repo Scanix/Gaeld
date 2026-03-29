@@ -17,9 +17,9 @@ class ChartTemplateTest extends TestCase
     public static function templateProvider(): array
     {
         return [
-            'swiss_sme' => [new SwissSmeTemplate()],
-            'swiss_freelancer' => [new SwissFreelancerTemplate()],
-            'swiss_association' => [new SwissAssociationTemplate()],
+            'swiss_sme' => [new SwissSmeTemplate],
+            'swiss_freelancer' => [new SwissFreelancerTemplate],
+            'swiss_association' => [new SwissAssociationTemplate],
         ];
     }
 
@@ -85,7 +85,7 @@ class ChartTemplateTest extends TestCase
 
     public function test_sme_template_has_key_accounts(): void
     {
-        $template = new SwissSmeTemplate();
+        $template = new SwissSmeTemplate;
         $codes = array_column($template->accounts(), 'code');
 
         $this->assertContains('1000', $codes, 'Cash account missing');
@@ -96,7 +96,7 @@ class ChartTemplateTest extends TestCase
 
     public function test_freelancer_template_has_key_accounts(): void
     {
-        $template = new SwissFreelancerTemplate();
+        $template = new SwissFreelancerTemplate;
         $codes = array_column($template->accounts(), 'code');
 
         $this->assertContains('1000', $codes, 'Cash account missing');
@@ -105,7 +105,7 @@ class ChartTemplateTest extends TestCase
 
     public function test_each_template_has_unique_key(): void
     {
-        $templates = [new SwissSmeTemplate(), new SwissFreelancerTemplate(), new SwissAssociationTemplate()];
+        $templates = [new SwissSmeTemplate, new SwissFreelancerTemplate, new SwissAssociationTemplate];
         $keys = array_map(fn ($t) => $t->key(), $templates);
         $this->assertSame(count($keys), count(array_unique($keys)));
     }

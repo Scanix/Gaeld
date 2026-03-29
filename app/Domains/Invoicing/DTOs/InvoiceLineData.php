@@ -33,5 +33,4 @@ readonly class InvoiceLineData
             sortOrder: $data['sort_order'] ?? null,
         );
     }
-
 }

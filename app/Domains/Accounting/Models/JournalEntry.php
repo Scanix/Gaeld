@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * in draft (`is_posted = false`) or posted to the ledger.
  *
  * @property string $id
+ * @property Carbon $date
  * @property string $reference
  * @property string|null $description
  * @property bool $is_posted

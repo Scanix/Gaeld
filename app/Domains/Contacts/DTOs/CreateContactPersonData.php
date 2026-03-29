@@ -41,5 +41,4 @@ readonly class CreateContactPersonData
             notes: $data['notes'] ?? null,
         );
     }
-
 }

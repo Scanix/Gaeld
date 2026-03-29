@@ -160,12 +160,14 @@ class ReportController extends Controller
     //  VAT Report
     // ──────────────────────────────────────────────────────────────
 
-    public function vatReport(VatReportRequest $request, VatReportService $service, CurrentOrganization $currentOrg): Response
+    public function vatReport(Request $request, VatReportService $service, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', Account::class);
 
-        $validated = $request->validated();
-        $report = $service->generate($currentOrg->id(), $validated['from_date'], $validated['to_date']);
+        $from = $request->input('from_date', $request->input('from', now()->startOfQuarter()->toDateString()));
+        $to = $request->input('to_date', $request->input('to', now()->endOfQuarter()->toDateString()));
+
+        $report = $service->generate($currentOrg->id(), $from, $to);
 
         return Inertia::render('Reports/VatReport', [
             'report' => $report,
@@ -244,8 +246,22 @@ class ReportController extends Controller
 
         $report = $reportingService->cashFlow($currentOrg->id(), $from, $to);
 
+        // Transform to the shape the Vue component expects
+        $operating = $report['operating']['adjustments'] ?? [];
+        if (isset($report['net_income']) && bccomp($report['net_income'], '0', 2) !== 0) {
+            array_unshift($operating, ['label' => 'Net Income', 'amount' => $report['net_income']]);
+        }
+
         return Inertia::render('Reports/CashFlow', [
-            'report' => $report,
+            'report' => [
+                'period' => $report['period'],
+                'operating' => $operating,
+                'investing' => $report['investing']['items'] ?? [],
+                'financing' => $report['financing']['items'] ?? [],
+                'net_change' => $report['net_change'] ?? '0.00',
+                'beginning_balance' => $report['beginning_cash'] ?? '0.00',
+                'ending_balance' => $report['ending_cash'] ?? '0.00',
+            ],
         ]);
     }
 

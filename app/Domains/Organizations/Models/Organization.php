@@ -36,6 +36,7 @@ class Organization extends Model
         'qr_iban',
         'currency',
         'fiscal_year_start',
+        'closed_fiscal_years',
         'locale',
         'require_two_factor',
         'default_payment_terms_days',
@@ -46,7 +47,29 @@ class Organization extends Model
         return [
             'require_two_factor' => 'boolean',
             'default_payment_terms_days' => 'integer',
+            'closed_fiscal_years' => 'array',
         ];
+    }
+
+    /**
+     * Check whether a given fiscal year is closed.
+     */
+    public function isFiscalYearClosed(int $year): bool
+    {
+        return in_array($year, $this->closed_fiscal_years ?? [], true);
+    }
+
+    /**
+     * Mark a fiscal year as closed.
+     */
+    public function closeFiscalYear(int $year): void
+    {
+        $closed = $this->closed_fiscal_years ?? [];
+        if (! in_array($year, $closed, true)) {
+            $closed[] = $year;
+            sort($closed);
+            $this->update(['closed_fiscal_years' => $closed]);
+        }
     }
 
     public function users(): BelongsToMany

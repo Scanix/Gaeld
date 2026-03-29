@@ -22,8 +22,16 @@ const errorConfig = computed(() => {
   return configs[props.status] || configs[500]
 })
 
-const title = computed(() => t(`error_${props.status}_title`) || t('something_went_wrong'))
-const description = computed(() => t(`error_${props.status}_description`) || t('unexpected_error_occurred'))
+const titleKey = `error_${props.status}_title`
+const descKey = `error_${props.status}_description`
+const title = computed(() => {
+  const val = t(titleKey)
+  return val !== titleKey ? val : t('something_went_wrong')
+})
+const description = computed(() => {
+  const val = t(descKey)
+  return val !== descKey ? val : t('unexpected_error_occurred')
+})
 
 function goBack() {
   window.history.back()

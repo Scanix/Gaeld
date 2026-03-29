@@ -1203,6 +1203,12 @@ return [
     'lettrage_account' => 'Conto',
     'lettrage_lettered_by' => 'Abbinato da',
     'lettrage_lettered_at' => 'Abbinato il',
+    'help_lettrage_text' => 'Seleziona un conto e abbina le righe di debito/credito aperte che si compensano a vicenda.',
+    'balanced' => 'Bilanciato',
+    'unbalanced' => 'Non bilanciato',
+    'no_open_items' => 'Nessuna partita aperta per questo conto.',
+    'lines' => 'Righe',
+    'select_account_to_start' => 'Seleziona un conto sopra per visualizzare le partite aperte.',
 
     // Archiviazione legale (10 anni)
     'legal_archives' => 'Archivi legali',
@@ -1215,6 +1221,9 @@ return [
     'archive_fiscal_year' => 'Archivia esercizio',
     'archive_expires_at' => 'Conservazione scade il',
     'archive_expiring_soon' => 'Scade entro 1 anno',
+    'archived' => 'Archiviato',
+    'verified' => 'Verificato',
+    'no_archives' => 'Nessun documento archiviato.',
 
     'exchange_rate_ecb_fetched' => ':count tassi di cambio recuperati dalla BCE.',
     'feature_analytical' => 'Contabilità analitica',
