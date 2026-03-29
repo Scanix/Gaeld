@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureApiOrganization;
 use App\Http\Middleware\EnsureHasOrganization;
 use App\Http\Middleware\EnsureOrganizationTwoFactor;
 use App\Http\Middleware\HandleInertiaRequests;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -45,6 +46,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->renderable(function (HttpExceptionInterface $e) {
             if (request()->is('api/*') || request()->expectsJson()) {
                 return null;
+            }
+
+            // Redirect unverified users to email verification instead of showing error page
+            $user = request()->user();
+            if ($e->getStatusCode() === 403
+                && $user
+                && $user instanceof MustVerifyEmail
+                && ! $user->hasVerifiedEmail()
+            ) {
+                return redirect()->route('verification.notice');
             }
 
             return Inertia::render('Error', [
