@@ -13,6 +13,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
+ * Schedule for automatically generating invoices at a recurring frequency.
+ *
+ * Holds the template data used to create each new invoice and tracks
+ * the next issue date to determine when the next invoice is due.
+ *
  * @property int $id
  * @property string $organization_id
  * @property int $customer_id

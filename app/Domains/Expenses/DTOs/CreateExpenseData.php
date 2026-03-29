@@ -2,8 +2,17 @@
 
 namespace App\Domains\Expenses\DTOs;
 
+use App\Support\MapsToSnakeCase;
+use App\Support\ValidatesFromArray;
+
+/**
+ * DTO for recording a new business expense.
+ */
 readonly class CreateExpenseData
 {
+    use MapsToSnakeCase;
+    use ValidatesFromArray;
+
     public function __construct(
         public string $organizationId,
         public string $category,
@@ -19,6 +28,8 @@ readonly class CreateExpenseData
 
     public static function fromArray(array $data): self
     {
+        self::assertRequired($data, ['organization_id', 'category', 'amount', 'date']);
+
         return new self(
             organizationId: $data['organization_id'],
             category: $data['category'],
@@ -33,19 +44,4 @@ readonly class CreateExpenseData
         );
     }
 
-    public function toArray(): array
-    {
-        return [
-            'organization_id' => $this->organizationId,
-            'vat_rate_id' => $this->vatRateId,
-            'category' => $this->category,
-            'description' => $this->description,
-            'amount' => $this->amount,
-            'vat_amount' => $this->vatAmount,
-            'date' => $this->date,
-            'vendor' => $this->vendor,
-            'receipt_path' => $this->receiptPath,
-            'currency' => $this->currency,
-        ];
-    }
 }

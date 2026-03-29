@@ -9,6 +9,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Activitylog\Models\Activity;
 
+/**
+ * Displays the organization-scoped activity / audit log.
+ */
 class ActivityLogController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response

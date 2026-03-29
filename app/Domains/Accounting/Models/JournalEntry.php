@@ -14,9 +14,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
+ * Double-entry accounting journal entry (header).
+ *
+ * Groups one or more balanced {@see TransactionLine} rows. May be
+ * in draft (`is_posted = false`) or posted to the ledger.
+ *
  * @property string $id
- * @property string $organization_id
- * @property Carbon $date
  * @property string $reference
  * @property string|null $description
  * @property bool $is_posted

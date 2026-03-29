@@ -7,6 +7,12 @@ use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Records a link between a bank transaction and an invoice for reconciliation.
+ *
+ * Stores the match type (automatic / manual), a confidence score,
+ * and whether the match has been confirmed by a user.
+ */
 class BankMatch extends Model
 {
     protected $fillable = [

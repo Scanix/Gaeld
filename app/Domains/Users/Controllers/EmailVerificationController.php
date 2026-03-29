@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Email verification notice and handler.
+ */
 class EmailVerificationController extends Controller
 {
     public function notice(Request $request): RedirectResponse|Response

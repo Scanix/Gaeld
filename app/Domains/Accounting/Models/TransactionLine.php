@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
+ * Single debit or credit line within a {@see JournalEntry}.
+ *
  * @property int $id
- * @property string $journal_entry_id
- * @property int $account_id
  * @property string $debit
  * @property string $credit
  * @property string|null $description

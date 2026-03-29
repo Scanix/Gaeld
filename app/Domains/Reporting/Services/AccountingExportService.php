@@ -13,6 +13,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
+/**
+ * Generates end-of-year accounting export packages (ZIP) containing
+ * balance sheet, income statement, journal, and tax reports as PDFs.
+ */
 class AccountingExportService
 {
     public function __construct(

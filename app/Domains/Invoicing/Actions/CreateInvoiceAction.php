@@ -7,6 +7,9 @@ use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Creates a new draft invoice with its line items.
+ */
 class CreateInvoiceAction
 {
     public function __construct(

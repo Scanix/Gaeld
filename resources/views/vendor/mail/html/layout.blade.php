@@ -6,9 +6,9 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 {!! $head ?? '' !!}
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; background-color: #ffffff; color: #52525b; line-height: 1.4; margin: 0; padding: 0; width: 100%;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; background-color: #ffffff; color: #171717; line-height: 1.4; margin: 0; padding: 0; width: 100%;">
 
-<table class="wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #fafafa; margin: 0; padding: 0; width: 100%;">
+<table class="wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #f2f2f2; margin: 0; padding: 0; width: 100%;">
 <tr>
 <td align="center">
 <table class="content" width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0; padding: 0; width: 100%;">
@@ -16,8 +16,8 @@
 
 <!-- Email Body -->
 <tr>
-<td class="body" width="100%" style="background-color: #fafafa; border-bottom: 1px solid #fafafa; border-top: 1px solid #fafafa; margin: 0; padding: 0;">
-<table class="inner-body" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #ffffff; border: 1px solid #e4e4e7; margin: 0 auto; padding: 0; width: 570px;">
+<td class="body" width="100%" style="background-color: #f2f2f2; border-bottom: 1px solid #f2f2f2; border-top: 1px solid #f2f2f2; margin: 0; padding: 0;">
+<table class="inner-body" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #ffffff; border: 1px solid #dbdbdb; border-radius: 8px; margin: 0 auto; padding: 0; width: 570px;">
 <!-- Body content -->
 <tr>
 <td class="content-cell" style="padding: 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">

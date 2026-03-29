@@ -4,6 +4,9 @@ namespace App\Support;
 
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * Generates CSV file content from arrays or Eloquent collections.
+ */
 class CsvExportService
 {
     /**

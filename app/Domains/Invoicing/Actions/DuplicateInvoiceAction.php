@@ -6,6 +6,9 @@ use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 
+/**
+ * Creates a new draft invoice by duplicating an existing one.
+ */
 class DuplicateInvoiceAction
 {
     public function __construct(

@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Google2FA;
 
+/**
+ * Two-factor authentication setup: enable, confirm, disable, and show recovery codes.
+ */
 class TwoFactorController extends Controller
 {
     public function __construct(

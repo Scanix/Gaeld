@@ -2,6 +2,7 @@
 
 namespace App\Domains\Banking\Enums;
 
+/** Confidence level of an automatic bank transaction match (0–100). */
 enum MatchConfidence: int
 {
     case QrReference = 100;

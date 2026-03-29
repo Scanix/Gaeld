@@ -20,6 +20,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
+/**
+ * Financial reports: balance sheet, income statement, trial balance,
+ * VAT report, and aging analysis.
+ */
 class ReportController extends Controller
 {
     public function profitAndLoss(ProfitAndLossRequest $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response

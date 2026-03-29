@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * CRUD for contact persons attached to customers or suppliers.
+ */
 class ContactPersonController extends Controller
 {
     private const VALIDATION_RULES = [

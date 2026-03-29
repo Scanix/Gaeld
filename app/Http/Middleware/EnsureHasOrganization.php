@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Resolves the current organization for the authenticated user
+ * and binds it to the application container. Aborts 403 if the
+ * user does not belong to any organization.
+ */
 class EnsureHasOrganization
 {
     public function __construct(

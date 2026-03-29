@@ -3,13 +3,17 @@
 namespace App\Domains\Accounting\Controllers;
 
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Accounting\Requests\StoreVatRateRequest;
+use App\Domains\Accounting\Requests\UpdateVatRateRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * CRUD operations for organization-scoped VAT rate definitions.
+ */
 class VatRateController extends Controller
 {
     public function index(CurrentOrganization $currentOrg): Response
@@ -25,16 +29,11 @@ class VatRateController extends Controller
         ]);
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(StoreVatRateRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', VatRate::class);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'rate' => ['required', 'numeric', 'min:0', 'max:100'],
-            'code' => ['nullable', 'string', 'max:20'],
-            'is_default' => ['boolean'],
-        ]);
+        $validated = $request->validated();
 
         $validated['organization_id'] = $currentOrg->id();
         $validated['is_active'] = true;
@@ -51,17 +50,11 @@ class VatRateController extends Controller
             ->with('success', __('app.vat_rate_created'));
     }
 
-    public function update(Request $request, VatRate $vatRate): RedirectResponse
+    public function update(UpdateVatRateRequest $request, VatRate $vatRate): RedirectResponse
     {
         $this->authorize('update', $vatRate);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'rate' => ['required', 'numeric', 'min:0', 'max:100'],
-            'code' => ['nullable', 'string', 'max:20'],
-            'is_default' => ['boolean'],
-            'is_active' => ['boolean'],
-        ]);
+        $validated = $request->validated();
 
         if (! empty($validated['is_default'])) {
             VatRate::where('organization_id', $vatRate->organization_id)

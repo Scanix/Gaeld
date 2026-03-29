@@ -11,6 +11,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * REST API: webhook endpoint CRUD.
+ */
 class WebhookApiController extends Controller
 {
     public function index(): AnonymousResourceCollection

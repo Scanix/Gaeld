@@ -7,6 +7,11 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Route middleware that aborts with 403 when the requested feature flag is disabled.
+ *
+ * Usage: `->middleware('feature:auto_reconciliation')`
+ */
 class CheckFeatureFlag
 {
     /**

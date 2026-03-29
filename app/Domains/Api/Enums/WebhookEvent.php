@@ -2,6 +2,7 @@
 
 namespace App\Domains\Api\Enums;
 
+/** Webhook event names dispatched by the application (e.g. invoice.created). */
 enum WebhookEvent: string
 {
     case InvoiceCreated = 'invoice.created';

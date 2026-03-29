@@ -5,6 +5,9 @@ namespace App\Domains\Invoicing\Actions;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 
+/**
+ * Soft-deletes a draft invoice.
+ */
 class DeleteInvoiceAction
 {
     public function execute(Invoice $invoice): void

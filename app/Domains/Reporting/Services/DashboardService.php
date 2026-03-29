@@ -11,6 +11,10 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
+/**
+ * Aggregates KPI data for the organization dashboard: revenue/expense
+ * summaries, cash flow, outstanding invoices, and recent activity.
+ */
 class DashboardService
 {
     public function __construct(

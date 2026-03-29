@@ -5,6 +5,9 @@ namespace App\Domains\Expenses\Actions;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 
+/**
+ * Soft-deletes an expense (only allowed for pending expenses).
+ */
 class DeleteExpenseAction
 {
     public function execute(Expense $expense): void

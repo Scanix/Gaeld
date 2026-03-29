@@ -12,6 +12,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * Browses and verifies legally archived accounting documents.
+ */
 class LegalArchiveController extends Controller
 {
     public function __construct(private readonly LegalArchivingService $service) {}

@@ -17,6 +17,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * Organization settings page: general info, branding, and security policies.
+ */
 class OrganizationSettingsController extends Controller
 {
     public function __construct(

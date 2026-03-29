@@ -12,6 +12,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
+ * Monthly salary slip for an employee, including gross/net amounts and deductions.
+ *
+ * Optionally linked to a posted journal entry for accounting integration.
+ *
  * @property string $id
  * @property string $employee_id
  * @property string $organization_id

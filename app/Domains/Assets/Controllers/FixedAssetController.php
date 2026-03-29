@@ -15,6 +15,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Fixed asset CRUD, depreciation runs, and disposal handling.
+ */
 class FixedAssetController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response

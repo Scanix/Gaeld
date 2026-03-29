@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Individual VAT line attached to a journal entry.
+ *
+ * Captures the taxable base amount and the computed VAT amount
+ * for a specific rate, distinguishing input vs. output tax via `type`.
+ */
 class VatEntry extends Model
 {
     use HasFactory;

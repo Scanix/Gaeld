@@ -14,6 +14,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Organization CRUD and multi-org switching.
+ */
 class OrganizationController extends Controller
 {
     public function index(Request $request): Response

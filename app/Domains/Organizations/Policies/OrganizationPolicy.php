@@ -6,6 +6,9 @@ use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 
+/**
+ * Authorization policy for organization-level operations (settings, members, billing).
+ */
 class OrganizationPolicy
 {
     public function viewAny(User $user): bool

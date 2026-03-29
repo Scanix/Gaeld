@@ -17,6 +17,12 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Business logic for creating, updating, approving, and paying expenses.
+ *
+ * Handles VAT calculations, Swiss rounding, journal entry posting,
+ * and expense status transitions.
+ */
 class ExpenseService
 {
     public function __construct(
