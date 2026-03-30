@@ -1255,4 +1255,13 @@ return [
     'peppol_id' => 'PEPPOL-Endpunkt-ID',
     'feature_e_invoicing' => 'E-Rechnung',
     'feature_consolidation' => 'Konsolidierung',
+
+    // Search
+    'search_results' => 'Suchergebnisse',
+
+    // Missing keys
+    'rate' => 'Satz',
+    'employee' => 'Mitarbeiter',
+    'per_month' => '/Monat',
+    'export_dispatched' => 'Ihr Export wird erstellt. Sie erhalten in Kürze eine E-Mail mit dem Download-Link.',
 ];

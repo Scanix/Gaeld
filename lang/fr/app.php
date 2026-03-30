@@ -20,7 +20,7 @@ return [
     'manage_subscription' => 'Gérer l\'abonnement',
     'start_trial' => 'Commencer l\'essai gratuit',
     'switch_plan' => 'Changer pour ce plan',
-    'month' => 'mois',
+    'month' => 'Mois',
     'unlimited_users' => 'Utilisateurs illimités',
     'unlimited_invoices' => 'Factures illimitées',
     'users' => 'utilisateurs',
@@ -1279,4 +1279,13 @@ return [
     'error_503_description' => 'Nous effectuons actuellement une maintenance. Veuillez revenir bientôt.',
     'go_to_dashboard' => 'Aller au tableau de bord',
     'go_back' => 'Retour',
+
+    // Search
+    'search_results' => 'Résultats de recherche',
+
+    // Missing keys
+    'rate' => 'Taux',
+    'employee' => 'Employé(e)',
+    'per_month' => '/mois',
+    'export_dispatched' => 'Votre export est en cours de génération. Vous recevrez un e-mail avec le lien de téléchargement sous peu.',
 ];

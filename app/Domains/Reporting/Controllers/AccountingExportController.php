@@ -50,7 +50,7 @@ class AccountingExportController extends Controller
         );
 
         return redirect()->route('accounting.export')
-            ->with('flash', __('accounting.export_dispatched'));
+            ->with('success', __('app.export_dispatched'));
     }
 
     public function download(Request $request): BinaryFileResponse

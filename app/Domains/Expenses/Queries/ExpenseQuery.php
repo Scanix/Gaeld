@@ -14,13 +14,20 @@ class ExpenseQuery
 {
     public static function list(Request $request, int $perPage = 20): LengthAwarePaginator
     {
-        return QueryBuilder::for(Expense::query(), $request)
+        return QueryBuilder::for(Expense::query()->with('supplier'), $request)
             ->allowedSorts(['date', 'amount', 'category', 'vendor', 'status'], 'date', 'desc')
             ->allowedFilters(['status', 'category'])
             ->searchable(['description', 'vendor', 'category'])
             ->apply()
             ->paginate($perPage)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(function ($expense) {
+                if (empty($expense->vendor) && $expense->supplier) {
+                    $expense->vendor = $expense->supplier->name;
+                }
+
+                return $expense;
+            });
     }
 
     public static function yearlyTotal(string $orgId, int $year): string

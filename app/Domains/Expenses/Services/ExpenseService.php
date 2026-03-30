@@ -5,7 +5,9 @@ namespace App\Domains\Expenses\Services;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Enums\VatEntryType;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
@@ -108,6 +110,17 @@ class ExpenseService
                 description: $data->description,
                 lines: $lines,
             ));
+
+            // Create VatEntry record for the VAT report (Input VAT)
+            if ($expense->vat_rate_id && bccomp((string) $expense->vat_amount, '0', 2) > 0) {
+                VatEntry::create([
+                    'journal_entry_id' => $journalEntry->id,
+                    'vat_rate_id' => $expense->vat_rate_id,
+                    'base_amount' => bcsub((string) $expense->amount, (string) $expense->vat_amount, 2),
+                    'vat_amount' => (string) $expense->vat_amount,
+                    'type' => VatEntryType::Input,
+                ]);
+            }
 
             $expense->update([
                 'status' => ExpenseStatus::Posted,

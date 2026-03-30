@@ -27,7 +27,7 @@ function chf(val) {
 
 // Income input (raw string to allow apostrophe typing)
 const incomeInput = ref('')
-const income = computed(() => parseFloat(incomeInput.value.replace(/['']/g, '').replace(',', '.')) || 0)
+const income = computed(() => parseFloat(incomeInput.value.replace(/['''`\s]/g, '').replace(',', '.')) || 0)
 
 // Swiss AVS/AI/APG rates (defaults if not passed from backend)
 const defaultRates = {
@@ -115,7 +115,7 @@ function postToLedger() {
             <thead>
               <tr class="border-b text-xs text-[hsl(var(--muted-foreground))]">
                 <th class="pb-2 text-left">{{ t('social_contribution') }}</th>
-                <th class="pb-2 text-right">{{ t('vat_rate') }}</th>
+                <th class="pb-2 text-right">{{ t('rate') }}</th>
               </tr>
             </thead>
             <tbody>

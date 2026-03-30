@@ -9,6 +9,7 @@ use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Payroll\Services\PayrollCalculator;
 use App\Http\Controllers\Controller;
 use App\Support\PdfExportService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -24,15 +25,38 @@ class SalarySlipController extends Controller
     {
         $this->authorize('viewAny', Employee::class);
 
-        $slips = SalarySlip::query()
+        $year = $request->input('year');
+        $month = $request->input('month');
+
+        $query = SalarySlip::query()
             ->where('organization_id', $currentOrg->id())
             ->with('employee')
             ->orderByDesc('period_year')
-            ->orderByDesc('period_month')
-            ->paginate(25);
+            ->orderByDesc('period_month');
+
+        if ($year) {
+            $query->where('period_year', (int) $year);
+        }
+
+        if ($month) {
+            $query->where('period_month', (int) $month);
+        }
+
+        // Default year to the most recent slip's year if no filter provided
+        $defaultYear = $year;
+        if (! $defaultYear) {
+            $latestSlip = SalarySlip::where('organization_id', $currentOrg->id())
+                ->orderByDesc('period_year')
+                ->first();
+            $defaultYear = $latestSlip ? (string) $latestSlip->period_year : (string) now()->year;
+        }
 
         return Inertia::render('Payroll/SalarySlips/Index', [
-            'slips' => $slips,
+            'slips' => $query->paginate(25),
+            'query' => [
+                'year' => $defaultYear,
+                'month' => $month ?? '',
+            ],
         ]);
     }
 
@@ -63,15 +87,23 @@ class SalarySlipController extends Controller
             ->with('success', __('app.salary_slip_generated'));
     }
 
-    public function post(SalarySlip $slip, PostPayrollAction $action): RedirectResponse
+    public function post(Request $request, SalarySlip $slip, PostPayrollAction $action): RedirectResponse|JsonResponse
     {
         $this->authorize('update', $slip->employee);
 
         if ($slip->isPosted()) {
+            if ($request->wantsJson()) {
+                return new JsonResponse(['message' => __('app.salary_slip_already_posted')], 422);
+            }
+
             return redirect()->back()->with('error', __('app.salary_slip_already_posted'));
         }
 
         $action->execute($slip);
+
+        if ($request->wantsJson()) {
+            return new JsonResponse(['message' => __('app.salary_slip_posted'), 'id' => $slip->id]);
+        }
 
         return redirect()->route('payroll.salarySlips.show', $slip)
             ->with('success', __('app.salary_slip_posted'));
