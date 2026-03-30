@@ -19,7 +19,7 @@ return [
     'manage_subscription' => 'Manage subscription',
     'start_trial' => 'Start free trial',
     'switch_plan' => 'Switch to this plan',
-    'month' => 'month',
+    'month' => 'Month',
     'unlimited_users' => 'Unlimited users',
     'unlimited_invoices' => 'Unlimited invoices',
     'users' => 'users',
@@ -1270,4 +1270,13 @@ return [
     'error_503_description' => 'We\'re currently performing maintenance. Please check back soon.',
     'go_to_dashboard' => 'Go to Dashboard',
     'go_back' => 'Go Back',
+
+    // Search
+    'search_results' => 'Search Results',
+
+    // Missing keys
+    'rate' => 'Rate',
+    'employee' => 'Employee',
+    'per_month' => '/month',
+    'export_dispatched' => 'Your export is being generated. You will receive an email with the download link shortly.',
 ];

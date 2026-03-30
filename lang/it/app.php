@@ -27,7 +27,7 @@ return [
     'manage_subscription' => 'Gestisci abbonamento',
     'start_trial' => 'Inizia la prova gratuita',
     'switch_plan' => 'Passa a questo piano',
-    'month' => 'mese',
+    'month' => 'Mese',
     'unlimited_users' => 'Utenti illimitati',
     'unlimited_invoices' => 'Fatture illimitate',
     'users' => 'utenti',
@@ -1255,4 +1255,13 @@ return [
     'peppol_id' => 'ID endpoint PEPPOL',
     'feature_e_invoicing' => 'Fatturazione elettronica',
     'feature_consolidation' => 'Consolidamento',
+
+    // Search
+    'search_results' => 'Risultati della ricerca',
+
+    // Missing keys
+    'rate' => 'Tasso',
+    'employee' => 'Dipendente',
+    'per_month' => '/mese',
+    'export_dispatched' => 'La vostra esportazione è in fase di generazione. Riceverete a breve un\'e-mail con il link per il download.',
 ];

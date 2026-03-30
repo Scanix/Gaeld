@@ -34,6 +34,8 @@ class SalarySlip extends Model
 {
     use Auditable, BelongsToOrganization, HasUuids;
 
+    protected $appends = ['status', 'month_label', 'employee_name'];
+
     protected $fillable = [
         'employee_id',
         'organization_id',
@@ -76,5 +78,23 @@ class SalarySlip extends Model
     public function isPosted(): bool
     {
         return $this->posted_at !== null;
+    }
+
+    public function getStatusAttribute(): string
+    {
+        return $this->isPosted() ? 'posted' : 'draft';
+    }
+
+    public function getMonthLabelAttribute(): string
+    {
+        $monthName = Carbon::createFromDate($this->period_year, $this->period_month, 1)
+            ->translatedFormat('F Y');
+
+        return $monthName;
+    }
+
+    public function getEmployeeNameAttribute(): string
+    {
+        return $this->employee->fullName();
     }
 }

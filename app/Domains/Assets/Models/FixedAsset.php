@@ -38,10 +38,15 @@ use Illuminate\Support\Carbon;
  * @property bool $is_active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ *
+ * @property-read string $status
+ * @property-read string $net_book_value
  */
 class FixedAsset extends Model
 {
     use Auditable, BelongsToOrganization, HasUuids;
+
+    protected $appends = ['status', 'net_book_value'];
 
     protected $attributes = [
         'is_active' => true,
@@ -125,8 +130,26 @@ class FixedAsset extends Model
         return bcsub($this->purchase_amount, $this->totalDepreciated(), 2);
     }
 
+    public function getNetBookValueAttribute(): string
+    {
+        return $this->netBookValue();
+    }
+
     public function isFullyDepreciated(): bool
     {
         return bccomp($this->netBookValue(), $this->salvage_value, 2) <= 0;
+    }
+
+    public function getStatusAttribute(): string
+    {
+        if ($this->disposed_at) {
+            return 'disposed';
+        }
+
+        if ($this->isFullyDepreciated()) {
+            return 'fully_depreciated';
+        }
+
+        return 'active';
     }
 }
