@@ -46,6 +46,7 @@ enum Permission: string
     case OrganizationEdit = 'organization.edit';
     case OrganizationManageUsers = 'organization.manage-users';
     case OrganizationDelete = 'organization.delete';
+    case OrganizationViewAuditLog = 'organization.view-audit-log';
 
     // Reporting
     case ReportingView = 'reporting.view';

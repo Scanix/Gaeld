@@ -21,7 +21,7 @@ return new class extends Migration
         // Create contact_persons table (polymorphic: belongs to customer or supplier)
         Schema::create('contact_persons', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuidMorphs('contactable'); // contactable_type + contactable_id
+            $table->morphs('contactable'); // contactable_type + contactable_id (integer to match Customer/Supplier PKs)
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->nullable();

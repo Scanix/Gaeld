@@ -140,7 +140,9 @@ const paymentMethodOptions = [
 ]
 
 const bankAccountOptions = computed(() =>
-  props.bankAccounts.map(ba => ({ value: ba.id.toString(), label: `${ba.name}${ba.iban ? ` (${ba.iban})` : ''}` }))
+  props.bankAccounts
+    .filter(ba => ba.ledger_account?.code)
+    .map(ba => ({ value: ba.ledger_account.code, label: `${ba.name}${ba.iban ? ` (${ba.iban})` : ''}` }))
 )
 </script>
 

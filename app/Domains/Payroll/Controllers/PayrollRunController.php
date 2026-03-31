@@ -5,7 +5,9 @@ namespace App\Domains\Payroll\Controllers;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\GeneratePayrollRunAction;
 use App\Domains\Payroll\Models\Employee;
+use App\Domains\Payroll\Models\SalarySlip;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,6 +15,9 @@ use Inertia\Response;
 
 /**
  * Triggers payroll calculation runs for a given period.
+ *
+ * Authorizes against Employee::class because no PayrollRun model exists.
+ * EmployeePolicy maps viewAny/create to payroll.view/payroll.create permissions.
  */
 class PayrollRunController extends Controller
 {
@@ -35,7 +40,7 @@ class PayrollRunController extends Controller
         ]);
     }
 
-    public function generate(Request $request, CurrentOrganization $currentOrg, GeneratePayrollRunAction $action): RedirectResponse
+    public function generate(Request $request, CurrentOrganization $currentOrg, GeneratePayrollRunAction $action): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Employee::class);
 
@@ -51,6 +56,15 @@ class PayrollRunController extends Controller
             (int) $validated['year'],
             $validated['post'] ?? false,
         );
+
+        if ($request->wantsJson()) {
+            $slipIds = SalarySlip::where('organization_id', $currentOrg->id())
+                ->where('period_month', (int) $validated['month'])
+                ->where('period_year', (int) $validated['year'])
+                ->pluck('id');
+
+            return response()->json(['count' => $count, 'slip_ids' => $slipIds]);
+        }
 
         return redirect()->route('payroll.salarySlips.index')
             ->with('success', __('app.payroll_run_completed', ['count' => $count]));

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -70,6 +70,11 @@ const supplierOptions = ref([
 ])
 
 const showCreateSupplier = ref(false)
+
+watch(() => form.supplier_id, (id) => {
+  const supplier = supplierList.find(s => s.id === id)
+  form.vendor = supplier?.name ?? ''
+})
 
 function onSupplierCreated(supplier) {
   supplierList.push(supplier)

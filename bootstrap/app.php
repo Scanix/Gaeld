@@ -1,9 +1,11 @@
 <?php
 
 use App\Domains\Organizations\Models\Organization;
+use App\Http\Middleware\DisableThrottleInTesting;
 use App\Http\Middleware\EnsureApiOrganization;
 use App\Http\Middleware\EnsureHasOrganization;
 use App\Http\Middleware\EnsureOrganizationTwoFactor;
+use App\Http\Middleware\FakeTimeMiddleware;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Application;
@@ -22,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             HandleInertiaRequests::class,
+            FakeTimeMiddleware::class,
         ]);
 
         $middleware->alias([
@@ -29,6 +32,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'org-2fa' => EnsureOrganizationTwoFactor::class,
             'api-org' => EnsureApiOrganization::class,
         ]);
+
+        // Disable rate limiting in testing environment (Docker test stack)
+        if (env('APP_ENV') === 'testing') {
+            $middleware->alias([
+                'org' => EnsureHasOrganization::class,
+                'org-2fa' => EnsureOrganizationTwoFactor::class,
+                'api-org' => EnsureApiOrganization::class,
+                'throttle' => DisableThrottleInTesting::class,
+            ]);
+        }
 
         $middleware->redirectGuestsTo(static function () {
             return Organization::exists() ? route('login') : route('setup.index');

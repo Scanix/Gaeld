@@ -17,7 +17,7 @@ class ActivityLogController extends Controller
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
         $organization = $currentOrg->get();
-        $this->authorize('update', $organization);
+        $this->authorize('viewAuditLog', $organization);
 
         $orgId = $currentOrg->id();
 

@@ -117,7 +117,10 @@ class SuggestionService
         $matches = $this->matchingService->findAndStoreMatches($transaction);
 
         $invoiceSuggestions = $matches->map(function ($match) {
-            $invoice = $match->invoice->load(['customer']);
+            $invoice = $match->invoice?->load(['customer']);
+            if (! $invoice) {
+                return null;
+            }
 
             return new InvoiceSuggestion(
                 invoice: $invoice,
@@ -125,7 +128,7 @@ class SuggestionService
                 matchType: $match->match_type,
                 matchId: $match->id,
             );
-        })->sortByDesc(fn ($s) => $s->score)->values();
+        })->filter()->sortByDesc(fn ($s) => $s->score)->values();
 
         $expenseSuggestions = $this->suggestExpenses($orgId, $transaction, $amount);
 
@@ -151,7 +154,7 @@ class SuggestionService
         }
 
         $candidateExpenses = Expense::where('organization_id', $orgId)
-            ->whereIn('status', [ExpenseStatus::Pending, ExpenseStatus::Approved])
+            ->where('status', ExpenseStatus::Posted)
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('amount', [
                     bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),

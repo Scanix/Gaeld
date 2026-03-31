@@ -42,4 +42,16 @@ class AccountPolicy extends BasePolicy
             && $user->hasPermissionTo(Permission::AccountingDelete)
             && $account->transactionLines()->doesntExist();
     }
+
+    public function manage(User $user, Account $account): bool
+    {
+        return $this->belongsToOrganization($user, $account)
+            && $user->hasPermissionTo(Permission::AccountingEdit);
+    }
+
+    public function closeYear(User $user): bool
+    {
+        return $this->hasCurrentOrganization($user)
+            && $user->hasPermissionTo(Permission::AccountingCloseYear);
+    }
 }

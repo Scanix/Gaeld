@@ -191,7 +191,7 @@ class ReconciliationFlowTest extends TestCase
             'vat_amount' => 0,
             'date' => '2026-03-12',
             'vendor' => 'GitHub',
-            'status' => ExpenseStatus::Approved,
+            'status' => ExpenseStatus::Posted,
             'currency' => 'CHF',
         ]);
 

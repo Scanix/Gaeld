@@ -23,9 +23,11 @@ import {
   Settings,
 } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
+import { usePermissions } from '@/lib/usePermissions'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 
 const { t } = useTranslations()
+const { can } = usePermissions()
 
 const props = defineProps({
   collapsed: { type: Boolean, default: false },
@@ -65,10 +67,14 @@ const navigation = computed(() => [
     { key: 'trial_balance', href: '/accounting/trial-balance' },
     { key: 'social_charges', href: '/accounting/social-charges' },
     { key: 'budget', href: '/accounting/budgets' },
-    { key: 'year_end_closing', href: '/accounting/year-end-closing' },
+    ...(can('accounting.close-year') ? [
+      { key: 'year_end_closing', href: '/accounting/year-end-closing' },
+    ] : []),
     { key: 'fiduciary_export', href: '/accounting/export' },
     { key: 'lettrage', href: '/accounting/lettrage' },
-    { key: 'legal_archives', href: '/accounting/archives' },
+    ...(can('accounting.view') ? [
+      { key: 'legal_archives', href: '/accounting/archives' },
+    ] : []),
     { key: 'vat_rates', href: '/accounting/vat-rates' },
     ...(features.value.analytical ? [
       { key: 'cost_centers', href: '/accounting/cost-centers' },
@@ -107,7 +113,9 @@ const navigation = computed(() => [
   { key: 'organization', href: '/organizations', icon: Building2 },
   { key: 'settings', href: '/settings', icon: Settings, children: [
     { key: 'settings_general', href: '/settings' },
-    { key: 'activity_log', href: '/settings/activity-log' },
+    ...(can('organization.view-audit-log') ? [
+      { key: 'activity_log', href: '/settings/activity-log' },
+    ] : []),
     ...(features.value.api_access ? [
       { key: 'api_tokens', href: '/settings/api-tokens' },
       { key: 'webhooks', href: '/settings/webhooks' },
