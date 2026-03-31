@@ -8,6 +8,20 @@ return [
     'data_export_expiry' => 'Ce lien expirera dans 48 heures.',
     'data_export_regards' => 'Cordialement',
 
+    // Export plan comptable
+    'chart_export_subject' => 'Votre export du plan comptable est prêt',
+    'chart_export_greeting' => 'Bonjour :name,',
+    'chart_export_body' => 'Votre export du plan comptable a été généré et est prêt à être téléchargé.',
+    'chart_export_button' => 'Télécharger l\'export',
+    'chart_export_expiry' => 'Ce lien expirera dans 24 heures.',
+
+    // Export comptable (fin d'année)
+    'accounting_export_subject' => 'Votre export comptable pour :year est prêt',
+    'accounting_export_greeting' => 'Bonjour :name,',
+    'accounting_export_body' => 'Votre export comptable pour l\'exercice :year a été généré et est prêt à être téléchargé.',
+    'accounting_export_button' => 'Télécharger l\'export',
+    'accounting_export_expiry' => 'Ce lien expirera dans 24 heures.',
+
     // Rappels de paiement
     'reminder_subject_first' => 'Rappel de paiement — Facture :number',
     'reminder_subject_second' => 'Deuxième rappel — Facture :number',

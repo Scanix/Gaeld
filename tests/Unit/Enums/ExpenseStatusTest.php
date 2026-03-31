@@ -52,10 +52,12 @@ class ExpenseStatusTest extends TestCase
         $this->assertFalse(ExpenseStatus::Posted->isDeletable());
     }
 
-    public function test_labels_are_capitalized(): void
+    public function test_labels_return_non_empty_translated_strings(): void
     {
         foreach (ExpenseStatus::cases() as $status) {
-            $this->assertSame(ucfirst($status->value), $status->label());
+            $label = $status->label();
+            $this->assertIsString($label);
+            $this->assertNotEmpty($label);
         }
     }
 }

@@ -19,7 +19,7 @@ return [
     'manage_subscription' => 'Manage subscription',
     'start_trial' => 'Start free trial',
     'switch_plan' => 'Switch to this plan',
-    'month' => 'month',
+    'month' => 'Month',
     'unlimited_users' => 'Unlimited users',
     'unlimited_invoices' => 'Unlimited invoices',
     'users' => 'users',
@@ -649,6 +649,7 @@ return [
     'role_owner' => 'Owner',
     'role_admin' => 'Admin',
     'role_member' => 'Member',
+    'role_accountant' => 'Accountant',
     'role_viewer' => 'Viewer',
     'invited_by' => 'Invited by',
     'expires' => 'Expires',
@@ -682,6 +683,7 @@ return [
     'expense_deleted' => 'Expense deleted.',
     'expense_approved' => 'Expense approved.',
     'expense_posted' => 'Expense posted to ledger.',
+    'account_not_found' => 'Ledger account ":code" not found.',
     'receipt_removed' => 'Receipt removed.',
     'customer_created' => 'Customer created.',
     'customer_updated' => 'Customer updated.',
@@ -1270,4 +1272,13 @@ return [
     'error_503_description' => 'We\'re currently performing maintenance. Please check back soon.',
     'go_to_dashboard' => 'Go to Dashboard',
     'go_back' => 'Go Back',
+
+    // Search
+    'search_results' => 'Search Results',
+
+    // Missing keys
+    'rate' => 'Rate',
+    'employee' => 'Employee',
+    'per_month' => '/month',
+    'export_dispatched' => 'Your export is being generated. You will receive an email with the download link shortly.',
 ];

@@ -10,5 +10,5 @@ enum MatchConfidence: int
     case AutoExpenseThreshold = 80;
     case Heuristic = 70;
 
-    public const AMOUNT_TOLERANCE = '0.05';
+    public const AMOUNT_TOLERANCE = '1.00';
 }

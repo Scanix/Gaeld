@@ -34,6 +34,8 @@ class Employee extends Model
 {
     use Auditable, BelongsToOrganization, HasUuids;
 
+    protected $appends = ['status'];
+
     protected $fillable = [
         'organization_id',
         'first_name',
@@ -71,5 +73,10 @@ class Employee extends Model
     public function fullName(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function getStatusAttribute(): string
+    {
+        return $this->is_active ? 'active' : 'inactive';
     }
 }

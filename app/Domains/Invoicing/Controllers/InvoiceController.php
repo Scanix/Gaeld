@@ -13,6 +13,7 @@ use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Domains\Invoicing\Actions\SendInvoiceAction;
 use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
@@ -104,7 +105,8 @@ class InvoiceController extends Controller
                 : null,
             'bankAccounts' => BankAccount::where('organization_id', $invoice->organization_id)
                 ->where('is_active', true)
-                ->select('id', 'name', 'iban', 'currency')
+                ->select('id', 'account_id', 'name', 'iban', 'currency')
+                ->with('ledgerAccount:id,code')
                 ->orderBy('name')
                 ->get(),
             'creditNotes' => $invoice->creditNotes()
@@ -209,6 +211,8 @@ class InvoiceController extends Controller
             $action->execute($invoice, $dto);
         } catch (InvalidInvoiceStateException|InvalidPaymentException $e) {
             return redirect()->back()->with('error', $e->getMessage());
+        } catch (ModelNotFoundException) {
+            return redirect()->back()->with('error', __('app.account_not_found', ['code' => $validated['bank_account_code'] ?? '']));
         }
 
         return redirect()->route('invoices.show', $invoice)
@@ -275,7 +279,7 @@ class InvoiceController extends Controller
 
     public function sendInvoice(Invoice $invoice, SendInvoiceAction $action): RedirectResponse
     {
-        $this->authorize('update', $invoice);
+        $this->authorize('send', $invoice);
 
         try {
             $action->execute($invoice->load('customer'));
@@ -289,7 +293,7 @@ class InvoiceController extends Controller
 
     public function sendReminder(Invoice $invoice, SendInvoiceReminderAction $action): RedirectResponse
     {
-        $this->authorize('update', $invoice);
+        $this->authorize('send', $invoice);
 
         try {
             $action->execute($invoice);

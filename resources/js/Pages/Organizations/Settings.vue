@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -31,6 +31,7 @@ const tabs = [
 ]
 
 // --- General form ---
+const initialName = props.organization.name || ''
 const generalForm = useForm({
   name: props.organization.name || '',
   legal_name: props.organization.legal_name || '',
@@ -44,6 +45,13 @@ const generalForm = useForm({
   locale: props.organization.locale || 'en',
   require_two_factor: props.organization.require_two_factor || false,
   default_payment_terms_days: props.organization.default_payment_terms_days ?? 30,
+})
+
+// Auto-sync legal_name when name changes, if legal_name still matches the original name
+watch(() => generalForm.name, (newName) => {
+  if (generalForm.legal_name === initialName || generalForm.legal_name === '') {
+    generalForm.legal_name = newName
+  }
 })
 
 function submitGeneral() {

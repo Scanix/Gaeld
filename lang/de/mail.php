@@ -8,6 +8,20 @@ return [
     'data_export_expiry' => 'Dieser Link ist 48 Stunden gültig.',
     'data_export_regards' => 'Freundliche Grüsse',
 
+    // Kontenplan-Export
+    'chart_export_subject' => 'Ihr Kontenplan-Export ist bereit',
+    'chart_export_greeting' => 'Hallo :name,',
+    'chart_export_body' => 'Ihr Kontenplan-Export wurde erstellt und steht zum Download bereit.',
+    'chart_export_button' => 'Export herunterladen',
+    'chart_export_expiry' => 'Dieser Link ist 24 Stunden gültig.',
+
+    // Buchhaltungsexport (Jahresabschluss)
+    'accounting_export_subject' => 'Ihr Buchhaltungsexport für :year ist bereit',
+    'accounting_export_greeting' => 'Hallo :name,',
+    'accounting_export_body' => 'Ihr Buchhaltungsexport für das Geschäftsjahr :year wurde erstellt und steht zum Download bereit.',
+    'accounting_export_button' => 'Export herunterladen',
+    'accounting_export_expiry' => 'Dieser Link ist 24 Stunden gültig.',
+
     // Zahlungserinnerungen
     'reminder_subject_first' => 'Zahlungserinnerung — Rechnung :number',
     'reminder_subject_second' => 'Zweite Erinnerung — Rechnung :number',

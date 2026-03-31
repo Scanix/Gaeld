@@ -625,6 +625,12 @@ parameters:
 			path: app/Domains/Assets/Models/FixedAsset.php
 
 		-
+			message: "#^Property 'net_book_value' does not exist in model\\.$#"
+			identifier: rules.modelAppends
+			count: 1
+			path: app/Domains/Assets/Models/FixedAsset.php
+
+		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$bankAccount\.$#'
 			identifier: property.notFound
 			count: 1
@@ -835,12 +841,6 @@ parameters:
 			path: app/Domains/Banking/Services/SuggestionService.php
 
 		-
-			message: '#^Access to an undefined property App\\Domains\\Contacts\\Models\\ContactPerson\:\:\$contactable_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Contacts/Controllers/ContactPersonController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 3
@@ -851,18 +851,6 @@ parameters:
 			identifier: method.notFound
 			count: 3
 			path: app/Domains/Contacts/Controllers/ContactPersonController.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\Contacts\\Models\\ContactPerson\:\:\$first_name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Contacts/Models/ContactPerson.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\Contacts\\Models\\ContactPerson\:\:\$last_name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Contacts/Models/ContactPerson.php
 
 		-
 			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
@@ -881,6 +869,18 @@ parameters:
 			identifier: property.notFound
 			count: 2
 			path: app/Domains/Expenses/Models/Expense.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$supplier\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Expenses/Queries/ExpenseQuery.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$vendor\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Expenses/Queries/ExpenseQuery.php
 
 		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
@@ -1011,7 +1011,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$amount\.$#'
 			identifier: property.notFound
-			count: 1
+			count: 2
 			path: app/Domains/Invoicing/Services/InvoiceService.php
 
 		-

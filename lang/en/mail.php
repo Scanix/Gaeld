@@ -8,6 +8,20 @@ return [
     'data_export_expiry' => 'This link will expire in 48 hours.',
     'data_export_regards' => 'Regards',
 
+    // Chart of accounts export
+    'chart_export_subject' => 'Your chart of accounts export is ready',
+    'chart_export_greeting' => 'Hello :name,',
+    'chart_export_body' => 'Your chart of accounts export has been generated and is ready for download.',
+    'chart_export_button' => 'Download export',
+    'chart_export_expiry' => 'This link will expire in 24 hours.',
+
+    // Accounting export (year-end)
+    'accounting_export_subject' => 'Your accounting export for :year is ready',
+    'accounting_export_greeting' => 'Hello :name,',
+    'accounting_export_body' => 'Your accounting export for fiscal year :year has been generated and is ready for download.',
+    'accounting_export_button' => 'Download export',
+    'accounting_export_expiry' => 'This link will expire in 24 hours.',
+
     // Payment reminders
     'reminder_subject_first' => 'Payment reminder — Invoice :number',
     'reminder_subject_second' => 'Second reminder — Invoice :number',

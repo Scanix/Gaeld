@@ -20,7 +20,7 @@ return [
     'manage_subscription' => 'Gérer l\'abonnement',
     'start_trial' => 'Commencer l\'essai gratuit',
     'switch_plan' => 'Changer pour ce plan',
-    'month' => 'mois',
+    'month' => 'Mois',
     'unlimited_users' => 'Utilisateurs illimités',
     'unlimited_invoices' => 'Factures illimitées',
     'users' => 'utilisateurs',
@@ -637,6 +637,7 @@ return [
     'role_owner' => 'Propriétaire',
     'role_admin' => 'Admin',
     'role_member' => 'Membre',
+    'role_accountant' => 'Comptable',
     'role_viewer' => 'Lecteur',
     'invited_by' => 'Invité par',
     'expires' => 'Expire',
@@ -669,6 +670,7 @@ return [
     'expense_deleted' => 'Dépense supprimée.',
     'expense_approved' => 'Dépense approuvée.',
     'expense_posted' => 'Dépense comptabilisée.',
+    'account_not_found' => 'Compte comptable « :code » introuvable.',
     'receipt_removed' => 'Justificatif supprimé.',
     'customer_created' => 'Client créé.',
     'customer_updated' => 'Client mis à jour.',
@@ -1279,4 +1281,13 @@ return [
     'error_503_description' => 'Nous effectuons actuellement une maintenance. Veuillez revenir bientôt.',
     'go_to_dashboard' => 'Aller au tableau de bord',
     'go_back' => 'Retour',
+
+    // Search
+    'search_results' => 'Résultats de recherche',
+
+    // Missing keys
+    'rate' => 'Taux',
+    'employee' => 'Employé(e)',
+    'per_month' => '/mois',
+    'export_dispatched' => 'Votre export est en cours de génération. Vous recevrez un e-mail avec le lien de téléchargement sous peu.',
 ];

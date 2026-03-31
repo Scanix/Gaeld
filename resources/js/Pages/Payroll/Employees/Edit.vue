@@ -19,8 +19,8 @@ const props = defineProps({
 })
 
 const statusOptions = [
-  { value: 'active', label: t('employee_status_active') },
-  { value: 'inactive', label: t('employee_status_inactive') },
+  { value: true, label: t('employee_status_active') },
+  { value: false, label: t('employee_status_inactive') },
 ]
 
 const form = useForm({
@@ -137,7 +137,7 @@ function submit() {
               type="number"
               step="0.01"
               min="0"
-              :label="t('gross_salary') + ' (CHF/mois)'"
+              :label="t('gross_salary') + ' (CHF' + t('per_month') + ')'"
               :error="form.errors.gross_salary"
               required
             />
