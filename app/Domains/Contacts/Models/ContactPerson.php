@@ -15,6 +15,8 @@ class ContactPerson extends Model
 {
     use HasUuids;
 
+    protected $table = 'contact_persons';
+
     protected $fillable = [
         'contactable_type',
         'contactable_id',

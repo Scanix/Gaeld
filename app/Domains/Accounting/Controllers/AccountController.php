@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Controllers;
 
 use App\Domains\Accounting\Actions\ImportAccountsAction;
+use App\Domains\Accounting\Jobs\ExportChartOfAccountsJob;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Requests\ImportAccountsRequest;
 use App\Domains\Accounting\Requests\StoreAccountRequest;
@@ -11,7 +12,8 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * CRUD operations for chart-of-accounts entries.
@@ -71,38 +73,32 @@ class AccountController extends Controller
             ->with('success', __('app.import_success'));
     }
 
-    public function export(Request $request, CurrentOrganization $currentOrg): StreamedResponse
+    public function export(Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('viewAny', Account::class);
 
         $format = $request->input('format', 'csv');
-        $accounts = Account::where('organization_id', $currentOrg->id())
-            ->orderBy('code')
-            ->get(['code', 'name', 'type', 'description', 'is_active']);
 
-        if ($format === 'json') {
-            return response()->streamDownload(function () use ($accounts) {
-                echo $accounts->toJson(JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            }, 'chart_of_accounts.json', [
-                'Content-Type' => 'application/json',
-            ]);
-        }
+        ExportChartOfAccountsJob::dispatch(
+            $currentOrg->id(),
+            (string) $request->user()->id,
+            $format,
+        );
 
-        return response()->streamDownload(function () use ($accounts) {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['code', 'name', 'type', 'description', 'is_active']);
-            foreach ($accounts as $account) {
-                fputcsv($handle, [
-                    $account->code,
-                    $account->name,
-                    $account->type->value,
-                    $account->description,
-                    $account->is_active ? '1' : '0',
-                ]);
-            }
-            fclose($handle);
-        }, 'chart_of_accounts.csv', [
-            'Content-Type' => 'text/csv',
-        ]);
+        return redirect()->route('accounting.chart')
+            ->with('success', __('app.export_dispatched'));
+    }
+
+    public function downloadExport(Request $request): BinaryFileResponse
+    {
+        abort_unless($request->hasValidSignature(), 403);
+
+        $path = $request->query('path', '');
+
+        $absolutePath = Storage::disk('local')->path('exports/'.basename($path));
+
+        abort_unless(file_exists($absolutePath), 404);
+
+        return response()->download($absolutePath);
     }
 }

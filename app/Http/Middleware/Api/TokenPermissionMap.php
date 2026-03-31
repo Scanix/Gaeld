@@ -56,6 +56,7 @@ final class TokenPermissionMap
                 'update' => Permission::OrganizationEdit,
                 'delete' => Permission::OrganizationDelete,
                 'manageUsers' => Permission::OrganizationManageUsers,
+                'viewAuditLog' => Permission::OrganizationViewAuditLog,
             ],
             Webhook::class => [
                 'viewAny' => Permission::OrganizationEdit,

@@ -66,7 +66,11 @@ const showSettle = ref(false)
 const settleForm = useForm({})
 
 function postSettlement() {
-  settleForm.post('/reports/vat/settlement', {
+  const params = exportParams.value
+  settleForm.transform(() => ({
+    from_date: params.from,
+    to_date: params.to,
+  })).post('/reports/vat/settlement', {
     preserveScroll: true,
     onSuccess: () => { showSettle.value = false },
   })

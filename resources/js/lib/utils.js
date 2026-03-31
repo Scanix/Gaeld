@@ -12,6 +12,8 @@ export function formatCurrency(amount, currency = 'CHF') {
   }).format(amount)
 }
 
+export const formatMoney = formatCurrency
+
 export function formatDate(date) {
   if (!date) return ''
   return new Intl.DateTimeFormat('de-CH').format(new Date(date))

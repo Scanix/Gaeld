@@ -8,6 +8,20 @@ return [
     'data_export_expiry' => 'Questo link scadrà tra 48 ore.',
     'data_export_regards' => 'Cordiali saluti',
 
+    // Export piano dei conti
+    'chart_export_subject' => 'Il tuo export del piano dei conti è pronto',
+    'chart_export_greeting' => 'Ciao :name,',
+    'chart_export_body' => 'Il tuo export del piano dei conti è stato generato ed è pronto per il download.',
+    'chart_export_button' => 'Scarica l\'export',
+    'chart_export_expiry' => 'Questo link scadrà tra 24 ore.',
+
+    // Export contabile (chiusura annuale)
+    'accounting_export_subject' => 'Il tuo export contabile per :year è pronto',
+    'accounting_export_greeting' => 'Ciao :name,',
+    'accounting_export_body' => 'Il tuo export contabile per l\'esercizio :year è stato generato ed è pronto per il download.',
+    'accounting_export_button' => 'Scarica l\'export',
+    'accounting_export_expiry' => 'Questo link scadrà tra 24 ore.',
+
     // Solleciti di pagamento
     'reminder_subject_first' => 'Promemoria di pagamento — Fattura :number',
     'reminder_subject_second' => 'Secondo promemoria — Fattura :number',

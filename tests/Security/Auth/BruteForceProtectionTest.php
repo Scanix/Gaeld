@@ -4,6 +4,8 @@ namespace Tests\Security\Auth;
 
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
+use Illuminate\Routing\Middleware\ThrottleRequests;
+use PragmaRX\Google2FA\Google2FA;
 use Tests\Security\SecurityTestCase;
 
 /**
@@ -12,6 +14,15 @@ use Tests\Security\SecurityTestCase;
  */
 class BruteForceProtectionTest extends SecurityTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Re-enable the real throttle middleware (disabled globally for testing)
+        $this->app->make(\Illuminate\Routing\Router::class)
+            ->aliasMiddleware('throttle', ThrottleRequests::class);
+    }
+
     // ──────────────────────────────────────────────────────────────
     //  Login — throttle:5,1
     // ──────────────────────────────────────────────────────────────
@@ -37,7 +48,9 @@ class BruteForceProtectionTest extends SecurityTestCase
 
     public function test_two_factor_challenge_is_throttled_after_five_attempts(): void
     {
-        $user = User::factory()->create();
+        // Generate a valid base32 secret so Google2FA doesn't throw
+        $secret = app(Google2FA::class)->generateSecretKey();
+        $user = User::factory()->create(['two_factor_secret' => $secret]);
         $payload = ['code' => '000000'];
 
         // Pre-load the session as if we just completed the password step

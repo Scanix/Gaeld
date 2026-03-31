@@ -33,7 +33,15 @@ const form = useForm({
 })
 
 function submit() {
-  form.post('/payroll/employees')
+  form.transform((data) => ({
+    first_name: data.first_name,
+    last_name: data.last_name,
+    email: data.email || null,
+    ahv_number: data.ahv_number || null,
+    entry_date: data.start_date,
+    gross_salary: data.gross_salary,
+    is_active: data.status === 'active',
+  })).post('/payroll/employees')
 }
 </script>
 
@@ -124,7 +132,7 @@ function submit() {
               type="number"
               step="0.01"
               min="0"
-              :label="t('gross_salary') + ' (CHF/mois)'"
+              :label="t('gross_salary') + ' (CHF' + t('per_month') + ')'"
               :error="form.errors.gross_salary"
               required
             />

@@ -22,8 +22,12 @@ const props = defineProps({
 // Step state: 1=Select, 2=Preview, 3=Generate, 4=Post
 const step = ref(1)
 const selectedEmployeeIds = ref([])
-const month = ref(new Date().getMonth() + 1)
-const year = ref(new Date().getFullYear())
+const month = ref(String(new Date().getMonth() + 1))
+const year = ref(
+  props.fiscalYears.length
+    ? String(props.fiscalYears[0])
+    : String(new Date().getFullYear())
+)
 const preview = ref([])
 const generatedSlipIds = ref([])
 const generating = ref(false)
@@ -32,17 +36,17 @@ const errorMessage = ref('')
 
 const monthOptions = computed(() =>
   Array.from({ length: 12 }, (_, i) => ({
-    value: i + 1,
+    value: String(i + 1),
     label: new Date(2000, i).toLocaleString('default', { month: 'long' }),
   }))
 )
 
 const yearOptions = computed(() =>
   props.fiscalYears.length
-    ? props.fiscalYears.map(y => ({ value: y, label: String(y) }))
+    ? props.fiscalYears.map(y => ({ value: String(y), label: String(y) }))
     : Array.from({ length: 3 }, (_, i) => {
         const v = new Date().getFullYear() - i
-        return { value: v, label: String(v) }
+        return { value: String(v), label: String(v) }
       })
 )
 
@@ -93,13 +97,14 @@ async function generateSlips() {
   generating.value = true
   errorMessage.value = ''
   try {
-    const response = await fetch('/payroll/run/generate', {
+    const response = await fetch('/payroll/run', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
       },
-      body: JSON.stringify({ employee_ids: selectedEmployeeIds.value, month: month.value, year: year.value }),
+      body: JSON.stringify({ employee_ids: selectedEmployeeIds.value, month: month.value, year: year.value, post: true }),
     })
     if (!response.ok) {
       const err = await response.json().catch(() => ({}))
@@ -108,7 +113,7 @@ async function generateSlips() {
     }
     const data = await response.json()
     generatedSlipIds.value = data.slip_ids ?? []
-    step.value = 3
+    step.value = 4
   } catch {
     errorMessage.value = t('payroll_generate_error')
   } finally {
@@ -120,18 +125,21 @@ async function postSlips() {
   posting.value = true
   errorMessage.value = ''
   try {
-    const response = await fetch('/payroll/run/post', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-      },
-      body: JSON.stringify({ slip_ids: generatedSlipIds.value }),
-    })
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}))
-      errorMessage.value = err.message || t('payroll_post_error')
-      return
+    const csrfToken = document.querySelector('meta[name=csrf-token]')?.content ?? ''
+    for (const slipId of generatedSlipIds.value) {
+      const response = await fetch(`/payroll/salary-slips/${slipId}/post`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+      })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        errorMessage.value = err.message || t('payroll_post_error')
+        return
+      }
     }
     step.value = 4
   } catch {
@@ -211,7 +219,7 @@ async function postSlips() {
               />
               <div class="flex-1">
                 <p class="font-medium text-sm">{{ emp.first_name }} {{ emp.last_name }}</p>
-                <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ emp.position }} — CHF {{ formatSwiss(emp.gross_salary) }}/mois</p>
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ emp.position }} — CHF {{ formatSwiss(emp.gross_salary) }}{{ t('per_month') }}</p>
               </div>
             </label>
           </div>

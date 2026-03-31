@@ -25,10 +25,10 @@ class YearEndClosingController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
-        $this->authorize('viewAny', Account::class);
+        $this->authorize('closeYear', Account::class);
 
         $orgId = $currentOrg->id();
-        $year = $request->integer('year', now()->subYear()->year);
+        $year = $request->integer('year', now()->year);
         $from = "{$year}-01-01";
         $to = "{$year}-12-31";
 
@@ -46,7 +46,7 @@ class YearEndClosingController extends Controller
 
     public function store(Request $request, CurrentOrganization $currentOrg, LedgerService $ledger): RedirectResponse
     {
-        $this->authorize('create', Account::class);
+        $this->authorize('closeYear', Account::class);
 
         $orgId = $currentOrg->id();
 

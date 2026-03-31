@@ -5,6 +5,8 @@ namespace App\Domains\Invoicing\Services;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Enums\VatEntryType;
+use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -155,6 +157,30 @@ class InvoiceService
                 description: "{$docType} {$invoice->number} — ".($invoice->customer?->name ?? 'N/A'),
                 lines: $lines,
             ));
+
+            // Create VatEntry records for the VAT report
+            foreach ($groupedByVat as $vatRateId => $invoiceLines) {
+                if ($vatRateId === 'none') {
+                    continue;
+                }
+
+                $netAmount = '0';
+                $vatAmount = '0';
+                foreach ($invoiceLines as $line) {
+                    $netAmount = bcadd($netAmount, Money::absoluteAmount((string) $line->amount), 2);
+                    $vatAmount = bcadd($vatAmount, Money::absoluteAmount((string) ($line->vat_amount ?? '0')), 2);
+                }
+
+                if (bccomp($vatAmount, '0', 2) > 0) {
+                    VatEntry::create([
+                        'journal_entry_id' => $journalEntry->id,
+                        'vat_rate_id' => $vatRateId,
+                        'base_amount' => $netAmount,
+                        'vat_amount' => $vatAmount,
+                        'type' => VatEntryType::Output,
+                    ]);
+                }
+            }
 
             $invoice->update([
                 'status' => InvoiceStatus::Sent,

@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -22,32 +21,12 @@ const props = defineProps({
 const yearOptions = props.fiscalYears.map(y => ({ value: String(y), label: String(y) }))
 
 const form = useForm({ fiscal_year: props.currentFiscalYear ? String(props.currentFiscalYear) : '' })
-const loading = ref(false)
 
-async function generateExport() {
+function generateExport() {
   if (!form.fiscal_year) return
-  loading.value = true
-  try {
-    const res = await fetch('/accounting/export/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-      },
-      body: JSON.stringify({ fiscal_year: form.fiscal_year }),
-    })
-    if (res.ok) {
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `gaeld-export-${form.fiscal_year}.zip`
-      a.click()
-      URL.revokeObjectURL(url)
-    }
-  } finally {
-    loading.value = false
-  }
+  form.post('/accounting/export', {
+    preserveScroll: true,
+  })
 }
 
 const zipContents = [
@@ -84,11 +63,11 @@ const zipContents = [
           />
 
           <Button
-            :disabled="!form.fiscal_year || loading"
+            :disabled="!form.fiscal_year || form.processing"
             class="w-full sm:w-auto"
             @click="generateExport"
           >
-            <template v-if="loading">
+            <template v-if="form.processing">
               <svg class="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />

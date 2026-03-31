@@ -41,7 +41,11 @@ const form = useForm({
 })
 
 function submit() {
-  form.put(`/assets/${props.asset.id}`)
+  form.transform(data => ({
+    ...data,
+    depreciation_method: data.depreciation_method === 'straight_line' ? 'linear' : data.depreciation_method,
+    depreciation_expense_account_id: data.depreciation_account_id,
+  })).put(`/assets/${props.asset.id}`)
 }
 </script>
 

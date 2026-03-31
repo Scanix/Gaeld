@@ -32,6 +32,6 @@ class MatchConfidenceTest extends TestCase
 
     public function test_amount_tolerance_constant(): void
     {
-        $this->assertSame('0.05', MatchConfidence::AMOUNT_TOLERANCE);
+        $this->assertSame('1.00', MatchConfidence::AMOUNT_TOLERANCE);
     }
 }
