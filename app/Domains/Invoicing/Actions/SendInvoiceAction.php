@@ -16,6 +16,7 @@ class SendInvoiceAction
 {
     public function __construct(
         private CurrentOrganization $currentOrg,
+        private GenerateQrInvoicePdfAction $pdfAction,
     ) {}
 
     public function execute(Invoice $invoice): void
@@ -31,7 +32,11 @@ class SendInvoiceAction
         }
 
         $organization = $this->currentOrg->get();
+        $locale = $organization->locale ?? app()->getLocale();
 
-        Mail::to($customerEmail)->send(new InvoiceMail($invoice, $organization));
+        $pdf = $this->pdfAction->execute($invoice, $organization, $locale);
+        $filename = 'invoice-'.($invoice->number ?? $invoice->id).'.pdf';
+
+        Mail::to($customerEmail)->send(new InvoiceMail($invoice, $organization, $pdf, $filename));
     }
 }
