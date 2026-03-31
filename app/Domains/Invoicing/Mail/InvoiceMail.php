@@ -5,6 +5,7 @@ namespace App\Domains\Invoicing\Mail;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Attachment;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -17,6 +18,8 @@ class InvoiceMail extends Mailable
     public function __construct(
         public readonly Invoice $invoice,
         public readonly Organization $organization,
+        private readonly ?string $pdfContent = null,
+        private readonly ?string $pdfFilename = null,
     ) {}
 
     public function envelope(): Envelope
@@ -38,6 +41,21 @@ class InvoiceMail extends Mailable
                     : null,
             ],
         );
+    }
+
+    /**
+     * @return array<int, Attachment>
+     */
+    public function attachments(): array
+    {
+        if (! $this->pdfContent) {
+            return [];
+        }
+
+        return [
+            Attachment::fromData(fn () => $this->pdfContent, $this->pdfFilename ?? 'invoice.pdf')
+                ->withMime('application/pdf'),
+        ];
     }
 
     private function replacePlaceholders(string $text): string
