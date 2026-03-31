@@ -2,8 +2,10 @@
 /public/build
 /public/hot
 /storage/*.key
+/storage/app/private/
 /storage/framework/cache/*
 /storage/framework/sessions/*
+/storage/framework/testing/
 /storage/framework/views/*
 /storage/logs/*
 !/storage/logs/.gitkeep
@@ -14,6 +16,7 @@
 .env
 .env.backup
 .env.production
+.env.testing
 .phpunit.result.cache
 .phpunit.cache
 Homestead.json
@@ -29,6 +32,7 @@ yarn-error.log
 .DS_Store
 /bootstrap/cache/packages.php
 /bootstrap/cache/services.php
+/bootstrap/cache/routes-v7.php
 
 # Scribe API docs (generated output)
 /public/docs

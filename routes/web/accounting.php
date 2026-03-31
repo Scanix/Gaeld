@@ -17,6 +17,7 @@ Route::put('/accounting/accounts/{account}', [AccountController::class, 'update'
 Route::delete('/accounting/accounts/{account}', [AccountController::class, 'destroy'])->name('accounting.accounts.destroy');
 Route::post('/accounting/accounts/import', [AccountController::class, 'import'])->name('accounting.accounts.import');
 Route::get('/accounting/accounts/export', [AccountController::class, 'export'])->name('accounting.accounts.export');
+Route::get('/accounting/accounts/export/download', [AccountController::class, 'downloadExport'])->name('accounting.accounts.export.download')->middleware('signed');
 Route::get('/accounting/journal-entries', [AccountingController::class, 'journalEntries'])->name('accounting.journal');
 Route::get('/accounting/trial-balance', [AccountingController::class, 'trialBalance'])->name('accounting.trialBalance');
 Route::get('/accounting/trial-balance/export/{format}', [AccountingController::class, 'exportTrialBalance'])->name('accounting.trialBalance.export');

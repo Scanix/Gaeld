@@ -13,6 +13,7 @@ use App\Domains\Expenses\DTOs\CreateExpenseData;
 use App\Domains\Expenses\DTOs\UpdateExpenseData;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Jobs\ProcessReceiptOcrJob;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Queries\ExpenseQuery;
 use App\Domains\Expenses\Requests\ScanReceiptRequest;
@@ -174,6 +175,8 @@ class ExpenseController extends Controller
             $action->execute($expense, $validated['expense_account_code']);
         } catch (InvalidExpenseStateException $e) {
             return redirect()->back()->with('error', $e->getMessage());
+        } catch (ModelNotFoundException) {
+            return redirect()->back()->with('error', __('app.account_not_found', ['code' => $validated['expense_account_code']]));
         }
 
         return redirect()->route('expenses.show', $expense)

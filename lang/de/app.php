@@ -638,6 +638,7 @@ return [
     'role_owner' => 'Eigentümer',
     'role_admin' => 'Admin',
     'role_member' => 'Mitglied',
+    'role_accountant' => 'Buchhalter',
     'role_viewer' => 'Betrachter',
     'invited_by' => 'Eingeladen von',
     'expires' => 'Läuft ab',

@@ -40,7 +40,18 @@ const form = useForm({
 })
 
 function submit() {
-  form.post('/assets')
+  form.transform((data) => ({
+    name: data.name,
+    description: data.description || null,
+    purchase_date: data.purchase_date,
+    purchase_amount: data.purchase_amount,
+    useful_life_years: data.useful_life_years,
+    salvage_value: data.salvage_value || '0',
+    depreciation_method: data.depreciation_method === 'straight_line' ? 'linear' : data.depreciation_method,
+    asset_account_id: data.asset_account_id,
+    depreciation_expense_account_id: data.depreciation_account_id,
+    accumulated_depreciation_account_id: data.accumulated_depreciation_account_id,
+  })).post('/assets')
 }
 </script>
 

@@ -45,4 +45,10 @@ class OrganizationPolicy
         return $this->view($user, $organization)
             && $user->hasPermissionTo(Permission::OrganizationManageUsers);
     }
+
+    public function viewAuditLog(User $user, Organization $organization): bool
+    {
+        return $this->view($user, $organization)
+            && $user->hasPermissionTo(Permission::OrganizationViewAuditLog);
+    }
 }

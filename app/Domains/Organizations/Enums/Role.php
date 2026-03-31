@@ -2,11 +2,12 @@
 
 namespace App\Domains\Organizations\Enums;
 
-/** Organization membership roles (owner, admin, member). */
+/** Organization membership roles. */
 enum Role: string
 {
     case Owner = 'owner';
     case Admin = 'admin';
+    case Accountant = 'accountant';
     case Member = 'member';
     case Viewer = 'viewer';
 
@@ -18,6 +19,7 @@ enum Role: string
         return match ($this) {
             self::Owner => Permission::cases(),
             self::Admin => $this->adminPermissions(),
+            self::Accountant => $this->accountantPermissions(),
             self::Member => $this->memberPermissions(),
             self::Viewer => $this->viewerPermissions(),
         };
@@ -88,11 +90,62 @@ enum Role: string
 
             // Organization
             Permission::OrganizationView,
+            Permission::OrganizationViewAuditLog,
 
             // Reporting
             Permission::ReportingView,
 
             // Payroll
+            Permission::PayrollView,
+            Permission::PayrollCreate,
+            Permission::PayrollEdit,
+        ];
+    }
+
+    /**
+     * @return Permission[]
+     */
+    private function accountantPermissions(): array
+    {
+        return [
+            // Accounting (full access including delete & close-year)
+            Permission::AccountingView,
+            Permission::AccountingCreate,
+            Permission::AccountingEdit,
+            Permission::AccountingDelete,
+            Permission::AccountingCloseYear,
+
+            // Banking (view + import/reconcile, no create/edit/delete)
+            Permission::BankingView,
+            Permission::BankingImport,
+            Permission::BankingReconcile,
+
+            // Contacts (view/create/edit, no delete)
+            Permission::ContactsView,
+            Permission::ContactsCreate,
+            Permission::ContactsEdit,
+
+            // Expenses (view/create/edit/approve, no delete)
+            Permission::ExpensesView,
+            Permission::ExpensesCreate,
+            Permission::ExpensesEdit,
+            Permission::ExpensesApprove,
+
+            // Invoicing (view/create/edit/finalize/record-payment, no delete)
+            Permission::InvoicingView,
+            Permission::InvoicingCreate,
+            Permission::InvoicingEdit,
+            Permission::InvoicingFinalize,
+            Permission::InvoicingRecordPayment,
+
+            // Organization
+            Permission::OrganizationView,
+            Permission::OrganizationViewAuditLog,
+
+            // Reporting
+            Permission::ReportingView,
+
+            // Payroll (view/create/edit, no delete)
             Permission::PayrollView,
             Permission::PayrollCreate,
             Permission::PayrollEdit,

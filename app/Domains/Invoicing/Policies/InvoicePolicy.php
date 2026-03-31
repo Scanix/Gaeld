@@ -57,6 +57,13 @@ class InvoicePolicy extends BasePolicy
             && $user->hasPermissionTo(Permission::InvoicingRecordPayment);
     }
 
+    public function send(User $user, Invoice $invoice): bool
+    {
+        return $this->belongsToOrganization($user, $invoice)
+            && $user->hasPermissionTo(Permission::InvoicingEdit)
+            && in_array($invoice->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue], true);
+    }
+
     public function cancel(User $user, Invoice $invoice): bool
     {
         return $this->belongsToOrganization($user, $invoice)

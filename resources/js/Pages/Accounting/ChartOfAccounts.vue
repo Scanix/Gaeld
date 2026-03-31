@@ -84,6 +84,10 @@ function performDelete() {
 
 // Import dialog
 const showImport = ref(false)
+
+function requestExport() {
+  router.get('/accounting/accounts/export', { format: 'csv' }, { preserveScroll: true })
+}
 </script>
 
 <template>
@@ -100,11 +104,9 @@ const showImport = ref(false)
             <Button v-if="can?.create" variant="outline" size="sm" @click="showImport = true">
               <Upload class="mr-1 h-4 w-4" /> {{ t('import') }}
             </Button>
-            <a href="/accounting/accounts/export?format=csv" class="inline-flex items-center">
-              <Button variant="outline" size="sm" type="button">
-                <Download class="mr-1 h-4 w-4" /> {{ t('export') }}
-              </Button>
-            </a>
+            <Button variant="outline" size="sm" type="button" @click="requestExport">
+              <Download class="mr-1 h-4 w-4" /> {{ t('export') }}
+            </Button>
             <Button v-if="can?.create" size="sm" @click="openCreate">
               <Plus class="mr-1 h-4 w-4" /> {{ t('add_account') }}
             </Button>

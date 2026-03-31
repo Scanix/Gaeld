@@ -42,7 +42,20 @@ function removeLine(index) {
 }
 
 function submit() {
-  form.post('/invoices/recurring')
+  form
+    .transform((data) => ({
+      customer_id: data.customer_id,
+      frequency: data.frequency,
+      next_issue_date: data.start_date,
+      end_date: data.end_date || null,
+      template_data: {
+        lines: data.lines,
+        notes: data.notes,
+        currency: data.currency,
+        payment_terms: data.payment_terms,
+      },
+    }))
+    .post('/invoices/recurring')
 }
 
 const clientOptions = computed(() =>

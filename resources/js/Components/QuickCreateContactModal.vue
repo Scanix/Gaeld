@@ -5,7 +5,8 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
-import { useTranslations } from '@/lib/useTranslations'\nimport { countryOptions, currencyOptions } from '@/lib/contactOptions'
+import { useTranslations } from '@/lib/useTranslations'
+import { countryOptions, currencyOptions } from '@/lib/contactOptions'
 
 const props = defineProps({
   open: Boolean,

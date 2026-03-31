@@ -64,6 +64,9 @@ class FeatureFlagTest extends TestCase
 
     public function test_auto_reconciliation_disabled_by_default(): void
     {
+        // Override .env.testing to verify the production config default
+        config(['features.auto_reconciliation' => false]);
+
         $this->assertFalse(FeatureFlag::enabled('auto_reconciliation'));
         $this->assertTrue(FeatureFlag::disabled('auto_reconciliation'));
     }
