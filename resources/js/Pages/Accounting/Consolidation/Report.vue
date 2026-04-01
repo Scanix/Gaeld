@@ -10,7 +10,7 @@ import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { ref } from 'vue'
 import { router, useForm, Link } from '@inertiajs/vue3'
 import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next'
@@ -22,6 +22,7 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 // Consolidated report data
 const reportColumns = [

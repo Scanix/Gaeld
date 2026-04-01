@@ -12,9 +12,10 @@ import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { computed, ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, GitBranch } from 'lucide-vue-next'
 
 const props = defineProps({
   costCenters: Array,
@@ -129,6 +130,15 @@ function performDelete() {
       <CardContent>
         <p class="mb-4 text-sm text-[hsl(var(--muted-foreground))]">{{ t('cost_centers_desc') }}</p>
         <DataTable :columns="columns" :rows="rows">
+          <template #empty>
+            <EmptyState
+              :icon="GitBranch"
+              :title="t('empty_cost_centers_title')"
+              :description="t('empty_cost_centers_desc')"
+              :action-label="t('create_first')"
+              @action="openCreate"
+            />
+          </template>
           <template #cell-is_active="{ value }">
             <Badge :variant="value ? 'success' : 'default'">{{ value ? t('yes') : t('no') }}</Badge>
           </template>

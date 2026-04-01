@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Expenses\Controllers\ExpenseCategoryController;
 use App\Domains\Organizations\Controllers\ActivityLogController;
 use App\Domains\Organizations\Controllers\InvitationController;
 use App\Domains\Organizations\Controllers\MemberController;
@@ -18,6 +19,11 @@ Route::post('/settings/invoice/logo', [OrganizationSettingsController::class, 'u
 Route::delete('/settings/invoice/logo', [OrganizationSettingsController::class, 'deleteLogo'])->name('settings.logo.delete');
 Route::get('/settings/logo', [OrganizationSettingsController::class, 'serveLogo'])->name('settings.logo');
 Route::put('/settings/communications', [OrganizationSettingsController::class, 'updateCommunications'])->name('settings.communications');
+
+// Expense categories
+Route::get('/settings/expense-categories', [ExpenseCategoryController::class, 'index'])->name('settings.expense-categories.index');
+Route::post('/settings/expense-categories', [ExpenseCategoryController::class, 'store'])->name('settings.expense-categories.store');
+Route::delete('/settings/expense-categories/{expenseCategory}', [ExpenseCategoryController::class, 'destroy'])->name('settings.expense-categories.destroy');
 
 // Activity log
 Route::get('/settings/activity-log', [ActivityLogController::class, 'index'])->name('settings.activity-log');

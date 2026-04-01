@@ -8,7 +8,7 @@ import Badge from '@/Components/UI/Badge.vue'
 import Button from '@/Components/UI/Button.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { router, Link } from '@inertiajs/vue3'
 import { ArrowLeft, Lock } from 'lucide-vue-next'
 
@@ -17,6 +17,7 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const statusVariant = {
   draft: 'default',

@@ -13,7 +13,8 @@ import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
+import { Plus, Pencil, Trash2, Percent } from 'lucide-vue-next'
 
 const props = defineProps({
   vatRates: { type: Array, default: () => [] },
@@ -97,6 +98,15 @@ function doDelete() {
       </CardHeader>
       <CardContent>
         <DataTable :columns="columns" :rows="vatRates">
+          <template #empty>
+            <EmptyState
+              :icon="Percent"
+              :title="t('empty_vat_rates_title')"
+              :description="t('empty_vat_rates_desc')"
+              :action-label="t('create_first')"
+              @action="openCreate"
+            />
+          </template>
           <template #cell-rate="{ row }">
             {{ row.rate }}%
           </template>

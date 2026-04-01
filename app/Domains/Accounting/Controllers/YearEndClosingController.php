@@ -97,7 +97,7 @@ class YearEndClosingController extends Controller
                         accountId: (string) $row['account_id'],
                         debit: (string) $row['balance'],
                         credit: '0',
-                        description: "Bouclement {$year} — clôture ".$row['code'],
+                        description: __('app.closing_line_description', ['year' => $year, 'code' => $row['code']]),
                     );
                     $netCreditOnResult = bcadd($netCreditOnResult, (string) $row['balance'], 2);
                 }
@@ -110,7 +110,7 @@ class YearEndClosingController extends Controller
                         accountId: (string) $row['account_id'],
                         debit: '0',
                         credit: (string) $row['balance'],
-                        description: "Bouclement {$year} — clôture ".$row['code'],
+                        description: __('app.closing_line_description', ['year' => $year, 'code' => $row['code']]),
                     );
                     $netDebitOnResult = bcadd($netDebitOnResult, (string) $row['balance'], 2);
                 }
@@ -123,13 +123,13 @@ class YearEndClosingController extends Controller
                     accountId: (string) $resultAccount->id,
                     debit: $netDebit,
                     credit: $netCredit,
-                    description: "Bouclement {$year} — résultat de l'exercice",
+                    description: __('app.closing_result_description', ['year' => $year]),
                 );
 
                 $entry = new JournalEntryData(
                     date: $validated['closing_date'],
                     reference: $validated['reference'],
-                    description: "Bouclement de compte {$year}",
+                    description: __('app.closing_entry_description', ['year' => $year]),
                     lines: $lines,
                 );
 

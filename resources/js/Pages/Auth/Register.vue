@@ -28,7 +28,7 @@ function submit() {
 </script>
 
 <template>
-  <Head title="Register" />
+  <Head :title="t('create_account')" />
 
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">
@@ -110,6 +110,13 @@ function submit() {
         {{ t('have_account') }}
         <Link href="/login" class="font-medium text-[hsl(var(--primary))] hover:underline">
           {{ t('sign_in') }}
+        </Link>
+      </p>
+
+      <p v-if="isSaas" class="mt-2 text-center text-sm text-[hsl(var(--muted-foreground))]">
+        {{ t('want_trial') }}
+        <Link href="/signup" class="font-medium text-[hsl(var(--primary))] hover:underline">
+          {{ t('start_free_trial') }}
         </Link>
       </p>
     </div>

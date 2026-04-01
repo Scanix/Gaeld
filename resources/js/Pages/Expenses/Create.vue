@@ -19,6 +19,7 @@ import { Plus, HelpCircle } from 'lucide-vue-next'
 const props = defineProps({
   vatRates: { type: Array, default: () => [] },
   suppliers: { type: Array, default: () => [] },
+  categories: { type: Array, default: () => [] },
 })
 
 const form = useForm({
@@ -31,6 +32,7 @@ const form = useForm({
   vendor: '',
   supplier_id: '',
   currency: 'CHF',
+  payment_method: '',
   receipt: null,
 })
 
@@ -46,21 +48,19 @@ function onReceiptChange(e) {
 
 const { t } = useTranslations()
 
-const categoryOptions = [
-  { value: 'Office Supplies', label: t('cat_office_supplies') },
-  { value: 'Travel', label: t('cat_travel') },
-  { value: 'Software', label: t('cat_software') },
-  { value: 'Professional Services', label: t('cat_professional_services') },
-  { value: 'Marketing', label: t('cat_marketing') },
-  { value: 'Rent', label: t('cat_rent') },
-  { value: 'Utilities', label: t('cat_utilities') },
-  { value: 'Insurance', label: t('cat_insurance') },
-  { value: 'Other', label: t('cat_other') },
-]
+const categoryOptions = props.categories.map(c => ({ value: c.name, label: c.name }))
 
 const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
+]
+
+const paymentMethodOptions = [
+  { value: '', label: '—' },
+  { value: 'cash', label: t('payment_cash') },
+  { value: 'card', label: t('payment_card') },
+  { value: 'bank_transfer', label: t('payment_bank_transfer') },
+  { value: 'other', label: t('payment_other') },
 ]
 
 const supplierList = reactive([...props.suppliers])
@@ -164,6 +164,13 @@ function onSupplierCreated(supplier) {
               type="number"
               :label="t('vat_amount')"
               :error="form.errors.vat_amount"
+            />
+            <FormSelect
+              id="payment_method"
+              v-model="form.payment_method"
+              :label="t('payment_method')"
+              :options="paymentMethodOptions"
+              :error="form.errors.payment_method"
             />
           </div>
 

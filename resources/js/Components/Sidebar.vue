@@ -166,7 +166,7 @@ function isGroupActive(item) {
       </Link>
       <button
         class="ml-2 rounded p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] lg:hidden"
-        aria-label="Close navigation"
+        :aria-label="t('close_navigation')"
         @click="emit('closeMobile')"
       >
         <X class="h-5 w-5" />
@@ -294,7 +294,7 @@ function isGroupActive(item) {
     <div class="hidden border-t border-[hsl(var(--sidebar-border))] p-3 lg:block">
       <button
         class="flex w-full items-center justify-center rounded-lg p-2 text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
-        :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+        :aria-label="collapsed ? t('expand_sidebar') : t('collapse_sidebar')"
         @click="emit('update:collapsed', !collapsed)"
       >
         <ChevronLeft v-if="!collapsed" class="h-4 w-4" />

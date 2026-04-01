@@ -16,10 +16,11 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import Combobox from '@/Components/UI/Combobox.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { computed } from 'vue'
 
 const { t } = useTranslations()
+const { formatDate } = useFormatters()
 
 const props = defineProps({
   asset: Object,

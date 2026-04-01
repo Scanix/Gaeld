@@ -5,13 +5,14 @@ import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Pencil, Trash2, Copy, Eye } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 function daysOverdue(dueDate) {
   if (!dueDate) return 0
@@ -156,7 +157,7 @@ const statusFilters = computed(() => [
         <span class="flex flex-wrap items-center gap-1.5">
           {{ formatDate(value) }}
           <Badge v-if="isInvoiceOverdue(row)" variant="destructive" class="text-xs">
-            {{ daysOverdue(value) }}d
+            {{ t('overdue_days', { days: daysOverdue(value) }) }}
           </Badge>
         </span>
       </template>

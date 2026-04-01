@@ -13,7 +13,7 @@ import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
 import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail } from 'lucide-vue-next'
@@ -31,6 +31,7 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 const showPaymentModal = ref(false)
 const showDeleteDialog = ref(false)
@@ -163,7 +164,7 @@ const bankAccountOptions = computed(() =>
         <div class="flex items-center gap-3">
           <div>
             <Badge :variant="statusVariant[invoice?.status] ?? 'secondary'" class="mb-1">
-              {{ invoice?.status }}
+              {{ t('invoice_status_' + invoice?.status) }}
             </Badge>
             <p class="text-sm text-[hsl(var(--muted-foreground))]">
               {{ invoice?.customer?.name }} &middot; {{ t('issued') }} {{ formatDate(invoice?.issue_date) }} &middot; {{ t('due') }} {{ formatDate(invoice?.due_date) }}

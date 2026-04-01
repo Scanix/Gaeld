@@ -9,13 +9,14 @@ import Badge from '@/Components/UI/Badge.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, reactive } from 'vue'
 import { Pencil, Plus, Trash2, Star } from 'lucide-vue-next'
 import axios from 'axios'
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 const props = defineProps({
   supplier: { type: Object, required: true },

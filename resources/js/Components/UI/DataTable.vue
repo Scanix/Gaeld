@@ -4,9 +4,11 @@ import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown, Search, X, 
 import Button from './Button.vue'
 import Badge from './Badge.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useMediaQuery } from '@/lib/useMediaQuery'
 import { ref, computed, watch } from 'vue'
 
 const { t } = useTranslations()
+const isMobile = useMediaQuery('(max-width: 639px)')
 
 const props = defineProps({
   columns: {
@@ -241,7 +243,37 @@ function exportCsv() {
     </div>
 
     <div class="overflow-auto">
-      <table class="w-full text-sm">
+      <!-- Mobile card view -->
+      <div v-if="isMobile" class="divide-y divide-[hsl(var(--border))]">
+        <component
+          :is="rowLink ? Link : 'div'"
+          v-for="(row, i) in rows"
+          :key="row.id ?? i"
+          v-bind="rowLink ? { href: rowLink(row) } : {}"
+          class="block px-4 py-3 space-y-1"
+          :class="rowLink ? 'hover:bg-[hsl(var(--muted))]/50' : ''"
+        >
+          <div v-if="selectable" class="flex items-center gap-2 pb-1">
+            <input type="checkbox" :checked="selectedIds.has(row.id)" class="rounded border-[hsl(var(--input))]" @change="toggleRow(row.id)" />
+          </div>
+          <div v-for="col in visibleColumns" :key="col.key" class="flex justify-between gap-2 text-sm">
+            <span class="text-[hsl(var(--muted-foreground))] shrink-0">{{ col.label }}</span>
+            <span :class="col.class" class="text-right">
+              <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
+                {{ col.format ? col.format(row[col.key], row) : row[col.key] }}
+              </slot>
+            </span>
+          </div>
+        </component>
+        <div v-if="rows.length === 0" class="px-4 py-8 text-center text-[hsl(var(--muted-foreground))]">
+          <slot name="empty">
+            {{ emptyMessage ?? t('no_records') }}
+          </slot>
+        </div>
+      </div>
+
+      <!-- Desktop table view -->
+      <table v-else class="w-full text-sm">
         <thead>
           <tr class="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/50">
             <th v-if="selectable" scope="col" class="w-10 px-4 py-3">
@@ -294,7 +326,9 @@ function exportCsv() {
           </tr>
           <tr v-if="rows.length === 0">
             <td :colspan="visibleColumns.length + (selectable ? 1 : 0)" class="px-4 py-8 text-center text-[hsl(var(--muted-foreground))]">
-              {{ emptyMessage ?? t('no_records') }}
+              <slot name="empty">
+                {{ emptyMessage ?? t('no_records') }}
+              </slot>
             </td>
           </tr>
         </tbody>

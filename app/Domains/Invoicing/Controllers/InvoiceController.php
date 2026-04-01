@@ -25,6 +25,7 @@ use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
+use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Invoicing\Requests\RecordPaymentRequest;
 use App\Domains\Invoicing\Requests\StoreInvoiceRequest;
 use App\Domains\Invoicing\Requests\UpdateInvoiceRequest;
@@ -68,9 +69,13 @@ class InvoiceController extends Controller
     {
         $this->authorize('create', Invoice::class);
 
+        $numberGenerator = app(InvoiceNumberGenerator::class);
+        $currentOrg = app(CurrentOrganization::class);
+
         return Inertia::render('Invoices/Create', [
             'customers' => CustomerQuery::forSelect(),
             'vatRates' => VatRateQuery::active(),
+            'suggestedNumber' => $numberGenerator->next($currentOrg->id()),
         ]);
     }
 
@@ -89,6 +94,10 @@ class InvoiceController extends Controller
         $dto = CreateInvoiceData::fromArray($validated);
 
         $invoice = $action->execute($dto);
+
+        if ($request->boolean('finalize')) {
+            app(FinalizeInvoiceAction::class)->execute($invoice);
+        }
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', __('app.invoice_created'));

@@ -32,17 +32,18 @@ Gäld covers the full accounting workflow for a small Swiss business:
 
 ```bash
 cp .env.example .env
-docker-compose up -d
-docker-compose exec app php artisan key:generate
-docker-compose exec app php artisan gaeld:install
+docker compose up -d
+docker compose exec laravel.test php artisan gaeld:install
 ```
+
+Dependencies and the app key are installed automatically on first start.
 
 Visit `http://localhost:8080`. The install wizard walks you through creating your organisation and admin account.
 
 Add `--demo` to seed the database with sample invoices, expenses, and contacts:
 
 ```bash
-docker-compose exec app php artisan gaeld:install --demo
+docker compose exec laravel.test php artisan gaeld:install --demo
 ```
 
 ### Manual

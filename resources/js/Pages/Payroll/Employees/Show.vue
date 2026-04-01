@@ -10,11 +10,12 @@ import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { computed } from 'vue'
 import { Pencil } from 'lucide-vue-next'
 
 const { t } = useTranslations()
+const { formatDate } = useFormatters()
 
 const props = defineProps({
   employee: Object,

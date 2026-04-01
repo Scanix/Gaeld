@@ -62,6 +62,7 @@ class Expense extends Model
         'currency',
         'type',
         'supplier_id',
+        'payment_method',
     ];
 
     protected function casts(): array

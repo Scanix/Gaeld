@@ -8,7 +8,8 @@ import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import { ArrowLeftRight } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { computed } from 'vue'
 import HelpText from '@/Components/HelpText.vue'
 
@@ -18,28 +19,29 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const columns = computed(() => [
   { key: 'name', label: t('account_name') },
   { key: 'iban', label: t('iban'), format: v => v || '—' },
   { key: 'balance', label: t('balance'), class: 'text-right', format: v => formatCurrency(v) },
-  { key: 'unreconciled_count', label: t('unreconciled') || 'Unreconciled', class: 'text-center' },
+  { key: 'unreconciled_count', label: t('unreconciled'), class: 'text-center' },
 ])
 </script>
 
 <template>
-  <AppLayout :title="t('reconciliation') || 'Reconciliation'">
+  <AppLayout :title="t('reconciliation')">
     <HelpText :title="t('help_reconciliation_title')" class="mb-6">
       <p>{{ t('help_reconciliation_text') }}</p>
     </HelpText>
 
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-semibold">{{ t('reconciliation') || 'Reconciliation' }}</h2>
+      <h2 class="text-xl font-semibold">{{ t('reconciliation') }}</h2>
     </div>
 
     <Card v-if="bankAccounts.length">
       <CardHeader>
-        <CardTitle>{{ t('bank_accounts') || 'Bank Accounts' }}</CardTitle>
+        <CardTitle>{{ t('bank_accounts') }}</CardTitle>
       </CardHeader>
       <CardContent>
         <DataTable
@@ -56,9 +58,14 @@ const columns = computed(() => [
     </Card>
 
     <Card v-else>
-      <CardContent class="flex flex-col items-center justify-center py-12">
-        <ArrowLeftRight class="mb-4 h-12 w-12 text-muted-foreground" />
-        <p class="text-muted-foreground">{{ t('no_bank_accounts') || 'No bank accounts found. Create a bank account first.' }}</p>
+      <CardContent class="pt-6">
+        <EmptyState
+          :icon="ArrowLeftRight"
+          :title="t('empty_reconciliation_title')"
+          :description="t('empty_reconciliation_desc')"
+          :action-label="t('go_to_banking')"
+          action-href="/banking"
+        />
       </CardContent>
     </Card>
   </AppLayout>

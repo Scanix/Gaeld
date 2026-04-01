@@ -13,10 +13,11 @@ import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatDate, formatMoney } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { Link2, Unlink, CalendarDays } from 'lucide-vue-next'
 
 const { t } = useTranslations()
+const { formatDate, formatMoney } = useFormatters()
 
 const props = defineProps({
   accounts: Array,

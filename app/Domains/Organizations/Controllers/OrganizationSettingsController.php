@@ -2,6 +2,8 @@
 
 namespace App\Domains\Organizations\Controllers;
 
+use App\Domains\Expenses\Controllers\ExpenseCategoryController;
+use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
 use App\Domains\Organizations\Actions\UpdateOrganizationAction;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Requests\UpdateCommunicationsRequest;
@@ -32,9 +34,15 @@ class OrganizationSettingsController extends Controller
 
         $this->authorize('update', $organization);
 
+        // Seed default expense categories if org has none yet
+        if ($organization->expenseCategories()->count() === 0) {
+            ExpenseCategoryController::seedDefaults($organization->id);
+        }
+
         return Inertia::render('Organizations/Settings', [
             'organization' => $organization,
             'hasLogo' => $organization->logo_path && Storage::disk('local')->exists($organization->logo_path),
+            'expenseCategories' => ExpenseCategoryQuery::all(),
         ]);
     }
 

@@ -9,12 +9,13 @@ import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
-import { formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Pencil, Trash2, Pause, Play } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
+const { formatDate } = useFormatters()
 
 const props = defineProps({
   recurringInvoices: Object,

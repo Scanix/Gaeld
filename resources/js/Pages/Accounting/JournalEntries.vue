@@ -8,15 +8,17 @@ import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
 import Tooltip from '@/Components/UI/Tooltip.vue'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { computed } from 'vue'
 import HelpText from '@/Components/HelpText.vue'
-import { HelpCircle } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
+import { HelpCircle, BookText } from 'lucide-vue-next'
 
 defineProps({ entries: Object })
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 const columns = computed(() => [
   { key: 'date', label: t('date'), format: v => formatDate(v) },
@@ -40,6 +42,15 @@ const columns = computed(() => [
       <CardHeader><CardTitle>{{ t('journal_entries') }}</CardTitle></CardHeader>
       <CardContent>
         <DataTable :columns="columns" :rows="entries?.data ?? []" :pagination="entries">
+          <template #empty>
+            <EmptyState
+              :icon="BookText"
+              :title="t('empty_journal_entries_title')"
+              :description="t('empty_journal_entries_desc')"
+              :action-label="t('go_to_invoices')"
+              action-href="/invoices/create"
+            />
+          </template>
           <template #cell-is_posted="{ value }">
             <Badge :variant="value ? 'success' : 'warning'">{{ value ? t('posted') : t('draft') }}</Badge>
           </template>

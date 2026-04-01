@@ -11,7 +11,7 @@ import Badge from '@/Components/UI/Badge.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
-import { formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
 import { ArrowLeft, Webhook, Plus, Trash2, Pencil, RotateCcw, Copy, Check, ExternalLink } from 'lucide-vue-next'
@@ -22,6 +22,7 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatDate } = useFormatters()
 const page = usePage()
 const flash = computed(() => page.props.flash || {})
 
@@ -129,20 +130,20 @@ const eventGroups = computed(() => {
 </script>
 
 <template>
-  <AppLayout :title="t('webhooks') || 'Webhooks'">
+  <AppLayout :title="t('webhooks')">
     <div class="max-w-3xl space-y-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           <Button as="a" href="/settings" variant="outline" size="sm">
-            <ArrowLeft class="mr-2 h-4 w-4" /> {{ t('settings') || 'Settings' }}
+            <ArrowLeft class="mr-2 h-4 w-4" /> {{ t('settings') }}
           </Button>
           <h2 class="text-xl font-semibold">
             <Webhook class="inline mr-2 h-5 w-5" />
-            {{ t('webhooks') || 'Webhooks' }}
+            {{ t('webhooks') }}
           </h2>
         </div>
         <Button @click="openCreateModal">
-          <Plus class="mr-2 h-4 w-4" /> {{ t('add_webhook') || 'Add Webhook' }}
+          <Plus class="mr-2 h-4 w-4" /> {{ t('add_webhook') }}
         </Button>
       </div>
 
@@ -154,7 +155,7 @@ const eventGroups = computed(() => {
       <!-- Webhook secret display (shown once after creation/regeneration) -->
       <div v-if="flash.webhookSecret" class="rounded-md border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
         <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-          {{ t('webhook_secret_copy') || 'Your webhook signing secret. Copy it now — it won\'t be shown again.' }}
+          {{ t('webhook_secret_copy')t be shown again.' }}
         </p>
         <div class="flex items-center gap-2">
           <code class="flex-1 rounded bg-yellow-100 px-3 py-2 text-xs font-mono dark:bg-yellow-900 break-all">
@@ -170,14 +171,14 @@ const eventGroups = computed(() => {
       <!-- Webhooks list -->
       <Card>
         <CardHeader>
-          <CardTitle>{{ t('configured_webhooks') || 'Configured Webhooks' }}</CardTitle>
+          <CardTitle>{{ t('configured_webhooks') }}</CardTitle>
           <CardDescription>
-            {{ t('webhooks_description') || 'Receive HTTP POST notifications when events occur in your organization.' }}
+            {{ t('webhooks_description') }}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div v-if="!webhooks.length" class="py-8 text-center text-sm text-muted-foreground">
-            {{ t('no_webhooks') || 'No webhooks configured yet.' }}
+            {{ t('no_webhooks') }}
           </div>
           <div v-else class="space-y-4">
             <div
@@ -189,10 +190,10 @@ const eventGroups = computed(() => {
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-1">
                     <Badge :variant="webhook.is_active ? 'default' : 'secondary'">
-                      {{ webhook.is_active ? (t('active') || 'Active') : (t('inactive') || 'Inactive') }}
+                      {{ webhook.is_active ? (t('active')) : (t('inactive')) }}
                     </Badge>
                     <span v-if="webhook.calls_count" class="text-xs text-muted-foreground">
-                      {{ webhook.calls_count }} {{ t('deliveries') || 'deliveries' }}
+                      {{ webhook.calls_count }} {{ t('deliveries') }}
                     </span>
                   </div>
                   <p class="text-sm font-mono truncate">
@@ -205,9 +206,9 @@ const eventGroups = computed(() => {
                     </Badge>
                   </div>
                   <div class="flex gap-3 mt-2 text-xs text-muted-foreground">
-                    <span>{{ t('created') || 'Created' }}: {{ formatDate(webhook.created_at) }}</span>
+                    <span>{{ t('created') }}: {{ formatDate(webhook.created_at) }}</span>
                     <span v-if="webhook.last_triggered_at">
-                      {{ t('last_triggered') || 'Last triggered' }}: {{ formatDate(webhook.last_triggered_at) }}
+                      {{ t('last_triggered') }}: {{ formatDate(webhook.last_triggered_at) }}
                     </span>
                   </div>
                 </div>
@@ -229,11 +230,11 @@ const eventGroups = computed(() => {
       </Card>
 
       <!-- Create/Edit modal -->
-      <Modal :show="showModal" @close="showModal = false" :title="editingWebhook ? (t('edit_webhook') || 'Edit Webhook') : (t('add_webhook') || 'Add Webhook')">
+      <Modal :show="showModal" @close="showModal = false" :title="editingWebhook ? (t('edit_webhook')) : (t('add_webhook'))">
         <form class="space-y-4" @submit.prevent="submitForm">
           <FormInput
             v-model="form.url"
-            :label="t('payload_url') || 'Payload URL'"
+            :label="t('payload_url')"
             :error="form.errors.url"
             required
             type="url"
@@ -242,9 +243,9 @@ const eventGroups = computed(() => {
 
           <div>
             <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-medium">{{ t('events') || 'Events' }} <span class="text-destructive">*</span></label>
+              <label class="text-sm font-medium">{{ t('events') }} <span class="text-destructive">*</span></label>
               <button type="button" class="text-xs text-primary underline" @click="toggleAllEvents">
-                {{ form.events.length === availableEvents.length ? (t('deselect_all') || 'Deselect all') : (t('select_all') || 'Select all') }}
+                {{ form.events.length === availableEvents.length ? (t('deselect_all')) : (t('select_all')) }}
               </button>
             </div>
             <div class="space-y-3">
@@ -277,13 +278,13 @@ const eventGroups = computed(() => {
               id="webhook-active"
               class="rounded border-gray-300"
             />
-            <label for="webhook-active" class="text-sm">{{ t('active') || 'Active' }}</label>
+            <label for="webhook-active" class="text-sm">{{ t('active') }}</label>
           </div>
 
           <div class="flex justify-end gap-3">
-            <Button variant="outline" type="button" @click="showModal = false">{{ t('cancel') || 'Cancel' }}</Button>
+            <Button variant="outline" type="button" @click="showModal = false">{{ t('cancel') }}</Button>
             <Button type="submit" :disabled="form.processing">
-              {{ editingWebhook ? (t('save') || 'Save') : (t('create') || 'Create') }}
+              {{ editingWebhook ? (t('save')) : (t('create')) }}
             </Button>
           </div>
         </form>
@@ -294,9 +295,9 @@ const eventGroups = computed(() => {
         :show="confirmingDelete"
         @close="confirmingDelete = false"
         @confirm="deleteWebhook"
-        :title="t('delete_webhook') || 'Delete Webhook'"
-        :message="t('delete_webhook_confirm') || 'Are you sure you want to delete this webhook? It will stop receiving notifications immediately.'"
-        :confirmLabel="t('delete') || 'Delete'"
+        :title="t('delete_webhook')"
+        :message="t('delete_webhook_confirm')"
+        :confirmLabel="t('delete')"
         variant="destructive"
       />
     </div>

@@ -13,12 +13,13 @@ import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
-import { Plus } from 'lucide-vue-next'
+import { Plus, FileText } from 'lucide-vue-next'
 
 const props = defineProps({
   expense: Object,
   vatRates: { type: Array, default: () => [] },
   suppliers: { type: Array, default: () => [] },
+  categories: { type: Array, default: () => [] },
   receiptUrl: { type: String, default: null },
 })
 
@@ -32,6 +33,7 @@ const form = useForm({
   vendor: props.expense.vendor ?? '',
   supplier_id: props.expense.supplier_id ?? '',
   currency: props.expense.currency ?? 'CHF',
+  payment_method: props.expense.payment_method ?? '',
   receipt: null,
 })
 
@@ -46,21 +48,19 @@ function submit() {
 
 const { t } = useTranslations()
 
-const categoryOptions = [
-  { value: 'Office Supplies', label: t('cat_office_supplies') },
-  { value: 'Travel', label: t('cat_travel') },
-  { value: 'Software', label: t('cat_software') },
-  { value: 'Professional Services', label: t('cat_professional_services') },
-  { value: 'Marketing', label: t('cat_marketing') },
-  { value: 'Rent', label: t('cat_rent') },
-  { value: 'Utilities', label: t('cat_utilities') },
-  { value: 'Insurance', label: t('cat_insurance') },
-  { value: 'Other', label: t('cat_other') },
-]
+const categoryOptions = props.categories.map(c => ({ value: c.name, label: c.name }))
 
 const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
+]
+
+const paymentMethodOptions = [
+  { value: '', label: '—' },
+  { value: 'cash', label: t('payment_cash') },
+  { value: 'card', label: t('payment_card') },
+  { value: 'bank_transfer', label: t('payment_bank_transfer') },
+  { value: 'other', label: t('payment_other') },
 ]
 
 const supplierList = reactive([...props.suppliers])
@@ -84,6 +84,11 @@ function onSupplierCreated(supplier) {
 function onReceiptChange(e) {
   form.receipt = e.target.files[0] ?? null
 }
+
+const isImage = computed(() => {
+  if (!props.receiptUrl) return false
+  return /\.(jpe?g|png|gif|webp)$/i.test(props.receiptUrl)
+})
 </script>
 
 <template>
@@ -154,6 +159,13 @@ function onReceiptChange(e) {
               :label="t('vat_amount')"
               :error="form.errors.vat_amount"
             />
+            <FormSelect
+              id="payment_method"
+              v-model="form.payment_method"
+              :label="t('payment_method')"
+              :options="paymentMethodOptions"
+              :error="form.errors.payment_method"
+            />
           </div>
 
           <div>
@@ -176,9 +188,25 @@ function onReceiptChange(e) {
               @change="onReceiptChange"
             />
             <p v-if="form.errors.receipt" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.receipt }}</p>
-            <p v-if="receiptUrl && !form.receipt" class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-              {{ t('receipt_attached') }}
-            </p>
+            <!-- Receipt preview -->
+            <div v-if="receiptUrl && !form.receipt" class="mt-3">
+              <p class="mb-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('receipt_preview') }}</p>
+              <a :href="receiptUrl" target="_blank" rel="noopener">
+                <img
+                  v-if="isImage"
+                  :src="receiptUrl"
+                  :alt="t('receipt_preview')"
+                  class="h-40 rounded-md border border-[hsl(var(--border))] object-contain"
+                />
+                <div
+                  v-else
+                  class="inline-flex items-center gap-2 rounded-md border border-[hsl(var(--border))] px-3 py-2 text-sm hover:bg-[hsl(var(--accent))]"
+                >
+                  <FileText class="h-5 w-5 text-[hsl(var(--muted-foreground))]" />
+                  {{ t('receipt_attached') }}
+                </div>
+              </a>
+            </div>
           </div>
 
           <div class="flex justify-end gap-3">

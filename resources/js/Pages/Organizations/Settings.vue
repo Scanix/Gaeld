@@ -11,11 +11,12 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { Upload, Trash2 } from 'lucide-vue-next'
+import { Upload, Trash2, Plus } from 'lucide-vue-next'
 
 const props = defineProps({
   organization: Object,
   hasLogo: Boolean,
+  expenseCategories: { type: Array, default: () => [] },
 })
 
 const { t } = useTranslations()
@@ -28,6 +29,7 @@ const tabs = [
   { key: 'general', label: 'settings_general' },
   { key: 'invoice', label: 'settings_invoice' },
   { key: 'communications', label: 'settings_communications' },
+  { key: 'expenses', label: 'settings_expenses' },
 ]
 
 // --- General form ---
@@ -109,6 +111,26 @@ const commsForm = useForm({
 
 function submitCommunications() {
   commsForm.put('/settings/communications', { preserveScroll: true })
+}
+
+// --- Expense categories ---
+const newCategoryName = ref('')
+const addingCategory = ref(false)
+
+function addCategory() {
+  if (!newCategoryName.value.trim()) return
+  addingCategory.value = true
+  router.post('/settings/expense-categories', { name: newCategoryName.value.trim() }, {
+    preserveScroll: true,
+    onFinish: () => {
+      newCategoryName.value = ''
+      addingCategory.value = false
+    },
+  })
+}
+
+function removeCategory(id) {
+  router.delete(`/settings/expense-categories/${id}`, { preserveScroll: true })
 }
 
 const localeOptions = [
@@ -239,13 +261,16 @@ const cantonOptions = [
               </div>
 
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormSelect
-                  id="locale"
-                  v-model="generalForm.locale"
-                  :label="t('language')"
-                  :options="localeOptions"
-                  :error="generalForm.errors.locale"
-                />
+                <div>
+                  <FormSelect
+                    id="locale"
+                    v-model="generalForm.locale"
+                    :label="t('language')"
+                    :options="localeOptions"
+                    :error="generalForm.errors.locale"
+                  />
+                  <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('org_locale_hint') }}</p>
+                </div>
                 <FormInput
                   id="default_payment_terms_days"
                   v-model="generalForm.default_payment_terms_days"
@@ -430,6 +455,48 @@ const cantonOptions = [
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+      </div>
+
+      <!-- Expenses Tab -->
+      <div v-show="activeTab === 'expenses'">
+        <Card>
+          <CardHeader>
+            <CardTitle>{{ t('settings_expense_categories_title') }}</CardTitle>
+            <CardDescription>{{ t('settings_expense_categories_desc') }}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul class="divide-y divide-[hsl(var(--border))]">
+              <li
+                v-for="cat in expenseCategories"
+                :key="cat.id"
+                class="flex items-center justify-between py-2"
+              >
+                <span class="text-sm">{{ cat.name }}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="h-8 w-8 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))]"
+                  @click="removeCategory(cat.id)"
+                >
+                  <Trash2 class="h-4 w-4" />
+                </Button>
+              </li>
+            </ul>
+            <div class="mt-4 flex gap-2">
+              <FormInput
+                id="new_category"
+                v-model="newCategoryName"
+                :placeholder="t('new_category_placeholder')"
+                class="flex-1"
+                @keydown.enter.prevent="addCategory"
+              />
+              <Button :disabled="addingCategory || !newCategoryName.trim()" @click="addCategory">
+                <Plus class="mr-1 h-4 w-4" />
+                {{ t('add') }}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

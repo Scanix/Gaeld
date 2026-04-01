@@ -13,7 +13,8 @@ import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { FileSpreadsheet } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
+import { FileSpreadsheet, Receipt } from 'lucide-vue-next'
 
 const props = defineProps({ report: Object })
 const { t } = useTranslations()
@@ -250,8 +251,12 @@ function postSettlement() {
       </div>
     </template>
 
-    <div v-else class="py-16 text-center text-sm text-[hsl(var(--muted-foreground))]">
-      {{ t('select_period_to_view_report') }}
+    <div v-else class="py-8 text-center">
+      <EmptyState
+        :icon="Receipt"
+        :title="t('empty_vat_report_title')"
+        :description="t('empty_vat_report_desc')"
+      />
     </div>
 
     <!-- Settle confirmation dialog -->
