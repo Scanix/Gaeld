@@ -28,6 +28,9 @@ const previewUrl = ref(null)
 
 // OCR result
 const receiptPath = ref(null)
+const ocrConfidence = ref(null)
+const scanElapsed = ref(0)
+const scanTimer = ref(null)
 const form = ref({
   category: '',
   amount: '',
@@ -71,6 +74,9 @@ function triggerCapture() {
 async function scanReceipt() {
   stage.value = 'scanning'
   error.value = null
+  scanElapsed.value = 0
+  ocrConfidence.value = null
+  scanTimer.value = setInterval(() => { scanElapsed.value++ }, 1000)
 
   const formData = new FormData()
   formData.append('receipt', selectedFile.value)
@@ -128,18 +134,22 @@ async function pollForResults(scanId) {
       if (extracted.amount) form.value.amount = String(extracted.amount)
       if (extracted.date) form.value.date = extracted.date
       if (extracted.vendor) form.value.vendor = extracted.vendor
+      ocrConfidence.value = extracted.confidence ?? data.confidence ?? null
+      clearInterval(scanTimer.value)
       stage.value = 'review'
       return
     }
 
     if (data.status === 'failed') {
       // Still let user fill in manually
+      clearInterval(scanTimer.value)
       stage.value = 'review'
       return
     }
   }
 
   // Timeout — let user fill in manually
+  clearInterval(scanTimer.value)
   stage.value = 'review'
 }
 
@@ -179,6 +189,9 @@ function resetAndClose() {
   stage.value = 'capture'
   error.value = null
   selectedFile.value = null
+  clearInterval(scanTimer.value)
+  scanElapsed.value = 0
+  ocrConfidence.value = null
   if (previewUrl.value) {
     URL.revokeObjectURL(previewUrl.value)
     previewUrl.value = null
@@ -220,7 +233,7 @@ function resetAndClose() {
       >
         <Camera class="mb-3 h-10 w-10 text-[hsl(var(--muted-foreground))]" />
         <span class="text-sm font-medium">{{ t('take_photo_or_upload') }}</span>
-        <span class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">JPG, PNG — max 10 MB</span>
+        <span class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('receipt_file_formats') }}</span>
       </div>
 
       <div v-if="error" class="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
@@ -233,7 +246,18 @@ function resetAndClose() {
     <div v-if="stage === 'scanning'" class="flex flex-col items-center justify-center space-y-4 py-8">
       <Loader2 class="h-8 w-8 animate-spin text-[hsl(var(--primary))]" />
       <p class="text-sm font-medium">{{ t('scanning_receipt') }}</p>
-      <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('extracting_fields') }}</p>
+      <p class="text-xs text-[hsl(var(--muted-foreground))]">
+        {{ scanElapsed < 90 ? t('ocr_processing') : t('ocr_taking_longer') }}
+      </p>
+      <div class="w-full max-w-xs">
+        <div class="h-1.5 w-full overflow-hidden rounded-full bg-[hsl(var(--muted))]">
+          <div
+            class="h-full rounded-full bg-[hsl(var(--primary))] transition-all duration-1000"
+            :style="{ width: Math.min(scanElapsed * 100 / 120, 95) + '%' }"
+          />
+        </div>
+        <p class="mt-1 text-center text-xs tabular-nums text-[hsl(var(--muted-foreground))]">{{ scanElapsed }}s</p>
+      </div>
     </div>
 
     <!-- REVIEW STAGE -->
@@ -248,9 +272,14 @@ function resetAndClose() {
       </div>
 
       <div class="rounded-md bg-green-50 p-3 dark:bg-green-950">
-        <div class="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-300">
-          <Check class="h-4 w-4" />
-          {{ t('scan_complete') }}
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-300">
+            <Check class="h-4 w-4" />
+            {{ t('scan_complete') }}
+          </div>
+          <span v-if="ocrConfidence != null" class="text-xs tabular-nums text-[hsl(var(--muted-foreground))]">
+            {{ t('ocr_confidence') }}: {{ Math.round(ocrConfidence * 100) }}%
+          </span>
         </div>
         <p class="mt-1 text-xs text-green-600 dark:text-green-400">{{ t('review_and_adjust') }}</p>
       </div>

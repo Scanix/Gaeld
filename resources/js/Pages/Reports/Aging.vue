@@ -10,13 +10,14 @@ import Button from '@/Components/UI/Button.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 
 const props = defineProps({
   report: Object,
   type: { type: String, default: 'receivables' },
 })
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const selectedType = ref(props.type)
 

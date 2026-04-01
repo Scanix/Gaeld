@@ -9,10 +9,12 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Button from '@/Components/UI/Button.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import HelpText from '@/Components/HelpText.vue'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { ref, computed } from 'vue'
+import { Scale } from 'lucide-vue-next'
 
 const props = defineProps({
   balances: Array,
@@ -22,6 +24,7 @@ const props = defineProps({
 const date = ref(props.asOfDate)
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 function applyFilter() {
   router.get('/accounting/trial-balance', { as_of_date: date.value }, { preserveState: true })
@@ -55,7 +58,15 @@ const totalCredit = computed(() => (props.balances || []).reduce((s, b) => s + (
     <Card>
       <CardHeader><CardTitle>{{ t('trial_balance') }}</CardTitle></CardHeader>
       <CardContent>
-        <DataTable :columns="columns" :rows="balances || []" />
+        <DataTable :columns="columns" :rows="balances || []">
+          <template #empty>
+            <EmptyState
+              :icon="Scale"
+              :title="t('empty_trial_balance_title')"
+              :description="t('empty_trial_balance_desc')"
+            />
+          </template>
+        </DataTable>
         <div class="mt-4 flex justify-between border-t pt-3 text-sm font-semibold">
           <span>{{ t('totals') }}</span>
           <div class="flex gap-12">

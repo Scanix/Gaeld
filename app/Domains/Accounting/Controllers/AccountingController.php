@@ -25,10 +25,20 @@ class AccountingController extends Controller
     {
         $this->authorize('viewAny', Account::class);
 
-        $accounts = Account::withCount('transactionLines')
-            ->orderBy('code')
-            ->get()
-            ->map(fn (Account $a) => [
+        $query = Account::withCount('transactionLines')
+            ->orderBy('code');
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'ilike', "%{$search}%")
+                  ->orWhere('name', 'ilike', "%{$search}%");
+            });
+        }
+
+        $accounts = $query
+            ->paginate(50)
+            ->withQueryString()
+            ->through(fn (Account $a) => [
                 ...$a->toArray(),
                 'has_transactions' => $a->transaction_lines_count > 0,
             ]);
@@ -37,6 +47,7 @@ class AccountingController extends Controller
 
         return Inertia::render('Accounting/ChartOfAccounts', [
             'accounts' => $accounts,
+            'query' => ['search' => $request->input('search', '')],
             'can' => [
                 'create' => $user->can('create', Account::class),
                 'edit' => $user->hasPermissionTo(Permission::AccountingEdit),

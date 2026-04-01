@@ -8,10 +8,13 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
+import { useFormValidation, z } from '@/lib/useFormValidation'
 import { Plus, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -46,6 +49,13 @@ if (form.lines.length === 0) {
 
 useUnsavedChanges(computed(() => form.isDirty))
 
+const { errors: clientErrors, validate, validateField } = useFormValidation(z.object({
+  customer_id: z.string().min(1, 'This field is required.'),
+  number: z.string().min(1, 'This field is required.').max(50, 'Must be at most 50 characters.'),
+  issue_date: z.string().min(1, 'This field is required.'),
+  due_date: z.string().min(1, 'This field is required.'),
+}))
+
 function addLine() {
   form.lines.push({ description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
 }
@@ -57,6 +67,7 @@ function removeLine(index) {
 }
 
 function submit() {
+  if (!validate(form.data())) return
   form.post(`/invoices/${props.invoice.id}`, {
     forceFormData: true,
     headers: { 'X-HTTP-Method-Override': 'PUT' },
@@ -93,6 +104,8 @@ const vatOptions = [
 
 <template>
   <AppLayout :title="t('edit_invoice')" help-page="invoices">
+    <Breadcrumb :items="[{ label: t('invoices'), href: '/invoices' }, { label: invoice.number, href: `/invoices/${invoice.id}` }, { label: t('edit') }]" class="mb-4" />
+
     <Card class="max-w-3xl">
       <CardHeader>
         <CardTitle>{{ t('edit_invoice') }} {{ invoice.number }}</CardTitle>
@@ -107,7 +120,7 @@ const vatOptions = [
                 :label="t('client')"
                 :options="clientOptions"
                 :placeholder="t('select_client')"
-                :error="form.errors.customer_id"
+                :error="form.errors.customer_id || clientErrors.customer_id"
                 required
                 class="flex-1"
               />
@@ -127,7 +140,7 @@ const vatOptions = [
               v-model="form.number"
               :label="t('invoice_number')"
               placeholder="INV-001"
-              :error="form.errors.number"
+              :error="form.errors.number || clientErrors.number"
               required
             />
             <FormInput
@@ -135,7 +148,7 @@ const vatOptions = [
               v-model="form.issue_date"
               type="date"
               :label="t('issue_date')"
-              :error="form.errors.issue_date"
+              :error="form.errors.issue_date || clientErrors.issue_date"
               required
             />
             <FormInput
@@ -143,7 +156,7 @@ const vatOptions = [
               v-model="form.due_date"
               type="date"
               :label="t('due_date')"
-              :error="form.errors.due_date"
+              :error="form.errors.due_date || clientErrors.due_date"
               required
             />
             <FormSelect
@@ -226,15 +239,11 @@ const vatOptions = [
           </div>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label for="notes" class="mb-1 block text-sm font-medium">{{ t('notes') }}</label>
-              <textarea
-                id="notes"
-                v-model="form.notes"
-                rows="3"
-                class="flex w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
-              />
-            </div>
+            <FormTextarea
+              id="notes"
+              v-model="form.notes"
+              :label="t('notes')"
+            />
             <FormInput
               id="payment_terms"
               v-model="form.payment_terms"

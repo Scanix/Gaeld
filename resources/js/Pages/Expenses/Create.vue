@@ -8,7 +8,9 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import Tooltip from '@/Components/UI/Tooltip.vue'
@@ -19,6 +21,7 @@ import { Plus, HelpCircle } from 'lucide-vue-next'
 const props = defineProps({
   vatRates: { type: Array, default: () => [] },
   suppliers: { type: Array, default: () => [] },
+  categories: { type: Array, default: () => [] },
 })
 
 const form = useForm({
@@ -31,6 +34,7 @@ const form = useForm({
   vendor: '',
   supplier_id: '',
   currency: 'CHF',
+  payment_method: '',
   receipt: null,
 })
 
@@ -46,21 +50,19 @@ function onReceiptChange(e) {
 
 const { t } = useTranslations()
 
-const categoryOptions = [
-  { value: 'Office Supplies', label: t('cat_office_supplies') },
-  { value: 'Travel', label: t('cat_travel') },
-  { value: 'Software', label: t('cat_software') },
-  { value: 'Professional Services', label: t('cat_professional_services') },
-  { value: 'Marketing', label: t('cat_marketing') },
-  { value: 'Rent', label: t('cat_rent') },
-  { value: 'Utilities', label: t('cat_utilities') },
-  { value: 'Insurance', label: t('cat_insurance') },
-  { value: 'Other', label: t('cat_other') },
-]
+const categoryOptions = props.categories.map(c => ({ value: c.name, label: c.name }))
 
 const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
+]
+
+const paymentMethodOptions = [
+  { value: '', label: '—' },
+  { value: 'cash', label: t('payment_cash') },
+  { value: 'card', label: t('payment_card') },
+  { value: 'bank_transfer', label: t('payment_bank_transfer') },
+  { value: 'other', label: t('payment_other') },
 ]
 
 const supplierList = reactive([...props.suppliers])
@@ -89,12 +91,14 @@ function onSupplierCreated(supplier) {
 
 <template>
   <AppLayout :title="t('create_expense')" help-page="expenses">
+    <Breadcrumb :items="[{ label: t('expenses'), href: '/expenses' }, { label: t('create_expense') }]" class="mb-4" />
+
     <Card class="max-w-2xl">
       <CardHeader>
         <CardTitle>{{ t('new_expense') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form class="space-y-4" @submit.prevent="submit">
+        <form class="space-y-6" @submit.prevent="submit">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="relative">
               <FormSelect
@@ -165,17 +169,20 @@ function onSupplierCreated(supplier) {
               :label="t('vat_amount')"
               :error="form.errors.vat_amount"
             />
-          </div>
-
-          <div>
-            <label for="description" class="mb-1 block text-sm font-medium">{{ t('description') }}</label>
-            <textarea
-              id="description"
-              v-model="form.description"
-              rows="3"
-              class="flex w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+            <FormSelect
+              id="payment_method"
+              v-model="form.payment_method"
+              :label="t('payment_method')"
+              :options="paymentMethodOptions"
+              :error="form.errors.payment_method"
             />
           </div>
+
+          <FormTextarea
+            id="description"
+            v-model="form.description"
+            :label="t('description')"
+          />
 
           <div>
             <label for="receipt" class="mb-1 block text-sm font-medium">{{ t('receipt') }}</label>

@@ -4,12 +4,14 @@ namespace App\Domains\Users\Controllers;
 
 use App\Domains\Users\DTOs\UpdateUserProfileData;
 use App\Domains\Users\Jobs\ExportUserDataJob;
+use App\Domains\Users\Notifications\VerifyNewEmailNotification;
 use App\Domains\Users\Services\UserService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -68,6 +70,23 @@ class UserController extends Controller
         return back();
     }
 
+    public function updateDashboardLayout(Request $request): RedirectResponse
+    {
+        $this->authorize('update', $request->user());
+
+        $validated = $request->validate([
+            'widgets' => 'required|array',
+            'widgets.*.id' => 'required|string|in:checklist,action_cards,budget,chart,transactions',
+            'widgets.*.visible' => 'required|boolean',
+        ]);
+
+        $request->user()->update([
+            'dashboard_layout' => $validated,
+        ]);
+
+        return back();
+    }
+
     /**
      * Queue an export of all personal data for the authenticated user (GDPR Art. 15 / Art. 20).
      */
@@ -117,5 +136,74 @@ class UserController extends Controller
         $userService->deleteAccount($user);
 
         return redirect('/login')->with('success', __('app.account_deleted'));
+    }
+
+    public function requestEmailChange(Request $request): RedirectResponse
+    {
+        $this->authorize('update', $request->user());
+
+        $validated = $request->validate([
+            'email' => 'required|email|max:255|unique:users,email',
+            'current_password' => 'required|current_password',
+        ]);
+
+        $user = $request->user();
+        $token = Str::random(64);
+
+        $user->update([
+            'pending_email' => $validated['email'],
+            'email_change_token' => hash('sha256', $token),
+            'email_change_requested_at' => now(),
+        ]);
+
+        $user->notify(new VerifyNewEmailNotification($token));
+
+        return back()->with('success', __('app.confirm_email_change'));
+    }
+
+    public function confirmEmailChange(Request $request, string $token): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (! $user || ! $user->pending_email || ! $user->email_change_token) {
+            return redirect()->route('profile')->with('error', __('app.email_change_invalid'));
+        }
+
+        if (! hash_equals($user->email_change_token, hash('sha256', $token))) {
+            return redirect()->route('profile')->with('error', __('app.email_change_invalid'));
+        }
+
+        // Check expiration (24 hours)
+        if ($user->email_change_requested_at?->diffInHours(now()) > 24) {
+            $user->update([
+                'pending_email' => null,
+                'email_change_token' => null,
+                'email_change_requested_at' => null,
+            ]);
+
+            return redirect()->route('profile')->with('error', __('app.email_change_expired'));
+        }
+
+        $user->update([
+            'email' => $user->pending_email,
+            'pending_email' => null,
+            'email_change_token' => null,
+            'email_change_requested_at' => null,
+        ]);
+
+        return redirect()->route('profile')->with('success', __('app.email_changed'));
+    }
+
+    public function cancelEmailChange(Request $request): RedirectResponse
+    {
+        $this->authorize('update', $request->user());
+
+        $request->user()->update([
+            'pending_email' => null,
+            'email_change_token' => null,
+            'email_change_requested_at' => null,
+        ]);
+
+        return back()->with('success', __('app.email_change_cancelled'));
     }
 }

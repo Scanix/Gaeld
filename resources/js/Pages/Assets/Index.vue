@@ -6,11 +6,12 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { Plus, Eye } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 const props = defineProps({
   assets: Object,

@@ -12,6 +12,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -180,9 +181,10 @@ function canChangeUserRole(user) {
 
 <template>
   <AppLayout :title="organization.name">
+    <Breadcrumb :items="[{ label: t('organizations'), href: '/organizations' }, { label: organization.name }]" class="mb-4" />
+
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
-        <Button as="a" href="/organizations" variant="outline" size="sm">← {{ t('back') }}</Button>
         <h2 class="text-xl font-semibold">{{ organization.name }}</h2>
       </div>
       <div class="flex items-center gap-2">
@@ -312,7 +314,7 @@ function canChangeUserRole(user) {
 
     <!-- Edit Organization Modal -->
     <Modal :show="showEditModal" @close="showEditModal = false" :title="t('edit_organization')">
-      <form class="space-y-4" @submit.prevent="submitUpdate">
+      <form class="space-y-6" @submit.prevent="submitUpdate">
         <FormInput id="name" v-model="form.name" :label="t('name')" :error="form.errors.name" required />
         <FormInput id="legal_name" v-model="form.legal_name" :label="t('legal_name')" :error="form.errors.legal_name" />
         <FormInput id="address" v-model="form.address" :label="t('address')" :error="form.errors.address" />
@@ -362,7 +364,7 @@ function canChangeUserRole(user) {
 
     <!-- Invite Member Modal -->
     <Modal :show="showInviteModal" @close="showInviteModal = false" :title="t('invite_member')">
-      <form class="space-y-4" @submit.prevent="submitInvite">
+      <form class="space-y-6" @submit.prevent="submitInvite">
         <FormInput
           id="invite_email"
           v-model="inviteForm.email"

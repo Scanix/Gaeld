@@ -3,13 +3,17 @@
 namespace App\Domains\Reporting\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
+use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\Budget;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\VatReportService;
 use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Invoicing\Services\InvoiceService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Aggregates KPI data for the organization dashboard: revenue/expense
@@ -21,12 +25,28 @@ class DashboardService
         private readonly LedgerService $ledgerService,
         private readonly InvoiceService $invoiceService,
         private readonly ExpenseService $expenseService,
+        private readonly VatReportService $vatReportService,
+        private readonly AgingReportService $agingReportService,
     ) {}
 
     /**
      * @return array{revenue: string, expenses: string, cashBalance: string, unpaidInvoices: array{count: int, total: string}, pendingExpenses: array{count: int, total: string}, balance: string, recentTransactions: Collection, monthlyBreakdown: array}
      */
     public function metrics(string $organizationId): array
+    {
+        return Cache::tags(["org:{$organizationId}:dashboard"])->remember(
+            "dashboard_metrics:{$organizationId}",
+            300, // 5 minutes
+            fn () => $this->computeMetrics($organizationId)
+        );
+    }
+
+    public function flushCache(string $organizationId): void
+    {
+        Cache::tags(["org:{$organizationId}:dashboard"])->flush();
+    }
+
+    private function computeMetrics(string $organizationId): array
     {
         $year = now()->year;
 
@@ -37,6 +57,10 @@ class DashboardService
         $unpaidInvoices = $this->invoiceService->unpaidSummary($organizationId);
 
         $pendingExpenses = $this->expenseService->pendingSummary($organizationId);
+
+        // Year-over-year comparison
+        $previousRevenue = $this->invoiceService->yearlyRevenue($organizationId, $year - 1);
+        $previousExpenses = $this->expenseService->yearlyTotal($organizationId, $year - 1);
 
         return [
             'revenue' => $totalRevenue,
@@ -51,8 +75,14 @@ class DashboardService
                 'total' => $pendingExpenses->total,
             ],
             'balance' => bcsub($totalRevenue, $totalExpenses, 2),
+            'previousRevenue' => $previousRevenue,
+            'previousExpenses' => $previousExpenses,
+            'previousBalance' => bcsub($previousRevenue, $previousExpenses, 2),
             'recentTransactions' => $this->recentTransactions($organizationId),
             'monthlyBreakdown' => $this->monthlyBreakdown($organizationId, $year),
+            'budgetSummary' => $this->budgetSummary($organizationId, $year),
+            'vatSummary' => $this->currentQuarterVat($organizationId),
+            'receivablesAging' => $this->agingSummary($organizationId),
         ];
     }
 
@@ -131,6 +161,129 @@ class DashboardService
             'revenueItems' => $monthlyData->pluck('revenueItems')->values(),
             'expenseItems' => $monthlyData->pluck('expenseItems')->values(),
             'forecastItems' => $monthlyData->pluck('forecastItems')->values(),
+        ];
+    }
+
+    /**
+     * Budget vs actual summary for the current fiscal year.
+     *
+     * Returns null when no budgets are configured.
+     *
+     * @return array{budgetedRevenue: string, budgetedExpenses: string, actualRevenue: string, actualExpenses: string, revenueVariance: string, expenseVariance: string, monthsElapsed: int}|null
+     */
+    private function budgetSummary(string $organizationId, int $year): ?array
+    {
+        $budgets = Budget::withoutGlobalScope('organization')
+            ->where('organization_id', $organizationId)
+            ->forYear($year)
+            ->with('account')
+            ->get();
+
+        if ($budgets->isEmpty()) {
+            return null;
+        }
+
+        $monthsElapsed = now()->month;
+
+        $budgetedRevenue = '0.00';
+        $budgetedExpenses = '0.00';
+
+        foreach ($budgets as $budget) {
+            $code = $budget->account->code ?? '';
+            $annualBudget = bcmul((string) $budget->monthly_amount, '12', 2);
+
+            if (AccountCode::isRevenue($code)) {
+                $budgetedRevenue = bcadd($budgetedRevenue, $annualBudget, 2);
+            } elseif (AccountCode::isExpense($code)) {
+                $budgetedExpenses = bcadd($budgetedExpenses, $annualBudget, 2);
+            }
+        }
+
+        // Actual YTD figures are already in the main metrics
+        $actualRevenue = $this->invoiceService->yearlyRevenue($organizationId, $year);
+        $actualExpenses = $this->expenseService->yearlyTotal($organizationId, $year);
+
+        // Pro-rated budget based on months elapsed
+        $proRatedRevenue = bcmul(bcdiv($budgetedRevenue, '12', 6), (string) $monthsElapsed, 2);
+        $proRatedExpenses = bcmul(bcdiv($budgetedExpenses, '12', 6), (string) $monthsElapsed, 2);
+
+        return [
+            'budgetedRevenue' => $budgetedRevenue,
+            'budgetedExpenses' => $budgetedExpenses,
+            'proRatedRevenue' => $proRatedRevenue,
+            'proRatedExpenses' => $proRatedExpenses,
+            'actualRevenue' => $actualRevenue,
+            'actualExpenses' => $actualExpenses,
+            'revenueVariance' => bccomp($proRatedRevenue, '0', 2) !== 0
+                ? bcmul(bcdiv(bcsub($actualRevenue, $proRatedRevenue, 2), $proRatedRevenue, 4), '100', 1)
+                : '0.0',
+            'expenseVariance' => bccomp($proRatedExpenses, '0', 2) !== 0
+                ? bcmul(bcdiv(bcsub($actualExpenses, $proRatedExpenses, 2), $proRatedExpenses, 4), '100', 1)
+                : '0.0',
+            'monthsElapsed' => $monthsElapsed,
+        ];
+    }
+
+    /**
+     * Current-quarter VAT liability summary.
+     *
+     * Returns null when no VAT entries exist for the quarter.
+     *
+     * @return array{vatPayable: string, quarterLabel: string, quarterEnd: string}|null
+     */
+    private function currentQuarterVat(string $organizationId): ?array
+    {
+        $now = now();
+        $quarter = (int) ceil($now->month / 3);
+        $fromMonth = ($quarter - 1) * 3 + 1;
+        $from = Carbon::create($now->year, $fromMonth, 1)->toDateString();
+        $to = Carbon::create($now->year, $fromMonth, 1)->endOfQuarter()->toDateString();
+
+        $report = $this->vatReportService->generate($organizationId, $from, $to);
+
+        // No VAT activity this quarter
+        if ($report['total_revenue'] === '0.00' && $report['input_vat'] === '0.00') {
+            return null;
+        }
+
+        return [
+            'vatPayable' => $report['vat_payable'],
+            'quarterLabel' => 'Q'.$quarter.' '.$now->year,
+            'quarterEnd' => $to,
+        ];
+    }
+
+    /**
+     * Receivables aging summary with overdue totals per bracket.
+     *
+     * Returns null when there are no overdue receivables.
+     *
+     * @return array{overdueCount: int, totalOverdue: string, brackets: array<string, string>}|null
+     */
+    private function agingSummary(string $organizationId): ?array
+    {
+        $report = $this->agingReportService->generate($organizationId, 'receivables');
+
+        $overdueBrackets = ['1_30', '31_60', '61_90', '90_plus'];
+        $totalOverdue = '0.00';
+        $overdueCount = 0;
+        $bracketTotals = [];
+
+        foreach ($overdueBrackets as $key) {
+            $bracket = $report['brackets'][$key];
+            $totalOverdue = bcadd($totalOverdue, $bracket['total'], 2);
+            $overdueCount += count($bracket['items']);
+            $bracketTotals[$key] = $bracket['total'];
+        }
+
+        if (bccomp($totalOverdue, '0', 2) === 0) {
+            return null;
+        }
+
+        return [
+            'overdueCount' => $overdueCount,
+            'totalOverdue' => $totalOverdue,
+            'brackets' => $bracketTotals,
         ];
     }
 }

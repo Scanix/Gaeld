@@ -7,6 +7,7 @@ use App\Domains\Organizations\DTOs\CreateOrganizationData;
 use App\Domains\Organizations\Services\OrganizationService;
 use App\Domains\Organizations\Services\OrganizationSetupService;
 use App\Http\Controllers\Controller;
+use App\Support\FeatureFlag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,11 @@ class OnboardingController extends Controller
 {
     public function create(Request $request): RedirectResponse|Response
     {
+        // In SaaS mode, org creation happens during /signup — not here
+        if (FeatureFlag::isSaas()) {
+            return redirect()->route('signup');
+        }
+
         if ($request->user()->organizations()->exists()) {
             return redirect()->route('dashboard');
         }
@@ -34,6 +40,10 @@ class OnboardingController extends Controller
         OrganizationSetupService $setupService,
         ChartTemplateService $chartTemplateService,
     ): RedirectResponse {
+        if (FeatureFlag::isSaas()) {
+            return redirect()->route('signup');
+        }
+
         $validTemplateKeys = $chartTemplateService->validKeys();
 
         $validated = $request->validate([
@@ -45,7 +55,7 @@ class OnboardingController extends Controller
             'canton' => 'nullable|string|size:2',
             'vat_number' => 'nullable|string|max:50',
             'currency' => 'required|string|size:3',
-            'locale' => 'required|string|in:en,fr,de,it,rm',
+            'locale' => 'required|string|in:en,fr,de,it',
             'chart_of_accounts' => ['required', 'string', Rule::in([...$validTemplateKeys, 'none'])],
         ]);
 

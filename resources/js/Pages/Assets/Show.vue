@@ -16,10 +16,11 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import Combobox from '@/Components/UI/Combobox.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { computed } from 'vue'
 
 const { t } = useTranslations()
+const { formatDate } = useFormatters()
 
 const props = defineProps({
   asset: Object,
@@ -196,7 +197,7 @@ const historyColumns = computed(() => [
 
     <!-- Dispose Modal -->
     <Modal :open="showDisposeModal" :title="t('dispose_asset')" @close="showDisposeModal = false">
-      <form class="space-y-4" @submit.prevent="submitDisposal">
+      <form class="space-y-6" @submit.prevent="submitDisposal">
         <FormInput
           id="disposal_date"
           v-model="disposeForm.disposal_date"

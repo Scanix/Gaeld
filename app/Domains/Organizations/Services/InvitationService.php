@@ -128,7 +128,7 @@ class InvitationService
 
         $subscription = $organization->activeSubscription ?? null;
         if (! $subscription) {
-            return true;
+            return false;
         }
 
         $maxUsers = $subscription->plan->max_users ?? -1;

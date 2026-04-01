@@ -24,7 +24,10 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', array_merge(
             $dashboardService->metrics($orgId),
-            ['checklist' => $checklistService->checklist($orgId)],
+            [
+                'checklist' => $checklistService->checklist($orgId),
+                'dashboardLayout' => $request->user()->dashboard_layout,
+            ],
         ));
     }
 }

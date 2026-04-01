@@ -5,6 +5,7 @@ namespace App\Domains\Organizations\Models;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Customer;
+use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Users\Models\User;
 use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -72,6 +73,17 @@ class Organization extends Model
         }
     }
 
+    /**
+     * Reopen a previously closed fiscal year.
+     */
+    public function reopenFiscalYear(int $year): void
+    {
+        /** @var int[] $closed */
+        $closed = $this->closed_fiscal_years ?? [];
+        $closed = array_values(array_filter($closed, fn (int $y) => $y !== $year));
+        $this->update(['closed_fiscal_years' => $closed]);
+    }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'organization_users')
@@ -97,5 +109,10 @@ class Organization extends Model
     public function invitations(): HasMany
     {
         return $this->hasMany(OrganizationInvitation::class);
+    }
+
+    public function expenseCategories(): HasMany
+    {
+        return $this->hasMany(ExpenseCategory::class);
     }
 }

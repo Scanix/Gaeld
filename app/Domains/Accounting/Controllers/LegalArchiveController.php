@@ -28,11 +28,14 @@ class LegalArchiveController extends Controller
         $archives = LegalArchive::where('organization_id', $orgId)
             ->orderByDesc('fiscal_year')
             ->orderBy('document_type')
-            ->get()
-            ->groupBy('fiscal_year');
+            ->paginate(50)
+            ->withQueryString();
+
+        $archivesByYear = collect($archives->items())->groupBy('fiscal_year');
 
         return Inertia::render('Accounting/Archives/Index', [
-            'archivesByYear' => $archives,
+            'archivesByYear' => $archivesByYear,
+            'pagination' => $archives,
         ]);
     }
 

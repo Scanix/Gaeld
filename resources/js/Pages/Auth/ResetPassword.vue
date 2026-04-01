@@ -28,7 +28,7 @@ function submit() {
 </script>
 
 <template>
-  <Head title="Reset Password" />
+  <Head :title="t('reset_password')" />
 
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">

@@ -13,16 +13,17 @@ import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { Link2, Unlink, CalendarDays } from 'lucide-vue-next'
 
 const { t } = useTranslations()
+const { formatDate, formatMoney } = useFormatters()
 
 const props = defineProps({
   accounts: Array,
   account: Object,
   openItems: Array,
-  lots: Array,
+  lots: Object,
   filterDate: String,
 })
 
@@ -120,8 +121,8 @@ const openItemColumns = computed(() => [
   { key: 'date', label: t('date'), format: v => formatDate(v) },
   { key: 'reference', label: t('reference') },
   { key: 'description', label: t('description') },
-  { key: 'debit', label: t('debit'), format: v => v > 0 ? formatCurrency(v) : '' },
-  { key: 'credit', label: t('credit'), format: v => v > 0 ? formatCurrency(v) : '' },
+  { key: 'debit', label: t('debit'), format: v => v > 0 ? formatMoney(v) : '' },
+  { key: 'credit', label: t('credit'), format: v => v > 0 ? formatMoney(v) : '' },
 ])
 
 const lotColumns = computed(() => [
@@ -185,8 +186,8 @@ const lotColumns = computed(() => [
         </CardHeader>
         <CardContent>
           <div v-if="selectedLineIds.length >= 2" class="mb-4 flex items-center gap-4 rounded-md bg-[hsl(var(--muted))] px-4 py-2 text-sm">
-            <span>{{ t('debit') }}: {{ formatCurrency(selectedBalance.debit) }}</span>
-            <span>{{ t('credit') }}: {{ formatCurrency(selectedBalance.credit) }}</span>
+            <span>{{ t('debit') }}: {{ formatMoney(selectedBalance.debit) }}</span>
+            <span>{{ t('credit') }}: {{ formatMoney(selectedBalance.credit) }}</span>
             <Badge :variant="isBalanced ? 'success' : 'destructive'">
               {{ isBalanced ? t('balanced') : t('unbalanced') }}
             </Badge>
@@ -210,12 +211,12 @@ const lotColumns = computed(() => [
       </Card>
 
       <!-- Existing lots -->
-      <Card v-if="lots && lots.length > 0">
+      <Card v-if="lots && (lots?.data ?? []).length > 0">
         <CardHeader>
           <CardTitle>{{ t('lettrage') }}</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable :columns="lotColumns" :rows="lots">
+          <DataTable :columns="lotColumns" :rows="lots?.data ?? []" :pagination="lots">
             <template #cell-actions="{ row }">
               <Button
                 variant="ghost"

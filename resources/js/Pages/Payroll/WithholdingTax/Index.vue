@@ -11,7 +11,7 @@ import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { computed, ref } from 'vue'
 import { router, useForm, Link } from '@inertiajs/vue3'
 import { Plus, Send, FileText } from 'lucide-vue-next'
@@ -21,6 +21,7 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const statusVariant = { draft: 'default', submitted: 'info', paid: 'success' }
 
@@ -123,7 +124,7 @@ function submitDeclaration(declaration) {
     </Card>
 
     <Modal :open="showForm" :title="t('withholding_tax')" @close="showForm = false">
-      <form class="space-y-4" @submit.prevent="submitForm">
+      <form class="space-y-6" @submit.prevent="submitForm">
         <FormSelect
           id="canton"
           v-model="form.canton"

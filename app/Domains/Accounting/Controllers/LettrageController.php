@@ -46,8 +46,9 @@ class LettrageController extends Controller
             ? LettrageLot::where('account_id', $account->id)
                 ->where('is_reversed', false)
                 ->orderBy('letter_key')
-                ->get()
-            : [];
+                ->paginate(25)
+                ->withQueryString()
+            : null;
 
         return Inertia::render('Accounting/Lettrage', [
             'accounts' => $accounts,

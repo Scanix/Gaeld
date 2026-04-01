@@ -22,7 +22,7 @@ function submit() {
 </script>
 
 <template>
-  <Head title="Forgot Password" />
+  <Head :title="t('forgot_password')" />
 
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">

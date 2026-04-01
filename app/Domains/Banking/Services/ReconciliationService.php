@@ -42,6 +42,7 @@ class ReconciliationService
         private BankingService $bankingService,
         private MatchingService $matchingService,
         private SuggestionService $suggestionService,
+        private PersonalPatternService $personalPatternService,
     ) {}
 
     /**
@@ -217,6 +218,76 @@ class ReconciliationService
 
             return $postedTransaction->fresh(['journalEntry.lines', 'bankAccount']);
         });
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  CE: Personal Transaction (mixed-use accounts)
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Mark a bank transaction as personal on a mixed-use account.
+     *
+     * Posts a journal entry to account 2850 (Private contributions/withdrawals):
+     *   - Money OUT (debit tx): Debit 2850 / Credit bank account
+     *   - Money IN  (credit tx): Debit bank account / Credit 2850
+     *
+     * Also records the counterparty pattern for future suggestions.
+     *
+     * @throws AlreadyReconciledException When transaction is already reconciled
+     * @throws UnlinkedBankAccountException When bank account has no linked ledger account
+     */
+    public function reconcileAsPersonal(BankTransaction $transaction): BankTransaction
+    {
+        return DB::transaction(function () use ($transaction) {
+            /** @var BankAccount $bankAccount */
+            $bankAccount = $transaction->bankAccount;
+
+            $this->validateReconciliationPreconditions($transaction, $bankAccount);
+
+            $postedTransaction = $this->bankingService->postBankTransaction(
+                $transaction,
+                AccountCode::PRIVATE_WITHDRAWALS,
+            );
+
+            $postedTransaction->update([
+                'is_reconciled' => true,
+                'is_personal' => true,
+            ]);
+
+            $this->personalPatternService->recordPersonalTransaction(
+                $transaction,
+                $bankAccount->organization_id,
+            );
+
+            return $postedTransaction->fresh(['journalEntry.lines', 'bankAccount']);
+        });
+    }
+
+    /**
+     * Bulk mark transactions as personal.
+     *
+     * @param  \Illuminate\Support\Collection<int, BankTransaction>  $transactions
+     * @return array{reconciled: int, skipped: int}
+     */
+    public function bulkReconcileAsPersonal(\Illuminate\Support\Collection $transactions): array
+    {
+        $reconciled = 0;
+        $skipped = 0;
+
+        foreach ($transactions as $transaction) {
+            try {
+                $this->reconcileAsPersonal($transaction);
+                $reconciled++;
+            } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
+                Log::info('Bulk personal reconcile: skipped', [
+                    'transaction_id' => $transaction->id,
+                    'reason' => $e->getMessage(),
+                ]);
+                $skipped++;
+            }
+        }
+
+        return ['reconciled' => $reconciled, 'skipped' => $skipped];
     }
 
     // ──────────────────────────────────────────────────────────────

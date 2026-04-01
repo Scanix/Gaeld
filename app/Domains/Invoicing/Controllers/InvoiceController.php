@@ -13,7 +13,6 @@ use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Domains\Invoicing\Actions\SendInvoiceAction;
 use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
@@ -28,9 +27,11 @@ use App\Domains\Invoicing\Queries\InvoiceQuery;
 use App\Domains\Invoicing\Requests\RecordPaymentRequest;
 use App\Domains\Invoicing\Requests\StoreInvoiceRequest;
 use App\Domains\Invoicing\Requests\UpdateInvoiceRequest;
+use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use App\Support\Services\FileUploadService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -59,7 +60,7 @@ class InvoiceController extends Controller
                 'sort' => $request->input('sort', 'issue_date'),
                 'direction' => $request->input('direction', 'desc'),
                 'search' => $request->input('search', ''),
-                'filter' => $request->input('filter', []),
+                'filter' => $request->input('filter', ['type' => 'invoice']),
             ],
         ]);
     }
@@ -68,9 +69,13 @@ class InvoiceController extends Controller
     {
         $this->authorize('create', Invoice::class);
 
+        $numberGenerator = app(InvoiceNumberGenerator::class);
+        $currentOrg = app(CurrentOrganization::class);
+
         return Inertia::render('Invoices/Create', [
             'customers' => CustomerQuery::forSelect(),
             'vatRates' => VatRateQuery::active(),
+            'suggestedNumber' => $numberGenerator->next($currentOrg->id()),
         ]);
     }
 
@@ -89,6 +94,10 @@ class InvoiceController extends Controller
         $dto = CreateInvoiceData::fromArray($validated);
 
         $invoice = $action->execute($dto);
+
+        if ($request->boolean('finalize')) {
+            app(FinalizeInvoiceAction::class)->execute($invoice);
+        }
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', __('app.invoice_created'));

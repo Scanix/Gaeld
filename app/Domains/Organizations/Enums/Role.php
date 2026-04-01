@@ -90,7 +90,6 @@ enum Role: string
 
             // Organization
             Permission::OrganizationView,
-            Permission::OrganizationViewAuditLog,
 
             // Reporting
             Permission::ReportingView,
@@ -99,6 +98,9 @@ enum Role: string
             Permission::PayrollView,
             Permission::PayrollCreate,
             Permission::PayrollEdit,
+
+            // Migration
+            Permission::MigrationImport,
         ];
     }
 
@@ -140,7 +142,6 @@ enum Role: string
 
             // Organization
             Permission::OrganizationView,
-            Permission::OrganizationViewAuditLog,
 
             // Reporting
             Permission::ReportingView,
@@ -149,6 +150,9 @@ enum Role: string
             Permission::PayrollView,
             Permission::PayrollCreate,
             Permission::PayrollEdit,
+
+            // Migration
+            Permission::MigrationImport,
         ];
     }
 

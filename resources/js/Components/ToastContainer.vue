@@ -1,5 +1,8 @@
 <script setup>
 import { useToast } from '@/lib/useToast'
+import { useTranslations } from '@/lib/useTranslations'
+
+const { t: tl } = useTranslations()
 
 const { toasts, dismiss } = useToast()
 
@@ -31,7 +34,7 @@ const variantClasses = {
       >
         <div class="flex items-start justify-between gap-2">
           <span>{{ t.message }}</span>
-          <button @click="dismiss(t.id)" class="shrink-0 opacity-60 hover:opacity-100" aria-label="Dismiss">
+          <button @click="dismiss(t.id)" class="shrink-0 opacity-60 hover:opacity-100" :aria-label="tl('dismiss')">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>

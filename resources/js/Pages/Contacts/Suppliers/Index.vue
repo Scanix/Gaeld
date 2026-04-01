@@ -6,7 +6,8 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Pencil, Trash2, Eye } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Eye, Truck } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
@@ -103,7 +104,6 @@ const countryFilters = computed(() => [
       :rows="suppliers?.data ?? []"
       :pagination="suppliers"
       :row-link="(row) => `/suppliers/${row.id}`"
-      :empty-message="t('no_suppliers_yet')"
       :sort="query.sort"
       :direction="query.direction"
       searchable
@@ -144,6 +144,9 @@ const countryFilters = computed(() => [
             <Trash2 class="h-4 w-4 text-[hsl(var(--destructive))]" />
           </Button>
         </div>
+      </template>
+      <template #empty>
+        <EmptyState :icon="Truck" :title="t('no_suppliers_yet')" :description="t('no_suppliers_yet_desc')" :action-label="t('new_supplier')" action-href="/suppliers/create" />
       </template>
     </DataTable>
 

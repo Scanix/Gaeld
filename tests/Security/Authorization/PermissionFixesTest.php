@@ -67,10 +67,10 @@ class PermissionFixesTest extends SecurityTestCase
         $this->assertContains('accounting.delete', $perms);
     }
 
-    public function test_accountant_has_audit_log_permission(): void
+    public function test_accountant_does_not_have_audit_log_permission(): void
     {
         $perms = Role::Accountant->permissionValues();
-        $this->assertContains('organization.view-audit-log', $perms);
+        $this->assertNotContains('organization.view-audit-log', $perms);
     }
 
     public function test_accountant_cannot_delete_invoices(): void
@@ -92,13 +92,13 @@ class PermissionFixesTest extends SecurityTestCase
     }
 
     // ──────────────────────────────────────────────────────────────
-    //  Member role now has audit-log permission
+    //  Member role does NOT have audit-log permission
     // ──────────────────────────────────────────────────────────────
 
-    public function test_member_has_audit_log_permission(): void
+    public function test_member_does_not_have_audit_log_permission(): void
     {
         $perms = Role::Member->permissionValues();
-        $this->assertContains('organization.view-audit-log', $perms);
+        $this->assertNotContains('organization.view-audit-log', $perms);
     }
 
     public function test_viewer_does_not_have_audit_log_permission(): void
@@ -167,8 +167,8 @@ class PermissionFixesTest extends SecurityTestCase
 
         $this->assertTrue($policy->viewAuditLog($this->ownerA, $this->orgA));
         $this->assertTrue($policy->viewAuditLog($this->admin, $this->orgA));
-        $this->assertTrue($policy->viewAuditLog($this->accountant, $this->orgA));
-        $this->assertTrue($policy->viewAuditLog($this->member, $this->orgA));
+        $this->assertFalse($policy->viewAuditLog($this->accountant, $this->orgA));
+        $this->assertFalse($policy->viewAuditLog($this->member, $this->orgA));
         $this->assertFalse($policy->viewAuditLog($this->viewer, $this->orgA));
     }
 
@@ -180,20 +180,20 @@ class PermissionFixesTest extends SecurityTestCase
             ->assertForbidden();
     }
 
-    public function test_member_can_access_activity_log(): void
+    public function test_member_cannot_access_activity_log(): void
     {
         $this->actingAs($this->member)
             ->withSession(['current_organization_id' => $this->orgA->id])
             ->get('/settings/activity-log')
-            ->assertOk();
+            ->assertForbidden();
     }
 
-    public function test_accountant_can_access_activity_log(): void
+    public function test_accountant_cannot_access_activity_log(): void
     {
         $this->actingAs($this->accountant)
             ->withSession(['current_organization_id' => $this->orgA->id])
             ->get('/settings/activity-log')
-            ->assertOk();
+            ->assertForbidden();
     }
 
     // ──────────────────────────────────────────────────────────────

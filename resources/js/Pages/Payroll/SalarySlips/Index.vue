@@ -6,10 +6,13 @@ import Badge from '@/Components/UI/Badge.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Button from '@/Components/UI/Button.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import { computed, ref } from 'vue'
-import { Eye } from 'lucide-vue-next'
+import { Eye, FileText } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 
 const { t } = useTranslations()
+const { intlMonthName } = useFormatters()
 
 const props = defineProps({
   slips: Object,
@@ -31,7 +34,7 @@ const monthOptions = computed(() => [
   { value: '', label: t('all_months') },
   ...Array.from({ length: 12 }, (_, i) => ({
     value: String(i + 1).padStart(2, '0'),
-    label: new Date(2000, i).toLocaleString('default', { month: 'long' }),
+    label: intlMonthName(i),
   })),
 ])
 
@@ -39,9 +42,11 @@ function applyFilter() {
   router.get('/payroll/salary-slips', { year: year.value, month: month.value, page: 1 }, { preserveState: true, replace: true })
 }
 
+const { locale: appLocale } = useFormatters()
 function formatSwiss(v) {
   if (v == null) return '—'
-  return Number(v).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const intlMap = { en: 'en-CH', fr: 'fr-CH', de: 'de-CH', it: 'it-CH' }
+  return Number(v).toLocaleString(intlMap[appLocale.value] || 'de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 const columns = computed(() => [
@@ -79,7 +84,6 @@ const columns = computed(() => [
       :columns="columns"
       :rows="slips?.data ?? []"
       :pagination="slips"
-      :empty-message="t('no_salary_slips_yet')"
     >
       <template #cell-period="{ row }">{{ row.month_label }}</template>
       <template #cell-employee="{ row }">
@@ -102,6 +106,9 @@ const columns = computed(() => [
         <Link :href="`/payroll/salary-slips/${row.id}`" class="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
           <Eye class="h-4 w-4" />
         </Link>
+      </template>
+      <template #empty>
+        <EmptyState :icon="FileText" :title="t('no_salary_slips_yet')" :description="t('no_salary_slips_yet_desc')" />
       </template>
     </DataTable>
   </AppLayout>

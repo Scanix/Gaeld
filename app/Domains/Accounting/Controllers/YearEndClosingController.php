@@ -34,6 +34,8 @@ class YearEndClosingController extends Controller
 
         [$income, $expenses, $netResult] = $this->computeClosingAccounts($orgId, $from, $to);
 
+        $org = Organization::findOrFail($orgId);
+
         return Inertia::render('Accounting/YearEndClosing', [
             'year' => $year,
             'fromDate' => $from,
@@ -41,6 +43,8 @@ class YearEndClosingController extends Controller
             'income' => $income,
             'expenses' => $expenses,
             'netResult' => $netResult,
+            'closedYears' => $org->closed_fiscal_years ?? [],
+            'canReopenYear' => $request->user()?->can('reopenYear', Account::class) ?? false,
         ]);
     }
 
@@ -97,7 +101,7 @@ class YearEndClosingController extends Controller
                         accountId: (string) $row['account_id'],
                         debit: (string) $row['balance'],
                         credit: '0',
-                        description: "Bouclement {$year} — clôture ".$row['code'],
+                        description: __('app.closing_line_description', ['year' => $year, 'code' => $row['code']]),
                     );
                     $netCreditOnResult = bcadd($netCreditOnResult, (string) $row['balance'], 2);
                 }
@@ -110,7 +114,7 @@ class YearEndClosingController extends Controller
                         accountId: (string) $row['account_id'],
                         debit: '0',
                         credit: (string) $row['balance'],
-                        description: "Bouclement {$year} — clôture ".$row['code'],
+                        description: __('app.closing_line_description', ['year' => $year, 'code' => $row['code']]),
                     );
                     $netDebitOnResult = bcadd($netDebitOnResult, (string) $row['balance'], 2);
                 }
@@ -123,13 +127,13 @@ class YearEndClosingController extends Controller
                     accountId: (string) $resultAccount->id,
                     debit: $netDebit,
                     credit: $netCredit,
-                    description: "Bouclement {$year} — résultat de l'exercice",
+                    description: __('app.closing_result_description', ['year' => $year]),
                 );
 
                 $entry = new JournalEntryData(
                     date: $validated['closing_date'],
                     reference: $validated['reference'],
-                    description: "Bouclement de compte {$year}",
+                    description: __('app.closing_entry_description', ['year' => $year]),
                     lines: $lines,
                 );
 
@@ -150,6 +154,33 @@ class YearEndClosingController extends Controller
 
         return redirect()->route('accounting.closing')
             ->with('success', __('app.year_end_closing_done'));
+    }
+
+    public function reopen(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    {
+        $this->authorize('reopenYear', Account::class);
+
+        $validated = $request->validate([
+            'year' => 'required|integer|min:2000|max:2100',
+        ]);
+
+        $year = (int) $validated['year'];
+        $org = Organization::findOrFail($currentOrg->id());
+
+        if (! $org->isFiscalYearClosed($year)) {
+            return redirect()->back()->with('error', __('app.fiscal_year_not_closed', ['year' => $year]));
+        }
+
+        $org->reopenFiscalYear($year);
+
+        activity()
+            ->causedBy($request->user())
+            ->performedOn($org)
+            ->withProperties(['year' => $year])
+            ->log("Fiscal year {$year} reopened");
+
+        return redirect()->route('accounting.closing', ['year' => $year])
+            ->with('success', __('app.fiscal_year_reopened', ['year' => $year]));
     }
 
     // ──────────────────────────────────────────────────────────────

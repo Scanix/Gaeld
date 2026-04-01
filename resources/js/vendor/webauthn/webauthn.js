@@ -247,8 +247,6 @@ class WebAuthn {
                 });
             });
 
-        console.log(publicKey);
-
         return publicKey;
     }
 
@@ -345,8 +343,6 @@ class WebAuthn {
         const publicKeyCredential = this.#parseOutgoingCredentials(credentials);
 
         Object.assign(publicKeyCredential, response);
-
-        console.log(publicKeyCredential);
 
         return await this.#fetch(publicKeyCredential, this.#routes.login, response).then(WebAuthn.#handleResponse);
     }

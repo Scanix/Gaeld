@@ -28,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property string $currency
  * @property string $balance
  * @property bool $is_active
+ * @property bool $is_mixed_use
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -45,6 +46,7 @@ class BankAccount extends Model
         'currency',
         'balance',
         'is_active',
+        'is_mixed_use',
     ];
 
     protected function casts(): array
@@ -52,6 +54,7 @@ class BankAccount extends Model
         return [
             'balance' => 'decimal:2',
             'is_active' => 'boolean',
+            'is_mixed_use' => 'boolean',
         ];
     }
 

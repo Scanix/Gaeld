@@ -1,5 +1,8 @@
 <script setup>
 import { computed } from 'vue'
+import { useTranslations } from '@/lib/useTranslations'
+
+const { t } = useTranslations()
 
 const props = defineProps({
   password: {
@@ -22,7 +25,7 @@ const strength = computed(() => {
 })
 
 const label = computed(() => {
-  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong']
+  const labels = ['', t('password_weak'), t('password_fair'), t('password_good'), t('password_strong')]
   return labels[strength.value]
 })
 
