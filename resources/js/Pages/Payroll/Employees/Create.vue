@@ -59,6 +59,7 @@ function submit() {
       <CardContent>
         <form class="space-y-6" @submit.prevent="submit">
           <!-- Personal info -->
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('personal_info') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormInput
               id="first_name"
@@ -111,6 +112,8 @@ function submit() {
           </div>
 
           <!-- Employment -->
+          <hr class="border-[hsl(var(--border))]" />
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('employment') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormInput
               id="position"
@@ -146,6 +149,8 @@ function submit() {
           </div>
 
           <!-- Bank account -->
+          <hr class="border-[hsl(var(--border))]" />
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('bank_account') }}</h3>
           <MaskedInput
             id="iban"
             v-model="form.iban"

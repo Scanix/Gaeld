@@ -7,7 +7,7 @@ export default function getTranslations() {
       consentModal: {
         title: 'Cookies & Privacy',
         description:
-          'Our website uses essential cookies to ensure its proper functioning. <a href="https://gaeld.ch/privacy" class="cc-link">Privacy Policy</a>',
+          'Our website uses essential cookies to ensure its proper functioning and optional analytics cookies to improve our service. You can choose which cookies to accept. <a href="https://gaeld.ch/privacy" class="cc-link">Privacy Policy</a>',
         acceptAllBtn: 'Accept',
         showPreferencesBtn: 'More info',
       },
@@ -57,6 +57,34 @@ export default function getTranslations() {
             },
           },
           {
+            title: 'Analytics cookies',
+            description:
+              'These cookies allow us to measure traffic and analyse your behaviour to improve our service.',
+            linkedCategory: 'analytics',
+            cookieTable: {
+              headers: {
+                name: 'Name',
+                domain: 'Domain',
+                description: 'Description',
+                expiration: 'Expiration',
+              },
+              body: [
+                {
+                  name: '_ga',
+                  domain: COOKIE_DOMAIN,
+                  description: 'Google Analytics — distinguishes unique users.',
+                  expiration: '2 years',
+                },
+                {
+                  name: '_gid',
+                  domain: COOKIE_DOMAIN,
+                  description: 'Google Analytics — distinguishes unique users.',
+                  expiration: '24 hours',
+                },
+              ],
+            },
+          },
+          {
             title: 'More information',
             description:
               'For any questions regarding our cookie policy and your choices, please <a class="cc-link" href="https://gaeld.ch/privacy">contact us</a>',
@@ -69,7 +97,7 @@ export default function getTranslations() {
       consentModal: {
         title: 'Cookies & Confidentialit\u00e9',
         description:
-          'Notre site web utilise des cookies essentiels pour assurer son bon fonctionnement. <a href="https://gaeld.ch/fr/privacy" class="cc-link">Politique de confidentialit\u00e9</a>',
+          'Notre site web utilise des cookies essentiels pour assurer son bon fonctionnement et des cookies analytiques optionnels pour am\u00e9liorer notre service. Vous pouvez choisir les cookies \u00e0 accepter. <a href="https://gaeld.ch/fr/privacy" class="cc-link">Politique de confidentialit\u00e9</a>',
         acceptAllBtn: 'Accepter',
         showPreferencesBtn: "Plus d\'infos",
       },
@@ -119,6 +147,34 @@ export default function getTranslations() {
             },
           },
           {
+            title: 'Cookies analytiques',
+            description:
+              'Ces cookies nous permettent de mesurer le trafic et d\'analyser votre comportement afin d\'am\u00e9liorer notre service.',
+            linkedCategory: 'analytics',
+            cookieTable: {
+              headers: {
+                name: 'Nom',
+                domain: 'Domaine',
+                description: 'Description',
+                expiration: 'Expiration',
+              },
+              body: [
+                {
+                  name: '_ga',
+                  domain: COOKIE_DOMAIN,
+                  description: 'Google Analytics — distingue les utilisateurs uniques.',
+                  expiration: '2 ans',
+                },
+                {
+                  name: '_gid',
+                  domain: COOKIE_DOMAIN,
+                  description: 'Google Analytics — distingue les utilisateurs uniques.',
+                  expiration: '24 heures',
+                },
+              ],
+            },
+          },
+          {
             title: "Plus d\'informations",
             description:
               'Pour toute question concernant notre politique de cookies et vos choix, veuillez <a class="cc-link" href="https://gaeld.ch/fr/privacy">nous contacter</a>',
@@ -131,7 +187,7 @@ export default function getTranslations() {
       consentModal: {
         title: 'Cookies & Datenschutz',
         description:
-          'Unsere Website verwendet essentielle Cookies, um deren ordnungsgem\u00e4sses Funktionieren sicherzustellen. <a href="https://gaeld.ch/de/privacy" class="cc-link">Datenschutzerkl\u00e4rung</a>',
+          'Unsere Website verwendet essentielle Cookies, um deren ordnungsgem\u00e4sses Funktionieren sicherzustellen, und optionale Analyse-Cookies zur Verbesserung unseres Dienstes. Sie k\u00f6nnen w\u00e4hlen, welche Cookies Sie akzeptieren. <a href="https://gaeld.ch/de/privacy" class="cc-link">Datenschutzerkl\u00e4rung</a>',
         acceptAllBtn: 'Akzeptieren',
         showPreferencesBtn: 'Mehr Infos',
       },
@@ -181,6 +237,34 @@ export default function getTranslations() {
             },
           },
           {
+            title: 'Analyse-Cookies',
+            description:
+              'Diese Cookies erm\u00f6glichen es uns, den Datenverkehr zu messen und Ihr Verhalten zu analysieren, um unseren Service zu verbessern.',
+            linkedCategory: 'analytics',
+            cookieTable: {
+              headers: {
+                name: 'Name',
+                domain: 'Domain',
+                description: 'Beschreibung',
+                expiration: 'Ablauf',
+              },
+              body: [
+                {
+                  name: '_ga',
+                  domain: COOKIE_DOMAIN,
+                  description: 'Google Analytics — unterscheidet eindeutige Benutzer.',
+                  expiration: '2 Jahre',
+                },
+                {
+                  name: '_gid',
+                  domain: COOKIE_DOMAIN,
+                  description: 'Google Analytics — unterscheidet eindeutige Benutzer.',
+                  expiration: '24 Stunden',
+                },
+              ],
+            },
+          },
+          {
             title: 'Weitere Informationen',
             description:
               'Bei Fragen zu unserer Cookie-Richtlinie und Ihren Wahlm\u00f6glichkeiten <a class="cc-link" href="https://gaeld.ch/de/privacy">kontaktieren Sie uns</a>',
@@ -193,7 +277,7 @@ export default function getTranslations() {
       consentModal: {
         title: 'Cookie e Privacy',
         description:
-          'Il nostro sito web utilizza cookie essenziali per garantirne il corretto funzionamento. <a href="https://gaeld.ch/it/privacy" class="cc-link">Informativa sulla privacy</a>',
+          'Il nostro sito web utilizza cookie essenziali per garantirne il corretto funzionamento e cookie analitici opzionali per migliorare il nostro servizio. Potete scegliere quali cookie accettare. <a href="https://gaeld.ch/it/privacy" class="cc-link">Informativa sulla privacy</a>',
         acceptAllBtn: 'Accetta',
         showPreferencesBtn: "Pi\u00f9 info",
       },
@@ -238,6 +322,34 @@ export default function getTranslations() {
                   domain: COOKIE_DOMAIN,
                   description: 'Identificatore di sessione.',
                   expiration: 'Sessione',
+                },
+              ],
+            },
+          },
+          {
+            title: 'Cookie analitici',
+            description:
+              'Questi cookie ci consentono di misurare il traffico e analizzare il vostro comportamento per migliorare il nostro servizio.',
+            linkedCategory: 'analytics',
+            cookieTable: {
+              headers: {
+                name: 'Nome',
+                domain: 'Dominio',
+                description: 'Descrizione',
+                expiration: 'Scadenza',
+              },
+              body: [
+                {
+                  name: '_ga',
+                  domain: COOKIE_DOMAIN,
+                  description: 'Google Analytics — distingue gli utenti unici.',
+                  expiration: '2 anni',
+                },
+                {
+                  name: '_gid',
+                  domain: COOKIE_DOMAIN,
+                  description: 'Google Analytics — distingue gli utenti unici.',
+                  expiration: '24 ore',
                 },
               ],
             },

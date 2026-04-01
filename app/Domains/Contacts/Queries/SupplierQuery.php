@@ -7,6 +7,7 @@ use App\Support\QueryBuilder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class SupplierQuery
 {
@@ -23,7 +24,13 @@ class SupplierQuery
 
     public static function forSelect(): Collection
     {
-        return Supplier::orderBy('name')->get();
+        $orgId = app(\App\Domains\Organizations\Services\CurrentOrganization::class)->id();
+
+        return Cache::tags(["org:{$orgId}:contacts"])->remember(
+            "suppliers_select:{$orgId}",
+            600,
+            fn () => Supplier::orderBy('name')->get()
+        );
     }
 
     public static function hasMatchingSupplier(string $organizationId, string $creditorName): bool

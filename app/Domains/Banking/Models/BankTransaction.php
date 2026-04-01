@@ -33,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $structured_reference
  * @property string $import_hash
  * @property bool $is_reconciled
+ * @property bool|null $is_personal
  * @property string|null $matched_invoice_id
  * @property string|null $matched_expense_id
  * @property string|null $suggested_expense_category
@@ -58,6 +59,7 @@ class BankTransaction extends Model
         'structured_reference',
         'import_hash',
         'is_reconciled',
+        'is_personal',
         'matched_invoice_id',
         'matched_expense_id',
         'suggested_expense_category',
@@ -70,6 +72,7 @@ class BankTransaction extends Model
             'amount' => 'decimal:2',
             'type' => BankTransactionType::class,
             'is_reconciled' => 'boolean',
+            'is_personal' => 'boolean',
         ];
     }
 

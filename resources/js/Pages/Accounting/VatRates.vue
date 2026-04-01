@@ -13,10 +13,11 @@ import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
+import { Plus, Pencil, Trash2, Percent } from 'lucide-vue-next'
 
 const props = defineProps({
-  vatRates: { type: Array, default: () => [] },
+  vatRates: { type: Object, default: () => ({}) },
 })
 
 const { t } = useTranslations()
@@ -96,7 +97,16 @@ function doDelete() {
         </Button>
       </CardHeader>
       <CardContent>
-        <DataTable :columns="columns" :rows="vatRates">
+        <DataTable :columns="columns" :rows="vatRates?.data ?? []" :pagination="vatRates">
+          <template #empty>
+            <EmptyState
+              :icon="Percent"
+              :title="t('empty_vat_rates_title')"
+              :description="t('empty_vat_rates_desc')"
+              :action-label="t('create_first')"
+              @action="openCreate"
+            />
+          </template>
           <template #cell-rate="{ row }">
             {{ row.rate }}%
           </template>
@@ -129,7 +139,7 @@ function doDelete() {
       :title="editingRate ? t('edit_vat_rate') : t('new_vat_rate')"
       @close="showForm = false"
     >
-      <form class="space-y-4" @submit.prevent="submitForm">
+      <form class="space-y-6" @submit.prevent="submitForm">
         <FormInput
           id="name"
           v-model="form.name"

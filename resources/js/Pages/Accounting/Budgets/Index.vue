@@ -13,10 +13,11 @@ import Combobox from '@/Components/UI/Combobox.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Trash2 } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
+import { Plus, Trash2, PieChart } from 'lucide-vue-next'
 
 const props = defineProps({
-  budgets: { type: Array, default: () => [] },
+  budgets: { type: Object, default: () => ({}) },
   accounts: { type: Array, default: () => [] },
   fiscalYears: { type: Array, default: () => [] },
   selectedYear: { type: [String, Number], default: null },
@@ -179,9 +180,9 @@ function chf(val) {
             </tr>
           </thead>
           <tbody>
-            <template v-if="budgets.length">
+            <template v-if="(budgets?.data ?? []).length">
               <tr
-                v-for="budget in budgets"
+                v-for="budget in (budgets?.data ?? [])"
                 :key="budget.id"
                 class="border-b last:border-0 hover:bg-[hsl(var(--accent))]/40"
               >
@@ -225,12 +226,29 @@ function chf(val) {
               </tr>
             </template>
             <tr v-else>
-              <td colspan="5" class="px-4 py-12 text-center text-[hsl(var(--muted-foreground))]">
-                {{ t('no_budget_lines') }}
+              <td colspan="5" class="px-4 py-8 text-center">
+                <EmptyState
+                  :icon="PieChart"
+                  :title="t('empty_budgets_title')"
+                  :description="t('empty_budgets_desc')"
+                  :action-label="t('create_first')"
+                  @action="showAddForm = true"
+                />
               </td>
             </tr>
           </tbody>
         </table>
+
+        <!-- Pagination -->
+        <div v-if="budgets?.last_page > 1" class="flex items-center justify-between border-t border-[hsl(var(--border))] px-4 py-3">
+          <span class="text-sm text-[hsl(var(--muted-foreground))]">
+            {{ t('page') }} {{ budgets.current_page }} / {{ budgets.last_page }}
+          </span>
+          <div class="flex gap-2">
+            <Button v-if="budgets.prev_page_url" variant="outline" size="sm" @click="router.get(budgets.prev_page_url)">{{ t('previous') }}</Button>
+            <Button v-if="budgets.next_page_url" variant="outline" size="sm" @click="router.get(budgets.next_page_url)">{{ t('next') }}</Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
 

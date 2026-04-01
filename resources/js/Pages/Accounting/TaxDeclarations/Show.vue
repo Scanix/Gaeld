@@ -8,15 +8,17 @@ import Badge from '@/Components/UI/Badge.vue'
 import Button from '@/Components/UI/Button.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { router, Link } from '@inertiajs/vue3'
 import { ArrowLeft, Lock } from 'lucide-vue-next'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 
 const props = defineProps({
   declaration: Object,
 })
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const statusVariant = {
   draft: 'default',
@@ -44,11 +46,7 @@ function dataRows() {
 
 <template>
   <AppLayout :title="`${t('tax_declaration')} — ${declaration.fiscal_year} (${declaration.canton})`">
-    <div class="mb-4">
-      <Link href="/accounting/tax-declarations" class="inline-flex items-center gap-1 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
-        <ArrowLeft class="h-4 w-4" /> {{ t('back') }}
-      </Link>
-    </div>
+    <Breadcrumb :items="[{ label: t('tax_declarations'), href: '/accounting/tax-declarations' }, { label: `${declaration.fiscal_year} (${declaration.canton})` }]" class="mb-4" />
 
     <div class="space-y-6">
       <Card>

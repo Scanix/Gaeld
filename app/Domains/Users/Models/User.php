@@ -20,6 +20,8 @@ use Spatie\Permission\Traits\HasRoles;
  * Belongs to one or more organizations via the `organization_users` pivot table.
  * Supports two-factor authentication (TOTP & WebAuthn), Sanctum API tokens,
  * role-based permissions (Spatie), and per-user locale preference.
+ *
+ * @property \Illuminate\Support\Carbon|null $email_change_requested_at
  */
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, WebAuthnAuthenticatable
 {
@@ -31,8 +33,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'password',
         'locale',
         'show_help',
+        'dashboard_layout',
         'accepted_privacy_at',
         'accepted_terms_at',
+        'pending_email',
+        'email_change_token',
+        'email_change_requested_at',
     ];
 
     protected $hidden = [
@@ -48,11 +54,13 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'show_help' => 'boolean',
+            'dashboard_layout' => 'array',
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
             'accepted_privacy_at' => 'datetime',
             'accepted_terms_at' => 'datetime',
+            'email_change_requested_at' => 'datetime',
         ];
     }
 

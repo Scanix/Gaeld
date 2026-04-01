@@ -10,9 +10,15 @@ Route::get('/profile', [UserController::class, 'profile'])->name('profile');
 Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
 Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
 Route::post('/profile/toggle-help', [UserController::class, 'toggleHelp'])->name('profile.toggle-help');
+Route::put('/profile/dashboard-layout', [UserController::class, 'updateDashboardLayout'])->name('profile.dashboard-layout');
 Route::post('/profile/export', [UserController::class, 'exportData'])->name('profile.export');
 Route::get('/profile/export/download/{filename}', [UserController::class, 'downloadExport'])->name('profile.export.download')->middleware('signed');
 Route::delete('/profile', [UserController::class, 'destroyAccount'])->name('profile.destroy');
+
+// Email change
+Route::put('/profile/email', [UserController::class, 'requestEmailChange'])->name('profile.email');
+Route::get('/profile/email/verify/{token}', [UserController::class, 'confirmEmailChange'])->name('profile.email.verify')->middleware('signed');
+Route::delete('/profile/email', [UserController::class, 'cancelEmailChange'])->name('profile.email.cancel');
 
 // Two-factor authentication management
 Route::post('/profile/two-factor', [TwoFactorController::class, 'enable'])->name('two-factor.enable');

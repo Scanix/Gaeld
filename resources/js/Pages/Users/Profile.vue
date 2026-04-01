@@ -51,6 +51,27 @@ function submitPassword() {
   })
 }
 
+// --- Email change ---
+const showEmailChange = ref(false)
+const emailForm = useForm({
+  email: '',
+  current_password: '',
+})
+
+function submitEmailChange() {
+  emailForm.put('/profile/email', {
+    preserveScroll: true,
+    onSuccess: () => {
+      emailForm.reset()
+      showEmailChange.value = false
+    },
+  })
+}
+
+function cancelEmailChange() {
+  router.delete('/profile/email', { preserveScroll: true })
+}
+
 const { t } = useTranslations()
 const { showHelp, toggleHelp } = useHelp()
 
@@ -259,9 +280,30 @@ function confirmDeletePasskey() {
       <Card>
         <CardHeader><CardTitle>{{ t('profile_information') }}</CardTitle></CardHeader>
         <CardContent>
-          <form class="space-y-4" @submit.prevent="submitProfile">
+          <form class="space-y-6" @submit.prevent="submitProfile">
             <FormInput id="name" v-model="profileForm.name" :label="t('name')" :error="profileForm.errors.name" required />
-            <FormInput id="email" :model-value="user.email" :label="t('email')" disabled />
+            <div>
+              <div class="flex items-center gap-2">
+                <FormInput id="email" :model-value="user.email" :label="t('email')" disabled class="flex-1" />
+                <Button v-if="!showEmailChange" type="button" variant="outline" size="sm" class="mt-5" @click="showEmailChange = true">
+                  {{ t('change_email') }}
+                </Button>
+              </div>
+              <div v-if="user.pending_email" class="mt-1 flex items-center gap-2">
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('pending_email_change', { email: user.pending_email }) }}</p>
+                <button type="button" class="text-xs text-[hsl(var(--destructive))] underline" @click="cancelEmailChange">
+                  {{ t('cancel_email_change') }}
+                </button>
+              </div>
+              <div v-if="showEmailChange" class="mt-3 space-y-3 rounded-md border border-[hsl(var(--border))] p-3">
+                <FormInput id="new_email" v-model="emailForm.email" :label="t('new_email')" type="email" :error="emailForm.errors.email" required />
+                <FormInput id="email_password" v-model="emailForm.current_password" :label="t('current_password')" type="password" :error="emailForm.errors.current_password" required />
+                <div class="flex gap-2 justify-end">
+                  <Button type="button" variant="outline" size="sm" @click="showEmailChange = false">{{ t('cancel') }}</Button>
+                  <Button type="button" size="sm" :disabled="emailForm.processing" @click="submitEmailChange">{{ t('change_email') }}</Button>
+                </div>
+              </div>
+            </div>
             <FormSelect
               id="locale"
               v-model="profileForm.locale"
@@ -270,6 +312,7 @@ function confirmDeletePasskey() {
               :error="profileForm.errors.locale"
               required
             />
+            <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('user_locale_hint') }}</p>
             <div class="flex justify-end">
               <Button type="submit" :disabled="profileForm.processing">{{ t('save') }}</Button>
             </div>
@@ -468,7 +511,7 @@ function confirmDeletePasskey() {
       <Card>
         <CardHeader><CardTitle>{{ t('change_password') }}</CardTitle></CardHeader>
         <CardContent>
-          <form class="space-y-4" @submit.prevent="submitPassword">
+          <form class="space-y-6" @submit.prevent="submitPassword">
             <FormInput
               id="current_password"
               v-model="passwordForm.current_password"

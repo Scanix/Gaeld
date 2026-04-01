@@ -10,7 +10,7 @@ import Badge from '@/Components/UI/Badge.vue'
 import Button from '@/Components/UI/Button.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
-import { formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { computed, ref } from 'vue'
 import { ArrowLeft, History, Search } from 'lucide-vue-next'
@@ -22,18 +22,19 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatDate } = useFormatters()
 
 const searchValue = ref(props.filters.search || '')
 const selectedType = ref(props.filters.subject_type || '')
 const selectedEvent = ref(props.filters.event || '')
 
 const columns = computed(() => [
-  { key: 'created_at', label: t('date') || 'Date', sortable: true, format: (v) => formatDate(v) },
-  { key: 'description', label: t('description') || 'Description', sortable: false },
-  { key: 'subject_type', label: t('entity') || 'Entity', sortable: true, format: (v) => v ? v.split('\\').pop() : '—' },
-  { key: 'event', label: t('event') || 'Event', sortable: true },
-  { key: 'causer', label: t('user') || 'User', sortable: false, format: (v) => v?.name || '—' },
-  { key: 'changes', label: t('changes') || 'Changes', sortable: false },
+  { key: 'created_at', label: t('date'), sortable: true, format: (v) => formatDate(v) },
+  { key: 'description', label: t('description'), sortable: false },
+  { key: 'subject_type', label: t('entity'), sortable: true, format: (v) => v ? v.split('\\').pop() : '—' },
+  { key: 'event', label: t('event'), sortable: true },
+  { key: 'causer', label: t('user'), sortable: false, format: (v) => v?.name || '—' },
+  { key: 'changes', label: t('changes'), sortable: false },
 ])
 
 const rows = computed(() => {
@@ -88,28 +89,28 @@ function clearFilters() {
 }
 
 const typeOptions = computed(() => [
-  { value: '', label: t('all_types') || 'All types' },
+  { value: '', label: t('all_types') },
   ...props.subjectTypes,
 ])
 
 const eventOptions = [
-  { value: '', label: t('all_events') || 'All events' },
-  { value: 'created', label: t('created') || 'Created' },
-  { value: 'updated', label: t('updated') || 'Updated' },
-  { value: 'deleted', label: t('deleted') || 'Deleted' },
+  { value: '', label: t('all_events') },
+  { value: 'created', label: t('created') },
+  { value: 'updated', label: t('updated') },
+  { value: 'deleted', label: t('deleted') },
 ]
 </script>
 
 <template>
-  <AppLayout :title="t('activity_log') || 'Activity Log'">
+  <AppLayout :title="t('activity_log')">
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
         <Button as="a" href="/settings" variant="outline" size="sm">
-          <ArrowLeft class="mr-2 h-4 w-4" /> {{ t('settings') || 'Settings' }}
+          <ArrowLeft class="mr-2 h-4 w-4" /> {{ t('settings') }}
         </Button>
         <h2 class="text-xl font-semibold">
           <History class="inline mr-2 h-5 w-5" />
-          {{ t('activity_log') || 'Activity Log' }}
+          {{ t('activity_log') }}
         </h2>
       </div>
     </div>
@@ -123,7 +124,7 @@ const eventOptions = [
               :modelValue="selectedType"
               @update:modelValue="v => { selectedType = v; applyFilters() }"
               :options="typeOptions"
-              :label="t('entity_type') || 'Entity type'"
+              :label="t('entity_type')"
             />
           </div>
           <div class="w-40">
@@ -131,11 +132,11 @@ const eventOptions = [
               :modelValue="selectedEvent"
               @update:modelValue="v => { selectedEvent = v; applyFilters() }"
               :options="eventOptions"
-              :label="t('event') || 'Event'"
+              :label="t('event')"
             />
           </div>
           <Button v-if="selectedType || selectedEvent || searchValue" variant="outline" size="sm" @click="clearFilters">
-            {{ t('clear_filters') || 'Clear filters' }}
+            {{ t('clear_filters') }}
           </Button>
         </div>
       </CardContent>
@@ -144,9 +145,9 @@ const eventOptions = [
     <!-- Activity table -->
     <Card>
       <CardHeader>
-        <CardTitle>{{ t('recent_activity') || 'Recent Activity' }}</CardTitle>
+        <CardTitle>{{ t('recent_activity') }}</CardTitle>
         <CardDescription>
-          {{ t('activity_log_description') || 'All changes made to your organization data.' }}
+          {{ t('activity_log_description') }}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -156,7 +157,7 @@ const eventOptions = [
           :pagination="activities"
           searchable
           :search-value="searchValue"
-          :empty-message="t('no_activity') || 'No activity recorded yet.'"
+          :empty-message="t('no_activity')"
           @search="handleSearch"
           @sort="handleSort"
         >
@@ -168,7 +169,7 @@ const eventOptions = [
             <div v-if="value" class="max-w-xs">
               <details class="text-xs">
                 <summary class="cursor-pointer text-muted-foreground hover:text-foreground">
-                  {{ t('view_changes') || 'View changes' }}
+                  {{ t('view_changes') }}
                 </summary>
                 <div class="mt-1 space-y-1">
                   <template v-if="value.old">

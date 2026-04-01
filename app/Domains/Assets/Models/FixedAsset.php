@@ -38,7 +38,6 @@ use Illuminate\Support\Carbon;
  * @property bool $is_active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- *
  * @property-read string $status
  * @property-read string $net_book_value
  */

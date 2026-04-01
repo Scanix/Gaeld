@@ -12,26 +12,19 @@
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Scanix/Gaeld.git
-cd Gaeld
+cd Gaeld/api
 
 # 2. Copy environment file
 cp .env.example .env
 
-# 3. Start the containers
-docker-compose up -d
+# 3. Start the containers (dependencies and app key are set up automatically)
+docker compose up -d
 
-# 4. Install dependencies (first time only)
-docker-compose exec app composer install
-docker-compose exec app npm install && npm run build
-
-# 5. Generate app key
-docker-compose exec app php artisan key:generate
-
-# 6. Run the installer
-docker-compose exec app php artisan gaeld:install
+# 4. Run the installer
+docker compose exec laravel.test php artisan gaeld:install
 
 # Or with demo data:
-docker-compose exec app php artisan gaeld:install --demo
+docker compose exec laravel.test php artisan gaeld:install --demo
 ```
 
 Visit `http://localhost:8080` to access the application.

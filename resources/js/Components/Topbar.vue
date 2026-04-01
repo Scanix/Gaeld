@@ -39,7 +39,7 @@ function logout() {
   <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/95 px-3 sm:px-6 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60">
     <div class="flex items-center gap-2 sm:gap-4 min-w-0">
       <button
-        class="shrink-0 rounded-lg p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] lg:hidden"
+        class="shrink-0 rounded-lg p-3 min-h-[44px] min-w-[44px] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] lg:hidden"
         @click="$emit('toggleMobile')"
       >
         <Menu class="h-5 w-5" />

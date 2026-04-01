@@ -9,12 +9,14 @@ import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
-import { formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Pencil, Trash2, Pause, Play } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Pause, Play, RefreshCw } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
+const { formatDate } = useFormatters()
 
 const props = defineProps({
   recurringInvoices: Object,
@@ -77,7 +79,6 @@ const columns = computed(() => [
           :columns="columns"
           :rows="recurringInvoices?.data ?? []"
           :pagination="recurringInvoices"
-          :empty-message="t('no_recurring_invoices')"
         >
           <template #cell-is_active="{ row }">
             <Badge :variant="row.is_active ? 'success' : 'warning'">
@@ -113,6 +114,9 @@ const columns = computed(() => [
                 <Trash2 class="h-4 w-4 text-[hsl(var(--destructive))]" />
               </Button>
             </div>
+          </template>
+          <template #empty>
+            <EmptyState :icon="RefreshCw" :title="t('no_recurring_invoices')" :description="t('no_recurring_invoices_desc')" :action-label="t('new_recurring_invoice')" action-href="/invoices/recurring/create" />
           </template>
         </DataTable>
       </CardContent>

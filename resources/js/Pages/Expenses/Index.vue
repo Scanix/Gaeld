@@ -5,11 +5,12 @@ import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Pencil, Trash2, Eye } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Eye, Receipt } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -24,6 +25,7 @@ const deleteTarget = ref(null)
 const deleting = ref(false)
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 function confirmDelete(expense) {
   deleteTarget.value = expense
@@ -111,7 +113,6 @@ const statusFilters = computed(() => [
       :rows="expenses?.data ?? []"
       :pagination="expenses"
       :row-link="(row) => `/expenses/${row.id}`"
-      :empty-message="t('no_expenses_yet')"
       :sort="query.sort"
       :direction="query.direction"
       searchable
@@ -159,6 +160,9 @@ const statusFilters = computed(() => [
             <Trash2 class="h-4 w-4 text-[hsl(var(--destructive))]" />
           </Button>
         </div>
+      </template>
+      <template #empty>
+        <EmptyState :icon="Receipt" :title="t('no_expenses_yet')" :description="t('no_expenses_yet_desc')" :action-label="t('new_expense')" action-href="/expenses/create" />
       </template>
     </DataTable>
 

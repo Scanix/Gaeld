@@ -13,9 +13,10 @@ import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 
 const props = defineProps({
   bankAccount: Object,
@@ -24,6 +25,7 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 const showTransactionModal = ref(false)
 const showEditModal = ref(false)
@@ -45,6 +47,7 @@ const editForm = useForm({
   bank_name: props.bankAccount.bank_name ?? '',
   currency: props.bankAccount.currency ?? 'CHF',
   account_id: props.bankAccount.account_id?.toString() ?? '',
+  is_mixed_use: props.bankAccount.is_mixed_use ?? false,
 })
 
 function recordTransaction() {
@@ -100,10 +103,12 @@ const columns = computed(() => [
 
 <template>
   <AppLayout :title="`${t('bank')} — ${bankAccount.name}`">
+    <Breadcrumb :items="[{ label: t('bank_accounts'), href: '/banking' }, { label: bankAccount.name }]" class="mb-4" />
+
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
-        <Button as="a" href="/banking" variant="outline" size="sm">← {{ t('back') }}</Button>
         <h2 class="text-xl font-semibold">{{ bankAccount.name }}</h2>
+        <Badge v-if="bankAccount.is_mixed_use" variant="outline">{{ t('mixed') }}</Badge>
       </div>
       <div class="flex gap-2">
         <Button size="sm" variant="outline" @click="showEditModal = true">
@@ -165,7 +170,7 @@ const columns = computed(() => [
 
     <!-- Record Transaction Modal -->
     <Modal :open="showTransactionModal" :title="t('record_transaction')" @close="showTransactionModal = false">
-      <form class="space-y-4" @submit.prevent="recordTransaction">
+      <form class="space-y-6" @submit.prevent="recordTransaction">
         <FormInput
           id="txn-date"
           v-model="transactionForm.date"
@@ -220,7 +225,7 @@ const columns = computed(() => [
 
     <!-- Edit Bank Account Modal -->
     <Modal :open="showEditModal" :title="t('edit_bank_account')" @close="showEditModal = false">
-      <form class="space-y-4" @submit.prevent="submitEdit">
+      <form class="space-y-6" @submit.prevent="submitEdit">
         <FormInput id="edit-name" v-model="editForm.name" :label="t('account_name')" :error="editForm.errors.name" required />
         <FormInput id="edit-iban" v-model="editForm.iban" :label="t('iban')" :error="editForm.errors.iban" />
         <FormInput id="edit-bank-name" v-model="editForm.bank_name" :label="t('bank_name')" :error="editForm.errors.bank_name" />
@@ -239,6 +244,18 @@ const columns = computed(() => [
           :placeholder="t('select_account')"
           :error="editForm.errors.account_id"
         />
+        <div class="flex items-start gap-3">
+          <input
+            id="edit-is_mixed_use"
+            v-model="editForm.is_mixed_use"
+            type="checkbox"
+            class="mt-1 h-4 w-4 rounded border-[hsl(var(--input))]"
+          />
+          <div>
+            <label for="edit-is_mixed_use" class="text-sm font-medium">{{ t('mixed_use_label') }}</label>
+            <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('mixed_use_tooltip') }}</p>
+          </div>
+        </div>
         <div class="flex justify-end gap-3">
           <Button type="button" variant="outline" @click="showEditModal = false">{{ t('cancel') }}</Button>
           <Button type="submit" :disabled="editForm.processing">{{ t('save_changes') }}</Button>

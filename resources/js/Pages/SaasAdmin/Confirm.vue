@@ -37,7 +37,7 @@ function submit() {
 
       <Card>
         <CardContent class="pt-6">
-          <form class="space-y-4" @submit.prevent="submit">
+          <form class="space-y-6" @submit.prevent="submit">
             <FormInput
               id="code"
               v-model="form.code"

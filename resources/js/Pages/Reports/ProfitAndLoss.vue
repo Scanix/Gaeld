@@ -9,7 +9,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Button from '@/Components/UI/Button.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed, watch } from 'vue'
 import HelpText from '@/Components/HelpText.vue'
@@ -42,6 +42,7 @@ function applyFilter() {
 }
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const hasBudget = computed(() => !!props.report.budgets && Object.keys(props.report.budgets).length > 0)
 
@@ -76,8 +77,9 @@ function mergeComparison(rows, compRows, isExpense = false) {
     const merged = { ...row }
     if (compRows) {
       const comp = compMap[row.code]
-      const compBalance = comp?.balance ?? 0
-      const variance = row.balance - compBalance
+      const compBalance = Number(comp?.balance ?? 0)
+      const currentBalance = Number(row.balance)
+      const variance = currentBalance - compBalance
       const variancePct = compBalance !== 0 ? (variance / Math.abs(compBalance)) * 100 : null
       const positiveIsGood = !isExpense
       const varianceClass = variance === 0 ? '' : (variance > 0 ? (positiveIsGood ? 'text-green-600' : 'text-red-600') : (positiveIsGood ? 'text-red-600' : 'text-green-600'))

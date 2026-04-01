@@ -11,9 +11,10 @@ import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { computed, ref } from 'vue'
 import { useForm, Link } from '@inertiajs/vue3'
-import { Plus, Eye } from 'lucide-vue-next'
+import { Plus, Eye, FileText } from 'lucide-vue-next'
 
 const props = defineProps({
   declarations: Array,
@@ -87,6 +88,15 @@ function submitForm() {
       <CardContent>
         <p class="mb-4 text-sm text-[hsl(var(--muted-foreground))]">{{ t('tax_declaration_desc') }}</p>
         <DataTable :columns="columns" :rows="declarations">
+          <template #empty>
+            <EmptyState
+              :icon="FileText"
+              :title="t('empty_tax_declarations_title')"
+              :description="t('empty_tax_declarations_desc')"
+              :action-label="t('create_first')"
+              @action="openCreate"
+            />
+          </template>
           <template #cell-status="{ value }">
             <Badge :variant="statusVariant[value] || 'default'">
               {{ t(`tax_declaration_status_${value}`) }}
@@ -106,7 +116,7 @@ function submitForm() {
     </Card>
 
     <Modal :open="showForm" :title="t('tax_declaration')" @close="showForm = false">
-      <form class="space-y-4" @submit.prevent="submitForm">
+      <form class="space-y-6" @submit.prevent="submitForm">
         <FormInput
           id="fiscal_year"
           v-model="form.fiscal_year"

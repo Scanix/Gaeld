@@ -1,5 +1,5 @@
 <script setup>
-import { Head, useForm, Link, router } from '@inertiajs/vue3'
+import { Head, useForm, Link, router, usePage } from '@inertiajs/vue3'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -9,9 +9,11 @@ import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { startAuthentication, browserSupportsWebAuthn } from '@simplewebauthn/browser'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
+const page = usePage()
+const isSaas = computed(() => page.props.features?.saas ?? false)
 
 const form = useForm({
   email: '',
@@ -85,7 +87,7 @@ function getCsrfToken() {
 </script>
 
 <template>
-  <Head title="Login" />
+  <Head :title="t('sign_in')" />
 
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">
@@ -161,7 +163,7 @@ function getCsrfToken() {
 
       <p class="mt-4 text-center text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('no_account') }}
-        <Link href="/register" class="font-medium text-[hsl(var(--primary))] hover:underline">
+        <Link :href="isSaas ? '/signup' : '/register'" class="font-medium text-[hsl(var(--primary))] hover:underline">
           {{ t('create_one') }}
         </Link>
       </p>

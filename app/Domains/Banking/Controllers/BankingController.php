@@ -2,6 +2,8 @@
 
 namespace App\Domains\Banking\Controllers;
 
+use App\Domains\Accounting\Constants\AccountCode;
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\DTOs\CreateBankAccountData;
 use App\Domains\Banking\DTOs\RecordBankTransactionData;
@@ -28,7 +30,8 @@ class BankingController extends Controller
 
         $bankAccounts = BankAccount::with('ledgerAccount')
             ->orderBy('name')
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
         return Inertia::render('Banking/Index', [
             'bankAccounts' => $bankAccounts,
@@ -67,6 +70,10 @@ class BankingController extends Controller
 
         $bankAccount = BankAccount::create(CreateBankAccountData::fromArray($validated)->toArray());
 
+        if ($bankAccount->is_mixed_use) {
+            $this->ensurePrivateWithdrawalsAccount($currentOrg->id());
+        }
+
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', __('app.bank_account_created'));
     }
@@ -76,6 +83,10 @@ class BankingController extends Controller
         $this->authorize('update', $bankAccount);
 
         $bankAccount->update($request->validated());
+
+        if ($bankAccount->is_mixed_use) {
+            $this->ensurePrivateWithdrawalsAccount($bankAccount->organization_id);
+        }
 
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', __('app.bank_account_updated'));
@@ -105,5 +116,28 @@ class BankingController extends Controller
 
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', __('app.transaction_recorded'));
+    }
+
+    /**
+     * Ensure the organization has a 2850 private withdrawals account.
+     *
+     * Created automatically when any bank account is flagged as mixed-use,
+     * so the reconciliation flow can book personal transactions.
+     */
+    private function ensurePrivateWithdrawalsAccount(string $organizationId): void
+    {
+        $exists = Account::where('organization_id', $organizationId)
+            ->where('code', AccountCode::PRIVATE_WITHDRAWALS)
+            ->exists();
+
+        if (! $exists) {
+            Account::create([
+                'organization_id' => $organizationId,
+                'code' => AccountCode::PRIVATE_WITHDRAWALS,
+                'name' => __('app.private_withdrawals_account'),
+                'type' => AccountType::Equity->value,
+                'is_active' => true,
+            ]);
+        }
     }
 }

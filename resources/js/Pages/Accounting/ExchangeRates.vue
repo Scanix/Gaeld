@@ -11,9 +11,10 @@ import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { computed, ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
-import { Plus, Trash2, Download } from 'lucide-vue-next'
+import { Plus, Trash2, Download, ArrowLeftRight } from 'lucide-vue-next'
 
 const props = defineProps({
   rates: Object, // Laravel paginator
@@ -108,6 +109,15 @@ function fetchEcb() {
       <CardContent>
         <p class="mb-4 text-sm text-[hsl(var(--muted-foreground))]">{{ t('exchange_rates_desc') }}</p>
         <DataTable :columns="columns" :rows="rates.data" :pagination="rates">
+          <template #empty>
+            <EmptyState
+              :icon="ArrowLeftRight"
+              :title="t('empty_exchange_rates_title')"
+              :description="t('empty_exchange_rates_desc')"
+              :action-label="t('create_first')"
+              @action="openCreate"
+            />
+          </template>
           <template #cell-source="{ value }">
             <Badge :variant="sourceVariant[value] || 'default'">{{ value }}</Badge>
           </template>
@@ -128,7 +138,7 @@ function fetchEcb() {
     </Card>
 
     <Modal :open="showForm" :title="t('exchange_rate')" @close="showForm = false">
-      <form class="space-y-4" @submit.prevent="submitForm">
+      <form class="space-y-6" @submit.prevent="submitForm">
         <div class="grid grid-cols-2 gap-4">
           <FormInput
             id="currency_from"

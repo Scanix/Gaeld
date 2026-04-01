@@ -6,7 +6,8 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Pencil, Trash2, Eye } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Eye, Users } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
@@ -103,7 +104,6 @@ const countryFilters = computed(() => [
       :rows="customers?.data ?? []"
       :pagination="customers"
       :row-link="(row) => `/customers/${row.id}`"
-      :empty-message="t('no_customers_yet')"
       :sort="query.sort"
       :direction="query.direction"
       searchable
@@ -144,6 +144,9 @@ const countryFilters = computed(() => [
             <Trash2 class="h-4 w-4 text-[hsl(var(--destructive))]" />
           </Button>
         </div>
+      </template>
+      <template #empty>
+        <EmptyState :icon="Users" :title="t('no_customers_yet')" :description="t('no_customers_yet_desc')" :action-label="t('new_customer')" action-href="/customers/create" />
       </template>
     </DataTable>
 

@@ -19,7 +19,7 @@ function resend() {
 </script>
 
 <template>
-  <Head title="Verify Email" />
+  <Head :title="t('verify_email_title')" />
 
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">

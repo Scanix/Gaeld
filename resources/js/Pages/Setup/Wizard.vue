@@ -57,9 +57,9 @@ const localeOptions = [
         <CardDescription>{{ t('setup_welcome') }}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form class="space-y-8" @submit.prevent="submit">
+        <form class="space-y-6" @submit.prevent="submit">
           <!-- Admin User -->
-          <fieldset class="space-y-4">
+          <fieldset class="space-y-6">
             <legend class="text-lg font-semibold">{{ t('admin_account') }}</legend>
             <FormInput id="user_name" v-model="form.user_name" :label="t('full_name')" :error="form.errors.user_name" required />
             <FormInput id="user_email" v-model="form.user_email" type="email" :label="t('email')" :error="form.errors.user_email" required />
@@ -68,25 +68,25 @@ const localeOptions = [
           </fieldset>
 
           <!-- Organization -->
-          <fieldset class="space-y-4">
+          <fieldset class="space-y-6">
             <legend class="text-lg font-semibold">{{ t('organization') }}</legend>
             <FormInput id="org_name" v-model="form.org_name" :label="t('company_name')" :error="form.errors.org_name" required />
             <FormInput id="org_legal_name" v-model="form.org_legal_name" :label="t('legal_name_different')" />
             <FormInput id="org_address" v-model="form.org_address" :label="t('address')" />
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormInput id="org_city" v-model="form.org_city" :label="t('city')" />
               <FormInput id="org_postal_code" v-model="form.org_postal_code" :label="t('postal_code')" />
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormSelect id="org_canton" v-model="form.org_canton" :label="t('canton')" :options="cantons" :placeholder="t('select')" />
               <FormInput id="org_vat_number" v-model="form.org_vat_number" :label="t('vat_number')" placeholder="CHE-123.456.789" />
             </div>
           </fieldset>
 
           <!-- Settings -->
-          <fieldset class="space-y-4">
+          <fieldset class="space-y-6">
             <legend class="text-lg font-semibold">{{ t('settings') }}</legend>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormSelect id="currency" v-model="form.currency" :label="t('currency')" :options="currencyOptions" required />
               <FormSelect id="locale" v-model="form.locale" :label="t('language')" :options="localeOptions" required />
             </div>

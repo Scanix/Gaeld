@@ -137,7 +137,7 @@ function performDelete() {
     </Card>
 
     <Modal :open="showForm" :title="t('withholding_tax_tariffs')" @close="showForm = false">
-      <form class="space-y-4" @submit.prevent="submitForm">
+      <form class="space-y-6" @submit.prevent="submitForm">
         <div class="grid grid-cols-2 gap-4">
           <FormSelect id="canton" v-model="form.canton" :label="t('source_tax_canton')" :options="cantonOptions" :error="form.errors.canton" required />
           <FormSelect id="tariff_code" v-model="form.tariff_code" :label="t('source_tax_tariff')" :options="tariffCodeOptions" :error="form.errors.tariff_code" required />

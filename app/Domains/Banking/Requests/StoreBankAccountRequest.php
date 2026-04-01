@@ -27,6 +27,7 @@ class StoreBankAccountRequest extends FormRequest
                 Rule::exists('accounts', 'id')->where('organization_id', $orgId),
             ],
             'currency' => 'string|size:3',
+            'is_mixed_use' => 'boolean',
         ];
     }
 }
