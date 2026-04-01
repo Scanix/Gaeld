@@ -22,7 +22,8 @@ class VatRateController extends Controller
 
         $vatRates = VatRate::where('organization_id', $currentOrg->id())
             ->orderBy('code')
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
         return Inertia::render('Accounting/VatRates', [
             'vatRates' => $vatRates,

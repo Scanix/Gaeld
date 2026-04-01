@@ -14,7 +14,7 @@ import { computed } from 'vue'
 import HelpText from '@/Components/HelpText.vue'
 
 const props = defineProps({
-  bankAccounts: { type: Array, default: () => [] },
+  bankAccounts: { type: Object, default: () => ({}) },
   pageFeatures: { type: Object, default: () => ({}) },
 })
 
@@ -39,14 +39,15 @@ const columns = computed(() => [
       <h2 class="text-xl font-semibold">{{ t('reconciliation') }}</h2>
     </div>
 
-    <Card v-if="bankAccounts.length">
+    <Card v-if="(bankAccounts?.data ?? []).length">
       <CardHeader>
         <CardTitle>{{ t('bank_accounts') }}</CardTitle>
       </CardHeader>
       <CardContent>
         <DataTable
           :columns="columns"
-          :rows="bankAccounts"
+          :rows="bankAccounts?.data ?? []"
+          :pagination="bankAccounts"
           :row-link="row => `/reconciliation/${row.id}`"
         >
           <template #cell-unreconciled_count="{ value }">

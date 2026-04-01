@@ -76,7 +76,7 @@ class AccountingHttpFlowTest extends TestCase
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
             ->component('Accounting/ChartOfAccounts')
-            ->has('accounts', 3));
+            ->has('accounts.data', 3));
     }
 
     public function test_journal_entries_route_returns_paginated_posted_entries(): void

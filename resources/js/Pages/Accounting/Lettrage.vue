@@ -23,7 +23,7 @@ const props = defineProps({
   accounts: Array,
   account: Object,
   openItems: Array,
-  lots: Array,
+  lots: Object,
   filterDate: String,
 })
 
@@ -211,12 +211,12 @@ const lotColumns = computed(() => [
       </Card>
 
       <!-- Existing lots -->
-      <Card v-if="lots && lots.length > 0">
+      <Card v-if="lots && (lots?.data ?? []).length > 0">
         <CardHeader>
           <CardTitle>{{ t('lettrage') }}</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable :columns="lotColumns" :rows="lots">
+          <DataTable :columns="lotColumns" :rows="lots?.data ?? []" :pagination="lots">
             <template #cell-actions="{ row }">
               <Button
                 variant="ghost"

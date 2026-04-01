@@ -16,6 +16,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 
 const props = defineProps({
   bankAccount: Object,
@@ -102,9 +103,10 @@ const columns = computed(() => [
 
 <template>
   <AppLayout :title="`${t('bank')} — ${bankAccount.name}`">
+    <Breadcrumb :items="[{ label: t('bank_accounts'), href: '/banking' }, { label: bankAccount.name }]" class="mb-4" />
+
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
-        <Button as="a" href="/banking" variant="outline" size="sm">← {{ t('back') }}</Button>
         <h2 class="text-xl font-semibold">{{ bankAccount.name }}</h2>
         <Badge v-if="bankAccount.is_mixed_use" variant="outline">{{ t('mixed') }}</Badge>
       </div>

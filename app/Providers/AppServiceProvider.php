@@ -15,7 +15,9 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Services\GlobalSearchService;
 use App\Support\Listeners\AuthAuditSubscriber;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -60,5 +62,32 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(Customer::class, ContactPolicy::class);
         Gate::policy(Supplier::class, ContactPolicy::class);
+
+        // Cache invalidation: flush tagged caches when models change
+        $flushTags = function (string ...$tags) {
+            return function (Model $model) use ($tags) {
+                $orgId = $model->organization_id ?? null;
+                if (! $orgId) {
+                    return;
+                }
+                foreach ($tags as $tag) {
+                    Cache::tags(["org:{$orgId}:{$tag}"])->flush();
+                }
+            };
+        };
+
+        $referenceFlush = $flushTags('reference');
+        $contactsFlush = $flushTags('contacts');
+        $dashboardFlush = $flushTags('dashboard');
+
+        foreach (['created', 'updated', 'deleted'] as $event) {
+            \App\Domains\Accounting\Models\VatRate::$event($referenceFlush);
+            \App\Domains\Accounting\Models\Account::$event($referenceFlush);
+            \App\Domains\Expenses\Models\ExpenseCategory::$event($referenceFlush);
+            Customer::$event($contactsFlush);
+            Supplier::$event($contactsFlush);
+            \App\Domains\Invoicing\Models\Invoice::$event($dashboardFlush);
+            \App\Domains\Expenses\Models\Expense::$event($dashboardFlush);
+        }
     }
 }

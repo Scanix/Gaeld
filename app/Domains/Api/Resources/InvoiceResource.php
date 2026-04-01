@@ -13,6 +13,8 @@ class InvoiceResource extends JsonResource
             'id' => $this->id,
             'number' => $this->number,
             'status' => $this->status->value,
+            'type' => $this->type->value,
+            'related_invoice_id' => $this->related_invoice_id,
             'customer' => new CustomerResource($this->whenLoaded('customer')),
             'issue_date' => $this->issue_date?->toDateString(),
             'due_date' => $this->due_date?->toDateString(),

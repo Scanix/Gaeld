@@ -13,6 +13,7 @@ use App\Domains\Invoicing\Services\InvoiceService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Aggregates KPI data for the organization dashboard: revenue/expense
@@ -32,6 +33,20 @@ class DashboardService
      * @return array{revenue: string, expenses: string, cashBalance: string, unpaidInvoices: array{count: int, total: string}, pendingExpenses: array{count: int, total: string}, balance: string, recentTransactions: Collection, monthlyBreakdown: array}
      */
     public function metrics(string $organizationId): array
+    {
+        return Cache::tags(["org:{$organizationId}:dashboard"])->remember(
+            "dashboard_metrics:{$organizationId}",
+            300, // 5 minutes
+            fn () => $this->computeMetrics($organizationId)
+        );
+    }
+
+    public function flushCache(string $organizationId): void
+    {
+        Cache::tags(["org:{$organizationId}:dashboard"])->flush();
+    }
+
+    private function computeMetrics(string $organizationId): array
     {
         $year = now()->year;
 

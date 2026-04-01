@@ -14,9 +14,12 @@ import { useTranslations } from '@/lib/useTranslations'
 import { ref, reactive } from 'vue'
 import { Pencil, Plus, Trash2, Star } from 'lucide-vue-next'
 import axios from 'axios'
+import { useToast } from '@/lib/useToast'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 
 const { t } = useTranslations()
 const { formatCurrency, formatDate } = useFormatters()
+const { toast } = useToast()
 
 const props = defineProps({
   customer: { type: Object, required: true },
@@ -112,6 +115,7 @@ async function submitContact() {
     }
     showContactModal.value = false
     resetContactForm()
+    toast(editingContact.value ? t('contact_person_updated') : t('contact_person_created'), 'success')
   } catch (err) {
     if (err.response?.status === 422) {
       contactErrors.value = err.response.data.errors ?? {}
@@ -135,6 +139,7 @@ async function executeDeleteContact() {
     contactPersons.value = contactPersons.value.filter(c => c.id !== contactToDelete.value.id)
     showDeleteContactDialog.value = false
     contactToDelete.value = null
+    toast(t('contact_person_deleted'), 'success')
   } finally {
     contactProcessing.value = false
   }
@@ -143,10 +148,9 @@ async function executeDeleteContact() {
 
 <template>
   <AppLayout :title="customer.name" help-page="customers">
-    <div class="mb-4 flex items-center justify-between">
-      <Button as="a" href="/customers" variant="outline" size="sm">
-        ← {{ t('back') }}
-      </Button>
+    <Breadcrumb :items="[{ label: t('customers'), href: '/customers' }, { label: customer.name }]" class="mb-4" />
+
+    <div class="mb-4 flex items-center justify-end">
       <Button as="a" :href="`/customers/${customer.id}/edit`">
         <Pencil class="mr-2 h-4 w-4" />
         {{ t('edit') }}

@@ -7,6 +7,7 @@ use App\Support\QueryBuilder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class CustomerQuery
 {
@@ -23,6 +24,12 @@ class CustomerQuery
 
     public static function forSelect(): Collection
     {
-        return Customer::orderBy('name')->get();
+        $orgId = app(\App\Domains\Organizations\Services\CurrentOrganization::class)->id();
+
+        return Cache::tags(["org:{$orgId}:contacts"])->remember(
+            "customers_select:{$orgId}",
+            600,
+            fn () => Customer::orderBy('name')->get()
+        );
     }
 }

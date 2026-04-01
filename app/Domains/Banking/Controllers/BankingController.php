@@ -30,7 +30,8 @@ class BankingController extends Controller
 
         $bankAccounts = BankAccount::with('ledgerAccount')
             ->orderBy('name')
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
         return Inertia::render('Banking/Index', [
             'bankAccounts' => $bankAccounts,

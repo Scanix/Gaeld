@@ -11,6 +11,7 @@ import Button from '@/Components/UI/Button.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
+import { Link } from '@inertiajs/vue3'
 import { Archive, ShieldCheck, Download, ChevronDown, ChevronRight } from 'lucide-vue-next'
 
 const { t } = useTranslations()
@@ -18,6 +19,7 @@ const { formatDate } = useFormatters()
 
 const props = defineProps({
   archivesByYear: Object,
+  pagination: Object,
 })
 
 const expandedYears = ref({})
@@ -108,7 +110,22 @@ function verifyArchive(archive) {
       </Card>
     </div>
 
-    <Card v-else>
+    <!-- Pagination -->
+    <div v-if="pagination?.last_page > 1" class="mt-4 flex items-center justify-between">
+      <span class="text-sm text-[hsl(var(--muted-foreground))]">
+        {{ t('page') }} {{ pagination.current_page }} / {{ pagination.last_page }}
+      </span>
+      <div class="flex gap-2">
+        <Link v-if="pagination.prev_page_url" :href="pagination.prev_page_url">
+          <Button variant="outline" size="sm">{{ t('previous') }}</Button>
+        </Link>
+        <Link v-if="pagination.next_page_url" :href="pagination.next_page_url">
+          <Button variant="outline" size="sm">{{ t('next') }}</Button>
+        </Link>
+      </div>
+    </div>
+
+    <Card v-else-if="!archivesByYear || Object.keys(archivesByYear).length === 0">
       <CardContent class="py-12 text-center text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('no_archives', 'No archived documents yet.') }}
       </CardContent>

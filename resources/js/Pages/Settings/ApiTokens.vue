@@ -114,11 +114,6 @@ const expirationOptions = [
         </div>
       </div>
 
-      <!-- Flash messages -->
-      <div v-if="flash.success" class="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
-        {{ flash.success }}
-      </div>
-
       <!-- New token display (shown once after creation) -->
       <div v-if="flash.newToken" class="rounded-md border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
         <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">

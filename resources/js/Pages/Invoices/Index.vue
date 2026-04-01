@@ -7,8 +7,9 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Pencil, Trash2, Copy, Eye } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Copy, Eye, FileText } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
@@ -28,7 +29,7 @@ const props = defineProps({
   invoices: Object,
   query: {
     type: Object,
-    default: () => ({ sort: 'issue_date', direction: 'desc', search: '', filter: {} }),
+    default: () => ({ sort: 'issue_date', direction: 'desc', search: '', filter: { type: 'invoice' } }),
   },
 })
 
@@ -138,7 +139,6 @@ const statusFilters = computed(() => [
       :rows="invoices?.data ?? []"
       :pagination="invoices"
       :row-link="(row) => `/invoices/${row.id}`"
-      :empty-message="t('no_invoices_yet')"
       :sort="query.sort"
       :direction="query.direction"
       searchable
@@ -210,6 +210,9 @@ const statusFilters = computed(() => [
             <Trash2 class="h-4 w-4 text-[hsl(var(--destructive))]" />
           </Button>
         </div>
+      </template>
+      <template #empty>
+        <EmptyState :icon="FileText" :title="t('no_invoices_yet')" :description="t('no_invoices_yet_desc')" :action-label="t('new_invoice')" action-href="/invoices/create" />
       </template>
     </DataTable>
 

@@ -12,6 +12,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -180,9 +181,10 @@ function canChangeUserRole(user) {
 
 <template>
   <AppLayout :title="organization.name">
+    <Breadcrumb :items="[{ label: t('organizations'), href: '/organizations' }, { label: organization.name }]" class="mb-4" />
+
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
-        <Button as="a" href="/organizations" variant="outline" size="sm">← {{ t('back') }}</Button>
         <h2 class="text-xl font-semibold">{{ organization.name }}</h2>
       </div>
       <div class="flex items-center gap-2">

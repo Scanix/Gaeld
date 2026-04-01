@@ -90,7 +90,6 @@ enum Role: string
 
             // Organization
             Permission::OrganizationView,
-            Permission::OrganizationViewAuditLog,
 
             // Reporting
             Permission::ReportingView,
@@ -143,7 +142,6 @@ enum Role: string
 
             // Organization
             Permission::OrganizationView,
-            Permission::OrganizationViewAuditLog,
 
             // Reporting
             Permission::ReportingView,

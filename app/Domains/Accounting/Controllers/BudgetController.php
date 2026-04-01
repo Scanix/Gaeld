@@ -24,7 +24,8 @@ class BudgetController extends Controller
 
         $budgets = Budget::with('account:id,code,name,type')
             ->forYear($year)
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
         $accounts = Account::where('is_active', true)
             ->whereIn('type', ['Revenue', 'Expense'])
