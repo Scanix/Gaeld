@@ -17,7 +17,7 @@ import EmptyState from '@/Components/UI/EmptyState.vue'
 import { Plus, Pencil, Trash2, Percent } from 'lucide-vue-next'
 
 const props = defineProps({
-  vatRates: { type: Array, default: () => [] },
+  vatRates: { type: Object, default: () => ({}) },
 })
 
 const { t } = useTranslations()
@@ -97,7 +97,7 @@ function doDelete() {
         </Button>
       </CardHeader>
       <CardContent>
-        <DataTable :columns="columns" :rows="vatRates">
+        <DataTable :columns="columns" :rows="vatRates?.data ?? []" :pagination="vatRates">
           <template #empty>
             <EmptyState
               :icon="Percent"

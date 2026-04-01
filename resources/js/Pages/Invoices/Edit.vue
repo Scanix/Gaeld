@@ -14,6 +14,7 @@ import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
+import { useFormValidation, z } from '@/lib/useFormValidation'
 import { Plus, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -48,6 +49,13 @@ if (form.lines.length === 0) {
 
 useUnsavedChanges(computed(() => form.isDirty))
 
+const { errors: clientErrors, validate, validateField } = useFormValidation(z.object({
+  customer_id: z.string().min(1, 'This field is required.'),
+  number: z.string().min(1, 'This field is required.').max(50, 'Must be at most 50 characters.'),
+  issue_date: z.string().min(1, 'This field is required.'),
+  due_date: z.string().min(1, 'This field is required.'),
+}))
+
 function addLine() {
   form.lines.push({ description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
 }
@@ -59,6 +67,7 @@ function removeLine(index) {
 }
 
 function submit() {
+  if (!validate(form.data())) return
   form.post(`/invoices/${props.invoice.id}`, {
     forceFormData: true,
     headers: { 'X-HTTP-Method-Override': 'PUT' },
@@ -111,7 +120,7 @@ const vatOptions = [
                 :label="t('client')"
                 :options="clientOptions"
                 :placeholder="t('select_client')"
-                :error="form.errors.customer_id"
+                :error="form.errors.customer_id || clientErrors.customer_id"
                 required
                 class="flex-1"
               />
@@ -131,7 +140,7 @@ const vatOptions = [
               v-model="form.number"
               :label="t('invoice_number')"
               placeholder="INV-001"
-              :error="form.errors.number"
+              :error="form.errors.number || clientErrors.number"
               required
             />
             <FormInput
@@ -139,7 +148,7 @@ const vatOptions = [
               v-model="form.issue_date"
               type="date"
               :label="t('issue_date')"
-              :error="form.errors.issue_date"
+              :error="form.errors.issue_date || clientErrors.issue_date"
               required
             />
             <FormInput
@@ -147,7 +156,7 @@ const vatOptions = [
               v-model="form.due_date"
               type="date"
               :label="t('due_date')"
-              :error="form.errors.due_date"
+              :error="form.errors.due_date || clientErrors.due_date"
               required
             />
             <FormSelect

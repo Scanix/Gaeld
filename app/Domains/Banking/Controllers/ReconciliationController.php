@@ -51,7 +51,8 @@ class ReconciliationController extends Controller
                 'transactions as unreconciled_count' => fn ($q) => $q->where('is_reconciled', false),
             ])
             ->orderBy('name')
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
         return Inertia::render('Banking/Reconciliation', [
             'bankAccounts' => $bankAccounts,

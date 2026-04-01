@@ -19,9 +19,13 @@ import EmptyState from '@/Components/UI/EmptyState.vue'
 import { Plus, Upload, Download, Pencil, Trash2, BookOpen, Search } from 'lucide-vue-next'
 
 const props = defineProps({
-  accounts: Array,
+  accounts: Object,
   can: Object,
   accountTypes: Array,
+  query: {
+    type: Object,
+    default: () => ({ search: '' }),
+  },
 })
 
 const { t } = useTranslations()
@@ -41,11 +45,7 @@ const groupLabels = {
 }
 
 const filteredAccounts = computed(() => {
-  if (!search.value) return props.accounts
-  const q = search.value.toLowerCase()
-  return props.accounts.filter(a =>
-    a.code?.toLowerCase().includes(q) || a.name?.toLowerCase().includes(q)
-  )
+  return props.accounts?.data ?? []
 })
 
 const accountGroups = computed(() => {
@@ -164,6 +164,7 @@ function requestExport() {
               v-model="search"
               :placeholder="t('search_accounts')"
               class="pl-9"
+              @input="handleSearch"
             />
           </div>
         </div>
@@ -199,6 +200,21 @@ function requestExport() {
                 </div>
               </template>
             </DataTable>
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="accounts?.last_page > 1" class="mt-4 flex items-center justify-between border-t border-[hsl(var(--border))] pt-4">
+            <span class="text-sm text-[hsl(var(--muted-foreground))]">
+              {{ t('page') }} {{ accounts.current_page }} / {{ accounts.last_page }}
+            </span>
+            <div class="flex gap-2">
+              <a v-if="accounts.prev_page_url" :href="accounts.prev_page_url">
+                <Button variant="outline" size="sm">{{ t('previous') }}</Button>
+              </a>
+              <a v-if="accounts.next_page_url" :href="accounts.next_page_url">
+                <Button variant="outline" size="sm">{{ t('next') }}</Button>
+              </a>
+            </div>
           </div>
         </template>
       </CardContent>

@@ -35,8 +35,8 @@ class MigrationController extends Controller
 
         $sessions = MigrationSession::where('organization_id', $this->currentOrganization->id())
             ->orderByDesc('created_at')
-            ->limit(20)
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
         return Inertia::render('Migration/Index', [
             'sessions' => $sessions,

@@ -6,7 +6,8 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Eye, Pencil, Trash2 } from 'lucide-vue-next'
+import { Plus, Eye, Pencil, Trash2, UserPlus } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
@@ -71,7 +72,6 @@ const columns = computed(() => [
       :direction="query.direction"
       :search="query.search"
       :search-placeholder="t('search_employees')"
-      :empty-message="t('no_employees_yet')"
       @sort="({ sort, direction }) => applyQuery({ sort, direction })"
       @search="(search) => applyQuery({ search })"
     >
@@ -101,6 +101,9 @@ const columns = computed(() => [
             <Trash2 class="h-4 w-4" />
           </button>
         </div>
+      </template>
+      <template #empty>
+        <EmptyState :icon="UserPlus" :title="t('no_employees_yet')" :description="t('no_employees_yet_desc')" :action-label="t('new_employee')" action-href="/payroll/employees/create" />
       </template>
     </DataTable>
 

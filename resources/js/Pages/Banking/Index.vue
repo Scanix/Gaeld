@@ -17,7 +17,7 @@ import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
-  bankAccounts: { type: Array, default: () => [] },
+  bankAccounts: { type: Object, default: () => ({}) },
   accounts: { type: Array, default: () => [] },
 })
 
@@ -70,9 +70,9 @@ const columns = computed(() => [
       <Button @click="showModal = true"><Plus class="mr-2 h-4 w-4" /> {{ t('add_account') }}</Button>
     </div>
 
-    <Card v-if="bankAccounts.length">
+    <Card v-if="(bankAccounts?.data ?? []).length">
       <CardContent class="pt-6">
-        <DataTable :columns="columns" :rows="bankAccounts" :row-link="row => `/banking/${row.id}`">
+        <DataTable :columns="columns" :rows="bankAccounts?.data ?? []" :pagination="bankAccounts" :row-link="row => `/banking/${row.id}`">
           <template #cell-name="{ row, value }">
             {{ value }}
             <Badge v-if="row.is_mixed_use" variant="outline" class="ml-2 text-xs">{{ t('mixed') }}</Badge>

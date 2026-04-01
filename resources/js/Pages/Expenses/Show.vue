@@ -16,6 +16,7 @@ import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
 import { Pencil, Trash2, CheckCircle } from 'lucide-vue-next'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 
 const props = defineProps({
   expense: Object,
@@ -83,9 +84,10 @@ const journalColumns = computed(() => [
 
 <template>
   <AppLayout :title="`${t('expense')} — ${categoryLabel}`" help-page="expenses">
+    <Breadcrumb :items="[{ label: t('expenses'), href: '/expenses' }, { label: categoryLabel }]" class="mb-4" />
+
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
-        <Button as="a" href="/expenses" variant="outline" size="sm">← {{ t('back') }}</Button>
         <h2 class="text-xl font-semibold">{{ categoryLabel }}</h2>
         <Badge :variant="statusVariant[expense.status] || 'default'">{{ expense.status }}</Badge>
       </div>

@@ -60,7 +60,7 @@ class InvoiceController extends Controller
                 'sort' => $request->input('sort', 'issue_date'),
                 'direction' => $request->input('direction', 'desc'),
                 'search' => $request->input('search', ''),
-                'filter' => $request->input('filter', []),
+                'filter' => $request->input('filter', ['type' => 'invoice']),
             ],
         ]);
     }

@@ -24,7 +24,7 @@ const { t } = useTranslations()
 const { formatDate } = useFormatters()
 
 const props = defineProps({
-  sessions: { type: Array, default: () => [] },
+  sessions: { type: Object, default: () => ({}) },
   platforms: { type: Array, default: () => [] },
 })
 
@@ -90,14 +90,14 @@ const platformIcons = {
         <CardTitle>{{ t('migration.import_history') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div v-if="sessions.length === 0" class="py-12 text-center text-sm text-[hsl(var(--muted-foreground))]">
+        <div v-if="(sessions?.data ?? []).length === 0" class="py-12 text-center text-sm text-[hsl(var(--muted-foreground))]">
           <ArrowRightLeft class="mx-auto mb-3 h-10 w-10 opacity-40" />
           <p>{{ t('migration.no_sessions') }}</p>
         </div>
 
         <div v-else class="divide-y divide-[hsl(var(--border))]">
           <div
-            v-for="session in sessions"
+            v-for="session in (sessions?.data ?? [])"
             :key="session.id"
             class="flex items-center gap-4 py-4 first:pt-0 last:pb-0"
           >
@@ -126,6 +126,21 @@ const platformIcons = {
                 </Button>
               </Link>
             </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="sessions?.last_page > 1" class="mt-4 flex items-center justify-between border-t border-[hsl(var(--border))] pt-4">
+          <span class="text-sm text-[hsl(var(--muted-foreground))]">
+            {{ t('page') }} {{ sessions.current_page }} / {{ sessions.last_page }}
+          </span>
+          <div class="flex gap-2">
+            <Link v-if="sessions.prev_page_url" :href="sessions.prev_page_url">
+              <Button variant="outline" size="sm">{{ t('previous') }}</Button>
+            </Link>
+            <Link v-if="sessions.next_page_url" :href="sessions.next_page_url">
+              <Button variant="outline" size="sm">{{ t('next') }}</Button>
+            </Link>
           </div>
         </div>
       </CardContent>

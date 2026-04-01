@@ -261,6 +261,7 @@ class LedgerService
     {
         Cache::tags(["org:{$organizationId}:ledger"])->flush();
         Cache::tags(["org:{$organizationId}:reports"])->flush();
+        Cache::tags(["org:{$organizationId}:dashboard"])->flush();
     }
 
     // ──────────────────────────────────────────────────────────────
