@@ -1,5 +1,10 @@
 # Gäld
 
+[![CI](https://github.com/Scanix/Gaeld/actions/workflows/ci.yml/badge.svg)](https://github.com/Scanix/Gaeld/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PHP 8.4+](https://img.shields.io/badge/PHP-8.4%2B-777BB4.svg)](https://www.php.net/)
+[![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20.svg)](https://laravel.com/)
+
 **Open-source accounting for Swiss freelancers and small businesses.**
 
 Proper double-entry bookkeeping, Swiss QR-Bill invoicing, VAT reporting, and bank reconciliation — built with Laravel and Vue, MIT licensed, fully self-hostable.
@@ -131,12 +136,10 @@ Plugins are auto-discovered on boot. See `plugins/example-plugin/` for a minimal
 
 ## Contributing
 
-Issues and pull requests are welcome. For larger changes, please open an issue first so we can discuss the approach.
-
-Please also read the repository-level contribution guide at [../CONTRIBUTING.md](../CONTRIBUTING.md).
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a PR.
 
 ```bash
-php artisan test          # run the test suite (255 tests)
+php artisan test          # run the test suite
 ./vendor/bin/pint         # fix code style
 ```
 
