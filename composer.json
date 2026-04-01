@@ -16,6 +16,7 @@
         "laravel/scout": "^11.0",
         "meilisearch/meilisearch-php": "^1.16",
         "pragmarx/google2fa-laravel": "^3.0",
+        "sentry/sentry-laravel": "^4.24",
         "spatie/laravel-activitylog": "^4.12",
         "spatie/laravel-permission": "^7.2",
         "sprain/swiss-qr-bill": "^5.3",
