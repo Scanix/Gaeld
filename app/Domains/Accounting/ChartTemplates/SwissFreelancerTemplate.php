@@ -80,6 +80,9 @@ class SwissFreelancerTemplate implements ChartTemplateInterface
             ['code' => '2950', 'type' => AccountType::Equity->value, 'name' => [
                 'en' => 'Current Year Profit/Loss', 'fr' => 'Résultat de l\'exercice', 'de' => 'Jahresergebnis', 'it' => 'Risultato d\'esercizio', 'rm' => 'Resultat da l\'onn',
             ]],
+            ['code' => '2850', 'type' => AccountType::Equity->value, 'name' => [
+                'en' => 'Private Contributions and Withdrawals', 'fr' => 'Apports et prélèvements privés', 'de' => 'Privateinlagen und -bezüge', 'it' => 'Apporti e prelievi privati', 'rm' => 'Depositas e retratgas privatas',
+            ]],
             ['code' => '2970', 'type' => AccountType::Equity->value, 'name' => [
                 'en' => 'Owner Drawings', 'fr' => 'Prélèvements privés', 'de' => 'Privatbezüge', 'it' => 'Prelevamenti privati', 'rm' => 'Retratgas privatas',
             ]],

@@ -5,6 +5,7 @@ namespace Tests\Security\Auth;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Routing\Router;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\Security\SecurityTestCase;
 
@@ -19,7 +20,7 @@ class BruteForceProtectionTest extends SecurityTestCase
         parent::setUp();
 
         // Re-enable the real throttle middleware (disabled globally for testing)
-        $this->app->make(\Illuminate\Routing\Router::class)
+        $this->app->make(Router::class)
             ->aliasMiddleware('throttle', ThrottleRequests::class);
     }
 

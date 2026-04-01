@@ -19,8 +19,8 @@ class CsvBankParser
     /**
      * Parse CSV content with the given column mapping.
      *
-     * @param array{date: int, amount: int, description: ?int, reference: ?int} $mapping
-     *        Zero-based column indices.
+     * @param  array{date: int, amount: int, description: ?int, reference: ?int}  $mapping
+     *                                                                                      Zero-based column indices.
      */
     public function parse(string $content, array $mapping, string $delimiter = ','): void
     {

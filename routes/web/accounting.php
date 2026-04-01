@@ -24,6 +24,7 @@ Route::get('/accounting/trial-balance/export/{format}', [AccountingController::c
 Route::get('/accounting/journal-entries/export/{format}', [AccountingController::class, 'exportJournalEntries'])->name('accounting.journalEntries.export');
 Route::get('/accounting/year-end-closing', [YearEndClosingController::class, 'index'])->name('accounting.closing');
 Route::post('/accounting/year-end-closing', [YearEndClosingController::class, 'store'])->name('accounting.closing.store');
+Route::post('/accounting/year-end-closing/reopen', [YearEndClosingController::class, 'reopen'])->name('accounting.closing.reopen');
 Route::get('/accounting/social-charges', [SocialChargesController::class, 'index'])->name('accounting.socialCharges');
 Route::post('/accounting/social-charges/calculate', [SocialChargesController::class, 'calculate'])->name('accounting.socialCharges.calculate');
 Route::post('/accounting/social-charges/post', [SocialChargesController::class, 'post'])->name('accounting.socialCharges.post');

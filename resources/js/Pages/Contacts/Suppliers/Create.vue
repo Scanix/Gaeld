@@ -8,8 +8,10 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
@@ -62,6 +64,8 @@ const typeOptions = [
 
 <template>
   <AppLayout :title="t('new_supplier')" help-page="suppliers">
+    <Breadcrumb :items="[{ label: t('suppliers'), href: '/suppliers' }, { label: t('new_supplier') }]" class="mb-4" />
+
     <Card class="max-w-2xl">
       <CardHeader>
         <CardTitle>{{ t('new_supplier') }}</CardTitle>
@@ -173,13 +177,14 @@ const typeOptions = [
               :label="t('internal_notes')"
               :error="form.errors.internal_notes"
             />
-            <FormInput
-              id="notes"
-              v-model="form.notes"
-              :label="t('notes')"
-              :error="form.errors.notes"
-            />
           </div>
+
+          <FormTextarea
+            id="notes"
+            v-model="form.notes"
+            :label="t('notes')"
+            :error="form.errors.notes"
+          />
 
           <div class="flex justify-end gap-3">
             <Button as="a" href="/suppliers" variant="outline">

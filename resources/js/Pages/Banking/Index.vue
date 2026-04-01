@@ -10,6 +10,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import Badge from '@/Components/UI/Badge.vue'
 import { Plus, Landmark } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
@@ -27,6 +28,7 @@ const form = useForm({
   bank_name: '',
   currency: 'CHF',
   account_id: '',
+  is_mixed_use: false,
 })
 
 function submit() {
@@ -70,7 +72,12 @@ const columns = computed(() => [
 
     <Card v-if="bankAccounts.length">
       <CardContent class="pt-6">
-        <DataTable :columns="columns" :rows="bankAccounts" :row-link="row => `/banking/${row.id}`" />
+        <DataTable :columns="columns" :rows="bankAccounts" :row-link="row => `/banking/${row.id}`">
+          <template #cell-name="{ row, value }">
+            {{ value }}
+            <Badge v-if="row.is_mixed_use" variant="outline" class="ml-2 text-xs">{{ t('mixed') }}</Badge>
+          </template>
+        </DataTable>
       </CardContent>
     </Card>
 
@@ -83,7 +90,7 @@ const columns = computed(() => [
     </Card>
 
     <Modal :show="showModal" @close="showModal = false" :title="t('add_bank_account')">
-      <form class="space-y-4" @submit.prevent="submit">
+      <form class="space-y-6" @submit.prevent="submit">
         <FormInput id="name" v-model="form.name" :label="t('account_name')" :error="form.errors.name" required />
         <FormInput id="iban" v-model="form.iban" :label="t('iban')" :placeholder="t('iban_placeholder')" :error="form.errors.iban" />
         <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('qr_iban_hint') }}</p>
@@ -103,6 +110,18 @@ const columns = computed(() => [
           :placeholder="t('select_account')"
           :error="form.errors.account_id"
         />
+        <div class="flex items-start gap-3">
+          <input
+            id="is_mixed_use"
+            v-model="form.is_mixed_use"
+            type="checkbox"
+            class="mt-1 h-4 w-4 rounded border-[hsl(var(--input))]"
+          />
+          <div>
+            <label for="is_mixed_use" class="text-sm font-medium">{{ t('mixed_use_label') }}</label>
+            <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('mixed_use_tooltip') }}</p>
+          </div>
+        </div>
         <div class="flex justify-end gap-3">
           <Button variant="outline" @click="showModal = false">{{ t('cancel') }}</Button>
           <Button type="submit" :disabled="form.processing">{{ t('create') }}</Button>

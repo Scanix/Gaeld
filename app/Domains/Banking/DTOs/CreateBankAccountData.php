@@ -19,6 +19,7 @@ readonly class CreateBankAccountData
         public ?string $accountId = null,
         public string $currency = 'CHF',
         public string $balance = '0',
+        public bool $isMixedUse = false,
     ) {}
 
     public static function fromArray(array $data): self
@@ -31,6 +32,7 @@ readonly class CreateBankAccountData
             accountId: $data['account_id'] ?? null,
             currency: $data['currency'] ?? 'CHF',
             balance: isset($data['balance']) ? (string) $data['balance'] : '0',
+            isMixedUse: $data['is_mixed_use'] ?? false,
         );
     }
 }

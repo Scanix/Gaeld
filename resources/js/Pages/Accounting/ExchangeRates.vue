@@ -138,7 +138,7 @@ function fetchEcb() {
     </Card>
 
     <Modal :open="showForm" :title="t('exchange_rate')" @close="showForm = false">
-      <form class="space-y-4" @submit.prevent="submitForm">
+      <form class="space-y-6" @submit.prevent="submitForm">
         <div class="grid grid-cols-2 gap-4">
           <FormInput
             id="currency_from"

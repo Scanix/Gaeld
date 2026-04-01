@@ -139,7 +139,7 @@ function doDelete() {
       :title="editingRate ? t('edit_vat_rate') : t('new_vat_rate')"
       @close="showForm = false"
     >
-      <form class="space-y-4" @submit.prevent="submitForm">
+      <form class="space-y-6" @submit.prevent="submitForm">
         <FormInput
           id="name"
           v-model="form.name"

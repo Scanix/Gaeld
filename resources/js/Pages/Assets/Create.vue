@@ -7,6 +7,7 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Combobox from '@/Components/UI/Combobox.vue'
 import HelpText from '@/Components/HelpText.vue'
@@ -86,7 +87,7 @@ function submit() {
               required
               class="sm:col-span-2"
             />
-            <FormInput
+            <FormTextarea
               id="description"
               v-model="form.description"
               :label="t('description')"

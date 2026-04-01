@@ -16,12 +16,14 @@ import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
-  year:      { type: Number, required: true },
-  fromDate:  { type: String, required: true },
-  toDate:    { type: String, required: true },
-  income:    { type: Array, default: () => [] },
-  expenses:  { type: Array, default: () => [] },
-  netResult: { type: String, default: '0' },
+  year:         { type: Number, required: true },
+  fromDate:     { type: String, required: true },
+  toDate:       { type: String, required: true },
+  income:       { type: Array, default: () => [] },
+  expenses:     { type: Array, default: () => [] },
+  netResult:    { type: String, default: '0' },
+  closedYears:  { type: Array, default: () => [] },
+  canReopenYear: { type: Boolean, default: false },
 })
 
 const { t } = useTranslations()
@@ -29,6 +31,7 @@ const { formatCurrency } = useFormatters()
 
 const selectedYear = ref(props.year)
 const showConfirm  = ref(false)
+const showReopenConfirm = ref(false)
 const processing   = ref(false)
 
 const form = useForm({
@@ -38,7 +41,12 @@ const form = useForm({
   result_account_code: '9000',
 })
 
+const reopenForm = useForm({
+  year: props.year,
+})
+
 const hasAccounts = computed(() => props.income.length > 0 || props.expenses.length > 0)
+const isYearClosed = computed(() => props.closedYears.includes(props.year))
 
 const netResultNum = computed(() => parseFloat(props.netResult ?? 0))
 const isProfit     = computed(() => netResultNum.value >= 0)
@@ -62,6 +70,15 @@ function runClosing() {
     },
   })
 }
+
+function runReopen() {
+  reopenForm.year = props.year
+  reopenForm.post('/accounting/year-end-closing/reopen', {
+    onFinish: () => {
+      showReopenConfirm.value = false
+    },
+  })
+}
 </script>
 
 <template>
@@ -71,7 +88,7 @@ function runClosing() {
     </HelpText>
 
     <!-- Year selector -->
-    <div class="mb-6 flex items-end gap-4">
+    <div class="mb-6 flex items-center gap-4">
       <FormInput
         id="year"
         v-model="selectedYear"
@@ -79,6 +96,20 @@ function runClosing() {
         :label="t('fiscal_year')"
       />
       <Button variant="outline" @click="applyYear">{{ t('apply') }}</Button>
+      <span
+        v-if="isYearClosed"
+        class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-300"
+      >
+        {{ t('year_closed_badge') }}
+      </span>
+      <Button
+        v-if="isYearClosed && canReopenYear"
+        variant="outline"
+        class="ml-auto"
+        @click="showReopenConfirm = true"
+      >
+        {{ t('reopen_fiscal_year') }}
+      </Button>
     </div>
 
     <!-- Info banner -->
@@ -129,7 +160,7 @@ function runClosing() {
       </Card>
 
       <!-- Closing form -->
-      <Card>
+      <Card v-if="!isYearClosed">
         <CardHeader>
           <CardTitle>{{ t('run_closing') }}</CardTitle>
         </CardHeader>
@@ -188,6 +219,17 @@ function runClosing() {
       :processing="processing"
       @confirm="runClosing"
       @cancel="showConfirm = false"
+    />
+
+    <!-- Reopen confirmation dialog -->
+    <ConfirmDialog
+      :open="showReopenConfirm"
+      :title="t('reopen_fiscal_year')"
+      :message="t('reopen_fiscal_year_confirm', { year: props.year })"
+      :confirm-label="t('reopen_fiscal_year')"
+      :processing="reopenForm.processing"
+      @confirm="runReopen"
+      @cancel="showReopenConfirm = false"
     />
   </AppLayout>
 </template>

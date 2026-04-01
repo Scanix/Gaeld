@@ -10,6 +10,7 @@ import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
+import DropdownMenu from '@/Components/UI/DropdownMenu.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
@@ -100,29 +101,32 @@ const journalColumns = computed(() => [
           {{ t('edit') }}
         </Button>
         <Button
-          v-if="expense.status === 'pending'"
-          variant="outline"
-          :disabled="approveForm.processing"
-          @click="approve"
-        >
-          <CheckCircle class="mr-1 h-4 w-4" />
-          {{ t('approve') }}
-        </Button>
-        <Button
           v-if="expense.status === 'pending' || expense.status === 'approved'"
+          size="sm"
           @click="showPostModal = true"
         >
           {{ t('post_to_ledger') }}
         </Button>
-        <Button
-          v-if="expense.status === 'pending'"
-          variant="destructive"
-          size="sm"
-          @click="showDeleteDialog = true"
-        >
-          <Trash2 class="mr-1 h-4 w-4" />
-          {{ t('delete') }}
-        </Button>
+        <DropdownMenu v-if="expense.status === 'pending'">
+          <template #default="{ close }">
+            <button
+              class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+              :disabled="approveForm.processing"
+              @click="approve(); close()"
+            >
+              <CheckCircle class="h-4 w-4 shrink-0" />
+              {{ t('approve') }}
+            </button>
+            <div class="my-1 border-t border-[hsl(var(--border))]" />
+            <button
+              class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
+              @click="showDeleteDialog = true; close()"
+            >
+              <Trash2 class="h-4 w-4 shrink-0" />
+              {{ t('delete') }}
+            </button>
+          </template>
+        </DropdownMenu>
       </div>
     </div>
 
@@ -189,7 +193,7 @@ const journalColumns = computed(() => [
     </div>
 
     <Modal :show="showPostModal" @close="showPostModal = false" :title="t('post_expense_ledger')">
-      <form class="space-y-4" @submit.prevent="submitPost">
+      <form class="space-y-6" @submit.prevent="submitPost">
         <FormInput
           id="expense_account_code"
           v-model="postForm.expense_account_code"

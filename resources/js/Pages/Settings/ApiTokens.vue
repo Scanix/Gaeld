@@ -122,7 +122,7 @@ const expirationOptions = [
       <!-- New token display (shown once after creation) -->
       <div v-if="flash.newToken" class="rounded-md border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
         <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-          {{ t('token_created_copy_now')t be shown again.' }}
+          {{ t('token_created_copy_now') }}
         </p>
         <div class="flex items-center gap-2">
           <code class="flex-1 rounded bg-yellow-100 px-3 py-2 text-xs font-mono dark:bg-yellow-900 break-all">
@@ -241,7 +241,7 @@ const expirationOptions = [
 
       <!-- Create token modal -->
       <Modal :show="showCreateModal" @close="showCreateModal = false" :title="tokenType === 'personal' ? (t('create_personal_token')) : (t('create_org_token'))">
-        <form class="space-y-4" @submit.prevent="submitCreate">
+        <form class="space-y-6" @submit.prevent="submitCreate">
           <FormInput
             v-model="createForm.name"
             :label="t('token_name')"

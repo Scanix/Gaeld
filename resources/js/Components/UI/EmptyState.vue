@@ -1,5 +1,5 @@
 <script setup>
-import { Button } from '@/Components/UI'
+import Button from '@/Components/UI/Button.vue'
 import { Link } from '@inertiajs/vue3'
 
 defineProps({

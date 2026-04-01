@@ -113,6 +113,9 @@ const navigation = computed(() => [
   { key: 'organization', href: '/organizations', icon: Building2 },
   { key: 'settings', href: '/settings', icon: Settings, children: [
     { key: 'settings_general', href: '/settings' },
+    ...(can('migration.import') ? [
+      { key: 'data_migration', href: '/migration' },
+    ] : []),
     ...(can('organization.view-audit-log') ? [
       { key: 'activity_log', href: '/settings/activity-log' },
     ] : []),

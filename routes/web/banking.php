@@ -21,6 +21,10 @@ Route::post('/reconciliation/transactions/{transaction}/expense', [Reconciliatio
 Route::post('/reconciliation/transactions/{transaction}/manual', [ReconciliationController::class, 'reconcileManual'])->name('reconciliation.manual');
 Route::post('/reconciliation/matches/{match}/confirm', [ReconciliationController::class, 'confirmMatch'])->name('reconciliation.confirm');
 
+// Personal transaction marking (mixed-use accounts, CE)
+Route::post('/reconciliation/transactions/{transaction}/personal', [ReconciliationController::class, 'reconcilePersonal'])->name('reconciliation.personal');
+Route::post('/reconciliation/{bankAccount}/bulk-personal', [ReconciliationController::class, 'bulkReconcilePersonal'])->name('reconciliation.bulk-personal');
+
 // Auto-reconciliation (EE only)
 Route::middleware('feature:auto_reconciliation')->group(function () {
     Route::post('/reconciliation/{bankAccount}/auto', [ReconciliationController::class, 'autoReconcile'])->name('reconciliation.auto');

@@ -6,18 +6,32 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\VatReportService;
 use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Reporting\Services\AgingReportService;
 use App\Domains\Reporting\Services\DashboardService;
 use App\Support\DTOs\SummaryResult;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Mockery;
 use Tests\TestCase;
 
 class DashboardServiceTest extends TestCase
 {
+    use RefreshDatabase;
+
+    private string $orgId;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->orgId = (string) Str::uuid();
+    }
+
     protected function tearDown(): void
     {
         Carbon::setTestNow();
@@ -40,32 +54,53 @@ class DashboardServiceTest extends TestCase
         ]);
         $bankAccount->id = 10;
 
-        $invoiceService->shouldReceive('yearlyRevenue')->once()->with('org-1', 2026)->andReturn('1500.00');
-        $expenseService->shouldReceive('yearlyTotal')->once()->with('org-1', 2026)->andReturn('450.00');
-        $invoiceService->shouldReceive('unpaidSummary')->once()->with('org-1')->andReturn(new SummaryResult(2, '700.00'));
-        $expenseService->shouldReceive('pendingSummary')->once()->with('org-1')->andReturn(new SummaryResult(1, '120.00'));
-        $ledgerService->shouldReceive('resolveAccount')->once()->with('org-1', '1020')->andReturn($bankAccount);
+        $invoiceService->shouldReceive('yearlyRevenue')->with($this->orgId, 2026)->andReturn('1500.00');
+        $expenseService->shouldReceive('yearlyTotal')->with($this->orgId, 2026)->andReturn('450.00');
+        $invoiceService->shouldReceive('unpaidSummary')->once()->with($this->orgId)->andReturn(new SummaryResult(2, '700.00'));
+        $expenseService->shouldReceive('pendingSummary')->once()->with($this->orgId)->andReturn(new SummaryResult(1, '120.00'));
+        $ledgerService->shouldReceive('resolveAccount')->once()->with($this->orgId, '1020')->andReturn($bankAccount);
         $ledgerService->shouldReceive('accountBalance')->once()->with(10)->andReturn('800.00');
-        $ledgerService->shouldReceive('recentEntries')->once()->with('org-1')->andReturn(collect([
+        $ledgerService->shouldReceive('recentEntries')->once()->with($this->orgId)->andReturn(collect([
             $this->makeEntry('je-1', '2026-03-02', 'Invoice payment', 'PAY-1', '3000', '500.00'),
             $this->makeEntry('je-2', '2026-03-04', 'Software expense', 'EXP-1', '6530', '120.00'),
         ]));
 
-        $invoiceService->shouldReceive('paidInYear')->once()->with('org-1', 2026)->andReturn(collect([
+        $invoiceService->shouldReceive('paidInYear')->once()->with($this->orgId, 2026)->andReturn(collect([
             (object) ['number' => 'INV-1', 'total' => '100.00', 'issue_date' => '2026-01-10'],
             (object) ['number' => 'INV-2', 'total' => '200.00', 'issue_date' => '2026-03-08'],
         ]));
-        $expenseService->shouldReceive('inYear')->once()->with('org-1', 2026)->andReturn(collect([
+        $expenseService->shouldReceive('inYear')->once()->with($this->orgId, 2026)->andReturn(collect([
             (object) ['description' => 'Hosting', 'amount' => '50.00', 'date' => '2026-01-12'],
             (object) ['description' => 'Tools', 'amount' => '70.00', 'date' => '2026-03-09'],
         ]));
-        $invoiceService->shouldReceive('sentOrOverdueDueInYear')->once()->with('org-1', 2026)->andReturn(collect([
+        $invoiceService->shouldReceive('sentOrOverdueDueInYear')->once()->with($this->orgId, 2026)->andReturn(collect([
             (object) ['number' => 'INV-3', 'total' => '300.00', 'due_date' => '2026-03-25'],
         ]));
 
-        $service = new DashboardService($ledgerService, $invoiceService, $expenseService);
+        // Year-over-year comparison
+        $invoiceService->shouldReceive('yearlyRevenue')->with($this->orgId, 2025)->andReturn('1200.00');
+        $expenseService->shouldReceive('yearlyTotal')->with($this->orgId, 2025)->andReturn('400.00');
 
-        $metrics = $service->metrics('org-1');
+        $vatReportService = Mockery::mock(VatReportService::class);
+        $vatReportService->shouldReceive('generate')->once()->andReturn([
+            'total_revenue' => '0.00',
+            'input_vat' => '0.00',
+            'vat_payable' => '0.00',
+        ]);
+
+        $agingReportService = Mockery::mock(AgingReportService::class);
+        $agingReportService->shouldReceive('generate')->once()->andReturn([
+            'brackets' => [
+                '1_30' => ['total' => '0.00', 'items' => []],
+                '31_60' => ['total' => '0.00', 'items' => []],
+                '61_90' => ['total' => '0.00', 'items' => []],
+                '90_plus' => ['total' => '0.00', 'items' => []],
+            ],
+        ]);
+
+        $service = new DashboardService($ledgerService, $invoiceService, $expenseService, $vatReportService, $agingReportService);
+
+        $metrics = $service->metrics($this->orgId);
 
         $this->assertSame('1500.00', $metrics['revenue']);
         $this->assertSame('450.00', $metrics['expenses']);
@@ -88,8 +123,8 @@ class DashboardServiceTest extends TestCase
         $invoiceService = Mockery::mock(InvoiceService::class);
         $expenseService = Mockery::mock(ExpenseService::class);
 
-        $invoiceService->shouldReceive('yearlyRevenue')->once()->andReturn('0.00');
-        $expenseService->shouldReceive('yearlyTotal')->once()->andReturn('0.00');
+        $invoiceService->shouldReceive('yearlyRevenue')->andReturn('0.00');
+        $expenseService->shouldReceive('yearlyTotal')->andReturn('0.00');
         $invoiceService->shouldReceive('unpaidSummary')->once()->andReturn(new SummaryResult(0, '0.00'));
         $expenseService->shouldReceive('pendingSummary')->once()->andReturn(new SummaryResult(0, '0.00'));
         $ledgerService->shouldReceive('resolveAccount')->once()->andThrow(new ModelNotFoundException);
@@ -98,9 +133,26 @@ class DashboardServiceTest extends TestCase
         $expenseService->shouldReceive('inYear')->once()->andReturn(collect());
         $invoiceService->shouldReceive('sentOrOverdueDueInYear')->once()->andReturn(collect());
 
-        $service = new DashboardService($ledgerService, $invoiceService, $expenseService);
+        $vatReportService = Mockery::mock(VatReportService::class);
+        $vatReportService->shouldReceive('generate')->once()->andReturn([
+            'total_revenue' => '0.00',
+            'input_vat' => '0.00',
+            'vat_payable' => '0.00',
+        ]);
 
-        $metrics = $service->metrics('org-1');
+        $agingReportService = Mockery::mock(AgingReportService::class);
+        $agingReportService->shouldReceive('generate')->once()->andReturn([
+            'brackets' => [
+                '1_30' => ['total' => '0.00', 'items' => []],
+                '31_60' => ['total' => '0.00', 'items' => []],
+                '61_90' => ['total' => '0.00', 'items' => []],
+                '90_plus' => ['total' => '0.00', 'items' => []],
+            ],
+        ]);
+
+        $service = new DashboardService($ledgerService, $invoiceService, $expenseService, $vatReportService, $agingReportService);
+
+        $metrics = $service->metrics($this->orgId);
 
         $this->assertSame('0.00', $metrics['cashBalance']);
         $this->assertTrue($metrics['recentTransactions']->isEmpty());

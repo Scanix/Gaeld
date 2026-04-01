@@ -8,6 +8,7 @@ use App\Domains\Assets\Models\DepreciationEntry;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Migration\Models\MigrationSession;
 
 /**
  * Provides a guided getting-started checklist for new organizations,
@@ -58,8 +59,13 @@ class ChecklistService
 
         $fiduciaryExported = false; // Would require an export log table
 
+        $dataImported = MigrationSession::where('organization_id', $organizationId)
+            ->where('status', 'completed')
+            ->exists();
+
         return [
             ['key' => 'checklist_chart_configured',    'done' => $chartConfigured,    'href' => '/accounting/chart-of-accounts'],
+            ['key' => 'checklist_data_imported',       'done' => $dataImported,       'href' => '/migration'],
             ['key' => 'checklist_invoices_created',    'done' => $invoicesCreated,    'href' => '/invoices'],
             ['key' => 'checklist_expenses_posted',     'done' => $expensesPosted,     'href' => '/expenses'],
             ['key' => 'checklist_bank_imported',       'done' => $bankImported,       'href' => '/banking'],

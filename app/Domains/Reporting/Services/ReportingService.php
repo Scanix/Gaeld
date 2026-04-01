@@ -7,6 +7,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\Budget;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Assets\Models\DepreciationEntry;
+use App\Domains\Organizations\Models\Organization;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -112,6 +113,9 @@ class ReportingService
     /**
      * Generate a balance sheet.
      *
+     * Includes the current-year net income (revenue − expenses) as a synthetic
+     * equity row so that Assets = Liabilities + Equity always holds.
+     *
      * Results are cached per organization + as-of date (tag: org:{orgId}:reports).
      *
      * @return array{as_of_date: string, assets: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, liabilities: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, equity: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}}
@@ -139,6 +143,26 @@ class ReportingService
                 ];
             }
 
+            // Compute current-year net income (revenue − expenses) and add it
+            // as a synthetic row in the equity section so the balance sheet balances.
+            $fiscalYearStart = $this->resolveFiscalYearStart($organizationId, $asOfDate);
+            $revenue = $this->accountsWithBalances($organizationId, AccountType::Revenue, $fiscalYearStart, $asOfDate);
+            $expenses = $this->accountsWithBalances($organizationId, AccountType::Expense, $fiscalYearStart, $asOfDate);
+            $currentYearResult = bcsub((string) $revenue->sum('balance'), (string) $expenses->sum('balance'), 2);
+
+            if (bccomp($currentYearResult, '0', 2) !== 0) {
+                $sections[AccountType::Equity->value]['accounts'][] = [
+                    'code' => '2990',
+                    'name' => __('app.current_year_result'),
+                    'balance' => $currentYearResult,
+                ];
+                $sections[AccountType::Equity->value]['total'] = bcadd(
+                    (string) $sections[AccountType::Equity->value]['total'],
+                    $currentYearResult,
+                    2,
+                );
+            }
+
             return [
                 'as_of_date' => $asOfDate,
                 'assets' => $sections[AccountType::Asset->value],
@@ -146,6 +170,32 @@ class ReportingService
                 'equity' => $sections[AccountType::Equity->value],
             ];
         });
+    }
+
+    /**
+     * Determine the fiscal year start date for the organization containing the given as-of date.
+     *
+     * Uses the organization's `fiscal_year_start` (MM-DD) if set, otherwise defaults to Jan 1.
+     */
+    private function resolveFiscalYearStart(string $organizationId, string $asOfDate): string
+    {
+        $org = Organization::findOrFail($organizationId);
+        $asOf = Carbon::parse($asOfDate);
+
+        // fiscal_year_start is stored as "MM.DD" or "MM-DD" (e.g. "01.01")
+        $startMonthDay = $org->fiscal_year_start ?? '01.01';
+        $parts = preg_split('/[\.\-\/]/', $startMonthDay);
+        $month = (int) ($parts[0] ?? 1);
+        $day = (int) ($parts[1] ?? 1);
+
+        $fiscalStart = Carbon::create($asOf->year, $month, $day);
+
+        // If the fiscal year start is after the as-of date, go back one year
+        if ($fiscalStart->gt($asOf)) {
+            $fiscalStart->subYear();
+        }
+
+        return $fiscalStart->toDateString();
     }
 
     private function accountsWithBalances(string $organizationId, AccountType $type, ?string $fromDate, ?string $toDate): Collection
@@ -341,6 +391,22 @@ class ReportingService
             $beginningCash = $cashAccount
                 ? $this->ledgerService->accountBalance($cashAccount->id, null, $beginDate)
                 : '0.00';
+
+            // Reconcile against actual ending cash balance to catch untracked
+            // movements (e.g. prepaid expenses, other current items not
+            // explicitly handled above).
+            $actualEndingCash = $cashAccount
+                ? $this->ledgerService->accountBalance($cashAccount->id, null, $toDate)
+                : '0.00';
+
+            $reconciliationDiff = bcsub($actualEndingCash, bcadd($beginningCash, $netChange, 2), 2);
+
+            if (bccomp($reconciliationDiff, '0', 2) !== 0) {
+                $operatingAdjustments[] = ['label' => 'Other operating changes', 'amount' => $reconciliationDiff];
+                $operatingAdjTotal = bcadd($operatingAdjTotal, $reconciliationDiff, 2);
+                $operatingTotal = bcadd($operatingTotal, $reconciliationDiff, 2);
+                $netChange = bcadd($netChange, $reconciliationDiff, 2);
+            }
 
             $endingCash = bcadd($beginningCash, $netChange, 2);
 

@@ -27,6 +27,7 @@ class UpdateBankAccountRequest extends FormRequest
             ],
             'currency' => 'string|size:3',
             'is_active' => 'boolean',
+            'is_mixed_use' => 'boolean',
         ];
     }
 }

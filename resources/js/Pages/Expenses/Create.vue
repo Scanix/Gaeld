@@ -8,7 +8,9 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import Tooltip from '@/Components/UI/Tooltip.vue'
@@ -89,12 +91,14 @@ function onSupplierCreated(supplier) {
 
 <template>
   <AppLayout :title="t('create_expense')" help-page="expenses">
+    <Breadcrumb :items="[{ label: t('expenses'), href: '/expenses' }, { label: t('create_expense') }]" class="mb-4" />
+
     <Card class="max-w-2xl">
       <CardHeader>
         <CardTitle>{{ t('new_expense') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form class="space-y-4" @submit.prevent="submit">
+        <form class="space-y-6" @submit.prevent="submit">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="relative">
               <FormSelect
@@ -174,15 +178,11 @@ function onSupplierCreated(supplier) {
             />
           </div>
 
-          <div>
-            <label for="description" class="mb-1 block text-sm font-medium">{{ t('description') }}</label>
-            <textarea
-              id="description"
-              v-model="form.description"
-              rows="3"
-              class="flex w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
-            />
-          </div>
+          <FormTextarea
+            id="description"
+            v-model="form.description"
+            :label="t('description')"
+          />
 
           <div>
             <label for="receipt" class="mb-1 block text-sm font-medium">{{ t('receipt') }}</label>

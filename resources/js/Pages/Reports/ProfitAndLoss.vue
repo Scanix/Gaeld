@@ -77,8 +77,9 @@ function mergeComparison(rows, compRows, isExpense = false) {
     const merged = { ...row }
     if (compRows) {
       const comp = compMap[row.code]
-      const compBalance = comp?.balance ?? 0
-      const variance = row.balance - compBalance
+      const compBalance = Number(comp?.balance ?? 0)
+      const currentBalance = Number(row.balance)
+      const variance = currentBalance - compBalance
       const variancePct = compBalance !== 0 ? (variance / Math.abs(compBalance)) * 100 : null
       const positiveIsGood = !isExpense
       const varianceClass = variance === 0 ? '' : (variance > 0 ? (positiveIsGood ? 'text-green-600' : 'text-red-600') : (positiveIsGood ? 'text-red-600' : 'text-green-600'))

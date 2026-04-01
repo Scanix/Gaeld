@@ -11,6 +11,7 @@ enum Permission: string
     case AccountingEdit = 'accounting.edit';
     case AccountingDelete = 'accounting.delete';
     case AccountingCloseYear = 'accounting.close-year';
+    case AccountingReopenYear = 'accounting.reopen-year';
 
     // Banking
     case BankingView = 'banking.view';
@@ -56,6 +57,9 @@ enum Permission: string
     case PayrollCreate = 'payroll.create';
     case PayrollEdit = 'payroll.edit';
     case PayrollDelete = 'payroll.delete';
+
+    // Migration
+    case MigrationImport = 'migration.import';
 
     /**
      * @return string[]

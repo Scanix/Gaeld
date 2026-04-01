@@ -53,7 +53,7 @@ class Mt940Parser
     private function parseTransaction(string $block): ?CamtEntry
     {
         $lines = explode("\n", $block);
-        $firstLine = trim($lines[0] ?? '');
+        $firstLine = trim($lines[0]);
 
         if (strlen($firstLine) < 16) {
             return null;

@@ -8,8 +8,10 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { countryOptions, currencyOptions } from '@/lib/contactOptions'
@@ -46,6 +48,8 @@ const typeOptions = [
 
 <template>
   <AppLayout :title="t('new_customer')" help-page="customers">
+    <Breadcrumb :items="[{ label: t('customers'), href: '/customers' }, { label: t('new_customer') }]" class="mb-4" />
+
     <Card class="max-w-2xl">
       <CardHeader>
         <CardTitle>{{ t('new_customer') }}</CardTitle>
@@ -131,21 +135,20 @@ const typeOptions = [
               :placeholder="t('payment_terms_placeholder')"
               :error="form.errors.payment_terms"
             />
-            <FormInput
-              id="internal_notes"
-              v-model="form.internal_notes"
-              :label="t('internal_notes')"
-              :error="form.errors.internal_notes"
-              class="sm:col-span-2"
-            />
-            <FormInput
-              id="notes"
-              v-model="form.notes"
-              :label="t('notes')"
-              :error="form.errors.notes"
-              class="sm:col-span-2"
-            />
           </div>
+
+          <FormTextarea
+            id="internal_notes"
+            v-model="form.internal_notes"
+            :label="t('internal_notes')"
+            :error="form.errors.internal_notes"
+          />
+          <FormTextarea
+            id="notes"
+            v-model="form.notes"
+            :label="t('notes')"
+            :error="form.errors.notes"
+          />
 
           <div class="flex justify-end gap-3">
             <Button as="a" href="/customers" variant="outline">

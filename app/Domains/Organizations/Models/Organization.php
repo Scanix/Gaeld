@@ -73,6 +73,17 @@ class Organization extends Model
         }
     }
 
+    /**
+     * Reopen a previously closed fiscal year.
+     */
+    public function reopenFiscalYear(int $year): void
+    {
+        /** @var int[] $closed */
+        $closed = $this->closed_fiscal_years ?? [];
+        $closed = array_values(array_filter($closed, fn (int $y) => $y !== $year));
+        $this->update(['closed_fiscal_years' => $closed]);
+    }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'organization_users')

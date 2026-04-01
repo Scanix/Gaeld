@@ -312,7 +312,7 @@ function canChangeUserRole(user) {
 
     <!-- Edit Organization Modal -->
     <Modal :show="showEditModal" @close="showEditModal = false" :title="t('edit_organization')">
-      <form class="space-y-4" @submit.prevent="submitUpdate">
+      <form class="space-y-6" @submit.prevent="submitUpdate">
         <FormInput id="name" v-model="form.name" :label="t('name')" :error="form.errors.name" required />
         <FormInput id="legal_name" v-model="form.legal_name" :label="t('legal_name')" :error="form.errors.legal_name" />
         <FormInput id="address" v-model="form.address" :label="t('address')" :error="form.errors.address" />
@@ -362,7 +362,7 @@ function canChangeUserRole(user) {
 
     <!-- Invite Member Modal -->
     <Modal :show="showInviteModal" @close="showInviteModal = false" :title="t('invite_member')">
-      <form class="space-y-4" @submit.prevent="submitInvite">
+      <form class="space-y-6" @submit.prevent="submitInvite">
         <FormInput
           id="invite_email"
           v-model="inviteForm.email"
