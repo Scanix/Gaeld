@@ -2,9 +2,11 @@
 
 namespace App\Domains\Banking\Enums;
 
-/** CAMT XML format variant (camt.053 statement vs. camt.054 notification). */
+/** Bank statement import format. */
 enum CamtFormat: string
 {
     case Camt053 = 'camt053';
     case Camt054 = 'camt054';
+    case Csv = 'csv';
+    case Mt940 = 'mt940';
 }

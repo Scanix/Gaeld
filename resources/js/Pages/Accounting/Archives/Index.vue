@@ -10,10 +10,11 @@ import Badge from '@/Components/UI/Badge.vue'
 import Button from '@/Components/UI/Button.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { Archive, ShieldCheck, Download, ChevronDown, ChevronRight } from 'lucide-vue-next'
 
 const { t } = useTranslations()
+const { formatDate } = useFormatters()
 
 const props = defineProps({
   archivesByYear: Object,

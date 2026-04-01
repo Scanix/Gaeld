@@ -5,7 +5,7 @@ import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Pencil, Trash2, Eye } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
@@ -24,6 +24,7 @@ const deleteTarget = ref(null)
 const deleting = ref(false)
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 function confirmDelete(expense) {
   deleteTarget.value = expense

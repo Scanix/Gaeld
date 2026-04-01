@@ -37,12 +37,20 @@ RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Install Node.js (for frontend build)
+RUN apk add --no-cache nodejs npm
+
 # Create Sail-compatible user expected by vendor/bin/sail
 RUN addgroup -S -g 1000 sail \
     && adduser -S -D -h /home/sail -s /bin/sh -G sail -u 1000 sail
 
 # Set working directory
 WORKDIR /var/www/html
+
+# Copy and set entrypoint
+COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 EXPOSE 9000
 CMD ["php-fpm"]

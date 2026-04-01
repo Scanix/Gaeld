@@ -12,7 +12,7 @@ import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
-import { formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
 import { ArrowLeft, Key, Plus, Trash2, Copy, Check, Building2 } from 'lucide-vue-next'
@@ -25,6 +25,7 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatDate } = useFormatters()
 const page = usePage()
 const flash = computed(() => page.props.flash || {})
 
@@ -90,7 +91,7 @@ function copyToken(token) {
 }
 
 const expirationOptions = [
-  { value: '', label: t('never') || 'Never' },
+  { value: '', label: t('never') },
   { value: '7', label: '7 days' },
   { value: '30', label: '30 days' },
   { value: '90', label: '90 days' },
@@ -99,16 +100,16 @@ const expirationOptions = [
 </script>
 
 <template>
-  <AppLayout :title="t('api_tokens') || 'API Tokens'">
+  <AppLayout :title="t('api_tokens')">
     <div class="max-w-3xl space-y-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           <Button as="a" href="/settings" variant="outline" size="sm">
-            <ArrowLeft class="mr-2 h-4 w-4" /> {{ t('settings') || 'Settings' }}
+            <ArrowLeft class="mr-2 h-4 w-4" /> {{ t('settings') }}
           </Button>
           <h2 class="text-xl font-semibold">
             <Key class="inline mr-2 h-5 w-5" />
-            {{ t('api_tokens') || 'API Tokens' }}
+            {{ t('api_tokens') }}
           </h2>
         </div>
       </div>
@@ -121,7 +122,7 @@ const expirationOptions = [
       <!-- New token display (shown once after creation) -->
       <div v-if="flash.newToken" class="rounded-md border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
         <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-          {{ t('token_created_copy_now') || 'Your new API token has been created. Copy it now — it won\'t be shown again.' }}
+          {{ t('token_created_copy_now')t be shown again.' }}
         </p>
         <div class="flex items-center gap-2">
           <code class="flex-1 rounded bg-yellow-100 px-3 py-2 text-xs font-mono dark:bg-yellow-900 break-all">
@@ -139,19 +140,19 @@ const expirationOptions = [
         <CardHeader>
           <div class="flex items-center justify-between">
             <div>
-              <CardTitle>{{ t('personal_tokens') || 'Personal Tokens' }}</CardTitle>
+              <CardTitle>{{ t('personal_tokens') }}</CardTitle>
               <CardDescription>
-                {{ t('personal_tokens_description') || 'Tokens tied to your user account.' }}
+                {{ t('personal_tokens_description') }}
               </CardDescription>
             </div>
             <Button size="sm" @click="openCreateModal('personal')">
-              <Plus class="mr-2 h-4 w-4" /> {{ t('create_token') || 'Create Token' }}
+              <Plus class="mr-2 h-4 w-4" /> {{ t('create_token') }}
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           <div v-if="!personalTokens.length" class="py-4 text-center text-sm text-muted-foreground">
-            {{ t('no_personal_tokens') || 'No personal tokens yet.' }}
+            {{ t('no_personal_tokens') }}
           </div>
           <div v-else class="space-y-3">
             <div
@@ -163,11 +164,11 @@ const expirationOptions = [
                 <p class="text-sm font-medium">{{ token.name }}</p>
                 <div class="flex gap-3 mt-1 text-xs text-muted-foreground">
                   <span v-if="token.last_used_at">
-                    {{ t('last_used') || 'Last used' }}: {{ formatDate(token.last_used_at) }}
+                    {{ t('last_used') }}: {{ formatDate(token.last_used_at) }}
                   </span>
-                  <span v-else>{{ t('never_used') || 'Never used' }}</span>
+                  <span v-else>{{ t('never_used') }}</span>
                   <span v-if="token.expires_at">
-                    {{ t('expires') || 'Expires' }}: {{ formatDate(token.expires_at) }}
+                    {{ t('expires') }}: {{ formatDate(token.expires_at) }}
                   </span>
                 </div>
                 <div class="flex flex-wrap gap-1 mt-1">
@@ -191,20 +192,20 @@ const expirationOptions = [
             <div>
               <CardTitle>
                 <Building2 class="inline mr-2 h-4 w-4" />
-                {{ t('organization_tokens') || 'Organization Tokens' }}
+                {{ t('organization_tokens') }}
               </CardTitle>
               <CardDescription>
-                {{ t('org_tokens_description') || 'Tokens shared across the organization. Not tied to any specific user.' }}
+                {{ t('org_tokens_description') }}
               </CardDescription>
             </div>
             <Button size="sm" @click="openCreateModal('organization')">
-              <Plus class="mr-2 h-4 w-4" /> {{ t('create_token') || 'Create Token' }}
+              <Plus class="mr-2 h-4 w-4" /> {{ t('create_token') }}
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           <div v-if="!orgTokens.length" class="py-4 text-center text-sm text-muted-foreground">
-            {{ t('no_org_tokens') || 'No organization tokens yet.' }}
+            {{ t('no_org_tokens') }}
           </div>
           <div v-else class="space-y-3">
             <div
@@ -215,13 +216,13 @@ const expirationOptions = [
               <div>
                 <p class="text-sm font-medium">{{ token.name }}</p>
                 <div class="flex gap-3 mt-1 text-xs text-muted-foreground">
-                  <span v-if="token.created_by">{{ t('created_by') || 'Created by' }}: {{ token.created_by }}</span>
+                  <span v-if="token.created_by">{{ t('created_by') }}: {{ token.created_by }}</span>
                   <span v-if="token.last_used_at">
-                    {{ t('last_used') || 'Last used' }}: {{ formatDate(token.last_used_at) }}
+                    {{ t('last_used') }}: {{ formatDate(token.last_used_at) }}
                   </span>
-                  <span v-else>{{ t('never_used') || 'Never used' }}</span>
+                  <span v-else>{{ t('never_used') }}</span>
                   <span v-if="token.expires_at">
-                    {{ t('expires') || 'Expires' }}: {{ formatDate(token.expires_at) }}
+                    {{ t('expires') }}: {{ formatDate(token.expires_at) }}
                   </span>
                 </div>
                 <div class="flex flex-wrap gap-1 mt-1">
@@ -239,23 +240,23 @@ const expirationOptions = [
       </Card>
 
       <!-- Create token modal -->
-      <Modal :show="showCreateModal" @close="showCreateModal = false" :title="tokenType === 'personal' ? (t('create_personal_token') || 'Create Personal Token') : (t('create_org_token') || 'Create Organization Token')">
+      <Modal :show="showCreateModal" @close="showCreateModal = false" :title="tokenType === 'personal' ? (t('create_personal_token')) : (t('create_org_token'))">
         <form class="space-y-4" @submit.prevent="submitCreate">
           <FormInput
             v-model="createForm.name"
-            :label="t('token_name') || 'Token name'"
+            :label="t('token_name')"
             :error="createForm.errors.name"
             required
             placeholder="e.g. CI/CD Pipeline"
           />
           <FormSelect
             v-model="createForm.expires_in_days"
-            :label="t('expiration') || 'Expiration'"
+            :label="t('expiration')"
             :options="expirationOptions"
             :error="createForm.errors.expires_in_days"
           />
           <div>
-            <label class="text-sm font-medium">{{ t('permissions') || 'Permissions' }}</label>
+            <label class="text-sm font-medium">{{ t('permissions') }}</label>
             <div class="mt-2 grid grid-cols-2 gap-2">
               <label
                 v-for="ability in abilities"
@@ -272,13 +273,13 @@ const expirationOptions = [
               </label>
             </div>
             <p class="text-xs text-muted-foreground mt-1">
-              {{ t('no_selection_all_permissions') || 'Leave empty for full access.' }}
+              {{ t('no_selection_all_permissions') }}
             </p>
           </div>
           <div class="flex justify-end gap-3">
-            <Button variant="outline" type="button" @click="showCreateModal = false">{{ t('cancel') || 'Cancel' }}</Button>
+            <Button variant="outline" type="button" @click="showCreateModal = false">{{ t('cancel') }}</Button>
             <Button type="submit" :disabled="createForm.processing">
-              {{ t('create') || 'Create' }}
+              {{ t('create') }}
             </Button>
           </div>
         </form>
@@ -289,9 +290,9 @@ const expirationOptions = [
         :show="confirmingDelete"
         @close="confirmingDelete = false"
         @confirm="deleteToken"
-        :title="t('revoke_token') || 'Revoke Token'"
-        :message="t('revoke_token_confirm') || 'Are you sure you want to revoke this token? Applications using it will lose access immediately.'"
-        :confirmLabel="t('revoke') || 'Revoke'"
+        :title="t('revoke_token')"
+        :message="t('revoke_token_confirm')"
+        :confirmLabel="t('revoke')"
         variant="destructive"
       />
     </div>

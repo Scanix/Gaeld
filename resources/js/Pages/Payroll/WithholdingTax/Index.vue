@@ -11,7 +11,7 @@ import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { computed, ref } from 'vue'
 import { router, useForm, Link } from '@inertiajs/vue3'
 import { Plus, Send, FileText } from 'lucide-vue-next'
@@ -21,6 +21,7 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const statusVariant = { draft: 'default', submitted: 'info', paid: 'success' }
 

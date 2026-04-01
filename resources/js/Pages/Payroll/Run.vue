@@ -10,9 +10,11 @@ import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import { Check, ChevronRight } from 'lucide-vue-next'
 
 const { t } = useTranslations()
+const { intlMonthName } = useFormatters()
 
 const props = defineProps({
   employees: { type: Array, default: () => [] },
@@ -37,7 +39,7 @@ const errorMessage = ref('')
 const monthOptions = computed(() =>
   Array.from({ length: 12 }, (_, i) => ({
     value: String(i + 1),
-    label: new Date(2000, i).toLocaleString('default', { month: 'long' }),
+    label: intlMonthName(i),
   }))
 )
 

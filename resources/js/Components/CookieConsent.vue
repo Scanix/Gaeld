@@ -4,7 +4,7 @@
       v-if="isVisible"
       type="button"
       @click="openPreferences"
-      aria-label="Open Cookie Preferences"
+      :aria-label="tl('open_cookie_preferences')"
       class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-[#33cc66] text-white shadow-md transition duration-300 ease-in-out hover:bg-[#2bb858] hover:shadow-lg"
     >
       <CookieIcon :size="20" />
@@ -14,6 +14,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useTranslations } from '@/lib/useTranslations'
+
+const { t: tl } = useTranslations()
 import * as CookieConsent from 'vanilla-cookieconsent'
 import 'vanilla-cookieconsent/dist/cookieconsent.css'
 import './cookieConsent.css'

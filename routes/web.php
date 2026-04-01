@@ -73,7 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware('auth')->post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
 // Authenticated routes
-Route::middleware(['auth', 'verified', 'org', 'org-2fa'])->group(function () {
+Route::middleware(['auth', 'verified', 'org', 'org-2fa', 'subscription'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Global search

@@ -108,14 +108,23 @@ class ReconciliationController extends Controller
         $this->authorize('update', $bankAccount);
 
         $file = $request->file('camt_file');
-        $xml = file_get_contents($file->getRealPath());
-        if ($xml === false) {
+        $content = file_get_contents($file->getRealPath());
+        if ($content === false) {
             return redirect()->back()->with('error', 'Could not read the uploaded file.');
         }
         $filename = preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($file->getClientOriginalName()));
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
         try {
-            $import = $this->importService->importCamtFile($bankAccount, $xml, $filename);
+            if ($extension === 'csv') {
+                $mapping = $request->validated('csv_mapping', []);
+                $delimiter = $request->validated('csv_delimiter', ',');
+                $import = $this->importService->importCsvFile($bankAccount, $content, $filename, $mapping, $delimiter);
+            } elseif (in_array($extension, ['sta', 'mt940', 'mt9', 'fin', 'swi'])) {
+                $import = $this->importService->importMt940File($bankAccount, $content, $filename);
+            } else {
+                $import = $this->importService->importCamtFile($bankAccount, $content, $filename);
+            }
 
             return redirect()->route('reconciliation.show', $bankAccount)
                 ->with('success', __('app.transactions_imported', ['count' => $import->transaction_count, 'filename' => $filename]));

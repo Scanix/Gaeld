@@ -9,9 +9,10 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import Modal from '@/Components/UI/Modal.vue'
+import CsvColumnMappingModal from '@/Components/CsvColumnMappingModal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
 import { Upload, Check, Link2, RotateCcw, Loader2 } from 'lucide-vue-next'
@@ -25,10 +26,14 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 // Upload form
 const showUploadModal = ref(false)
-const uploadForm = useForm({ camt_file: null })
+const uploadForm = useForm({ camt_file: null, csv_mapping: null, csv_delimiter: ',' })
+const showCsvMapping = ref(false)
+const csvHeaders = ref([])
+const pendingCsvFile = ref(null)
 
 function submitUpload() {
   uploadForm.post(`/reconciliation/${props.bankAccount.id}/import`, {
@@ -38,7 +43,32 @@ function submitUpload() {
 }
 
 function onFileChange(e) {
-  uploadForm.camt_file = e.target.files[0]
+  const file = e.target.files[0]
+  if (!file) return
+
+  const ext = file.name.split('.').pop().toLowerCase()
+  if (ext === 'csv') {
+    // Read headers for column mapping
+    pendingCsvFile.value = file
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target.result
+      const firstLine = text.split('\n')[0]
+      csvHeaders.value = firstLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''))
+      showCsvMapping.value = true
+    }
+    reader.readAsText(file)
+  } else {
+    uploadForm.camt_file = file
+  }
+}
+
+function onCsvMappingConfirm({ mapping, delimiter }) {
+  showCsvMapping.value = false
+  uploadForm.camt_file = pendingCsvFile.value
+  uploadForm.csv_mapping = mapping
+  uploadForm.csv_delimiter = delimiter
+  submitUpload()
 }
 
 // Match modals
@@ -135,10 +165,10 @@ const currentSuggestions = computed(() => {
 </script>
 
 <template>
-  <AppLayout :title="`${t('reconciliation') || 'Reconciliation'} — ${bankAccount.name}`">
+  <AppLayout :title="`${t('reconciliation')} — ${bankAccount.name}`">
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
-        <Button as="a" href="/reconciliation" variant="outline" size="sm">← {{ t('back') || 'Back' }}</Button>
+        <Button as="a" href="/reconciliation" variant="outline" size="sm">← {{ t('back') }}</Button>
         <h2 class="text-xl font-semibold">{{ bankAccount.name }}</h2>
         <Badge variant="secondary">{{ formatCurrency(bankAccount.balance, bankAccount.currency) }}</Badge>
       </div>
@@ -146,10 +176,10 @@ const currentSuggestions = computed(() => {
         <Button v-if="pageFeatures.auto_reconciliation" @click="autoReconcile" variant="outline" :disabled="autoReconciling">
           <Loader2 v-if="autoReconciling" class="mr-2 h-4 w-4 animate-spin" />
           <RotateCcw v-else class="mr-2 h-4 w-4" />
-          {{ t('auto_reconcile') || 'Auto Reconcile' }}
+          {{ t('auto_reconcile') }}
         </Button>
         <Button @click="showUploadModal = true">
-          <Upload class="mr-2 h-4 w-4" /> {{ t('import_camt') || 'Import CAMT' }}
+          <Upload class="mr-2 h-4 w-4" /> {{ t('import_bank_statement') }}
         </Button>
       </div>
     </div>
@@ -170,14 +200,14 @@ const currentSuggestions = computed(() => {
     <!-- Transactions list -->
     <Card>
       <CardHeader>
-        <CardTitle>{{ t('transactions') || 'Transactions' }}</CardTitle>
+        <CardTitle>{{ t('transactions') }}</CardTitle>
         <CardDescription>
-          {{ (transactions?.data?.length || 0) }} {{ t('transactions') || 'transactions' }}
+          {{ (transactions?.data?.length || 0) }} {{ t('transactions') }}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div v-if="!transactions?.data?.length" class="py-8 text-center text-muted-foreground">
-          {{ t('no_transactions') || 'No transactions found.' }}
+          {{ t('no_transactions') }}
         </div>
 
         <div v-else class="space-y-3">
@@ -198,7 +228,7 @@ const currentSuggestions = computed(() => {
                 </Badge>
                 <span class="text-sm text-muted-foreground">{{ formatDate(tx.date) }}</span>
                 <Badge v-if="tx.is_reconciled" variant="outline" class="text-green-600">
-                  <Check class="mr-1 h-3 w-3" /> {{ t('reconciled') || 'Reconciled' }}
+                  <Check class="mr-1 h-3 w-3" /> {{ t('reconciled') }}
                 </Badge>
               </div>
               <p class="text-sm font-medium truncate">{{ tx.description || '—' }}</p>
@@ -267,7 +297,7 @@ const currentSuggestions = computed(() => {
                 variant="outline"
                 @click="openMatchModal(tx)"
               >
-                {{ t('match') || 'Match' }}
+                {{ t('match') }}
               </Button>
             </div>
           </div>
@@ -275,33 +305,41 @@ const currentSuggestions = computed(() => {
       </CardContent>
     </Card>
 
-    <!-- Upload CAMT Modal -->
-    <Modal :show="showUploadModal" @close="showUploadModal = false" :title="t('import_camt') || 'Import CAMT File'">
+    <!-- Upload Modal -->
+    <Modal :show="showUploadModal" @close="showUploadModal = false" :title="t('import_bank_statement')">
       <form class="space-y-4" @submit.prevent="submitUpload">
         <p class="text-sm text-muted-foreground">
-          Upload a CAMT.053 (statement) or CAMT.054 (notification) file.
+          {{ t('import_bank_desc') }}
         </p>
         <div class="space-y-2">
-          <label class="text-sm font-medium">{{ t('file') || 'File' }} <span class="text-[hsl(var(--destructive))]">*</span></label>
+          <label class="text-sm font-medium">{{ t('file') }} <span class="text-[hsl(var(--destructive))]">*</span></label>
           <input
             type="file"
-            accept=".xml,.XML"
+            accept=".xml,.XML,.csv,.CSV,.sta,.mt940,.mt9"
             class="flex h-9 w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium"
             @change="onFileChange"
           />
           <p v-if="uploadForm.errors.camt_file" class="text-xs text-[hsl(var(--destructive))]">{{ uploadForm.errors.camt_file }}</p>
         </div>
         <div class="flex justify-end gap-3">
-          <Button variant="outline" type="button" @click="showUploadModal = false">{{ t('cancel') || 'Cancel' }}</Button>
+          <Button variant="outline" type="button" @click="showUploadModal = false">{{ t('cancel') }}</Button>
           <Button type="submit" :disabled="uploadForm.processing || !uploadForm.camt_file">
-            <Upload class="mr-2 h-4 w-4" /> {{ t('import') || 'Import' }}
+            <Upload class="mr-2 h-4 w-4" /> {{ t('import') }}
           </Button>
         </div>
       </form>
     </Modal>
 
+    <!-- CSV Column Mapping Modal -->
+    <CsvColumnMappingModal
+      :open="showCsvMapping"
+      :headers="csvHeaders"
+      @close="showCsvMapping = false"
+      @confirm="onCsvMappingConfirm"
+    />
+
     <!-- Match Modal -->
-    <Modal :show="showMatchModal" @close="closeMatchModal" :title="t('reconcile_transaction') || 'Reconcile Transaction'">
+    <Modal :show="showMatchModal" @close="closeMatchModal" :title="t('reconcile_transaction')">
       <div v-if="matchingTransaction" class="space-y-4">
         <!-- Transaction summary -->
         <div class="rounded-lg border p-3 bg-muted/50">
@@ -328,14 +366,14 @@ const currentSuggestions = computed(() => {
             size="sm"
             @click="matchType = mt"
           >
-            {{ mt === 'invoice' ? (t('invoice') || 'Invoice') : mt === 'expense' ? (t('expense') || 'Expense') : (t('manual') || 'Manual') }}
+            {{ mt === 'invoice' ? (t('invoice')) : mt === 'expense' ? (t('expense')) : (t('manual')) }}
           </Button>
         </div>
 
         <!-- Invoice match -->
         <form v-if="matchType === 'invoice'" class="space-y-3" @submit.prevent="submitMatch">
           <div v-if="currentSuggestions.invoices?.length" class="space-y-2">
-            <p class="text-sm font-medium">{{ t('suggested_matches') || 'Suggested Matches' }}</p>
+            <p class="text-sm font-medium">{{ t('suggested_matches') }}</p>
             <button
               v-for="inv in currentSuggestions.invoices"
               :key="inv.id"
@@ -354,14 +392,14 @@ const currentSuggestions = computed(() => {
           <FormInput
             id="invoice_id"
             v-model="matchInvoiceForm.invoice_id"
-            :label="t('invoice_id') || 'Invoice ID'"
+            :label="t('invoice_id')"
             :error="matchInvoiceForm.errors.invoice_id"
-            :placeholder="t('enter_invoice_id') || 'Select or enter invoice ID'"
+            :placeholder="t('enter_invoice_id')"
           />
           <div class="flex justify-end gap-3">
-            <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') || 'Cancel' }}</Button>
+            <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') }}</Button>
             <Button type="submit" :disabled="matchInvoiceForm.processing || !matchInvoiceForm.invoice_id">
-              <Check class="mr-2 h-4 w-4" /> {{ t('reconcile') || 'Reconcile' }}
+              <Check class="mr-2 h-4 w-4" /> {{ t('reconcile') }}
             </Button>
           </div>
         </form>
@@ -369,7 +407,7 @@ const currentSuggestions = computed(() => {
         <!-- Expense match -->
         <form v-if="matchType === 'expense'" class="space-y-3" @submit.prevent="submitMatch">
           <div v-if="currentSuggestions.expenses?.length" class="space-y-2">
-            <p class="text-sm font-medium">{{ t('suggested_matches') || 'Suggested Matches' }}</p>
+            <p class="text-sm font-medium">{{ t('suggested_matches') }}</p>
             <button
               v-for="exp in currentSuggestions.expenses"
               :key="exp.id"
@@ -388,21 +426,21 @@ const currentSuggestions = computed(() => {
           <FormInput
             id="expense_id"
             v-model="matchExpenseForm.expense_id"
-            :label="t('expense_id') || 'Expense ID'"
+            :label="t('expense_id')"
             :error="matchExpenseForm.errors.expense_id"
-            :placeholder="t('enter_expense_id') || 'Select or enter expense ID'"
+            :placeholder="t('enter_expense_id')"
           />
           <FormInput
             id="expense_account_code"
             v-model="matchExpenseForm.expense_account_code"
-            :label="t('expense_account') || 'Expense Account Code'"
+            :label="t('expense_account')"
             :error="matchExpenseForm.errors.expense_account_code"
             placeholder="6530"
           />
           <div class="flex justify-end gap-3">
-            <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') || 'Cancel' }}</Button>
+            <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') }}</Button>
             <Button type="submit" :disabled="matchExpenseForm.processing || !matchExpenseForm.expense_id">
-              <Check class="mr-2 h-4 w-4" /> {{ t('reconcile') || 'Reconcile' }}
+              <Check class="mr-2 h-4 w-4" /> {{ t('reconcile') }}
             </Button>
           </div>
         </form>
@@ -410,20 +448,20 @@ const currentSuggestions = computed(() => {
         <!-- Manual match -->
         <form v-if="matchType === 'manual'" class="space-y-3" @submit.prevent="submitMatch">
           <p class="text-sm text-muted-foreground">
-            {{ t('manual_reconcile_help') || 'Enter the contra account code to post this transaction to the ledger.' }}
+            {{ t('manual_reconcile_help') }}
           </p>
           <FormInput
             id="contra_account_code"
             v-model="matchManualForm.contra_account_code"
-            :label="t('contra_account') || 'Contra Account Code'"
+            :label="t('contra_account')"
             :error="matchManualForm.errors.contra_account_code"
             placeholder="3000"
             required
           />
           <div class="flex justify-end gap-3">
-            <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') || 'Cancel' }}</Button>
+            <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') }}</Button>
             <Button type="submit" :disabled="matchManualForm.processing || !matchManualForm.contra_account_code">
-              <Check class="mr-2 h-4 w-4" /> {{ t('reconcile') || 'Reconcile' }}
+              <Check class="mr-2 h-4 w-4" /> {{ t('reconcile') }}
             </Button>
           </div>
         </form>

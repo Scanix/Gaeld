@@ -14,6 +14,11 @@ Route::post('/profile/export', [UserController::class, 'exportData'])->name('pro
 Route::get('/profile/export/download/{filename}', [UserController::class, 'downloadExport'])->name('profile.export.download')->middleware('signed');
 Route::delete('/profile', [UserController::class, 'destroyAccount'])->name('profile.destroy');
 
+// Email change
+Route::put('/profile/email', [UserController::class, 'requestEmailChange'])->name('profile.email');
+Route::get('/profile/email/verify/{token}', [UserController::class, 'confirmEmailChange'])->name('profile.email.verify')->middleware('signed');
+Route::delete('/profile/email', [UserController::class, 'cancelEmailChange'])->name('profile.email.cancel');
+
 // Two-factor authentication management
 Route::post('/profile/two-factor', [TwoFactorController::class, 'enable'])->name('two-factor.enable');
 Route::post('/profile/two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');

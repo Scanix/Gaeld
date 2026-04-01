@@ -13,7 +13,8 @@ import Combobox from '@/Components/UI/Combobox.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Trash2 } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
+import { Plus, Trash2, PieChart } from 'lucide-vue-next'
 
 const props = defineProps({
   budgets: { type: Array, default: () => [] },
@@ -225,8 +226,14 @@ function chf(val) {
               </tr>
             </template>
             <tr v-else>
-              <td colspan="5" class="px-4 py-12 text-center text-[hsl(var(--muted-foreground))]">
-                {{ t('no_budget_lines') }}
+              <td colspan="5" class="px-4 py-8 text-center">
+                <EmptyState
+                  :icon="PieChart"
+                  :title="t('empty_budgets_title')"
+                  :description="t('empty_budgets_desc')"
+                  :action-label="t('create_first')"
+                  @action="showAddForm = true"
+                />
               </td>
             </tr>
           </tbody>

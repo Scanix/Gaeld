@@ -7,7 +7,7 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
@@ -27,6 +27,7 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 const props = defineProps({
   revenue: { type: Number, default: 0 },

@@ -4,12 +4,14 @@ import { useForm } from '@inertiajs/vue3'
 import { CheckCircle2, Zap } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 import Button from '@/Components/UI/Button.vue'
+import PasswordStrength from '@/Components/UI/PasswordStrength.vue'
 
 const { t } = useTranslations()
 
 const props = defineProps({
   plans: { type: Array, default: () => [] },
   trial_days: { type: Number, default: 14 },
+  chart_templates: { type: Array, default: () => [] },
 })
 
 const selectedPlan = ref(props.plans[0]?.id ?? null)
@@ -21,6 +23,8 @@ const form = useForm({
   password_confirmation: '',
   org_name: '',
   plan_id: selectedPlan,
+  accepted_privacy: false,
+  chart_of_accounts: 'swiss_sme',
 })
 
 function submit() {
@@ -112,6 +116,19 @@ function submit() {
             <p v-if="form.errors.email" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.email }}</p>
           </div>
 
+          <div>
+            <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('chart_of_accounts') }}</label>
+            <select
+              v-model="form.chart_of_accounts"
+              class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+            >
+              <option v-for="tpl in chart_templates" :key="tpl.key" :value="tpl.key">{{ t(tpl.label_key) }}</option>
+              <option value="none">{{ t('chart_none') }}</option>
+            </select>
+            <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('chart_of_accounts_signup_help') }}</p>
+            <p v-if="form.errors.chart_of_accounts" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.chart_of_accounts }}</p>
+          </div>
+
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('password') }}</label>
@@ -132,6 +149,26 @@ function submit() {
                 class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
               />
             </div>
+          </div>
+
+          <PasswordStrength :password="form.password" />
+          <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('password_requirements_hint') }}</p>
+
+          <div class="space-y-1">
+            <label class="flex items-start gap-2">
+              <input
+                v-model="form.accepted_privacy"
+                type="checkbox"
+                class="mt-1 h-4 w-4 rounded border-[hsl(var(--input))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--ring))]"
+              />
+              <span class="text-sm text-[hsl(var(--muted-foreground))]">
+                {{ t('accept_privacy_prefix') }}
+                <a href="https://gaeld.ch/privacy" target="_blank" class="font-medium text-[hsl(var(--primary))] hover:underline">{{ t('privacy_policy') }}</a>
+                {{ t('and') }}
+                <a href="https://gaeld.ch/terms" target="_blank" class="font-medium text-[hsl(var(--primary))] hover:underline">{{ t('terms_of_service') }}</a>.
+              </span>
+            </label>
+            <p v-if="form.errors.accepted_privacy" class="text-sm text-[hsl(var(--destructive))]">{{ form.errors.accepted_privacy }}</p>
           </div>
 
           <Button type="submit" class="w-full" :disabled="form.processing">

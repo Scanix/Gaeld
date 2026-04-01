@@ -85,7 +85,8 @@ const columns = computed(() => [
     <Modal :show="showModal" @close="showModal = false" :title="t('add_bank_account')">
       <form class="space-y-4" @submit.prevent="submit">
         <FormInput id="name" v-model="form.name" :label="t('account_name')" :error="form.errors.name" required />
-        <FormInput id="iban" v-model="form.iban" :label="t('iban')" :error="form.errors.iban" />
+        <FormInput id="iban" v-model="form.iban" :label="t('iban')" :placeholder="t('iban_placeholder')" :error="form.errors.iban" />
+        <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('qr_iban_hint') }}</p>
         <FormInput id="bank_name" v-model="form.bank_name" :label="t('bank_name')" :error="form.errors.bank_name" />
         <FormSelect
           id="currency"

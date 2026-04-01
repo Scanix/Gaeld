@@ -60,7 +60,7 @@ const localeOptions = [
 </script>
 
 <template>
-  <Head title="Create Organization" />
+  <Head :title="t('onboarding_title')" />
 
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-2xl">

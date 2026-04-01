@@ -11,7 +11,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
 import { Pencil, Trash2, CheckCircle } from 'lucide-vue-next'
@@ -55,6 +55,7 @@ const statusVariant = {
 }
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 const categoryKeys = {
   'Office Supplies': 'cat_office_supplies',

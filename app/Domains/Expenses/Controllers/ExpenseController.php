@@ -15,6 +15,7 @@ use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Jobs\ProcessReceiptOcrJob;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
 use App\Domains\Expenses\Queries\ExpenseQuery;
 use App\Domains\Expenses\Requests\ScanReceiptRequest;
 use App\Domains\Expenses\Requests\StoreExpenseRequest;
@@ -63,6 +64,7 @@ class ExpenseController extends Controller
         return Inertia::render('Expenses/Create', [
             'vatRates' => VatRateQuery::active(),
             'suppliers' => SupplierQuery::forSelect(),
+            'categories' => ExpenseCategoryQuery::forSelect(),
         ]);
     }
 
@@ -108,6 +110,7 @@ class ExpenseController extends Controller
             'expense' => $expense->load('vatRate'),
             'vatRates' => VatRateQuery::active(),
             'suppliers' => SupplierQuery::forSelect(),
+            'categories' => ExpenseCategoryQuery::forSelect(),
             'receiptUrl' => $expense->receipt_path ? route('expenses.receipt.download', $expense) : null,
         ]);
     }

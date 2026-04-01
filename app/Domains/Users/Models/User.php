@@ -33,6 +33,9 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'show_help',
         'accepted_privacy_at',
         'accepted_terms_at',
+        'pending_email',
+        'email_change_token',
+        'email_change_requested_at',
     ];
 
     protected $hidden = [
@@ -53,6 +56,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'two_factor_confirmed_at' => 'datetime',
             'accepted_privacy_at' => 'datetime',
             'accepted_terms_at' => 'datetime',
+            'email_change_requested_at' => 'datetime',
         ];
     }
 

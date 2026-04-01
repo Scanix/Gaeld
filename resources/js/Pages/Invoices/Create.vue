@@ -10,7 +10,9 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
+import InvoicePreviewModal from '@/Components/InvoicePreviewModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { useFormValidation, z } from '@/lib/useFormValidation'
 import { Plus, Trash2, HelpCircle } from 'lucide-vue-next'
@@ -19,13 +21,15 @@ import Tooltip from '@/Components/UI/Tooltip.vue'
 const props = defineProps({
   customers: { type: Array, default: () => [] },
   vatRates: { type: Array, default: () => [] },
+  suggestedNumber: { type: String, default: '' },
 })
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const form = useForm({
   customer_id: '',
-  number: '',
+  number: props.suggestedNumber,
   issue_date: new Date().toISOString().slice(0, 10),
   due_date: '',
   currency: 'CHF',
@@ -33,6 +37,7 @@ const form = useForm({
   payment_terms: '',
   lines: [{ description: '', quantity: 1, unit_price: 0, vat_rate_id: '' }],
   justificatif: null,
+  finalize: false,
 })
 
 useUnsavedChanges(computed(() => form.isDirty))
@@ -56,8 +61,38 @@ function removeLine(index) {
 
 function submit() {
   if (!validate(form.data())) return
+  form.finalize = false
   form.post('/invoices', { forceFormData: true })
 }
+
+function submitAndFinalize() {
+  if (!validate(form.data())) return
+  form.finalize = true
+  form.post('/invoices', { forceFormData: true })
+}
+
+// I1: Live running totals
+const vatRateMap = computed(() => {
+  const map = {}
+  for (const v of props.vatRates) {
+    map[v.id] = parseFloat(v.rate) || 0
+  }
+  return map
+})
+
+const subtotal = computed(() =>
+  form.lines.reduce((sum, l) => sum + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0)
+)
+
+const vatTotal = computed(() =>
+  form.lines.reduce((sum, l) => {
+    const lineAmount = (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0)
+    const rate = l.vat_rate_id ? (vatRateMap.value[l.vat_rate_id] || 0) : 0
+    return sum + lineAmount * rate / 100
+  }, 0)
+)
+
+const total = computed(() => subtotal.value + vatTotal.value)
 
 function onJustificatifChange(e) {
   form.justificatif = e.target.files[0] ?? null
@@ -67,6 +102,7 @@ const customerList = reactive([...props.customers])
 const clientOptions = ref(customerList.map(c => ({ value: c.id, label: c.name })))
 
 const showCreateCustomer = ref(false)
+const showPreview = ref(false)
 
 function onCustomerCreated(customer) {
   customerList.push(customer)
@@ -123,7 +159,7 @@ const vatOptions = [
               id="number"
               v-model="form.number"
               :label="t('invoice_number')"
-              placeholder="INV-001"
+              :placeholder="t('invoice_number_placeholder')"
               :error="form.errors.number || clientErrors.number"
               required
               @blur="validateField('number', form.number)"
@@ -226,6 +262,22 @@ const vatOptions = [
               <Plus class="mr-1 h-4 w-4" />
               {{ t('add_line') }}
             </Button>
+
+            <!-- Running totals -->
+            <div class="mt-4 space-y-1 border-t pt-3 text-sm">
+              <div class="flex justify-between text-[hsl(var(--muted-foreground))]">
+                <span>{{ t('subtotal') }}</span>
+                <span class="tabular-nums">{{ formatCurrency(subtotal, form.currency) }}</span>
+              </div>
+              <div class="flex justify-between text-[hsl(var(--muted-foreground))]">
+                <span>{{ t('vat_total') }}</span>
+                <span class="tabular-nums">{{ formatCurrency(vatTotal, form.currency) }}</span>
+              </div>
+              <div class="flex justify-between font-semibold">
+                <span>{{ t('total') }}</span>
+                <span class="tabular-nums">{{ formatCurrency(total, form.currency) }}</span>
+              </div>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -238,12 +290,17 @@ const vatOptions = [
                 class="flex w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
             </div>
-            <FormInput
-              id="payment_terms"
-              v-model="form.payment_terms"
-              :label="t('payment_terms')"
-              placeholder="Net 30"
-            />
+            <div>
+              <FormInput
+                id="payment_terms"
+                v-model="form.payment_terms"
+                type="number"
+                min="0"
+                :label="t('payment_terms_days')"
+                placeholder="30"
+              />
+              <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('payment_terms_hint') }}</p>
+            </div>
           </div>
 
           <div>
@@ -260,6 +317,12 @@ const vatOptions = [
 
           <div class="flex justify-end gap-3">
             <Button as="a" href="/invoices" variant="outline">{{ t('cancel') }}</Button>
+            <Button type="button" variant="outline" @click="showPreview = true">
+              {{ t('invoice_preview') }}
+            </Button>
+            <Button type="button" variant="outline" :disabled="form.processing" @click="submitAndFinalize">
+              {{ t('create_and_finalize') }}
+            </Button>
             <Button type="submit" :disabled="form.processing">{{ t('create_invoice') }}</Button>
           </div>
         </form>
@@ -271,6 +334,14 @@ const vatOptions = [
       contact-type="customer"
       @close="showCreateCustomer = false"
       @created="onCustomerCreated"
+    />
+
+    <InvoicePreviewModal
+      :open="showPreview"
+      :form="form"
+      :customers="customerList"
+      :vat-rates="vatRates"
+      @close="showPreview = false"
     />
   </AppLayout>
 </template>

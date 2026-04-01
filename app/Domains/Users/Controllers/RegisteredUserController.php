@@ -19,29 +19,30 @@ use Inertia\Response;
  */
 class RegisteredUserController extends Controller
 {
-    public function create(): Response
+    public function create(): Response|RedirectResponse
     {
+        // In SaaS mode, registration must go through /signup (with plan + subscription)
+        if (FeatureFlag::isSaas()) {
+            return redirect()->route('signup');
+        }
+
         return Inertia::render('Auth/Register');
     }
 
     public function store(Request $request, CreateUserAction $action): RedirectResponse
     {
+        // In SaaS mode, prevent direct registration without a subscription
+        if (FeatureFlag::isSaas()) {
+            return redirect()->route('signup');
+        }
+
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Password::defaults()],
         ];
 
-        if (FeatureFlag::isSaas()) {
-            $rules['accepted_privacy'] = ['required', 'accepted'];
-        }
-
         $validated = $request->validate($rules);
-
-        if (FeatureFlag::isSaas()) {
-            $validated['accepted_privacy_at'] = now();
-            $validated['accepted_terms_at'] = now();
-        }
 
         $user = $action->execute(CreateUserData::fromArray($validated));
 

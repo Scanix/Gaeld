@@ -13,7 +13,7 @@ import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
 
@@ -24,6 +24,7 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatCurrency, formatDate } = useFormatters()
 
 const showTransactionModal = ref(false)
 const showEditModal = ref(false)

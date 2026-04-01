@@ -11,11 +11,13 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { ChevronDown, ChevronRight } from 'lucide-vue-next'
-import { formatCurrency } from '@/lib/utils'
+import { ChevronDown, ChevronRight, Banknote } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
+import { useFormatters } from '@/lib/useFormatters'
 
 const props = defineProps({ report: Object })
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const from = ref(props.report?.period?.from ?? '')
 const to = ref(props.report?.period?.to ?? '')
@@ -198,8 +200,12 @@ function sectionTotal(rows) {
       </div>
     </template>
 
-    <div v-else class="py-16 text-center text-sm text-[hsl(var(--muted-foreground))]">
-      {{ t('select_period_to_view_report') }}
+    <div v-else class="py-8 text-center">
+      <EmptyState
+        :icon="Banknote"
+        :title="t('empty_cash_flow_title')"
+        :description="t('empty_cash_flow_desc')"
+      />
     </div>
   </AppLayout>
 </template>
