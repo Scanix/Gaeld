@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Accounting\Exceptions\FiscalYearClosedException;
 use App\Domains\Organizations\Models\Organization;
 use App\Http\Middleware\DisableThrottleInTesting;
 use App\Http\Middleware\EnsureActiveSubscription;
@@ -56,6 +57,14 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->renderable(function (FiscalYearClosedException $e) {
+            if (request()->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
+
+            return back()->with('error', $e->getMessage());
+        });
+
         $exceptions->renderable(function (DomainException $e) {
             if (request()->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 422);

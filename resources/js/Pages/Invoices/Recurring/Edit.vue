@@ -8,6 +8,7 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { useTranslations } from '@/lib/useTranslations'
@@ -83,7 +84,7 @@ const vatOptions = computed(() => [
       { label: t('invoices'), href: '/invoices' },
       { label: t('recurring'), href: '/invoices/recurring' },
       { label: t('edit') },
-    ]" />
+    ]" class="mb-4" />
 
     <Card class="max-w-3xl">
       <CardHeader>
@@ -204,15 +205,11 @@ const vatOptions = computed(() => [
           </div>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label for="notes" class="mb-1 block text-sm font-medium">{{ t('notes') }}</label>
-              <textarea
-                id="notes"
-                v-model="form.notes"
-                rows="3"
-                class="flex w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
-              />
-            </div>
+            <FormTextarea
+              id="notes"
+              v-model="form.notes"
+              :label="t('notes')"
+            />
             <FormInput
               id="payment_terms"
               v-model="form.payment_terms"

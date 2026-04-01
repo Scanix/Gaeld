@@ -1,0 +1,102 @@
+<?php
+
+namespace App\Domains\Migration\Importers;
+
+use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Expenses\Models\Expense;
+use App\Domains\Migration\Contracts\DataTypeImporterInterface;
+use App\Domains\Migration\Contracts\ImportRowInterface;
+use App\Domains\Migration\DTOs\ExpenseImportRow;
+use App\Domains\Migration\DTOs\ImportResult;
+use App\Domains\Migration\DTOs\ValidationResult;
+use App\Domains\Migration\Enums\DataType;
+use App\Domains\Organizations\Models\Organization;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+
+class ExpenseImporter implements DataTypeImporterInterface
+{
+    public function dataType(): DataType
+    {
+        return DataType::Expenses;
+    }
+
+    public function dependencies(): array
+    {
+        return [DataType::Accounts, DataType::Contacts];
+    }
+
+    public function validate(Collection $rows, Organization $organization): ValidationResult
+    {
+        $errors = [];
+
+        foreach ($rows as $row) {
+            if (! $row instanceof ExpenseImportRow || ! $row->isValid()) {
+                continue;
+            }
+
+            if (empty($row->date)) {
+                $errors[$row->sourceRow()][] = 'Expense date is required';
+            }
+
+            if (empty($row->amount) || (float) $row->amount <= 0) {
+                $errors[$row->sourceRow()][] = 'Expense amount must be positive';
+            }
+        }
+
+        if (! empty($errors)) {
+            return ValidationResult::failure([], $errors);
+        }
+
+        return ValidationResult::success();
+    }
+
+    public function import(Collection $rows, Organization $organization): ImportResult
+    {
+        $imported = 0;
+        $skipped = 0;
+
+        DB::transaction(function () use ($rows, $organization, &$imported, &$skipped): void {
+            foreach ($rows as $row) {
+                if (! $row instanceof ExpenseImportRow || ! $row->isValid()) {
+                    $skipped++;
+
+                    continue;
+                }
+
+                // Link or create supplier
+                $supplier = null;
+                if ($row->supplierName) {
+                    $supplier = Supplier::where('organization_id', $organization->id)
+                        ->where('name', $row->supplierName)
+                        ->first();
+
+                    if (! $supplier) {
+                        $supplier = Supplier::create([
+                            'organization_id' => $organization->id,
+                            'name' => $row->supplierName,
+                            'email' => $row->supplierEmail,
+                            'country' => 'CH',
+                        ]);
+                    }
+                }
+
+                Expense::create([
+                    'organization_id' => $organization->id,
+                    'supplier_id' => $supplier?->id,
+                    'date' => $row->date,
+                    'amount' => $row->amount,
+                    'currency' => $row->currency,
+                    'description' => $row->description,
+                    'category' => $row->category,
+                    'reference' => $row->reference,
+                    'is_paid' => $row->isPaid,
+                ]);
+
+                $imported++;
+            }
+        });
+
+        return ImportResult::success($this->dataType(), $imported, $skipped);
+    }
+}

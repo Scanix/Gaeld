@@ -158,7 +158,7 @@ function performDelete() {
 
     <!-- Create / Edit dialog -->
     <Modal :open="showForm" :title="editingCenter ? t('edit') : t('add')" @close="showForm = false">
-      <form class="space-y-4" @submit.prevent="submitForm">
+      <form class="space-y-6" @submit.prevent="submitForm">
         <FormInput id="code" v-model="form.code" :label="t('cost_center_code')" :error="form.errors.code" required />
         <FormInput id="name" v-model="form.name" :label="t('cost_center_name')" :error="form.errors.name" required />
         <FormSelect

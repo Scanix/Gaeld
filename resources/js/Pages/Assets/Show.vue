@@ -197,7 +197,7 @@ const historyColumns = computed(() => [
 
     <!-- Dispose Modal -->
     <Modal :open="showDisposeModal" :title="t('dispose_asset')" @close="showDisposeModal = false">
-      <form class="space-y-4" @submit.prevent="submitDisposal">
+      <form class="space-y-6" @submit.prevent="submitDisposal">
         <FormInput
           id="disposal_date"
           v-model="disposeForm.disposal_date"

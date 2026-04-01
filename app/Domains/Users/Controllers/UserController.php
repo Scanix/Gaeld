@@ -10,7 +10,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -67,6 +66,23 @@ class UserController extends Controller
         $this->authorize('update', $request->user());
 
         $userService->toggleHelp($request->user());
+
+        return back();
+    }
+
+    public function updateDashboardLayout(Request $request): RedirectResponse
+    {
+        $this->authorize('update', $request->user());
+
+        $validated = $request->validate([
+            'widgets' => 'required|array',
+            'widgets.*.id' => 'required|string|in:checklist,action_cards,budget,chart,transactions',
+            'widgets.*.visible' => 'required|boolean',
+        ]);
+
+        $request->user()->update([
+            'dashboard_layout' => $validated,
+        ]);
 
         return back();
     }

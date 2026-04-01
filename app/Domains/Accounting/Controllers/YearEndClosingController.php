@@ -34,6 +34,8 @@ class YearEndClosingController extends Controller
 
         [$income, $expenses, $netResult] = $this->computeClosingAccounts($orgId, $from, $to);
 
+        $org = Organization::findOrFail($orgId);
+
         return Inertia::render('Accounting/YearEndClosing', [
             'year' => $year,
             'fromDate' => $from,
@@ -41,6 +43,8 @@ class YearEndClosingController extends Controller
             'income' => $income,
             'expenses' => $expenses,
             'netResult' => $netResult,
+            'closedYears' => $org->closed_fiscal_years ?? [],
+            'canReopenYear' => $request->user()?->can('reopenYear', Account::class) ?? false,
         ]);
     }
 
@@ -150,6 +154,33 @@ class YearEndClosingController extends Controller
 
         return redirect()->route('accounting.closing')
             ->with('success', __('app.year_end_closing_done'));
+    }
+
+    public function reopen(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    {
+        $this->authorize('reopenYear', Account::class);
+
+        $validated = $request->validate([
+            'year' => 'required|integer|min:2000|max:2100',
+        ]);
+
+        $year = (int) $validated['year'];
+        $org = Organization::findOrFail($currentOrg->id());
+
+        if (! $org->isFiscalYearClosed($year)) {
+            return redirect()->back()->with('error', __('app.fiscal_year_not_closed', ['year' => $year]));
+        }
+
+        $org->reopenFiscalYear($year);
+
+        activity()
+            ->causedBy($request->user())
+            ->performedOn($org)
+            ->withProperties(['year' => $year])
+            ->log("Fiscal year {$year} reopened");
+
+        return redirect()->route('accounting.closing', ['year' => $year])
+            ->with('success', __('app.fiscal_year_reopened', ['year' => $year]));
     }
 
     // ──────────────────────────────────────────────────────────────

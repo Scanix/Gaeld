@@ -286,7 +286,7 @@ async function executeDeleteContact() {
 
     <!-- Contact Person Modal -->
     <Modal :open="showContactModal" :title="editingContact ? t('edit_contact_person') : t('add_contact_person')" @close="showContactModal = false">
-      <form class="space-y-4" @submit.prevent="submitContact">
+      <form class="space-y-6" @submit.prevent="submitContact">
         <div class="grid grid-cols-2 gap-4">
           <FormInput
             id="cp-first-name"

@@ -11,6 +11,7 @@ import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
+import DropdownMenu from '@/Components/UI/DropdownMenu.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useFormatters } from '@/lib/useFormatters'
@@ -160,7 +161,7 @@ const bankAccountOptions = computed(() =>
 
     <div class="max-w-5xl space-y-6">
       <!-- Header -->
-      <div class="flex items-center justify-between">
+      <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div>
             <Badge :variant="statusVariant[invoice?.status] ?? 'secondary'" class="mb-1">
@@ -171,7 +172,7 @@ const bankAccountOptions = computed(() =>
             </p>
           </div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex items-center gap-2">
           <Button
             v-if="invoice?.status === 'draft'"
             as="a"
@@ -183,16 +184,9 @@ const bankAccountOptions = computed(() =>
             {{ t('edit') }}
           </Button>
           <Button
-            variant="outline"
-            size="sm"
-            @click="duplicate"
-          >
-            <Copy class="mr-1 h-4 w-4" />
-            {{ t('duplicate') }}
-          </Button>
-          <Button
             v-if="invoice?.status === 'draft'"
             variant="outline"
+            size="sm"
             :disabled="finalizeForm.processing"
             @click="finalize"
           >
@@ -200,6 +194,7 @@ const bankAccountOptions = computed(() =>
           </Button>
           <Button
             v-if="invoice?.status === 'sent' || invoice?.status === 'overdue'"
+            size="sm"
             @click="showPaymentModal = true"
           >
             {{ t('record_payment') }}
@@ -214,54 +209,64 @@ const bankAccountOptions = computed(() =>
             <Download class="mr-1 h-4 w-4" />
             {{ t('download_qr_invoice') }}
           </Button>
-          <Button
-            v-if="invoice?.status === 'sent'"
-            variant="outline"
-            size="sm"
-            :disabled="sendForm.processing"
-            @click="sendInvoice"
-          >
-            <Mail class="mr-1 h-4 w-4" />
-            {{ t('send_invoice_email') }}
-          </Button>
-          <Button
-            v-if="isOverdue"
-            variant="outline"
-            size="sm"
-            :disabled="reminderForm.processing"
-            @click="sendReminder"
-          >
-            <Bell class="mr-1 h-4 w-4" />
-            {{ t('send_reminder') }}
-          </Button>
-          <Button
-            v-if="invoice?.type !== 'credit_note' && (invoice?.status === 'sent' || invoice?.status === 'paid')"
-            variant="outline"
-            size="sm"
-            :disabled="creditNoteForm.processing"
-            @click="createCreditNote"
-          >
-            <FileMinus class="mr-1 h-4 w-4" />
-            {{ t('create_credit_note') }}
-          </Button>
-          <Button
-            v-if="invoice?.status === 'draft'"
-            variant="destructive"
-            size="sm"
-            @click="showDeleteDialog = true"
-          >
-            <Trash2 class="mr-1 h-4 w-4" />
-            {{ t('delete') }}
-          </Button>
-          <Button
-            v-if="invoice?.status !== 'paid' && invoice?.status !== 'cancelled'"
-            variant="outline"
-            size="sm"
-            @click="showCancelDialog = true"
-          >
-            <Ban class="mr-1 h-4 w-4" />
-            {{ t('cancel_invoice') }}
-          </Button>
+          <DropdownMenu>
+            <template #default="{ close }">
+              <button
+                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+                @click="duplicate(); close()"
+              >
+                <Copy class="h-4 w-4 shrink-0" />
+                {{ t('duplicate') }}
+              </button>
+              <button
+                v-if="invoice?.status === 'sent'"
+                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+                :disabled="sendForm.processing"
+                @click="sendInvoice(); close()"
+              >
+                <Mail class="h-4 w-4 shrink-0" />
+                {{ t('send_invoice_email') }}
+              </button>
+              <button
+                v-if="isOverdue"
+                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+                :disabled="reminderForm.processing"
+                @click="sendReminder(); close()"
+              >
+                <Bell class="h-4 w-4 shrink-0" />
+                {{ t('send_reminder') }}
+              </button>
+              <button
+                v-if="invoice?.type !== 'credit_note' && (invoice?.status === 'sent' || invoice?.status === 'paid')"
+                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+                :disabled="creditNoteForm.processing"
+                @click="createCreditNote(); close()"
+              >
+                <FileMinus class="h-4 w-4 shrink-0" />
+                {{ t('create_credit_note') }}
+              </button>
+              <div
+                v-if="(invoice?.status !== 'paid' && invoice?.status !== 'cancelled') || invoice?.status === 'draft'"
+                class="my-1 border-t border-[hsl(var(--border))]"
+              />
+              <button
+                v-if="invoice?.status !== 'paid' && invoice?.status !== 'cancelled'"
+                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
+                @click="showCancelDialog = true; close()"
+              >
+                <Ban class="h-4 w-4 shrink-0" />
+                {{ t('cancel_invoice') }}
+              </button>
+              <button
+                v-if="invoice?.status === 'draft'"
+                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
+                @click="showDeleteDialog = true; close()"
+              >
+                <Trash2 class="h-4 w-4 shrink-0" />
+                {{ t('delete') }}
+              </button>
+            </template>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -384,7 +389,7 @@ const bankAccountOptions = computed(() =>
 
     <!-- Payment Modal -->
     <Modal :open="showPaymentModal" :title="t('record_payment')" @close="showPaymentModal = false">
-      <form class="space-y-4" @submit.prevent="recordPayment">
+      <form class="space-y-6" @submit.prevent="recordPayment">
         <FormInput
           id="payment-amount"
           v-model="paymentForm.amount"

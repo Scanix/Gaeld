@@ -54,4 +54,10 @@ class AccountPolicy extends BasePolicy
         return $this->hasCurrentOrganization($user)
             && $user->hasPermissionTo(Permission::AccountingCloseYear);
     }
+
+    public function reopenYear(User $user): bool
+    {
+        return $this->hasCurrentOrganization($user)
+            && $user->hasPermissionTo(Permission::AccountingReopenYear);
+    }
 }

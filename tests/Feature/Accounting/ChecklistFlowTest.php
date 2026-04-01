@@ -46,7 +46,7 @@ class ChecklistFlowTest extends TestCase
     {
         $checklist = $this->service->checklist($this->org->id);
 
-        $this->assertCount(10, $checklist);
+        $this->assertCount(11, $checklist);
 
         foreach ($checklist as $item) {
             $this->assertFalse($item['done'], "Item {$item['key']} should be not done for empty org");
@@ -68,6 +68,7 @@ class ChecklistFlowTest extends TestCase
         $this->assertContains('checklist_social_charges', $keys);
         $this->assertContains('checklist_year_end_closed', $keys);
         $this->assertContains('checklist_fiduciary_exported', $keys);
+        $this->assertContains('checklist_data_imported', $keys);
     }
 
     public function test_chart_configured_is_done_when_accounts_exist(): void

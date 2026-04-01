@@ -12,6 +12,7 @@ use App\Domains\Banking\Requests\ReconcileExpenseRequest;
 use App\Domains\Banking\Requests\ReconcileInvoiceRequest;
 use App\Domains\Banking\Requests\ReconcileManualRequest;
 use App\Domains\Banking\Services\BankImportService;
+use App\Domains\Banking\Services\PersonalPatternService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Expenses\Models\Expense;
@@ -35,6 +36,7 @@ class ReconciliationController extends Controller
         private BankImportService $importService,
         private ReconciliationService $reconciliationService,
         private SuggestionService $suggestionService,
+        private PersonalPatternService $personalPatternService,
     ) {}
 
     /**
@@ -89,10 +91,23 @@ class ReconciliationController extends Controller
             ? $this->suggestionService->generateSuggestionsForTransactions($unreconciledOnPage)
             : [];
 
+        // For mixed-use accounts, check which unreconciled transactions
+        // match known personal counterparty patterns
+        $personalSuggestions = [];
+        if ($bankAccount->is_mixed_use && $unreconciledOnPage->isNotEmpty()) {
+            /** @var BankTransaction $tx */
+            foreach ($unreconciledOnPage as $tx) {
+                if ($this->personalPatternService->isLikelyPersonal($tx, $bankAccount->organization_id)) {
+                    $personalSuggestions[] = $tx->id;
+                }
+            }
+        }
+
         return Inertia::render('Banking/ReconciliationShow', [
             'bankAccount' => $bankAccount->load('ledgerAccount'),
             'transactions' => $transactions,
             'suggestions' => $suggestions,
+            'personalSuggestions' => $personalSuggestions,
             'filter' => $filter,
             'pageFeatures' => [
                 'auto_reconciliation' => FeatureFlag::enabled('auto_reconciliation'),
@@ -240,5 +255,57 @@ class ReconciliationController extends Controller
 
         return redirect()->back()
             ->with('success', __('app.auto_reconciliation_complete', ['matched' => $result['matched'], 'unmatched' => $result['unmatched']]));
+    }
+
+    /**
+     * Mark a transaction as personal (mixed-use accounts only).
+     */
+    public function reconcilePersonal(BankTransaction $transaction): RedirectResponse
+    {
+        /** @var BankAccount $bankAccount */
+        $bankAccount = $transaction->bankAccount;
+        $this->authorize('update', $bankAccount);
+
+        if (! $bankAccount->is_mixed_use) {
+            return redirect()->back()->with('error', __('app.mixed_use_required'));
+        }
+
+        try {
+            $this->reconciliationService->reconcileAsPersonal($transaction);
+        } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()
+            ->with('success', __('app.transaction_marked_personal'));
+    }
+
+    /**
+     * Bulk mark transactions as personal (mixed-use accounts only).
+     */
+    public function bulkReconcilePersonal(Request $request, BankAccount $bankAccount): RedirectResponse
+    {
+        $this->authorize('update', $bankAccount);
+
+        if (! $bankAccount->is_mixed_use) {
+            return redirect()->back()->with('error', __('app.mixed_use_required'));
+        }
+
+        $validated = $request->validate([
+            'transaction_ids' => 'required|array|min:1',
+            'transaction_ids.*' => 'integer|exists:bank_transactions,id',
+        ]);
+
+        $transactions = BankTransaction::where('bank_account_id', $bankAccount->id)
+            ->whereIn('id', $validated['transaction_ids'])
+            ->where('is_reconciled', false)
+            ->get();
+
+        $result = $this->reconciliationService->bulkReconcileAsPersonal($transactions);
+
+        return redirect()->back()
+            ->with('success', __('app.transactions_marked_personal', [
+                'count' => $result['reconciled'],
+            ]));
     }
 }

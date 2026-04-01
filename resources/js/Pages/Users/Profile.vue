@@ -280,7 +280,7 @@ function confirmDeletePasskey() {
       <Card>
         <CardHeader><CardTitle>{{ t('profile_information') }}</CardTitle></CardHeader>
         <CardContent>
-          <form class="space-y-4" @submit.prevent="submitProfile">
+          <form class="space-y-6" @submit.prevent="submitProfile">
             <FormInput id="name" v-model="profileForm.name" :label="t('name')" :error="profileForm.errors.name" required />
             <div>
               <div class="flex items-center gap-2">
@@ -511,7 +511,7 @@ function confirmDeletePasskey() {
       <Card>
         <CardHeader><CardTitle>{{ t('change_password') }}</CardTitle></CardHeader>
         <CardContent>
-          <form class="space-y-4" @submit.prevent="submitPassword">
+          <form class="space-y-6" @submit.prevent="submitPassword">
             <FormInput
               id="current_password"
               v-model="passwordForm.current_password"

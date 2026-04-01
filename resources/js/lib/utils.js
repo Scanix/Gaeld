@@ -17,10 +17,11 @@ export function intlLocale(appLocale) {
 }
 
 export function formatCurrency(amount, currency = 'CHF', locale = 'de-CH') {
+  const value = Number(amount)
   return new Intl.NumberFormat(intlLocale(locale), {
     style: 'currency',
     currency,
-  }).format(amount)
+  }).format(Number.isFinite(value) ? value : 0)
 }
 
 export const formatMoney = formatCurrency

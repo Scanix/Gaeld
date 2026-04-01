@@ -34,6 +34,8 @@ final class AccountCode
 
     public const OPENING_BALANCE = '9000';
 
+    public const PRIVATE_WITHDRAWALS = '2850';
+
     public const REVENUE_PREFIX = '3';
 
     public const EXPENSE_PREFIXES = ['4', '5', '6'];

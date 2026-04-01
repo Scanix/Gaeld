@@ -155,7 +155,7 @@ const eventGroups = computed(() => {
       <!-- Webhook secret display (shown once after creation/regeneration) -->
       <div v-if="flash.webhookSecret" class="rounded-md border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
         <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-          {{ t('webhook_secret_copy')t be shown again.' }}
+          {{ t('webhook_secret_copy') }}
         </p>
         <div class="flex items-center gap-2">
           <code class="flex-1 rounded bg-yellow-100 px-3 py-2 text-xs font-mono dark:bg-yellow-900 break-all">
@@ -231,7 +231,7 @@ const eventGroups = computed(() => {
 
       <!-- Create/Edit modal -->
       <Modal :show="showModal" @close="showModal = false" :title="editingWebhook ? (t('edit_webhook')) : (t('add_webhook'))">
-        <form class="space-y-4" @submit.prevent="submitForm">
+        <form class="space-y-6" @submit.prevent="submitForm">
           <FormInput
             v-model="form.url"
             :label="t('payload_url')"

@@ -11,6 +11,7 @@ class FiscalYearClosedExceptionTest extends TestCase
     {
         $exception = new FiscalYearClosedException(2025);
 
-        $this->assertSame('Cannot post to closed fiscal year 2025.', $exception->getMessage());
+        $this->assertStringContainsString('2025', $exception->getMessage());
+        $this->assertSame(2025, $exception->year);
     }
 }

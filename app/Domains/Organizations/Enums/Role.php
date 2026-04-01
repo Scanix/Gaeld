@@ -99,6 +99,9 @@ enum Role: string
             Permission::PayrollView,
             Permission::PayrollCreate,
             Permission::PayrollEdit,
+
+            // Migration
+            Permission::MigrationImport,
         ];
     }
 
@@ -149,6 +152,9 @@ enum Role: string
             Permission::PayrollView,
             Permission::PayrollCreate,
             Permission::PayrollEdit,
+
+            // Migration
+            Permission::MigrationImport,
         ];
     }
 

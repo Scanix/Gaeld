@@ -124,7 +124,7 @@ function submitDeclaration(declaration) {
     </Card>
 
     <Modal :open="showForm" :title="t('withholding_tax')" @close="showForm = false">
-      <form class="space-y-4" @submit.prevent="submitForm">
+      <form class="space-y-6" @submit.prevent="submitForm">
         <FormSelect
           id="canton"
           v-model="form.canton"

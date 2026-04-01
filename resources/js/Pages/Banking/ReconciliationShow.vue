@@ -15,12 +15,13 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Upload, Check, Link2, RotateCcw, Loader2 } from 'lucide-vue-next'
+import { Upload, Check, Link2, RotateCcw, Loader2, UserX } from 'lucide-vue-next'
 
 const props = defineProps({
   bankAccount: Object,
   transactions: Object,
   suggestions: { type: Object, default: () => ({}) },
+  personalSuggestions: { type: Array, default: () => [] },
   filter: { type: String, default: 'unreconciled' },
   pageFeatures: { type: Object, default: () => ({}) },
 })
@@ -154,6 +155,53 @@ function autoReconcile() {
   })
 }
 
+// Personal transaction marking (mixed-use accounts)
+const markingPersonal = ref(null)
+
+function markAsPersonal(transactionId) {
+  if (markingPersonal.value) return
+  markingPersonal.value = transactionId
+  router.post(`/reconciliation/transactions/${transactionId}/personal`, {}, {
+    onFinish: () => { markingPersonal.value = null },
+  })
+}
+
+// Bulk selection for personal marking
+const selectedForPersonal = ref(new Set())
+const bulkProcessing = ref(false)
+
+function togglePersonalSelection(txId) {
+  if (selectedForPersonal.value.has(txId)) {
+    selectedForPersonal.value.delete(txId)
+  } else {
+    selectedForPersonal.value.add(txId)
+  }
+}
+
+function bulkMarkAsPersonal() {
+  if (bulkProcessing.value || selectedForPersonal.value.size === 0) return
+  bulkProcessing.value = true
+  router.post(`/reconciliation/${props.bankAccount.id}/bulk-personal`, {
+    transaction_ids: Array.from(selectedForPersonal.value),
+  }, {
+    onFinish: () => {
+      bulkProcessing.value = false
+      selectedForPersonal.value.clear()
+    },
+  })
+}
+
+// Triage summary for mixed-use accounts
+const triageSummary = computed(() => {
+  if (!props.bankAccount.is_mixed_use || !props.transactions?.data) return null
+  const all = props.transactions.data
+  return {
+    unclassified: all.filter(tx => !tx.is_reconciled).length,
+    personal: all.filter(tx => tx.is_personal === true).length,
+    business: all.filter(tx => tx.is_reconciled && tx.is_personal === false).length,
+  }
+})
+
 function changeFilter(newFilter) {
   router.get(`/reconciliation/${props.bankAccount.id}`, { filter: newFilter }, { preserveState: true })
 }
@@ -170,6 +218,7 @@ const currentSuggestions = computed(() => {
       <div class="flex items-center gap-3">
         <Button as="a" href="/reconciliation" variant="outline" size="sm">← {{ t('back') }}</Button>
         <h2 class="text-xl font-semibold">{{ bankAccount.name }}</h2>
+        <Badge v-if="bankAccount.is_mixed_use" variant="outline">{{ t('mixed') }}</Badge>
         <Badge variant="secondary">{{ formatCurrency(bankAccount.balance, bankAccount.currency) }}</Badge>
       </div>
       <div class="flex items-center gap-2">
@@ -195,6 +244,21 @@ const currentSuggestions = computed(() => {
       >
         {{ t(f) || f.charAt(0).toUpperCase() + f.slice(1) }}
       </Button>
+    </div>
+
+    <!-- Triage summary for mixed-use accounts -->
+    <div v-if="triageSummary" class="mb-4 flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-2 text-sm">
+      <span>{{ triageSummary.unclassified }} {{ t('unclassified') }}</span>
+      <span class="text-muted-foreground">|</span>
+      <span class="text-purple-600 dark:text-purple-400">{{ triageSummary.personal }} {{ t('personal') }}</span>
+      <span class="text-muted-foreground">|</span>
+      <span class="text-green-600 dark:text-green-400">{{ triageSummary.business }} {{ t('business') }}</span>
+      <div v-if="selectedForPersonal.size > 0" class="ml-auto">
+        <Button size="sm" variant="outline" :disabled="bulkProcessing" @click="bulkMarkAsPersonal">
+          <UserX class="mr-1 h-3 w-3" />
+          {{ t('mark_personal') }} ({{ selectedForPersonal.size }})
+        </Button>
+      </div>
     </div>
 
     <!-- Transactions list -->
@@ -230,6 +294,9 @@ const currentSuggestions = computed(() => {
                 <Badge v-if="tx.is_reconciled" variant="outline" class="text-green-600">
                   <Check class="mr-1 h-3 w-3" /> {{ t('reconciled') }}
                 </Badge>
+                <Badge v-if="tx.is_personal" variant="outline" class="text-purple-600">
+                  {{ t('personal') }}
+                </Badge>
               </div>
               <p class="text-sm font-medium truncate">{{ tx.description || '—' }}</p>
               <div class="flex gap-3 mt-1 text-xs text-muted-foreground">
@@ -248,7 +315,17 @@ const currentSuggestions = computed(() => {
               </div>
 
               <!-- Quick suggestions for unreconciled -->
-              <div v-if="!tx.is_reconciled && suggestions[tx.id]" class="mt-2 flex flex-wrap gap-1">
+              <div v-if="!tx.is_reconciled && (suggestions[tx.id] || (bankAccount.is_mixed_use && personalSuggestions.includes(tx.id)))" class="mt-2 flex flex-wrap gap-1">
+                <!-- Personal suggestion badge -->
+                <button
+                  v-if="bankAccount.is_mixed_use && personalSuggestions.includes(tx.id)"
+                  class="inline-flex items-center gap-1 rounded-md border border-purple-300 bg-purple-50 px-2 py-0.5 text-xs text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300"
+                  :disabled="markingPersonal === tx.id"
+                  @click="markAsPersonal(tx.id)"
+                >
+                  <UserX class="h-3 w-3" />
+                  {{ t('personal') }}?
+                </button>
                 <template v-if="suggestions[tx.id].invoices?.length">
                   <button
                     v-for="inv in suggestions[tx.id].invoices.slice(0, 3)"
@@ -291,6 +368,24 @@ const currentSuggestions = computed(() => {
               ]">
                 {{ tx.type === 'credit' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
               </span>
+              <template v-if="!tx.is_reconciled && bankAccount.is_mixed_use">
+                <input
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-[hsl(var(--input))]"
+                  :checked="selectedForPersonal.has(tx.id)"
+                  @change="togglePersonalSelection(tx.id)"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="text-purple-600 border-purple-300 hover:bg-purple-50 dark:text-purple-400 dark:border-purple-700 dark:hover:bg-purple-950"
+                  :disabled="markingPersonal === tx.id"
+                  @click="markAsPersonal(tx.id)"
+                >
+                  <UserX class="mr-1 h-3 w-3" />
+                  {{ t('personal') }}
+                </Button>
+              </template>
               <Button
                 v-if="!tx.is_reconciled"
                 size="sm"
@@ -307,7 +402,7 @@ const currentSuggestions = computed(() => {
 
     <!-- Upload Modal -->
     <Modal :show="showUploadModal" @close="showUploadModal = false" :title="t('import_bank_statement')">
-      <form class="space-y-4" @submit.prevent="submitUpload">
+      <form class="space-y-6" @submit.prevent="submitUpload">
         <p class="text-sm text-muted-foreground">
           {{ t('import_bank_desc') }}
         </p>

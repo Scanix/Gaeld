@@ -116,7 +116,7 @@ function submitForm() {
     </Card>
 
     <Modal :open="showForm" :title="t('tax_declaration')" @close="showForm = false">
-      <form class="space-y-4" @submit.prevent="submitForm">
+      <form class="space-y-6" @submit.prevent="submitForm">
         <FormInput
           id="fiscal_year"
           v-model="form.fiscal_year"

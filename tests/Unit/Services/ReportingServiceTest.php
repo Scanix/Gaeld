@@ -61,11 +61,17 @@ class ReportingServiceTest extends TestCase
         $asset = $this->makeAccount('1020', 'Bank', AccountType::Asset);
         $liability = $this->makeAccount('2000', 'Payables', AccountType::Liability);
         $equity = $this->makeAccount('2800', 'Equity', AccountType::Equity);
+        $revenue = $this->makeAccount('3000', 'Revenue', AccountType::Revenue);
+        $expense = $this->makeAccount('6530', 'Software', AccountType::Expense);
 
         $ledgerService = Mockery::mock(LedgerService::class);
+        // Balance sheet accounts (cumulative since inception)
         $ledgerService->shouldReceive('accountBalance')->once()->with($asset->id, null, '2026-03-31')->andReturn('1500.00');
         $ledgerService->shouldReceive('accountBalance')->once()->with($liability->id, null, '2026-03-31')->andReturn('600.00');
-        $ledgerService->shouldReceive('accountBalance')->once()->with($equity->id, null, '2026-03-31')->andReturn('900.00');
+        $ledgerService->shouldReceive('accountBalance')->once()->with($equity->id, null, '2026-03-31')->andReturn('500.00');
+        // P&L accounts for current year result (fiscal year starts 2026-01-01)
+        $ledgerService->shouldReceive('accountBalance')->once()->with($revenue->id, '2026-01-01', '2026-03-31')->andReturn('800.00');
+        $ledgerService->shouldReceive('accountBalance')->once()->with($expense->id, '2026-01-01', '2026-03-31')->andReturn('400.00');
 
         $service = new ReportingService($ledgerService);
 
@@ -74,8 +80,20 @@ class ReportingServiceTest extends TestCase
         $this->assertSame('2026-03-31', $report['as_of_date']);
         $this->assertEquals('1500.00', $report['assets']['total']);
         $this->assertEquals('600.00', $report['liabilities']['total']);
+        // Equity total = 500 (equity accounts) + 400 (current year result: 800 rev - 400 exp)
         $this->assertEquals('900.00', $report['equity']['total']);
         $this->assertSame('1020', $report['assets']['accounts'][0]['code']);
+
+        // The current year result row should be present in equity accounts
+        $equityCodes = array_column($report['equity']['accounts'], 'code');
+        $this->assertContains('2990', $equityCodes);
+        $this->assertContains('2800', $equityCodes);
+
+        // Accounting equation: Assets = Liabilities + Equity
+        $this->assertSame(
+            bcadd($report['liabilities']['total'], $report['equity']['total'], 2),
+            bcadd($report['assets']['total'], '0', 2),
+        );
     }
 
     public function test_profit_and_loss_without_comparison_returns_null_comparison(): void

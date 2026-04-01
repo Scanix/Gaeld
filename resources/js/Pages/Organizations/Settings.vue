@@ -9,6 +9,7 @@ import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { Upload, Trash2, Plus } from 'lucide-vue-next'
@@ -197,7 +198,7 @@ const cantonOptions = [
             <CardDescription>{{ t('settings_general_desc') }}</CardDescription>
           </CardHeader>
           <CardContent>
-            <form class="space-y-4" @submit.prevent="submitGeneral">
+            <form class="space-y-6" @submit.prevent="submitGeneral">
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormInput
                   id="name"
@@ -366,30 +367,22 @@ const cantonOptions = [
             <CardDescription>{{ t('settings_invoice_texts_desc') }}</CardDescription>
           </CardHeader>
           <CardContent>
-            <form class="space-y-4" @submit.prevent="submitInvoice">
-              <div>
-                <label for="invoice_header_text" class="mb-1 block text-sm font-medium">{{ t('settings_invoice_header') }}</label>
-                <textarea
-                  id="invoice_header_text"
-                  v-model="invoiceForm.invoice_header_text"
-                  rows="3"
-                  :placeholder="t('settings_invoice_header_placeholder')"
-                  class="flex w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
-                />
-                <p v-if="invoiceForm.errors.invoice_header_text" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ invoiceForm.errors.invoice_header_text }}</p>
-              </div>
+            <form class="space-y-6" @submit.prevent="submitInvoice">
+              <FormTextarea
+                id="invoice_header_text"
+                v-model="invoiceForm.invoice_header_text"
+                :label="t('settings_invoice_header')"
+                :placeholder="t('settings_invoice_header_placeholder')"
+                :error="invoiceForm.errors.invoice_header_text"
+              />
 
-              <div>
-                <label for="invoice_footer_text" class="mb-1 block text-sm font-medium">{{ t('settings_invoice_footer') }}</label>
-                <textarea
-                  id="invoice_footer_text"
-                  v-model="invoiceForm.invoice_footer_text"
-                  rows="3"
-                  :placeholder="t('settings_invoice_footer_placeholder')"
-                  class="flex w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
-                />
-                <p v-if="invoiceForm.errors.invoice_footer_text" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ invoiceForm.errors.invoice_footer_text }}</p>
-              </div>
+              <FormTextarea
+                id="invoice_footer_text"
+                v-model="invoiceForm.invoice_footer_text"
+                :label="t('settings_invoice_footer')"
+                :placeholder="t('settings_invoice_footer_placeholder')"
+                :error="invoiceForm.errors.invoice_footer_text"
+              />
 
               <FormInput
                 id="qr_iban"
@@ -417,7 +410,7 @@ const cantonOptions = [
             <CardDescription>{{ t('settings_comms_desc') }}</CardDescription>
           </CardHeader>
           <CardContent>
-            <form class="space-y-4" @submit.prevent="submitCommunications">
+            <form class="space-y-6" @submit.prevent="submitCommunications">
               <FormInput
                 id="invoice_email_subject"
                 v-model="commsForm.invoice_email_subject"
@@ -426,17 +419,14 @@ const cantonOptions = [
                 :placeholder="t('settings_email_subject_placeholder')"
               />
 
-              <div>
-                <label for="invoice_email_body" class="mb-1 block text-sm font-medium">{{ t('settings_email_body') }}</label>
-                <textarea
-                  id="invoice_email_body"
-                  v-model="commsForm.invoice_email_body"
-                  rows="6"
-                  :placeholder="t('settings_email_body_placeholder')"
-                  class="flex w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
-                />
-                <p v-if="commsForm.errors.invoice_email_body" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ commsForm.errors.invoice_email_body }}</p>
-              </div>
+              <FormTextarea
+                id="invoice_email_body"
+                v-model="commsForm.invoice_email_body"
+                :label="t('settings_email_body')"
+                :rows="6"
+                :placeholder="t('settings_email_body_placeholder')"
+                :error="commsForm.errors.invoice_email_body"
+              />
 
               <div class="rounded-md bg-[hsl(var(--muted))] p-3">
                 <p class="text-xs font-medium text-[hsl(var(--muted-foreground))]">{{ t('settings_email_placeholders_title') }}</p>
