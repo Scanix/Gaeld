@@ -6,32 +6,18 @@ use App\Domains\Migration\Enums\ImportStatus;
 use App\Domains\Migration\Enums\Platform;
 use App\Domains\Migration\Models\MigrationSession;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class MigrationControllerTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private User $user;
-
-    private Organization $organization;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->organization = Organization::create([
-            'name' => 'Migration Controller Org',
-            'currency' => 'CHF',
-        ]);
-        $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
+        $this->setUpOrganization();
     }
 
     // ────────────────────────────────────────────────
@@ -45,7 +31,7 @@ class MigrationControllerTest extends TestCase
 
     public function test_index_returns_migration_page(): void
     {
-        $response = $this->asCurrentOrg()->get('/migration');
+        $response = $this->actAsOrg()->get('/migration');
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -61,7 +47,7 @@ class MigrationControllerTest extends TestCase
 
     public function test_store_creates_migration_session(): void
     {
-        $response = $this->asCurrentOrg()->post('/migration', [
+        $response = $this->actAsOrg()->post('/migration', [
             'platform' => 'bexio',
         ]);
 
@@ -76,7 +62,7 @@ class MigrationControllerTest extends TestCase
 
     public function test_store_validates_platform(): void
     {
-        $response = $this->asCurrentOrg()->post('/migration', [
+        $response = $this->actAsOrg()->post('/migration', [
             'platform' => 'nonexistent',
         ]);
 
@@ -99,7 +85,7 @@ class MigrationControllerTest extends TestCase
             'created_by' => $this->user->id,
         ]);
 
-        $response = $this->asCurrentOrg()->get("/migration/{$session->id}");
+        $response = $this->actAsOrg()->get("/migration/{$session->id}");
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -123,9 +109,9 @@ class MigrationControllerTest extends TestCase
             'created_by' => $this->user->id,
         ]);
 
-        $response = $this->asCurrentOrg()->get("/migration/{$session->id}");
+        $response = $this->actAsOrg()->get("/migration/{$session->id}");
 
-        $response->assertStatus(403);
+        $response->assertStatus(404);
     }
 
     // ────────────────────────────────────────────────
@@ -144,7 +130,7 @@ class MigrationControllerTest extends TestCase
             'created_by' => $this->user->id,
         ]);
 
-        $response = $this->asCurrentOrg()->delete("/migration/{$session->id}");
+        $response = $this->actAsOrg()->delete("/migration/{$session->id}");
 
         $response->assertRedirect('/migration');
         $this->assertDatabaseMissing('migration_sessions', ['id' => $session->id]);
@@ -163,9 +149,9 @@ class MigrationControllerTest extends TestCase
             'created_by' => $this->user->id,
         ]);
 
-        $response = $this->asCurrentOrg()->delete("/migration/{$session->id}");
+        $response = $this->actAsOrg()->delete("/migration/{$session->id}");
 
-        $response->assertStatus(403);
+        $response->assertStatus(404);
     }
 
     // ────────────────────────────────────────────────
@@ -184,7 +170,7 @@ class MigrationControllerTest extends TestCase
             'created_by' => $this->user->id,
         ]);
 
-        $response = $this->asCurrentOrg()->post("/migration/{$session->id}/upload", [
+        $response = $this->actAsOrg()->post("/migration/{$session->id}/upload", [
             'data_type' => 'accounts',
         ]);
 
@@ -207,7 +193,7 @@ class MigrationControllerTest extends TestCase
             'created_by' => $this->user->id,
         ]);
 
-        $response = $this->asCurrentOrg()->post("/migration/{$session->id}/execute", []);
+        $response = $this->actAsOrg()->post("/migration/{$session->id}/execute", []);
 
         $response->assertSessionHasErrors('data_types');
     }
@@ -315,12 +301,5 @@ class MigrationControllerTest extends TestCase
 
         $session->refresh();
         $this->assertCount(3, $session->errors['accounts']);
-    }
-
-    private function asCurrentOrg(): self
-    {
-        return $this->actingAs($this->user)->withSession([
-            'current_organization_id' => $this->organization->id,
-        ]);
     }
 }

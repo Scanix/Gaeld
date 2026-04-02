@@ -5,24 +5,18 @@ namespace Tests\Feature\Payroll;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
-use App\Domains\Organizations\Models\Organization;
 use App\Domains\Payroll\Actions\PostPayrollAction;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Payroll\Services\PayrollCalculator;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class PayrollFlowTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private Organization $org;
-
-    private User $user;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private Employee $employee;
 
@@ -30,15 +24,7 @@ class PayrollFlowTest extends TestCase
     {
         parent::setUp();
 
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->org = Organization::create([
-            'name' => 'Test GmbH',
-            'currency' => 'CHF',
-        ]);
-        $this->org->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->org, 'owner');
+        $this->setUpOrganization();
 
         // Create required accounts
         foreach ([

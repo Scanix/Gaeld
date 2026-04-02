@@ -10,20 +10,14 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Accounting\Services\VatReportService;
-use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class VatReportTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private User $user;
-
-    private Organization $organization;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private VatRate $vatRate;
 
@@ -31,17 +25,9 @@ class VatReportTest extends TestCase
     {
         parent::setUp();
 
-        $this->seedPermissions();
-
         Carbon::setTestNow('2026-03-20 12:00:00');
 
-        $this->user = User::factory()->create();
-        $this->organization = Organization::create([
-            'name' => 'VAT Test Org',
-            'currency' => 'CHF',
-        ]);
-        $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
+        $this->setUpOrganization();
 
         // Chart of accounts required for VAT settlement
         Account::create(['organization_id' => $this->organization->id, 'code' => '1020', 'name' => 'Bank', 'type' => AccountType::Asset->value]);

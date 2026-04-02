@@ -11,21 +11,15 @@ use App\Domains\Assets\Actions\DisposeAssetAction;
 use App\Domains\Assets\Enums\DepreciationMethod;
 use App\Domains\Assets\Jobs\MonthlyDepreciationJob;
 use App\Domains\Assets\Models\FixedAsset;
-use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class FixedAssetFlowTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private Organization $org;
-
-    private User $user;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private Account $assetAccount;
 
@@ -43,15 +37,7 @@ class FixedAssetFlowTest extends TestCase
     {
         parent::setUp();
 
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->org = Organization::create([
-            'name' => 'Test GmbH',
-            'currency' => 'CHF',
-        ]);
-        $this->org->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->org, 'owner');
+        $this->setUpOrganization();
 
         $this->assetAccount = Account::create([
             'organization_id' => $this->org->id,

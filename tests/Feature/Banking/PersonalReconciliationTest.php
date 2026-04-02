@@ -6,25 +6,19 @@ use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Enums\BankTransactionType;
+use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Models\PersonalTransactionPattern;
 use App\Domains\Banking\Services\PersonalPatternService;
 use App\Domains\Banking\Services\ReconciliationService;
-use App\Domains\Organizations\Models\Organization;
-use App\Domains\Organizations\Services\CurrentOrganization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class PersonalReconciliationTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private Organization $organization;
-
-    private User $user;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private BankAccount $bankAccount;
 
@@ -33,18 +27,7 @@ class PersonalReconciliationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->organization = Organization::create([
-            'name' => 'Freelancer Org',
-            'currency' => 'CHF',
-        ]);
-        $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
-
-        app(CurrentOrganization::class)->set($this->organization);
+        $this->setUpOrganization();
 
         $this->accounts['bank'] = Account::create([
             'organization_id' => $this->organization->id,
@@ -177,7 +160,7 @@ class PersonalReconciliationTest extends TestCase
 
         $service = app(ReconciliationService::class);
 
-        $this->expectException(\App\Domains\Banking\Exceptions\AlreadyReconciledException::class);
+        $this->expectException(AlreadyReconciledException::class);
         $service->reconcileAsPersonal($transaction);
     }
 

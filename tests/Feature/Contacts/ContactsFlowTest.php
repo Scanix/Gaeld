@@ -9,33 +9,19 @@ use App\Domains\Contacts\DTOs\UpdateSupplierData;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Organizations\Services\CurrentOrganization;
-use App\Domains\Users\Models\User;
 use App\Support\AddressData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class ContactsFlowTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private Organization $org;
-
-    private User $user;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->org = Organization::create(['name' => 'Test GmbH', 'currency' => 'CHF']);
-        $this->org->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->org, 'owner');
-
-        app(CurrentOrganization::class)->set($this->org);
+        $this->setUpOrganization();
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -224,7 +210,6 @@ class ContactsFlowTest extends TestCase
     public function test_customer_index_returns_inertia_response(): void
     {
         $this->actingAs($this->user);
-        $this->setCurrentOrgMiddleware();
 
         $response = $this->get('/customers');
 
@@ -235,7 +220,6 @@ class ContactsFlowTest extends TestCase
     public function test_customer_store_creates_record_and_redirects(): void
     {
         $this->actingAs($this->user);
-        $this->setCurrentOrgMiddleware();
 
         $response = $this->post('/customers', [
             'name' => 'HTTP Customer',
@@ -251,7 +235,6 @@ class ContactsFlowTest extends TestCase
     public function test_customer_destroy_soft_deletes(): void
     {
         $this->actingAs($this->user);
-        $this->setCurrentOrgMiddleware();
 
         $customer = Customer::create([
             'organization_id' => $this->org->id,
@@ -269,7 +252,6 @@ class ContactsFlowTest extends TestCase
     public function test_supplier_store_creates_record_and_redirects(): void
     {
         $this->actingAs($this->user);
-        $this->setCurrentOrgMiddleware();
 
         $response = $this->post('/suppliers', [
             'name' => 'HTTP Supplier',
@@ -281,10 +263,5 @@ class ContactsFlowTest extends TestCase
 
         $response->assertStatus(302);
         $this->assertDatabaseHas('suppliers', ['name' => 'HTTP Supplier']);
-    }
-
-    private function setCurrentOrgMiddleware(): void
-    {
-        app(CurrentOrganization::class)->set($this->org);
     }
 }

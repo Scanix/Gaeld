@@ -5,14 +5,9 @@ namespace Tests\Unit\Migration;
 use App\Domains\Migration\Contracts\AccountMapperInterface;
 use App\Domains\Migration\Contracts\DataTypeImporterInterface;
 use App\Domains\Migration\Contracts\PlatformParserInterface;
-use App\Domains\Migration\DTOs\ImportResult;
-use App\Domains\Migration\DTOs\ValidationResult;
 use App\Domains\Migration\Enums\DataType;
 use App\Domains\Migration\Enums\Platform;
 use App\Domains\Migration\Services\MigrationRegistry;
-use App\Domains\Organizations\Models\Organization;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
 
 class MigrationRegistryTest extends TestCase

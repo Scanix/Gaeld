@@ -2,24 +2,17 @@
 
 namespace Tests\Feature\Accounting;
 
-use App\Domains\Accounting\DTOs\JournalEntryData;
-use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\CreatesAccountingFixtures;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class AccountingHttpFlowTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private User $user;
-
-    private Organization $organization;
+    use CreatesAccountingFixtures, RefreshDatabase, WithAuthenticatedOrganization;
 
     private Account $bankAccount;
 
@@ -28,16 +21,7 @@ class AccountingHttpFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->organization = Organization::create([
-            'name' => 'Accounting HTTP Org',
-            'currency' => 'CHF',
-        ]);
-        $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
+        $this->setUpOrganization();
 
         $this->bankAccount = Account::create([
             'organization_id' => $this->organization->id,
@@ -71,7 +55,7 @@ class AccountingHttpFlowTest extends TestCase
             'type' => AccountType::Asset->value,
         ]);
 
-        $response = $this->asCurrentOrg()->get('/accounting/chart-of-accounts');
+        $response = $this->actAsOrg()->get('/accounting/chart-of-accounts');
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -83,7 +67,7 @@ class AccountingHttpFlowTest extends TestCase
     {
         $this->postSampleEntry();
 
-        $response = $this->asCurrentOrg()->get('/accounting/journal-entries');
+        $response = $this->actAsOrg()->get('/accounting/journal-entries');
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -95,7 +79,7 @@ class AccountingHttpFlowTest extends TestCase
     {
         $this->postSampleEntry();
 
-        $response = $this->asCurrentOrg()->get('/accounting/trial-balance?as_of_date=2026-03-31');
+        $response = $this->actAsOrg()->get('/accounting/trial-balance?as_of_date=2026-03-31');
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -110,21 +94,9 @@ class AccountingHttpFlowTest extends TestCase
 
     private function postSampleEntry(): void
     {
-        app(LedgerService::class)->postEntry($this->organization->id, new JournalEntryData(
-            date: '2026-03-15',
-            reference: 'TB-1',
-            description: 'Trial balance sample',
-            lines: [
-                new JournalLineData(accountId: $this->bankAccount->id, debit: '500.00', credit: '0.00', description: 'Bank'),
-                new JournalLineData(accountId: $this->revenueAccount->id, debit: '0.00', credit: '500.00', description: 'Revenue'),
-            ],
-        ));
-    }
-
-    private function asCurrentOrg(): self
-    {
-        return $this->actingAs($this->user)->withSession([
-            'current_organization_id' => $this->organization->id,
-        ]);
+        $this->postJournalEntry('2026-03-15', [
+            $this->journalLine($this->bankAccount, '500.00', '0.00', 'Bank'),
+            $this->journalLine($this->revenueAccount, '0.00', '500.00', 'Revenue'),
+        ], 'TB-1', 'Trial balance sample');
     }
 }

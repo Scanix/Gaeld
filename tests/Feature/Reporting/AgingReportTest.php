@@ -7,21 +7,15 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Organizations\Models\Organization;
 use App\Domains\Reporting\Services\AgingReportService;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class AgingReportTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private User $user;
-
-    private Organization $organization;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private Customer $customer;
 
@@ -29,17 +23,9 @@ class AgingReportTest extends TestCase
     {
         parent::setUp();
 
-        $this->seedPermissions();
-
         Carbon::setTestNow('2026-03-20 12:00:00');
 
-        $this->user = User::factory()->create();
-        $this->organization = Organization::create([
-            'name' => 'Aging Test Org',
-            'currency' => 'CHF',
-        ]);
-        $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
+        $this->setUpOrganization();
 
         $this->customer = Customer::create([
             'organization_id' => $this->organization->id,
