@@ -7,26 +7,31 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "@inertiajs/vue3": "^2.3.18",
-        "@tailwindcss/vite": "^4.2.1",
+        "@inertiajs/vue3": "^3.0.1",
+        "@tailwindcss/vite": "^4.2.2",
         "@vitejs/plugin-vue": "^6.0.5",
-        "autoprefixer": "^10.4",
-        "laravel-vite-plugin": "^2.1.0",
-        "postcss": "^8.4",
-        "tailwindcss": "^4.2.1",
-        "vite": "^7.3.1"
+        "autoprefixer": "^10.4.27",
+        "laravel-vite-plugin": "^3.0.1",
+        "postcss": "^8.5.8",
+        "tailwindcss": "^4.2.2",
+        "vite": "^8.0.3"
     },
     "dependencies": {
         "@simplewebauthn/browser": "^13.3.0",
         "chart.js": "^4.5.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
-        "lucide-vue-next": "^0.577.0",
+        "lucide-vue-next": "^1.0.0",
         "maska": "^3.2.0",
         "tailwind-merge": "^3.5.0",
         "vanilla-cookieconsent": "^3.1.0",
-        "vue": "^3.5.30",
+        "vue": "^3.5.31",
         "vue-chartjs": "^5.3.3",
         "zod": "^4.3.6"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "esbuild"
+        ]
     }
 }
