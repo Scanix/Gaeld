@@ -8,6 +8,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\DTOs\CreateBankAccountData;
 use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Models\BankAccount;
+use App\Domains\Banking\Queries\BankAccountQuery;
 use App\Domains\Banking\Requests\RecordTransactionRequest;
 use App\Domains\Banking\Requests\StoreBankAccountRequest;
 use App\Domains\Banking\Requests\UpdateBankAccountRequest;
@@ -24,18 +25,13 @@ use Inertia\Response;
  */
 class BankingController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', BankAccount::class);
 
-        $bankAccounts = BankAccount::with('ledgerAccount')
-            ->orderBy('name')
-            ->paginate(25)
-            ->withQueryString();
-
         return Inertia::render('Banking/Index', [
-            'bankAccounts' => $bankAccounts,
-            'accounts' => Account::where('organization_id', app(CurrentOrganization::class)->id())
+            'bankAccounts' => BankAccountQuery::list($request),
+            'accounts' => Account::where('organization_id', $currentOrg->id())
                 ->where('is_active', true)
                 ->select('id', 'code', 'name')
                 ->orderBy('code')

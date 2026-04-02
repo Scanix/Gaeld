@@ -6,6 +6,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,7 +43,7 @@ use Illuminate\Support\Carbon;
  */
 class BankTransaction extends Model
 {
-    use HasFactory;
+    use Auditable, HasFactory;
 
     protected $fillable = [
         'bank_account_id',

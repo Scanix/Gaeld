@@ -5,7 +5,6 @@ namespace App\Domains\Migration\Services;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
-use App\Domains\Migration\Contracts\AccountMapperInterface;
 use App\Domains\Migration\Contracts\ImportRowInterface;
 use App\Domains\Migration\DTOs\ImportResult;
 use App\Domains\Migration\DTOs\ParseResult;
@@ -31,6 +30,10 @@ class MigrationOrchestrator
     public function __construct(
         private readonly MigrationRegistry $registry,
     ) {}
+
+    // ──────────────────────────────────────────────────────────────
+    //  Pipeline
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Start a new migration session.
@@ -99,6 +102,10 @@ class MigrationOrchestrator
             accountMappings: $accountMappings,
         );
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Import Execution
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Execute the import for a single data type.
@@ -182,6 +189,10 @@ class MigrationOrchestrator
         return $results;
     }
 
+    // ──────────────────────────────────────────────────────────────
+    //  Helpers
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Suggest account mappings for rows that reference external account codes.
      *
@@ -239,6 +250,10 @@ class MigrationOrchestrator
             DataType::FixedAssets,
         ], true);
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Rollback
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Reverse (undo) a completed migration session by deleting all imported records.

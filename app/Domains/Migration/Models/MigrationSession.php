@@ -22,10 +22,10 @@ use Illuminate\Support\Carbon;
  * @property string $organization_id
  * @property Platform $platform
  * @property ImportStatus $status
- * @property array<string, string> $data_types_status  Per-type ImportStatus values
- * @property array<string, int> $imported_counts  Per-type imported row counts
- * @property array<string, string[]> $imported_record_ids  Per-type created record IDs
- * @property array<string, string[]> $errors  Per-type error arrays
+ * @property array<string, string> $data_types_status Per-type ImportStatus values
+ * @property array<string, int> $imported_counts Per-type imported row counts
+ * @property array<string, string[]> $imported_record_ids Per-type created record IDs
+ * @property array<string, string[]> $errors Per-type error arrays
  * @property int $created_by
  * @property Carbon|null $completed_at
  * @property Carbon|null $created_at

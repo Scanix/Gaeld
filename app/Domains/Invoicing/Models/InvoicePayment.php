@@ -4,6 +4,7 @@ namespace App\Domains\Invoicing\Models;
 
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Invoicing\Enums\PaymentMethod;
+use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +24,7 @@ use Illuminate\Support\Carbon;
  */
 class InvoicePayment extends Model
 {
-    use HasFactory, HasUuids;
+    use Auditable, HasFactory, HasUuids;
 
     protected $fillable = [
         'invoice_id',

@@ -274,7 +274,7 @@ class AccountingExportService
         );
 
         foreach ($iterator as $file) {
-            $relativePath = str_replace($sourceDir.'/', '', $file->getRealPath());
+            $relativePath = $iterator->getSubPathname();
             $zip->addFile($file->getRealPath(), $relativePath);
         }
 

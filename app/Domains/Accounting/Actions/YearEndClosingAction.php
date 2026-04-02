@@ -9,6 +9,7 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Performs fiscal year-end closing: transfers P&L balances to equity
@@ -95,5 +96,14 @@ class YearEndClosingAction
 
         // Generate opening balance entries for the next fiscal year
         $this->openingBalances->execute($orgId, $year);
+
+        Log::info('Year-end closing completed', [
+            'organization_id' => $orgId,
+            'fiscal_year' => $year,
+            'closing_date' => $closingDate,
+            'reference' => $reference,
+            'revenue_accounts_closed' => count($income),
+            'expense_accounts_closed' => count($expenses),
+        ]);
     }
 }

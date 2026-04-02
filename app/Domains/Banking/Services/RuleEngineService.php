@@ -39,6 +39,10 @@ class RuleEngineService
         $this->rules = [$qrRule, $supplierRule, $recurringRule];
     }
 
+    // ──────────────────────────────────────────────────────────────
+    //  Rule Evaluation
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Run all rules against a transaction.
      *
@@ -91,6 +95,10 @@ class RuleEngineService
 
         return $ruleMatches->sortByDesc('confidence')->values();
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Bulk Processing
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Run the rule engine on all unreconciled transactions for an organization.

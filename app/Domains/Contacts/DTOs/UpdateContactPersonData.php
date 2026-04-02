@@ -2,14 +2,14 @@
 
 namespace App\Domains\Contacts\DTOs;
 
-use App\Support\MapsToSnakeCase;
+use App\Support\OmitsNullValues;
 
 /**
  * DTO for updating an existing contact person's details.
  */
 readonly class UpdateContactPersonData
 {
-    use MapsToSnakeCase;
+    use OmitsNullValues;
 
     public function __construct(
         public string $firstName,

@@ -4,7 +4,6 @@ namespace App\Domains\Migration\Importers;
 
 use App\Domains\Assets\Models\FixedAsset;
 use App\Domains\Migration\Contracts\DataTypeImporterInterface;
-use App\Domains\Migration\Contracts\ImportRowInterface;
 use App\Domains\Migration\DTOs\FixedAssetImportRow;
 use App\Domains\Migration\DTOs\ImportResult;
 use App\Domains\Migration\DTOs\ValidationResult;

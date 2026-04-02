@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\DB;
  */
 class LettrageService
 {
+    // ──────────────────────────────────────────────────────────────
+    //  Lettering
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Letter a set of transaction lines on the given account.
      *
@@ -90,6 +94,10 @@ class LettrageService
         });
     }
 
+    // ──────────────────────────────────────────────────────────────
+    //  Queries
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Get all unlettered transaction lines for the given account.
      */
@@ -105,6 +113,10 @@ class LettrageService
 
         return $query->orderBy('id')->get();
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Helpers
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Determine the next available letter key for an account.

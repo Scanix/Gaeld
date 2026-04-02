@@ -36,12 +36,12 @@ class CustomerApiController extends Controller
         return new CustomerResource($customer);
     }
 
-    public function store(StoreCustomerApiRequest $request): JsonResponse
+    public function store(StoreCustomerApiRequest $request, CurrentOrganization $currentOrg): JsonResponse
     {
         $this->authorize('create', Customer::class);
 
         $validated = $request->validated();
-        $validated['organization_id'] = app(CurrentOrganization::class)->id();
+        $validated['organization_id'] = $currentOrg->id();
 
         $customer = Customer::create(
             CreateCustomerData::fromArray($validated)->toArray()

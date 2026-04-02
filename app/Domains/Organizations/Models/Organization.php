@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Multi-tenant organization (company / business entity).
@@ -20,6 +21,25 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Every domain model is scoped to an organization via `organization_id`.
  * Stores company details (legal name, address, VAT), default currency,
  * locale, fiscal year start, and QR-IBAN for Swiss QR invoices.
+ *
+ * @property string $id
+ * @property string $name
+ * @property string|null $legal_name
+ * @property string|null $address
+ * @property string|null $city
+ * @property string|null $postal_code
+ * @property string|null $canton
+ * @property string|null $country
+ * @property string|null $vat_number
+ * @property string|null $qr_iban
+ * @property string $currency
+ * @property int|null $fiscal_year_start
+ * @property array<int, int>|null $closed_fiscal_years
+ * @property string|null $locale
+ * @property bool $require_two_factor
+ * @property int|null $default_payment_terms_days
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class Organization extends Model
 {

@@ -4,6 +4,7 @@ namespace App\Domains\Banking\Models;
 
 use App\Domains\Banking\Enums\CamtFormat;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -29,7 +30,7 @@ use Illuminate\Support\Carbon;
  */
 class BankImport extends Model
 {
-    use BelongsToOrganization, HasUuids;
+    use Auditable, BelongsToOrganization, HasUuids;
 
     protected $fillable = [
         'organization_id',

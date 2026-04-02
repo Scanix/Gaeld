@@ -39,6 +39,7 @@ use Laravel\Scout\Searchable;
  * @property string $currency
  * @property ExpenseType $type
  * @property int|null $supplier_id
+ * @property string|null $payment_method
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at

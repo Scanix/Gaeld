@@ -19,6 +19,10 @@ class LegalArchivingService
 {
     private const RETENTION_YEARS = 10;
 
+    // ──────────────────────────────────────────────────────────────
+    //  Single Document Archiving
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Archive a single document (invoice, expense, journal_entry, salary_slip).
      *
@@ -41,6 +45,9 @@ class LegalArchivingService
         }
 
         $payload = json_encode($document->toArray(), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        if ($payload === false) {
+            throw new \RuntimeException('Failed to encode document for archiving');
+        }
         $checksum = hash('sha256', $payload);
 
         $relativePath = "archives/{$orgId}/{$year}/{$documentType}/{$id}.json";
@@ -69,6 +76,10 @@ class LegalArchivingService
         );
     }
 
+    // ──────────────────────────────────────────────────────────────
+    //  Integrity Verification
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Re-compute the SHA-256 hash and compare with the stored checksum.
      */
@@ -88,6 +99,10 @@ class LegalArchivingService
 
         return $ok;
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Bulk Archiving
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Archive all relevant documents for a closed fiscal year.

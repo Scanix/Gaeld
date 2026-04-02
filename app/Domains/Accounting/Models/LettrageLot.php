@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Models;
 
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,7 @@ use Illuminate\Support\Carbon;
  */
 class LettrageLot extends Model
 {
-    use BelongsToOrganization;
+    use Auditable, BelongsToOrganization;
 
     protected $table = 'lettrage_lots';
 
@@ -46,13 +47,13 @@ class LettrageLot extends Model
         ];
     }
 
-    public function account(): BelongsTo
-    {
-        return $this->belongsTo(Account::class);
-    }
-
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
     }
 }

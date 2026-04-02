@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Models;
 
+use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,13 +11,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Single debit or credit line within a {@see JournalEntry}.
  *
  * @property int $id
+ * @property int $journal_entry_id
+ * @property int $account_id
  * @property string $debit
  * @property string $credit
  * @property string|null $description
  */
 class TransactionLine extends Model
 {
-    use HasFactory;
+    use Auditable, HasFactory;
 
     protected $fillable = [
         'journal_entry_id',

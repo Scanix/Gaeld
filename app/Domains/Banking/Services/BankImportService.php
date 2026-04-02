@@ -22,6 +22,10 @@ class BankImportService
     /** Delimiter used to separate fields in the deduplication hash input. */
     private const HASH_DELIMITER = '|';
 
+    // ──────────────────────────────────────────────────────────────
+    //  Public Import API
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Import a CAMT file and create bank transactions.
      *
@@ -133,6 +137,10 @@ class BankImportService
         );
     }
 
+    // ──────────────────────────────────────────────────────────────
+    //  Persistence
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Persist parsed entries as bank transactions.
      *
@@ -191,6 +199,10 @@ class BankImportService
             return $import->load('transactions');
         });
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Helpers
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Detect CAMT format from XML content.
