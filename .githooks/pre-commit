@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# Pre-commit hook: runs Pint (code style) and PHPStan (static analysis)
+# on staged PHP files to catch issues before CI.
+#
+
+# Get list of staged PHP files (excluding deleted files)
+STAGED_PHP=$(git diff --cached --name-only --diff-filter=d -- '*.php')
+
+if [ -z "$STAGED_PHP" ]; then
+    exit 0
+fi
+
+echo "🔍 Running Pint on staged PHP files..."
+./vendor/bin/pint --test $STAGED_PHP
+PINT_EXIT=$?
+
+if [ $PINT_EXIT -ne 0 ]; then
+    echo ""
+    echo "❌ Pint found code style issues. Run 'composer format' to fix them."
+    exit 1
+fi
+
+echo "🔍 Running PHPStan..."
+./vendor/bin/phpstan analyse --memory-limit=512M --no-progress $STAGED_PHP
+PHPSTAN_EXIT=$?
+
+if [ $PHPSTAN_EXIT -ne 0 ]; then
+    echo ""
+    echo "❌ PHPStan found errors. Fix them before committing."
+    exit 1
+fi
+
+echo "✅ All checks passed."
+exit 0
