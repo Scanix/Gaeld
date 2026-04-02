@@ -40,6 +40,14 @@ class ApiTest extends TestCase
     //  Authentication
     // ──────────────────────────────────────────────────────────────
 
+    public function test_api_root_returns_version_info(): void
+    {
+        $this->getJson('/api/v1')
+            ->assertOk()
+            ->assertJsonStructure(['name', 'version', 'documentation', 'status'])
+            ->assertJson(['version' => 'v1', 'status' => 'ok']);
+    }
+
     public function test_unauthenticated_request_returns_401(): void
     {
         $this->getJson('/api/v1/customers')
