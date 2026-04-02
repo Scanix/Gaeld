@@ -22,3 +22,17 @@ export function currencyOptions(t) {
     { value: 'GBP', label: t('gbp_label') },
   ]
 }
+
+export function supplierCategoryOptions(t) {
+  return [
+    { value: '', label: '—' },
+    { value: 'office', label: t('cat_office') },
+    { value: 'utilities', label: t('cat_utilities') },
+    { value: 'software', label: t('cat_software') },
+    { value: 'travel', label: t('cat_travel') },
+    { value: 'marketing', label: t('cat_marketing') },
+    { value: 'professional_services', label: t('cat_professional_services') },
+    { value: 'equipment', label: t('cat_equipment') },
+    { value: 'other', label: t('cat_other') },
+  ]
+}

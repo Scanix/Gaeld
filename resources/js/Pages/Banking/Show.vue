@@ -13,6 +13,7 @@ import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import { currencyOptions } from '@/lib/contactOptions'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
@@ -71,13 +72,6 @@ function executeDelete() {
     onFinish: () => { deleting.value = false },
   })
 }
-
-const currencyOptions = [
-  { value: 'CHF', label: 'CHF' },
-  { value: 'EUR', label: 'EUR' },
-  { value: 'USD', label: 'USD' },
-  { value: 'GBP', label: 'GBP' },
-]
 
 const typeOptions = [
   { value: 'credit', label: t('credit') },
@@ -233,7 +227,7 @@ const columns = computed(() => [
           id="edit-currency"
           v-model="editForm.currency"
           :label="t('currency')"
-          :options="currencyOptions"
+          :options="currencyOptions(t)"
           :error="editForm.errors.currency"
         />
         <FormSelect

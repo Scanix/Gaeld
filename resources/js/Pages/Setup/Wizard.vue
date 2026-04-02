@@ -9,6 +9,7 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { currencyOptions } from '@/lib/contactOptions'
 
 const cantons = ['AG','AI','AR','BE','BL','BS','FR','GE','GL','GR','JU','LU','NE','NW','OW','SG','SH','SO','SZ','TG','TI','UR','VD','VS','ZG','ZH']
 
@@ -33,12 +34,6 @@ function submit() {
 }
 
 const { t } = useTranslations()
-
-const currencyOptions = [
-  { value: 'CHF', label: t('chf_label') },
-  { value: 'EUR', label: t('eur_label') },
-  { value: 'USD', label: t('usd_label') },
-]
 
 const localeOptions = [
   { value: 'en', label: t('locale_en') },
@@ -87,7 +82,7 @@ const localeOptions = [
           <fieldset class="space-y-6">
             <legend class="text-lg font-semibold">{{ t('settings') }}</legend>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormSelect id="currency" v-model="form.currency" :label="t('currency')" :options="currencyOptions" required />
+              <FormSelect id="currency" v-model="form.currency" :label="t('currency')" :options="currencyOptions(t)" required />
               <FormSelect id="locale" v-model="form.locale" :label="t('language')" :options="localeOptions" required />
             </div>
           </fieldset>
