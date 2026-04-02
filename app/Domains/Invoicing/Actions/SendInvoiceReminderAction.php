@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Mail;
  */
 class SendInvoiceReminderAction
 {
-    public function execute(Invoice $invoice): void
+    public function execute(Invoice $invoice): Invoice
     {
         if (! $invoice->isOverdue()) {
             throw new InvalidInvoiceStateException('Invoice is not overdue.');
@@ -28,5 +28,7 @@ class SendInvoiceReminderAction
         $invoice->update(['last_reminded_at' => now()]);
 
         Mail::to($customerEmail)->send(new InvoiceReminderMail($invoice->fresh()));
+
+        return $invoice->fresh();
     }
 }

@@ -138,4 +138,7 @@ return [
 
     // Platform WIP
     'platform_wip' => '(Prossimamente)',
+
+    // ── Additional translations ──────────────────────────────
+    'opening_balances_entry' => 'Saldi di apertura',
 ];

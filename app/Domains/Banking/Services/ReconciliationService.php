@@ -21,6 +21,7 @@ use App\Domains\Invoicing\Services\InvoiceService;
 use App\Support\Exceptions\FeatureDisabledException;
 use App\Support\FeatureFlag;
 use App\Support\Money;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -266,10 +267,10 @@ class ReconciliationService
     /**
      * Bulk mark transactions as personal.
      *
-     * @param  \Illuminate\Support\Collection<int, BankTransaction>  $transactions
+     * @param  Collection<int, BankTransaction>  $transactions
      * @return array{reconciled: int, skipped: int}
      */
-    public function bulkReconcileAsPersonal(\Illuminate\Support\Collection $transactions): array
+    public function bulkReconcileAsPersonal(Collection $transactions): array
     {
         $reconciled = 0;
         $skipped = 0;

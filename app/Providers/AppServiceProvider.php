@@ -2,14 +2,19 @@
 
 namespace App\Providers;
 
+use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Api\Models\PersonalAccessToken;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Contacts\Policies\ContactPolicy;
 use App\Domains\Contacts\Search\ContactSearchProvider;
 use App\Domains\Expenses\Contracts\ReceiptOcrInterface;
+use App\Domains\Expenses\Models\Expense;
+use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Expenses\Search\ExpenseSearchProvider;
 use App\Domains\Expenses\Services\TesseractOcrService;
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Search\InvoiceSearchProvider;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Services\GlobalSearchService;
@@ -81,13 +86,13 @@ class AppServiceProvider extends ServiceProvider
         $dashboardFlush = $flushTags('dashboard');
 
         foreach (['created', 'updated', 'deleted'] as $event) {
-            \App\Domains\Accounting\Models\VatRate::$event($referenceFlush);
-            \App\Domains\Accounting\Models\Account::$event($referenceFlush);
-            \App\Domains\Expenses\Models\ExpenseCategory::$event($referenceFlush);
+            VatRate::$event($referenceFlush);
+            Account::$event($referenceFlush);
+            ExpenseCategory::$event($referenceFlush);
             Customer::$event($contactsFlush);
             Supplier::$event($contactsFlush);
-            \App\Domains\Invoicing\Models\Invoice::$event($dashboardFlush);
-            \App\Domains\Expenses\Models\Expense::$event($dashboardFlush);
+            Invoice::$event($dashboardFlush);
+            Expense::$event($dashboardFlush);
         }
     }
 }

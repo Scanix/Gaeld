@@ -32,6 +32,10 @@ class ChartTemplateService
         ])->keyBy(fn (ChartTemplateInterface $t) => $t->key())->all();
     }
 
+    // ──────────────────────────────────────────────────────────────
+    //  Template Discovery
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * List available templates with their translation keys.
      *
@@ -63,6 +67,10 @@ class ChartTemplateService
     {
         return $this->templates[$key] ?? null;
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Template Seeding
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Seed a chart of accounts for an organization using the given template.

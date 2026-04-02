@@ -52,6 +52,9 @@ class ExportChartOfAccountsJob implements ShouldQueue
         } else {
             $filename .= '.csv';
             $handle = fopen('php://temp', 'r+');
+            if ($handle === false) {
+                throw new \RuntimeException('Failed to open temporary stream for CSV export');
+            }
             fputcsv($handle, ['code', 'name', 'type', 'description', 'is_active']);
             foreach ($accounts as $account) {
                 fputcsv($handle, [

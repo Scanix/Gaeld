@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Reporting\Controllers\ReportController;
+use App\Domains\Reporting\Controllers\VatReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/reports/profit-and-loss', [ReportController::class, 'profitAndLoss'])->name('reports.pnl');
@@ -9,9 +10,9 @@ Route::get('/reports/profit-and-loss/export/{format}', [ReportController::class,
 Route::get('/reports/balance-sheet/export/{format}', [ReportController::class, 'exportBalanceSheet'])->name('reports.balanceSheet.export');
 
 // VAT Report
-Route::get('/reports/vat', [ReportController::class, 'vatReport'])->name('reports.vat');
-Route::get('/reports/vat/export/{format}', [ReportController::class, 'exportVatReport'])->name('reports.vat.export');
-Route::post('/reports/vat/settlement', [ReportController::class, 'postVatSettlement'])->name('reports.vat.settlement');
+Route::get('/reports/vat', [VatReportController::class, 'vatReport'])->name('reports.vat');
+Route::get('/reports/vat/export/{format}', [VatReportController::class, 'exportVatReport'])->name('reports.vat.export');
+Route::post('/reports/vat/settlement', [VatReportController::class, 'postVatSettlement'])->name('reports.vat.settlement');
 
 // Cash Flow Report
 Route::get('/reports/cash-flow', [ReportController::class, 'cashFlow'])->name('reports.cashFlow');

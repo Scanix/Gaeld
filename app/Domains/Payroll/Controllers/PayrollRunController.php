@@ -5,7 +5,6 @@ namespace App\Domains\Payroll\Controllers;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\GeneratePayrollRunAction;
 use App\Domains\Payroll\Models\Employee;
-use App\Domains\Payroll\Models\SalarySlip;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -50,7 +49,7 @@ class PayrollRunController extends Controller
             'post' => ['boolean'],
         ]);
 
-        $count = $action->execute(
+        $slips = $action->execute(
             $currentOrg->id(),
             (int) $validated['month'],
             (int) $validated['year'],
@@ -58,15 +57,10 @@ class PayrollRunController extends Controller
         );
 
         if ($request->wantsJson()) {
-            $slipIds = SalarySlip::where('organization_id', $currentOrg->id())
-                ->where('period_month', (int) $validated['month'])
-                ->where('period_year', (int) $validated['year'])
-                ->pluck('id');
-
-            return response()->json(['count' => $count, 'slip_ids' => $slipIds]);
+            return response()->json(['count' => $slips->count(), 'slip_ids' => $slips->pluck('id')]);
         }
 
         return redirect()->route('payroll.salarySlips.index')
-            ->with('success', __('app.payroll_run_completed', ['count' => $count]));
+            ->with('success', __('app.payroll_run_completed', ['count' => $slips->count()]));
     }
 }

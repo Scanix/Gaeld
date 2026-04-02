@@ -10,6 +10,7 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { currencyOptions } from '@/lib/contactOptions'
 import { ArrowRightLeft } from 'lucide-vue-next'
 
 const { t } = useTranslations()
@@ -45,12 +46,6 @@ const chartDescriptions = {
 function submit() {
   form.post('/onboarding')
 }
-
-const currencyOptions = [
-  { value: 'CHF', label: t('chf_label') },
-  { value: 'EUR', label: t('eur_label') },
-  { value: 'USD', label: t('usd_label') },
-]
 
 const localeOptions = [
   { value: 'en', label: t('locale_en') },
@@ -95,7 +90,7 @@ const localeOptions = [
             <fieldset class="space-y-6">
               <legend class="text-lg font-semibold">{{ t('settings') }}</legend>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormSelect id="currency" v-model="form.currency" :label="t('currency')" :options="currencyOptions" required />
+                <FormSelect id="currency" v-model="form.currency" :label="t('currency')" :options="currencyOptions(t)" required />
                 <FormSelect id="locale" v-model="form.locale" :label="t('language')" :options="localeOptions" required />
               </div>
               <FormSelect id="chart_of_accounts" v-model="form.chart_of_accounts" :label="t('chart_of_accounts')" :options="chartOptions" required />

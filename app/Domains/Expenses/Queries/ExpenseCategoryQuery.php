@@ -3,6 +3,7 @@
 namespace App\Domains\Expenses\Queries;
 
 use App\Domains\Expenses\Models\ExpenseCategory;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -10,7 +11,7 @@ class ExpenseCategoryQuery
 {
     public static function forSelect(): Collection
     {
-        $orgId = app(\App\Domains\Organizations\Services\CurrentOrganization::class)->id();
+        $orgId = app(CurrentOrganization::class)->id();
 
         return Cache::tags(["org:{$orgId}:reference"])->remember(
             "expense_categories_select:{$orgId}",
@@ -23,7 +24,7 @@ class ExpenseCategoryQuery
 
     public static function all(): Collection
     {
-        $orgId = app(\App\Domains\Organizations\Services\CurrentOrganization::class)->id();
+        $orgId = app(CurrentOrganization::class)->id();
 
         return Cache::tags(["org:{$orgId}:reference"])->remember(
             "expense_categories_all:{$orgId}",

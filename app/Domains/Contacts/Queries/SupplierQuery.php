@@ -3,6 +3,7 @@
 namespace App\Domains\Contacts\Queries;
 
 use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Support\QueryBuilder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -24,7 +25,7 @@ class SupplierQuery
 
     public static function forSelect(): Collection
     {
-        $orgId = app(\App\Domains\Organizations\Services\CurrentOrganization::class)->id();
+        $orgId = app(CurrentOrganization::class)->id();
 
         return Cache::tags(["org:{$orgId}:contacts"])->remember(
             "suppliers_select:{$orgId}",

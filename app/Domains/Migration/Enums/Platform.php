@@ -31,4 +31,15 @@ enum Platform: string
     {
         return array_column(self::cases(), 'value');
     }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Bexio => __('app.platform_bexio'),
+            self::Banana => __('app.platform_banana'),
+            self::Abacus => __('app.platform_abacus'),
+            self::GenericCsv => __('app.platform_generic_csv'),
+            self::Manual => __('app.platform_manual'),
+        };
+    }
 }

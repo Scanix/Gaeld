@@ -68,7 +68,7 @@ class BudgetController extends Controller
         );
 
         return redirect()->route('accounting.budgets', ['year' => $validated['fiscal_year']])
-            ->with('success', __('Budget saved successfully.'));
+            ->with('success', __('app.budget_saved'));
     }
 
     public function destroy(Budget $budget): RedirectResponse
@@ -79,7 +79,7 @@ class BudgetController extends Controller
         $budget->delete();
 
         return redirect()->route('accounting.budgets', ['year' => $year])
-            ->with('success', __('Budget deleted successfully.'));
+            ->with('success', __('app.budget_deleted'));
     }
 
     public function update(Request $request, Budget $budget): RedirectResponse
@@ -93,6 +93,6 @@ class BudgetController extends Controller
         $budget->update($validated);
 
         return redirect()->route('accounting.budgets', ['year' => $budget->fiscal_year])
-            ->with('success', __('Budget updated successfully.'));
+            ->with('success', __('app.budget_updated'));
     }
 }

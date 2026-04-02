@@ -2,9 +2,9 @@
 
 namespace App\Domains\Expenses\Exceptions;
 
-use RuntimeException;
+use DomainException;
 
-class OcrProcessException extends RuntimeException
+class OcrProcessException extends DomainException
 {
     public static function processFailed(int $exitCode, string $errorOutput): self
     {

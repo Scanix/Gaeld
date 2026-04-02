@@ -2,6 +2,7 @@
 
 namespace App\Domains\Api\Models;
 
+use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class WebhookCall extends Model
 {
-    use HasUuids;
+    use Auditable, HasUuids;
 
     protected $fillable = [
         'webhook_id',

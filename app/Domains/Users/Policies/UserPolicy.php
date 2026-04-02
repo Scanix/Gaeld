@@ -4,15 +4,16 @@ namespace App\Domains\Users\Policies;
 
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Users\Models\User;
+use App\Support\Policies\BasePolicy;
 
 /**
  * Authorization policy for user account management.
  */
-class UserPolicy
+class UserPolicy extends BasePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->resolveCurrentOrganization() !== null
+        return $this->hasCurrentOrganization($user)
             && $user->hasPermissionTo(Permission::OrganizationManageUsers);
     }
 

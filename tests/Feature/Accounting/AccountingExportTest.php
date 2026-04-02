@@ -7,26 +7,20 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
-use App\Domains\Organizations\Models\Organization;
 use App\Domains\Reporting\Jobs\GenerateAccountingExportJob;
 use App\Domains\Reporting\Mail\AccountingExportReadyMail;
 use App\Domains\Reporting\Services\AccountingExportService;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class AccountingExportTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private User $user;
-
-    private Organization $org;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private Account $bankAccount;
 
@@ -35,16 +29,7 @@ class AccountingExportTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->org = Organization::create([
-            'name' => 'Fiduciary Test GmbH',
-            'currency' => 'CHF',
-        ]);
-        $this->org->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->org, 'owner');
+        $this->setUpOrganization();
 
         $this->bankAccount = Account::create([
             'organization_id' => $this->org->id,

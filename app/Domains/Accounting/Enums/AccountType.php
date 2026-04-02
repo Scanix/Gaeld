@@ -18,4 +18,15 @@ enum AccountType: string
             default => false,
         };
     }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Asset => __('app.account_type_asset'),
+            self::Liability => __('app.account_type_liability'),
+            self::Equity => __('app.account_type_equity'),
+            self::Revenue => __('app.account_type_revenue'),
+            self::Expense => __('app.account_type_expense'),
+        };
+    }
 }

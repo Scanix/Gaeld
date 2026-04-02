@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\VatReportService;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Posts the VAT settlement clearing journal entry.
@@ -82,6 +83,16 @@ final class PostVatSettlementAction
         ));
 
         $journalEntry->update(['type' => 'vat_settlement']);
+
+        Log::info('VAT settlement posted', [
+            'organization_id' => $orgId,
+            'period' => "{$fromDate} to {$toDate}",
+            'reference' => $reference,
+            'output_vat' => $totalOutputVat,
+            'input_vat' => $totalInputVat,
+            'net_vat' => $netVat,
+            'journal_entry_id' => $journalEntry->id,
+        ]);
 
         return $journalEntry;
     }

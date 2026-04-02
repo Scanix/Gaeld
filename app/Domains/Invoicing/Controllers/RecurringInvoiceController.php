@@ -6,10 +6,10 @@ use App\Domains\Contacts\Queries\CustomerQuery;
 use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\RecurringInvoice;
+use App\Domains\Invoicing\Requests\RecurringInvoiceRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,24 +44,11 @@ class RecurringInvoiceController extends Controller
         ]);
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(RecurringInvoiceRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', Invoice::class);
 
-        $validated = $request->validate([
-            'customer_id' => ['required', 'exists:customers,id'],
-            'frequency' => ['required', 'string', 'in:weekly,monthly,quarterly,yearly'],
-            'next_issue_date' => ['required', 'date', 'after_or_equal:today'],
-            'end_date' => ['nullable', 'date', 'after:next_issue_date'],
-            'template_data' => ['required', 'array'],
-            'template_data.lines' => ['required', 'array', 'min:1'],
-            'template_data.lines.*.description' => ['required', 'string', 'max:500'],
-            'template_data.lines.*.quantity' => ['required', 'numeric', 'gt:0'],
-            'template_data.lines.*.unit_price' => ['required', 'numeric', 'min:0'],
-            'template_data.notes' => ['nullable', 'string', 'max:2000'],
-            'template_data.payment_terms' => ['nullable', 'string', 'max:255'],
-            'template_data.currency' => ['nullable', 'string', 'size:3'],
-        ]);
+        $validated = $request->validated();
 
         RecurringInvoice::create([
             'organization_id' => $currentOrg->id(),
@@ -73,7 +60,7 @@ class RecurringInvoiceController extends Controller
         ]);
 
         return redirect()->route('invoices.recurring.index')
-            ->with('success', __('Recurring invoice created successfully.'));
+            ->with('success', __('app.recurring_invoice_created'));
     }
 
     public function edit(RecurringInvoice $recurring): Response
@@ -90,30 +77,14 @@ class RecurringInvoiceController extends Controller
         ]);
     }
 
-    public function update(Request $request, RecurringInvoice $recurring): RedirectResponse
+    public function update(RecurringInvoiceRequest $request, RecurringInvoice $recurring): RedirectResponse
     {
         $this->authorize('update', Invoice::class);
 
-        $validated = $request->validate([
-            'customer_id' => ['required', 'exists:customers,id'],
-            'frequency' => ['required', 'string', 'in:weekly,monthly,quarterly,yearly'],
-            'next_issue_date' => ['required', 'date'],
-            'end_date' => ['nullable', 'date', 'after:next_issue_date'],
-            'template_data' => ['required', 'array'],
-            'template_data.lines' => ['required', 'array', 'min:1'],
-            'template_data.lines.*.description' => ['required', 'string', 'max:500'],
-            'template_data.lines.*.quantity' => ['required', 'numeric', 'gt:0'],
-            'template_data.lines.*.unit_price' => ['required', 'numeric', 'min:0'],
-            'template_data.notes' => ['nullable', 'string', 'max:2000'],
-            'template_data.payment_terms' => ['nullable', 'string', 'max:255'],
-            'template_data.currency' => ['nullable', 'string', 'size:3'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
-
-        $recurring->update($validated);
+        $recurring->update($request->validated());
 
         return redirect()->route('invoices.recurring.index')
-            ->with('success', __('Recurring invoice updated successfully.'));
+            ->with('success', __('app.recurring_invoice_updated'));
     }
 
     public function destroy(RecurringInvoice $recurring): RedirectResponse
@@ -123,7 +94,7 @@ class RecurringInvoiceController extends Controller
         $recurring->delete();
 
         return redirect()->route('invoices.recurring.index')
-            ->with('success', __('Recurring invoice deleted successfully.'));
+            ->with('success', __('app.recurring_invoice_deleted'));
     }
 
     public function pause(RecurringInvoice $recurring): RedirectResponse

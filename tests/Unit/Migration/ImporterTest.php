@@ -2,10 +2,7 @@
 
 namespace Tests\Unit\Migration;
 
-use App\Domains\Accounting\Enums\AccountType;
-use App\Domains\Accounting\Models\Account;
 use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Migration\DTOs\AccountImportRow;
 use App\Domains\Migration\DTOs\ContactImportRow;
 use App\Domains\Migration\Enums\DataType;

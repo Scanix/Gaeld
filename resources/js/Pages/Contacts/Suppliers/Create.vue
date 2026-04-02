@@ -15,7 +15,7 @@ import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
-import { countryOptions, currencyOptions } from '@/lib/contactOptions'
+import { countryOptions, currencyOptions, supplierCategoryOptions } from '@/lib/contactOptions'
 import { HelpCircle } from 'lucide-vue-next'
 
 const { t } = useTranslations()
@@ -44,17 +44,7 @@ function submit() {
   form.post('/suppliers')
 }
 
-const categoryOptions = [
-  { value: '', label: '—' },
-  { value: 'office', label: t('cat_office') },
-  { value: 'utilities', label: t('cat_utilities') },
-  { value: 'software', label: t('cat_software') },
-  { value: 'travel', label: t('cat_travel') },
-  { value: 'marketing', label: t('cat_marketing') },
-  { value: 'professional_services', label: t('cat_professional_services') },
-  { value: 'equipment', label: t('cat_equipment') },
-  { value: 'other', label: t('cat_other') },
-]
+const categoryOptions = supplierCategoryOptions(t)
 
 const typeOptions = [
   { value: 'organization', label: t('organization') },

@@ -26,6 +26,10 @@ class BankingService
         private LedgerService $ledgerService,
     ) {}
 
+    // ──────────────────────────────────────────────────────────────
+    //  Transaction Recording
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Record a bank transaction and post to ledger.
      *
@@ -50,6 +54,10 @@ class BankingService
             return $this->postBankTransaction($transaction, $data->contraAccountCode);
         });
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Ledger Posting
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Post a bank transaction to the ledger.
@@ -97,6 +105,10 @@ class BankingService
             return $transaction->fresh(['journalEntry.lines', 'bankAccount']);
         });
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Helpers
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Update a bank account's denormalized balance field.

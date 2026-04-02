@@ -13,19 +13,13 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class CoreHttpFlowTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private User $user;
-
-    private Organization $organization;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private Customer $customer;
 
@@ -35,15 +29,7 @@ class CoreHttpFlowTest extends TestCase
     {
         parent::setUp();
 
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->organization = Organization::create([
-            'name' => 'Core HTTP Org',
-            'currency' => 'CHF',
-        ]);
-        $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
+        $this->setUpOrganization();
 
         Account::create([
             'organization_id' => $this->organization->id,
@@ -92,7 +78,7 @@ class CoreHttpFlowTest extends TestCase
 
     public function test_invoice_http_flow_uses_authenticated_request_pipeline(): void
     {
-        $create = $this->asCurrentOrg()->post('/invoices', [
+        $create = $this->actAsOrg()->post('/invoices', [
             'customer_id' => $this->customer->id,
             'number' => 'INV-HTTP-001',
             'issue_date' => '2026-03-10',
@@ -113,13 +99,13 @@ class CoreHttpFlowTest extends TestCase
         $create->assertRedirect(route('invoices.show', $invoice));
         $this->assertSame(InvoiceStatus::Draft, $invoice->status);
 
-        $this->asCurrentOrg()->post("/invoices/{$invoice->id}/finalize")
+        $this->actAsOrg()->post("/invoices/{$invoice->id}/finalize")
             ->assertRedirect(route('invoices.show', $invoice));
 
         $invoice->refresh();
         $this->assertSame(InvoiceStatus::Sent, $invoice->status);
 
-        $this->asCurrentOrg()->post("/invoices/{$invoice->id}/payment", [
+        $this->actAsOrg()->post("/invoices/{$invoice->id}/payment", [
             'amount' => (string) $invoice->total,
             'payment_date' => '2026-03-15',
             'payment_method' => 'bank',
@@ -133,7 +119,7 @@ class CoreHttpFlowTest extends TestCase
 
     public function test_expense_http_flow_uses_authenticated_request_pipeline(): void
     {
-        $create = $this->asCurrentOrg()->post('/expenses', [
+        $create = $this->actAsOrg()->post('/expenses', [
             'category' => 'Software',
             'description' => 'HTTP expense',
             'amount' => 120.00,
@@ -148,13 +134,13 @@ class CoreHttpFlowTest extends TestCase
         $create->assertRedirect(route('expenses.show', $expense));
         $this->assertSame(ExpenseStatus::Pending, $expense->status);
 
-        $this->asCurrentOrg()->post("/expenses/{$expense->id}/approve")
+        $this->actAsOrg()->post("/expenses/{$expense->id}/approve")
             ->assertRedirect(route('expenses.show', $expense));
 
         $expense->refresh();
         $this->assertSame(ExpenseStatus::Approved, $expense->status);
 
-        $this->asCurrentOrg()->post("/expenses/{$expense->id}/post", [
+        $this->actAsOrg()->post("/expenses/{$expense->id}/post", [
             'expense_account_code' => '6530',
         ])->assertRedirect(route('expenses.show', $expense));
 
@@ -169,7 +155,7 @@ class CoreHttpFlowTest extends TestCase
             ->where('code', '1020')
             ->value('id');
 
-        $create = $this->asCurrentOrg()->post('/banking', [
+        $create = $this->actAsOrg()->post('/banking', [
             'name' => 'Main HTTP Bank',
             'iban' => 'CH93 0076 2011 6238 5295 7',
             'bank_name' => 'UBS',
@@ -181,7 +167,7 @@ class CoreHttpFlowTest extends TestCase
 
         $create->assertRedirect(route('banking.show', $bankAccount));
 
-        $this->asCurrentOrg()->post("/banking/{$bankAccount->id}/transactions", [
+        $this->actAsOrg()->post("/banking/{$bankAccount->id}/transactions", [
             'date' => '2026-03-14',
             'description' => 'HTTP transfer',
             'amount' => 150.00,
@@ -217,19 +203,12 @@ class CoreHttpFlowTest extends TestCase
             'is_reconciled' => false,
         ]);
 
-        $this->asCurrentOrg()->post("/reconciliation/transactions/{$transaction->id}/manual", [
+        $this->actAsOrg()->post("/reconciliation/transactions/{$transaction->id}/manual", [
             'contra_account_code' => '3000',
         ])->assertRedirect();
 
         $transaction->refresh();
         $this->assertTrue($transaction->is_reconciled);
         $this->assertNotNull($transaction->journal_entry_id);
-    }
-
-    private function asCurrentOrg(): self
-    {
-        return $this->actingAs($this->user)->withSession([
-            'current_organization_id' => $this->organization->id,
-        ]);
     }
 }

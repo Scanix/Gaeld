@@ -9,7 +9,9 @@ const { t } = useTranslations()
 onErrorCaptured((err) => {
   hasError.value = true
   errorMessage.value = err?.message || t('unexpected_error_occurred')
-  console.error('[ErrorBoundary]', err)
+  if (import.meta.env.DEV) {
+    console.error('[ErrorBoundary]', err)
+  }
   return false // stop propagation
 })
 

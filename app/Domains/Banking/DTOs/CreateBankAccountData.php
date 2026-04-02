@@ -3,6 +3,7 @@
 namespace App\Domains\Banking\DTOs;
 
 use App\Support\MapsToSnakeCase;
+use App\Support\ValidatesFromArray;
 
 /**
  * DTO for creating a new bank account linked to an organization.
@@ -10,6 +11,7 @@ use App\Support\MapsToSnakeCase;
 readonly class CreateBankAccountData
 {
     use MapsToSnakeCase;
+    use ValidatesFromArray;
 
     public function __construct(
         public string $organizationId,
@@ -24,6 +26,8 @@ readonly class CreateBankAccountData
 
     public static function fromArray(array $data): self
     {
+        self::assertRequired($data, ['organization_id', 'name']);
+
         return new self(
             organizationId: $data['organization_id'],
             name: $data['name'],

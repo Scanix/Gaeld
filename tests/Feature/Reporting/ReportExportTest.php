@@ -2,38 +2,22 @@
 
 namespace Tests\Feature\Reporting;
 
-use App\Domains\Accounting\DTOs\JournalEntryData;
-use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Accounting\Services\LedgerService;
-use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\CreatesAccountingFixtures;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class ReportExportTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private Organization $org;
-
-    private User $user;
+    use CreatesAccountingFixtures, RefreshDatabase, WithAuthenticatedOrganization;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->org = Organization::create([
-            'name' => 'Export Test GmbH',
-            'currency' => 'CHF',
-        ]);
-        $this->org->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->org, 'owner');
+        $this->setUpOrganization();
 
         // Create accounts
         $revenue = Account::create([
@@ -65,16 +49,10 @@ class ReportExportTest extends TestCase
         ]);
 
         // Post a journal entry so reports have data
-        $ledger = app(LedgerService::class);
-        $ledger->postEntry($this->org->id, new JournalEntryData(
-            date: '2026-01-15',
-            reference: 'TEST-001',
-            description: 'Test Revenue Entry',
-            lines: [
-                new JournalLineData(accountId: (string) $bank->id, debit: '1000.00', credit: '0', description: 'Bank deposit'),
-                new JournalLineData(accountId: (string) $revenue->id, debit: '0', credit: '1000.00', description: 'Service revenue'),
-            ],
-        ));
+        $this->postJournalEntry('2026-01-15', [
+            $this->journalLine($bank, '1000.00', '0', 'Bank deposit'),
+            $this->journalLine($revenue, '0', '1000.00', 'Service revenue'),
+        ], 'TEST-001', 'Test Revenue Entry');
     }
 
     public function test_export_profit_and_loss_csv(): void

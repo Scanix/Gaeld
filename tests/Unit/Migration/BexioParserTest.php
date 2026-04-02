@@ -4,8 +4,8 @@ namespace Tests\Unit\Migration;
 
 use App\Domains\Migration\DTOs\AccountImportRow;
 use App\Domains\Migration\DTOs\ContactImportRow;
-use App\Domains\Migration\DTOs\InvoiceImportRow;
 use App\Domains\Migration\DTOs\ExpenseImportRow;
+use App\Domains\Migration\DTOs\InvoiceImportRow;
 use App\Domains\Migration\Enums\DataType;
 use App\Domains\Migration\Parsers\BexioParser;
 use Illuminate\Http\UploadedFile;

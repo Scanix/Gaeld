@@ -103,7 +103,7 @@ const journalColumns = computed(() => [
           {{ t('edit') }}
         </Button>
         <Button
-          v-if="expense.status === 'pending' || expense.status === 'approved'"
+          v-if="expense.status === 'approved'"
           size="sm"
           @click="showPostModal = true"
         >

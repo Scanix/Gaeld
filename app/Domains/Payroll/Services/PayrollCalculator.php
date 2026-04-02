@@ -18,6 +18,10 @@ class PayrollCalculator
         private SwissDeductionService $deductionService,
     ) {}
 
+    // ──────────────────────────────────────────────────────────────
+    //  Calculation
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Calculate salary for a given employee and period.
      * Handles pro-rata for partial months (entry/exit mid-month).
@@ -42,6 +46,10 @@ class PayrollCalculator
             'deductions' => $deductions,
         ]);
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Helpers
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Calculate pro-rata gross salary for partial months.

@@ -34,6 +34,11 @@ class DispatchWebhookJob implements ShouldQueue
         }
 
         $payload = json_encode($this->webhookCall->payload);
+        if ($payload === false) {
+            $this->webhookCall->update(['status' => 'failed']);
+
+            return;
+        }
         $signature = hash_hmac('sha256', $payload, $webhook->secret);
 
         try {

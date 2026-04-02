@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Queries;
 
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -10,7 +11,7 @@ class VatRateQuery
 {
     public static function active(): Collection
     {
-        $orgId = app(\App\Domains\Organizations\Services\CurrentOrganization::class)->id();
+        $orgId = app(CurrentOrganization::class)->id();
 
         return Cache::tags(["org:{$orgId}:reference"])->remember(
             "vat_rates_active:{$orgId}",

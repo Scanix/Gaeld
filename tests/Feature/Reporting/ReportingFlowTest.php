@@ -17,36 +17,22 @@ use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Services\InvoiceService;
-use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class ReportingFlowTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private User $user;
-
-    private Organization $organization;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->seedPermissions();
-
         Carbon::setTestNow('2026-03-20 12:00:00');
 
-        $this->user = User::factory()->create();
-        $this->organization = Organization::create([
-            'name' => 'Reporting Org',
-            'currency' => 'CHF',
-        ]);
-        $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
+        $this->setUpOrganization();
 
         Account::create([
             'organization_id' => $this->organization->id,
