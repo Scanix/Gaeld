@@ -111,6 +111,7 @@ class InvoiceApiController extends Controller
      * Updates an existing invoice. Only draft invoices can be modified.
      *
      * @urlParam invoice string required The UUID of the invoice. Example: 9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b
+     *
      * @bodyParam customer_id string UUID of an existing customer.
      * @bodyParam issue_date string Date in YYYY-MM-DD format.
      * @bodyParam due_date string Date in YYYY-MM-DD format.

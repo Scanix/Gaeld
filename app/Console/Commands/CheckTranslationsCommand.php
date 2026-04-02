@@ -199,7 +199,7 @@ class CheckTranslationsCommand extends Command
             '/@lang\(\s*[\'"]([a-z_]+\.[a-z_.]+)[\'"]/i',
         ];
 
-        $finder = (new Finder())
+        $finder = (new Finder)
             ->in([
                 base_path('app'),
                 base_path('resources'),
@@ -241,7 +241,7 @@ class CheckTranslationsCommand extends Command
             "/@lang\(\s*'([^']+)'\s*\)/",
         ];
 
-        $finder = (new Finder())
+        $finder = (new Finder)
             ->in([
                 base_path('app'),
                 base_path('resources'),
@@ -354,7 +354,7 @@ class CheckTranslationsCommand extends Command
             $export = preg_replace('/\)(\s*,?)$/m', ']$1', $export);
 
             File::put($path, "<?php\n\nreturn {$export};\n");
-            $this->info("  → Added ".count($keys)." missing keys to {$lang}/{$file}.php");
+            $this->info('  → Added '.count($keys)." missing keys to {$lang}/{$file}.php");
         }
     }
 }
