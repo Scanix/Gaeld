@@ -2,26 +2,18 @@
 
 namespace Tests\Feature\Reporting;
 
-use App\Domains\Accounting\DTOs\JournalEntryData;
-use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Accounting\Services\LedgerService;
-use App\Domains\Organizations\Models\Organization;
 use App\Domains\Reporting\Services\ReportingService;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\CreatesAccountingFixtures;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class CashFlowReportTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private User $user;
-
-    private Organization $organization;
+    use CreatesAccountingFixtures, RefreshDatabase, WithAuthenticatedOrganization;
 
     private Account $bankAccount;
 
@@ -35,17 +27,9 @@ class CashFlowReportTest extends TestCase
     {
         parent::setUp();
 
-        $this->seedPermissions();
-
         Carbon::setTestNow('2026-03-20 12:00:00');
 
-        $this->user = User::factory()->create();
-        $this->organization = Organization::create([
-            'name' => 'CashFlow Test Org',
-            'currency' => 'CHF',
-        ]);
-        $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
+        $this->setUpOrganization();
 
         $this->bankAccount = Account::create(['organization_id' => $this->organization->id, 'code' => '1020', 'name' => 'Bank', 'type' => AccountType::Asset->value]);
         $this->arAccount = Account::create(['organization_id' => $this->organization->id, 'code' => '1100', 'name' => 'Accounts Receivable', 'type' => AccountType::Asset->value]);
@@ -61,23 +45,6 @@ class CashFlowReportTest extends TestCase
     {
         Carbon::setTestNow();
         parent::tearDown();
-    }
-
-    private function postEntry(string $date, array $lines): void
-    {
-        /** @var LedgerService $ledger */
-        $ledger = app(LedgerService::class);
-        $ledger->postEntry($this->organization->id, new JournalEntryData(
-            date: $date,
-            reference: 'CF-'.uniqid(),
-            description: 'Cash flow test entry',
-            lines: $lines,
-        ));
-    }
-
-    private function line(Account $account, string $debit, string $credit): JournalLineData
-    {
-        return new JournalLineData(accountId: $account->id, debit: $debit, credit: $credit);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -100,9 +67,9 @@ class CashFlowReportTest extends TestCase
     public function test_net_income_equals_pnl_net_profit(): void
     {
         // Post one revenue entry: Debit AR, Credit Revenue
-        $this->postEntry('2026-01-15', [
-            $this->line($this->arAccount, '1000.00', '0.00'),
-            $this->line($this->revenueAccount, '0.00', '1000.00'),
+        $this->postJournalEntry('2026-01-15', [
+            $this->journalLine($this->arAccount, '1000.00', '0.00'),
+            $this->journalLine($this->revenueAccount, '0.00', '1000.00'),
         ]);
 
         /** @var ReportingService $service */

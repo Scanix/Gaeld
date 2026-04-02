@@ -11,20 +11,14 @@ use App\Domains\Invoicing\Jobs\GenerateRecurringInvoicesJob;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\RecurringInvoice;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
-use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class RecurringInvoiceFlowTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private Organization $org;
-
-    private User $user;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private Customer $customer;
 
@@ -32,17 +26,9 @@ class RecurringInvoiceFlowTest extends TestCase
     {
         parent::setUp();
 
-        $this->seedPermissions();
-
         Carbon::setTestNow('2026-03-15 08:00:00');
 
-        $this->user = User::factory()->create();
-        $this->org = Organization::create([
-            'name' => 'Recurring Test GmbH',
-            'currency' => 'CHF',
-        ]);
-        $this->org->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->org, 'owner');
+        $this->setUpOrganization();
 
         Account::create(['organization_id' => $this->org->id, 'code' => '1100', 'name' => 'Accounts Receivable', 'type' => AccountType::Asset->value]);
         Account::create(['organization_id' => $this->org->id, 'code' => '3000', 'name' => 'Revenue', 'type' => AccountType::Revenue->value]);
