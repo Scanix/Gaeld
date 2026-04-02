@@ -12,6 +12,7 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { currencyOptions } from '@/lib/contactOptions'
 import { Upload, Trash2, Plus } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -141,12 +142,6 @@ const localeOptions = [
   { value: 'it', label: t('locale_it') },
 ]
 
-const currencyOptions = [
-  { value: 'CHF', label: t('chf_label') },
-  { value: 'EUR', label: t('eur_label') },
-  { value: 'USD', label: t('usd_label') },
-]
-
 const cantonOptions = [
   { value: '', label: t('select_placeholder') },
   { value: 'AG', label: 'Aargau' }, { value: 'AI', label: 'Appenzell I.Rh.' },
@@ -256,7 +251,7 @@ const cantonOptions = [
                   id="currency"
                   v-model="generalForm.currency"
                   :label="t('currency')"
-                  :options="currencyOptions"
+                  :options="currencyOptions(t)"
                   :error="generalForm.errors.currency"
                 />
               </div>
