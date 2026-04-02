@@ -249,10 +249,12 @@ class InvoiceService
 
     public function yearlyRevenue(string $orgId, int $year): string
     {
-        return (string) Invoice::where('organization_id', $orgId)
+        $total = Invoice::where('organization_id', $orgId)
             ->where('status', InvoiceStatus::Paid)
             ->whereYear('issue_date', $year)
             ->sum('total');
+
+        return $total ? (string) $total : '0.00';
     }
 
     public function unpaidSummary(string $orgId): SummaryResult

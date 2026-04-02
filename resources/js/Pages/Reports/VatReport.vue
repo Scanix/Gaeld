@@ -64,14 +64,16 @@ function chf(val) {
 
 // Settlement confirm dialog
 const showSettle = ref(false)
-const settleForm = useForm({})
+const settleForm = useForm({
+  from_date: '',
+  to_date: '',
+})
 
 function postSettlement() {
   const params = exportParams.value
-  settleForm.transform(() => ({
-    from_date: params.from,
-    to_date: params.to,
-  })).post('/reports/vat/settlement', {
+  settleForm.from_date = params.from
+  settleForm.to_date = params.to
+  settleForm.post('/reports/vat/settlement', {
     preserveScroll: true,
     onSuccess: () => { showSettle.value = false },
   })
@@ -267,12 +269,9 @@ function postSettlement() {
       :confirm-label="t('post')"
       confirm-variant="default"
       :processing="settleForm.processing"
+      :errors="settleForm.errors"
       @confirm="postSettlement"
       @cancel="showSettle = false"
     />
-
-    <p v-if="settleForm.hasErrors" class="mt-4 text-sm text-[hsl(var(--destructive))]">
-      {{ Object.values(settleForm.errors).join(', ') }}
-    </p>
   </AppLayout>
 </template>

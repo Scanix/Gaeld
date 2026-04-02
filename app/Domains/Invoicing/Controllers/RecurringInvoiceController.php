@@ -60,7 +60,7 @@ class RecurringInvoiceController extends Controller
         ]);
 
         return redirect()->route('invoices.recurring.index')
-            ->with('success', __('Recurring invoice created successfully.'));
+            ->with('success', __('app.recurring_invoice_created'));
     }
 
     public function edit(RecurringInvoice $recurring): Response
@@ -84,7 +84,7 @@ class RecurringInvoiceController extends Controller
         $recurring->update($request->validated());
 
         return redirect()->route('invoices.recurring.index')
-            ->with('success', __('Recurring invoice updated successfully.'));
+            ->with('success', __('app.recurring_invoice_updated'));
     }
 
     public function destroy(RecurringInvoice $recurring): RedirectResponse
@@ -94,7 +94,7 @@ class RecurringInvoiceController extends Controller
         $recurring->delete();
 
         return redirect()->route('invoices.recurring.index')
-            ->with('success', __('Recurring invoice deleted successfully.'));
+            ->with('success', __('app.recurring_invoice_deleted'));
     }
 
     public function pause(RecurringInvoice $recurring): RedirectResponse

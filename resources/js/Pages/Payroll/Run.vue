@@ -79,15 +79,18 @@ async function goToPreview() {
   // Compute preview client-side from selected employees
   preview.value = props.employees
     .filter(e => selectedEmployeeIds.value.includes(e.id))
-    .map(e => ({
-      ...e,
-      gross_salary: e.gross_salary,
-      avs: (Number(e.gross_salary) * 0.053).toFixed(2),
-      ac: (Number(e.gross_salary) * 0.011).toFixed(2),
-      aanp: (Number(e.gross_salary) * 0.008).toFixed(2),
-      lpp: (Number(e.gross_salary) * 0.05).toFixed(2),
-      net: (Number(e.gross_salary) * (1 - 0.053 - 0.011 - 0.008 - 0.05)).toFixed(2),
-    }))
+    .map(e => {
+      const salary = Number(e.gross_salary) || 0
+      return {
+        ...e,
+        gross_salary: e.gross_salary,
+        avs: (salary * 0.053).toFixed(2),
+        ac: (salary * 0.011).toFixed(2),
+        aanp: (salary * 0.008).toFixed(2),
+        lpp: (salary * 0.05).toFixed(2),
+        net: (salary * (1 - 0.053 - 0.011 - 0.008 - 0.05)).toFixed(2),
+      }
+    })
   step.value = 2
 }
 

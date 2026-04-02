@@ -138,4 +138,7 @@ return [
 
     // Platform WIP
     'platform_wip' => '(Coming Soon)',
+
+    // ── Additional translations ──────────────────────────────
+    'opening_balances_entry' => 'Opening Balances',
 ];

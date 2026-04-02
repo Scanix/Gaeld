@@ -137,9 +137,11 @@ class ExpenseService
 
     public function yearlyTotal(string $orgId, int $year): string
     {
-        return (string) Expense::where('organization_id', $orgId)
+        $total = Expense::where('organization_id', $orgId)
             ->whereYear('date', $year)
             ->sum('amount');
+
+        return $total ? (string) $total : '0.00';
     }
 
     public function pendingSummary(string $orgId): SummaryResult
