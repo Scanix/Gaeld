@@ -18,10 +18,10 @@ trait WithOrganizationPermissions
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    protected function assignOrganizationRole(User $user, Organization $organization, string $roleName = 'owner'): void
+    protected function assignOrganizationRole(User $user, Organization $organization, string $roleName = 'owner', string $guard = 'web'): void
     {
         app()[PermissionRegistrar::class]->setPermissionsTeamId($organization->id);
-        $spatieRole = SpatieRole::findByName($roleName, 'web');
+        $spatieRole = SpatieRole::findByName($roleName, $guard);
         $user->assignRole($spatieRole);
     }
 }
