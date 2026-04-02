@@ -22,7 +22,7 @@ if [ $PINT_EXIT -ne 0 ]; then
 fi
 
 echo "🔍 Running PHPStan..."
-./vendor/bin/phpstan analyse --memory-limit=512M --no-progress $STAGED_PHP
+./vendor/bin/phpstan analyse --memory-limit=512M --no-progress
 PHPSTAN_EXIT=$?
 
 if [ $PHPSTAN_EXIT -ne 0 ]; then

@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Api\Controllers\AccountApiController;
+use App\Domains\Api\Controllers\ApiInfoController;
 use App\Domains\Api\Controllers\ApiTokenController;
 use App\Domains\Api\Controllers\BankAccountApiController;
 use App\Domains\Api\Controllers\CustomerApiController;
@@ -24,6 +25,11 @@ use Illuminate\Support\Facades\Route;
 |  - Organization tokens: managed by admins, survive user removal
 |
 */
+
+// Public API root — version & status (no auth required)
+Route::prefix('v1')->group(function () {
+    Route::get('/', ApiInfoController::class)->name('api.info');
+});
 
 Route::middleware(['auth:sanctum', 'api-org', 'feature:api_access', 'throttle:api'])->prefix('v1')->group(function () {
 
