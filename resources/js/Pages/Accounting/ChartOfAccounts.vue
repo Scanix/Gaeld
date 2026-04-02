@@ -30,7 +30,11 @@ const props = defineProps({
 
 const { t } = useTranslations()
 
-const search = ref('')
+const search = ref(props.query?.search ?? '')
+
+function handleSearch() {
+  router.get('/accounting/accounts', { search: search.value || undefined }, { preserveState: true, replace: true })
+}
 
 const groupLabels = {
   1: t('account_group_1'),
@@ -224,7 +228,7 @@ function requestExport() {
       :open="showForm"
       :account="editingAccount"
       :account-types="accountTypes"
-      :accounts="accounts"
+      :accounts="accounts?.data ?? []"
       @close="showForm = false"
     />
 
