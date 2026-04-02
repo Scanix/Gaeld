@@ -54,6 +54,17 @@
         "lint": [
             "./vendor/bin/pint --test"
         ],
+        "test": [
+            "php artisan test"
+        ],
+        "stan": [
+            "./vendor/bin/phpstan analyse --memory-limit=512M"
+        ],
+        "check": [
+            "@lint",
+            "@stan",
+            "@test"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
