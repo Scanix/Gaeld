@@ -412,7 +412,8 @@ class LedgerService
      */
     private function guardClosedFiscalYear(string $organizationId, string $date): void
     {
-        $year = (int) date('Y', strtotime($date));
+        $timestamp = strtotime($date);
+        $year = $timestamp !== false ? (int) date('Y', $timestamp) : (int) date('Y');
         $org = Organization::find($organizationId);
 
         if ($org && $org->isFiscalYearClosed($year)) {

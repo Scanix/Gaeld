@@ -5,7 +5,6 @@ namespace App\Domains\Migration\Importers;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Migration\Contracts\DataTypeImporterInterface;
-use App\Domains\Migration\Contracts\ImportRowInterface;
 use App\Domains\Migration\DTOs\ContactImportRow;
 use App\Domains\Migration\DTOs\ImportResult;
 use App\Domains\Migration\DTOs\ValidationResult;

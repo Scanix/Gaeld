@@ -14,6 +14,9 @@ use Laravel\Sanctum\PersonalAccessToken as SanctumToken;
  *
  * Extends Laravel Sanctum's default token model to add an organization
  * foreign key and a type discriminator (personal vs. organization token).
+ *
+ * Note: Does NOT use BelongsToOrganization trait because Sanctum must resolve
+ * tokens without an active organization context (the org is derived FROM the token).
  */
 class PersonalAccessToken extends SanctumToken
 {
@@ -29,13 +32,14 @@ class PersonalAccessToken extends SanctumToken
     protected static function booted(): void
     {
         static::creating(function (self $token) {
+            $token->type ??= TokenType::Personal;
+
             if (! $token->organization_id) {
                 $currentOrg = app(CurrentOrganization::class);
                 if ($currentOrg->isBound()) {
                     $token->organization_id = $currentOrg->id();
                 }
             }
-            $token->type ??= TokenType::Personal;
         });
     }
 

@@ -7,95 +7,59 @@ use App\Domains\Contacts\DTOs\UpdateSupplierData;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Contacts\Queries\SupplierQuery;
 use App\Domains\Contacts\Requests\StoreSupplierRequest;
-use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesCrudOperations;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 
 /**
  * Supplier CRUD with full-text search and soft-delete support.
  */
 class SupplierController extends Controller
 {
-    public function index(Request $request): Response
-    {
-        $this->authorize('viewAny', Supplier::class);
+    use HandlesCrudOperations;
 
-        return Inertia::render('Contacts/Suppliers/Index', [
-            'suppliers' => SupplierQuery::list($request),
-            'query' => [
-                'sort' => $request->input('sort', 'name'),
-                'direction' => $request->input('direction', 'asc'),
-                'search' => $request->input('search', ''),
-                'filter' => $request->input('filter', []),
-            ],
-        ]);
+    protected function modelClass(): string
+    {
+        return Supplier::class;
     }
 
-    public function create(): Response
+    protected function createDtoClass(): string
     {
-        $this->authorize('create', Supplier::class);
-
-        return Inertia::render('Contacts/Suppliers/Create');
+        return CreateSupplierData::class;
     }
 
-    public function store(StoreSupplierRequest $request, CurrentOrganization $currentOrg): RedirectResponse|JsonResponse
+    protected function updateDtoClass(): string
     {
-        $this->authorize('create', Supplier::class);
-
-        $validated = $request->validated();
-        $validated['organization_id'] = $currentOrg->id();
-
-        $supplier = Supplier::create(CreateSupplierData::fromArray($validated)->toArray());
-
-        if ($request->wantsJson()) {
-            return response()->json(['supplier' => $supplier], 201);
-        }
-
-        return redirect()->route('suppliers.show', $supplier)
-            ->with('success', __('app.supplier_created'));
+        return UpdateSupplierData::class;
     }
 
-    public function show(Supplier $supplier): Response
+    protected function queryClass(): string
     {
-        $this->authorize('view', $supplier);
-
-        return Inertia::render('Contacts/Suppliers/Show', [
-            'supplier' => $supplier->load(['expenses', 'contactPersons']),
-        ]);
+        return SupplierQuery::class;
     }
 
-    public function edit(Supplier $supplier): Response
+    protected function storeRequestClass(): string
     {
-        $this->authorize('update', $supplier);
-
-        return Inertia::render('Contacts/Suppliers/Edit', [
-            'supplier' => $supplier,
-        ]);
+        return StoreSupplierRequest::class;
     }
 
-    public function update(StoreSupplierRequest $request, Supplier $supplier): RedirectResponse
+    protected function inertiaPrefix(): string
     {
-        $this->authorize('update', $supplier);
-
-        $validated = $request->validated();
-
-        $supplier->update(UpdateSupplierData::fromArray($validated)->toArray());
-
-        return redirect()->route('suppliers.show', $supplier)
-            ->with('success', __('app.supplier_updated'));
+        return 'Contacts/Suppliers';
     }
 
-    public function destroy(Supplier $supplier): RedirectResponse
+    protected function routePrefix(): string
     {
-        $this->authorize('delete', $supplier);
+        return 'suppliers';
+    }
 
-        $supplier->delete();
+    protected function resourceName(): string
+    {
+        return 'supplier';
+    }
 
-        return redirect()->route('suppliers.index')
-            ->with('success', __('app.supplier_deleted'));
+    /** @return array<int, string> */
+    protected function showRelations(): array
+    {
+        return ['expenses', 'contactPersons'];
     }
 }

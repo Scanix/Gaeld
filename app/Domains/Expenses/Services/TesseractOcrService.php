@@ -43,6 +43,10 @@ class TesseractOcrService implements ReceiptOcrInterface
         );
     }
 
+    // ──────────────────────────────────────────────────────────────
+    //  Tesseract Process
+    // ──────────────────────────────────────────────────────────────
+
     private function runTesseract(string $imagePath): string
     {
         $result = Process::run([
@@ -67,6 +71,10 @@ class TesseractOcrService implements ReceiptOcrInterface
 
         return trim($result->output());
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Text Parsing
+    // ──────────────────────────────────────────────────────────────
 
     public function extractAmount(string $text): ?float
     {

@@ -7,95 +7,59 @@ use App\Domains\Contacts\DTOs\UpdateCustomerData;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Queries\CustomerQuery;
 use App\Domains\Contacts\Requests\StoreCustomerRequest;
-use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesCrudOperations;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 
 /**
  * Customer CRUD with full-text search and soft-delete support.
  */
 class CustomerController extends Controller
 {
-    public function index(Request $request): Response
-    {
-        $this->authorize('viewAny', Customer::class);
+    use HandlesCrudOperations;
 
-        return Inertia::render('Contacts/Customers/Index', [
-            'customers' => CustomerQuery::list($request),
-            'query' => [
-                'sort' => $request->input('sort', 'name'),
-                'direction' => $request->input('direction', 'asc'),
-                'search' => $request->input('search', ''),
-                'filter' => $request->input('filter', []),
-            ],
-        ]);
+    protected function modelClass(): string
+    {
+        return Customer::class;
     }
 
-    public function create(): Response
+    protected function createDtoClass(): string
     {
-        $this->authorize('create', Customer::class);
-
-        return Inertia::render('Contacts/Customers/Create');
+        return CreateCustomerData::class;
     }
 
-    public function store(StoreCustomerRequest $request, CurrentOrganization $currentOrg): RedirectResponse|JsonResponse
+    protected function updateDtoClass(): string
     {
-        $this->authorize('create', Customer::class);
-
-        $validated = $request->validated();
-        $validated['organization_id'] = $currentOrg->id();
-
-        $customer = Customer::create(CreateCustomerData::fromArray($validated)->toArray());
-
-        if ($request->wantsJson()) {
-            return response()->json(['customer' => $customer], 201);
-        }
-
-        return redirect()->route('customers.show', $customer)
-            ->with('success', __('app.customer_created'));
+        return UpdateCustomerData::class;
     }
 
-    public function show(Customer $customer): Response
+    protected function queryClass(): string
     {
-        $this->authorize('view', $customer);
-
-        return Inertia::render('Contacts/Customers/Show', [
-            'customer' => $customer->load(['invoices', 'contactPersons']),
-        ]);
+        return CustomerQuery::class;
     }
 
-    public function edit(Customer $customer): Response
+    protected function storeRequestClass(): string
     {
-        $this->authorize('update', $customer);
-
-        return Inertia::render('Contacts/Customers/Edit', [
-            'customer' => $customer,
-        ]);
+        return StoreCustomerRequest::class;
     }
 
-    public function update(StoreCustomerRequest $request, Customer $customer): RedirectResponse
+    protected function inertiaPrefix(): string
     {
-        $this->authorize('update', $customer);
-
-        $validated = $request->validated();
-
-        $customer->update(UpdateCustomerData::fromArray($validated)->toArray());
-
-        return redirect()->route('customers.show', $customer)
-            ->with('success', __('app.customer_updated'));
+        return 'Contacts/Customers';
     }
 
-    public function destroy(Customer $customer): RedirectResponse
+    protected function routePrefix(): string
     {
-        $this->authorize('delete', $customer);
+        return 'customers';
+    }
 
-        $customer->delete();
+    protected function resourceName(): string
+    {
+        return 'customer';
+    }
 
-        return redirect()->route('customers.index')
-            ->with('success', __('app.customer_deleted'));
+    /** @return array<int, string> */
+    protected function showRelations(): array
+    {
+        return ['invoices', 'contactPersons'];
     }
 }

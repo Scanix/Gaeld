@@ -21,4 +21,14 @@ enum RecurrenceFrequency: string
             self::Yearly => $from->copy()->addYear(),
         };
     }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Weekly => __('app.recurrence_frequency_weekly'),
+            self::Monthly => __('app.recurrence_frequency_monthly'),
+            self::Quarterly => __('app.recurrence_frequency_quarterly'),
+            self::Yearly => __('app.recurrence_frequency_yearly'),
+        };
+    }
 }

@@ -7,19 +7,14 @@ use App\Domains\Api\Models\Webhook;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class ApiTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private Organization $org;
-
-    private User $user;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private string $token;
 
@@ -29,15 +24,8 @@ class ApiTest extends TestCase
 
         config(['features.api_access' => true]);
 
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->org = Organization::create(['name' => 'Test GmbH', 'currency' => 'CHF']);
-        $this->org->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->org, 'owner');
+        $this->setUpOrganization();
         $this->assignOrganizationRole($this->user, $this->org, 'owner', 'sanctum');
-
-        app(CurrentOrganization::class)->set($this->org);
 
         // Create a personal Sanctum token for API tests
         $sanctumToken = $this->user->createToken('test-token', ['*']);

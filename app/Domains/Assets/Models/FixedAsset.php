@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
@@ -43,7 +44,7 @@ use Illuminate\Support\Carbon;
  */
 class FixedAsset extends Model
 {
-    use Auditable, BelongsToOrganization, HasUuids;
+    use Auditable, BelongsToOrganization, HasUuids, SoftDeletes;
 
     protected $appends = ['status', 'net_book_value'];
 

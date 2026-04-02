@@ -16,21 +16,14 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Organizations\Models\Organization;
-use App\Domains\Organizations\Services\CurrentOrganization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class ReconciliationFlowTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private Organization $organization;
-
-    private User $user;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private BankAccount $bankAccount;
 
@@ -39,19 +32,7 @@ class ReconciliationFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->organization = Organization::create([
-            'name' => 'Test Org',
-            'currency' => 'CHF',
-        ]);
-        $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
-
-        // Bind current organization
-        app(CurrentOrganization::class)->set($this->organization);
+        $this->setUpOrganization();
 
         $this->accounts['bank'] = Account::create([
             'organization_id' => $this->organization->id,

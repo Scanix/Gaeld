@@ -19,7 +19,7 @@ class SendInvoiceAction
         private GenerateQrInvoicePdfAction $pdfAction,
     ) {}
 
-    public function execute(Invoice $invoice): void
+    public function execute(Invoice $invoice): Invoice
     {
         if ($invoice->status !== InvoiceStatus::Sent && $invoice->status !== InvoiceStatus::Overdue) {
             throw new InvalidInvoiceStateException('Invoice must be finalized before sending.');
@@ -38,5 +38,7 @@ class SendInvoiceAction
         $filename = 'invoice-'.($invoice->number ?? $invoice->id).'.pdf';
 
         Mail::to($customerEmail)->send(new InvoiceMail($invoice, $organization, $pdf, $filename));
+
+        return $invoice;
     }
 }

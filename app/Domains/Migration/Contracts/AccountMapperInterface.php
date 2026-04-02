@@ -19,7 +19,7 @@ interface AccountMapperInterface
      * Suggest a target account for the given source account.
      *
      * @param  Collection<int, Account>  $targetAccounts  Available accounts in the org
-     * @return array{account: Account|null, confidence: float}  confidence ∈ [0.0, 1.0]
+     * @return array{account: Account|null, confidence: float} confidence ∈ [0.0, 1.0]
      */
     public function suggest(
         string $sourceCode,

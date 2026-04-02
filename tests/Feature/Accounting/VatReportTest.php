@@ -10,20 +10,14 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Accounting\Services\VatReportService;
-use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class VatReportTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private User $user;
-
-    private Organization $organization;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private VatRate $vatRate;
 
@@ -31,17 +25,9 @@ class VatReportTest extends TestCase
     {
         parent::setUp();
 
-        $this->seedPermissions();
-
         Carbon::setTestNow('2026-03-20 12:00:00');
 
-        $this->user = User::factory()->create();
-        $this->organization = Organization::create([
-            'name' => 'VAT Test Org',
-            'currency' => 'CHF',
-        ]);
-        $this->organization->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->organization, 'owner');
+        $this->setUpOrganization();
 
         // Chart of accounts required for VAT settlement
         Account::create(['organization_id' => $this->organization->id, 'code' => '1020', 'name' => 'Bank', 'type' => AccountType::Asset->value]);
@@ -249,5 +235,44 @@ class VatReportTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));
+    }
+
+    public function test_post_settlement_route_creates_journal_entry_and_redirects(): void
+    {
+        $je1 = $this->createPostedJournalEntry('2026-01-15');
+        $je2 = $this->createPostedJournalEntry('2026-01-20');
+
+        $this->createVatEntry($je1, VatEntryType::Output, 1000.00, 81.00);
+        $this->createVatEntry($je2, VatEntryType::Input, 500.00, 40.50);
+
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->post(route('reports.vat.settlement'), [
+                'from_date' => '2026-01-01',
+                'to_date' => '2026-03-31',
+            ]);
+
+        $response->assertRedirect(route('reports.vat', [
+            'from_date' => '2026-01-01',
+            'to_date' => '2026-03-31',
+        ]));
+
+        $this->assertDatabaseHas('journal_entries', [
+            'organization_id' => $this->organization->id,
+            'reference' => 'VAT-SETTLEMENT-2026-01-01-2026-03-31',
+            'is_posted' => true,
+        ]);
+    }
+
+    public function test_post_settlement_route_validates_dates(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->post(route('reports.vat.settlement'), [
+                'from_date' => '',
+                'to_date' => '',
+            ]);
+
+        $response->assertSessionHasErrors(['from_date', 'to_date']);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Domains\Api\Models;
 
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +19,7 @@ use Illuminate\Support\Str;
  */
 class Webhook extends Model
 {
-    use BelongsToOrganization, HasUuids;
+    use Auditable, BelongsToOrganization, HasUuids;
 
     protected $fillable = [
         'organization_id',

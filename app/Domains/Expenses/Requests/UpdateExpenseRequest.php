@@ -2,12 +2,13 @@
 
 namespace App\Domains\Expenses\Requests;
 
-use App\Domains\Expenses\Enums\ExpenseType;
+use App\Domains\Expenses\Requests\Concerns\ExpenseValidationRules;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateExpenseRequest extends FormRequest
 {
+    use ExpenseValidationRules;
+
     public function authorize(): bool
     {
         return $this->user()->can('update', $this->route('expense'));
@@ -15,26 +16,6 @@ class UpdateExpenseRequest extends FormRequest
 
     public function rules(): array
     {
-        $orgId = $this->route('expense')->organization_id;
-
-        return [
-            'category' => 'required|string|max:100',
-            'description' => 'nullable|string',
-            'amount' => 'required|numeric|min:0.01',
-            'vat_amount' => 'nullable|numeric|min:0',
-            'vat_rate_id' => [
-                'nullable',
-                Rule::exists('vat_rates', 'id')->where('organization_id', $orgId),
-            ],
-            'supplier_id' => [
-                'nullable',
-                Rule::exists('suppliers', 'id')->where('organization_id', $orgId),
-            ],
-            'date' => 'required|date',
-            'vendor' => 'nullable|string|max:255',
-            'currency' => 'string|size:3',
-            'type' => ['sometimes', Rule::enum(ExpenseType::class)],
-            'receipt' => 'nullable|file|mimes:'.config('uploads.allowed_mimes.receipt').'|max:'.config('uploads.max_size.receipt'),
-        ];
+        return $this->sharedRules($this->route('expense')->organization_id);
     }
 }

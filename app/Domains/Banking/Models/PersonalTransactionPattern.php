@@ -3,9 +3,11 @@
 namespace App\Domains\Banking\Models;
 
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Tracks counterparty names that the user has consistently marked as personal.
@@ -17,11 +19,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $organization_id
  * @property string $counterparty_name
  * @property int $hit_count
- * @property \Illuminate\Support\Carbon $last_seen_at
+ * @property Carbon $last_seen_at
  */
 class PersonalTransactionPattern extends Model
 {
-    use BelongsToOrganization;
+    use Auditable, BelongsToOrganization;
 
     protected $fillable = [
         'organization_id',

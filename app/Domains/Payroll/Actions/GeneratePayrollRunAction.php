@@ -5,6 +5,7 @@ namespace App\Domains\Payroll\Actions;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Payroll\Services\PayrollCalculator;
+use Illuminate\Support\Collection;
 
 /**
  * Generates salary slips for all active employees in a given payroll period.
@@ -16,14 +17,17 @@ class GeneratePayrollRunAction
         private PostPayrollAction $postAction,
     ) {}
 
-    public function execute(string $orgId, int $month, int $year, bool $shouldPost = false): int
+    /**
+     * @return Collection<int, SalarySlip>
+     */
+    public function execute(string $orgId, int $month, int $year, bool $shouldPost = false): Collection
     {
         $employees = Employee::query()
             ->where('organization_id', $orgId)
             ->where('is_active', true)
             ->get();
 
-        $count = 0;
+        $slips = collect();
         foreach ($employees as $employee) {
             $exists = SalarySlip::where('employee_id', $employee->id)
                 ->where('period_month', $month)
@@ -41,9 +45,9 @@ class GeneratePayrollRunAction
                 $this->postAction->execute($slip);
             }
 
-            $count++;
+            $slips->push($slip);
         }
 
-        return $count;
+        return $slips;
     }
 }

@@ -73,7 +73,8 @@ class RecordPaymentActionTest extends TestCase
         $invoice = $this->makeInvoice(InvoiceStatus::Sent, amountDue: '500.00');
 
         $paymentData = new RecordPaymentData('100.00', now()->toDateString(), PaymentMethod::Bank, null);
-        $payment = Mockery::mock(InvoicePayment::class);
+        $payment = Mockery::mock(InvoicePayment::class)->makePartial();
+        $payment->id = 'test-payment-id';
         $this->invoiceService
             ->shouldReceive('recordPayment')
             ->once()
@@ -90,7 +91,8 @@ class RecordPaymentActionTest extends TestCase
         $invoice = $this->makeInvoice(InvoiceStatus::Overdue, amountDue: '500.00');
 
         $paymentData = new RecordPaymentData('200.00', now()->toDateString(), PaymentMethod::Bank, null);
-        $payment = Mockery::mock(InvoicePayment::class);
+        $payment = Mockery::mock(InvoicePayment::class)->makePartial();
+        $payment->id = 'test-payment-id';
         $this->invoiceService
             ->shouldReceive('recordPayment')
             ->once()
@@ -106,7 +108,8 @@ class RecordPaymentActionTest extends TestCase
         $invoice = $this->makeInvoice(InvoiceStatus::Sent, amountDue: '500.00');
 
         $paymentData = new RecordPaymentData('500.00', now()->toDateString(), PaymentMethod::Bank, null);
-        $payment = Mockery::mock(InvoicePayment::class);
+        $payment = Mockery::mock(InvoicePayment::class)->makePartial();
+        $payment->id = 'test-payment-id';
         $this->invoiceService
             ->shouldReceive('recordPayment')
             ->once()
@@ -121,6 +124,8 @@ class RecordPaymentActionTest extends TestCase
     {
         $invoice = Mockery::mock(Invoice::class)->makePartial();
         $invoice->status = $status;
+        $invoice->id = 'test-invoice-id';
+        $invoice->organization_id = 'test-org-id';
         $invoice->shouldReceive('amountDue')->andReturn($amountDue);
 
         /** @var Invoice $invoice */

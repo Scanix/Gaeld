@@ -6,6 +6,7 @@ use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceService;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Finalizes a draft invoice: assigns invoice number, posts journal entry, and marks as sent.
@@ -26,6 +27,15 @@ class FinalizeInvoiceAction
             throw new InvalidInvoiceStateException('Cannot finalize an invoice with no line items.');
         }
 
-        return $this->invoiceService->postToLedger($invoice);
+        $result = $this->invoiceService->postToLedger($invoice);
+
+        Log::info('Invoice finalized', [
+            'invoice_id' => $invoice->id,
+            'invoice_number' => $result->number,
+            'organization_id' => $invoice->organization_id,
+            'total' => (string) $result->total,
+        ]);
+
+        return $result;
     }
 }

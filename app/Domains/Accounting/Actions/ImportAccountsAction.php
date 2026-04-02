@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Actions;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -23,6 +24,10 @@ class ImportAccountsAction
     {
         $extension = strtolower($file->getClientOriginalExtension());
         $content = $file->get();
+
+        if ($content === false) {
+            return ['rows' => [], 'errors' => [__('app.import_validation_error')]];
+        }
 
         if ($extension === 'json') {
             $rows = json_decode($content, true);
@@ -78,18 +83,21 @@ class ImportAccountsAction
 
     /**
      * @param  array<array<string, mixed>>  $rows
+     * @return Collection<int, Account>
      */
-    public function execute(string $orgId, array $rows, string $mode): void
+    public function execute(string $orgId, array $rows, string $mode): Collection
     {
-        DB::transaction(function () use ($orgId, $rows, $mode): void {
+        return DB::transaction(function () use ($orgId, $rows, $mode): Collection {
             if ($mode === 'replace') {
                 Account::where('organization_id', $orgId)
                     ->whereDoesntHave('transactionLines')
                     ->delete();
             }
 
+            $accounts = collect();
+
             foreach ($rows as $row) {
-                Account::updateOrCreate(
+                $accounts->push(Account::updateOrCreate(
                     [
                         'organization_id' => $orgId,
                         'code' => $row['code'],
@@ -100,8 +108,10 @@ class ImportAccountsAction
                         'description' => $row['description'] ?? null,
                         'is_active' => $row['is_active'] ?? true,
                     ]
-                );
+                ));
             }
+
+            return $accounts;
         });
     }
 

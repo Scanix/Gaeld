@@ -2,6 +2,7 @@
 
 namespace App\Domains\Migration\Services;
 
+use App\Domains\Accounting\Services\ChartTemplateService;
 use App\Domains\Migration\Contracts\AccountMapperInterface;
 use App\Domains\Migration\Contracts\DataTypeImporterInterface;
 use App\Domains\Migration\Contracts\PlatformParserInterface;
@@ -11,7 +12,7 @@ use App\Domains\Migration\Enums\Platform;
 /**
  * Registry of platform parsers, data type importers, and account mappers.
  *
- * Follows the same pattern as {@see \App\Domains\Accounting\Services\ChartTemplateService}:
+ * Follows the same pattern as {@see ChartTemplateService}:
  * implementations are registered at boot time and resolved by key.
  *
  * To add a new platform, register a new parser — the wizard auto-discovers
@@ -28,6 +29,10 @@ class MigrationRegistry
     /** @var AccountMapperInterface[] */
     private array $mappers = [];
 
+    // ──────────────────────────────────────────────────────────────
+    //  Registration
+    // ──────────────────────────────────────────────────────────────
+
     public function registerParser(PlatformParserInterface $parser): void
     {
         $this->parsers[$parser->platform()->value] = $parser;
@@ -42,6 +47,10 @@ class MigrationRegistry
     {
         $this->mappers[] = $mapper;
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Lookups
+    // ──────────────────────────────────────────────────────────────
 
     public function getParser(Platform $platform): ?PlatformParserInterface
     {
@@ -60,6 +69,10 @@ class MigrationRegistry
     {
         return $this->mappers;
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Discovery
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * List all registered parsers for the UI.
@@ -87,11 +100,15 @@ class MigrationRegistry
         return $this->importers;
     }
 
+    // ──────────────────────────────────────────────────────────────
+    //  Dependency Resolution
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Resolve the correct import order based on declared dependencies.
      *
      * @param  DataType[]  $requestedTypes
-     * @return DataType[]  Topologically sorted
+     * @return DataType[] Topologically sorted
      */
     public function resolveImportOrder(array $requestedTypes): array
     {

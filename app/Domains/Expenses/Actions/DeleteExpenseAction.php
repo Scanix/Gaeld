@@ -4,6 +4,7 @@ namespace App\Domains\Expenses\Actions;
 
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Soft-deletes an expense (only allowed for pending expenses).
@@ -16,6 +17,8 @@ class DeleteExpenseAction
             throw new InvalidExpenseStateException('Only pending expenses can be deleted.');
         }
 
-        $expense->delete();
+        DB::transaction(function () use ($expense) {
+            $expense->delete();
+        });
     }
 }

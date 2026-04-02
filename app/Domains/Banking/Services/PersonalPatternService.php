@@ -18,6 +18,10 @@ class PersonalPatternService
     /** Minimum number of hits before suggesting a counterparty as personal. */
     private const SUGGESTION_THRESHOLD = 2;
 
+    // ──────────────────────────────────────────────────────────────
+    //  Recording
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Record that a transaction was marked as personal.
      *
@@ -41,6 +45,10 @@ class PersonalPatternService
             ],
         )->increment('hit_count');
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Queries
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Get counterparty names that have been consistently marked as personal.
@@ -70,6 +78,10 @@ class PersonalPatternService
             ->where('hit_count', '>=', self::SUGGESTION_THRESHOLD)
             ->exists();
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Helpers
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Extract and normalize the counterparty name from a transaction.

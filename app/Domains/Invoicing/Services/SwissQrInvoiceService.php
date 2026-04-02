@@ -27,6 +27,10 @@ class SwissQrInvoiceService
 
     private const ALLOWED_CURRENCIES = ['CHF', 'EUR'];
 
+    // ──────────────────────────────────────────────────────────────
+    //  QR Bill Building
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Generate a QR reference (QRR) for an invoice.
      *
@@ -63,6 +67,10 @@ class SwissQrInvoiceService
 
         return $qrBill;
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Bill Component Builders
+    // ──────────────────────────────────────────────────────────────
 
     private function setCreditorInfo(QrBill $qrBill, Invoice $invoice, Organization $organization): void
     {
@@ -130,6 +138,10 @@ class SwissQrInvoiceService
             PaymentReference::create($refType, $invoice->qr_reference ?? null),
         );
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Output & Validation
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Generate a PNG data URI for the invoice QR code.

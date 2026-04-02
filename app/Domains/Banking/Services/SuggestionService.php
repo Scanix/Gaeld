@@ -32,6 +32,10 @@ class SuggestionService
         private MatchingService $matchingService,
     ) {}
 
+    // ──────────────────────────────────────────────────────────────
+    //  Invoice Suggestions
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Get reconciliation suggestions for a paginated collection of transactions.
      *
@@ -138,6 +142,10 @@ class SuggestionService
             'matches' => $matches,
         ];
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Expense Suggestions
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Find expense candidates for a debit transaction using amount and vendor heuristics.

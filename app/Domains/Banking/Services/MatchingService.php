@@ -25,6 +25,10 @@ class MatchingService
 {
     private const MAX_MATCH_CANDIDATES = 5;
 
+    // ──────────────────────────────────────────────────────────────
+    //  Match Orchestration
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Find and store matches for a bank transaction.
      *
@@ -63,6 +67,10 @@ class MatchingService
 
         return $this->storeMatches($transaction, $matches);
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Matching Strategies
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Match by exact QR reference (structured_reference ↔ invoice.qr_reference).
@@ -154,6 +162,10 @@ class MatchingService
             'match_type' => BankMatchType::Heuristic,
         ])->values();
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Persistence
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Persist match candidates to bank_matches table, replacing any unconfirmed existing matches.

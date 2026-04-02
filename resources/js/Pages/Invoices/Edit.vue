@@ -13,6 +13,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { currencyOptions } from '@/lib/contactOptions'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { useFormValidation, z } from '@/lib/useFormValidation'
 import { Plus, Trash2 } from 'lucide-vue-next'
@@ -89,13 +90,6 @@ function onCustomerCreated(customer) {
   form.customer_id = customer.id
 }
 
-const currencyOptions = [
-  { value: 'CHF', label: 'CHF' },
-  { value: 'EUR', label: 'EUR' },
-  { value: 'USD', label: 'USD' },
-  { value: 'GBP', label: 'GBP' },
-]
-
 const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
@@ -163,7 +157,7 @@ const vatOptions = [
               id="currency"
               v-model="form.currency"
               :label="t('currency')"
-              :options="currencyOptions"
+              :options="currencyOptions(t)"
               :error="form.errors.currency"
             />
           </div>

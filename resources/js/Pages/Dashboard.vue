@@ -115,8 +115,16 @@ const profit = computed(() => props.revenue - props.expenses)
 const previousProfit = computed(() => props.previousRevenue - props.previousExpenses)
 
 function yoyChange(current, previous) {
-  if (!previous || previous === 0) return null
-  return ((current - previous) / Math.abs(previous) * 100).toFixed(1)
+  const prev = Number(previous)
+  const cur = Number(current)
+  if (!prev || !Number.isFinite(prev) || !Number.isFinite(cur)) return null
+  const result = (cur - prev) / Math.abs(prev) * 100
+  return Number.isFinite(result) ? result.toFixed(1) : null
+}
+
+function safePercent(val) {
+  const n = parseFloat(val)
+  return Number.isFinite(n) ? n : 0
 }
 
 const summaryCards = computed(() => [
@@ -341,7 +349,7 @@ const transactionColumns = computed(() => [
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">{{ card.value }}</div>
-          <p v-if="card.trend !== null" :class="['mt-1 text-xs', parseFloat(card.trend) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400']">
+          <p v-if="card.trend !== null && Number.isFinite(parseFloat(card.trend))" :class="['mt-1 text-xs', parseFloat(card.trend) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400']">
             {{ parseFloat(card.trend) >= 0 ? '+' : '' }}{{ card.trend }}% {{ t('vs_last_year') }}
           </p>
         </CardContent>
@@ -434,12 +442,12 @@ const transactionColumns = computed(() => [
               <div class="h-2.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
                 <div
                   class="h-2.5 rounded-full transition-all"
-                  :class="parseFloat(budgetSummary.revenueVariance) >= 0 ? 'bg-green-500' : 'bg-amber-500'"
-                  :style="{ width: Math.min(100, parseFloat(budgetSummary.proRatedRevenue) > 0 ? (parseFloat(budgetSummary.actualRevenue) / parseFloat(budgetSummary.proRatedRevenue) * 100) : 0) + '%' }"
+                  :class="safePercent(budgetSummary.revenueVariance) >= 0 ? 'bg-green-500' : 'bg-amber-500'"
+                  :style="{ width: Math.min(100, safePercent(budgetSummary.proRatedRevenue) > 0 ? (safePercent(budgetSummary.actualRevenue) / safePercent(budgetSummary.proRatedRevenue) * 100) : 0) + '%' }"
                 />
               </div>
-              <p class="mt-0.5 text-xs" :class="parseFloat(budgetSummary.revenueVariance) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'">
-                {{ parseFloat(budgetSummary.revenueVariance) >= 0 ? '+' : '' }}{{ budgetSummary.revenueVariance }}% {{ parseFloat(budgetSummary.revenueVariance) >= 0 ? t('on_track') : t('behind_target') }}
+              <p class="mt-0.5 text-xs" :class="safePercent(budgetSummary.revenueVariance) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'">
+                {{ safePercent(budgetSummary.revenueVariance) >= 0 ? '+' : '' }}{{ safePercent(budgetSummary.revenueVariance).toFixed(1) }}% {{ safePercent(budgetSummary.revenueVariance) >= 0 ? t('on_track') : t('behind_target') }}
               </p>
             </div>
             <!-- Expenses progress -->
@@ -451,12 +459,12 @@ const transactionColumns = computed(() => [
               <div class="h-2.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
                 <div
                   class="h-2.5 rounded-full transition-all"
-                  :class="parseFloat(budgetSummary.expenseVariance) <= 0 ? 'bg-green-500' : 'bg-red-500'"
-                  :style="{ width: Math.min(100, parseFloat(budgetSummary.proRatedExpenses) > 0 ? (parseFloat(budgetSummary.actualExpenses) / parseFloat(budgetSummary.proRatedExpenses) * 100) : 0) + '%' }"
+                  :class="safePercent(budgetSummary.expenseVariance) <= 0 ? 'bg-green-500' : 'bg-red-500'"
+                  :style="{ width: Math.min(100, safePercent(budgetSummary.proRatedExpenses) > 0 ? (safePercent(budgetSummary.actualExpenses) / safePercent(budgetSummary.proRatedExpenses) * 100) : 0) + '%' }"
                 />
               </div>
-              <p class="mt-0.5 text-xs" :class="parseFloat(budgetSummary.expenseVariance) <= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-                {{ parseFloat(budgetSummary.expenseVariance) >= 0 ? '+' : '' }}{{ budgetSummary.expenseVariance }}% {{ parseFloat(budgetSummary.expenseVariance) <= 0 ? t('under_budget') : t('over_budget') }}
+              <p class="mt-0.5 text-xs" :class="safePercent(budgetSummary.expenseVariance) <= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                {{ safePercent(budgetSummary.expenseVariance) >= 0 ? '+' : '' }}{{ safePercent(budgetSummary.expenseVariance).toFixed(1) }}% {{ safePercent(budgetSummary.expenseVariance) <= 0 ? t('under_budget') : t('over_budget') }}
               </p>
             </div>
           </div>

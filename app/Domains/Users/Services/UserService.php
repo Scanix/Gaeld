@@ -14,6 +14,10 @@ use Spatie\Activitylog\Models\Activity;
  */
 class UserService
 {
+    // ──────────────────────────────────────────────────────────────
+    //  Account Management
+    // ──────────────────────────────────────────────────────────────
+
     public function create(CreateUserData $data): User
     {
         return User::create([
@@ -50,6 +54,10 @@ class UserService
             'password' => Hash::make($newPassword),
         ]);
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Account Deletion
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Permanently delete a user account and all associated data (GDPR Art. 17).

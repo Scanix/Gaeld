@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Models;
 
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +23,7 @@ use Illuminate\Support\Carbon;
  */
 class Budget extends Model
 {
-    use BelongsToOrganization;
+    use Auditable, BelongsToOrganization;
 
     protected $fillable = [
         'organization_id',

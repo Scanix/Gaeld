@@ -14,6 +14,7 @@ import Badge from '@/Components/UI/Badge.vue'
 import { Plus, Landmark } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { currencyOptions } from '@/lib/contactOptions'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -38,13 +39,6 @@ function submit() {
 }
 
 const { t } = useTranslations()
-
-const currencyOptions = [
-  { value: 'CHF', label: 'CHF' },
-  { value: 'EUR', label: 'EUR' },
-  { value: 'USD', label: 'USD' },
-  { value: 'GBP', label: 'GBP' },
-]
 
 const accountOptions = computed(() =>
   props.accounts.map(a => ({ value: a.id.toString(), label: `${a.code} — ${a.name}` }))
@@ -99,7 +93,7 @@ const columns = computed(() => [
           id="currency"
           v-model="form.currency"
           :label="t('currency')"
-          :options="currencyOptions"
+          :options="currencyOptions(t)"
           :error="form.errors.currency"
         />
         <FormSelect

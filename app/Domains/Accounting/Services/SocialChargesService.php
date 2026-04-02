@@ -50,6 +50,10 @@ final class SocialChargesService
         '58800' => '0.09315',
     ];
 
+    // ──────────────────────────────────────────────────────────────
+    //  Calculation
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Calculate social charges for a given annual income.
      *
@@ -107,6 +111,10 @@ final class SocialChargesService
         ];
     }
 
+    // ──────────────────────────────────────────────────────────────
+    //  Rate Info
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Return the current rate table for display.
      *
@@ -123,6 +131,10 @@ final class SocialChargesService
             'full_rate_threshold' => self::FULL_RATE_THRESHOLD,
         ];
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Helpers
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Determine the effective contribution rate based on income.

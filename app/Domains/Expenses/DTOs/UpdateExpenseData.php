@@ -2,7 +2,7 @@
 
 namespace App\Domains\Expenses\DTOs;
 
-use App\Support\MapsToSnakeCase;
+use App\Support\OmitsNullValues;
 use App\Support\ValidatesFromArray;
 
 /**
@@ -10,7 +10,7 @@ use App\Support\ValidatesFromArray;
  */
 readonly class UpdateExpenseData
 {
-    use MapsToSnakeCase;
+    use OmitsNullValues;
     use ValidatesFromArray;
 
     public function __construct(

@@ -3,6 +3,8 @@
 namespace App\Domains\Organizations\Models;
 
 use App\Domains\Users\Models\User;
+use App\Support\Traits\Auditable;
+use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class OrganizationInvitation extends Model
 {
-    use HasUuids;
+    use Auditable, BelongsToOrganization, HasUuids;
 
     /**
      * Transient plain-text token set after creation for notification purposes.

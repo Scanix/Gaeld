@@ -16,19 +16,13 @@ use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceService;
-use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class InvoiceFlowTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private Organization $org;
-
-    private User $user;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     private Customer $customer;
 
@@ -37,16 +31,7 @@ class InvoiceFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->org = Organization::create([
-            'name' => 'Test GmbH',
-            'currency' => 'CHF',
-        ]);
-        $this->org->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->org, 'owner');
+        $this->setUpOrganization();
 
         Account::create([
             'organization_id' => $this->org->id,

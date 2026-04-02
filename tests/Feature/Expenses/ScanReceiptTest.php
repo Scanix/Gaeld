@@ -8,36 +8,22 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Jobs\ProcessReceiptOcrJob;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
-use Tests\Traits\WithOrganizationPermissions;
+use Tests\Traits\WithAuthenticatedOrganization;
 
 class ScanReceiptTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
-
-    private Organization $org;
-
-    private User $user;
+    use RefreshDatabase, WithAuthenticatedOrganization;
 
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->seedPermissions();
-
-        $this->user = User::factory()->create();
-        $this->org = Organization::create([
-            'name' => 'Test GmbH',
-            'currency' => 'CHF',
-        ]);
-        $this->org->users()->attach($this->user->id, ['role' => 'owner']);
-        $this->assignOrganizationRole($this->user, $this->org, 'owner');
+        $this->setUpOrganization();
 
         // Mock the OCR service to avoid Tesseract dependency in tests
         $this->app->bind(ReceiptOcrInterface::class, function () {

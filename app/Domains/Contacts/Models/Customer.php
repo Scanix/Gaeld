@@ -24,6 +24,7 @@ use Laravel\Scout\Searchable;
  * @property int $id
  * @property string $organization_id
  * @property string $name
+ * @property ContactType|null $type
  * @property string|null $email
  * @property string|null $phone
  * @property string|null $address
