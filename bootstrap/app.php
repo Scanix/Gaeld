@@ -9,6 +9,7 @@ use App\Http\Middleware\EnsureHasOrganization;
 use App\Http\Middleware\EnsureOrganizationTwoFactor;
 use App\Http\Middleware\FakeTimeMiddleware;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SetGuestLocale;
 use App\Support\FeatureFlag;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Application;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            SetGuestLocale::class,
             HandleInertiaRequests::class,
             FakeTimeMiddleware::class,
         ]);

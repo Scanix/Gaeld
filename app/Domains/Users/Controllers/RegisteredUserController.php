@@ -43,6 +43,7 @@ class RegisteredUserController extends Controller
         ];
 
         $validated = $request->validate($rules);
+        $validated['locale'] = app()->getLocale();
 
         $user = $action->execute(CreateUserData::fromArray($validated));
 
