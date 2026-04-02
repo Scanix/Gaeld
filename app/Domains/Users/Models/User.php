@@ -3,12 +3,14 @@
 namespace App\Domains\Users\Models;
 
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Traits\Auditable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laragear\WebAuthn\Contracts\WebAuthnAuthenticatable;
 use Laragear\WebAuthn\WebAuthnAuthentication;
 use Laravel\Sanctum\HasApiTokens;
@@ -21,11 +23,11 @@ use Spatie\Permission\Traits\HasRoles;
  * Supports two-factor authentication (TOTP & WebAuthn), Sanctum API tokens,
  * role-based permissions (Spatie), and per-user locale preference.
  *
- * @property \Illuminate\Support\Carbon|null $email_change_requested_at
+ * @property Carbon|null $email_change_requested_at
  */
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, WebAuthnAuthenticatable
 {
-    use HasApiTokens, HasFactory, HasRoles, Notifiable, WebAuthnAuthentication;
+    use Auditable, HasApiTokens, HasFactory, HasRoles, Notifiable, WebAuthnAuthentication;
 
     protected $fillable = [
         'name',

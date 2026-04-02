@@ -6,6 +6,7 @@ use App\Domains\Migration\Enums\DataType;
 use App\Domains\Migration\Enums\Platform;
 use App\Domains\Migration\Jobs\ProcessMigrationImport;
 use App\Domains\Migration\Models\MigrationSession;
+use App\Domains\Migration\Parsers\GenericCsvParser;
 use App\Domains\Migration\Requests\ExecuteMigrationRequest;
 use App\Domains\Migration\Requests\StartMigrationRequest;
 use App\Domains\Migration\Requests\UploadMigrationFileRequest;
@@ -14,7 +15,6 @@ use App\Domains\Migration\Services\MigrationRegistry;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -90,7 +90,7 @@ class MigrationController extends Controller
 
         // Set column mapping for generic CSV parser if provided
         $parser = $this->registry->getParser($session->platform);
-        if ($parser instanceof \App\Domains\Migration\Parsers\GenericCsvParser) {
+        if ($parser instanceof GenericCsvParser) {
             $mapping = $request->validated('column_mapping');
             $delimiter = $request->validated('delimiter', ',');
             if ($mapping) {
@@ -212,5 +212,4 @@ class MigrationController extends Controller
         return redirect()->route('migration.show', $session)
             ->with('success', __('migration.rollback_complete', ['deleted' => $result['deleted']]));
     }
-
 }

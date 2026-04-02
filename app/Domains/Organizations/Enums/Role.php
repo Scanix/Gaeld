@@ -41,6 +41,17 @@ enum Role: string
         return array_column(self::cases(), 'value');
     }
 
+    public function label(): string
+    {
+        return match ($this) {
+            self::Owner => __('app.role_owner'),
+            self::Admin => __('app.role_admin'),
+            self::Accountant => __('app.role_accountant'),
+            self::Member => __('app.role_member'),
+            self::Viewer => __('app.role_viewer'),
+        };
+    }
+
     /**
      * @return Permission[]
      */

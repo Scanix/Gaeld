@@ -3,7 +3,6 @@
 namespace App\Domains\Reporting\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
-use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\Budget;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
@@ -29,6 +28,10 @@ class DashboardService
         private readonly AgingReportService $agingReportService,
     ) {}
 
+    // ──────────────────────────────────────────────────────────────
+    //  Public API
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * @return array{revenue: string, expenses: string, cashBalance: string, unpaidInvoices: array{count: int, total: string}, pendingExpenses: array{count: int, total: string}, balance: string, recentTransactions: Collection, monthlyBreakdown: array}
      */
@@ -45,6 +48,10 @@ class DashboardService
     {
         Cache::tags(["org:{$organizationId}:dashboard"])->flush();
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Core Computation
+    // ──────────────────────────────────────────────────────────────
 
     private function computeMetrics(string $organizationId): array
     {
@@ -85,6 +92,10 @@ class DashboardService
             'receivablesAging' => $this->agingSummary($organizationId),
         ];
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Component Metrics
+    // ──────────────────────────────────────────────────────────────
 
     private function cashBalance(string $organizationId): string
     {

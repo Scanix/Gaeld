@@ -6,7 +6,6 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Migration\Contracts\DataTypeImporterInterface;
-use App\Domains\Migration\Contracts\ImportRowInterface;
 use App\Domains\Migration\DTOs\ImportResult;
 use App\Domains\Migration\DTOs\OpeningBalanceRow;
 use App\Domains\Migration\DTOs\ValidationResult;

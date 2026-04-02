@@ -16,6 +16,10 @@ use Spatie\Permission\PermissionRegistrar;
  */
 class OrganizationService
 {
+    // ──────────────────────────────────────────────────────────────
+    //  CRUD
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Create a new organization and attach the owner.
      */
@@ -38,6 +42,10 @@ class OrganizationService
 
         return $organization;
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Membership
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Add a member to an organization.
@@ -88,6 +96,10 @@ class OrganizationService
         $organization->users()->updateExistingPivot($user->id, ['role' => $role->value]);
         $this->assignSpatieRole($user, $organization, $role);
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Helpers
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Check if removing/changing this user would leave the org without an owner.

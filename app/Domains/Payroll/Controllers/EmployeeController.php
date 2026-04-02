@@ -5,7 +5,10 @@ namespace App\Domains\Payroll\Controllers;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\CreateEmployeeAction;
 use App\Domains\Payroll\Actions\UpdateEmployeeAction;
+use App\Domains\Payroll\DTOs\CreateEmployeeData;
+use App\Domains\Payroll\DTOs\UpdateEmployeeData;
 use App\Domains\Payroll\Models\Employee;
+use App\Domains\Payroll\Queries\EmployeeQuery;
 use App\Domains\Payroll\Requests\StoreEmployeeRequest;
 use App\Domains\Payroll\Requests\UpdateEmployeeRequest;
 use App\Http\Controllers\Controller;
@@ -19,17 +22,12 @@ use Inertia\Response;
  */
 class EmployeeController extends Controller
 {
-    public function index(Request $request, CurrentOrganization $currentOrg): Response
+    public function index(Request $request): Response
     {
         $this->authorize('viewAny', Employee::class);
 
-        $employees = Employee::query()
-            ->where('organization_id', $currentOrg->id())
-            ->orderBy('last_name')
-            ->paginate(25);
-
         return Inertia::render('Payroll/Employees/Index', [
-            'employees' => $employees,
+            'employees' => EmployeeQuery::list($request),
         ]);
     }
 
@@ -44,7 +42,10 @@ class EmployeeController extends Controller
     {
         $this->authorize('create', Employee::class);
 
-        $employee = $action->execute($currentOrg->id(), $request->validated());
+        $validated = $request->validated();
+        $validated['organization_id'] = $currentOrg->id();
+
+        $employee = $action->execute(CreateEmployeeData::fromArray($validated));
 
         return redirect()->route('payroll.employees.show', $employee)
             ->with('success', __('app.employee_created'));
@@ -72,7 +73,7 @@ class EmployeeController extends Controller
     {
         $this->authorize('update', $employee);
 
-        $action->execute($employee, $request->validated());
+        $action->execute($employee, UpdateEmployeeData::fromArray($request->validated()));
 
         return redirect()->route('payroll.employees.show', $employee)
             ->with('success', __('app.employee_updated'));

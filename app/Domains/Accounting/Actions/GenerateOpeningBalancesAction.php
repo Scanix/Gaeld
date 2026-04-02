@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Services\LedgerService;
 
@@ -27,7 +28,7 @@ class GenerateOpeningBalancesAction
      * @param  string  $orgId  Organization UUID
      * @param  int  $closedYear  The year that was just closed (e.g. 2025)
      */
-    public function execute(string $orgId, int $closedYear): void
+    public function execute(string $orgId, int $closedYear): ?JournalEntry
     {
         $nextYear = $closedYear + 1;
         $openingDate = sprintf('%d-01-01', $nextYear);
@@ -108,7 +109,7 @@ class GenerateOpeningBalancesAction
         }
 
         if (empty($lines)) {
-            return;
+            return null;
         }
 
         // Balance the entry via the opening balance (9000) account
@@ -130,7 +131,7 @@ class GenerateOpeningBalancesAction
             );
         }
 
-        $this->ledger->postEntry($orgId, new JournalEntryData(
+        return $this->ledger->postEntry($orgId, new JournalEntryData(
             date: $openingDate,
             reference: "OPENING-{$nextYear}",
             description: "Bilan d'ouverture {$nextYear}",

@@ -7,6 +7,7 @@ use App\Domains\Assets\Actions\DepreciateAssetAction;
 use App\Domains\Assets\Actions\DisposeAssetAction;
 use App\Domains\Assets\DTOs\CreateFixedAssetData;
 use App\Domains\Assets\Models\FixedAsset;
+use App\Domains\Assets\Queries\FixedAssetQuery;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
@@ -20,18 +21,12 @@ use Inertia\Response;
  */
 class FixedAssetController extends Controller
 {
-    public function index(Request $request, CurrentOrganization $currentOrg): Response
+    public function index(Request $request): Response
     {
         $this->authorize('viewAny', FixedAsset::class);
 
-        $assets = FixedAsset::query()
-            ->where('organization_id', $currentOrg->id())
-            ->with(['assetAccount', 'depreciationExpenseAccount', 'accumulatedDepreciationAccount'])
-            ->orderBy('purchase_date', 'desc')
-            ->paginate(25);
-
         return Inertia::render('Assets/Index', [
-            'assets' => $assets,
+            'assets' => FixedAssetQuery::list($request),
         ]);
     }
 

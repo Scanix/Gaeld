@@ -17,6 +17,10 @@ class Mt940Parser
 
     private ?string $statementId = null;
 
+    // ──────────────────────────────────────────────────────────────
+    //  Parsing
+    // ──────────────────────────────────────────────────────────────
+
     public function parse(string $content): void
     {
         $this->entries = [];
@@ -49,6 +53,10 @@ class Mt940Parser
     {
         return $this->statementId;
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Transaction Parsing
+    // ──────────────────────────────────────────────────────────────
 
     private function parseTransaction(string $block): ?CamtEntry
     {

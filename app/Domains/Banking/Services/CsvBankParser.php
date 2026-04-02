@@ -16,6 +16,10 @@ class CsvBankParser
     /** @var CamtEntry[] */
     private array $entries = [];
 
+    // ──────────────────────────────────────────────────────────────
+    //  Parsing
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Parse CSV content with the given column mapping.
      *
@@ -85,6 +89,10 @@ class CsvBankParser
     {
         return $this->entries;
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Helpers
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Read headers from the first row of a CSV.

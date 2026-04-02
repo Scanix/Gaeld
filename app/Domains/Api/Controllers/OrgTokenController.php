@@ -17,20 +17,17 @@ class OrgTokenController extends Controller
 {
     use AuthorizesRequests;
 
-    public function __construct()
-    {
-        // Only org owners and admins can manage organization tokens
-    }
+    public function __construct(
+        private CurrentOrganization $currentOrg,
+    ) {}
 
     public function index(): JsonResponse
     {
-        $this->authorize('manageUsers', app(CurrentOrganization::class)->get());
-
-        $orgId = app(CurrentOrganization::class)->id();
+        $this->authorize('manageUsers', $this->currentOrg->get());
 
         $tokens = PersonalAccessToken::query()
             ->organization()
-            ->where('organization_id', $orgId)
+            ->where('organization_id', $this->currentOrg->id())
             ->get(['id', 'name', 'abilities', 'last_used_at', 'expires_at', 'created_at', 'tokenable_id']);
 
         // Include the creator name for each token
@@ -83,12 +80,12 @@ class OrgTokenController extends Controller
 
     public function destroy(int $tokenId): JsonResponse
     {
-        $this->authorize('manageUsers', app(CurrentOrganization::class)->get());
+        $this->authorize('manageUsers', $this->currentOrg->get());
 
         $token = PersonalAccessToken::query()
             ->organization()
             ->where('id', $tokenId)
-            ->where('organization_id', app(CurrentOrganization::class)->id())
+            ->where('organization_id', $this->currentOrg->id())
             ->firstOrFail();
 
         $token->delete();

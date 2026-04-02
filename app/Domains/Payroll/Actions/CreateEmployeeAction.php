@@ -2,6 +2,7 @@
 
 namespace App\Domains\Payroll\Actions;
 
+use App\Domains\Payroll\DTOs\CreateEmployeeData;
 use App\Domains\Payroll\Models\Employee;
 
 /**
@@ -9,10 +10,8 @@ use App\Domains\Payroll\Models\Employee;
  */
 class CreateEmployeeAction
 {
-    public function execute(string $orgId, array $data): Employee
+    public function execute(CreateEmployeeData $data): Employee
     {
-        $data['organization_id'] = $orgId;
-
-        return Employee::create($data);
+        return Employee::create($data->toArray());
     }
 }

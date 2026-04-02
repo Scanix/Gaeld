@@ -29,6 +29,10 @@ class SwissDeductionService
         ['code' => 'lpp_employer', 'name' => 'LPP (employer)', 'rate' => '7.0000', 'type' => 'employer'],
     ];
 
+    // ──────────────────────────────────────────────────────────────
+    //  Calculation
+    // ──────────────────────────────────────────────────────────────
+
     /**
      * Calculate all deductions for a given gross salary.
      *
@@ -59,6 +63,10 @@ class SwissDeductionService
 
         return $deductions;
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Helpers
+    // ──────────────────────────────────────────────────────────────
 
     /**
      * Build the rate map from custom rates or defaults.

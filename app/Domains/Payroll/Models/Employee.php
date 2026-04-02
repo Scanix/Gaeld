@@ -6,9 +6,11 @@ use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
@@ -32,7 +34,7 @@ use Illuminate\Support\Carbon;
  */
 class Employee extends Model
 {
-    use Auditable, BelongsToOrganization, HasUuids;
+    use Auditable, BelongsToOrganization, HasFactory, HasUuids, SoftDeletes;
 
     protected $appends = ['status'];
 

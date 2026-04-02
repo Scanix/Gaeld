@@ -22,6 +22,10 @@ class InvitationService
         private readonly OrganizationService $organizationService,
     ) {}
 
+    // ──────────────────────────────────────────────────────────────
+    //  Invite Lifecycle
+    // ──────────────────────────────────────────────────────────────
+
     public function invite(Organization $organization, string $email, Role $role, User $inviter): OrganizationInvitation
     {
         // Check if user is already a member
@@ -102,6 +106,10 @@ class InvitationService
         return $invitation->organization;
     }
 
+    // ──────────────────────────────────────────────────────────────
+    //  Management
+    // ──────────────────────────────────────────────────────────────
+
     public function cancel(OrganizationInvitation $invitation): void
     {
         $invitation->delete();
@@ -119,6 +127,10 @@ class InvitationService
         Notification::route('mail', $invitation->email)
             ->notify((new InvitationNotification($invitation))->locale($invitation->organization->locale));
     }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Capacity Checks
+    // ──────────────────────────────────────────────────────────────
 
     public function canAddMember(Organization $organization): bool
     {

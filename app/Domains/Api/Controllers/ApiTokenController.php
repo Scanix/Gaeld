@@ -17,12 +17,16 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class ApiTokenController extends Controller
 {
+    public function __construct(
+        private CurrentOrganization $currentOrg,
+    ) {}
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $tokens = $request->user()
             ->tokens()
             ->personal()
-            ->where('organization_id', app(CurrentOrganization::class)->id())
+            ->where('organization_id', $this->currentOrg->id())
             ->get(['id', 'name', 'abilities', 'last_used_at', 'expires_at', 'created_at']);
 
         return ApiTokenResource::collection($tokens);
@@ -63,7 +67,7 @@ class ApiTokenController extends Controller
             ->tokens()
             ->personal()
             ->where('id', $tokenId)
-            ->where('organization_id', app(CurrentOrganization::class)->id())
+            ->where('organization_id', $this->currentOrg->id())
             ->firstOrFail();
 
         $token->delete();

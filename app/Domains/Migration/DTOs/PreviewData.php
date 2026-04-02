@@ -12,9 +12,6 @@ class PreviewData
 {
     /**
      * @param  Collection<int, ImportRowInterface>  $sampleRows  First N rows for preview
-     * @param  int  $totalRows
-     * @param  int  $validRows
-     * @param  int  $invalidRows
      * @param  array<int, string[]>  $rowErrors
      * @param  array<string, array{source_code: string, source_name: string, target_code: ?string, target_name: ?string, confidence: float}>  $accountMappings  Suggested account mappings
      */

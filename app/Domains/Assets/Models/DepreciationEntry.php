@@ -3,6 +3,7 @@
 namespace App\Domains\Assets\Models;
 
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -19,6 +20,8 @@ use Illuminate\Support\Carbon;
  */
 class DepreciationEntry extends Model
 {
+    use Auditable;
+
     public $timestamps = false;
 
     protected $fillable = [
