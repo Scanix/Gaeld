@@ -1,6 +1,9 @@
 <?php
 
+use App\Domains\Invoicing\Controllers\InvoiceCommunicationController;
 use App\Domains\Invoicing\Controllers\InvoiceController;
+use App\Domains\Invoicing\Controllers\InvoiceDocumentController;
+use App\Domains\Invoicing\Controllers\InvoiceLifecycleController;
 use App\Domains\Invoicing\Controllers\RecurringInvoiceController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,13 +14,13 @@ Route::post('/invoices/recurring/{recurring}/pause', [RecurringInvoiceController
 Route::post('/invoices/recurring/{recurring}/resume', [RecurringInvoiceController::class, 'resume'])->name('invoices.recurring.resume');
 
 Route::resource('invoices', InvoiceController::class);
-Route::post('/invoices/{invoice}/finalize', [InvoiceController::class, 'finalize'])->name('invoices.finalize');
-Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
-Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment'])->name('invoices.payment');
-Route::post('/invoices/{invoice}/duplicate', [InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
-Route::post('/invoices/{invoice}/credit-note', [InvoiceController::class, 'creditNote'])->name('invoices.creditNote');
-Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'sendInvoice'])->name('invoices.send');
-Route::get('/invoices/{invoice}/qr-pdf', [InvoiceController::class, 'downloadQrPdf'])->middleware('throttle:30,1')->name('invoices.qr-pdf');
-Route::delete('/invoices/{invoice}/justificatif', [InvoiceController::class, 'removeJustificatif'])->name('invoices.justificatif.remove');
-Route::get('/invoices/{invoice}/justificatif', [InvoiceController::class, 'downloadJustificatif'])->middleware('throttle:30,1')->name('invoices.justificatif.download');
-Route::post('/invoices/{invoice}/reminder', [InvoiceController::class, 'sendReminder'])->name('invoices.reminder');
+Route::post('/invoices/{invoice}/finalize', [InvoiceLifecycleController::class, 'finalize'])->name('invoices.finalize');
+Route::post('/invoices/{invoice}/cancel', [InvoiceLifecycleController::class, 'cancel'])->name('invoices.cancel');
+Route::post('/invoices/{invoice}/payment', [InvoiceLifecycleController::class, 'recordPayment'])->name('invoices.payment');
+Route::post('/invoices/{invoice}/duplicate', [InvoiceLifecycleController::class, 'duplicate'])->name('invoices.duplicate');
+Route::post('/invoices/{invoice}/credit-note', [InvoiceLifecycleController::class, 'creditNote'])->name('invoices.creditNote');
+Route::post('/invoices/{invoice}/send', [InvoiceCommunicationController::class, 'sendInvoice'])->name('invoices.send');
+Route::get('/invoices/{invoice}/qr-pdf', [InvoiceDocumentController::class, 'downloadQrPdf'])->middleware('throttle:30,1')->name('invoices.qr-pdf');
+Route::delete('/invoices/{invoice}/justificatif', [InvoiceDocumentController::class, 'removeJustificatif'])->name('invoices.justificatif.remove');
+Route::get('/invoices/{invoice}/justificatif', [InvoiceDocumentController::class, 'downloadJustificatif'])->middleware('throttle:30,1')->name('invoices.justificatif.download');
+Route::post('/invoices/{invoice}/reminder', [InvoiceCommunicationController::class, 'sendReminder'])->name('invoices.reminder');

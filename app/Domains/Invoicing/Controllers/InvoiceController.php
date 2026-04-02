@@ -5,44 +5,28 @@ namespace App\Domains\Invoicing\Controllers;
 use App\Domains\Accounting\Queries\VatRateQuery;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Queries\CustomerQuery;
-use App\Domains\Invoicing\Actions\CancelInvoiceAction;
-use App\Domains\Invoicing\Actions\CreateCreditNoteAction;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DeleteInvoiceAction;
-use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
-use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
-use App\Domains\Invoicing\Actions\RecordPaymentAction;
-use App\Domains\Invoicing\Actions\SendInvoiceAction;
-use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
-use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
-use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
-use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
-use App\Domains\Invoicing\Requests\RecordPaymentRequest;
 use App\Domains\Invoicing\Requests\StoreInvoiceRequest;
 use App\Domains\Invoicing\Requests\UpdateInvoiceRequest;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use App\Support\Services\FileUploadService;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response as HttpResponse;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Invoice lifecycle: creating, editing, sending, payment recording,
- * PDF generation, credit notes, and reminders.
+ * Invoice CRUD: creating, listing, viewing, editing and deleting invoices.
  */
 class InvoiceController extends Controller
 {
@@ -65,12 +49,9 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function create(Request $request): Response
+    public function create(Request $request, InvoiceNumberGenerator $numberGenerator, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('create', Invoice::class);
-
-        $numberGenerator = app(InvoiceNumberGenerator::class);
-        $currentOrg = app(CurrentOrganization::class);
 
         return Inertia::render('Invoices/Create', [
             'customers' => CustomerQuery::forSelect(),
@@ -79,7 +60,7 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function store(StoreInvoiceRequest $request, CreateInvoiceAction $action, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(StoreInvoiceRequest $request, CreateInvoiceAction $action, CurrentOrganization $currentOrg, FinalizeInvoiceAction $finalizeAction): RedirectResponse
     {
         $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
@@ -96,7 +77,7 @@ class InvoiceController extends Controller
         $invoice = $action->execute($dto);
 
         if ($request->boolean('finalize')) {
-            app(FinalizeInvoiceAction::class)->execute($invoice);
+            $finalizeAction->execute($invoice);
         }
 
         return redirect()->route('invoices.show', $invoice)
@@ -180,151 +161,5 @@ class InvoiceController extends Controller
 
         return redirect()->route('invoices.index')
             ->with('success', __('app.invoice_deleted'));
-    }
-
-    public function finalize(Invoice $invoice, FinalizeInvoiceAction $action): RedirectResponse
-    {
-        $this->authorize('finalize', $invoice);
-
-        try {
-            $action->execute($invoice);
-        } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-
-        return redirect()->route('invoices.show', $invoice)
-            ->with('success', __('app.invoice_finalized'));
-    }
-
-    public function cancel(Invoice $invoice, CancelInvoiceAction $action): RedirectResponse
-    {
-        $this->authorize('cancel', $invoice);
-
-        try {
-            $action->execute($invoice);
-        } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-
-        return redirect()->route('invoices.show', $invoice)
-            ->with('success', __('app.invoice_cancelled'));
-    }
-
-    public function recordPayment(RecordPaymentRequest $request, Invoice $invoice, RecordPaymentAction $action): RedirectResponse
-    {
-        $validated = $request->validated();
-
-        $dto = RecordPaymentData::fromArray($validated);
-
-        try {
-            $action->execute($invoice, $dto);
-        } catch (InvalidInvoiceStateException|InvalidPaymentException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        } catch (ModelNotFoundException) {
-            return redirect()->back()->with('error', __('app.account_not_found', ['code' => $validated['bank_account_code'] ?? '']));
-        }
-
-        return redirect()->route('invoices.show', $invoice)
-            ->with('success', __('app.payment_recorded'));
-    }
-
-    public function duplicate(Invoice $invoice, DuplicateInvoiceAction $action): RedirectResponse
-    {
-        $this->authorize('view', $invoice);
-
-        $newInvoice = $action->execute($invoice);
-
-        return redirect()->route('invoices.show', $newInvoice)
-            ->with('success', __('app.invoice_duplicated'));
-    }
-
-    public function removeJustificatif(Invoice $invoice): RedirectResponse
-    {
-        $this->authorize('update', $invoice);
-
-        if ($invoice->justificatif_path) {
-            $this->uploadService->delete($invoice->justificatif_path);
-            $invoice->update(['justificatif_path' => null]);
-        }
-
-        return redirect()->route('invoices.show', $invoice)
-            ->with('success', __('app.justificatif_removed'));
-    }
-
-    public function downloadJustificatif(Invoice $invoice): StreamedResponse|RedirectResponse
-    {
-        $this->authorize('view', $invoice);
-
-        if (! $invoice->justificatif_path || ! Storage::disk('local')->exists($invoice->justificatif_path)) {
-            abort(404);
-        }
-
-        return Storage::disk('local')->download(
-            $invoice->justificatif_path,
-            basename($invoice->justificatif_path),
-        );
-    }
-
-    public function downloadQrPdf(Invoice $invoice, GenerateQrInvoicePdfAction $action, CurrentOrganization $currentOrg): HttpResponse|RedirectResponse
-    {
-        $this->authorize('view', $invoice);
-
-        $organization = $currentOrg->get();
-        $locale = $organization->locale ?? app()->getLocale();
-
-        try {
-            $pdf = $action->execute($invoice, $organization, $locale);
-        } catch (QrBillValidationException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-
-        $filename = 'invoice-'.($invoice->number ?? $invoice->id).'.pdf';
-
-        return new HttpResponse($pdf, 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
-        ]);
-    }
-
-    public function sendInvoice(Invoice $invoice, SendInvoiceAction $action): RedirectResponse
-    {
-        $this->authorize('send', $invoice);
-
-        try {
-            $action->execute($invoice->load('customer'));
-        } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-
-        return redirect()->route('invoices.show', $invoice)
-            ->with('success', __('app.invoice_sent'));
-    }
-
-    public function sendReminder(Invoice $invoice, SendInvoiceReminderAction $action): RedirectResponse
-    {
-        $this->authorize('send', $invoice);
-
-        try {
-            $action->execute($invoice);
-        } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-
-        return redirect()->route('invoices.show', $invoice)
-            ->with('success', __('app.reminder_sent'));
-    }
-
-    public function creditNote(Invoice $invoice, CreateCreditNoteAction $action): RedirectResponse
-    {
-        $this->authorize('view', $invoice);
-
-        try {
-            $creditNote = $action->execute($invoice);
-        } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-
-        return redirect()->route('invoices.show', $creditNote)
-            ->with('success', __('app.credit_note_created'));
     }
 }
