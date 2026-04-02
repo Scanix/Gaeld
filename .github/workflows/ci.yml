@@ -62,6 +62,20 @@ jobs:
       - name: Generate application key
         run: php artisan key:generate
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@latest --activate
+
+      - name: Install NPM dependencies
+        run: pnpm install
+
+      - name: Build Vite assets
+        run: pnpm build
+
       - name: Run linter (Pint)
         run: composer lint
 
