@@ -9,6 +9,7 @@ use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Domains\Invoicing\Services\InvoiceService;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Records a payment against an invoice and updates its status (partial or fully paid).
@@ -32,6 +33,16 @@ class RecordPaymentAction
             throw new InvalidPaymentException("Payment amount ({$amount}) exceeds amount due ({$amountDue}).");
         }
 
-        return $this->invoiceService->recordPayment($invoice, $data);
+        $payment = $this->invoiceService->recordPayment($invoice, $data);
+
+        Log::info('Invoice payment recorded', [
+            'invoice_id' => $invoice->id,
+            'payment_id' => $payment->id,
+            'amount' => $amount,
+            'amount_due_before' => $amountDue,
+            'organization_id' => $invoice->organization_id,
+        ]);
+
+        return $payment;
     }
 }
