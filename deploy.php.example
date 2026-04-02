@@ -43,8 +43,8 @@ host('production')
 
 // Build assets locally to avoid CPU spikes on production.
 task('assets:build', function () {
-    runLocally('npm install --no-audit --no-fund --silent');
-    runLocally('npm run build');
+    runLocally('pnpm install --frozen-lockfile');
+    runLocally('pnpm build');
 })->desc('Build frontend assets locally');
 
 task('assets:upload', function () {
