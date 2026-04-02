@@ -11,7 +11,10 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 
 /**
- * Organization-scoped API token management.
+ * @group Authentication
+ *
+ * Manage organisation-scoped API tokens. Requires the `manageUsers` permission.
+ * Organisation tokens are shared across the organisation and not tied to a single user.
  */
 class OrgTokenController extends Controller
 {
@@ -21,6 +24,13 @@ class OrgTokenController extends Controller
         private CurrentOrganization $currentOrg,
     ) {}
 
+    /**
+     * List organisation tokens
+     *
+     * Returns all organisation-scoped API tokens for the current organisation.
+     *
+     * @response 200 scenario="Success" {"data":[{"id":1,"name":"Production Key","abilities":["*"],"last_used_at":"2025-03-15T08:00:00.000000Z","expires_at":null,"created_at":"2025-01-10T10:00:00.000000Z","created_by":"John Doe"}]}
+     */
     public function index(): JsonResponse
     {
         $this->authorize('manageUsers', $this->currentOrg->get());
@@ -46,6 +56,19 @@ class OrgTokenController extends Controller
         return response()->json(['data' => $data]);
     }
 
+    /**
+     * Create an organisation token
+     *
+     * Creates a new organisation-scoped API token. The plain-text token is returned only once.
+     *
+     * @bodyParam name string required A descriptive name for the token. Example: Production Key
+     * @bodyParam abilities string[] Token abilities. Use `*` for full access. Example: ["*"]
+     * @bodyParam expires_in_days integer Number of days until the token expires (1-365). Example: 365
+     *
+     * @response 201 scenario="Created" {"token":"2|xyz789...","name":"Production Key","type":"organization","abilities":["*"],"expires_at":null}
+     * @response 422 scenario="Validation error" {"message":"The name field is required.","errors":{"name":["The name field is required."]}}
+     * @response 403 scenario="Forbidden" {"message":"This action is unauthorized."}
+     */
     public function store(StoreOrgTokenRequest $request, CurrentOrganization $currentOrg): JsonResponse
     {
         $this->authorize('manageUsers', $currentOrg->get());
@@ -78,6 +101,17 @@ class OrgTokenController extends Controller
         ], 201);
     }
 
+    /**
+     * Revoke an organisation token
+     *
+     * Permanently deletes an organisation-scoped API token.
+     *
+     * @urlParam tokenId integer required The token ID. Example: 1
+     *
+     * @response 204 scenario="Revoked"
+     * @response 404 scenario="Not found" {"message":"Token not found."}
+     * @response 403 scenario="Forbidden" {"message":"This action is unauthorized."}
+     */
     public function destroy(int $tokenId): JsonResponse
     {
         $this->authorize('manageUsers', $this->currentOrg->get());

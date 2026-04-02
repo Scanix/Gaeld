@@ -33,7 +33,7 @@ const { t } = useTranslations()
 const search = ref(props.query?.search ?? '')
 
 function handleSearch() {
-  router.get('/accounting/accounts', { search: search.value || undefined }, { preserveState: true, replace: true })
+  router.get('/accounting/chart-of-accounts', { search: search.value || undefined }, { preserveState: true, replace: true })
 }
 
 const groupLabels = {

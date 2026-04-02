@@ -138,4 +138,7 @@ return [
 
     // Platform WIP
     'platform_wip' => '(Demnächst verfügbar)',
+
+    // ── Additional translations ──────────────────────────────
+    'opening_balances_entry' => 'Eröffnungssalden',
 ];

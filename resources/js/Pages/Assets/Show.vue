@@ -54,9 +54,10 @@ function formatSwiss(value) {
 }
 
 const depreciationProgress = computed(() => {
-  if (!props.asset.purchase_amount || props.asset.purchase_amount === 0) return 0
-  const accumulated = props.asset.purchase_amount - props.asset.net_book_value
-  return Math.min(100, Math.round((accumulated / props.asset.purchase_amount) * 100))
+  const purchase = Number(props.asset.purchase_amount)
+  if (!purchase) return 0
+  const accumulated = purchase - Number(props.asset.net_book_value)
+  return Math.min(100, Math.round((accumulated / purchase) * 100))
 })
 
 const historyColumns = computed(() => [

@@ -58,6 +58,6 @@ class SocialChargesController extends Controller
         );
 
         return redirect()->route('accounting.socialCharges')
-            ->with('success', __('Social charges entry posted successfully.'));
+            ->with('success', __('app.social_charges_posted'));
     }
 }

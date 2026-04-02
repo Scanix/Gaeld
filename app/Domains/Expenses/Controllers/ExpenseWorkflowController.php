@@ -2,6 +2,10 @@
 
 namespace App\Domains\Expenses\Controllers;
 
+use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
+use App\Domains\Accounting\Exceptions\FiscalYearClosedException;
+use App\Domains\Accounting\Exceptions\InvalidEntryDataException;
+use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
@@ -41,9 +45,15 @@ class ExpenseWorkflowController extends Controller
         try {
             $action->execute($expense, $validated['expense_account_code']);
         } catch (InvalidExpenseStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->back()->withErrors(['expense_account_code' => $e->getMessage()]);
         } catch (ModelNotFoundException) {
-            return redirect()->back()->with('error', __('app.account_not_found', ['code' => $validated['expense_account_code']]));
+            return redirect()->back()->withErrors(['expense_account_code' => __('app.account_not_found', ['code' => $validated['expense_account_code']])]);
+        } catch (FiscalYearClosedException $e) {
+            return redirect()->back()->withErrors(['expense_account_code' => $e->getMessage()]);
+        } catch (DuplicateReferenceException $e) {
+            return redirect()->back()->withErrors(['expense_account_code' => $e->getMessage()]);
+        } catch (UnbalancedEntryException|InvalidEntryDataException $e) {
+            return redirect()->back()->withErrors(['expense_account_code' => $e->getMessage()]);
         }
 
         return redirect()->route('expenses.show', $expense)
