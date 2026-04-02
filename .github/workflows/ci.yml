@@ -65,6 +65,9 @@ jobs:
       - name: Run linter (Pint)
         run: composer lint
 
+      - name: Run static analysis (PHPStan)
+        run: composer stan
+
       - name: Run migrations
         env:
           DB_CONNECTION: pgsql
