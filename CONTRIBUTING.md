@@ -42,7 +42,7 @@ For larger changes, please open an issue first so we can discuss the approach.
 
 ```bash
 composer install
-npm install && npm run build
+pnpm install && pnpm build
 cp .env.example .env
 php artisan key:generate
 php artisan gaeld:install --demo
