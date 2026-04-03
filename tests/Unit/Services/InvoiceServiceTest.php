@@ -9,7 +9,7 @@ use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -61,7 +61,7 @@ class InvoiceServiceTest extends TestCase
 
     public function test_record_payment_uses_default_reference_and_marks_invoice_paid(): void
     {
-        $service = app(InvoiceService::class);
+        $service = app(InvoiceAccountingService::class);
 
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
@@ -93,7 +93,7 @@ class InvoiceServiceTest extends TestCase
 
     public function test_record_payment_fails_when_bank_account_code_missing(): void
     {
-        $service = app(InvoiceService::class);
+        $service = app(InvoiceAccountingService::class);
 
         // Delete the bank account so the ledger account cannot be resolved
         Account::where('organization_id', $this->organization->id)
@@ -125,7 +125,7 @@ class InvoiceServiceTest extends TestCase
 
     public function test_record_payment_fails_when_receivable_account_missing(): void
     {
-        $service = app(InvoiceService::class);
+        $service = app(InvoiceAccountingService::class);
 
         // Delete accounts receivable so the ledger account cannot be resolved
         Account::where('organization_id', $this->organization->id)

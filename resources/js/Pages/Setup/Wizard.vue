@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue'
 import { Head, useForm } from '@inertiajs/vue3'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -10,6 +11,7 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { currencyOptions } from '@/lib/contactOptions'
+import { Check } from 'lucide-vue-next'
 
 const cantons = ['AG','AI','AR','BE','BL','BS','FR','GE','GL','GR','JU','LU','NE','NW','OW','SG','SH','SO','SZ','TG','TI','UR','VD','VS','ZG','ZH']
 
@@ -41,20 +43,74 @@ const localeOptions = [
   { value: 'de', label: t('locale_de') },
   { value: 'it', label: t('locale_it') },
 ]
+
+const currentStep = ref(0)
+
+const steps = [
+  { key: 'account', label: () => t('step_account') },
+  { key: 'organization', label: () => t('step_organization') },
+  { key: 'settings', label: () => t('step_settings') },
+]
+
+function nextStep() {
+  if (currentStep.value < steps.length - 1) {
+    currentStep.value++
+  }
+}
+
+function prevStep() {
+  if (currentStep.value > 0) {
+    currentStep.value--
+  }
+}
 </script>
 
 <template>
-  <Head title="Setup Wizard" />
+  <Head :title="t('setup_wizard')" />
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--background))] p-8">
     <Card class="w-full max-w-2xl">
       <CardHeader>
         <CardTitle class="text-3xl">{{ t('welcome') }}</CardTitle>
         <CardDescription>{{ t('setup_welcome') }}</CardDescription>
+
+        <!-- Stepper indicator -->
+        <nav aria-label="Setup progress" class="mt-6">
+          <ol class="flex items-center gap-2">
+            <li
+              v-for="(step, i) in steps"
+              :key="step.key"
+              class="flex items-center gap-2"
+            >
+              <button
+                type="button"
+                class="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors"
+                :class="[
+                  i === currentStep
+                    ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
+                    : i < currentStep
+                      ? 'bg-[hsl(var(--primary)/0.15)] text-[hsl(var(--primary))]'
+                      : 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]',
+                ]"
+                @click="i < currentStep ? currentStep = i : undefined"
+              >
+                <span
+                  class="flex h-5 w-5 items-center justify-center rounded-full text-xs"
+                  :class="i < currentStep ? '' : 'border border-current'"
+                >
+                  <Check v-if="i < currentStep" class="h-3 w-3" />
+                  <span v-else>{{ i + 1 }}</span>
+                </span>
+                {{ step.label() }}
+              </button>
+              <span v-if="i < steps.length - 1" class="h-px w-6 bg-[hsl(var(--border))]" />
+            </li>
+          </ol>
+        </nav>
       </CardHeader>
       <CardContent>
         <form class="space-y-6" @submit.prevent="submit">
-          <!-- Admin User -->
-          <fieldset class="space-y-6">
+          <!-- Step 1: Admin User -->
+          <fieldset v-show="currentStep === 0" class="space-y-6">
             <legend class="text-lg font-semibold">{{ t('admin_account') }}</legend>
             <FormInput id="user_name" v-model="form.user_name" :label="t('full_name')" :error="form.errors.user_name" required />
             <FormInput id="user_email" v-model="form.user_email" type="email" :label="t('email')" :error="form.errors.user_email" required />
@@ -62,8 +118,8 @@ const localeOptions = [
             <FormInput id="user_password_confirmation" v-model="form.user_password_confirmation" type="password" :label="t('confirm_password')" required />
           </fieldset>
 
-          <!-- Organization -->
-          <fieldset class="space-y-6">
+          <!-- Step 2: Organization -->
+          <fieldset v-show="currentStep === 1" class="space-y-6">
             <legend class="text-lg font-semibold">{{ t('organization') }}</legend>
             <FormInput id="org_name" v-model="form.org_name" :label="t('company_name')" :error="form.errors.org_name" required />
             <FormInput id="org_legal_name" v-model="form.org_legal_name" :label="t('legal_name_different')" />
@@ -78,8 +134,8 @@ const localeOptions = [
             </div>
           </fieldset>
 
-          <!-- Settings -->
-          <fieldset class="space-y-6">
+          <!-- Step 3: Settings -->
+          <fieldset v-show="currentStep === 2" class="space-y-6">
             <legend class="text-lg font-semibold">{{ t('settings') }}</legend>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormSelect id="currency" v-model="form.currency" :label="t('currency')" :options="currencyOptions(t)" required />
@@ -87,9 +143,33 @@ const localeOptions = [
             </div>
           </fieldset>
 
-          <Button type="submit" class="w-full" :disabled="form.processing">
-            {{ t('complete_setup') }}
-          </Button>
+          <!-- Navigation buttons -->
+          <div class="flex justify-between">
+            <Button
+              v-if="currentStep > 0"
+              type="button"
+              variant="outline"
+              @click="prevStep"
+            >
+              {{ t('back') }}
+            </Button>
+            <span v-else />
+
+            <Button
+              v-if="currentStep < steps.length - 1"
+              type="button"
+              @click="nextStep"
+            >
+              {{ t('next') }}
+            </Button>
+            <Button
+              v-else
+              type="submit"
+              :disabled="form.processing"
+            >
+              {{ t('complete_setup') }}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

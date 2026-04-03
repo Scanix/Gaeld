@@ -261,7 +261,7 @@ const eventGroups = computed(() => {
                       type="checkbox"
                       :checked="form.events.includes(event)"
                       @change="toggleEvent(event)"
-                      class="rounded border-gray-300"
+                      class="rounded border-gray-300 dark:border-gray-600"
                     />
                     {{ event.split('.').pop() }}
                   </label>
@@ -276,7 +276,7 @@ const eventGroups = computed(() => {
               type="checkbox"
               v-model="form.is_active"
               id="webhook-active"
-              class="rounded border-gray-300"
+              class="rounded border-gray-300 dark:border-gray-600"
             />
             <label for="webhook-active" class="text-sm">{{ t('active') }}</label>
           </div>

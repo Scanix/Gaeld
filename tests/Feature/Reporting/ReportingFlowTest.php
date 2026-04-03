@@ -16,7 +16,7 @@ use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\PaymentMethod;
-use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -179,7 +179,7 @@ class ReportingFlowTest extends TestCase
         ));
 
         $invoice = app(FinalizeInvoiceAction::class)->execute($invoice);
-        app(InvoiceService::class)->recordPayment($invoice, new RecordPaymentData(
+        app(InvoiceAccountingService::class)->recordPayment($invoice, new RecordPaymentData(
             amount: (string) $invoice->total,
             paymentDate: '2026-03-05',
             paymentMethod: PaymentMethod::Bank,

@@ -62,6 +62,8 @@ const typeOptions = [
       </CardHeader>
       <CardContent>
         <form class="space-y-6" @submit.prevent="submit">
+          <!-- Contact Information -->
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('contact_information') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormSelect
               id="type"
@@ -93,18 +95,18 @@ const typeOptions = [
               :label="t('phone')"
               :error="form.errors.phone"
             />
+          </div>
+
+          <!-- Address -->
+          <hr class="border-[hsl(var(--border))]" />
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('address_details') }}</h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormInput
               id="address"
               v-model="form.address"
               :label="t('address')"
               :error="form.errors.address"
               class="sm:col-span-2"
-            />
-            <FormInput
-              id="city"
-              v-model="form.city"
-              :label="t('city')"
-              :error="form.errors.city"
             />
             <MaskedInput
               id="postal_code"
@@ -113,6 +115,12 @@ const typeOptions = [
               :label="t('postal_code')"
               :error="form.errors.postal_code"
             />
+            <FormInput
+              id="city"
+              v-model="form.city"
+              :label="t('city')"
+              :error="form.errors.city"
+            />
             <FormSelect
               id="country"
               v-model="form.country"
@@ -120,6 +128,12 @@ const typeOptions = [
               :options="countryOptions(t)"
               :error="form.errors.country"
             />
+          </div>
+
+          <!-- Billing & Payment -->
+          <hr class="border-[hsl(var(--border))]" />
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('billing_details') }}</h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormSelect
               id="currency"
               v-model="form.currency"
@@ -161,13 +175,17 @@ const typeOptions = [
               :options="categoryOptions"
               :error="form.errors.default_expense_category"
             />
-            <FormInput
-              id="internal_notes"
-              v-model="form.internal_notes"
-              :label="t('internal_notes')"
-              :error="form.errors.internal_notes"
-            />
           </div>
+
+          <!-- Notes -->
+          <hr class="border-[hsl(var(--border))]" />
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('notes') }}</h3>
+          <FormInput
+            id="internal_notes"
+            v-model="form.internal_notes"
+            :label="t('internal_notes')"
+            :error="form.errors.internal_notes"
+          />
 
           <FormTextarea
             id="notes"
@@ -176,7 +194,7 @@ const typeOptions = [
             :error="form.errors.notes"
           />
 
-          <div class="flex justify-end gap-3">
+          <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" href="/suppliers" variant="outline">
               {{ t('cancel') }}
             </Button>

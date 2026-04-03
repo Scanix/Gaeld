@@ -20,7 +20,7 @@ use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
-use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use App\Domains\Organizations\Enums\Role;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
@@ -49,7 +49,7 @@ class ShowcaseDataSeeder extends Seeder
         private readonly ApproveExpenseAction $approveExpense,
         private readonly PostExpenseAction $postExpense,
         private readonly BankingService $bankingService,
-        private readonly InvoiceService $invoiceService,
+        private readonly InvoiceAccountingService $accountingService,
     ) {}
 
     // ──────────────────────────────────────────────────────────────
@@ -673,7 +673,7 @@ class ShowcaseDataSeeder extends Seeder
                         if (mt_rand(1, 10) <= 9) {
                             $invoice->refresh();
                             $payDate = $issueDate->copy()->addDays(mt_rand(15, 35));
-                            $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
+                            $this->accountingService->recordPayment($invoice, new RecordPaymentData(
                                 amount: (string) $total,
                                 paymentDate: $payDate->toDateString(),
                                 paymentMethod: mt_rand(1, 4) === 1 ? PaymentMethod::Card : PaymentMethod::Bank,
@@ -694,7 +694,7 @@ class ShowcaseDataSeeder extends Seeder
                         if ($roll <= 5) {
                             $invoice->refresh();
                             $payDate = $issueDate->copy()->addDays(mt_rand(25, 40));
-                            $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
+                            $this->accountingService->recordPayment($invoice, new RecordPaymentData(
                                 amount: (string) $total,
                                 paymentDate: $payDate->toDateString(),
                                 paymentMethod: PaymentMethod::Bank,
@@ -713,7 +713,7 @@ class ShowcaseDataSeeder extends Seeder
                             $partAmt = round($total * (mt_rand(30, 60) / 100), 2);
                             $invoice->refresh();
                             $payDate = $issueDate->copy()->addDays(mt_rand(20, 35));
-                            $this->invoiceService->recordPayment($invoice, new RecordPaymentData(
+                            $this->accountingService->recordPayment($invoice, new RecordPaymentData(
                                 amount: (string) $partAmt,
                                 paymentDate: $payDate->toDateString(),
                                 paymentMethod: PaymentMethod::Bank,

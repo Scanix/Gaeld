@@ -92,10 +92,10 @@ function copyToken(token) {
 
 const expirationOptions = [
   { value: '', label: t('never') },
-  { value: '7', label: '7 days' },
-  { value: '30', label: '30 days' },
-  { value: '90', label: '90 days' },
-  { value: '365', label: '365 days' },
+  { value: '7', label: t('n_days', { n: 7 }) },
+  { value: '30', label: t('n_days', { n: 30 }) },
+  { value: '90', label: t('n_days', { n: 90 }) },
+  { value: '365', label: t('n_days', { n: 365 }) },
 ]
 </script>
 
@@ -262,7 +262,7 @@ const expirationOptions = [
                   type="checkbox"
                   :value="ability"
                   v-model="createForm.abilities"
-                  class="rounded border-gray-300"
+                  class="rounded border-gray-300 dark:border-gray-600"
                 />
                 {{ ability }}
               </label>

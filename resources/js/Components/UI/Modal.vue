@@ -2,6 +2,9 @@
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { X } from 'lucide-vue-next'
 import Button from './Button.vue'
+import { useTranslations } from '@/lib/useTranslations'
+
+const { t } = useTranslations()
 
 const props = defineProps({
   open: Boolean,
@@ -78,7 +81,7 @@ onBeforeUnmount(() => {
         >
           <div class="flex items-center justify-between mb-4">
             <h2 id="modal-title" class="text-lg font-semibold">{{ title }}</h2>
-            <Button variant="ghost" size="icon" aria-label="Close" @click="$emit('close')">
+            <Button variant="ghost" size="icon" :aria-label="t('close')" @click="$emit('close')">
               <X class="h-4 w-4" />
             </Button>
           </div>

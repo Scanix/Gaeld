@@ -12,7 +12,7 @@ import { Eye, FileText } from 'lucide-vue-next'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 
 const { t } = useTranslations()
-const { intlMonthName } = useFormatters()
+const { intlMonthName, formatCurrency } = useFormatters()
 
 const props = defineProps({
   slips: Object,
@@ -40,13 +40,6 @@ const monthOptions = computed(() => [
 
 function applyFilter() {
   router.get('/payroll/salary-slips', { year: year.value, month: month.value, page: 1 }, { preserveState: true, replace: true })
-}
-
-const { locale: appLocale } = useFormatters()
-function formatSwiss(v) {
-  if (v == null) return '—'
-  const intlMap = { en: 'en-CH', fr: 'fr-CH', de: 'de-CH', it: 'it-CH' }
-  return Number(v).toLocaleString(intlMap[appLocale.value] || 'de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 const columns = computed(() => [
@@ -92,10 +85,10 @@ const columns = computed(() => [
         </Link>
       </template>
       <template #cell-gross_salary="{ row }">
-        <span class="font-mono">CHF {{ formatSwiss(row.gross_salary) }}</span>
+        <span class="font-mono">{{ formatCurrency(row.gross_salary) }}</span>
       </template>
       <template #cell-net_salary="{ row }">
-        <span class="font-mono">CHF {{ formatSwiss(row.net_salary) }}</span>
+        <span class="font-mono">{{ formatCurrency(row.net_salary) }}</span>
       </template>
       <template #cell-status="{ row }">
         <Badge :variant="row.status === 'posted' ? 'default' : 'secondary'">

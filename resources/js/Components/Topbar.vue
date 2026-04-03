@@ -1,5 +1,5 @@
 <script setup>
-import { useForm, usePage, router } from '@inertiajs/vue3'
+import { useForm, usePage, router, Link } from '@inertiajs/vue3'
 import { LogOut, User, HelpCircle, BookOpen, Menu, Sun, Moon, ShieldCheck } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import Button from './UI/Button.vue'
@@ -39,6 +39,7 @@ function logout() {
   <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/95 px-3 sm:px-6 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60">
     <div class="flex items-center gap-2 sm:gap-4 min-w-0">
       <button
+        :aria-label="t('toggle_menu')"
         class="shrink-0 rounded-lg p-3 min-h-[44px] min-w-[44px] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] lg:hidden"
         @click="$emit('toggleMobile')"
       >
@@ -101,16 +102,16 @@ function logout() {
         <div
           v-if="showUserMenu"
           role="menu"
-          class="absolute right-0 top-full mt-1 w-48 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-1 shadow-lg"
+          class="absolute right-0 top-full mt-1 w-48 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--popover))] p-1 shadow-lg"
           @mouseleave="showUserMenu = false"
         >
-          <a
+          <Link
             href="/profile"
             class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))]"
           >
             <User class="h-4 w-4" />
             {{ t('profile') }}
-          </a>
+          </Link>
           <button
             v-if="helpPage"
             class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] sm:hidden"
@@ -127,14 +128,14 @@ function logout() {
             <BookOpen class="h-4 w-4" />
             {{ t('documentation') }}
           </button>
-          <a
+          <Link
             v-if="isSaasAdmin"
             href="/saas-admin"
             class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]"
           >
             <ShieldCheck class="h-4 w-4" />
             {{ t('saas_admin') }}
-          </a>
+          </Link>
           <button
             class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--accent))]"
             @click="logout"

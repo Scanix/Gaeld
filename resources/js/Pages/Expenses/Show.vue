@@ -86,12 +86,12 @@ const journalColumns = computed(() => [
   <AppLayout :title="`${t('expense')} — ${categoryLabel}`" help-page="expenses">
     <Breadcrumb :items="[{ label: t('expenses'), href: '/expenses' }, { label: categoryLabel }]" class="mb-4" />
 
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
         <h2 class="text-xl font-semibold">{{ categoryLabel }}</h2>
-        <Badge :variant="statusVariant[expense.status] || 'default'">{{ expense.status }}</Badge>
+        <Badge :variant="statusVariant[expense.status] || 'default'">{{ t('expense_status_' + expense.status) }}</Badge>
       </div>
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <Button
           v-if="expense.status !== 'posted'"
           as="a"

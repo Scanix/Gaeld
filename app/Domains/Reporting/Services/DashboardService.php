@@ -8,7 +8,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\VatReportService;
 use App\Domains\Expenses\Services\ExpenseService;
-use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Invoicing\Queries\InvoiceReportingQuery;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -22,7 +22,7 @@ class DashboardService
 {
     public function __construct(
         private readonly LedgerService $ledgerService,
-        private readonly InvoiceService $invoiceService,
+        private readonly InvoiceReportingQuery $invoiceQuery,
         private readonly ExpenseService $expenseService,
         private readonly VatReportService $vatReportService,
         private readonly AgingReportService $agingReportService,
@@ -57,16 +57,16 @@ class DashboardService
     {
         $year = now()->year;
 
-        $totalRevenue = $this->invoiceService->yearlyRevenue($organizationId, $year);
+        $totalRevenue = $this->invoiceQuery->yearlyRevenue($organizationId, $year);
         $totalExpenses = $this->expenseService->yearlyTotal($organizationId, $year);
         $cashBalance = $this->cashBalance($organizationId);
 
-        $unpaidInvoices = $this->invoiceService->unpaidSummary($organizationId);
+        $unpaidInvoices = $this->invoiceQuery->unpaidSummary($organizationId);
 
         $pendingExpenses = $this->expenseService->pendingSummary($organizationId);
 
         // Year-over-year comparison
-        $previousRevenue = $this->invoiceService->yearlyRevenue($organizationId, $year - 1);
+        $previousRevenue = $this->invoiceQuery->yearlyRevenue($organizationId, $year - 1);
         $previousExpenses = $this->expenseService->yearlyTotal($organizationId, $year - 1);
 
         return [
@@ -139,13 +139,13 @@ class DashboardService
     private function monthlyBreakdown(string $organizationId, int $year): array
     {
         // Fetch all data for the year in 3 queries instead of 6*12
-        $paidInvoices = $this->invoiceService->paidInYear($organizationId, $year)
+        $paidInvoices = $this->invoiceQuery->paidInYear($organizationId, $year)
             ->groupBy(fn ($i) => Carbon::parse($i->issue_date)->month);
 
         $expenses = $this->expenseService->inYear($organizationId, $year)
             ->groupBy(fn ($e) => Carbon::parse($e->date)->month);
 
-        $forecastInvoices = $this->invoiceService->sentOrOverdueDueInYear($organizationId, $year)
+        $forecastInvoices = $this->invoiceQuery->sentOrOverdueDueInYear($organizationId, $year)
             ->groupBy(fn ($i) => Carbon::parse($i->due_date)->month);
 
         $monthlyData = collect(range(1, 12))->map(function ($month) use ($year, $paidInvoices, $expenses, $forecastInvoices) {
@@ -211,7 +211,7 @@ class DashboardService
         }
 
         // Actual YTD figures are already in the main metrics
-        $actualRevenue = $this->invoiceService->yearlyRevenue($organizationId, $year);
+        $actualRevenue = $this->invoiceQuery->yearlyRevenue($organizationId, $year);
         $actualExpenses = $this->expenseService->yearlyTotal($organizationId, $year);
 
         // Pro-rated budget based on months elapsed

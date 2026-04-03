@@ -9,6 +9,14 @@ return [
     'customers' => 'Clienti',
     'suppliers' => 'Fornitori',
     'accounting' => 'Contabilità',
+    'accounting_core' => 'Base',
+    'accounting_tax' => 'Tasse & IVA',
+    'accounting_reports' => 'Rapporti & Archivi',
+    'accounting_period' => 'Periodo',
+    'accounting_advanced' => 'Avanzato',
+    'collapse' => 'Comprimi',
+    'expand' => 'Espandi',
+    'go_to' => 'Vai a',
     'reports' => 'Rapporti',
     'banking' => 'Banca',
     'reconciliation' => 'Riconciliazione',
@@ -58,6 +66,8 @@ return [
     'save_changes' => 'Salva le modifiche',
     'cancel' => 'Annulla',
     'close' => 'Chiudi',
+    'toggle_menu' => 'Apri/chiudi menu',
+    'breadcrumb' => 'Percorso di navigazione',
     'confirm' => 'Conferma',
     'apply' => 'Applica',
     'back' => '← Indietro',
@@ -269,6 +279,12 @@ return [
     'expense_status_pending' => 'In attesa',
     'expense_status_approved' => 'Approvata',
     'expense_status_posted' => 'Registrata',
+    'expense_status_paid' => 'Pagata',
+    'expense_status_rejected' => 'Rifiutata',
+
+    // Banking types
+    'banking_type_credit' => 'Credito',
+    'banking_type_debit' => 'Debito',
 
     'year_end_closing_desc' => 'Chiudere i conti di ricavo e di costo alla fine dell\'esercizio fiscale.',
     'fiscal_year' => 'Esercizio fiscale',
@@ -1681,4 +1697,43 @@ return [
     'social_charges_posted' => 'Registrazione oneri sociali effettuata.',
     'invalid_credentials' => 'Le credenziali fornite non corrispondono ai nostri registri.',
     'all_rights_reserved' => 'Tutti i diritti riservati.',
+
+    // Form section headings
+    'contact_information' => 'Informazioni di contatto',
+    'address_details' => 'Indirizzo',
+    'billing_details' => 'Fatturazione e pagamento',
+    'expense_details' => 'Dettagli della spesa',
+    'categorization_vat' => 'Categoria e IVA',
+    'invoice_details' => 'Dettagli della fattura',
+    'notes_and_terms' => 'Note e condizioni',
+
+    // Tooltips
+    'tooltip_internal_notes' => 'Le note interne sono visibili solo al tuo team, mai al contatto.',
+    'tooltip_iban' => 'Numero di conto bancario internazionale per i pagamenti.',
+    'tooltip_ahv_number' => 'Numero AVS svizzero nel formato 756.XXXX.XXXX.XX.',
+    'tooltip_postal_code' => 'Codice postale svizzero (4 cifre).',
+    'tooltip_payment_terms' => 'Numero di giorni prima della scadenza del pagamento.',
+
+    // Wizard stepper
+    'step_account' => 'Account',
+    'step_organization' => 'Organizzazione',
+    'step_settings' => 'Impostazioni',
+    'back' => 'Indietro',
+
+    // UI & layout
+    'skip_to_content' => 'Vai al contenuto',
+    'setup_wizard' => 'Assistente di configurazione',
+    'saas_admin_warning' => 'Modalità Admin SaaS — Da un grande potere derivano grandi responsabilità',
+    'admin_dashboard' => 'Dashboard admin',
+    'early_beta' => 'Beta anticipata',
+    'early_beta_notice' => 'Gäld è in fase di sviluppo attivo. I dati possono essere reimpostati senza preavviso.',
+    'export_pdf' => 'Esportare PDF',
+    'export_csv' => 'Esportare CSV',
+    'n_days' => ':n giorni',
+
+    // VAT quarters
+    'quarter_q1' => 'T1 (gen–mar)',
+    'quarter_q2' => 'T2 (apr–giu)',
+    'quarter_q3' => 'T3 (lug–set)',
+    'quarter_q4' => 'T4 (ott–dic)',
 ];

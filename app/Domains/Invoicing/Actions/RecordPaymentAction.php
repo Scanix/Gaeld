@@ -8,7 +8,7 @@ use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoicePayment;
-use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 class RecordPaymentAction
 {
     public function __construct(
-        private InvoiceService $invoiceService,
+        private InvoiceAccountingService $accountingService,
     ) {}
 
     public function execute(Invoice $invoice, RecordPaymentData $data): InvoicePayment
@@ -33,7 +33,7 @@ class RecordPaymentAction
             throw new InvalidPaymentException("Payment amount ({$amount}) exceeds amount due ({$amountDue}).");
         }
 
-        $payment = $this->invoiceService->recordPayment($invoice, $data);
+        $payment = $this->accountingService->recordPayment($invoice, $data);
 
         Log::info('Invoice payment recorded', [
             'invoice_id' => $invoice->id,
