@@ -6,9 +6,11 @@ use App\Domains\Banking\Enums\CamtFormat;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\BankTransaction;
-use App\Domains\Banking\Services\Camt\Camt053Parser;
-use App\Domains\Banking\Services\Camt\Camt054Parser;
-use App\Domains\Banking\Services\Camt\CamtEntry;
+use App\Domains\Banking\Parsers\Camt\Camt053Parser;
+use App\Domains\Banking\Parsers\Camt\Camt054Parser;
+use App\Domains\Banking\Parsers\Camt\CamtEntry;
+use App\Domains\Banking\Parsers\CsvBankParser;
+use App\Domains\Banking\Parsers\Mt940Parser;
 use Illuminate\Support\Facades\DB;
 
 /**

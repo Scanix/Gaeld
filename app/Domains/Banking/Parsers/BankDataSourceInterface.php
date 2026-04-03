@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Domains\Banking\Services;
+namespace App\Domains\Banking\Parsers;
 
 use App\Domains\Banking\Models\BankAccount;
-use App\Domains\Banking\Services\Camt\CamtEntry;
+use App\Domains\Banking\Parsers\Camt\CamtEntry;
 use Illuminate\Support\Carbon;
 
 interface BankDataSourceInterface

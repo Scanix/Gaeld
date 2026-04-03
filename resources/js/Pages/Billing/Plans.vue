@@ -9,7 +9,7 @@ import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { CheckCircle2, Zap, AlertCircle, CreditCard, FileText, Settings } from 'lucide-vue-next'
+import { CheckCircle2, Zap, AlertCircle, CreditCard, FileText, Settings, Download, ExternalLink } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 const page = usePage()
@@ -17,6 +17,7 @@ const page = usePage()
 const props = defineProps({
   plans: { type: Array, default: () => [] },
   currentSubscription: { type: Object, default: null },
+  invoices: { type: Array, default: () => [] },
 })
 
 // Show success banner when returning from Stripe checkout
@@ -112,10 +113,6 @@ function openPortal() {
             <p class="text-sm text-[hsl(var(--muted-foreground))] mb-3">{{ t('billing_portal_description') }}</p>
             <div class="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" class="gap-2" @click="openPortal">
-                <FileText class="h-4 w-4" />
-                {{ t('view_invoices') }}
-              </Button>
-              <Button variant="outline" size="sm" class="gap-2" @click="openPortal">
                 <CreditCard class="h-4 w-4" />
                 {{ t('update_payment_method') }}
               </Button>
@@ -123,6 +120,74 @@ function openPortal() {
                 <Settings class="h-4 w-4" />
                 {{ t('manage_subscription') }}
               </Button>
+            </div>
+          </div>
+
+          <!-- Invoices -->
+          <div v-if="invoices.length > 0" class="border-t border-[hsl(var(--border))] pt-4">
+            <h3 class="text-sm font-semibold mb-3">{{ t('recent_invoices') }}</h3>
+            <div class="overflow-x-auto -mx-1">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]">
+                    <th class="text-left py-2 px-1 font-medium">{{ t('invoice_number') }}</th>
+                    <th class="text-left py-2 px-1 font-medium">{{ t('date') }}</th>
+                    <th class="text-right py-2 px-1 font-medium">{{ t('amount') }}</th>
+                    <th class="text-center py-2 px-1 font-medium">{{ t('status') }}</th>
+                    <th class="text-right py-2 px-1 font-medium"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="invoice in invoices"
+                    :key="invoice.id"
+                    class="border-b border-[hsl(var(--border)/0.5)] last:border-0"
+                  >
+                    <td class="py-2.5 px-1 font-mono text-xs">{{ invoice.number }}</td>
+                    <td class="py-2.5 px-1">{{ invoice.date }}</td>
+                    <td class="py-2.5 px-1 text-right font-medium">
+                      {{ invoice.currency }} {{ invoice.amount.toFixed(2) }}
+                    </td>
+                    <td class="py-2.5 px-1 text-center">
+                      <span
+                        :class="{
+                          'text-[hsl(var(--primary))] bg-[hsl(var(--accent))]': invoice.status === 'paid',
+                          'text-yellow-700 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-950/50': invoice.status === 'open',
+                          'text-[hsl(var(--destructive))] bg-[hsl(var(--destructive)/0.1)]': invoice.status === 'uncollectible',
+                          'text-[hsl(var(--muted-foreground))] bg-[hsl(var(--muted))]': invoice.status === 'draft' || invoice.status === 'void',
+                        }"
+                        class="text-xs font-medium px-2 py-0.5 rounded-full"
+                      >
+                        {{ t(`invoice_status_${invoice.status}`) }}
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-1 text-right">
+                      <div class="flex items-center justify-end gap-1">
+                        <a
+                          v-if="invoice.pdf_url"
+                          :href="invoice.pdf_url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-[hsl(var(--accent))] text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
+                          :title="t('download_pdf')"
+                        >
+                          <Download class="h-3.5 w-3.5" />
+                        </a>
+                        <a
+                          v-if="invoice.hosted_url"
+                          :href="invoice.hosted_url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-[hsl(var(--accent))] text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
+                          :title="t('view_online')"
+                        >
+                          <ExternalLink class="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </CardContent>

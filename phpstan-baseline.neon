@@ -1657,6 +1657,108 @@ parameters:
 			path: app/Domains/Banking/Models/PersonalTransactionPattern.php
 
 		-
+			message: '#^Access to an undefined property DOMNameSpaceNode\|DOMNode\:\:\$textContent\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+
+		-
+			message: '#^Argument of an invalid type DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+
+		-
+			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: property.nonObject
+			count: 5
+			path: app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+
+		-
+			message: '#^Cannot call method item\(\) on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+
+		-
+			message: '#^Parameter \#2 \$detail of method App\\Domains\\Banking\\Parsers\\Camt\\Camt053Parser\:\:parseTxDetail\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+
+		-
+			message: '#^Parameter \#2 \$entryNode of method App\\Domains\\Banking\\Parsers\\Camt\\Camt053Parser\:\:parseEntry\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+
+		-
+			message: '#^Access to an undefined property DOMNameSpaceNode\|DOMNode\:\:\$textContent\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+
+		-
+			message: '#^Argument of an invalid type DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+
+		-
+			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: property.nonObject
+			count: 5
+			path: app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+
+		-
+			message: '#^Cannot call method item\(\) on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+
+		-
+			message: '#^Parameter \#2 \$detail of method App\\Domains\\Banking\\Parsers\\Camt\\Camt054Parser\:\:parseTxDetail\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+
+		-
+			message: '#^Parameter \#2 \$entryNode of method App\\Domains\\Banking\\Parsers\\Camt\\Camt054Parser\:\:parseEntry\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Parsers/CsvBankParser.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fgetcsv expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Parsers/CsvBankParser.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Parsers/CsvBankParser.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function rewind expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Parsers/CsvBankParser.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_shift expects array, list\<string\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Parsers/Mt940Parser.php
+
+		-
 			message: '#^Method App\\Domains\\Banking\\Queries\\BankAccountQuery\:\:list\(\) return type with generic interface Illuminate\\Contracts\\Pagination\\LengthAwarePaginator does not specify its types\: TKey, TValue$#'
 			identifier: missingType.generics
 			count: 1
@@ -1795,100 +1897,106 @@ parameters:
 			path: app/Domains/Banking/Services/BankingService.php
 
 		-
-			message: '#^Access to an undefined property DOMNameSpaceNode\|DOMNode\:\:\$textContent\.$#'
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
 			identifier: property.notFound
-			count: 2
-			path: app/Domains/Banking/Services/Camt/Camt053Parser.php
-
-		-
-			message: '#^Argument of an invalid type DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 2
-			path: app/Domains/Banking/Services/Camt/Camt053Parser.php
-
-		-
-			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
-			identifier: property.nonObject
-			count: 5
-			path: app/Domains/Banking/Services/Camt/Camt053Parser.php
-
-		-
-			message: '#^Cannot call method item\(\) on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
-			identifier: method.nonObject
-			count: 3
-			path: app/Domains/Banking/Services/Camt/Camt053Parser.php
-
-		-
-			message: '#^Parameter \#2 \$detail of method App\\Domains\\Banking\\Services\\Camt\\Camt053Parser\:\:parseTxDetail\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
-			identifier: argument.type
 			count: 1
-			path: app/Domains/Banking/Services/Camt/Camt053Parser.php
+			path: app/Domains/Banking/Services/ContraAccountReconciler.php
 
 		-
-			message: '#^Parameter \#2 \$entryNode of method App\\Domains\\Banking\\Services\\Camt\\Camt053Parser\:\:parseEntry\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			message: '#^Parameter \#2 \$bankAccount of method App\\Domains\\Banking\\Services\\ContraAccountReconciler\:\:validatePreconditions\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/Camt/Camt053Parser.php
+			count: 2
+			path: app/Domains/Banking/Services/ContraAccountReconciler.php
 
 		-
-			message: '#^Access to an undefined property DOMNameSpaceNode\|DOMNode\:\:\$textContent\.$#'
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ledgerAccount\.$#'
 			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Services/ExpenseReconciler.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Services/ExpenseReconciler.php
+
+		-
+			message: '#^Parameter \#1 \$bankAccount of method App\\Domains\\Banking\\Services\\BankingService\:\:updateBankAccountBalance\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/ExpenseReconciler.php
+
+		-
+			message: '#^Parameter \#2 \$bankAccount of method App\\Domains\\Banking\\Services\\ExpenseReconciler\:\:validatePreconditions\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/ExpenseReconciler.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$bankAccount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Banking/Services/InvoiceReconciler.php
+
+		-
+			message: '#^Method App\\Domains\\Banking\\Services\\InvoiceReconciler\:\:confirmMatch\(\) should return App\\Domains\\Banking\\Models\\BankTransaction but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/Banking/Services/InvoiceReconciler.php
+
+		-
+			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
+			identifier: argument.type
 			count: 2
-			path: app/Domains/Banking/Services/Camt/Camt054Parser.php
+			path: app/Domains/Banking/Services/InvoiceReconciler.php
 
 		-
-			message: '#^Argument of an invalid type DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 2
-			path: app/Domains/Banking/Services/Camt/Camt054Parser.php
-
-		-
-			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
-			identifier: property.nonObject
-			count: 5
-			path: app/Domains/Banking/Services/Camt/Camt054Parser.php
-
-		-
-			message: '#^Cannot call method item\(\) on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
-			identifier: method.nonObject
-			count: 3
-			path: app/Domains/Banking/Services/Camt/Camt054Parser.php
-
-		-
-			message: '#^Parameter \#2 \$detail of method App\\Domains\\Banking\\Services\\Camt\\Camt054Parser\:\:parseTxDetail\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\InvoiceReconciler\:\:isDuplicatePayment\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: app/Domains/Banking/Services/Camt/Camt054Parser.php
+			path: app/Domains/Banking/Services/InvoiceReconciler.php
 
 		-
-			message: '#^Parameter \#2 \$entryNode of method App\\Domains\\Banking\\Services\\Camt\\Camt054Parser\:\:parseEntry\(\) expects DOMElement, DOMNameSpaceNode\|DOMNode given\.$#'
+			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\InvoiceReconciler\:\:recordPaymentAndReconcile\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: app/Domains/Banking/Services/Camt/Camt054Parser.php
+			path: app/Domains/Banking/Services/InvoiceReconciler.php
 
 		-
-			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\InvoiceReconciler\:\:validatePreconditions\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: app/Domains/Banking/Services/CsvBankParser.php
+			path: app/Domains/Banking/Services/InvoiceReconciler.php
 
 		-
-			message: '#^Parameter \#1 \$stream of function fgetcsv expects resource, resource\|false given\.$#'
+			message: '#^Parameter \#2 \$bankAccount of method App\\Domains\\Banking\\Services\\InvoiceReconciler\:\:validatePreconditions\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: app/Domains/Banking/Services/CsvBankParser.php
+			path: app/Domains/Banking/Services/InvoiceReconciler.php
 
 		-
-			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|false given\.$#'
+			message: '#^Parameter \#2 \$invoice of method App\\Domains\\Banking\\Services\\InvoiceReconciler\:\:isDuplicatePayment\(\) expects App\\Domains\\Invoicing\\Models\\Invoice, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: app/Domains/Banking/Services/CsvBankParser.php
+			path: app/Domains/Banking/Services/InvoiceReconciler.php
 
 		-
-			message: '#^Parameter \#1 \$stream of function rewind expects resource, resource\|false given\.$#'
+			message: '#^Parameter \#2 \$invoice of method App\\Domains\\Banking\\Services\\InvoiceReconciler\:\:recordPaymentAndReconcile\(\) expects App\\Domains\\Invoicing\\Models\\Invoice, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: app/Domains/Banking/Services/CsvBankParser.php
+			path: app/Domains/Banking/Services/InvoiceReconciler.php
+
+		-
+			message: '#^Parameter \#2 \$num2 of function bccomp expects numeric\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/InvoiceReconciler.php
+
+		-
+			message: '#^Parameter \#3 \$bankAccount of method App\\Domains\\Banking\\Services\\InvoiceReconciler\:\:recordPaymentAndReconcile\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Banking/Services/InvoiceReconciler.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
@@ -1939,32 +2047,20 @@ parameters:
 			path: app/Domains/Banking/Services/MatchingService.php
 
 		-
-			message: '#^Parameter \#1 \$array of function array_shift expects array, list\<string\>\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/Mt940Parser.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$bankAccount\.$#'
-			identifier: property.notFound
+			message: '#^Method App\\Domains\\Banking\\Services\\ExpenseReconciler\:\:reconcileWithExpense\(\) invoked with 2 parameters, 3 required\.$#'
+			identifier: arguments.count
 			count: 1
 			path: app/Domains/Banking/Services/ReconciliationService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ledgerAccount\.$#'
-			identifier: property.notFound
+			message: '#^Method App\\Domains\\Banking\\Services\\ReconciliationService\:\:bulkReconcileAsPersonal\(\) has parameter \$transactions with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
 			count: 1
 			path: app/Domains/Banking/Services/ReconciliationService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\ReconciliationService\:\:confirmMatch\(\) should return App\\Domains\\Banking\\Models\\BankTransaction but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
+			message: '#^Method App\\Domains\\Banking\\Services\\ReconciliationService\:\:bulkReconcileAsPersonal\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: app/Domains/Banking/Services/ReconciliationService.php
 
@@ -1975,37 +2071,7 @@ parameters:
 			path: app/Domains/Banking/Services/ReconciliationService.php
 
 		-
-			message: '#^Parameter \#1 \$bankAccount of method App\\Domains\\Banking\\Services\\BankingService\:\:updateBankAccountBalance\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:isDuplicatePayment\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:recordInvoicePaymentAndReconcile\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
 			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:tryAutoReconcileTransaction\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:validateReconciliationPreconditions\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Banking/Services/ReconciliationService.php
@@ -2013,42 +2079,6 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$transaction of method App\\Domains\\Banking\\Services\\SuggestionService\:\:generateSuggestions\(\) expects App\\Domains\\Banking\\Models\\BankTransaction, Illuminate\\Database\\Eloquent\\Model given\.$#'
 			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Parameter \#2 \$bankAccount of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:validateReconciliationPreconditions\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 3
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Parameter \#2 \$invoice of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:isDuplicatePayment\(\) expects App\\Domains\\Invoicing\\Models\\Invoice, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Parameter \#2 \$invoice of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:recordInvoicePaymentAndReconcile\(\) expects App\\Domains\\Invoicing\\Models\\Invoice, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Parameter \#3 \$bankAccount of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:recordInvoicePaymentAndReconcile\(\) expects App\\Domains\\Banking\\Models\\BankAccount, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Property App\\Domains\\Banking\\Services\\ReconciliationService\:\:\$matchingService is never read, only written\.$#'
-			identifier: property.onlyWritten
 			count: 1
 			path: app/Domains/Banking/Services/ReconciliationService.php
 
@@ -2617,54 +2647,6 @@ parameters:
 			path: app/Domains/Invoicing/Actions/DuplicateInvoiceAction.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit_price\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$vatRate\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
-
-		-
-			message: '#^Expression on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.expr
-			count: 2
-			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Domains/Invoicing/Actions/GenerateQrInvoicePdfAction.php
-
-		-
 			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
 			identifier: argument.type
 			count: 1
@@ -3001,6 +2983,18 @@ parameters:
 			path: app/Domains/Invoicing/Queries/InvoiceQuery.php
 
 		-
+			message: '#^Method App\\Domains\\Invoicing\\Queries\\InvoiceReportingQuery\:\:paidInYear\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Domains/Invoicing/Queries/InvoiceReportingQuery.php
+
+		-
+			message: '#^Method App\\Domains\\Invoicing\\Queries\\InvoiceReportingQuery\:\:sentOrOverdueDueInYear\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Domains/Invoicing/Queries/InvoiceReportingQuery.php
+
+		-
 			message: '#^Method App\\Domains\\Invoicing\\Requests\\RecordPaymentRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -3028,13 +3022,85 @@ parameters:
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$amount\.$#'
 			identifier: property.notFound
 			count: 2
-			path: app/Domains/Invoicing/Services/InvoiceService.php
+			path: app/Domains/Invoicing/Services/InvoiceAccountingService.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$vatRate\.$#'
 			identifier: property.notFound
 			count: 1
-			path: app/Domains/Invoicing/Services/InvoiceService.php
+			path: app/Domains/Invoicing/Services/InvoiceAccountingService.php
+
+		-
+			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Domains/Invoicing/Services/InvoiceAccountingService.php
+
+		-
+			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
+			identifier: argument.type
+			count: 4
+			path: app/Domains/Invoicing/Services/InvoiceAccountingService.php
+
+		-
+			message: '#^Unable to resolve the template type TGroupKey in call to method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:groupBy\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Domains/Invoicing/Services/InvoiceAccountingService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domains/Invoicing/Services/InvoiceAccountingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit_price\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$vatRate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
+
+		-
+			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
+
+		-
+			message: '#^Parameter \#2 \$num2 of function bcmul expects numeric\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
 
 		-
 			message: '#^Method App\\Domains\\Invoicing\\Services\\InvoiceService\:\:paidInYear\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
@@ -3046,30 +3112,6 @@ parameters:
 			message: '#^Method App\\Domains\\Invoicing\\Services\\InvoiceService\:\:sentOrOverdueDueInYear\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
 			identifier: missingType.generics
 			count: 1
-			path: app/Domains/Invoicing/Services/InvoiceService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Invoicing/Services/InvoiceService.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 4
-			path: app/Domains/Invoicing/Services/InvoiceService.php
-
-		-
-			message: '#^Unable to resolve the template type TGroupKey in call to method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:groupBy\(\)$#'
-			identifier: argument.templateType
-			count: 1
-			path: app/Domains/Invoicing/Services/InvoiceService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
 			path: app/Domains/Invoicing/Services/InvoiceService.php
 
 		-
