@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\Banking\Services\Camt;
+namespace App\Domains\Banking\Parsers\Camt;
 
 use App\Domains\Banking\Enums\BankTransactionType;
 use Illuminate\Support\Facades\Log;

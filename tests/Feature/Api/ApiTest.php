@@ -25,7 +25,6 @@ class ApiTest extends TestCase
         config(['features.api_access' => true]);
 
         $this->setUpOrganization();
-        $this->assignOrganizationRole($this->user, $this->org, 'owner', 'sanctum');
 
         // Create a personal Sanctum token for API tests
         $sanctumToken = $this->user->createToken('test-token', ['*']);
@@ -114,7 +113,6 @@ class ApiTest extends TestCase
         $orgB = Organization::create(['name' => 'Org B', 'currency' => 'CHF']);
         $orgB->users()->attach($this->user->id, ['role' => 'owner']);
         $this->assignOrganizationRole($this->user, $orgB, 'owner');
-        $this->assignOrganizationRole($this->user, $orgB, 'owner', 'sanctum');
 
         // Create separate token for org B
         $tokenB = $this->user->createToken('org-b-token', ['*']);
@@ -229,7 +227,6 @@ class ApiTest extends TestCase
         $member = User::factory()->create();
         $this->org->users()->attach($member->id, ['role' => 'member']);
         $this->assignOrganizationRole($member, $this->org, 'member');
-        $this->assignOrganizationRole($member, $this->org, 'member', 'sanctum');
 
         $memberToken = $member->createToken('member-token', ['*']);
         $memberToken->accessToken->update([

@@ -3,8 +3,8 @@
 namespace Tests\Unit;
 
 use App\Domains\Banking\Enums\BankTransactionType;
-use App\Domains\Banking\Services\Camt\Camt053Parser;
-use App\Domains\Banking\Services\Camt\Camt054Parser;
+use App\Domains\Banking\Parsers\Camt\Camt053Parser;
+use App\Domains\Banking\Parsers\Camt\Camt054Parser;
 use Tests\TestCase;
 
 class CamtParserTest extends TestCase

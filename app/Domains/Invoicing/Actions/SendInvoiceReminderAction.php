@@ -2,33 +2,22 @@
 
 namespace App\Domains\Invoicing\Actions;
 
-use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
-use App\Domains\Invoicing\Mail\InvoiceReminderMail;
 use App\Domains\Invoicing\Models\Invoice;
-use Illuminate\Support\Facades\Mail;
+use App\Domains\Invoicing\Services\InvoiceMailerService;
 
 /**
  * Sends a payment reminder e-mail for an overdue invoice.
+ *
+ * @deprecated Inject InvoiceMailerService directly for new code.
  */
 class SendInvoiceReminderAction
 {
+    public function __construct(
+        private InvoiceMailerService $mailerService,
+    ) {}
+
     public function execute(Invoice $invoice): Invoice
     {
-        if (! $invoice->isOverdue()) {
-            throw new InvalidInvoiceStateException('Invoice is not overdue.');
-        }
-
-        $customerEmail = $invoice->customer?->email;
-
-        if (! $customerEmail) {
-            throw new InvalidInvoiceStateException('Customer has no email address.');
-        }
-
-        $invoice->increment('reminder_count');
-        $invoice->update(['last_reminded_at' => now()]);
-
-        Mail::to($customerEmail)->send(new InvoiceReminderMail($invoice->fresh()));
-
-        return $invoice->fresh();
+        return $this->mailerService->sendReminder($invoice);
     }
 }
