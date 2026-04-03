@@ -13,11 +13,13 @@ import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import { FileSpreadsheet, Receipt } from 'lucide-vue-next'
 
 const props = defineProps({ report: Object })
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 // Period selector: quarter or custom
 const mode = ref('quarter')
@@ -27,10 +29,10 @@ const customFrom = ref('')
 const customTo = ref('')
 
 const quarterOptions = [
-  { value: 1, label: 'Q1 (Jan–Mar)' },
-  { value: 2, label: 'Q2 (Apr–Jun)' },
-  { value: 3, label: 'Q3 (Jul–Sep)' },
-  { value: 4, label: 'Q4 (Oct–Dec)' },
+  { value: 1, label: t('quarter_q1') },
+  { value: 2, label: t('quarter_q2') },
+  { value: 3, label: t('quarter_q3') },
+  { value: 4, label: t('quarter_q4') },
 ]
 
 const modeOptions = computed(() => [
@@ -54,12 +56,6 @@ const exportParams = computed(() => {
 
 function applyFilter() {
   router.get('/reports/vat', exportParams.value, { preserveState: true })
-}
-
-// Swiss number formatting: apostrophe thousands separator
-function chf(val) {
-  if (val === null || val === undefined) return '—'
-  return Number(val).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 // Settlement confirm dialog
@@ -147,12 +143,12 @@ function postSettlement() {
               <tr v-for="row in report.revenue_rows" :key="row.line" class="border-b last:border-0">
                 <td class="py-2 pr-4 font-mono text-xs text-[hsl(var(--muted-foreground))]">{{ row.line }}</td>
                 <td class="py-2 pr-4">{{ row.label }}</td>
-                <td class="py-2 text-right tabular-nums">{{ chf(row.amount) }}</td>
+                <td class="py-2 text-right tabular-nums">{{ formatCurrency(row.amount) }}</td>
               </tr>
               <tr class="border-t font-semibold">
                 <td class="py-2 pr-4 font-mono text-xs">299</td>
                 <td class="py-2 pr-4">{{ t('vat_line_299') }}</td>
-                <td class="py-2 text-right tabular-nums">{{ chf(report.total_revenue) }}</td>
+                <td class="py-2 text-right tabular-nums">{{ formatCurrency(report.total_revenue) }}</td>
               </tr>
             </tbody>
           </table>
@@ -179,16 +175,16 @@ function postSettlement() {
               <tr v-for="row in report.output_vat_rows" :key="row.line" class="border-b last:border-0">
                 <td class="py-2 pr-4 font-mono text-xs text-[hsl(var(--muted-foreground))]">{{ row.line }}</td>
                 <td class="py-2 pr-4">{{ row.label }}</td>
-                <td class="py-2 pr-4 text-right tabular-nums">{{ chf(row.taxable) }}</td>
+                <td class="py-2 pr-4 text-right tabular-nums">{{ formatCurrency(row.taxable) }}</td>
                 <td class="py-2 pr-4 text-right">{{ row.rate }}%</td>
-                <td class="py-2 text-right tabular-nums">{{ chf(row.vat) }}</td>
+                <td class="py-2 text-right tabular-nums">{{ formatCurrency(row.vat) }}</td>
               </tr>
               <tr class="border-t font-semibold">
                 <td class="py-2 pr-4 font-mono text-xs">399</td>
                 <td class="py-2 pr-4">{{ t('vat_line_399') }}</td>
-                <td class="py-2 pr-4 text-right tabular-nums">{{ chf(report.total_taxable) }}</td>
+                <td class="py-2 pr-4 text-right tabular-nums">{{ formatCurrency(report.total_taxable) }}</td>
                 <td class="py-2 pr-4" />
-                <td class="py-2 text-right tabular-nums">{{ chf(report.total_output_vat) }}</td>
+                <td class="py-2 text-right tabular-nums">{{ formatCurrency(report.total_output_vat) }}</td>
               </tr>
             </tbody>
           </table>
@@ -206,7 +202,7 @@ function postSettlement() {
               <span class="font-mono text-xs text-[hsl(var(--muted-foreground))]">400</span>
               <span>{{ t('vat_line_400') }}</span>
             </div>
-            <span class="tabular-nums font-medium">{{ chf(report.total_input_vat) }}</span>
+            <span class="tabular-nums font-medium">{{ formatCurrency(report.total_input_vat) }}</span>
           </div>
         </CardContent>
       </Card>
@@ -223,7 +219,7 @@ function postSettlement() {
                 <span class="font-mono text-xs text-[hsl(var(--muted-foreground))]">500</span>
                 <span>{{ t('vat_line_500') }}</span>
               </div>
-              <span class="tabular-nums">{{ chf(report.net_vat) }}</span>
+              <span class="tabular-nums">{{ formatCurrency(report.net_vat) }}</span>
             </div>
             <div class="flex items-center justify-between border-t py-2 font-bold">
               <div class="flex gap-4">
@@ -234,7 +230,7 @@ function postSettlement() {
                 class="tabular-nums text-base"
                 :class="(report.vat_payable ?? 0) >= 0 ? 'text-red-600' : 'text-green-600'"
               >
-                {{ chf(report.vat_payable) }}
+                {{ formatCurrency(report.vat_payable) }}
               </span>
             </div>
           </div>

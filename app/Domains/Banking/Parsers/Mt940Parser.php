@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Domains\Banking\Services;
+namespace App\Domains\Banking\Parsers;
 
 use App\Domains\Banking\Enums\BankTransactionType;
-use App\Domains\Banking\Services\Camt\CamtEntry;
+use App\Domains\Banking\Parsers\Camt\CamtEntry;
 
 /**
  * Parses SWIFT MT940 bank statement files into CamtEntry DTOs.

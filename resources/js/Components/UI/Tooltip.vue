@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { cn } from '@/lib/utils'
+import { useId } from 'vue'
 
 const props = defineProps({
   content: {
@@ -15,6 +16,7 @@ const props = defineProps({
   class: String,
 })
 
+const tooltipId = `tooltip-${useId()}`
 const visible = ref(false)
 
 const positionClasses = {
@@ -28,6 +30,7 @@ const positionClasses = {
 <template>
   <div
     class="relative inline-flex"
+    :aria-describedby="visible ? tooltipId : undefined"
     @mouseenter="visible = true"
     @mouseleave="visible = false"
     @focusin="visible = true"
@@ -44,6 +47,7 @@ const positionClasses = {
     >
       <div
         v-if="visible && (content || $slots.tooltip)"
+        :id="tooltipId"
         role="tooltip"
         :class="cn(
           'pointer-events-none absolute z-50 whitespace-nowrap rounded-md bg-[hsl(var(--popover))] px-3 py-1.5 text-xs text-[hsl(var(--popover-foreground))] shadow-md border border-[hsl(var(--border))]',

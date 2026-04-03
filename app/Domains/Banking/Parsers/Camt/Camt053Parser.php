@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\Banking\Services\Camt;
+namespace App\Domains\Banking\Parsers\Camt;
 
 /**
  * Parser for CAMT.053 (Bank-to-Customer Statement) XML files.

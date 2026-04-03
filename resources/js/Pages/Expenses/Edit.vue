@@ -13,6 +13,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
+import FormFileInput from '@/Components/UI/FormFileInput.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { Plus, FileText } from 'lucide-vue-next'
@@ -103,16 +104,9 @@ const isImage = computed(() => {
       </CardHeader>
       <CardContent>
         <form class="space-y-6" @submit.prevent="submit">
+          <!-- Expense Details -->
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('expense_details') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormSelect
-              id="category"
-              v-model="form.category"
-              :label="t('category')"
-              :options="categoryOptions"
-              :placeholder="t('select_category')"
-              :error="form.errors.category"
-              required
-            />
             <div class="flex items-end gap-2">
               <FormSelect
                 id="supplier_id"
@@ -151,6 +145,28 @@ const isImage = computed(() => {
               required
             />
             <FormSelect
+              id="payment_method"
+              v-model="form.payment_method"
+              :label="t('payment_method')"
+              :options="paymentMethodOptions"
+              :error="form.errors.payment_method"
+            />
+          </div>
+
+          <!-- Categorization & VAT -->
+          <hr class="border-[hsl(var(--border))]" />
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('categorization_vat') }}</h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormSelect
+              id="category"
+              v-model="form.category"
+              :label="t('category')"
+              :options="categoryOptions"
+              :placeholder="t('select_category')"
+              :error="form.errors.category"
+              required
+            />
+            <FormSelect
               id="vat_rate_id"
               v-model="form.vat_rate_id"
               :label="t('vat_rate')"
@@ -163,13 +179,6 @@ const isImage = computed(() => {
               :label="t('vat_amount')"
               :error="form.errors.vat_amount"
             />
-            <FormSelect
-              id="payment_method"
-              v-model="form.payment_method"
-              :label="t('payment_method')"
-              :options="paymentMethodOptions"
-              :error="form.errors.payment_method"
-            />
           </div>
 
           <FormTextarea
@@ -178,18 +187,17 @@ const isImage = computed(() => {
             :label="t('description')"
           />
 
-          <div>
-            <label for="receipt" class="mb-1 block text-sm font-medium">{{ t('receipt') }}</label>
-            <input
-              id="receipt"
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              class="block w-full text-sm text-[hsl(var(--muted-foreground))] file:mr-4 file:rounded-md file:border-0 file:bg-[hsl(var(--primary))] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[hsl(var(--primary-foreground))] hover:file:opacity-90"
-              @change="onReceiptChange"
-            />
-            <p v-if="form.errors.receipt" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.receipt }}</p>
+          <!-- Attachment -->
+          <hr class="border-[hsl(var(--border))]" />
+
+          <FormFileInput
+            id="receipt"
+            :label="t('receipt')"
+            :error="form.errors.receipt"
+            @change="onReceiptChange"
+          >
             <!-- Receipt preview -->
-            <div v-if="receiptUrl && !form.receipt" class="mt-3">
+            <div v-if="receiptUrl && !form.receipt" class="mt-1">
               <p class="mb-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('receipt_preview') }}</p>
               <a :href="receiptUrl" target="_blank" rel="noopener">
                 <img
@@ -207,9 +215,9 @@ const isImage = computed(() => {
                 </div>
               </a>
             </div>
-          </div>
+          </FormFileInput>
 
-          <div class="flex justify-end gap-3">
+          <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" :href="`/expenses/${expense.id}`" variant="outline">{{ t('cancel') }}</Button>
             <Button type="submit" :disabled="form.processing">{{ t('save_changes') }}</Button>
           </div>

@@ -38,6 +38,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret scanning (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -81,6 +88,12 @@ jobs:
 
       - name: Run static analysis (PHPStan)
         run: composer stan
+
+      - name: Audit Composer dependencies
+        run: composer audit --no-dev
+
+      - name: Audit NPM dependencies
+        run: pnpm audit --prod || true
 
       - name: Run migrations
         env:

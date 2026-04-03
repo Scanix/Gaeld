@@ -10,7 +10,9 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
+import Tooltip from '@/Components/UI/Tooltip.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { HelpCircle } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 
@@ -90,7 +92,7 @@ function submit() {
           </div>
 
           <!-- AHV Number -->
-          <div>
+          <div class="relative">
             <label class="mb-1.5 block text-sm font-medium">
               {{ t('ahv_number') }}
               <span class="text-[hsl(var(--destructive))]">*</span>
@@ -107,6 +109,9 @@ function submit() {
             />
             <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('ahv_format_hint') }}</p>
             <p v-if="form.errors.ahv_number" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.ahv_number }}</p>
+            <Tooltip :content="t('tooltip_ahv_number')" side="top" class="absolute right-0 top-0">
+              <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
+            </Tooltip>
           </div>
 
           <!-- Employment -->
@@ -156,16 +161,21 @@ function submit() {
           <!-- Bank account -->
           <hr class="border-[hsl(var(--border))]" />
           <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('bank_account') }}</h3>
-          <MaskedInput
-            id="iban"
-            v-model="form.iban"
-            mask="iban"
-            :label="t('iban')"
-            :error="form.errors.iban"
-            placeholder="CH56 0483 5012 3456 7800 9"
-          />
+          <div class="relative">
+            <MaskedInput
+              id="iban"
+              v-model="form.iban"
+              mask="iban"
+              :label="t('iban')"
+              :error="form.errors.iban"
+              placeholder="CH56 0483 5012 3456 7800 9"
+            />
+            <Tooltip :content="t('tooltip_iban')" side="top" class="absolute right-0 top-0">
+              <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
+            </Tooltip>
+          </div>
 
-          <div class="flex justify-end gap-3">
+          <div class="flex flex-wrap justify-end gap-3">
             <Button type="button" variant="outline" as="a" :href="`/payroll/employees/${employee.id}`">
               {{ t('cancel') }}
             </Button>

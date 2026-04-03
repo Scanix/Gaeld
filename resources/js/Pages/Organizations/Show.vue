@@ -183,11 +183,11 @@ function canChangeUserRole(user) {
   <AppLayout :title="organization.name">
     <Breadcrumb :items="[{ label: t('organizations'), href: '/organizations' }, { label: organization.name }]" class="mb-4" />
 
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
         <h2 class="text-xl font-semibold">{{ organization.name }}</h2>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <Button
           v-if="!isOwner && organization.users?.length > 1"
           variant="outline"

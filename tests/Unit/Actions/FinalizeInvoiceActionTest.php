@@ -6,7 +6,7 @@ use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Mockery;
 use Tests\TestCase;
@@ -15,14 +15,14 @@ class FinalizeInvoiceActionTest extends TestCase
 {
     private FinalizeInvoiceAction $action;
 
-    private $invoiceService;
+    private $accountingService;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->invoiceService = Mockery::mock(InvoiceService::class);
-        $this->action = new FinalizeInvoiceAction($this->invoiceService);
+        $this->accountingService = Mockery::mock(InvoiceAccountingService::class);
+        $this->action = new FinalizeInvoiceAction($this->accountingService);
     }
 
     public function test_rejects_sent_invoice(): void
@@ -69,7 +69,7 @@ class FinalizeInvoiceActionTest extends TestCase
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Draft, lineCount: 2);
 
-        $this->invoiceService
+        $this->accountingService
             ->shouldReceive('postToLedger')
             ->once()
             ->with($invoice)

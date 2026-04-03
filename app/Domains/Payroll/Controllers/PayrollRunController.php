@@ -25,7 +25,6 @@ class PayrollRunController extends Controller
         $this->authorize('viewAny', Employee::class);
 
         $employees = Employee::query()
-            ->where('organization_id', $currentOrg->id())
             ->where('is_active', true)
             ->orderBy('last_name')
             ->get();

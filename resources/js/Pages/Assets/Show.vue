@@ -20,7 +20,7 @@ import { useFormatters } from '@/lib/useFormatters'
 import { computed } from 'vue'
 
 const { t } = useTranslations()
-const { formatDate } = useFormatters()
+const { formatDate, formatCurrency } = useFormatters()
 
 const props = defineProps({
   asset: Object,
@@ -48,10 +48,7 @@ function submitDisposal() {
   })
 }
 
-function formatSwiss(value) {
-  if (value == null) return '—'
-  return Number(value).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+
 
 const depreciationProgress = computed(() => {
   const purchase = Number(props.asset.purchase_amount)
@@ -94,7 +91,7 @@ const historyColumns = computed(() => [
             </div>
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('purchase_amount') }}</p>
-              <p class="font-medium font-mono">CHF {{ formatSwiss(asset.purchase_amount) }}</p>
+              <p class="font-medium font-mono">{{ formatCurrency(asset.purchase_amount) }}</p>
             </div>
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('depreciation_method') }}</p>
@@ -106,11 +103,11 @@ const historyColumns = computed(() => [
             </div>
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('salvage_value') }}</p>
-              <p class="font-medium font-mono">CHF {{ formatSwiss(asset.salvage_value) }}</p>
+              <p class="font-medium font-mono">{{ formatCurrency(asset.salvage_value) }}</p>
             </div>
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('net_book_value') }}</p>
-              <p class="font-medium font-mono text-[hsl(var(--primary))]">CHF {{ formatSwiss(asset.net_book_value) }}</p>
+              <p class="font-medium font-mono text-[hsl(var(--primary))]">{{ formatCurrency(asset.net_book_value) }}</p>
             </div>
           </div>
 
@@ -174,10 +171,10 @@ const historyColumns = computed(() => [
             {{ formatDate(row.depreciation_date) }}
           </template>
           <template #cell-amount="{ row }">
-            <span class="font-mono text-red-600 dark:text-red-400">−CHF {{ formatSwiss(row.amount) }}</span>
+            <span class="font-mono text-red-600 dark:text-red-400">{{ formatCurrency(-row.amount) }}</span>
           </template>
           <template #cell-book_value_after="{ row }">
-            <span class="font-mono">CHF {{ formatSwiss(row.book_value_after) }}</span>
+            <span class="font-mono">{{ formatCurrency(row.book_value_after) }}</span>
           </template>
           <template #cell-journal_entry_id="{ row }">
             <Link
