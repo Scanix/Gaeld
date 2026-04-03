@@ -19,7 +19,7 @@ use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
-use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use App\Domains\Organizations\Enums\Role;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
@@ -43,7 +43,7 @@ class DemoDataSeeder extends Seeder
         private readonly ApproveExpenseAction $approveExpense,
         private readonly PostExpenseAction $postExpense,
         private readonly BankingService $bankingService,
-        private readonly InvoiceService $invoiceService,
+        private readonly InvoiceAccountingService $accountingService,
     ) {}
 
     public function run(): void
@@ -241,7 +241,7 @@ class DemoDataSeeder extends Seeder
         $this->finalizeInvoice->execute($inv1);
 
         $inv1->refresh();
-        $this->invoiceService
+        $this->accountingService
             ->recordPayment($inv1, new RecordPaymentData(
                 amount: '5405.00',
                 paymentDate: now()->subDays(5)->toDateString(),
@@ -394,7 +394,7 @@ class DemoDataSeeder extends Seeder
         $this->finalizeInvoice->execute($inv4);
 
         $inv4->refresh();
-        $this->invoiceService
+        $this->accountingService
             ->recordPayment($inv4, new RecordPaymentData(
                 amount: '2000.00',
                 paymentDate: now()->subDays(3)->toDateString(),

@@ -32,20 +32,30 @@ defineExpose({ close })
 
 <template>
   <div ref="dropdownRef" class="relative">
-    <slot name="trigger" :toggle="() => (open = !open)">
-      <Button variant="outline" size="icon" @click="open = !open">
+    <slot name="trigger" :toggle="() => (open = !open)" :open="open">
+      <Button variant="outline" size="icon" aria-haspopup="menu" :aria-expanded="open" @click="open = !open">
         <EllipsisVertical class="h-4 w-4" />
       </Button>
     </slot>
 
-    <div
-      v-if="open"
-      :class="[
-        'absolute z-50 mt-1 min-w-[12rem] rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-1 shadow-lg',
-        align === 'right' ? 'right-0' : 'left-0',
-      ]"
+    <Transition
+      enter-active-class="transition duration-100 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-75 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
     >
-      <slot :close="close" />
-    </div>
+      <div
+        v-if="open"
+        role="menu"
+        :class="[
+          'absolute z-50 mt-1 min-w-[12rem] rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--popover))] p-1 shadow-lg',
+          align === 'right' ? 'right-0' : 'left-0',
+        ]"
+      >
+        <slot :close="close" />
+      </div>
+    </Transition>
   </div>
 </template>

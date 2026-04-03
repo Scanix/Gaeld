@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { ChevronDown, X } from 'lucide-vue-next'
 
 const props = defineProps({
-  modelValue: { type: [String, Number, null], default: null },
+  modelValue: { type: [String, Number], default: null },
   options: { type: Array, default: () => [] },
   labelKey: { type: String, default: 'label' },
   valueKey: { type: String, default: 'value' },
@@ -95,9 +95,11 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   <div ref="containerRef" :class="cn('relative', props.class)">
     <button
       type="button"
-      class="flex w-full items-center justify-between rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] disabled:cursor-not-allowed disabled:opacity-50"
+      class="flex h-10 w-full items-center justify-between rounded-md border border-[hsl(var(--input))] bg-transparent px-3 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))] disabled:cursor-not-allowed disabled:opacity-50 sm:h-9"
       :class="error ? 'border-[hsl(var(--destructive))]' : ''"
       :disabled="disabled"
+      :aria-expanded="open"
+      aria-haspopup="listbox"
       @click="openDropdown"
     >
       <span :class="selectedOption ? '' : 'text-[hsl(var(--muted-foreground))]'">
@@ -123,6 +125,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
     >
       <div
         v-if="open"
+        role="listbox"
         class="absolute z-50 mt-1 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--popover))] p-1 shadow-lg"
       >
         <input
@@ -138,6 +141,8 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
             v-for="(option, index) in filtered"
             :key="getValue(option)"
             type="button"
+            role="option"
+            :aria-selected="getValue(option) === modelValue"
             :class="[
               'flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors',
               getValue(option) === modelValue

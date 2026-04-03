@@ -61,7 +61,7 @@ const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
     href="#main-content"
     class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded focus:bg-[hsl(var(--background))] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:ring-2 focus:ring-[hsl(var(--ring))]"
   >
-    Skip to content
+    {{ tl('skip_to_content') }}
   </a>
   <Head :title="title" />
 
@@ -88,9 +88,9 @@ const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
         <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
           <span class="inline-flex items-center gap-1.5">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-            SaaS Admin Mode — With great power comes great responsibility
+            {{ tl('saas_admin_warning') }}
           </span>
-          <Link href="/saas-admin" class="underline underline-offset-2 hover:text-red-100 whitespace-nowrap">Admin Dashboard</Link>
+          <Link href="/saas-admin" class="underline underline-offset-2 hover:text-red-100 whitespace-nowrap">{{ tl('admin_dashboard') }}</Link>
         </div>
       </div>
 
@@ -103,7 +103,7 @@ const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
         <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
           <span class="inline-flex items-center gap-1.5">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-            <strong>Early Beta</strong> — Gäld is under active development. Data may be reset without notice.
+            <strong>{{ tl('early_beta') }}</strong> — {{ tl('early_beta_notice') }}
           </span>
           <a href="https://github.com/gaeld/gaeld-app" target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-amber-900 whitespace-nowrap">{{ tl('follow_on_github') }}</a>
           <button @click="dismissBeta" class="ml-2 opacity-60 hover:opacity-100 transition-opacity" :aria-label="tl('dismiss')">

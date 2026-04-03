@@ -7,11 +7,13 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import { TrendingUp, Users, AlertCircle, CreditCard, Clock, ShieldCheck, Ban, ArrowRightLeft, Settings, Save } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const props = defineProps({
   stats: { type: Object, default: () => ({}) },
@@ -178,7 +180,7 @@ function updatePlan(plan) {
                 <TrendingUp class="h-4 w-4 text-[hsl(var(--primary))]" />
               </div>
               <div>
-                <p class="text-2xl font-bold tabular-nums">CHF {{ stats.mrr_chf }}</p>
+                <p class="text-2xl font-bold tabular-nums">{{ formatCurrency(stats.mrr_chf) }}</p>
                 <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('mrr') }}</p>
               </div>
             </div>
@@ -200,7 +202,7 @@ function updatePlan(plan) {
               <div class="flex items-center justify-between">
                 <span class="font-semibold">{{ plan.name }}</span>
                 <span class="text-sm text-[hsl(var(--muted-foreground))]">
-                  {{ plan.price_chf > 0 ? `CHF ${plan.price_chf}/mo` : t('free') }}
+                  {{ plan.price_chf > 0 ? `${formatCurrency(plan.price_chf)}/${t('month').toLowerCase().slice(0,2)}` : t('free') }}
                 </span>
               </div>
               <div class="flex items-baseline gap-1">

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **FormFileInput.vue** — reusable file upload component with label, error, and slot support.
+- **Setup Wizard stepper** — 3-step wizard (Account → Organisation → Settings) with visual progress indicator.
+- **Sidebar sub-categories** — Accounting menu grouped under Core, Tax & VAT, Reports & Archives, Period, Advanced headings.
+- **Collapsible sidebar sections** — expand/collapse with chevron toggle, localStorage persistence.
+- **Global search quick navigation** — ⌘K shows page quick links when empty; navigation results mixed into search.
+- **Form section headings** — all Create/Edit forms use `<h3>` + `<hr>` section dividers.
+- **Tooltip help** — contextual tooltips on internal notes, AHV number, IBAN fields.
+
+### Improved
+- **Mobile responsiveness** — action headers use `flex-wrap` + icon-only buttons on mobile across all Show/Create/Edit pages.
+- **Address field ordering** — Customer/Supplier forms reorder to Address → Postal → City → Country.
+- **i18n** — ~30 new keys across EN, FR, DE, IT.
+
 ---
 
 ## [1.17.0] — 2026-03-29

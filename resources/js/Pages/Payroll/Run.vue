@@ -14,7 +14,7 @@ import { useFormatters } from '@/lib/useFormatters'
 import { Check, ChevronRight } from 'lucide-vue-next'
 
 const { t } = useTranslations()
-const { intlMonthName } = useFormatters()
+const { intlMonthName, formatCurrency } = useFormatters()
 
 const props = defineProps({
   employees: { type: Array, default: () => [] },
@@ -92,10 +92,6 @@ async function goToPreview() {
       }
     })
   step.value = 2
-}
-
-function formatSwiss(v) {
-  return Number(v).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 async function generateSlips() {
@@ -224,7 +220,7 @@ async function postSlips() {
               />
               <div class="flex-1">
                 <p class="font-medium text-sm">{{ emp.first_name }} {{ emp.last_name }}</p>
-                <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ emp.position }} — CHF {{ formatSwiss(emp.gross_salary) }}{{ t('per_month') }}</p>
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ emp.position }} — {{ formatCurrency(emp.gross_salary) }}{{ t('per_month') }}</p>
               </div>
             </label>
           </div>
@@ -261,12 +257,12 @@ async function postSlips() {
             <tbody class="divide-y divide-[hsl(var(--border))]">
               <tr v-for="emp in preview" :key="emp.id">
                 <td class="py-2.5">{{ emp.first_name }} {{ emp.last_name }}</td>
-                <td class="py-2.5 text-right font-mono">{{ formatSwiss(emp.gross_salary) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatSwiss(emp.avs) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatSwiss(emp.ac) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatSwiss(emp.aanp) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatSwiss(emp.lpp) }}</td>
-                <td class="py-2.5 text-right font-mono font-bold text-green-700 dark:text-green-400">{{ formatSwiss(emp.net) }}</td>
+                <td class="py-2.5 text-right font-mono">{{ formatCurrency(emp.gross_salary) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.avs) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.ac) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.aanp) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.lpp) }}</td>
+                <td class="py-2.5 text-right font-mono font-bold text-green-700 dark:text-green-400">{{ formatCurrency(emp.net) }}</td>
               </tr>
             </tbody>
           </table>

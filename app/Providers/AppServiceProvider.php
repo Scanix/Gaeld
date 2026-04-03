@@ -54,7 +54,7 @@ class AppServiceProvider extends ServiceProvider
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            return Limit::perMinute((int) config('sanctum.rate_limit', 60))->by($request->user()?->id ?: $request->ip());
         });
         Password::defaults(fn () => Password::min(12)
             ->letters()

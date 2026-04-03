@@ -99,23 +99,23 @@ const columns = computed(() => [
   <AppLayout :title="`${t('bank')} — ${bankAccount.name}`">
     <Breadcrumb :items="[{ label: t('bank_accounts'), href: '/banking' }, { label: bankAccount.name }]" class="mb-4" />
 
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
         <h2 class="text-xl font-semibold">{{ bankAccount.name }}</h2>
         <Badge v-if="bankAccount.is_mixed_use" variant="outline">{{ t('mixed') }}</Badge>
       </div>
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" @click="showEditModal = true">
-          <Pencil class="mr-1 h-4 w-4" />
-          {{ t('edit') }}
+          <Pencil class="h-4 w-4 sm:mr-1" />
+          <span class="hidden sm:inline">{{ t('edit') }}</span>
         </Button>
         <Button size="sm" @click="showTransactionModal = true">
-          <Plus class="mr-1 h-4 w-4" />
-          {{ t('record_transaction') }}
+          <Plus class="h-4 w-4 sm:mr-1" />
+          <span class="hidden sm:inline">{{ t('record_transaction') }}</span>
         </Button>
         <Button size="sm" variant="destructive" @click="showDeleteDialog = true">
-          <Trash2 class="mr-1 h-4 w-4" />
-          {{ t('delete') }}
+          <Trash2 class="h-4 w-4 sm:mr-1" />
+          <span class="hidden sm:inline">{{ t('delete') }}</span>
         </Button>
       </div>
     </div>
@@ -155,7 +155,7 @@ const columns = computed(() => [
         >
           <template #cell-type="{ value }">
             <Badge :variant="value === 'credit' ? 'default' : 'secondary'">
-              {{ value }}
+              {{ t('banking_type_' + value) }}
             </Badge>
           </template>
         </DataTable>

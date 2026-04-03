@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\Banking\Services\Camt;
+namespace App\Domains\Banking\Parsers\Camt;
 
 /**
  * Parser for CAMT.054 (Bank-to-Customer Debit/Credit Notification) XML files.

@@ -18,6 +18,7 @@ import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { useFormValidation, z } from '@/lib/useFormValidation'
+import FormFileInput from '@/Components/UI/FormFileInput.vue'
 import { Plus, Trash2, HelpCircle } from 'lucide-vue-next'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 
@@ -129,6 +130,8 @@ const vatOptions = [
       </CardHeader>
       <CardContent>
         <form class="space-y-6" @submit.prevent="submit">
+          <!-- Invoice Details -->
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('invoice_details') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="flex items-end gap-2">
               <FormSelect
@@ -190,6 +193,7 @@ const vatOptions = [
           </div>
 
           <!-- Line items -->
+          <hr class="border-[hsl(var(--border))]" />
           <div>
             <h3 class="mb-3 text-sm font-medium">{{ t('line_items') }}</h3>
             <div class="space-y-3">
@@ -278,6 +282,9 @@ const vatOptions = [
             </div>
           </div>
 
+          <!-- Notes & Terms -->
+          <hr class="border-[hsl(var(--border))]" />
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('notes_and_terms') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormTextarea
               id="notes"
@@ -297,19 +304,14 @@ const vatOptions = [
             </div>
           </div>
 
-          <div>
-            <label for="justificatif" class="mb-1 block text-sm font-medium">{{ t('justificatif') }}</label>
-            <input
-              id="justificatif"
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              class="block w-full text-sm text-[hsl(var(--muted-foreground))] file:mr-4 file:rounded-md file:border-0 file:bg-[hsl(var(--primary))] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[hsl(var(--primary-foreground))] hover:file:opacity-90"
-              @change="onJustificatifChange"
-            />
-            <p v-if="form.errors.justificatif" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.justificatif }}</p>
-          </div>
+          <FormFileInput
+            id="justificatif"
+            :label="t('justificatif')"
+            :error="form.errors.justificatif"
+            @change="onJustificatifChange"
+          />
 
-          <div class="flex justify-end gap-3">
+          <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" href="/invoices" variant="outline">{{ t('cancel') }}</Button>
             <Button type="button" variant="outline" @click="showPreview = true">
               {{ t('invoice_preview') }}

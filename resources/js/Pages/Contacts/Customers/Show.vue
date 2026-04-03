@@ -16,6 +16,7 @@ import { Pencil, Plus, Trash2, Star } from 'lucide-vue-next'
 import axios from 'axios'
 import { useToast } from '@/lib/useToast'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 
 const { t } = useTranslations()
 const { formatCurrency, formatDate } = useFormatters()
@@ -150,8 +151,9 @@ async function executeDeleteContact() {
   <AppLayout :title="customer.name" help-page="customers">
     <Breadcrumb :items="[{ label: t('customers'), href: '/customers' }, { label: customer.name }]" class="mb-4" />
 
-    <div class="mb-4 flex items-center justify-end">
-      <Button as="a" :href="`/customers/${customer.id}/edit`">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-lg font-semibold">{{ customer.name }}</h2>
+      <Button as="a" :href="`/customers/${customer.id}/edit`" variant="outline" size="sm">
         <Pencil class="mr-2 h-4 w-4" />
         {{ t('edit') }}
       </Button>
@@ -203,9 +205,7 @@ async function executeDeleteContact() {
           <CardTitle>{{ t('invoices') }}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div v-if="!invoices.length" class="text-sm text-[hsl(var(--muted-foreground))]">
-            {{ t('no_invoices_yet') }}
-          </div>
+          <EmptyState v-if="!invoices.length" :title="t('no_invoices_yet')" />
           <table v-else class="w-full text-sm">
             <thead>
               <tr class="border-b text-[hsl(var(--muted-foreground))]">
@@ -230,7 +230,7 @@ async function executeDeleteContact() {
                 <td class="py-2 text-right">{{ formatCurrency(invoice.total, invoice.currency) }}</td>
                 <td class="py-2">
                   <Badge :variant="statusVariant[invoice.status] ?? 'secondary'">
-                    {{ invoice.status }}
+                    {{ t('invoice_status_' + invoice.status) }}
                   </Badge>
                 </td>
               </tr>
@@ -252,9 +252,7 @@ async function executeDeleteContact() {
         </div>
       </CardHeader>
       <CardContent>
-        <div v-if="!contactPersons.length" class="text-sm text-[hsl(var(--muted-foreground))]">
-          {{ t('no_contact_persons') }}
-        </div>
+        <EmptyState v-if="!contactPersons.length" :title="t('no_contact_persons')" />
         <div v-else class="space-y-3">
           <div
             v-for="contact in contactPersons"

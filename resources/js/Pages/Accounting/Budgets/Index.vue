@@ -13,6 +13,7 @@ import Combobox from '@/Components/UI/Combobox.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import { Plus, Trash2, PieChart } from 'lucide-vue-next'
 
@@ -24,6 +25,7 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 // Fiscal year selector
 const year = ref(props.selectedYear ?? props.fiscalYears[0]?.value ?? new Date().getFullYear())
@@ -99,11 +101,6 @@ function submitAdd() {
 
 function annualTotal(monthly) {
   return (parseFloat(monthly) || 0) * 12
-}
-
-function chf(val) {
-  if (!val && val !== 0) return '—'
-  return Number(val).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 </script>
 
@@ -200,11 +197,11 @@ function chf(val) {
                       class="w-28 rounded border border-[hsl(var(--input))] bg-transparent px-2 py-1 text-right text-sm"
                     />
                   </template>
-                  <span v-else class="tabular-nums">CHF {{ chf(budget.monthly_amount) }}</span>
+                  <span v-else class="tabular-nums">{{ formatCurrency(budget.monthly_amount) }}</span>
                 </td>
 
                 <td class="px-4 py-2.5 text-right tabular-nums text-[hsl(var(--muted-foreground))]">
-                  CHF {{ chf(editingRows[budget.id]
+                  {{ formatCurrency(editingRows[budget.id]
                     ? annualTotal(editingRows[budget.id].monthly_amount)
                     : annualTotal(budget.monthly_amount)) }}
                 </td>

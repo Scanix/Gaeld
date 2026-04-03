@@ -5,7 +5,7 @@ namespace App\Domains\Invoicing\Actions;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 class FinalizeInvoiceAction
 {
     public function __construct(
-        private InvoiceService $invoiceService,
+        private InvoiceAccountingService $accountingService,
     ) {}
 
     public function execute(Invoice $invoice): Invoice
@@ -27,7 +27,7 @@ class FinalizeInvoiceAction
             throw new InvalidInvoiceStateException('Cannot finalize an invoice with no line items.');
         }
 
-        $result = $this->invoiceService->postToLedger($invoice);
+        $result = $this->accountingService->postToLedger($invoice);
 
         Log::info('Invoice finalized', [
             'invoice_id' => $invoice->id,

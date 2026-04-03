@@ -32,10 +32,10 @@ const label = computed(() => {
 const color = computed(() => {
   const colors = [
     'bg-[hsl(var(--muted))]',
-    'bg-red-500',
-    'bg-orange-500',
-    'bg-yellow-500',
-    'bg-green-500',
+    'bg-red-500 dark:bg-red-400',
+    'bg-orange-500 dark:bg-orange-400',
+    'bg-yellow-500 dark:bg-yellow-400',
+    'bg-green-500 dark:bg-green-400',
   ]
   return colors[strength.value]
 })
@@ -43,7 +43,14 @@ const color = computed(() => {
 
 <template>
   <div v-if="password" class="space-y-1.5">
-    <div class="flex gap-1">
+    <div
+      class="flex gap-1"
+      role="meter"
+      :aria-valuenow="strength"
+      aria-valuemin="0"
+      aria-valuemax="4"
+      :aria-label="label"
+    >
       <div
         v-for="i in 4"
         :key="i"

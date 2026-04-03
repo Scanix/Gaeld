@@ -185,7 +185,7 @@ function exportCsv() {
           v-model="localSearch"
           type="text"
           :placeholder="searchPlaceholder ?? t('search')"
-          class="h-9 w-full rounded-md border border-[hsl(var(--input))] bg-transparent pl-9 pr-9 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))] focus:ring-1 focus:ring-[hsl(var(--ring))]"
+          class="h-9 w-full rounded-md border border-[hsl(var(--input))] bg-transparent pl-9 pr-9 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))] focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
           @input="handleSearch"
         />
         <button
@@ -202,7 +202,7 @@ function exportCsv() {
       <div v-for="filter in filters" :key="filter.key" class="flex items-center gap-1">
         <select
           :value="filter.value ?? ''"
-          class="h-9 rounded-md border border-[hsl(var(--input))] bg-transparent px-3 text-sm text-[hsl(var(--foreground))] outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
+          class="h-9 rounded-md border border-[hsl(var(--input))] bg-transparent px-3 text-sm text-[hsl(var(--foreground))] outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
           @change="handleFilter(filter.key, $event.target.value)"
         >
           <option value="">{{ filter.label }}</option>

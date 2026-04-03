@@ -63,6 +63,14 @@
     --chart-3: 38 92% 50%;
     --chart-4: 0 84% 60%;
     --chart-5: 262 83% 58%;
+
+    /* Semantic status colors */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 9%;
+    --info: 221 83% 53%;
+    --info-foreground: 0 0% 100%;
   }
 
   .dark {
@@ -101,6 +109,14 @@
     --chart-3: 38 92% 60%;
     --chart-4: 0 84% 65%;
     --chart-5: 262 83% 68%;
+
+    /* Semantic status colors */
+    --success: 142 71% 50%;
+    --success-foreground: 0 0% 4%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 4%;
+    --info: 221 83% 63%;
+    --info-foreground: 0 0% 100%;
   }
 }
 

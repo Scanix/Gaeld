@@ -149,7 +149,7 @@ const bankAccountOptions = computed(() =>
 </script>
 
 <template>
-  <AppLayout :title="`Invoice ${invoice?.number}`" help-page="invoices">
+  <AppLayout :title="`${t('invoice')} ${invoice?.number}`" help-page="invoices">
     <Breadcrumb :items="[
       { label: t('invoices'), href: '/invoices' },
       { label: invoice?.number },
@@ -172,7 +172,7 @@ const bankAccountOptions = computed(() =>
             </p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <Button
             v-if="invoice?.status === 'draft'"
             as="a"
@@ -180,8 +180,8 @@ const bankAccountOptions = computed(() =>
             variant="outline"
             size="sm"
           >
-            <Pencil class="mr-1 h-4 w-4" />
-            {{ t('edit') }}
+            <Pencil class="h-4 w-4 sm:mr-1" />
+            <span class="hidden sm:inline">{{ t('edit') }}</span>
           </Button>
           <Button
             v-if="invoice?.status === 'draft'"
@@ -206,8 +206,8 @@ const bankAccountOptions = computed(() =>
             variant="outline"
             size="sm"
           >
-            <Download class="mr-1 h-4 w-4" />
-            {{ t('download_qr_invoice') }}
+            <Download class="h-4 w-4 sm:mr-1" />
+            <span class="hidden sm:inline">{{ t('download_qr_invoice') }}</span>
           </Button>
           <DropdownMenu>
             <template #default="{ close }">

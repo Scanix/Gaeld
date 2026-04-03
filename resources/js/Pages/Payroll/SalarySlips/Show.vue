@@ -9,8 +9,10 @@ import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const props = defineProps({
   slip: Object,
@@ -24,11 +26,6 @@ function postToLedger() {
 
 function downloadPdf() {
   window.open(`/payroll/salary-slips/${props.slip.id}/pdf`, '_blank')
-}
-
-function formatSwiss(v) {
-  if (v == null) return '—'
-  return Number(v).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 function deductionRow(label, employee, employer) {
@@ -82,9 +79,9 @@ function deductionRow(label, employee, employer) {
               <!-- Gross salary -->
               <tr class="font-medium">
                 <td class="py-2.5">{{ t('gross_salary') }}</td>
-                <td class="py-2.5 text-right font-mono">CHF {{ formatSwiss(slip.gross_salary) }}</td>
+                <td class="py-2.5 text-right font-mono">{{ formatCurrency(slip.gross_salary) }}</td>
                 <td class="py-2.5 text-right text-[hsl(var(--muted-foreground))]">—</td>
-                <td class="py-2.5 text-right font-mono">CHF {{ formatSwiss(slip.gross_salary) }}</td>
+                <td class="py-2.5 text-right font-mono">{{ formatCurrency(slip.gross_salary) }}</td>
               </tr>
               <!-- Deductions -->
               <tr v-for="d in [
@@ -94,16 +91,16 @@ function deductionRow(label, employee, employer) {
                 deductionRow(t('lpp_employee'), slip.lpp_employee, slip.lpp_employer),
               ]" :key="d.label" class="text-red-700 dark:text-red-400">
                 <td class="py-2">{{ d.label }}</td>
-                <td class="py-2 text-right font-mono">−CHF {{ formatSwiss(d.employee) }}</td>
-                <td class="py-2 text-right font-mono">−CHF {{ formatSwiss(d.employer) }}</td>
-                <td class="py-2 text-right font-mono">−CHF {{ formatSwiss(d.total) }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(-d.employee) }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(-d.employer) }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(-d.total) }}</td>
               </tr>
             </tbody>
             <tfoot>
               <tr class="border-t-2 border-[hsl(var(--border))] font-bold text-[hsl(var(--foreground))]">
                 <td class="pt-3">{{ t('net_salary') }}</td>
                 <td class="pt-3 text-right font-mono text-green-700 dark:text-green-400">
-                  CHF {{ formatSwiss(slip.net_salary) }}
+                  {{ formatCurrency(slip.net_salary) }}
                 </td>
                 <td />
                 <td />
@@ -117,12 +114,13 @@ function deductionRow(label, employee, employer) {
       <div class="flex gap-3">
         <Button
           v-if="slip.status !== 'posted'"
+          size="sm"
           :disabled="postForm.processing"
           @click="postToLedger"
         >
           {{ t('post_to_ledger') }}
         </Button>
-        <Button variant="outline" @click="downloadPdf">
+        <Button variant="outline" size="sm" @click="downloadPdf">
           {{ t('download_pdf') }}
         </Button>
         <p v-if="slip.status === 'posted'" class="flex items-center text-sm text-green-700 dark:text-green-400">

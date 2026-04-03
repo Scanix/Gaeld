@@ -33,10 +33,7 @@ function handleSearch(search) {
   applyQuery({ search })
 }
 
-function formatSwiss(value) {
-  if (value == null) return '—'
-  return Number(value).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+
 
 const columns = computed(() => [
   { key: 'name', label: t('asset_name'), sortable: true },
@@ -89,7 +86,7 @@ const columns = computed(() => [
         {{ formatDate(row.purchase_date) }}
       </template>
       <template #cell-purchase_amount="{ row }">
-        <span class="font-mono">{{ formatSwiss(row.purchase_amount) }}</span>
+        <span class="font-mono">{{ formatCurrency(row.purchase_amount) }}</span>
       </template>
       <template #cell-depreciation_method="{ row }">
         {{ row.depreciation_method === 'straight_line' ? t('straight_line') : t('declining_balance') }}
@@ -98,7 +95,7 @@ const columns = computed(() => [
         {{ row.useful_life_years }} {{ t('years') }}
       </template>
       <template #cell-net_book_value="{ row }">
-        <span class="font-mono">{{ formatSwiss(row.net_book_value) }}</span>
+        <span class="font-mono">{{ formatCurrency(row.net_book_value) }}</span>
       </template>
       <template #cell-status="{ row }">
         <Badge :variant="row.status === 'active' ? 'default' : row.status === 'disposed' ? 'destructive' : 'secondary'">
@@ -106,9 +103,9 @@ const columns = computed(() => [
         </Badge>
       </template>
       <template #cell-actions="{ row }">
-        <Link :href="`/assets/${row.id}`" class="text-[hsl(var(--primary))] hover:underline">
+        <Button as="a" :href="`/assets/${row.id}`" variant="ghost" size="icon" :title="t('view')">
           <Eye class="h-4 w-4" />
-        </Link>
+        </Button>
       </template>
     </DataTable>
   </AppLayout>

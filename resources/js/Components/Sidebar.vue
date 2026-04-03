@@ -50,6 +50,28 @@ function switchOrg(orgId) {
   form.post(`/organizations/${orgId}/switch`)
 }
 
+// Collapsible sidebar sections with localStorage persistence
+const STORAGE_KEY = 'gaeld-sidebar-expanded'
+function loadExpandedGroups() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? new Set(JSON.parse(stored)) : new Set()
+  } catch { return new Set() }
+}
+const expandedGroups = ref(loadExpandedGroups())
+
+function toggleGroup(key) {
+  const s = new Set(expandedGroups.value)
+  if (s.has(key)) s.delete(key)
+  else s.add(key)
+  expandedGroups.value = s
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...s]))
+}
+
+function isExpanded(item) {
+  return expandedGroups.value.has(item.key) || isGroupActive(item)
+}
+
 const navigation = computed(() => [
   { key: 'dashboard', href: '/', icon: LayoutDashboard },
   { key: 'invoices', href: '/invoices', icon: FileText, children: [
@@ -62,26 +84,38 @@ const navigation = computed(() => [
     { key: 'suppliers', href: '/suppliers' },
   ]},
   { key: 'accounting', href: '/accounting/chart-of-accounts', icon: BookOpen, children: [
+    // Core
+    { type: 'separator', label: 'accounting_core' },
     { key: 'chart_of_accounts', href: '/accounting/chart-of-accounts' },
     { key: 'journal_entries', href: '/accounting/journal-entries' },
     { key: 'trial_balance', href: '/accounting/trial-balance' },
+    // Tax & VAT
+    { type: 'separator', label: 'accounting_tax' },
+    { key: 'vat_rates', href: '/accounting/vat-rates' },
     { key: 'social_charges', href: '/accounting/social-charges' },
+    ...(features.value.tax_declaration ? [
+      { key: 'tax_declarations', href: '/accounting/tax-declarations' },
+    ] : []),
+    // Reports & Archives
+    { type: 'separator', label: 'accounting_reports' },
+    { key: 'lettrage', href: '/accounting/lettrage' },
+    { key: 'fiduciary_export', href: '/accounting/export' },
+    ...(can('accounting.view') ? [
+      { key: 'legal_archives', href: '/accounting/archives' },
+    ] : []),
+    // Period
+    { type: 'separator', label: 'accounting_period' },
     { key: 'budget', href: '/accounting/budgets' },
     ...(can('accounting.close-year') ? [
       { key: 'year_end_closing', href: '/accounting/year-end-closing' },
     ] : []),
-    { key: 'fiduciary_export', href: '/accounting/export' },
-    { key: 'lettrage', href: '/accounting/lettrage' },
-    ...(can('accounting.view') ? [
-      { key: 'legal_archives', href: '/accounting/archives' },
+    // Advanced (feature-gated)
+    ...((features.value.analytical || features.value.consolidation || features.value.multi_currency) ? [
+      { type: 'separator', label: 'accounting_advanced' },
     ] : []),
-    { key: 'vat_rates', href: '/accounting/vat-rates' },
     ...(features.value.analytical ? [
       { key: 'cost_centers', href: '/accounting/cost-centers' },
       { key: 'analytical_report', href: '/accounting/analytical-report' },
-    ] : []),
-    ...(features.value.tax_declaration ? [
-      { key: 'tax_declarations', href: '/accounting/tax-declarations' },
     ] : []),
     ...(features.value.consolidation ? [
       { key: 'consolidation', href: '/accounting/consolidation' },
@@ -215,36 +249,55 @@ function isGroupActive(item) {
       <template v-for="item in navigation" :key="item.key">
         <div v-if="item.children">
           <Tooltip :content="collapsed ? t(item.key) : ''" side="right">
-            <Link
-              :href="item.href"
-              :aria-label="collapsed ? t(item.key) : undefined"
-              :aria-current="isGroupActive(item) ? 'page' : undefined"
-              :aria-expanded="!collapsed ? isGroupActive(item) : undefined"
-              :class="[
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                isGroupActive(item)
-                  ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
-                  : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
-              ]"
-            >
-              <component :is="item.icon" class="h-4 w-4 shrink-0" />
-              <span v-if="!collapsed">{{ t(item.key) }}</span>
-            </Link>
+            <div class="flex items-center">
+              <Link
+                :href="item.href"
+                :aria-label="collapsed ? t(item.key) : undefined"
+                :aria-current="isGroupActive(item) ? 'page' : undefined"
+                :class="[
+                  'flex flex-1 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  isGroupActive(item)
+                    ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
+                    : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
+                ]"
+              >
+                <component :is="item.icon" class="h-4 w-4 shrink-0" />
+                <span v-if="!collapsed">{{ t(item.key) }}</span>
+              </Link>
+              <button
+                v-if="!collapsed"
+                class="rounded p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
+                :aria-label="isExpanded(item) ? t('collapse') : t('expand')"
+                @click.prevent="toggleGroup(item.key)"
+              >
+                <ChevronDown
+                  class="h-3.5 w-3.5 transition-transform duration-200"
+                  :class="isExpanded(item) ? '' : '-rotate-90'"
+                />
+              </button>
+            </div>
           </Tooltip>
-          <div v-if="!collapsed && isGroupActive(item)" class="ml-7 mt-1 space-y-1">
-            <Link
-              v-for="child in item.children"
-              :key="child.key"
-              :href="child.href"
-              :class="[
-                'block rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                isActive(child.href)
-                  ? 'text-[hsl(var(--primary))]'
-                  : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--sidebar-foreground))]',
-              ]"
-            >
-              {{ t(child.key) }}
-            </Link>
+          <div v-if="!collapsed && isExpanded(item)" class="ml-7 mt-1 space-y-0.5">
+            <template v-for="child in item.children" :key="child.key || child.label">
+              <div
+                v-if="child.type === 'separator'"
+                class="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]"
+              >
+                {{ t(child.label) }}
+              </div>
+              <Link
+                v-else
+                :href="child.href"
+                :class="[
+                  'block rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                  isActive(child.href)
+                    ? 'text-[hsl(var(--primary))]'
+                    : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--sidebar-foreground))]',
+                ]"
+              >
+                {{ t(child.key) }}
+              </Link>
+            </template>
           </div>
         </div>
 
