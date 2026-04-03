@@ -9,6 +9,14 @@ return [
     'customers' => 'Kunden',
     'suppliers' => 'Lieferanten',
     'accounting' => 'Buchhaltung',
+    'accounting_core' => 'Grundlagen',
+    'accounting_tax' => 'Steuern & MwSt.',
+    'accounting_reports' => 'Berichte & Archiv',
+    'accounting_period' => 'Periode',
+    'accounting_advanced' => 'Erweitert',
+    'collapse' => 'Einklappen',
+    'expand' => 'Ausklappen',
+    'go_to' => 'Gehe zu',
     'reports' => 'Berichte',
     'banking' => 'Bankwesen',
     'reconciliation' => 'Abgleich',
@@ -58,6 +66,8 @@ return [
     'save_changes' => 'Änderungen speichern',
     'cancel' => 'Abbrechen',
     'close' => 'Schliessen',
+    'toggle_menu' => 'Menü umschalten',
+    'breadcrumb' => 'Brotkrümelnavigation',
     'confirm' => 'Bestätigen',
     'apply' => 'Anwenden',
     'back' => '← Zurück',
@@ -269,6 +279,12 @@ return [
     'expense_status_pending' => 'Ausstehend',
     'expense_status_approved' => 'Genehmigt',
     'expense_status_posted' => 'Verbucht',
+    'expense_status_paid' => 'Bezahlt',
+    'expense_status_rejected' => 'Abgelehnt',
+
+    // Banking types
+    'banking_type_credit' => 'Gutschrift',
+    'banking_type_debit' => 'Belastung',
 
     'year_end_closing_desc' => 'Aufwand- und Ertragskonten am Ende des Geschäftsjahres abschliessen.',
     'fiscal_year' => 'Geschäftsjahr',
@@ -1681,4 +1697,43 @@ return [
     'social_charges_posted' => 'Sozialabgaben verbucht.',
     'invalid_credentials' => 'Die angegebenen Zugangsdaten stimmen nicht mit unseren Einträgen überein.',
     'all_rights_reserved' => 'Alle Rechte vorbehalten.',
+
+    // Form section headings
+    'contact_information' => 'Kontaktdaten',
+    'address_details' => 'Adresse',
+    'billing_details' => 'Abrechnung & Zahlung',
+    'expense_details' => 'Ausgabendetails',
+    'categorization_vat' => 'Kategorie & MwSt.',
+    'invoice_details' => 'Rechnungsdetails',
+    'notes_and_terms' => 'Notizen & Bedingungen',
+
+    // Tooltips
+    'tooltip_internal_notes' => 'Interne Notizen sind nur für Ihr Team sichtbar, nie für den Kontakt.',
+    'tooltip_iban' => 'Internationale Bankkontonummer für Zahlungen.',
+    'tooltip_ahv_number' => 'Schweizer AHV-Nummer im Format 756.XXXX.XXXX.XX.',
+    'tooltip_postal_code' => 'Schweizer Postleitzahl (4 Ziffern).',
+    'tooltip_payment_terms' => 'Anzahl Tage bis zur Fälligkeit der Zahlung.',
+
+    // Wizard stepper
+    'step_account' => 'Konto',
+    'step_organization' => 'Organisation',
+    'step_settings' => 'Einstellungen',
+    'back' => 'Zurück',
+
+    // UI & layout
+    'skip_to_content' => 'Zum Inhalt springen',
+    'setup_wizard' => 'Einrichtungsassistent',
+    'saas_admin_warning' => 'SaaS-Admin-Modus — Mit grosser Macht kommt grosse Verantwortung',
+    'admin_dashboard' => 'Admin-Dashboard',
+    'early_beta' => 'Frühe Beta',
+    'early_beta_notice' => 'Gäld befindet sich in aktiver Entwicklung. Daten können ohne Vorankündigung zurückgesetzt werden.',
+    'export_pdf' => 'PDF exportieren',
+    'export_csv' => 'CSV exportieren',
+    'n_days' => ':n Tage',
+
+    // VAT quarters
+    'quarter_q1' => 'Q1 (Jan–Mär)',
+    'quarter_q2' => 'Q2 (Apr–Jun)',
+    'quarter_q3' => 'Q3 (Jul–Sep)',
+    'quarter_q4' => 'Q4 (Okt–Dez)',
 ];

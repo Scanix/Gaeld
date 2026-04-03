@@ -10,7 +10,7 @@ use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoicePayment;
-use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use Mockery;
 use Tests\TestCase;
 
@@ -18,14 +18,14 @@ class RecordPaymentActionTest extends TestCase
 {
     private RecordPaymentAction $action;
 
-    private $invoiceService;
+    private $accountingService;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->invoiceService = Mockery::mock(InvoiceService::class);
-        $this->action = new RecordPaymentAction($this->invoiceService);
+        $this->accountingService = Mockery::mock(InvoiceAccountingService::class);
+        $this->action = new RecordPaymentAction($this->accountingService);
     }
 
     public function test_rejects_payment_on_draft_invoice(): void
@@ -75,7 +75,7 @@ class RecordPaymentActionTest extends TestCase
         $paymentData = new RecordPaymentData('100.00', now()->toDateString(), PaymentMethod::Bank, null);
         $payment = Mockery::mock(InvoicePayment::class)->makePartial();
         $payment->id = 'test-payment-id';
-        $this->invoiceService
+        $this->accountingService
             ->shouldReceive('recordPayment')
             ->once()
             ->with($invoice, $paymentData)
@@ -93,7 +93,7 @@ class RecordPaymentActionTest extends TestCase
         $paymentData = new RecordPaymentData('200.00', now()->toDateString(), PaymentMethod::Bank, null);
         $payment = Mockery::mock(InvoicePayment::class)->makePartial();
         $payment->id = 'test-payment-id';
-        $this->invoiceService
+        $this->accountingService
             ->shouldReceive('recordPayment')
             ->once()
             ->andReturn($payment);
@@ -110,7 +110,7 @@ class RecordPaymentActionTest extends TestCase
         $paymentData = new RecordPaymentData('500.00', now()->toDateString(), PaymentMethod::Bank, null);
         $payment = Mockery::mock(InvoicePayment::class)->makePartial();
         $payment->id = 'test-payment-id';
-        $this->invoiceService
+        $this->accountingService
             ->shouldReceive('recordPayment')
             ->once()
             ->andReturn($payment);

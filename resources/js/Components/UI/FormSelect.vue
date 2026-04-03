@@ -33,8 +33,10 @@ defineEmits(['update:modelValue'])
       :id="id"
       :value="modelValue"
       :required="required"
+      :aria-describedby="error ? id + '-error' : undefined"
+      :aria-invalid="error ? true : undefined"
       :class="cn(
-        'flex h-9 w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))] disabled:cursor-not-allowed disabled:opacity-50',
+        'flex h-10 w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))] disabled:cursor-not-allowed disabled:opacity-50 sm:h-9',
         error && 'border-[hsl(var(--destructive))]'
       )"
       @change="$emit('update:modelValue', $event.target.value)"
@@ -48,6 +50,6 @@ defineEmits(['update:modelValue'])
         {{ typeof opt === 'string' ? opt : opt.label }}
       </option>
     </select>
-    <p v-if="error" class="text-xs text-[hsl(var(--destructive))]">{{ error }}</p>
+    <p v-if="error" :id="id + '-error'" role="alert" class="text-xs text-[hsl(var(--destructive))]">{{ error }}</p>
   </div>
 </template>

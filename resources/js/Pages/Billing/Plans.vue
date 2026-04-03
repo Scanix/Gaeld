@@ -9,9 +9,11 @@ import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import { CheckCircle2, Zap, AlertCircle, CreditCard, FileText, Settings, Download, ExternalLink } from 'lucide-vue-next'
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 const page = usePage()
 
 const props = defineProps({
@@ -146,7 +148,7 @@ function openPortal() {
                     <td class="py-2.5 px-1 font-mono text-xs">{{ invoice.number }}</td>
                     <td class="py-2.5 px-1">{{ invoice.date }}</td>
                     <td class="py-2.5 px-1 text-right font-medium">
-                      {{ invoice.currency }} {{ invoice.amount.toFixed(2) }}
+                      {{ formatCurrency(invoice.amount, invoice.currency) }}
                     </td>
                     <td class="py-2.5 px-1 text-center">
                       <span
@@ -227,7 +229,7 @@ function openPortal() {
             </CardHeader>
             <CardContent class="space-y-5">
               <div>
-                <span class="text-3xl font-bold">CHF {{ plan.price_chf }}</span>
+                <span class="text-3xl font-bold">{{ formatCurrency(plan.price_chf) }}</span>
                 <span class="text-[hsl(var(--muted-foreground))] text-sm"> / {{ t('month') }}</span>
               </div>
 

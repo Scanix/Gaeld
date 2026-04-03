@@ -15,17 +15,14 @@ import { computed } from 'vue'
 import { Pencil } from 'lucide-vue-next'
 
 const { t } = useTranslations()
-const { formatDate } = useFormatters()
+const { formatDate, formatCurrency } = useFormatters()
 
 const props = defineProps({
   employee: Object,
   salarySlips: { type: Array, default: () => [] },
 })
 
-function formatSwiss(v) {
-  if (v == null) return '—'
-  return Number(v).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+
 
 const salaryColumns = computed(() => [
   { key: 'period', label: t('period') },
@@ -47,9 +44,9 @@ const salaryColumns = computed(() => [
       <!-- Employee details -->
       <Card class="lg:col-span-2">
         <CardHeader>
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-3">
             <CardTitle>{{ employee.first_name }} {{ employee.last_name }}</CardTitle>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <Badge :variant="employee.status === 'active' ? 'default' : 'secondary'">
                 {{ t('employee_status_' + employee.status) }}
               </Badge>
@@ -84,7 +81,7 @@ const salaryColumns = computed(() => [
             </div>
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('gross_salary') }}</p>
-              <p class="font-medium font-mono">CHF {{ formatSwiss(employee.gross_salary) }}</p>
+              <p class="font-medium font-mono">{{ formatCurrency(employee.gross_salary) }}</p>
             </div>
             <div v-if="employee.iban" class="col-span-2">
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('iban') }}</p>
@@ -125,10 +122,10 @@ const salaryColumns = computed(() => [
             {{ row.month_label }}
           </template>
           <template #cell-gross_salary="{ row }">
-            <span class="font-mono">CHF {{ formatSwiss(row.gross_salary) }}</span>
+            <span class="font-mono">{{ formatCurrency(row.gross_salary) }}</span>
           </template>
           <template #cell-net_salary="{ row }">
-            <span class="font-mono">CHF {{ formatSwiss(row.net_salary) }}</span>
+            <span class="font-mono">{{ formatCurrency(row.net_salary) }}</span>
           </template>
           <template #cell-status="{ row }">
             <Badge :variant="row.status === 'posted' ? 'default' : 'secondary'">

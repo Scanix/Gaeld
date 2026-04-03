@@ -15,7 +15,7 @@ use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
-use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
@@ -124,8 +124,8 @@ class InvoiceFlowTest extends TestCase
         $this->assertTrue($invoice->journalEntry->isBalanced());
 
         // 3. Record full payment
-        $invoiceService = app(InvoiceService::class);
-        $payment = $invoiceService->recordPayment($invoice, new RecordPaymentData(
+        $accountingService = app(InvoiceAccountingService::class);
+        $payment = $accountingService->recordPayment($invoice, new RecordPaymentData(
             amount: (string) $invoice->total,
             paymentDate: '2026-04-01',
             paymentMethod: PaymentMethod::Bank,
@@ -149,8 +149,8 @@ class InvoiceFlowTest extends TestCase
         $total = (float) $invoice->total;
         $halfAmount = round($total / 2, 2);
 
-        $invoiceService = app(InvoiceService::class);
-        $payment1 = $invoiceService->recordPayment($invoice, new RecordPaymentData(
+        $accountingService = app(InvoiceAccountingService::class);
+        $payment1 = $accountingService->recordPayment($invoice, new RecordPaymentData(
             amount: (string) $halfAmount,
             paymentDate: '2026-04-01',
             paymentMethod: PaymentMethod::Bank,
@@ -163,7 +163,7 @@ class InvoiceFlowTest extends TestCase
 
         // Pay remainder
         $remaining = (float) $invoice->amountDue();
-        $payment2 = $invoiceService->recordPayment($invoice, new RecordPaymentData(
+        $payment2 = $accountingService->recordPayment($invoice, new RecordPaymentData(
             amount: (string) $remaining,
             paymentDate: '2026-04-10',
             paymentMethod: PaymentMethod::Bank,

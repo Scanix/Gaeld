@@ -326,7 +326,7 @@ const transactionColumns = computed(() => [
           <button
             @click="saveLayout"
             :disabled="savingLayout"
-            class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+            class="inline-flex items-center rounded-md bg-[hsl(var(--primary))] px-3 py-1.5 text-xs font-medium text-[hsl(var(--primary-foreground))] shadow-sm transition-colors hover:bg-[hsl(var(--primary))]/90 disabled:opacity-50"
           >
             {{ savingLayout ? t('saving') : t('save') }}
           </button>

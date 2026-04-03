@@ -55,7 +55,7 @@ const groupedResults = computed(() => {
               <p v-if="result.subtitle" class="text-sm text-[hsl(var(--muted-foreground))]">{{ result.subtitle }}</p>
             </div>
             <Badge v-if="result.status" :variant="result.status === 'paid' || result.status === 'posted' ? 'default' : 'secondary'">
-              {{ result.status }}
+              {{ t(result.type + '_status_' + result.status) }}
             </Badge>
           </Link>
         </div>

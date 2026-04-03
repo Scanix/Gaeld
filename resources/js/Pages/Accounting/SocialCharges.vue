@@ -11,6 +11,7 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import { Calculator } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -18,12 +19,7 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
-
-// Swiss number formatting with apostrophe
-function chf(val) {
-  if (val === null || val === undefined) return '—'
-  return Number(val).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+const { formatCurrency } = useFormatters()
 
 // Income input (raw string to allow apostrophe typing)
 const incomeInput = ref('')
@@ -149,23 +145,23 @@ function postToLedger() {
           <div class="grid grid-cols-2 gap-4 text-sm">
             <div class="rounded-lg border border-[hsl(var(--border))] p-4">
               <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('social_avs') }}</p>
-              <p class="mt-1 text-xl font-bold tabular-nums">CHF {{ chf(breakdown.avs) }}</p>
+              <p class="mt-1 text-xl font-bold tabular-nums">{{ formatCurrency(breakdown.avs) }}</p>
             </div>
             <div class="rounded-lg border border-[hsl(var(--border))] p-4">
               <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('social_ai') }}</p>
-              <p class="mt-1 text-xl font-bold tabular-nums">CHF {{ chf(breakdown.ai) }}</p>
+              <p class="mt-1 text-xl font-bold tabular-nums">{{ formatCurrency(breakdown.ai) }}</p>
             </div>
             <div class="rounded-lg border border-[hsl(var(--border))] p-4">
               <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('social_apg') }}</p>
-              <p class="mt-1 text-xl font-bold tabular-nums">CHF {{ chf(breakdown.apg) }}</p>
+              <p class="mt-1 text-xl font-bold tabular-nums">{{ formatCurrency(breakdown.apg) }}</p>
             </div>
             <div class="rounded-lg border border-[hsl(var(--primary))]/10 bg-[hsl(var(--primary))]/5 p-4">
               <p class="text-xs font-medium text-[hsl(var(--primary))]">{{ t('social_total_charges') }}</p>
-              <p class="mt-1 text-2xl font-bold tabular-nums text-[hsl(var(--primary))]">CHF {{ chf(breakdown.total) }}</p>
+              <p class="mt-1 text-2xl font-bold tabular-nums text-[hsl(var(--primary))]">{{ formatCurrency(breakdown.total) }}</p>
             </div>
           </div>
           <p class="text-xs text-[hsl(var(--muted-foreground))]">
-            {{ t('social_based_on_income', { income: chf(income) }) }}
+            {{ t('social_based_on_income', { income: formatCurrency(income) }) }}
           </p>
         </div>
       </CardContent>
@@ -179,7 +175,7 @@ function postToLedger() {
     <ConfirmDialog
       :open="showPost"
       :title="t('post_to_ledger')"
-      :message="t('social_post_confirm', { amount: breakdown ? chf(breakdown.total) : '' })"
+      :message="t('social_post_confirm', { amount: breakdown ? formatCurrency(breakdown.total) : '' })"
       :confirm-label="t('post')"
       confirm-variant="default"
       :processing="postForm.processing"

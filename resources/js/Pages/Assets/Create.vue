@@ -179,7 +179,7 @@ function submit() {
             </div>
           </div>
 
-          <div class="flex justify-end gap-3">
+          <div class="flex flex-wrap justify-end gap-3">
             <Button type="button" variant="outline" as="a" href="/assets">
               {{ t('cancel') }}
             </Button>

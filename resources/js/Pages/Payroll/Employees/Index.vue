@@ -6,11 +6,13 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import { Plus, Eye, Pencil, Trash2, UserPlus } from 'lucide-vue-next'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const props = defineProps({
   employees: Object,
@@ -82,7 +84,7 @@ const columns = computed(() => [
         <span class="font-mono text-sm">{{ row.ahv_number }}</span>
       </template>
       <template #cell-gross_salary="{ row }">
-        <span class="font-mono">CHF {{ Number(row.gross_salary).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+        <span class="font-mono">{{ formatCurrency(row.gross_salary) }}</span>
       </template>
       <template #cell-status="{ row }">
         <Badge :variant="row.status === 'active' ? 'default' : 'secondary'">
@@ -90,16 +92,16 @@ const columns = computed(() => [
         </Badge>
       </template>
       <template #cell-actions="{ row }">
-        <div class="flex items-center justify-end gap-2">
-          <Link :href="`/payroll/employees/${row.id}`" class="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+        <div class="flex items-center justify-end gap-1">
+          <Button as="a" :href="`/payroll/employees/${row.id}`" variant="ghost" size="icon" :title="t('view')">
             <Eye class="h-4 w-4" />
-          </Link>
-          <Link :href="`/payroll/employees/${row.id}/edit`" class="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+          </Button>
+          <Button as="a" :href="`/payroll/employees/${row.id}/edit`" variant="ghost" size="icon" :title="t('edit')">
             <Pencil class="h-4 w-4" />
-          </Link>
-          <button class="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))]" @click="confirmDelete(row)">
+          </Button>
+          <Button variant="ghost" size="icon" :title="t('delete')" @click="confirmDelete(row)">
             <Trash2 class="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </template>
       <template #empty>

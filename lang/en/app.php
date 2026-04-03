@@ -9,6 +9,14 @@ return [
     'customers' => 'Customers',
     'suppliers' => 'Suppliers',
     'accounting' => 'Accounting',
+    'accounting_core' => 'Core',
+    'accounting_tax' => 'Tax & VAT',
+    'accounting_reports' => 'Reports & Archives',
+    'accounting_period' => 'Period',
+    'accounting_advanced' => 'Advanced',
+    'collapse' => 'Collapse',
+    'expand' => 'Expand',
+    'go_to' => 'Go to',
     'reports' => 'Reports',
     'banking' => 'Banking',
     'settings' => 'Settings',
@@ -57,6 +65,8 @@ return [
     'save_changes' => 'Save Changes',
     'cancel' => 'Cancel',
     'close' => 'Close',
+    'toggle_menu' => 'Toggle menu',
+    'breadcrumb' => 'Breadcrumb',
     'confirm' => 'Confirm',
     'apply' => 'Apply',
     'back' => '← Back',
@@ -270,6 +280,12 @@ return [
     'expense_status_pending' => 'Pending',
     'expense_status_approved' => 'Approved',
     'expense_status_posted' => 'Posted',
+    'expense_status_paid' => 'Paid',
+    'expense_status_rejected' => 'Rejected',
+
+    // Banking types
+    'banking_type_credit' => 'Credit',
+    'banking_type_debit' => 'Debit',
 
     'year_end_closing_desc' => 'Close income and expense accounts at the end of the fiscal year.',
     'fiscal_year' => 'Fiscal Year',
@@ -1696,4 +1712,43 @@ return [
     'social_charges_posted' => 'Social charges entry posted.',
     'invalid_credentials' => 'The provided credentials do not match our records.',
     'all_rights_reserved' => 'All rights reserved.',
+
+    // Form section headings
+    'contact_information' => 'Contact Information',
+    'address_details' => 'Address',
+    'billing_details' => 'Billing & Payment',
+    'expense_details' => 'Expense Details',
+    'categorization_vat' => 'Categorization & VAT',
+    'invoice_details' => 'Invoice Details',
+    'notes_and_terms' => 'Notes & Terms',
+
+    // Tooltips
+    'tooltip_internal_notes' => 'Internal notes are only visible to your team, never to the contact.',
+    'tooltip_iban' => 'International Bank Account Number used for payments.',
+    'tooltip_ahv_number' => 'Swiss social security number in format 756.XXXX.XXXX.XX.',
+    'tooltip_postal_code' => 'Swiss postal code (4 digits).',
+    'tooltip_payment_terms' => 'Number of days until payment is due.',
+
+    // Wizard stepper
+    'step_account' => 'Account',
+    'step_organization' => 'Organization',
+    'step_settings' => 'Settings',
+    'back' => 'Back',
+
+    // UI & layout
+    'skip_to_content' => 'Skip to content',
+    'setup_wizard' => 'Setup Wizard',
+    'saas_admin_warning' => 'SaaS Admin Mode — With great power comes great responsibility',
+    'admin_dashboard' => 'Admin Dashboard',
+    'early_beta' => 'Early Beta',
+    'early_beta_notice' => 'Gäld is under active development. Data may be reset without notice.',
+    'export_pdf' => 'Export PDF',
+    'export_csv' => 'Export CSV',
+    'n_days' => ':n days',
+
+    // VAT quarters
+    'quarter_q1' => 'Q1 (Jan–Mar)',
+    'quarter_q2' => 'Q2 (Apr–Jun)',
+    'quarter_q3' => 'Q3 (Jul–Sep)',
+    'quarter_q4' => 'Q4 (Oct–Dec)',
 ];

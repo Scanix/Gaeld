@@ -8,7 +8,7 @@ use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\VatReportService;
 use App\Domains\Expenses\Services\ExpenseService;
-use App\Domains\Invoicing\Services\InvoiceService;
+use App\Domains\Invoicing\Queries\InvoiceReportingQuery;
 use App\Domains\Reporting\Services\AgingReportService;
 use App\Domains\Reporting\Services\DashboardService;
 use App\Support\DTOs\SummaryResult;
@@ -45,7 +45,7 @@ class DashboardServiceTest extends TestCase
         Carbon::setTestNow('2026-03-20 12:00:00');
 
         $ledgerService = Mockery::mock(LedgerService::class);
-        $invoiceService = Mockery::mock(InvoiceService::class);
+        $invoiceService = Mockery::mock(InvoiceReportingQuery::class);
         $expenseService = Mockery::mock(ExpenseService::class);
 
         $bankAccount = new Account([
@@ -120,7 +120,7 @@ class DashboardServiceTest extends TestCase
         Carbon::setTestNow('2026-03-20 12:00:00');
 
         $ledgerService = Mockery::mock(LedgerService::class);
-        $invoiceService = Mockery::mock(InvoiceService::class);
+        $invoiceService = Mockery::mock(InvoiceReportingQuery::class);
         $expenseService = Mockery::mock(ExpenseService::class);
 
         $invoiceService->shouldReceive('yearlyRevenue')->andReturn('0.00');

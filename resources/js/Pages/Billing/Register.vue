@@ -3,10 +3,12 @@ import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { CheckCircle2, Zap } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import Button from '@/Components/UI/Button.vue'
 import PasswordStrength from '@/Components/UI/PasswordStrength.vue'
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const props = defineProps({
   plans: { type: Array, default: () => [] },
@@ -66,7 +68,7 @@ function submit() {
             <span class="font-semibold text-[hsl(var(--foreground))]">{{ plan.name }}</span>
           </div>
           <p class="text-2xl font-bold text-[hsl(var(--foreground))]">
-            CHF {{ plan.price_chf }}<span class="text-sm font-normal text-[hsl(var(--muted-foreground))]">/{{ t('month') }}</span>
+            {{ formatCurrency(plan.price_chf) }}<span class="text-sm font-normal text-[hsl(var(--muted-foreground))]">/{{ t('month') }}</span>
           </p>
           <p class="text-xs text-[hsl(var(--muted-foreground))] mt-1">{{ plan.description }}</p>
           <ul class="mt-3 space-y-1">
@@ -89,7 +91,7 @@ function submit() {
                 v-model="form.name"
                 type="text"
                 required
-                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
               <p v-if="form.errors.name" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.name }}</p>
             </div>
@@ -99,7 +101,7 @@ function submit() {
                 v-model="form.org_name"
                 type="text"
                 required
-                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
               <p v-if="form.errors.org_name" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.org_name }}</p>
             </div>
@@ -111,7 +113,7 @@ function submit() {
               v-model="form.email"
               type="email"
               required
-              class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+              class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
             />
             <p v-if="form.errors.email" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.email }}</p>
           </div>
@@ -120,7 +122,7 @@ function submit() {
             <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('chart_of_accounts') }}</label>
             <select
               v-model="form.chart_of_accounts"
-              class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+              class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
             >
               <option v-for="tpl in chart_templates" :key="tpl.key" :value="tpl.key">{{ t(tpl.label_key) }}</option>
               <option value="none">{{ t('chart_none') }}</option>
@@ -136,7 +138,7 @@ function submit() {
                 v-model="form.password"
                 type="password"
                 required
-                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
               <p v-if="form.errors.password" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.password }}</p>
             </div>
@@ -146,7 +148,7 @@ function submit() {
                 v-model="form.password_confirmation"
                 type="password"
                 required
-                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
             </div>
           </div>
@@ -159,7 +161,7 @@ function submit() {
               <input
                 v-model="form.accepted_privacy"
                 type="checkbox"
-                class="mt-1 h-4 w-4 rounded border-[hsl(var(--input))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--ring))]"
+                class="mt-1 h-4 w-4 rounded border-[hsl(var(--input))] text-[hsl(var(--primary))] focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
               <span class="text-sm text-[hsl(var(--muted-foreground))]">
                 {{ t('accept_privacy_prefix') }}

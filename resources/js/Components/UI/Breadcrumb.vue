@@ -1,6 +1,9 @@
 <script setup>
 import { ChevronRight } from 'lucide-vue-next'
 import { Link } from '@inertiajs/vue3'
+import { useTranslations } from '@/lib/useTranslations'
+
+const { t } = useTranslations()
 
 defineProps({
   items: {
@@ -13,7 +16,7 @@ defineProps({
 </script>
 
 <template>
-  <nav aria-label="Breadcrumb" class="mb-4">
+  <nav :aria-label="t('breadcrumb')" class="mb-4">
     <ol class="flex items-center gap-1 text-sm text-[hsl(var(--muted-foreground))]">
       <li v-for="(item, index) in items" :key="index" class="flex items-center gap-1">
         <ChevronRight v-if="index > 0" class="h-3.5 w-3.5 shrink-0" />
