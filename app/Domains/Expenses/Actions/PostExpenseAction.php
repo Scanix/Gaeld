@@ -6,9 +6,11 @@ use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Enums\ExpenseType;
+use App\Domains\Expenses\Exceptions\ExpenseLedgerPostingException;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Services\ExpenseService;
+use App\Support\Exceptions\DomainException;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -48,14 +50,18 @@ class PostExpenseAction
 
         $reference = $prefix.$expense->id;
 
-        $this->expenseService->postToLedger($expense, new RecordExpensePaymentData(
-            amount: (string) $expense->amount,
-            paymentDate: $expense->date->toDateString(),
-            reference: $reference,
-            description: $expense->description ?? $expense->category,
-            expenseAccountCode: $expenseAccountCode,
-            bankAccountCode: $bankAccountCode,
-        ), $isCreditNote);
+        try {
+            $this->expenseService->postToLedger($expense, new RecordExpensePaymentData(
+                amount: (string) $expense->amount,
+                paymentDate: $expense->date->toDateString(),
+                reference: $reference,
+                description: $expense->description ?? $expense->category,
+                expenseAccountCode: $expenseAccountCode,
+                bankAccountCode: $bankAccountCode,
+            ), $isCreditNote);
+        } catch (DomainException $e) {
+            throw new ExpenseLedgerPostingException($e->getMessage(), 0, $e);
+        }
 
         Log::info('Expense posted to ledger', [
             'expense_id' => $expense->id,
