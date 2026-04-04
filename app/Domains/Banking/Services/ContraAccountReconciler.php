@@ -5,7 +5,6 @@ namespace App\Domains\Banking\Services;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
-use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +16,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ContraAccountReconciler
 {
+    use ReconciliationPreconditions;
+
     public function __construct(
         private BankingService $bankingService,
         private PersonalPatternService $personalPatternService,
@@ -101,16 +102,5 @@ class ContraAccountReconciler
         }
 
         return ['reconciled' => $reconciled, 'skipped' => $skipped];
-    }
-
-    private function validatePreconditions(BankTransaction $transaction, BankAccount $bankAccount): void
-    {
-        if (! $bankAccount->ledgerAccount) {
-            throw new UnlinkedBankAccountException;
-        }
-
-        if ($transaction->is_reconciled) {
-            throw new AlreadyReconciledException;
-        }
     }
 }
