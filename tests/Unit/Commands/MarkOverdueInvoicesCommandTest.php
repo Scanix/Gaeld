@@ -45,7 +45,7 @@ class MarkOverdueInvoicesCommandTest extends TestCase
 
     public function test_does_not_mark_draft_invoices(): void
     {
-        Invoice::factory()->create([
+        $invoice = Invoice::factory()->create([
             'status' => InvoiceStatus::Draft,
             'due_date' => now()->subDays(5)->toDateString(),
         ]);
@@ -53,11 +53,16 @@ class MarkOverdueInvoicesCommandTest extends TestCase
         $this->artisan('invoices:mark-overdue')
             ->assertSuccessful()
             ->expectsOutputToContain('0 invoice(s) marked as overdue');
+
+        $this->assertDatabaseHas('invoices', [
+            'id' => $invoice->id,
+            'status' => InvoiceStatus::Draft->value,
+        ]);
     }
 
     public function test_does_not_mark_already_paid_invoices(): void
     {
-        Invoice::factory()->create([
+        $invoice = Invoice::factory()->create([
             'status' => InvoiceStatus::Paid,
             'due_date' => now()->subDays(5)->toDateString(),
         ]);
@@ -65,6 +70,11 @@ class MarkOverdueInvoicesCommandTest extends TestCase
         $this->artisan('invoices:mark-overdue')
             ->assertSuccessful()
             ->expectsOutputToContain('0 invoice(s) marked as overdue');
+
+        $this->assertDatabaseHas('invoices', [
+            'id' => $invoice->id,
+            'status' => InvoiceStatus::Paid->value,
+        ]);
     }
 
     public function test_handles_no_invoices(): void
@@ -72,5 +82,7 @@ class MarkOverdueInvoicesCommandTest extends TestCase
         $this->artisan('invoices:mark-overdue')
             ->assertSuccessful()
             ->expectsOutputToContain('0 invoice(s) marked as overdue');
+
+        $this->assertDatabaseCount('invoices', 0);
     }
 }
