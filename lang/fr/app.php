@@ -479,6 +479,11 @@ return [
     // DataTable
     'no_records' => 'Aucun enregistrement trouvé.',
     'page_of' => 'Page :current sur :last',
+    'select_all' => 'Tout sélectionner',
+    'select_row' => 'Sélectionner la ligne',
+    'columns' => 'Colonnes',
+    'previous_page' => 'Page précédente',
+    'next_page' => 'Page suivante',
 
     // Currency labels
     'chf_label' => 'CHF — Franc suisse',
