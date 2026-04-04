@@ -5,7 +5,7 @@ namespace Tests\Unit\Services;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
-use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\VatReportService;
 use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Invoicing\Queries\InvoiceReportingQuery;
@@ -44,7 +44,7 @@ class DashboardServiceTest extends TestCase
     {
         Carbon::setTestNow('2026-03-20 12:00:00');
 
-        $ledgerService = Mockery::mock(LedgerService::class);
+        $ledgerService = Mockery::mock(LedgerQueryService::class);
         $invoiceService = Mockery::mock(InvoiceReportingQuery::class);
         $expenseService = Mockery::mock(ExpenseService::class);
 
@@ -119,7 +119,7 @@ class DashboardServiceTest extends TestCase
     {
         Carbon::setTestNow('2026-03-20 12:00:00');
 
-        $ledgerService = Mockery::mock(LedgerService::class);
+        $ledgerService = Mockery::mock(LedgerQueryService::class);
         $invoiceService = Mockery::mock(InvoiceReportingQuery::class);
         $expenseService = Mockery::mock(ExpenseService::class);
 

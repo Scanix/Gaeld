@@ -9,6 +9,7 @@ use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 
 /**
@@ -22,6 +23,7 @@ class GenerateOpeningBalancesAction
 {
     public function __construct(
         private readonly LedgerService $ledger,
+        private readonly LedgerQueryService $ledgerQuery,
     ) {}
 
     /**
@@ -46,7 +48,7 @@ class GenerateOpeningBalancesAction
             ->orderBy('code')
             ->get();
 
-        $openingAccount = $this->ledger->resolveAccount($orgId, AccountCode::OPENING_BALANCE);
+        $openingAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::OPENING_BALANCE);
 
         $lines = [];
         $totalDebit = '0';

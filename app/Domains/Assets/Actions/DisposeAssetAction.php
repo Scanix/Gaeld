@@ -5,6 +5,7 @@ namespace App\Domains\Assets\Actions;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Assets\Models\FixedAsset;
 use Carbon\Carbon;
@@ -16,6 +17,7 @@ class DisposeAssetAction
 {
     public function __construct(
         private LedgerService $ledger,
+        private LedgerQueryService $ledgerQuery,
     ) {}
 
     public function execute(FixedAsset $asset, string $disposalAmount, Carbon $disposalDate): FixedAsset
@@ -41,7 +43,7 @@ class DisposeAssetAction
 
         // Debit bank for disposal proceeds
         if (bccomp($disposalAmount, '0', 2) > 0) {
-            $bankAccount = $this->ledger->resolveAccount($asset->organization_id, AccountCode::BANK_CASH);
+            $bankAccount = $this->ledgerQuery->resolveAccount($asset->organization_id, AccountCode::BANK_CASH);
             $lines[] = new JournalLineData(
                 accountId: (string) $bankAccount->id,
                 debit: $disposalAmount,
@@ -65,7 +67,7 @@ class DisposeAssetAction
 
         if (bccomp($absGainLoss, '0', 2) > 0) {
             if ($isGain) {
-                $gainAccount = $this->ledger->resolveAccount($asset->organization_id, AccountCode::ASSET_DISPOSAL_GAIN);
+                $gainAccount = $this->ledgerQuery->resolveAccount($asset->organization_id, AccountCode::ASSET_DISPOSAL_GAIN);
                 $lines[] = new JournalLineData(
                     accountId: (string) $gainAccount->id,
                     debit: '0',
@@ -73,7 +75,7 @@ class DisposeAssetAction
                     description: "Gain on disposal: {$asset->name}",
                 );
             } else {
-                $lossAccount = $this->ledger->resolveAccount($asset->organization_id, AccountCode::ASSET_DISPOSAL_LOSS);
+                $lossAccount = $this->ledgerQuery->resolveAccount($asset->organization_id, AccountCode::ASSET_DISPOSAL_LOSS);
                 $lines[] = new JournalLineData(
                     accountId: (string) $lossAccount->id,
                     debit: $absGainLoss,

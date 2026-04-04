@@ -5,7 +5,7 @@ namespace App\Domains\Reporting\Services;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\Budget;
-use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Assets\Models\DepreciationEntry;
 use App\Domains\Organizations\Models\Organization;
 use Carbon\Carbon;
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Cache;
 class ReportingService
 {
     public function __construct(
-        private LedgerService $ledgerService,
+        private LedgerQueryService $ledgerService,
     ) {}
 
     /**
