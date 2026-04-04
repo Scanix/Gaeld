@@ -11,8 +11,9 @@ class AutoReconcileCommandTest extends TestCase
 
     public function test_outputs_message_when_no_accounts_have_unreconciled_transactions(): void
     {
-        $this->artisan('gaeld:auto-reconcile')
-            ->assertSuccessful()
-            ->expectsOutputToContain('No bank accounts with unreconciled transactions');
+        $result = $this->artisan('gaeld:auto-reconcile');
+        $result->assertSuccessful();
+        $result->expectsOutputToContain('No bank accounts with unreconciled transactions');
+        $this->assertDatabaseCount('bank_accounts', 0);
     }
 }

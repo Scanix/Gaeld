@@ -91,18 +91,21 @@ class PostSocialChargesActionTest extends TestCase
         $journalEntry = Mockery::mock(JournalEntry::class)->makePartial();
         $journalEntry->id = 43;
 
+        $today = now()->format('Y-m-d');
+
         $this->ledgerService
             ->shouldReceive('postEntry')
             ->once()
-            ->withArgs(function (string $orgId, JournalEntryData $data) {
-                // Date should be today when not specified
-                return $data->date === now()->format('Y-m-d');
+            ->withArgs(function (string $orgId, JournalEntryData $data) use ($today) {
+                return $data->date === $today;
             })
             ->andReturn($journalEntry);
 
         $journalEntry->shouldReceive('update')->once();
 
-        $this->action->execute('org-1', '500.00', 'Social charges');
+        $result = $this->action->execute('org-1', '500.00', 'Social charges');
+
+        $this->assertSame($journalEntry, $result);
     }
 
     public function test_debits_social_charges_and_credits_bank(): void
@@ -146,6 +149,8 @@ class PostSocialChargesActionTest extends TestCase
 
         $journalEntry->shouldReceive('update')->once();
 
-        $this->action->execute('org-1', '750.00', 'Swiss social charges', '2026-06-30');
+        $result = $this->action->execute('org-1', '750.00', 'Swiss social charges', '2026-06-30');
+
+        $this->assertSame($journalEntry, $result);
     }
 }
