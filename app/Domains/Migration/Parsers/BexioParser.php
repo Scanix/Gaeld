@@ -21,6 +21,8 @@ use Illuminate\Support\Collection;
  */
 class BexioParser implements PlatformParserInterface
 {
+    use CsvRowLookup;
+
     public function platform(): Platform
     {
         return Platform::Bexio;
@@ -204,25 +206,6 @@ class BexioParser implements PlatformParserInterface
         }
 
         return $importRow;
-    }
-
-    /**
-     * Search for a value in a row using multiple possible column names.
-     *
-     * @param  string[]  $keys
-     */
-    private function findValue(array $row, array $keys): ?string
-    {
-        $lowered = array_change_key_case($row, CASE_LOWER);
-
-        foreach ($keys as $key) {
-            $key = strtolower($key);
-            if (isset($lowered[$key]) && $lowered[$key] !== '') {
-                return trim($lowered[$key]);
-            }
-        }
-
-        return null;
     }
 
     private function mapAccountType(?string $type): string

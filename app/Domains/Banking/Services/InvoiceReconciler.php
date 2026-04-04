@@ -16,7 +16,6 @@ use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 /**
  * Reconciles bank transactions against invoices.
@@ -26,6 +25,9 @@ use Illuminate\Support\Str;
  */
 class InvoiceReconciler
 {
+    use ReconciliationPreconditions;
+    use ReconciliationReference;
+
     private const REFERENCE_PREFIX = 'REC-';
 
     public function __construct(
@@ -115,28 +117,6 @@ class InvoiceReconciler
             'matched_invoice_id' => $invoice->id,
             'is_reconciled' => true,
         ]);
-    }
-
-    private function validatePreconditions(BankTransaction $transaction, BankAccount $bankAccount): void
-    {
-        if (! $bankAccount->ledgerAccount) {
-            throw new UnlinkedBankAccountException;
-        }
-
-        if ($transaction->is_reconciled) {
-            throw new AlreadyReconciledException;
-        }
-    }
-
-    private function buildReference(string $orgId, BankTransaction $transaction): string
-    {
-        $reference = self::REFERENCE_PREFIX.($transaction->reference ?? $transaction->id);
-
-        if ($this->ledgerService->isDuplicateReference($orgId, $reference)) {
-            $reference .= '-'.Str::uuid()->toString();
-        }
-
-        return $reference;
     }
 
     private function resolvePaymentAmount(BankTransaction $transaction, Invoice $invoice): string
