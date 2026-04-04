@@ -73,6 +73,7 @@ class PostSocialChargesActionTest extends TestCase
         $result = $this->action->execute('org-1', '1250.00', 'AVS/AI/APG Q1 2026', '2026-03-31');
 
         $this->assertSame($journalEntry, $result);
+        $this->assertSame(42, $result->id);
     }
 
     public function test_uses_current_date_when_not_specified(): void
@@ -106,6 +107,7 @@ class PostSocialChargesActionTest extends TestCase
         $result = $this->action->execute('org-1', '500.00', 'Social charges');
 
         $this->assertSame($journalEntry, $result);
+        $this->assertSame(43, $result->id);
     }
 
     public function test_debits_social_charges_and_credits_bank(): void
@@ -152,5 +154,6 @@ class PostSocialChargesActionTest extends TestCase
         $result = $this->action->execute('org-1', '750.00', 'Swiss social charges', '2026-06-30');
 
         $this->assertSame($journalEntry, $result);
+        $this->assertSame(44, $result->id);
     }
 }
