@@ -2,8 +2,25 @@
 
 namespace App\Domains\Migration\Parsers;
 
+use App\Domains\Migration\Enums\DataType;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
+
 trait CsvRowLookup
 {
+    public function parse(UploadedFile $file, DataType $dataType): Collection
+    {
+        $content = $file->get();
+        $rows = $this->parseCsv($content);
+
+        if (empty($rows)) {
+            return collect();
+        }
+
+        return collect($rows)->map(fn (array $row, int $index) => $this->mapRow($row, $index + 1, $dataType))
+            ->filter();
+    }
+
     /**
      * @param  string[]  $keys
      */
