@@ -481,6 +481,11 @@ return [
     // DataTable
     'no_records' => 'No records found.',
     'page_of' => 'Page :current of :last',
+    'select_all' => 'Select all',
+    'select_row' => 'Select row',
+    'columns' => 'Columns',
+    'previous_page' => 'Previous page',
+    'next_page' => 'Next page',
 
     // Currency labels
     'chf_label' => 'CHF — Swiss Franc',

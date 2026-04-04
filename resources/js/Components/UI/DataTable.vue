@@ -1,11 +1,10 @@
 <script setup>
-import { Link, router } from '@inertiajs/vue3'
+import { Link } from '@inertiajs/vue3'
 import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown, Search, X, Columns3, Download } from 'lucide-vue-next'
 import Button from './Button.vue'
-import Badge from './Badge.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useMediaQuery } from '@/lib/useMediaQuery'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onBeforeUnmount, onMounted } from 'vue'
 
 const { t } = useTranslations()
 const isMobile = useMediaQuery('(max-width: 639px)')
@@ -87,6 +86,10 @@ watch(() => props.searchValue, (val) => {
   localSearch.value = val || ''
 })
 
+onBeforeUnmount(() => {
+  clearTimeout(searchTimeout)
+})
+
 function handleSort(column) {
   if (!column.sortable) return
   const newDirection = (props.sort === column.key && props.direction === 'asc') ? 'desc' : 'asc'
@@ -120,6 +123,16 @@ const hasToolbar = computed(() => props.searchable || props.filters.length > 0)
 // Column visibility
 const hiddenColumns = ref(new Set())
 const showColumnMenu = ref(false)
+const columnMenuRef = ref(null)
+
+function handleClickOutside(e) {
+  if (columnMenuRef.value && !columnMenuRef.value.contains(e.target)) {
+    showColumnMenu.value = false
+  }
+}
+
+onMounted(() => document.addEventListener('click', handleClickOutside, true))
+onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside, true))
 
 const visibleColumns = computed(() =>
   props.columns.filter((col) => !hiddenColumns.value.has(col.key))
@@ -133,6 +146,18 @@ function toggleColumn(key) {
 
 // Row selection
 const selectedIds = ref(new Set())
+
+// Clear stale selections when rows change (pagination, search, filter)
+watch(() => props.rows, () => {
+  if (selectedIds.value.size > 0) {
+    const currentIds = new Set(props.rows.map((r) => r.id))
+    const pruned = new Set([...selectedIds.value].filter((id) => currentIds.has(id)))
+    if (pruned.size !== selectedIds.value.size) {
+      selectedIds.value = pruned
+      emit('selection-change', [...pruned])
+    }
+  }
+})
 
 const allSelected = computed(() =>
   props.rows.length > 0 && props.rows.every((r) => selectedIds.value.has(r.id))
@@ -184,6 +209,7 @@ function exportCsv() {
         <input
           v-model="localSearch"
           type="text"
+          :aria-label="searchPlaceholder ?? t('search')"
           :placeholder="searchPlaceholder ?? t('search')"
           class="h-9 w-full rounded-md border border-[hsl(var(--input))] bg-transparent pl-9 pr-9 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))] focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
           @input="handleSearch"
@@ -214,8 +240,8 @@ function exportCsv() {
 
       <div class="ml-auto flex items-center gap-2">
         <!-- Column visibility toggle -->
-        <div class="relative">
-          <Button variant="outline" size="sm" @click="showColumnMenu = !showColumnMenu">
+        <div ref="columnMenuRef" class="relative">
+          <Button variant="outline" size="sm" :aria-label="t('columns')" @click="showColumnMenu = !showColumnMenu">
             <Columns3 class="h-4 w-4" />
           </Button>
           <div v-if="showColumnMenu" class="absolute right-0 top-full z-20 mt-1 min-w-[160px] rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 shadow-md">
@@ -254,7 +280,7 @@ function exportCsv() {
           :class="rowLink ? 'hover:bg-[hsl(var(--muted))]/50' : ''"
         >
           <div v-if="selectable" class="flex items-center gap-2 pb-1">
-            <input type="checkbox" :checked="selectedIds.has(row.id)" class="rounded border-[hsl(var(--input))]" @change="toggleRow(row.id)" />
+            <input type="checkbox" :checked="selectedIds.has(row.id)" :aria-label="t('select_row')" class="rounded border-[hsl(var(--input))]" @change="toggleRow(row.id)" />
           </div>
           <div v-for="col in visibleColumns" :key="col.key" class="flex justify-between gap-2 text-sm">
             <span class="text-[hsl(var(--muted-foreground))] shrink-0">{{ col.label }}</span>
@@ -277,7 +303,7 @@ function exportCsv() {
         <thead>
           <tr class="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/50">
             <th v-if="selectable" scope="col" class="w-10 px-4 py-3">
-              <input type="checkbox" :checked="allSelected" class="rounded border-[hsl(var(--input))]" @change="toggleAll" />
+              <input type="checkbox" :checked="allSelected" :aria-label="t('select_all')" class="rounded border-[hsl(var(--input))]" @change="toggleAll" />
             </th>
             <th
               v-for="col in visibleColumns"
@@ -307,7 +333,7 @@ function exportCsv() {
             class="border-b border-[hsl(var(--border))] last:border-0 transition-colors hover:bg-[hsl(var(--muted))]/50"
           >
             <td v-if="selectable" class="w-10 px-4 py-3">
-              <input type="checkbox" :checked="selectedIds.has(row.id)" class="rounded border-[hsl(var(--input))]" @change="toggleRow(row.id)" />
+              <input type="checkbox" :checked="selectedIds.has(row.id)" :aria-label="t('select_row')" class="rounded border-[hsl(var(--input))]" @change="toggleRow(row.id)" />
             </td>
             <td
               v-for="col in visibleColumns"
@@ -346,24 +372,22 @@ function exportCsv() {
         {{ t('page_of', { current: pagination.current_page, last: pagination.last_page }) }}
       </p>
       <div class="flex gap-1">
-        <Button
+        <Link
           v-if="pagination.prev_page_url"
-          as="a"
           :href="pagination.prev_page_url"
-          variant="outline"
-          size="sm"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 text-xs sm:h-8 border border-[hsl(var(--input))] bg-[hsl(var(--background))] shadow-sm hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+          :aria-label="t('previous_page')"
         >
           <ChevronLeft class="h-4 w-4" />
-        </Button>
-        <Button
+        </Link>
+        <Link
           v-if="pagination.next_page_url"
-          as="a"
           :href="pagination.next_page_url"
-          variant="outline"
-          size="sm"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 text-xs sm:h-8 border border-[hsl(var(--input))] bg-[hsl(var(--background))] shadow-sm hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+          :aria-label="t('next_page')"
         >
           <ChevronRight class="h-4 w-4" />
-        </Button>
+        </Link>
       </div>
     </div>
   </div>
