@@ -4525,12 +4525,6 @@ parameters:
 			path: app/Support/FeatureFlag.php
 
 		-
-			message: '#^Unsafe access to private property App\\Support\\FeatureFlag\:\:\$orgResolver through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 3
-			path: app/Support/FeatureFlag.php
-
-		-
 			message: '#^Method App\\Support\\Listeners\\AuthAuditSubscriber\:\:subscribe\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1

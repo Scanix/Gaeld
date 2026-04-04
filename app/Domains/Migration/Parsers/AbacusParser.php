@@ -11,7 +11,6 @@ use App\Domains\Migration\DTOs\JournalEntryImportRow;
 use App\Domains\Migration\Enums\DataType;
 use App\Domains\Migration\Enums\Platform;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Collection;
 
 /**
  * Parses Abacus CSV/XML export files.
@@ -50,19 +49,6 @@ class AbacusParser implements PlatformParserInterface
     public function acceptedExtensions(): array
     {
         return ['csv', 'xml', 'txt'];
-    }
-
-    public function parse(UploadedFile $file, DataType $dataType): Collection
-    {
-        $content = $file->get();
-        $rows = $this->parseCsv($content);
-
-        if (empty($rows)) {
-            return collect();
-        }
-
-        return collect($rows)->map(fn (array $row, int $index) => $this->mapRow($row, $index + 1, $dataType))
-            ->filter();
     }
 
     public function detectDataType(UploadedFile $file): ?DataType
