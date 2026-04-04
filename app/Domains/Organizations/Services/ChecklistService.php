@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\Reporting\Services;
+namespace App\Domains\Organizations\Services;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;

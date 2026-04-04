@@ -3,8 +3,8 @@
 namespace App\Domains\Reporting\Controllers;
 
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Organizations\Services\ChecklistService;
 use App\Domains\Organizations\Services\CurrentOrganization;
-use App\Domains\Reporting\Services\ChecklistService;
 use App\Domains\Reporting\Services\DashboardService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
