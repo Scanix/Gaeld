@@ -70,6 +70,7 @@ class PostPayrollActionTest extends TestCase
         $result = $this->action->execute($slip);
 
         $this->assertSame($slip, $result);
+        $this->assertNotNull($result);
     }
 
     public function test_builds_correct_journal_reference(): void
@@ -98,7 +99,9 @@ class PostPayrollActionTest extends TestCase
         $slip->shouldReceive('update')->once();
         $slip->shouldReceive('fresh')->once()->andReturnSelf();
 
-        $this->action->execute($slip);
+        $result = $this->action->execute($slip);
+
+        $this->assertSame($slip, $result);
     }
 
     // ──────────────────────────────────────────────────────────────────────────

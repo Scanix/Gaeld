@@ -63,5 +63,7 @@ class UserServiceTest extends TestCase
         $user->shouldReceive('update')->once()->with(['password' => 'hashed-secret']);
 
         $this->service->updatePassword($user, 'new-secret');
+
+        $this->assertTrue(true); // Mockery ->once() verified at tearDown
     }
 }
