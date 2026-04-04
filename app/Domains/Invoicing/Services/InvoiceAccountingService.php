@@ -115,36 +115,28 @@ class InvoiceAccountingService
                 $originalTotal = $isCreditNote
                     ? Money::absoluteAmount((string) $invoice->total)
                     : (string) $invoice->total;
-                $roundedTotal = SwissRounding::roundToFiveCents($originalTotal);
-                $roundingDiff = SwissRounding::difference($originalTotal, $roundedTotal);
+                $adj = SwissRounding::adjustment($originalTotal);
 
-                if (bccomp($roundingDiff, '0', 2) !== 0) {
+                if ($adj) {
                     $roundingAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ROUNDING_DIFFERENCE);
 
                     // Adjust the AR line to the rounded total
                     $lines[0] = new JournalLineData(
                         accountId: (string) $ar->id,
-                        debit: $isCreditNote ? '0' : $roundedTotal,
-                        credit: $isCreditNote ? $roundedTotal : '0',
+                        debit: $isCreditNote ? '0' : $adj['rounded'],
+                        credit: $isCreditNote ? $adj['rounded'] : '0',
                         description: 'Accounts Receivable',
                     );
 
                     // Post the rounding difference to keep the entry balanced
-                    if (bccomp($roundingDiff, '0', 2) < 0) {
-                        $lines[] = new JournalLineData(
-                            accountId: (string) $roundingAccount->id,
-                            debit: $isCreditNote ? '0' : Money::absoluteAmount($roundingDiff),
-                            credit: $isCreditNote ? Money::absoluteAmount($roundingDiff) : '0',
-                            description: 'Rounding difference (5ct)',
-                        );
-                    } else {
-                        $lines[] = new JournalLineData(
-                            accountId: (string) $roundingAccount->id,
-                            debit: $isCreditNote ? $roundingDiff : '0',
-                            credit: $isCreditNote ? '0' : $roundingDiff,
-                            description: 'Rounding difference (5ct)',
-                        );
-                    }
+                    $absDiff = Money::absoluteAmount($adj['diff']);
+                    $isRoundedDown = bccomp($adj['diff'], '0', 2) < 0;
+                    $lines[] = new JournalLineData(
+                        accountId: (string) $roundingAccount->id,
+                        debit: $isCreditNote ? ($isRoundedDown ? '0' : $adj['diff']) : ($isRoundedDown ? $absDiff : '0'),
+                        credit: $isCreditNote ? ($isRoundedDown ? $absDiff : '0') : ($isRoundedDown ? '0' : $adj['diff']),
+                        description: 'Rounding difference (5ct)',
+                    );
                 }
             }
 

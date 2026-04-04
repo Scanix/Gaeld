@@ -74,35 +74,24 @@ class ExpenseService
 
             // Apply Swiss 5-centime rounding for CHF expenses (regular invoices only)
             if (! $isCreditNote && strtoupper($expense->currency) === 'CHF') {
-                $roundedAmount = SwissRounding::roundToFiveCents($amount);
-                $roundingDiff = SwissRounding::difference($amount, $roundedAmount);
+                $adj = SwissRounding::adjustment($amount);
 
-                if (bccomp($roundingDiff, '0', 2) !== 0) {
+                if ($adj) {
                     $roundingAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ROUNDING_DIFFERENCE);
 
                     // Adjust the bank credit to the rounded amount
                     $lines = [
                         new JournalLineData(accountId: (string) $expenseAccount->id, debit: $amount, credit: '0', description: $expense->description ?? 'Expense'),
-                        new JournalLineData(accountId: (string) $bankAccount->id, debit: '0', credit: $roundedAmount, description: 'Bank withdrawal'),
+                        new JournalLineData(accountId: (string) $bankAccount->id, debit: '0', credit: $adj['rounded'], description: 'Bank withdrawal'),
                     ];
 
-                    if (bccomp($roundingDiff, '0', 2) > 0) {
-                        // Rounded up → debit rounding (more to pay)
-                        $lines[] = new JournalLineData(
-                            accountId: (string) $roundingAccount->id,
-                            debit: $roundingDiff,
-                            credit: '0',
-                            description: 'Rounding difference (5ct)',
-                        );
-                    } else {
-                        // Rounded down → credit rounding (less to pay)
-                        $lines[] = new JournalLineData(
-                            accountId: (string) $roundingAccount->id,
-                            debit: '0',
-                            credit: Money::absoluteAmount($roundingDiff),
-                            description: 'Rounding difference (5ct)',
-                        );
-                    }
+                    $absDiff = Money::absoluteAmount($adj['diff']);
+                    $lines[] = new JournalLineData(
+                        accountId: (string) $roundingAccount->id,
+                        debit: bccomp($adj['diff'], '0', 2) > 0 ? $absDiff : '0',
+                        credit: bccomp($adj['diff'], '0', 2) < 0 ? $absDiff : '0',
+                        description: 'Rounding difference (5ct)',
+                    );
                 }
             }
 

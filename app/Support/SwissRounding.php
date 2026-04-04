@@ -34,4 +34,23 @@ class SwissRounding
     {
         return bcsub($rounded, $original, 2);
     }
+
+    /**
+     * Check if an amount needs Swiss rounding and return the adjustment.
+     *
+     * Returns null if no rounding is needed, or an array with 'rounded' and 'diff'.
+     *
+     * @return array{rounded: string, diff: string}|null
+     */
+    public static function adjustment(string $amount): ?array
+    {
+        $rounded = self::roundToFiveCents($amount);
+        $diff = self::difference($amount, $rounded);
+
+        if (bccomp($diff, '0', 2) === 0) { // @phpstan-ignore argument.type
+            return null;
+        }
+
+        return ['rounded' => $rounded, 'diff' => $diff];
+    }
 }

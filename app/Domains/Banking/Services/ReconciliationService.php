@@ -22,8 +22,6 @@ use Illuminate\Support\Facades\Log;
  *
  * Coordinates InvoiceReconciler, ExpenseReconciler, and ContraAccountReconciler,
  * plus the auto-reconciliation engine (EE only).
- *
- * @deprecated Inject the specific reconciler directly for new code.
  */
 class ReconciliationService
 {
