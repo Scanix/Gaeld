@@ -2,8 +2,8 @@
 
 namespace App\Domains\Users\Controllers;
 
-use App\Domains\Users\Actions\CreateUserAction;
 use App\Domains\Users\DTOs\CreateUserData;
+use App\Domains\Users\Services\UserService;
 use App\Http\Controllers\Controller;
 use App\Support\FeatureFlag;
 use Illuminate\Auth\Events\Registered;
@@ -29,7 +29,7 @@ class RegisteredUserController extends Controller
         return Inertia::render('Auth/Register');
     }
 
-    public function store(Request $request, CreateUserAction $action): RedirectResponse
+    public function store(Request $request, UserService $userService): RedirectResponse
     {
         // In SaaS mode, prevent direct registration without a subscription
         if (FeatureFlag::isSaas()) {
@@ -45,7 +45,7 @@ class RegisteredUserController extends Controller
         $validated = $request->validate($rules);
         $validated['locale'] = app()->getLocale();
 
-        $user = $action->execute(CreateUserData::fromArray($validated));
+        $user = $userService->create(CreateUserData::fromArray($validated));
 
         event(new Registered($user));
 

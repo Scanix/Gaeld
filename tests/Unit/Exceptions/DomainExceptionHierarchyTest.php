@@ -7,6 +7,7 @@ use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
 use App\Domains\Accounting\Exceptions\InvalidEntryDataException;
 use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Domains\Banking\Exceptions\ReconciliationFailedException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
@@ -26,6 +27,7 @@ class DomainExceptionHierarchyTest extends TestCase
             InvalidEntryDataException::class,
             UnbalancedEntryException::class,
             AlreadyReconciledException::class,
+            ReconciliationFailedException::class,
             UnlinkedBankAccountException::class,
             InvalidExpenseStateException::class,
             InvalidInvoiceStateException::class,

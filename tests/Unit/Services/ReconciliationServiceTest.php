@@ -8,6 +8,7 @@ use App\Domains\Banking\Enums\BankMatchType;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\MatchConfidence;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Domains\Banking\Exceptions\ReconciliationFailedException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
@@ -15,7 +16,6 @@ use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -146,7 +146,7 @@ class ReconciliationServiceTest extends TestCase
             'is_confirmed' => false,
         ]);
 
-        $this->expectException(InvalidPaymentException::class);
+        $this->expectException(ReconciliationFailedException::class);
         $this->expectExceptionMessage('This payment has already been recorded for this invoice.');
 
         $service->confirmMatch($match);
