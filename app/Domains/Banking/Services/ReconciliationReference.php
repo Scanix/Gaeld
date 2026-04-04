@@ -11,7 +11,7 @@ trait ReconciliationReference
     {
         $reference = self::REFERENCE_PREFIX.($transaction->reference ?? $transaction->id);
 
-        if ($this->ledgerService->isDuplicateReference($orgId, $reference)) {
+        if ($this->ledgerQuery->isDuplicateReference($orgId, $reference)) {
             $reference .= '-'.Str::uuid()->toString();
         }
 

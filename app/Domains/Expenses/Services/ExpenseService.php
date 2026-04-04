@@ -8,6 +8,7 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\VatEntryType;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatEntry;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
@@ -29,6 +30,7 @@ class ExpenseService
 {
     public function __construct(
         private LedgerService $ledgerService,
+        private LedgerQueryService $ledgerQuery,
     ) {}
 
     /**
@@ -52,8 +54,8 @@ class ExpenseService
             $orgId = $expense->organization_id;
             $bankAccountCode = $data->bankAccountCode ?? AccountCode::BANK_CASH;
 
-            $expenseAccount = $this->ledgerService->resolveAccount($orgId, $data->expenseAccountCode);
-            $bankAccount = $this->ledgerService->resolveAccount($orgId, $bankAccountCode);
+            $expenseAccount = $this->ledgerQuery->resolveAccount($orgId, $data->expenseAccountCode);
+            $bankAccount = $this->ledgerQuery->resolveAccount($orgId, $bankAccountCode);
 
             $amount = $data->amount;
 
@@ -76,7 +78,7 @@ class ExpenseService
                 $roundingDiff = SwissRounding::difference($amount, $roundedAmount);
 
                 if (bccomp($roundingDiff, '0', 2) !== 0) {
-                    $roundingAccount = $this->ledgerService->resolveAccount($orgId, AccountCode::ROUNDING_DIFFERENCE);
+                    $roundingAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ROUNDING_DIFFERENCE);
 
                     // Adjust the bank credit to the rounded amount
                     $lines = [

@@ -3,7 +3,7 @@
 namespace App\Domains\Banking\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
-use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
@@ -31,7 +31,7 @@ class InvoiceReconciler
     private const REFERENCE_PREFIX = 'REC-';
 
     public function __construct(
-        private LedgerService $ledgerService,
+        private LedgerQueryService $ledgerQuery,
         private InvoiceAccountingService $invoiceAccountingService,
         private BankingService $bankingService,
     ) {}

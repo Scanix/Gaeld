@@ -5,6 +5,7 @@ namespace App\Domains\Banking\Services;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Enums\BankTransactionType;
@@ -24,6 +25,7 @@ class BankingService
 
     public function __construct(
         private LedgerService $ledgerService,
+        private LedgerQueryService $ledgerQuery,
     ) {}
 
     // ──────────────────────────────────────────────────────────────
@@ -83,7 +85,7 @@ class BankingService
                 throw new UnlinkedBankAccountException;
             }
 
-            $contraAccount = $this->ledgerService->resolveAccount($orgId, $contraAccountCode);
+            $contraAccount = $this->ledgerQuery->resolveAccount($orgId, $contraAccountCode);
             $amount = Money::absoluteAmount((string) $transaction->amount);
             $isDeposit = $transaction->type === BankTransactionType::Credit;
 

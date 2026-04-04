@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\VatEntryType;
 use App\Domains\Accounting\Models\VatEntry;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -27,6 +28,7 @@ class InvoiceAccountingService
 {
     public function __construct(
         private LedgerService $ledgerService,
+        private LedgerQueryService $ledgerQuery,
     ) {}
 
     /**
@@ -52,8 +54,8 @@ class InvoiceAccountingService
 
             $isCreditNote = $invoice->type === InvoiceType::CreditNote;
 
-            $ar = $this->ledgerService->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
-            $revenue = $this->ledgerService->resolveAccount($orgId, AccountCode::REVENUE);
+            $ar = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
+            $revenue = $this->ledgerQuery->resolveAccount($orgId, AccountCode::REVENUE);
 
             $lines = [];
 
@@ -97,7 +99,7 @@ class InvoiceAccountingService
 
                 // VAT line: Credit for invoice, Debit for credit note
                 if (bccomp($vatAmount, '0', 2) > 0) {
-                    $vatOutputAccount = $this->ledgerService->resolveAccount($orgId, AccountCode::VAT_OUTPUT);
+                    $vatOutputAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_OUTPUT);
                     $rateName = $invoiceLines->first()->vatRate?->name ?? 'VAT';
                     $lines[] = new JournalLineData(
                         accountId: (string) $vatOutputAccount->id,
@@ -117,7 +119,7 @@ class InvoiceAccountingService
                 $roundingDiff = SwissRounding::difference($originalTotal, $roundedTotal);
 
                 if (bccomp($roundingDiff, '0', 2) !== 0) {
-                    $roundingAccount = $this->ledgerService->resolveAccount($orgId, AccountCode::ROUNDING_DIFFERENCE);
+                    $roundingAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ROUNDING_DIFFERENCE);
 
                     // Adjust the AR line to the rounded total
                     $lines[0] = new JournalLineData(
@@ -206,8 +208,8 @@ class InvoiceAccountingService
         return DB::transaction(function () use ($invoice, $data, $bankAccountCode) {
             $orgId = $invoice->organization_id;
 
-            $bankAccount = $this->ledgerService->resolveAccount($orgId, $bankAccountCode);
-            $accountsReceivable = $this->ledgerService->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
+            $bankAccount = $this->ledgerQuery->resolveAccount($orgId, $bankAccountCode);
+            $accountsReceivable = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
 
             $paymentRef = $data->reference ?? 'PAY-'.$invoice->number.'-'.($invoice->payments()->count() + 1);
 

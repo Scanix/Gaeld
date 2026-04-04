@@ -4,7 +4,7 @@ namespace App\Domains\Reporting\Services;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
-use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\VatReportService;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
@@ -20,7 +20,7 @@ use ZipArchive;
 class AccountingExportService
 {
     public function __construct(
-        private LedgerService $ledgerService,
+        private LedgerQueryService $ledgerService,
         private ReportingService $reportingService,
         private VatReportService $vatReportService,
     ) {}

@@ -385,33 +385,27 @@ parameters:
 			path: app/Domains/Accounting/Requests/UpdateVatRateRequest.php
 
 		-
-			message: '#^Method App\\Domains\\Accounting\\Services\\LedgerService\:\:buildTrialBalanceQuery\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			message: '#^Method App\\Domains\\Accounting\\Services\\LedgerQueryService\:\:buildTrialBalanceQuery\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
 			identifier: missingType.generics
 			count: 1
-			path: app/Domains/Accounting/Services/LedgerService.php
+			path: app/Domains/Accounting/Services/LedgerQueryService.php
 
 		-
-			message: '#^Method App\\Domains\\Accounting\\Services\\LedgerService\:\:computeTrialBalances\(\) has parameter \$rows with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			message: '#^Method App\\Domains\\Accounting\\Services\\LedgerQueryService\:\:computeTrialBalances\(\) has parameter \$rows with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
 			identifier: missingType.generics
 			count: 1
-			path: app/Domains/Accounting/Services/LedgerService.php
+			path: app/Domains/Accounting/Services/LedgerQueryService.php
 
 		-
-			message: '#^Method App\\Domains\\Accounting\\Services\\LedgerService\:\:computeTrialBalances\(\) return type has no value type specified in iterable type array\.$#'
+			message: '#^Method App\\Domains\\Accounting\\Services\\LedgerQueryService\:\:computeTrialBalances\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
-			path: app/Domains/Accounting/Services/LedgerService.php
+			path: app/Domains/Accounting/Services/LedgerQueryService.php
 
 		-
 			message: '#^Method App\\Domains\\Accounting\\Services\\LedgerService\:\:validateBalance\(\) has parameter \$lines with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
-			path: app/Domains/Accounting/Services/LedgerService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
 			path: app/Domains/Accounting/Services/LedgerService.php
 
 		-
@@ -421,10 +415,16 @@ parameters:
 			path: app/Domains/Accounting/Services/LedgerService.php
 
 		-
+			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Domains/Accounting/Services/LedgerQueryService.php
+
+		-
 			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
 			identifier: argument.type
 			count: 2
-			path: app/Domains/Accounting/Services/LedgerService.php
+			path: app/Domains/Accounting/Services/LedgerQueryService.php
 
 		-
 			message: '#^Method App\\Domains\\Accounting\\Services\\LettrageService\:\:getOpenItems\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
