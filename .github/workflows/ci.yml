@@ -51,7 +51,7 @@ jobs:
         with:
           php-version: '8.4'
           extensions: pdo, pdo_pgsql, redis, mbstring, xml, curl, zip
-          coverage: none
+          coverage: pcov
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
@@ -117,4 +117,12 @@ jobs:
           DB_PASSWORD: password
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
-        run: php artisan test
+        run: php artisan test --coverage-clover coverage/clover.xml
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/clover.xml
+          retention-days: 14
