@@ -4,6 +4,10 @@ namespace App\Domains\Accounting\Services;
 
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Events\JournalDraftCreated;
+use App\Domains\Accounting\Events\JournalDraftPosted;
+use App\Domains\Accounting\Events\JournalEntryPosted;
+use App\Domains\Accounting\Events\JournalEntryReversed;
 use App\Domains\Accounting\Exceptions\AlreadyPostedException;
 use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
 use App\Domains\Accounting\Exceptions\FiscalYearClosedException;
@@ -60,7 +64,11 @@ class LedgerService
         $this->validateAccounts($organizationId, $entry->lines);
         $this->throwIfDuplicateReference($organizationId, $entry->reference);
 
-        return $this->persistEntry($organizationId, $entry, true);
+        $journalEntry = $this->persistEntry($organizationId, $entry, true);
+
+        JournalEntryPosted::dispatch($journalEntry);
+
+        return $journalEntry;
     }
 
     /**
@@ -74,7 +82,11 @@ class LedgerService
         $this->validateBalance($entry->lines);
         $this->validateAccounts($organizationId, $entry->lines);
 
-        return $this->persistEntry($organizationId, $entry, false);
+        $journalEntry = $this->persistEntry($organizationId, $entry, false);
+
+        JournalDraftCreated::dispatch($journalEntry);
+
+        return $journalEntry;
     }
 
     /**
@@ -94,6 +106,8 @@ class LedgerService
         }
 
         $journalEntry->update(['is_posted' => true]);
+
+        JournalDraftPosted::dispatch($journalEntry);
 
         return $journalEntry;
     }
@@ -115,12 +129,16 @@ class LedgerService
             description: 'Reversal: '.($line->description ?? ''),
         ))->all();
 
-        return $this->postEntry($journalEntry->organization_id, new JournalEntryData(
+        $reversalEntry = $this->postEntry($journalEntry->organization_id, new JournalEntryData(
             date: now()->toDateString(),
             reference: self::REFERENCE_PREFIX_REVERSAL.$journalEntry->reference,
             description: $description ?? 'Reversal of '.$journalEntry->reference,
             lines: $lines,
         ));
+
+        JournalEntryReversed::dispatch($reversalEntry, $journalEntry);
+
+        return $reversalEntry;
     }
 
     // ──────────────────────────────────────────────────────────────

@@ -6,7 +6,9 @@ use App\Domains\Api\Enums\TokenType;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\PersonalAccessToken as SanctumToken;
 
 /**
@@ -17,6 +19,21 @@ use Laravel\Sanctum\PersonalAccessToken as SanctumToken;
  *
  * Note: Does NOT use BelongsToOrganization trait because Sanctum must resolve
  * tokens without an active organization context (the org is derived FROM the token).
+ *
+ * @property int $id
+ * @property string $tokenable_type
+ * @property int $tokenable_id
+ * @property string $name
+ * @property string $token
+ * @property array<int, string>|null $abilities
+ * @property int|null $organization_id
+ * @property TokenType $type
+ * @property Carbon|null $last_used_at
+ * @property Carbon|null $expires_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Organization $organization
+ * @property-read Model $tokenable
  */
 class PersonalAccessToken extends SanctumToken
 {
@@ -50,6 +67,7 @@ class PersonalAccessToken extends SanctumToken
         ]);
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);

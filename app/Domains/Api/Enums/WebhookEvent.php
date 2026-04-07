@@ -20,6 +20,9 @@ enum WebhookEvent: string
     case ExpenseDeleted = 'expense.deleted';
     case ExpenseApproved = 'expense.approved';
 
+    case JournalEntryPosted = 'journal_entry.posted';
+    case JournalEntryReversed = 'journal_entry.reversed';
+
     public static function all(): array
     {
         return array_column(self::cases(), 'value');
@@ -45,6 +48,8 @@ enum WebhookEvent: string
             self::ExpenseUpdated => __('app.webhook_event_expense_updated'),
             self::ExpenseDeleted => __('app.webhook_event_expense_deleted'),
             self::ExpenseApproved => __('app.webhook_event_expense_approved'),
+            self::JournalEntryPosted => __('app.webhook_event_journal_entry_posted'),
+            self::JournalEntryReversed => __('app.webhook_event_journal_entry_reversed'),
         };
     }
 }

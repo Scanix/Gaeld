@@ -42,11 +42,13 @@ class VatEntry extends Model
         ];
     }
 
+    /** @return BelongsTo<JournalEntry, $this> */
     public function journalEntry(): BelongsTo
     {
         return $this->belongsTo(JournalEntry::class);
     }
 
+    /** @return BelongsTo<VatRate, $this> */
     public function vatRate(): BelongsTo
     {
         return $this->belongsTo(VatRate::class);

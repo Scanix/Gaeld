@@ -2,9 +2,11 @@
 
 namespace App\Domains\Api\Resources;
 
+use App\Domains\Contacts\Models\ContactPerson;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin ContactPerson */
 class ContactPersonResource extends JsonResource
 {
     public function toArray(Request $request): array
