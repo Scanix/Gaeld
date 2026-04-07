@@ -35,9 +35,10 @@ class GenerateQrInvoicePdfAction
         $tcpdf->AddPage();
 
         // --- INVOICE CONTENT ---
+        $this->pdfRenderer->setLocale($language);
         $this->pdfRenderer->renderInvoiceHeader($tcpdf, $invoice, $organization);
         $this->pdfRenderer->renderLineItems($tcpdf, $invoice);
-        $this->pdfRenderer->renderTotals($tcpdf, $invoice);
+        $this->pdfRenderer->renderTotals($tcpdf, $invoice, $organization);
 
         // --- QR PAYMENT SLIP (bottom of page) ---
         $violations = $this->qrService->validate($invoice, $organization);

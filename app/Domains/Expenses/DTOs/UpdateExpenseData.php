@@ -24,8 +24,11 @@ readonly class UpdateExpenseData
         public ?string $receiptPath = null,
         public ?string $currency = null,
         public ?string $type = null,
+        public ?string $expenseAccountCode = null,
+        public ?string $bankAccountCode = null,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['category', 'amount', 'date']);
@@ -41,6 +44,8 @@ readonly class UpdateExpenseData
             receiptPath: $data['receipt_path'] ?? null,
             currency: $data['currency'] ?? null,
             type: $data['type'] ?? null,
+            expenseAccountCode: $data['expense_account_code'] ?? null,
+            bankAccountCode: $data['bank_account_code'] ?? null,
         );
     }
 }

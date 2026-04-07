@@ -24,6 +24,7 @@ readonly class InvoiceSuggestion implements \JsonSerializable
     /**
      * Serialise for Inertia/JSON: flatten invoice attributes plus match metadata.
      */
+    /** @return array<string, mixed> */
     public function jsonSerialize(): array
     {
         return array_merge($this->invoice->toArray(), [

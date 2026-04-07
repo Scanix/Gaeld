@@ -26,6 +26,7 @@ readonly class CreateCustomerData
         public ?string $notes = null,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['organization_id', 'name']);
@@ -45,6 +46,7 @@ readonly class CreateCustomerData
         );
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

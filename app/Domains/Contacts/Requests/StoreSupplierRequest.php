@@ -2,11 +2,12 @@
 
 namespace App\Domains\Contacts\Requests;
 
+use App\Support\Rules\Iban;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSupplierRequest extends FormRequest
 {
-    /** @return array<string, string> */
+    /** @return array<string, string|array<int, mixed>> */
     public function rules(): array
     {
         return [
@@ -21,7 +22,7 @@ class StoreSupplierRequest extends FormRequest
             'vat_number' => 'nullable|string|max:50',
             'default_expense_category' => 'nullable|string|max:100',
             'currency' => 'nullable|string|size:3',
-            'iban' => 'nullable|string|max:34',
+            'iban' => ['nullable', 'string', 'max:34', new Iban],
             'internal_notes' => 'nullable|string',
             'notes' => 'nullable|string|max:2000',
         ];

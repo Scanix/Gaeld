@@ -7,6 +7,8 @@ use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
+use App\Support\Traits\HasPublicUuid;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +24,7 @@ use Laravel\Scout\Searchable;
  * Supports multi-language notes, soft-deletes, and full-text search via Scout.
  *
  * @property int $id
+ * @property string $uuid
  * @property string $organization_id
  * @property string $name
  * @property ContactType|null $type
@@ -39,12 +42,16 @@ use Laravel\Scout\Searchable;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read Organization $organization
+ * @property-read Collection<int, Invoice> $invoices
+ * @property-read Collection<int, ContactPerson> $contactPersons
  */
 class Customer extends Model
 {
-    use Auditable, BelongsToOrganization, HasFactory, Searchable, SoftDeletes;
+    use Auditable, BelongsToOrganization, HasFactory, HasPublicUuid, Searchable, SoftDeletes;
 
     protected $fillable = [
+        'uuid',
         'organization_id',
         'name',
         'email',
@@ -68,16 +75,19 @@ class Customer extends Model
         ];
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return HasMany<Invoice, $this> */
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
     }
 
+    /** @return MorphMany<ContactPerson, $this> */
     public function contactPersons(): MorphMany
     {
         return $this->morphMany(ContactPerson::class, 'contactable');

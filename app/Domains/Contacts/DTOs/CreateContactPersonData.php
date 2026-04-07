@@ -25,6 +25,7 @@ readonly class CreateContactPersonData
         public ?string $notes = null,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['contactable_type', 'contactable_id', 'first_name', 'last_name']);

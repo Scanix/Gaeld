@@ -26,8 +26,11 @@ readonly class CreateExpenseData
         public ?string $receiptPath = null,
         public string $currency = 'CHF',
         public string $type = 'invoice',
+        public ?string $expenseAccountCode = null,
+        public ?string $bankAccountCode = null,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['organization_id', 'category', 'amount', 'date']);
@@ -45,6 +48,8 @@ readonly class CreateExpenseData
             receiptPath: $data['receipt_path'] ?? null,
             currency: $data['currency'] ?? 'CHF',
             type: $data['type'] ?? 'invoice',
+            expenseAccountCode: $data['expense_account_code'] ?? null,
+            bankAccountCode: $data['bank_account_code'] ?? null,
         );
     }
 }

@@ -23,6 +23,10 @@ class ImportResult
         public readonly array $createdIds = [],
     ) {}
 
+    /**
+     * @param  string[]  $warnings
+     * @param  array<int|string>  $createdIds
+     */
     public static function success(DataType $dataType, int $imported, int $skipped = 0, array $warnings = [], array $createdIds = []): self
     {
         return new self(
@@ -35,6 +39,9 @@ class ImportResult
         );
     }
 
+    /**
+     * @param  string[]  $errors
+     */
     public static function failure(DataType $dataType, array $errors, int $imported = 0, int $failed = 0): self
     {
         return new self(

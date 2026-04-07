@@ -57,6 +57,8 @@ class InvoiceController extends Controller
             'customers' => CustomerQuery::forSelect(),
             'vatRates' => VatRateQuery::active(),
             'suggestedNumber' => $numberGenerator->next($currentOrg->id()),
+            'defaultNotes' => $currentOrg->get()->default_invoice_notes ?? '',
+            'defaultPaymentTermsDays' => $currentOrg->get()->default_payment_terms_days,
         ]);
     }
 

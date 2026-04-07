@@ -11,6 +11,7 @@ use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Services\ExpenseService;
 use App\Support\Exceptions\DomainException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -38,6 +39,8 @@ class PostExpenseAction
      *   Credit {expenseAccountCode} Expense account   (credit amount)
      *
      * @throws InvalidExpenseStateException When expense is already posted
+     * @throws ExpenseLedgerPostingException When ledger posting fails
+     * @throws ModelNotFoundException When account code is not found
      */
     public function execute(Expense $expense, string $expenseAccountCode, string $bankAccountCode = AccountCode::BANK_CASH): Expense
     {

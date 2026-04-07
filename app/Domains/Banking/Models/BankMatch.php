@@ -24,6 +24,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $confirmed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read BankTransaction $bankTransaction
+ * @property-read Invoice $invoice
  */
 class BankMatch extends Model
 {
@@ -48,11 +50,13 @@ class BankMatch extends Model
         ];
     }
 
+    /** @return BelongsTo<BankTransaction, $this> */
     public function bankTransaction(): BelongsTo
     {
         return $this->belongsTo(BankTransaction::class);
     }
 
+    /** @return BelongsTo<Invoice, $this> */
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);

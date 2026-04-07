@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\DTOs;
 
+use App\Domains\Invoicing\Enums\InvoiceLineType;
 use App\Support\MapsToSnakeCase;
 use App\Support\ValidatesFromArray;
 
@@ -17,10 +18,13 @@ readonly class InvoiceLineData
         public string $description,
         public string $quantity,
         public string $unitPrice,
+        public InvoiceLineType $type = InvoiceLineType::Item,
+        public ?string $discountType = null,
         public ?string $vatRateId = null,
         public ?int $sortOrder = null,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['description', 'quantity', 'unit_price']);
@@ -29,6 +33,8 @@ readonly class InvoiceLineData
             description: $data['description'],
             quantity: $data['quantity'],
             unitPrice: $data['unit_price'],
+            type: InvoiceLineType::tryFrom($data['type'] ?? 'item') ?? InvoiceLineType::Item,
+            discountType: $data['discount_type'] ?? null,
             vatRateId: $data['vat_rate_id'] ?? null,
             sortOrder: $data['sort_order'] ?? null,
         );
