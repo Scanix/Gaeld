@@ -24,6 +24,7 @@ readonly class CreateBankAccountData
         public bool $isMixedUse = false,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['organization_id', 'name']);

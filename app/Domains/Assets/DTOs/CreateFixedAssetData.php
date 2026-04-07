@@ -25,6 +25,7 @@ readonly class CreateFixedAssetData
         public int $accumulatedDepreciationAccountId,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['organization_id', 'name', 'purchase_date', 'purchase_amount', 'useful_life_years', 'asset_account_id', 'depreciation_expense_account_id', 'accumulated_depreciation_account_id']);

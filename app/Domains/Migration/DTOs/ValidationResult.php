@@ -25,6 +25,10 @@ class ValidationResult
         return new self(valid: true);
     }
 
+    /**
+     * @param  string[]  $globalErrors
+     * @param  array<int, string[]>  $rowErrors
+     */
     public static function failure(array $globalErrors = [], array $rowErrors = []): self
     {
         return new self(

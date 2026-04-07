@@ -62,11 +62,13 @@ class Employee extends Model
         ];
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return HasMany<SalarySlip, $this> */
     public function salarySlips(): HasMany
     {
         return $this->hasMany(SalarySlip::class);

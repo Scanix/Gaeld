@@ -13,6 +13,9 @@ readonly class ProfitAndLossReport implements Arrayable, JsonSerializable
     /**
      * @param  ReportAccountLine[]  $revenue
      * @param  ReportAccountLine[]  $expenses
+     * @param  array<string, mixed>|null  $comparison
+     * @param  array<string, mixed>|null  $variance
+     * @param  array<string, mixed>|null  $budget
      */
     public function __construct(
         public string $fromDate,
@@ -27,6 +30,7 @@ readonly class ProfitAndLossReport implements Arrayable, JsonSerializable
         public ?array $budget = null,
     ) {}
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [
@@ -42,6 +46,7 @@ readonly class ProfitAndLossReport implements Arrayable, JsonSerializable
         ];
     }
 
+    /** @return array<string, mixed> */
     public function jsonSerialize(): array
     {
         return $this->toArray();

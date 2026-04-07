@@ -159,6 +159,10 @@ class ReportingService
         return $fiscalStart->toDateString();
     }
 
+    /**
+     * @param  array<string, mixed>  $result
+     * @return array<string, mixed>
+     */
     private function computeComparison(array $result, string $organizationId, string $compareFrom, string $compareTo): array
     {
         $compRevenue = $this->accountsWithBalances($organizationId, AccountType::Revenue, $compareFrom, $compareTo);
@@ -186,6 +190,9 @@ class ReportingService
         return $result;
     }
 
+    /**
+     * @return array{amount: string, percentage: string|null}
+     */
     private function computeVariance(string $current, string $previous): array
     {
         $amount = bcsub($current, $previous, 2);

@@ -22,6 +22,7 @@ readonly class RecordExpensePaymentData
         public ?string $bankAccountCode = null,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['amount', 'payment_date', 'reference', 'description', 'expense_account_code']);

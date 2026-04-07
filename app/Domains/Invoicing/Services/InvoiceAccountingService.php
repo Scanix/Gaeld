@@ -216,6 +216,7 @@ class InvoiceAccountingService
             ));
 
             $payment = InvoicePayment::create([
+                'organization_id' => $orgId,
                 'invoice_id' => $invoice->id,
                 'journal_entry_id' => $journalEntry->id,
                 'amount' => $data->amount,

@@ -18,26 +18,27 @@ abstract readonly class InvoicePayloadData
      */
     public function __construct(
         public string $organizationId,
-        public string $customerId,
+        public ?string $customerId,
         public string $number,
         public string $issueDate,
-        public string $dueDate,
+        public ?string $dueDate,
         public string $currency,
         public ?string $notes,
         public ?string $paymentTerms,
         public array $lines,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): static
     {
-        static::assertRequired($data, ['organization_id', 'customer_id', 'number', 'issue_date', 'due_date', 'lines']);
+        static::assertRequired($data, ['organization_id', 'number', 'issue_date', 'lines']);
 
         return new static(
             organizationId: $data['organization_id'],
-            customerId: $data['customer_id'],
+            customerId: $data['customer_id'] ?? null,
             number: $data['number'],
             issueDate: $data['issue_date'],
-            dueDate: $data['due_date'],
+            dueDate: $data['due_date'] ?? null,
             currency: $data['currency'] ?? 'CHF',
             notes: $data['notes'] ?? null,
             paymentTerms: $data['payment_terms'] ?? null,
@@ -45,6 +46,7 @@ abstract readonly class InvoicePayloadData
         );
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

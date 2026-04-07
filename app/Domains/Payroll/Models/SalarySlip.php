@@ -60,16 +60,19 @@ class SalarySlip extends Model
         ];
     }
 
+    /** @return BelongsTo<Employee, $this> */
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return BelongsTo<JournalEntry, $this> */
     public function journalEntry(): BelongsTo
     {
         return $this->belongsTo(JournalEntry::class);
