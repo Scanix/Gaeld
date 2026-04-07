@@ -5,6 +5,7 @@ namespace App\Domains\Api\Controllers;
 use App\Domains\Api\Requests\StoreInvoiceApiRequest;
 use App\Domains\Api\Requests\UpdateInvoiceApiRequest;
 use App\Domains\Api\Resources\InvoiceResource;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DeleteInvoiceAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
@@ -12,6 +13,7 @@ use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
+use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -91,11 +93,24 @@ class InvoiceApiController extends Controller
         StoreInvoiceApiRequest $request,
         CreateInvoiceAction $action,
         CurrentOrganization $currentOrg,
+        InvoiceNumberGenerator $numberGenerator,
     ): JsonResponse {
         $this->authorize('create', Invoice::class);
 
         $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
+
+        // Auto-generate invoice number when not provided
+        if (empty($validated['number'])) {
+            $validated['number'] = $numberGenerator->next($currentOrg->id());
+        }
+
+        // Resolve customer UUID to internal integer FK
+        if (isset($validated['customer_id'])) {
+            $validated['customer_id'] = Customer::where('uuid', $validated['customer_id'])
+                ->where('organization_id', $currentOrg->id())
+                ->value('id');
+        }
 
         $dto = CreateInvoiceData::fromArray($validated);
         $invoice = $action->execute($dto);
@@ -136,6 +151,13 @@ class InvoiceApiController extends Controller
 
         $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
+
+        // Resolve customer UUID to internal integer FK
+        if (isset($validated['customer_id'])) {
+            $validated['customer_id'] = Customer::where('uuid', $validated['customer_id'])
+                ->where('organization_id', $currentOrg->id())
+                ->value('id');
+        }
 
         $dto = UpdateInvoiceData::fromArray($validated);
         $action->execute($invoice, $dto);
