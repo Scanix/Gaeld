@@ -2,15 +2,17 @@
 
 namespace App\Domains\Api\Resources;
 
+use App\Domains\Contacts\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Customer */
 class CustomerResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->uuid,
             'type' => $this->type?->value,
             'name' => $this->name,
             'email' => $this->email,

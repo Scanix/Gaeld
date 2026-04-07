@@ -2,9 +2,11 @@
 
 namespace App\Domains\Api\Resources;
 
+use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Invoice */
 class InvoiceResource extends JsonResource
 {
     public function toArray(Request $request): array
@@ -13,7 +15,7 @@ class InvoiceResource extends JsonResource
             'id' => $this->id,
             'number' => $this->number,
             'status' => $this->status->value,
-            'type' => $this->type->value,
+            'type' => $this->type?->value,
             'related_invoice_id' => $this->related_invoice_id,
             'customer' => new CustomerResource($this->whenLoaded('customer')),
             'issue_date' => $this->issue_date?->toDateString(),
