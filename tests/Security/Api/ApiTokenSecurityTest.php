@@ -121,15 +121,14 @@ class ApiTokenSecurityTest extends SecurityTestCase
     public function test_token_scoped_to_org_a_cannot_fetch_org_b_customer_by_id(): void
     {
         $response = $this->withToken($this->tokenA)
-            ->getJson("/api/v1/customers/{$this->customerB->id}");
+            ->getJson("/api/v1/customers/{$this->customerB->uuid}");
 
         $this->assertDenied($response); // 403 or 404 — both are valid security controls
     }
 
     // ──────────────────────────────────────────────────────────────
-    //  Removed member's token — known open issue M-10
-    //  This test documents the EXPECTED secure behaviour.
-    //  If it fails, it confirms issue M-10 is still present.
+    //  Removed member's token — FIXED (was issue M-10)
+    //  Token is now revoked when member is removed via MemberRemoved event.
     // ──────────────────────────────────────────────────────────────
 
     public function test_removed_member_api_token_is_invalidated(): void
@@ -159,17 +158,10 @@ class ApiTokenSecurityTest extends SecurityTestCase
             ->withSession(['current_organization_id' => $this->orgA->id])
             ->delete("/organizations/{$this->orgA->id}/members/{$member->id}");
 
-        // Token should now be invalid — if this fails, issue M-10 is confirmed open
+        // Token must be invalid after removal
         $response = $this->withToken($memberToken)->getJson('/api/v1/customers');
 
-        if ($response->status() === 200) {
-            $this->markTestIncomplete(
-                'OPEN ISSUE M-10: Removed member\'s API token is NOT invalidated. '.
-                'Token remains valid after member removal from organization.'
-            );
-        }
-
-        // 401 (token invalidated) or 403 (token valid but access denied) — both are acceptable
+        // 401 (token revoked) or 403 (access denied) — both are acceptable security controls
         $this->assertContains($response->status(), [401, 403],
             "Expected 401 or 403 after member removal, got {$response->status()}");
     }

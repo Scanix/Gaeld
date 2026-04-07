@@ -136,7 +136,7 @@ class TenantIsolationTest extends TestCase
 
         // User A tries to access Org B's bank account
         $response = $this->actingAs($this->userA)
-            ->get("/reconciliation/{$bankAccountB->id}");
+            ->get("/reconciliation/{$bankAccountB->uuid}");
 
         $response->assertForbidden();
     }
@@ -153,7 +153,7 @@ class TenantIsolationTest extends TestCase
         $file = UploadedFile::fake()->createWithContent('test.xml', $xmlContent);
 
         $response = $this->actingAs($this->userA)
-            ->post("/reconciliation/{$bankAccountB->id}/import", [
+            ->post("/reconciliation/{$bankAccountB->uuid}/import", [
                 'camt_file' => $file,
             ]);
 

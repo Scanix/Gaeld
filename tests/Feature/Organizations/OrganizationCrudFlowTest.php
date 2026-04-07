@@ -128,7 +128,7 @@ class OrganizationCrudFlowTest extends TestCase
     {
         $ownerResponse = $this->actingAs($this->owner)
             ->withSession(['current_organization_id' => $this->primaryOrganization->id])
-            ->put("/organizations/{$this->primaryOrganization->id}", [
+            ->put('/settings/general', [
                 'name' => 'Primary Org Updated',
                 'legal_name' => 'Primary Org Holdings',
                 'address' => 'New Street 5',
@@ -141,7 +141,7 @@ class OrganizationCrudFlowTest extends TestCase
                 'locale' => 'de',
             ]);
 
-        $ownerResponse->assertRedirect(route('organizations.show', $this->primaryOrganization));
+        $ownerResponse->assertRedirect(route('settings'));
         $this->assertDatabaseHas('organizations', [
             'id' => $this->primaryOrganization->id,
             'name' => 'Primary Org Updated',
@@ -152,7 +152,7 @@ class OrganizationCrudFlowTest extends TestCase
 
         $memberResponse = $this->actingAs($this->member)
             ->withSession(['current_organization_id' => $this->primaryOrganization->id])
-            ->put("/organizations/{$this->primaryOrganization->id}", [
+            ->put('/settings/general', [
                 'name' => 'Member Attempt',
                 'legal_name' => 'Member Attempt',
                 'address' => null,
