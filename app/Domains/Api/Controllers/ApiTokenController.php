@@ -28,7 +28,7 @@ class ApiTokenController extends Controller
      *
      * Returns all personal API tokens for the authenticated user in the current organisation.
      *
-     * @response 200 scenario="Success" {"data":[{"id":1,"name":"CI Token","abilities":["invoices:read"],"last_used_at":"2025-03-01T12:00:00.000000Z","expires_at":"2025-12-31T23:59:59.000000Z","created_at":"2025-01-15T10:00:00.000000Z"}]}
+     * @response 200 scenario="Success" {"data":[{"id":"9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b","name":"CI Token","abilities":["invoices:read"],"last_used_at":"2025-03-01T12:00:00.000000Z","expires_at":"2025-12-31T23:59:59.000000Z","created_at":"2025-01-15T10:00:00.000000Z"}]}
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -36,7 +36,7 @@ class ApiTokenController extends Controller
             ->tokens()
             ->personal()
             ->where('organization_id', $this->currentOrg->id())
-            ->get(['id', 'name', 'abilities', 'last_used_at', 'expires_at', 'created_at']);
+            ->get(['id', 'uuid', 'name', 'abilities', 'last_used_at', 'expires_at', 'created_at']);
 
         return ApiTokenResource::collection($tokens);
     }
@@ -87,17 +87,17 @@ class ApiTokenController extends Controller
      *
      * Permanently deletes a personal API token.
      *
-     * @urlParam tokenId integer required The token ID. Example: 1
+     * @urlParam tokenUuid string required The token UUID. Example: 9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b
      *
      * @response 204 scenario="Revoked"
      * @response 404 scenario="Not found" {"message":"Token not found."}
      */
-    public function destroy(Request $request, int $tokenId): JsonResponse
+    public function destroy(Request $request, string $tokenUuid): JsonResponse
     {
         $token = $request->user()
             ->tokens()
             ->personal()
-            ->where('id', $tokenId)
+            ->where('uuid', $tokenUuid)
             ->where('organization_id', $this->currentOrg->id())
             ->firstOrFail();
 
