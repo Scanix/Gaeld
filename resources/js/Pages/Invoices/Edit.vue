@@ -13,11 +13,16 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import { currencyOptions } from '@/lib/contactOptions'
+import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
+import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
+import UnsavedChangesDialog from '@/Components/UI/UnsavedChangesDialog.vue'
 import { useFormValidation, z } from '@/lib/useFormValidation'
 import FormFileInput from '@/Components/UI/FormFileInput.vue'
-import { Plus, Trash2 } from 'lucide-vue-next'
+import { Plus, Trash2, HelpCircle } from 'lucide-vue-next'
+import Tooltip from '@/Components/UI/Tooltip.vue'
 
 const props = defineProps({
   invoice: Object,
@@ -27,6 +32,9 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
+
+const { isClosed: isIssueDateClosed, closedYear } = useClosedFiscalYear(() => form.issue_date)
 
 const form = useForm({
   customer_id: props.invoice.customer_id ?? '',
@@ -37,6 +45,8 @@ const form = useForm({
   notes: props.invoice.notes ?? '',
   payment_terms: props.invoice.payment_terms ?? '',
   lines: (props.invoice.lines ?? []).map(l => ({
+    type: l.type ?? 'item',
+    discount_type: l.discount_type ?? 'flat',
     description: l.description,
     quantity: l.quantity,
     unit_price: l.unit_price,
@@ -46,10 +56,25 @@ const form = useForm({
 })
 
 if (form.lines.length === 0) {
-  form.lines.push({ description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
+  form.lines.push({ type: 'item', discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
 }
 
-useUnsavedChanges(computed(() => form.isDirty))
+function saveDraft() {
+  return new Promise((resolve) => {
+    form.post(`/invoices/${props.invoice.id}`, {
+      forceFormData: true,
+      headers: { 'X-HTTP-Method-Override': 'PUT' },
+      preserveState: false,
+      onSuccess: () => resolve(),
+      onError: () => resolve(),
+    })
+  })
+}
+
+const { showDialog, handleSave, handleDiscard, handleStay, forceClear } = useUnsavedChanges(
+  computed(() => form.isDirty),
+  { onSave: saveDraft, fallbackUrl: `/invoices/${props.invoice.id}` },
+)
 
 const { errors: clientErrors, validate, validateField } = useFormValidation(z.object({
   customer_id: z.string().min(1, 'This field is required.'),
@@ -58,8 +83,8 @@ const { errors: clientErrors, validate, validateField } = useFormValidation(z.ob
   due_date: z.string().min(1, 'This field is required.'),
 }))
 
-function addLine() {
-  form.lines.push({ description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
+function addLine(type = 'item') {
+  form.lines.push({ type, discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
 }
 
 function removeLine(index) {
@@ -70,9 +95,11 @@ function removeLine(index) {
 
 function submit() {
   if (!validate(form.data())) return
+  forceClear.value = true
   form.post(`/invoices/${props.invoice.id}`, {
     forceFormData: true,
     headers: { 'X-HTTP-Method-Override': 'PUT' },
+    onError: () => { forceClear.value = false },
   })
 }
 
@@ -95,13 +122,71 @@ const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
 ]
+
+const lineTypeOptions = [
+  { value: 'item', label: t('line_type_item') },
+  { value: 'discount', label: t('line_type_discount') },
+  { value: 'text', label: t('line_type_text') },
+]
+
+const discountTypeOptions = [
+  { value: 'flat', label: t('discount_flat') },
+  { value: 'percentage', label: t('discount_percentage') },
+]
+
+const vatRateMap = computed(() => {
+  const map = {}
+  for (const v of props.vatRates) {
+    map[v.id] = parseFloat(v.rate) || 0
+  }
+  return map
+})
+
+const itemSubtotal = computed(() =>
+  form.lines.reduce((sum, l) => {
+    if (l.type !== 'item') return sum
+    return sum + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0)
+  }, 0)
+)
+
+const subtotal = computed(() =>
+  form.lines.reduce((sum, l) => {
+    if (l.type === 'text') return sum
+    if (l.type === 'discount') {
+      if (l.discount_type === 'percentage') {
+        return sum - itemSubtotal.value * (parseFloat(l.unit_price) || 0) / 100
+      }
+      return sum - (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0)
+    }
+    return sum + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0)
+  }, 0)
+)
+
+const vatTotal = computed(() =>
+  form.lines.reduce((sum, l) => {
+    if (l.type === 'text') return sum
+    const rate = l.vat_rate_id ? (vatRateMap.value[l.vat_rate_id] || 0) : 0
+    let lineAmount
+    if (l.type === 'discount' && l.discount_type === 'percentage') {
+      lineAmount = itemSubtotal.value * (parseFloat(l.unit_price) || 0) / 100
+    } else {
+      lineAmount = (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0)
+    }
+    const vatAmount = lineAmount * rate / 100
+    return sum + (l.type === 'discount' ? -vatAmount : vatAmount)
+  }, 0)
+)
+
+const total = computed(() => subtotal.value + vatTotal.value)
 </script>
 
 <template>
   <AppLayout :title="t('edit_invoice')" help-page="invoices">
     <Breadcrumb :items="[{ label: t('invoices'), href: '/invoices' }, { label: invoice.number, href: `/invoices/${invoice.id}` }, { label: t('edit') }]" class="mb-4" />
 
-    <Card class="max-w-3xl">
+    <ClosedYearBanner v-if="isIssueDateClosed" :year="closedYear" />
+
+    <Card class="max-w-5xl">
       <CardHeader>
         <CardTitle>{{ t('edit_invoice') }} {{ invoice.number }}</CardTitle>
       </CardHeader>
@@ -175,7 +260,15 @@ const vatOptions = [
                 :key="i"
                 class="grid grid-cols-1 gap-3 rounded-lg border border-[hsl(var(--border))] p-3 sm:grid-cols-12 sm:items-end sm:gap-2"
               >
-                <div class="sm:col-span-4">
+                <div class="sm:col-span-2">
+                  <FormSelect
+                    :id="`line-type-${i}`"
+                    v-model="line.type"
+                    :label="t('type')"
+                    :options="lineTypeOptions"
+                  />
+                </div>
+                <div :class="line.type === 'text' ? 'sm:col-span-9' : 'sm:col-span-3'">
                   <FormInput
                     :id="`line-desc-${i}`"
                     v-model="line.description"
@@ -184,56 +277,97 @@ const vatOptions = [
                     required
                   />
                 </div>
-                <div class="grid grid-cols-2 gap-3 sm:contents">
-                  <div class="sm:col-span-2">
-                    <FormInput
-                      :id="`line-qty-${i}`"
-                      v-model="line.quantity"
-                      type="number"
-                      :label="t('qty')"
-                      :error="form.errors[`lines.${i}.quantity`]"
-                      required
-                    />
+                <template v-if="line.type !== 'text'">
+                  <div class="grid grid-cols-2 gap-3 sm:contents">
+                    <div v-if="line.type !== 'discount' || line.discount_type !== 'percentage'" class="sm:col-span-2">
+                      <FormInput
+                        :id="`line-qty-${i}`"
+                        v-model="line.quantity"
+                        type="number"
+                        :label="t('qty')"
+                        :error="form.errors[`lines.${i}.quantity`]"
+                        required
+                      />
+                    </div>
+                    <div :class="line.type === 'discount' && line.discount_type === 'percentage' ? 'sm:col-span-2' : 'sm:col-span-2'">
+                      <FormInput
+                        :id="`line-price-${i}`"
+                        v-model="line.unit_price"
+                        type="number"
+                        :label="line.type === 'discount' ? (line.discount_type === 'percentage' ? t('discount_percentage') : t('line_type_discount')) : t('unit_price')"
+                        :error="form.errors[`lines.${i}.unit_price`]"
+                        required
+                      />
+                    </div>
+                    <div v-if="line.type === 'discount'" class="sm:col-span-2">
+                      <FormSelect
+                        :id="`line-discount-type-${i}`"
+                        v-model="line.discount_type"
+                        :label="t('discount_mode')"
+                        :options="discountTypeOptions"
+                      />
+                    </div>
                   </div>
-                  <div class="sm:col-span-2">
-                    <FormInput
-                      :id="`line-price-${i}`"
-                      v-model="line.unit_price"
-                      type="number"
-                      :label="t('unit_price')"
-                      :error="form.errors[`lines.${i}.unit_price`]"
-                      required
-                    />
+                  <div class="flex items-end gap-3 sm:contents">
+                    <div class="flex-1 sm:col-span-2 relative">
+                      <FormSelect
+                        :id="`line-vat-${i}`"
+                        v-model="line.vat_rate_id"
+                        :label="t('vat')"
+                        :options="vatOptions"
+                      />
+                      <div class="absolute right-0 top-0">
+                        <Tooltip :content="t('tooltip_vat_rate')" side="top">
+                          <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
+                        </Tooltip>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div class="flex items-end gap-3 sm:contents">
-                  <div class="flex-1 sm:col-span-3">
-                    <FormSelect
-                      :id="`line-vat-${i}`"
-                      v-model="line.vat_rate_id"
-                      :label="t('vat')"
-                      :options="vatOptions"
-                    />
-                  </div>
-                  <div class="sm:col-span-1 flex justify-end pb-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      :disabled="form.lines.length <= 1"
-                      @click="removeLine(i)"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </Button>
-                  </div>
+                </template>
+                <div class="sm:col-span-1 flex justify-end pb-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    :disabled="form.lines.length <= 1"
+                    @click="removeLine(i)"
+                  >
+                    <Trash2 class="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
 
-            <Button type="button" variant="outline" size="sm" class="mt-3" @click="addLine">
-              <Plus class="mr-1 h-4 w-4" />
-              {{ t('add_line') }}
-            </Button>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" @click="addLine('item')">
+                <Plus class="mr-1 h-4 w-4" />
+                {{ t('add_line') }}
+              </Button>
+              <Button type="button" variant="outline" size="sm" @click="addLine('discount')">
+                <Plus class="mr-1 h-4 w-4" />
+                {{ t('add_discount_line') }}
+              </Button>
+              <Button type="button" variant="outline" size="sm" @click="addLine('text')">
+                <Plus class="mr-1 h-4 w-4" />
+                {{ t('add_text_line') }}
+              </Button>
+            </div>
+
+            <!-- Running totals -->
+            <div class="mt-4 space-y-1 border-t pt-3 text-sm">
+              <div class="flex justify-between text-[hsl(var(--muted-foreground))]">
+                <span>{{ t('subtotal') }}</span>
+                <span class="tabular-nums">{{ formatCurrency(subtotal, form.currency) }}</span>
+              </div>
+              <div class="flex justify-between text-[hsl(var(--muted-foreground))]">
+                <span>{{ t('vat_total') }}</span>
+                <span class="tabular-nums">{{ formatCurrency(vatTotal, form.currency) }}</span>
+              </div>
+              <div class="flex justify-between font-semibold">
+                <span>{{ t('total') }}</span>
+                <span class="tabular-nums">{{ formatCurrency(total, form.currency) }}</span>
+              </div>
+            </div>
           </div>
 
           <!-- Notes & Terms -->
@@ -277,6 +411,14 @@ const vatOptions = [
       contact-type="customer"
       @close="showCreateCustomer = false"
       @created="onCustomerCreated"
+    />
+
+    <UnsavedChangesDialog
+      :open="showDialog"
+      :saving="form.processing"
+      @save="handleSave"
+      @discard="handleDiscard"
+      @stay="handleStay"
     />
   </AppLayout>
 </template>

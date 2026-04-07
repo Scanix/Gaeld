@@ -118,8 +118,8 @@ function executeUnletter() {
 
 const openItemColumns = computed(() => [
   { key: 'select', label: '', sortable: false, class: 'w-10' },
-  { key: 'date', label: t('date'), format: v => formatDate(v) },
-  { key: 'reference', label: t('reference') },
+  { key: 'date', label: t('date'), format: (_, row) => formatDate(row.journal_entry?.date) },
+  { key: 'reference', label: t('reference'), format: (_, row) => row.journal_entry?.reference ?? '' },
   { key: 'description', label: t('description') },
   { key: 'debit', label: t('debit'), format: v => v > 0 ? formatMoney(v) : '' },
   { key: 'credit', label: t('credit'), format: v => v > 0 ? formatMoney(v) : '' },

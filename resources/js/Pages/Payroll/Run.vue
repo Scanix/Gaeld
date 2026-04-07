@@ -11,6 +11,8 @@ import Badge from '@/Components/UI/Badge.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
+import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
+import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import { Check, ChevronRight } from 'lucide-vue-next'
 
 const { t } = useTranslations()
@@ -34,6 +36,8 @@ const preview = ref([])
 const generatedSlipIds = ref([])
 const generating = ref(false)
 const posting = ref(false)
+
+const { isClosed: isYearClosed, closedYear } = useClosedFiscalYear(() => parseInt(year.value, 10))
 const errorMessage = ref('')
 
 const monthOptions = computed(() =>
@@ -155,6 +159,8 @@ async function postSlips() {
   <AppLayout :title="t('run_payroll')" help-page="payroll">
     <p v-if="errorMessage" class="mb-4 text-sm text-[hsl(var(--destructive))]">{{ errorMessage }}</p>
 
+    <ClosedYearBanner v-if="isYearClosed" :year="closedYear" />
+
     <!-- Step indicator -->
     <nav class="mb-8">
       <ol class="flex items-center gap-0">
@@ -269,7 +275,7 @@ async function postSlips() {
         </div>
         <div class="mt-6 flex justify-between">
           <Button variant="outline" @click="step = 1">{{ t('back') }}</Button>
-          <Button :disabled="generating" @click="generateSlips">
+          <Button :disabled="generating || isYearClosed" :title="isYearClosed ? t('fiscal_year_closed_action_disabled') : undefined" @click="generateSlips">
             {{ generating ? t('generating') + '…' : t('payroll_step_generate') }}
           </Button>
         </div>
@@ -286,7 +292,7 @@ async function postSlips() {
           {{ t('payroll_generated_count', { count: generatedSlipIds.length }) }}
         </p>
         <div class="flex gap-3">
-          <Button :disabled="posting" @click="postSlips">
+          <Button :disabled="posting || isYearClosed" :title="isYearClosed ? t('fiscal_year_closed_action_disabled') : undefined" @click="postSlips">
             {{ posting ? t('posting') + '…' : t('payroll_step_post') }}
           </Button>
           <Button variant="outline" as="a" href="/payroll/salary-slips">

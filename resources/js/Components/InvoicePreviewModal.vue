@@ -27,11 +27,24 @@ const vatRateMap = computed(() => {
   return map
 })
 
+const itemSubtotal = computed(() =>
+  props.form.lines.reduce((sum, line) => {
+    if (line.type !== 'item') return sum
+    return sum + (parseFloat(line.quantity) || 0) * (parseFloat(line.unit_price) || 0)
+  }, 0)
+)
+
 const lineDetails = computed(() =>
   props.form.lines.map(line => {
     const qty = parseFloat(line.quantity) || 0
     const price = parseFloat(line.unit_price) || 0
-    const amount = qty * price
+    let rawAmount
+    if (line.type === 'discount' && line.discount_type === 'percentage') {
+      rawAmount = itemSubtotal.value * price / 100
+    } else {
+      rawAmount = qty * price
+    }
+    const amount = line.type === 'discount' ? -rawAmount : rawAmount
     const vat = line.vat_rate_id ? vatRateMap.value[line.vat_rate_id] : null
     const vatAmount = vat ? amount * vat.rate / 100 : 0
     return { ...line, amount, vat, vatAmount }
@@ -74,8 +87,14 @@ const total = computed(() => subtotal.value + vatTotal.value)
         <tbody>
           <tr v-for="(line, i) in lineDetails" :key="i" class="border-b border-[hsl(var(--border))]">
             <td class="py-2">{{ line.description || '—' }}</td>
-            <td class="py-2 text-right tabular-nums">{{ line.quantity }}</td>
-            <td class="py-2 text-right tabular-nums">{{ formatCurrency(line.unit_price, form.currency) }}</td>
+            <td class="py-2 text-right tabular-nums">
+              <template v-if="line.type === 'discount' && line.discount_type === 'percentage'">—</template>
+              <template v-else>{{ line.quantity }}</template>
+            </td>
+            <td class="py-2 text-right tabular-nums">
+              <template v-if="line.type === 'discount' && line.discount_type === 'percentage'">{{ line.unit_price }}%</template>
+              <template v-else>{{ formatCurrency(line.unit_price, form.currency) }}</template>
+            </td>
             <td class="py-2 text-right">{{ line.vat ? `${line.vat.rate}%` : '—' }}</td>
             <td class="py-2 text-right tabular-nums">{{ formatCurrency(line.amount, form.currency) }}</td>
           </tr>

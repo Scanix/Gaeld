@@ -12,6 +12,7 @@ import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
+import IbanHint from '@/Components/IbanHint.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { countryOptions, currencyOptions, supplierCategoryOptions } from '@/lib/contactOptions'
@@ -40,10 +41,13 @@ const form = useForm({
   notes: props.supplier.notes?.default ?? '',
 })
 
-useUnsavedChanges(computed(() => form.isDirty))
+const { forceClear } = useUnsavedChanges(computed(() => form.isDirty))
 
 function submit() {
-  form.put(`/suppliers/${props.supplier.id}`)
+  forceClear.value = true
+  form.put(`/suppliers/${props.supplier.id}`, {
+    onError: () => { forceClear.value = false },
+  })
 }
 
 const categoryOptions = supplierCategoryOptions(t)
@@ -166,6 +170,7 @@ const typeOptions = [
               :error="form.errors.iban"
               class="sm:col-span-2"
             />
+            <IbanHint :iban="form.iban" mode="any" class="sm:col-span-2" />
             <FormSelect
               id="default_expense_category"
               v-model="form.default_expense_category"
