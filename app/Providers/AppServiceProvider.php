@@ -2,21 +2,34 @@
 
 namespace App\Providers;
 
+use App\Domains\Accounting\Jobs\ExportChartOfAccountsJob;
+use App\Domains\Accounting\Listeners\JournalEventSubscriber;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Api\Jobs\DispatchWebhookJob;
 use App\Domains\Api\Models\PersonalAccessToken;
+use App\Domains\Assets\Jobs\MonthlyDepreciationJob;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Contacts\Policies\ContactPolicy;
 use App\Domains\Contacts\Search\ContactSearchProvider;
 use App\Domains\Expenses\Contracts\ReceiptOcrInterface;
+use App\Domains\Expenses\Jobs\ProcessReceiptOcrJob;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Expenses\Search\ExpenseSearchProvider;
 use App\Domains\Expenses\Services\TesseractOcrService;
+use App\Domains\Invoicing\Jobs\GenerateRecurringInvoicesJob;
+use App\Domains\Invoicing\Jobs\SendPaymentRemindersJob;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Search\InvoiceSearchProvider;
+use App\Domains\Migration\Jobs\ProcessMigrationImport;
+use App\Domains\Organizations\Events\MemberRemoved;
+use App\Domains\Organizations\Jobs\ExportOrganizationDataJob;
+use App\Domains\Organizations\Listeners\RevokeOrganizationTokens;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Reporting\Jobs\GenerateReportsJob;
+use App\Domains\Users\Jobs\ExportUserDataJob;
 use App\Http\Services\GlobalSearchService;
 use App\Support\Listeners\AuthAuditSubscriber;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -25,6 +38,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -51,7 +65,26 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Model::preventLazyLoading(! app()->isProduction());
+
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
+        // ── Queue Routing (Laravel 13) ──────────────────────────
+        // Centralizes job→queue mapping so individual jobs don't
+        // need $queue properties. Run separate Horizon supervisors
+        // per queue for priority / concurrency control.
+        Queue::route([
+            DispatchWebhookJob::class => [null, 'webhooks'],
+            ProcessReceiptOcrJob::class => [null, 'processing'],
+            ProcessMigrationImport::class => [null, 'processing'],
+            ExportChartOfAccountsJob::class => [null, 'exports'],
+            ExportUserDataJob::class => [null, 'exports'],
+            ExportOrganizationDataJob::class => [null, 'exports'],
+            GenerateRecurringInvoicesJob::class => [null, 'scheduled'],
+            SendPaymentRemindersJob::class => [null, 'scheduled'],
+            GenerateReportsJob::class => [null, 'scheduled'],
+            MonthlyDepreciationJob::class => [null, 'scheduled'],
+        ]);
 
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute((int) config('sanctum.rate_limit', 60))->by($request->user()?->id ?: $request->ip());
@@ -64,6 +97,8 @@ class AppServiceProvider extends ServiceProvider
             ->uncompromised());
 
         Event::subscribe(AuthAuditSubscriber::class);
+        Event::subscribe(JournalEventSubscriber::class);
+        Event::listen(MemberRemoved::class, RevokeOrganizationTokens::class);
 
         Gate::policy(Customer::class, ContactPolicy::class);
         Gate::policy(Supplier::class, ContactPolicy::class);

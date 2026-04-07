@@ -8,6 +8,7 @@ namespace App\Support;
 trait ValidatesFromArray
 {
     /**
+     * @param  array<string, mixed>  $data
      * @param  array<string>  $required
      *
      * @throws \InvalidArgumentException

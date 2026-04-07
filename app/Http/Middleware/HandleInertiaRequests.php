@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Users\Models\User;
 use App\Support\FeatureFlag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -52,10 +53,7 @@ class HandleInertiaRequests extends Middleware
                 'two_factor_enabled' => $user->hasTwoFactorEnabled(),
                 'has_passkeys' => $user->webAuthnCredentials()->exists(),
             ],
-            'currentOrganization' => ($this->currentOrganization->isBound()
-                ? $this->currentOrganization->get()
-                : $user->resolveCurrentOrganization()
-            )?->only('id', 'name', 'currency', 'locale', 'require_two_factor'),
+            'currentOrganization' => fn () => $this->resolveCurrentOrganization($user),
             'subscription' => $this->resolveSubscription($user),
             'role' => fn () => $this->resolveCurrentRole($user),
             'permissions' => fn () => $this->resolvePermissions($user),
@@ -95,6 +93,26 @@ class HandleInertiaRequests extends Middleware
             'trial_ends_at' => $sub->trial_ends_at?->toDateString(),
             'ends_at' => $sub->ends_at?->toDateString(),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveCurrentOrganization(User $user): ?array
+    {
+        $org = $this->currentOrganization->isBound()
+            ? $this->currentOrganization->get()
+            : $user->resolveCurrentOrganization();
+
+        if (! $org) {
+            return null;
+        }
+
+        $data = $org->only('id', 'name', 'currency', 'locale', 'require_two_factor');
+        $data['closed_fiscal_years'] = $org->closed_fiscal_years ?? [];
+        $data['business_type'] = $org->business_type?->value;
+
+        return $data;
     }
 
     private function resolveCurrentRole($user): ?string
