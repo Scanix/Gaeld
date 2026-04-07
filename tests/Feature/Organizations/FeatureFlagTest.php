@@ -109,7 +109,7 @@ class FeatureFlagTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
-            ->post("/reconciliation/{$bankAccount->id}/auto");
+            ->post("/reconciliation/{$bankAccount->uuid}/auto");
 
         $response->assertForbidden();
     }
@@ -134,7 +134,7 @@ class FeatureFlagTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
-            ->post("/reconciliation/{$bankAccount->id}/auto");
+            ->post("/reconciliation/{$bankAccount->uuid}/auto");
 
         // Should not be 403 — may redirect or return success depending on data
         $this->assertNotEquals(403, $response->getStatusCode());
