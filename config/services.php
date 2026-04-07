@@ -46,4 +46,18 @@ return [
         'ga4_id' => env('GA4_ID'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Slack
+    |--------------------------------------------------------------------------
+    |
+    | SLACK_HORIZON_WEBHOOK — Incoming Webhook URL for Horizon alerts
+    |   (long wait, failed jobs). Create one at https://api.slack.com/messaging/webhooks
+    |
+    */
+
+    'slack' => [
+        'horizon_webhook' => env('SLACK_HORIZON_WEBHOOK'),
+    ],
+
 ];
