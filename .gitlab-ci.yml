@@ -1,0 +1,262 @@
+# =============================================================================
+#  Gäld API — GitLab CI/CD Pipeline
+#
+#  Runs on self-hosted Nectoria runners.
+#  Full pipeline: lint → analyse → test (CE+EE, coverage gate) → docs → deploy
+#
+#  The `deploy` stage is manual, triggered only on the `production` branch.
+# =============================================================================
+
+stages:
+  - lint
+  - analyse
+  - test
+  - docs
+  - deploy
+
+variables:
+  PHP_VERSION: "8.4"
+  NODE_VERSION: "24"
+  POSTGRES_DB: gaeld_test
+  POSTGRES_USER: gaeld
+  POSTGRES_PASSWORD: password
+  DB_CONNECTION: pgsql
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_DATABASE: gaeld_test
+  DB_USERNAME: gaeld
+  DB_PASSWORD: password
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  CACHE_STORE: array
+  SESSION_DRIVER: array
+  QUEUE_CONNECTION: sync
+  MAIL_MAILER: array
+  SCOUT_DRIVER: "null"
+  APP_ENV: testing
+  APP_KEY: "base64:s25aRLcFtz+CDCWpI2dW7Lhr1NJW9koLQSciHu35Nk4="
+  # EE feature flags — enabled in CI to cover all code paths
+  FEATURE_SAAS: "true"
+  FEATURE_AUTO_RECONCILIATION: "true"
+  FEATURE_BANK_SYNC: "true"
+  FEATURE_API_ACCESS: "true"
+  FEATURE_AUTOMATION: "true"
+  FEATURE_MULTI_CURRENCY: "true"
+  FEATURE_RULE_ENGINE: "true"
+  FEATURE_ADVANCED_PERMISSIONS: "true"
+  FEATURE_ANALYTICAL: "true"
+  FEATURE_WITHHOLDING_TAX: "true"
+  FEATURE_TAX_DECLARATION: "true"
+  FEATURE_E_INVOICING: "true"
+  FEATURE_CONSOLIDATION: "true"
+  # Composer / pnpm caching
+  COMPOSER_HOME: "$CI_PROJECT_DIR/.composer-cache"
+  PNPM_HOME: "$CI_PROJECT_DIR/.pnpm-store"
+
+# ---------------------------------------------------------------------------
+#  Cache & Services
+# ---------------------------------------------------------------------------
+
+.default-cache: &default-cache
+  key:
+    files:
+      - composer.lock
+      - pnpm-lock.yaml
+  paths:
+    - .composer-cache/
+    - .pnpm-store/
+    - vendor/
+    - node_modules/
+
+.php-setup: &php-setup
+  before_script:
+    - cp .env.example .env
+    # Clone EE plugin (available on GitLab, not on GitHub)
+    - |
+      if [ -n "$GAELD_EE_DEPLOY_KEY" ]; then
+        mkdir -p plugins/gaeld-ee
+        git clone --depth 1 "$GAELD_EE_REPO" plugins/gaeld-ee
+      else
+        echo "⚠ GAELD_EE_DEPLOY_KEY not set — running CE-only"
+      fi
+    - composer install --no-interaction --prefer-dist --optimize-autoloader
+    - php artisan key:generate
+  tags:
+    - nectoria
+
+.node-setup: &node-setup
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@latest --activate
+    - pnpm install --frozen-lockfile
+
+# ---------------------------------------------------------------------------
+#  Stage: lint
+# ---------------------------------------------------------------------------
+
+pint:
+  stage: lint
+  <<: *php-setup
+  script:
+    - composer lint
+  cache:
+    <<: *default-cache
+    policy: pull-push
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "production"
+
+# ---------------------------------------------------------------------------
+#  Stage: analyse
+# ---------------------------------------------------------------------------
+
+phpstan:
+  stage: analyse
+  <<: *php-setup
+  script:
+    - composer stan
+  cache:
+    <<: *default-cache
+    policy: pull
+  needs: ["pint"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "production"
+
+# ---------------------------------------------------------------------------
+#  Stage: test
+# ---------------------------------------------------------------------------
+
+test:
+  stage: test
+  <<: *php-setup
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+    - name: redis:7-alpine
+      alias: redis
+  script:
+    # Build frontend assets (required for Inertia tests)
+    - corepack enable && corepack prepare pnpm@latest --activate
+    - pnpm install --frozen-lockfile
+    - pnpm build
+    # Run migrations
+    - php artisan migrate --force
+    # Run tests with coverage
+    - php artisan test --coverage-clover coverage/clover.xml
+    # Enforce minimum coverage (70% line coverage)
+    - |
+      COVERAGE=$(php -r "
+        \$xml = simplexml_load_file('coverage/clover.xml');
+        \$metrics = \$xml->project->metrics;
+        \$stmts = (int)\$metrics['statements'];
+        \$covered = (int)\$metrics['coveredstatements'];
+        echo \$stmts > 0 ? round((\$covered / \$stmts) * 100, 2) : 0;
+      ")
+      echo "Line coverage: ${COVERAGE}%"
+      php -r "exit((float)'${COVERAGE}' >= 70.0 ? 0 : 1);" || {
+        echo "❌ Coverage ${COVERAGE}% is below the 70% minimum"
+        exit 1
+      }
+      echo "✅ Coverage gate passed: ${COVERAGE}%"
+  cache:
+    <<: *default-cache
+    policy: pull
+  needs: ["pint"]
+  artifacts:
+    when: always
+    paths:
+      - coverage/clover.xml
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/clover.xml
+    expire_in: 30 days
+  coverage: '/Line coverage: (\d+\.\d+)%/'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "production"
+
+# ---------------------------------------------------------------------------
+#  Stage: docs (Scribe API docs regeneration)
+# ---------------------------------------------------------------------------
+
+scribe:
+  stage: docs
+  <<: *php-setup
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+    - name: redis:7-alpine
+      alias: redis
+  script:
+    - php artisan migrate --force
+    - php artisan scribe:generate
+  cache:
+    <<: *default-cache
+    policy: pull
+  needs: ["test"]
+  artifacts:
+    paths:
+      - public/docs/
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "production"
+
+# ---------------------------------------------------------------------------
+#  Stage: deploy (manual, production branch only)
+# ---------------------------------------------------------------------------
+
+deploy:api:
+  stage: deploy
+  before_script:
+    - cp .env.example .env
+    - composer install --no-interaction --prefer-dist --optimize-autoloader
+  script:
+    - vendor/bin/dep deploy
+  after_script:
+    # Post-deploy health check
+    - |
+      sleep 10
+      HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "${DEPLOY_APP_URL:-https://app.gaeld.ch}/up")
+      if [ "$HTTP_STATUS" = "200" ]; then
+        echo "✅ Health check passed (HTTP ${HTTP_STATUS})"
+      else
+        echo "❌ Health check failed (HTTP ${HTTP_STATUS})"
+        exit 1
+      fi
+  environment:
+    name: production
+    url: https://app.gaeld.ch
+  cache:
+    <<: *default-cache
+    policy: pull
+  needs: ["test", "scribe"]
+  tags:
+    - nectoria
+  rules:
+    - if: $CI_COMMIT_BRANCH == "production"
+      when: manual
+  allow_failure: false
+
+deploy:ee:plugin:
+  stage: deploy
+  script:
+    - |
+      cd plugins/gaeld-ee
+      git push origin main --tags
+  tags:
+    - nectoria
+  rules:
+    - if: $CI_COMMIT_BRANCH == "production"
+      when: manual
+      changes:
+        - plugins/gaeld-ee/**/*
+  allow_failure: true
