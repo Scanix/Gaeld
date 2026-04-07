@@ -2,8 +2,8 @@
 
 namespace App\Domains\Organizations\Controllers;
 
-use App\Domains\Accounting\Services\ChartTemplateService;
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
+use App\Domains\Organizations\Requests\OnboardingRequest;
 use App\Domains\Organizations\Services\OrganizationService;
 use App\Domains\Organizations\Services\OrganizationSetupService;
 use App\Http\Controllers\Controller;
@@ -11,7 +11,6 @@ use App\Support\FeatureFlag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -35,29 +34,15 @@ class OnboardingController extends Controller
     }
 
     public function store(
-        Request $request,
+        OnboardingRequest $request,
         OrganizationService $organizationService,
         OrganizationSetupService $setupService,
-        ChartTemplateService $chartTemplateService,
     ): RedirectResponse {
         if (FeatureFlag::isSaas()) {
             return redirect()->route('signup');
         }
 
-        $validTemplateKeys = $chartTemplateService->validKeys();
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'legal_name' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:10',
-            'canton' => 'nullable|string|size:2',
-            'vat_number' => 'nullable|string|max:50',
-            'currency' => 'required|string|size:3',
-            'locale' => 'required|string|in:en,fr,de,it',
-            'chart_of_accounts' => ['required', 'string', Rule::in([...$validTemplateKeys, 'none'])],
-        ]);
+        $validated = $request->validated();
 
         $org = DB::transaction(function () use ($request, $validated, $organizationService, $setupService) {
             $org = $organizationService->create(

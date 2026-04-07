@@ -2,10 +2,9 @@
 
 namespace App\Domains\Organizations\Controllers;
 
-use App\Domains\Organizations\Actions\UpdateOrganizationAction;
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
-use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Organizations\Requests\StoreOrganizationRequest;
 use App\Domains\Organizations\Services\InvitationService;
 use App\Domains\Organizations\Services\OrganizationService;
 use App\Http\Controllers\Controller;
@@ -46,52 +45,12 @@ class OrganizationController extends Controller
         ]);
     }
 
-    public function store(Request $request, OrganizationService $organizationService): RedirectResponse
+    public function store(StoreOrganizationRequest $request, OrganizationService $organizationService): RedirectResponse
     {
-        $this->authorize('create', Organization::class);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'legal_name' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:10',
-            'canton' => 'nullable|string|size:2',
-            'country' => 'nullable|string|size:2',
-            'vat_number' => 'nullable|string|max:50',
-            'currency' => 'string|size:3',
-            'locale' => 'string|in:en,fr,de,it,rm',
-        ]);
-
-        $org = $organizationService->create($request->user(), CreateOrganizationData::fromArray($validated));
+        $org = $organizationService->create($request->user(), CreateOrganizationData::fromArray($request->validated()));
 
         return redirect()->route('organizations.show', $org)
             ->with('success', __('app.organization_created'));
-    }
-
-    public function update(Request $request, Organization $organization, UpdateOrganizationAction $action): RedirectResponse
-    {
-        $this->authorize('update', $organization);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'legal_name' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:10',
-            'canton' => 'nullable|string|size:2',
-            'country' => 'nullable|string|size:2',
-            'vat_number' => 'nullable|string|max:50',
-            'currency' => 'string|size:3',
-            'locale' => 'string|in:en,fr,de,it,rm',
-            'require_two_factor' => 'sometimes|boolean',
-            'default_payment_terms_days' => 'sometimes|integer|min:0|max:365',
-        ]);
-
-        $action->execute($organization, UpdateOrganizationData::fromArray($validated));
-
-        return redirect()->route('organizations.show', $organization)
-            ->with('success', __('app.organization_updated'));
     }
 
     public function switchOrganization(Request $request, Organization $organization): RedirectResponse

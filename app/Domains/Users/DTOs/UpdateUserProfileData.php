@@ -9,6 +9,7 @@ readonly class UpdateUserProfileData
         public string $locale,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): static
     {
         return new static(

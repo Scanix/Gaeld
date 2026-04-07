@@ -2,7 +2,9 @@
 
 namespace App\Domains\Organizations\Requests;
 
+use App\Domains\Organizations\Enums\BusinessType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SetupWizardRequest extends FormRequest
 {
@@ -20,7 +22,8 @@ class SetupWizardRequest extends FormRequest
             'org_canton' => 'nullable|string|size:2',
             'org_vat_number' => 'nullable|string|max:50',
             'currency' => 'required|string|size:3',
-            'locale' => 'required|string|in:en,fr,de,it',
+            'locale' => ['required', 'string', Rule::in(config('accounting.supported_locales'))],
+            'business_type' => ['nullable', 'string', Rule::in(BusinessType::values())],
         ];
     }
 }

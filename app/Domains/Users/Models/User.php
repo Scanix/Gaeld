@@ -71,6 +71,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->two_factor_confirmed_at !== null;
     }
 
+    /** @return BelongsToMany<Organization, $this> */
     public function organizations(): BelongsToMany
     {
         return $this->belongsToMany(Organization::class, 'organization_users')

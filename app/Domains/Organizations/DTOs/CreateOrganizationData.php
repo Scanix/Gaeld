@@ -2,6 +2,7 @@
 
 namespace App\Domains\Organizations\DTOs;
 
+use App\Domains\Organizations\Enums\BusinessType;
 use App\Support\AddressData;
 use App\Support\ValidatesFromArray;
 
@@ -21,8 +22,10 @@ readonly class CreateOrganizationData
         public string $currency = 'CHF',
         public string $fiscalYearStart = '01-01',
         public string $locale = 'en',
+        public ?BusinessType $businessType = null,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['name']);
@@ -36,9 +39,11 @@ readonly class CreateOrganizationData
             currency: $data['currency'] ?? 'CHF',
             fiscalYearStart: $data['fiscal_year_start'] ?? '01-01',
             locale: $data['locale'] ?? 'en',
+            businessType: isset($data['business_type']) ? BusinessType::tryFrom($data['business_type']) : null,
         );
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [
@@ -49,6 +54,7 @@ readonly class CreateOrganizationData
             'currency' => $this->currency,
             'fiscal_year_start' => $this->fiscalYearStart,
             'locale' => $this->locale,
+            'business_type' => $this->businessType?->value,
         ] + ($this->addressData?->toArray(includeCanton: true) ?? AddressData::empty(includeCanton: true)->toArray(includeCanton: true));
     }
 }
