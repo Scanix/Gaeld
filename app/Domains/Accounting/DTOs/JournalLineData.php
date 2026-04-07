@@ -23,6 +23,7 @@ readonly class JournalLineData
         public ?string $description = null,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['account_id', 'debit', 'credit']);

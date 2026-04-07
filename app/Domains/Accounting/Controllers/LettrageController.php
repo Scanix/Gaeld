@@ -87,12 +87,12 @@ class LettrageController extends Controller
     /**
      * Reverse a lettrage lot.
      */
-    public function destroy(LettrageLot $lot): RedirectResponse
+    public function destroy(LettrageLot $lettrageLot): RedirectResponse
     {
-        $this->authorize('manage', $lot->account);
+        $this->authorize('manage', $lettrageLot->account);
 
         try {
-            $this->service->unletter($lot);
+            $this->service->unletter($lettrageLot);
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['lettrage' => $e->getMessage()]);
         }

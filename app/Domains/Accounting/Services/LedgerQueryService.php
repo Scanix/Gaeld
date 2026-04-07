@@ -117,6 +117,9 @@ class LedgerQueryService
             ->firstOrFail();
     }
 
+    /**
+     * @return Builder<Account>
+     */
     private function buildTrialBalanceQuery(string $organizationId, ?string $asOfDate): Builder
     {
         return Account::where('accounts.organization_id', $organizationId)
@@ -134,15 +137,23 @@ class LedgerQueryService
             ->selectRaw('accounts.id, accounts.code, accounts.name, accounts.type, COALESCE(SUM(transaction_lines.debit), 0) as total_debit, COALESCE(SUM(transaction_lines.credit), 0) as total_credit');
     }
 
+    /**
+     * @param  Collection<int, \stdClass>  $rows
+     * @return array<int, array{account_code: string, account_name: string, account_type: string, debit: string, credit: string}>
+     */
     private function computeTrialBalances(Collection $rows): array
     {
         $balances = [];
 
         foreach ($rows as $row) {
             $isDebitNormal = $this->isDebitNormalAccount($row->type);
+            /** @var numeric-string $totalDebit */
+            $totalDebit = (string) $row->total_debit;
+            /** @var numeric-string $totalCredit */
+            $totalCredit = (string) $row->total_credit;
             $balance = $isDebitNormal
-                ? bcsub((string) $row->total_debit, (string) $row->total_credit, 2)
-                : bcsub((string) $row->total_credit, (string) $row->total_debit, 2);
+                ? bcsub($totalDebit, $totalCredit, 2)
+                : bcsub($totalCredit, $totalDebit, 2);
 
             if (bccomp($balance, '0', 2) !== 0) {
                 $balances[] = [

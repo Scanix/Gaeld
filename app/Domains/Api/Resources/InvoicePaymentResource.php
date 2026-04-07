@@ -2,9 +2,11 @@
 
 namespace App\Domains\Api\Resources;
 
+use App\Domains\Invoicing\Models\InvoicePayment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin InvoicePayment */
 class InvoicePaymentResource extends JsonResource
 {
     public function toArray(Request $request): array
