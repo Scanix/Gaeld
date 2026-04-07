@@ -12,7 +12,7 @@ class ApiTokenResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->uuid,
             'name' => $this->name,
             'abilities' => $this->abilities,
             'last_used_at' => $this->last_used_at?->toIso8601String(),

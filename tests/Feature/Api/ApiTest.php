@@ -200,7 +200,7 @@ class ApiTest extends TestCase
         ]);
 
         $this->withToken($this->token)
-            ->deleteJson("/api/v1/org-tokens/{$orgToken->accessToken->id}")
+            ->deleteJson("/api/v1/org-tokens/{$orgToken->accessToken->uuid}")
             ->assertStatus(204);
     }
 

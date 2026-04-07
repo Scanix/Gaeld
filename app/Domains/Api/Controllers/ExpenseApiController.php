@@ -2,6 +2,7 @@
 
 namespace App\Domains\Api\Controllers;
 
+use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Api\Requests\StoreExpenseApiRequest;
 use App\Domains\Api\Requests\UpdateExpenseApiRequest;
 use App\Domains\Api\Resources\ExpenseResource;
@@ -88,6 +89,13 @@ class ExpenseApiController extends Controller
         $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
 
+        // Resolve vat_rate_id UUID to internal integer FK
+        if (isset($validated['vat_rate_id'])) {
+            $validated['vat_rate_id'] = VatRate::where('uuid', $validated['vat_rate_id'])
+                ->where('organization_id', $currentOrg->id())
+                ->value('id');
+        }
+
         $dto = CreateExpenseData::fromArray($validated);
         $expense = $action->execute($dto);
 
@@ -122,6 +130,13 @@ class ExpenseApiController extends Controller
         $this->authorize('update', $expense);
 
         $validated = $request->validated();
+
+        // Resolve vat_rate_id UUID to internal integer FK
+        if (isset($validated['vat_rate_id'])) {
+            $validated['vat_rate_id'] = VatRate::where('uuid', $validated['vat_rate_id'])
+                ->where('organization_id', $expense->organization_id)
+                ->value('id');
+        }
 
         $dto = UpdateExpenseData::fromArray($validated);
         $action->execute($expense, $dto);

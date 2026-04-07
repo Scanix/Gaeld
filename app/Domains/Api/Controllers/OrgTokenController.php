@@ -29,7 +29,7 @@ class OrgTokenController extends Controller
      *
      * Returns all organisation-scoped API tokens for the current organisation.
      *
-     * @response 200 scenario="Success" {"data":[{"id":1,"name":"Production Key","abilities":["*"],"last_used_at":"2025-03-15T08:00:00.000000Z","expires_at":null,"created_at":"2025-01-10T10:00:00.000000Z","created_by":"John Doe"}]}
+     * @response 200 scenario="Success" {"data":[{"id":"9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b","name":"Production Key","abilities":["*"],"last_used_at":"2025-03-15T08:00:00.000000Z","expires_at":null,"created_at":"2025-01-10T10:00:00.000000Z","created_by":"John Doe"}]}
      */
     public function index(): JsonResponse
     {
@@ -38,13 +38,13 @@ class OrgTokenController extends Controller
         $tokens = PersonalAccessToken::query()
             ->organization()
             ->where('organization_id', $this->currentOrg->id())
-            ->get(['id', 'name', 'abilities', 'last_used_at', 'expires_at', 'created_at', 'tokenable_id']);
+            ->get(['id', 'uuid', 'name', 'abilities', 'last_used_at', 'expires_at', 'created_at', 'tokenable_id']);
 
         // Include the creator name for each token
         $tokens->load('tokenable:id,name');
 
         $data = $tokens->map(fn ($token) => [
-            'id' => $token->id,
+            'id' => $token->uuid,
             'name' => $token->name,
             'abilities' => $token->abilities,
             'last_used_at' => $token->last_used_at?->toIso8601String(),
@@ -106,19 +106,19 @@ class OrgTokenController extends Controller
      *
      * Permanently deletes an organisation-scoped API token.
      *
-     * @urlParam tokenId integer required The token ID. Example: 1
+     * @urlParam tokenUuid string required The token UUID. Example: 9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b
      *
      * @response 204 scenario="Revoked"
      * @response 404 scenario="Not found" {"message":"Token not found."}
      * @response 403 scenario="Forbidden" {"message":"This action is unauthorized."}
      */
-    public function destroy(int $tokenId): JsonResponse
+    public function destroy(string $tokenUuid): JsonResponse
     {
         $this->authorize('manageUsers', $this->currentOrg->get());
 
         $token = PersonalAccessToken::query()
             ->organization()
-            ->where('id', $tokenId)
+            ->where('uuid', $tokenUuid)
             ->where('organization_id', $this->currentOrg->id())
             ->firstOrFail();
 

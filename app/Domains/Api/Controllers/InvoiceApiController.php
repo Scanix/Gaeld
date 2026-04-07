@@ -2,6 +2,7 @@
 
 namespace App\Domains\Api\Controllers;
 
+use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Api\Requests\StoreInvoiceApiRequest;
 use App\Domains\Api\Requests\UpdateInvoiceApiRequest;
 use App\Domains\Api\Resources\InvoiceResource;
@@ -112,6 +113,11 @@ class InvoiceApiController extends Controller
                 ->value('id');
         }
 
+        // Resolve vat_rate_id UUIDs to internal integer FKs in lines
+        if (isset($validated['lines'])) {
+            $validated['lines'] = $this->resolveLineVatRateUuids($validated['lines'], $currentOrg->id());
+        }
+
         $dto = CreateInvoiceData::fromArray($validated);
         $invoice = $action->execute($dto);
 
@@ -159,6 +165,11 @@ class InvoiceApiController extends Controller
                 ->value('id');
         }
 
+        // Resolve vat_rate_id UUIDs to internal integer FKs in lines
+        if (isset($validated['lines'])) {
+            $validated['lines'] = $this->resolveLineVatRateUuids($validated['lines'], $currentOrg->id());
+        }
+
         $dto = UpdateInvoiceData::fromArray($validated);
         $action->execute($invoice, $dto);
 
@@ -182,5 +193,18 @@ class InvoiceApiController extends Controller
         $action->execute($invoice);
 
         return response()->json(null, 204);
+    }
+
+    private function resolveLineVatRateUuids(array $lines, string $orgId): array
+    {
+        foreach ($lines as &$line) {
+            if (isset($line['vat_rate_id'])) {
+                $line['vat_rate_id'] = VatRate::where('uuid', $line['vat_rate_id'])
+                    ->where('organization_id', $orgId)
+                    ->value('id');
+            }
+        }
+
+        return $lines;
     }
 }

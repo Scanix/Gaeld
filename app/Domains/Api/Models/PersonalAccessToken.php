@@ -5,6 +5,7 @@ namespace App\Domains\Api\Models;
 use App\Domains\Api\Enums\TokenType;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Support\Traits\HasPublicUuid;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,6 +22,7 @@ use Laravel\Sanctum\PersonalAccessToken as SanctumToken;
  * tokens without an active organization context (the org is derived FROM the token).
  *
  * @property int $id
+ * @property string $uuid
  * @property string $tokenable_type
  * @property int $tokenable_id
  * @property string $name
@@ -37,6 +39,8 @@ use Laravel\Sanctum\PersonalAccessToken as SanctumToken;
  */
 class PersonalAccessToken extends SanctumToken
 {
+    use HasPublicUuid;
+
     protected $fillable = [
         'name',
         'token',
