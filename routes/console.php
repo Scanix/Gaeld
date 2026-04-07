@@ -48,3 +48,32 @@ if (FeatureFlag::enabled('auto_reconciliation')) {
  * Monthly depreciation of fixed assets (1st of each month at 05:00).
  */
 Schedule::job(MonthlyDepreciationJob::class)->monthly();
+
+// ──────────────────────────────────────────────────────────────
+//  Backup & Horizon
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Nightly database backup (00:30) with cleanup of old backups.
+ */
+Schedule::command('backup:run --only-db')->dailyAt('00:30');
+Schedule::command('backup:clean')->dailyAt('01:30');
+
+/**
+ * Horizon queue metrics snapshot (every 5 min).
+ */
+Schedule::command('horizon:snapshot')->everyFiveMinutes();
+
+// ──────────────────────────────────────────────────────────────
+//  Schedule Health Monitoring
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Heartbeat check — alerts if the scheduler itself stops running.
+ * Configure SCHEDULE_HEARTBEAT_URL in .env (e.g. a Healthchecks.io ping URL).
+ */
+if ($heartbeatUrl = env('SCHEDULE_HEARTBEAT_URL')) {
+    Schedule::call(fn () => \Illuminate\Support\Facades\Http::get($heartbeatUrl))
+        ->everyFiveMinutes()
+        ->name('heartbeat');
+}
