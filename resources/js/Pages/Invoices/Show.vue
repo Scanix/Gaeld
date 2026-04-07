@@ -115,9 +115,12 @@ function executeCancel() {
 
 const lineColumns = computed(() => [
   { key: 'description', label: t('description') },
-  { key: 'quantity', label: t('qty'), class: 'text-right' },
-  { key: 'unit_price', label: t('unit_price'), class: 'text-right', format: (v) => formatCurrency(v) },
-  { key: 'total', label: t('total'), class: 'text-right', format: (v, row) => formatCurrency(row.quantity * row.unit_price) },
+  { key: 'quantity', label: t('qty'), class: 'text-right', format: (v, row) => row.type === 'discount' && row.discount_type === 'percentage' ? '—' : v },
+  { key: 'unit_price', label: t('unit_price'), class: 'text-right', format: (v, row) => row.type === 'discount' && row.discount_type === 'percentage' ? `${v}%` : formatCurrency(v) },
+  { key: 'total', label: t('total'), class: 'text-right', format: (v, row) => {
+    if (row.type === 'discount') return formatCurrency(-Math.abs(parseFloat(row.amount)))
+    return formatCurrency(row.amount)
+  }},
 ])
 
 const paymentColumns = computed(() => [

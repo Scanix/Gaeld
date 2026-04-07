@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -16,7 +16,10 @@ import InvoicePreviewModal from '@/Components/InvoicePreviewModal.vue'
 import { currencyOptions } from '@/lib/contactOptions'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
+import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
+import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
+import UnsavedChangesDialog from '@/Components/UI/UnsavedChangesDialog.vue'
 import { useFormValidation, z } from '@/lib/useFormValidation'
 import FormFileInput from '@/Components/UI/FormFileInput.vue'
 import { Plus, Trash2, HelpCircle } from 'lucide-vue-next'
@@ -26,10 +29,14 @@ const props = defineProps({
   customers: { type: Array, default: () => [] },
   vatRates: { type: Array, default: () => [] },
   suggestedNumber: { type: String, default: '' },
+  defaultNotes: { type: String, default: '' },
+  defaultPaymentTermsDays: { type: Number, default: null },
 })
 
 const { t } = useTranslations()
 const { formatCurrency } = useFormatters()
+
+const { isClosed: isIssueDateClosed, closedYear } = useClosedFiscalYear(() => form.issue_date)
 
 const form = useForm({
   customer_id: '',
@@ -37,14 +44,29 @@ const form = useForm({
   issue_date: new Date().toISOString().slice(0, 10),
   due_date: '',
   currency: 'CHF',
-  notes: '',
+  notes: props.defaultNotes,
   payment_terms: '',
-  lines: [{ description: '', quantity: 1, unit_price: 0, vat_rate_id: '' }],
+  lines: [{ type: 'item', discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: '' }],
   justificatif: null,
   finalize: false,
 })
 
-useUnsavedChanges(computed(() => form.isDirty))
+function saveDraft() {
+  return new Promise((resolve) => {
+    form.finalize = false
+    form.post('/invoices', {
+      forceFormData: true,
+      preserveState: false,
+      onSuccess: () => resolve(),
+      onError: () => resolve(),
+    })
+  })
+}
+
+const { showDialog, handleSave, handleDiscard, handleStay, forceClear } = useUnsavedChanges(
+  computed(() => form.isDirty),
+  { onSave: saveDraft, fallbackUrl: '/invoices' },
+)
 
 const { errors: clientErrors, validate, validateField } = useFormValidation(z.object({
   customer_id: z.string().min(1, 'This field is required.'),
@@ -53,8 +75,13 @@ const { errors: clientErrors, validate, validateField } = useFormValidation(z.ob
   due_date: z.string().min(1, 'This field is required.'),
 }))
 
-function addLine() {
-  form.lines.push({ description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
+const draftValidation = useFormValidation(z.object({
+  number: z.string().min(1, 'This field is required.').max(50, 'Must be at most 50 characters.'),
+  issue_date: z.string().min(1, 'This field is required.'),
+}))
+
+function addLine(type = 'item') {
+  form.lines.push({ type, discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
 }
 
 function removeLine(index) {
@@ -64,15 +91,23 @@ function removeLine(index) {
 }
 
 function submit() {
-  if (!validate(form.data())) return
+  if (!draftValidation.validate(form.data())) return
+  forceClear.value = true
   form.finalize = false
-  form.post('/invoices', { forceFormData: true })
+  form.post('/invoices', {
+    forceFormData: true,
+    onError: () => { forceClear.value = false },
+  })
 }
 
 function submitAndFinalize() {
   if (!validate(form.data())) return
+  forceClear.value = true
   form.finalize = true
-  form.post('/invoices', { forceFormData: true })
+  form.post('/invoices', {
+    forceFormData: true,
+    onError: () => { forceClear.value = false },
+  })
 }
 
 // I1: Live running totals
@@ -84,15 +119,38 @@ const vatRateMap = computed(() => {
   return map
 })
 
+const itemSubtotal = computed(() =>
+  form.lines.reduce((sum, l) => {
+    if (l.type !== 'item') return sum
+    return sum + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0)
+  }, 0)
+)
+
 const subtotal = computed(() =>
-  form.lines.reduce((sum, l) => sum + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0)
+  form.lines.reduce((sum, l) => {
+    if (l.type === 'text') return sum
+    if (l.type === 'discount') {
+      if (l.discount_type === 'percentage') {
+        return sum - itemSubtotal.value * (parseFloat(l.unit_price) || 0) / 100
+      }
+      return sum - (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0)
+    }
+    return sum + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0)
+  }, 0)
 )
 
 const vatTotal = computed(() =>
   form.lines.reduce((sum, l) => {
-    const lineAmount = (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0)
+    if (l.type === 'text') return sum
     const rate = l.vat_rate_id ? (vatRateMap.value[l.vat_rate_id] || 0) : 0
-    return sum + lineAmount * rate / 100
+    let lineAmount
+    if (l.type === 'discount' && l.discount_type === 'percentage') {
+      lineAmount = itemSubtotal.value * (parseFloat(l.unit_price) || 0) / 100
+    } else {
+      lineAmount = (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0)
+    }
+    const vatAmount = lineAmount * rate / 100
+    return sum + (l.type === 'discount' ? -vatAmount : vatAmount)
   }, 0)
 )
 
@@ -118,13 +176,54 @@ const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
 ]
+
+const lineTypeOptions = [
+  { value: 'item', label: t('line_type_item') },
+  { value: 'discount', label: t('line_type_discount') },
+  { value: 'text', label: t('line_type_text') },
+]
+
+const discountTypeOptions = [
+  { value: 'flat', label: t('discount_flat') },
+  { value: 'percentage', label: t('discount_percentage') },
+]
+
+// Due date auto-fill from customer or org default payment terms
+const dueDateManuallyEdited = ref(false)
+
+function computeDueDate(issueDate, paymentTermsDays) {
+  if (!issueDate || !paymentTermsDays) return ''
+  const date = new Date(issueDate)
+  date.setDate(date.getDate() + parseInt(paymentTermsDays))
+  return date.toISOString().slice(0, 10)
+}
+
+function applyPaymentTerms() {
+  if (dueDateManuallyEdited.value) return
+  const customer = customerList.find(c => c.id === form.customer_id)
+  const days = customer?.payment_terms || props.defaultPaymentTermsDays
+  if (days) {
+    form.payment_terms = String(days)
+    form.due_date = computeDueDate(form.issue_date, days)
+  }
+}
+
+watch(() => form.customer_id, applyPaymentTerms)
+watch(() => form.issue_date, applyPaymentTerms)
+
+function onDueDateManualEdit() {
+  dueDateManuallyEdited.value = true
+  validateField('due_date', form.due_date)
+}
 </script>
 
 <template>
   <AppLayout :title="t('create_invoice')" help-page="invoices">
     <Breadcrumb :items="[{ label: t('invoices'), href: '/invoices' }, { label: t('create_invoice') }]" class="mb-4" />
 
-    <Card class="max-w-3xl">
+    <ClosedYearBanner v-if="isIssueDateClosed" :year="closedYear" />
+
+    <Card class="max-w-5xl">
       <CardHeader>
         <CardTitle>{{ t('new_invoice') }}</CardTitle>
       </CardHeader>
@@ -181,7 +280,8 @@ const vatOptions = [
               :label="t('due_date')"
               :error="form.errors.due_date || clientErrors.due_date"
               required
-              @blur="validateField('due_date', form.due_date)"
+              @blur="onDueDateManualEdit"
+              @change="onDueDateManualEdit"
             />
             <FormSelect
               id="currency"
@@ -202,7 +302,15 @@ const vatOptions = [
                 :key="i"
                 class="grid grid-cols-1 gap-3 rounded-lg border border-[hsl(var(--border))] p-3 sm:grid-cols-12 sm:items-end sm:gap-2"
               >
-                <div class="sm:col-span-4">
+                <div class="sm:col-span-2">
+                  <FormSelect
+                    :id="`line-type-${i}`"
+                    v-model="line.type"
+                    :label="t('type')"
+                    :options="lineTypeOptions"
+                  />
+                </div>
+                <div :class="line.type === 'text' ? 'sm:col-span-9' : 'sm:col-span-3'">
                   <FormInput
                     :id="`line-desc-${i}`"
                     v-model="line.description"
@@ -211,59 +319,81 @@ const vatOptions = [
                     required
                   />
                 </div>
-                <div class="grid grid-cols-2 gap-3 sm:contents">
-                  <div class="sm:col-span-2">
-                    <FormInput
-                      :id="`line-qty-${i}`"
-                      v-model="line.quantity"
-                      type="number"
-                      :label="t('qty')"
-                      :error="form.errors[`lines.${i}.quantity`]"
-                      required
-                    />
+                <template v-if="line.type !== 'text'">
+                  <div class="grid grid-cols-2 gap-3 sm:contents">
+                    <div v-if="line.type !== 'discount' || line.discount_type !== 'percentage'" class="sm:col-span-2">
+                      <FormInput
+                        :id="`line-qty-${i}`"
+                        v-model="line.quantity"
+                        type="number"
+                        :label="t('qty')"
+                        :error="form.errors[`lines.${i}.quantity`]"
+                        required
+                      />
+                    </div>
+                    <div :class="line.type === 'discount' && line.discount_type === 'percentage' ? 'sm:col-span-2' : 'sm:col-span-2'">
+                      <FormInput
+                        :id="`line-price-${i}`"
+                        v-model="line.unit_price"
+                        type="number"
+                        :label="line.type === 'discount' ? (line.discount_type === 'percentage' ? t('discount_percentage') : t('line_type_discount')) : t('unit_price')"
+                        :error="form.errors[`lines.${i}.unit_price`]"
+                        required
+                      />
+                    </div>
+                    <div v-if="line.type === 'discount'" class="sm:col-span-2">
+                      <FormSelect
+                        :id="`line-discount-type-${i}`"
+                        v-model="line.discount_type"
+                        :label="t('discount_mode')"
+                        :options="discountTypeOptions"
+                      />
+                    </div>
                   </div>
-                  <div class="sm:col-span-2">
-                    <FormInput
-                      :id="`line-price-${i}`"
-                      v-model="line.unit_price"
-                      type="number"
-                      :label="t('unit_price')"
-                      :error="form.errors[`lines.${i}.unit_price`]"
-                      required
-                    />
+                  <div class="flex items-end gap-3 sm:contents">
+                    <div class="flex-1 sm:col-span-2 relative">
+                      <FormSelect
+                        :id="`line-vat-${i}`"
+                        v-model="line.vat_rate_id"
+                        :label="t('vat')"
+                        :options="vatOptions"
+                      />
+                      <div class="absolute right-0 top-0">
+                        <Tooltip :content="t('tooltip_vat_rate')" side="top">
+                          <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
+                        </Tooltip>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div class="flex items-end gap-3 sm:contents">
-                  <div class="flex-1 sm:col-span-3 relative">
-                    <FormSelect
-                      :id="`line-vat-${i}`"
-                      v-model="line.vat_rate_id"
-                      :label="t('vat')"
-                      :options="vatOptions"
-                    />
-                    <Tooltip :content="t('tooltip_vat_rate')" side="top" class="absolute right-0 top-0">
-                      <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
-                    </Tooltip>
-                  </div>
-                  <div class="sm:col-span-1 flex justify-end pb-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      :disabled="form.lines.length <= 1"
-                      @click="removeLine(i)"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </Button>
-                  </div>
+                </template>
+                <div class="sm:col-span-1 flex justify-end pb-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    :disabled="form.lines.length <= 1"
+                    @click="removeLine(i)"
+                  >
+                    <Trash2 class="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
 
-            <Button type="button" variant="outline" size="sm" class="mt-3" @click="addLine">
-              <Plus class="mr-1 h-4 w-4" />
-              {{ t('add_line') }}
-            </Button>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" @click="addLine('item')">
+                <Plus class="mr-1 h-4 w-4" />
+                {{ t('add_line') }}
+              </Button>
+              <Button type="button" variant="outline" size="sm" @click="addLine('discount')">
+                <Plus class="mr-1 h-4 w-4" />
+                {{ t('add_discount_line') }}
+              </Button>
+              <Button type="button" variant="outline" size="sm" @click="addLine('text')">
+                <Plus class="mr-1 h-4 w-4" />
+                {{ t('add_text_line') }}
+              </Button>
+            </div>
 
             <!-- Running totals -->
             <div class="mt-4 space-y-1 border-t pt-3 text-sm">
@@ -316,7 +446,7 @@ const vatOptions = [
             <Button type="button" variant="outline" @click="showPreview = true">
               {{ t('invoice_preview') }}
             </Button>
-            <Button type="button" variant="outline" :disabled="form.processing" @click="submitAndFinalize">
+            <Button type="button" variant="outline" :disabled="form.processing || isIssueDateClosed" :title="isIssueDateClosed ? t('fiscal_year_closed_action_disabled') : undefined" @click="submitAndFinalize">
               {{ t('create_and_finalize') }}
             </Button>
             <Button type="submit" :disabled="form.processing">{{ t('create_invoice') }}</Button>
@@ -338,6 +468,14 @@ const vatOptions = [
       :customers="customerList"
       :vat-rates="vatRates"
       @close="showPreview = false"
+    />
+
+    <UnsavedChangesDialog
+      :open="showDialog"
+      :saving="form.processing"
+      @save="handleSave"
+      @discard="handleDiscard"
+      @stay="handleStay"
     />
   </AppLayout>
 </template>

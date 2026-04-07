@@ -80,7 +80,7 @@ const vatOptions = computed(() => [
       { label: t('edit') },
     ]" class="mb-4" />
 
-    <Card class="max-w-3xl">
+    <Card class="max-w-5xl">
       <CardHeader>
         <CardTitle>{{ t('edit_recurring_invoice') }}</CardTitle>
       </CardHeader>

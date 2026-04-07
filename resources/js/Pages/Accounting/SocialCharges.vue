@@ -12,6 +12,8 @@ import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
+import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
+import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import { Calculator } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -20,6 +22,8 @@ const props = defineProps({
 
 const { t } = useTranslations()
 const { formatCurrency } = useFormatters()
+
+const { isClosed: isCurrentYearClosed, closedYear } = useClosedFiscalYear(() => new Date().getFullYear())
 
 // Income input (raw string to allow apostrophe typing)
 const incomeInput = ref('')
@@ -84,6 +88,8 @@ function postToLedger() {
       <p>{{ t('help_social_text') }}</p>
     </HelpText>
 
+    <ClosedYearBanner v-if="isCurrentYearClosed" :year="closedYear" />
+
     <div class="grid gap-6 lg:grid-cols-2">
       <!-- Income Input -->
       <Card>
@@ -137,7 +143,7 @@ function postToLedger() {
             <Calculator class="mr-2 inline h-4 w-4" />
             {{ t('social_breakdown') }}
           </CardTitle>
-          <Button @click="openPostDialog">{{ t('post_to_ledger') }}</Button>
+          <Button :disabled="isCurrentYearClosed" :title="isCurrentYearClosed ? t('fiscal_year_closed_action_disabled') : undefined" @click="openPostDialog">{{ t('post_to_ledger') }}</Button>
         </div>
       </CardHeader>
       <CardContent>

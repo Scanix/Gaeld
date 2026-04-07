@@ -8,10 +8,8 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
-import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import DropdownMenu from '@/Components/UI/DropdownMenu.vue'
-import FormInput from '@/Components/UI/FormInput.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
@@ -23,15 +21,16 @@ const props = defineProps({
   receiptUrl: { type: String, default: null },
 })
 
-const showPostModal = ref(false)
+const showPostDialog = ref(false)
 const showDeleteDialog = ref(false)
 const deleting = ref(false)
-const postForm = useForm({ expense_account_code: '' })
+const posting = ref(false)
 const approveForm = useForm({})
 
 function submitPost() {
-  postForm.post(`/expenses/${props.expense.id}/post`, {
-    onSuccess: () => { showPostModal.value = false },
+  posting.value = true
+  router.post(`/expenses/${props.expense.id}/post`, {}, {
+    onFinish: () => { posting.value = false; showPostDialog.value = false },
   })
 }
 
@@ -105,7 +104,7 @@ const journalColumns = computed(() => [
         <Button
           v-if="expense.status === 'approved'"
           size="sm"
-          @click="showPostModal = true"
+          @click="showPostDialog = true"
         >
           {{ t('post_to_ledger') }}
         </Button>
@@ -194,22 +193,15 @@ const journalColumns = computed(() => [
       </Card>
     </div>
 
-    <Modal :show="showPostModal" @close="showPostModal = false" :title="t('post_expense_ledger')">
-      <form class="space-y-6" @submit.prevent="submitPost">
-        <FormInput
-          id="expense_account_code"
-          v-model="postForm.expense_account_code"
-          :label="t('expense_account_code')"
-          placeholder="e.g. 6000"
-          :error="postForm.errors.expense_account_code"
-          required
-        />
-        <div class="flex justify-end gap-3">
-          <Button variant="outline" @click="showPostModal = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="postForm.processing">{{ t('post') }}</Button>
-        </div>
-      </form>
-    </Modal>
+    <ConfirmDialog
+      :open="showPostDialog"
+      :title="t('post_expense_ledger')"
+      :message="t('post_expense_confirm')"
+      :confirm-label="t('post')"
+      :processing="posting"
+      @confirm="submitPost"
+      @cancel="showPostDialog = false"
+    />
 
     <ConfirmDialog
       :open="showDeleteDialog"

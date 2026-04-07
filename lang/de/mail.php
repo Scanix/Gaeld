@@ -22,6 +22,14 @@ return [
     'accounting_export_button' => 'Export herunterladen',
     'accounting_export_expiry' => 'Dieser Link ist 24 Stunden gültig.',
 
+    // Organisationsdaten-Export
+    'org_export_subject' => 'Ihr Organisationsdaten-Export ist bereit',
+    'org_export_greeting' => 'Hallo :name,',
+    'org_export_body' => 'Ihr vollständiger Organisationsdaten-Export wurde erstellt und steht zum Download bereit. Das Archiv enthält alle Geschäftsdaten in JSON- und CSV-Formaten.',
+    'org_export_button' => 'Export herunterladen',
+    'org_export_expiry' => 'Dieser Link ist 48 Stunden gültig.',
+    'org_export_regards' => 'Freundliche Grüsse',
+
     // Zahlungserinnerungen
     'reminder_subject_first' => 'Zahlungserinnerung — Rechnung :number',
     'reminder_subject_second' => 'Zweite Erinnerung — Rechnung :number',

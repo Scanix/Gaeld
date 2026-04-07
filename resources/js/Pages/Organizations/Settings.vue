@@ -13,6 +13,7 @@ import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { currencyOptions } from '@/lib/contactOptions'
+import IbanHint from '@/Components/IbanHint.vue'
 import { Upload, Trash2, Plus } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -66,6 +67,7 @@ function submitGeneral() {
 const invoiceForm = useForm({
   invoice_header_text: props.organization.invoice_header_text || '',
   invoice_footer_text: props.organization.invoice_footer_text || '',
+  default_invoice_notes: props.organization.default_invoice_notes || '',
   qr_iban: props.organization.qr_iban || '',
 })
 
@@ -379,6 +381,14 @@ const cantonOptions = [
                 :error="invoiceForm.errors.invoice_footer_text"
               />
 
+              <FormTextarea
+                id="default_invoice_notes"
+                v-model="invoiceForm.default_invoice_notes"
+                :label="t('settings_default_invoice_notes')"
+                :placeholder="t('settings_default_invoice_notes_placeholder')"
+                :error="invoiceForm.errors.default_invoice_notes"
+              />
+
               <FormInput
                 id="qr_iban"
                 v-model="invoiceForm.qr_iban"
@@ -386,6 +396,7 @@ const cantonOptions = [
                 :error="invoiceForm.errors.qr_iban"
                 :placeholder="t('qr_iban_placeholder')"
               />
+              <IbanHint :iban="invoiceForm.qr_iban" mode="qr" />
 
               <div class="flex justify-end">
                 <Button type="submit" :disabled="invoiceForm.processing">
