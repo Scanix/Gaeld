@@ -50,3 +50,7 @@ docker/nginx/default.conf
 docker/supervisor/gaeld-worker.conf
 docker/systemd/gaeld-worker.service
 .venv/
+
+.pnpm-store/
+
+/coverage
