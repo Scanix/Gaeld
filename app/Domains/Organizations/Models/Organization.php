@@ -6,6 +6,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Expenses\Models\ExpenseCategory;
+use App\Domains\Organizations\Enums\BusinessType;
 use App\Domains\Users\Models\User;
 use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -36,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $fiscal_year_start
  * @property array<int, int>|null $closed_fiscal_years
  * @property string|null $locale
+ * @property BusinessType|null $business_type
  * @property bool $require_two_factor
  * @property int|null $default_payment_terms_days
  * @property Carbon|null $created_at
@@ -59,8 +61,15 @@ class Organization extends Model
         'fiscal_year_start',
         'closed_fiscal_years',
         'locale',
+        'business_type',
         'require_two_factor',
         'default_payment_terms_days',
+        'default_invoice_notes',
+        'logo_path',
+        'invoice_header_text',
+        'invoice_footer_text',
+        'invoice_email_subject',
+        'invoice_email_body',
     ];
 
     protected function casts(): array
@@ -69,6 +78,7 @@ class Organization extends Model
             'require_two_factor' => 'boolean',
             'default_payment_terms_days' => 'integer',
             'closed_fiscal_years' => 'array',
+            'business_type' => BusinessType::class,
         ];
     }
 
@@ -104,6 +114,7 @@ class Organization extends Model
         $this->update(['closed_fiscal_years' => $closed]);
     }
 
+    /** @return BelongsToMany<User, $this> */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'organization_users')
@@ -111,26 +122,31 @@ class Organization extends Model
             ->withTimestamps();
     }
 
+    /** @return HasMany<Account, $this> */
     public function accounts(): HasMany
     {
         return $this->hasMany(Account::class);
     }
 
+    /** @return HasMany<Customer, $this> */
     public function customers(): HasMany
     {
         return $this->hasMany(Customer::class);
     }
 
+    /** @return HasMany<BankAccount, $this> */
     public function bankAccounts(): HasMany
     {
         return $this->hasMany(BankAccount::class);
     }
 
+    /** @return HasMany<OrganizationInvitation, $this> */
     public function invitations(): HasMany
     {
         return $this->hasMany(OrganizationInvitation::class);
     }
 
+    /** @return HasMany<ExpenseCategory, $this> */
     public function expenseCategories(): HasMany
     {
         return $this->hasMany(ExpenseCategory::class);
