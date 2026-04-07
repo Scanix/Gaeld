@@ -16,10 +16,20 @@
         </testsuite>
     </testsuites>
 
+    <coverage>
+        <report>
+            <clover outputFile="coverage/clover.xml"/>
+            <html outputDirectory="coverage/html"/>
+        </report>
+    </coverage>
+
     <source>
         <include>
             <directory>app</directory>
         </include>
+        <exclude>
+            <directory>app/Providers</directory>
+        </exclude>
     </source>
 
     <php>
