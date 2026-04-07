@@ -3,8 +3,8 @@
 namespace App\Support\Traits;
 
 use Spatie\Activitylog\Contracts\Activity;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * Adds organisation-scoped audit logging to a model.
@@ -24,7 +24,7 @@ trait Auditable
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
+            ->dontLogEmptyChanges()
             ->setDescriptionForEvent(fn (string $event) => class_basename($this)." {$event}");
     }
 

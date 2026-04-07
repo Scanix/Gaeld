@@ -62,8 +62,10 @@ trait HandlesCrudOperations
     protected function resolveModel(): mixed
     {
         $key = Str::singular($this->routePrefix());
+        $modelClass = $this->modelClass();
+        $routeKey = (new $modelClass)->getRouteKeyName();
 
-        return $this->modelClass()::findOrFail(request()->route($key));
+        return $modelClass::where($routeKey, request()->route($key))->firstOrFail();
     }
 
     public function index(Request $request): Response
