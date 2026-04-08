@@ -48,7 +48,7 @@ const columns = computed(() => [
           :columns="columns"
           :rows="bankAccounts?.data ?? []"
           :pagination="bankAccounts"
-          :row-link="row => `/reconciliation/${row.id}`"
+          :row-link="row => `/reconciliation/${row.uuid}`"
         >
           <template #cell-unreconciled_count="{ value }">
             <Badge v-if="value > 0" variant="destructive">{{ value }}</Badge>

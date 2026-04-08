@@ -62,7 +62,7 @@ function openEdit(rate) {
 
 function submitForm() {
   if (editingRate.value) {
-    form.put(`/accounting/vat-rates/${editingRate.value.id}`, {
+    form.put(`/accounting/vat-rates/${editingRate.value.uuid}`, {
       onSuccess: () => { showForm.value = false },
     })
   } else {
@@ -80,7 +80,7 @@ function confirmDelete(rate) {
 }
 
 function doDelete() {
-  router.delete(`/accounting/vat-rates/${deletingRate.value.id}`, {
+  router.delete(`/accounting/vat-rates/${deletingRate.value.uuid}`, {
     onFinish: () => { deletingRate.value = null },
   })
 }

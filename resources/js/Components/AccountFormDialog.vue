@@ -66,7 +66,7 @@ function submit() {
 
   const method = isEditing.value ? 'put' : 'post'
   const url = isEditing.value
-    ? `/accounting/accounts/${props.account.id}`
+    ? `/accounting/accounts/${props.account.uuid}`
     : '/accounting/accounts'
 
   const data = { ...form.value }

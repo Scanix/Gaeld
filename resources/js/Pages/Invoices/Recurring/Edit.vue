@@ -52,7 +52,7 @@ function removeLine(index) {
 }
 
 function submit() {
-  form.put(`/invoices/recurring/${props.recurringInvoice.id}`)
+  form.put(`/invoices/recurring/${props.recurringInvoice.uuid}`)
 }
 
 const clientOptions = computed(() =>
