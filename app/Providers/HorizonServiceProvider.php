@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Domains\Organizations\Enums\Role;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Horizon\Horizon;
 use Laravel\Horizon\HorizonApplicationServiceProvider;
@@ -27,6 +26,7 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
      * Register the Horizon gate.
      *
      * This gate determines who can access Horizon in non-local environments.
+     * Only the SaaS admin (SAAS_ADMIN_EMAIL) is allowed in production.
      */
     protected function gate(): void
     {
@@ -35,15 +35,9 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
                 return false;
             }
 
-            $org = $user->resolveCurrentOrganization();
+            $adminEmail = config('ee.saas_admin_email');
 
-            if (! $org) {
-                return false;
-            }
-
-            $pivot = $org->users()->where('users.id', $user->id)->first()?->pivot;
-
-            return $pivot && $pivot->role === Role::Owner->value;
+            return $adminEmail && $user->email === $adminEmail;
         });
     }
 }

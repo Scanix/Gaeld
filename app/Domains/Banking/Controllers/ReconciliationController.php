@@ -104,12 +104,20 @@ class ReconciliationController extends Controller
             }
         }
 
+        // Fetch open invoices for the searchable reconciliation selector
+        $openInvoices = Invoice::where('organization_id', $bankAccount->organization_id)
+            ->open()
+            ->with('customer:id,name')
+            ->orderByDesc('issue_date')
+            ->get(['id', 'number', 'total', 'currency', 'customer_id', 'issue_date', 'status']);
+
         return Inertia::render('Banking/ReconciliationShow', [
             'bankAccount' => $bankAccount->load('ledgerAccount'),
             'transactions' => $transactions,
             'suggestions' => $suggestions,
             'personalSuggestions' => $personalSuggestions,
             'filter' => $filter,
+            'openInvoices' => $openInvoices,
             'pageFeatures' => [
                 'auto_reconciliation' => FeatureFlag::enabled('auto_reconciliation'),
             ],

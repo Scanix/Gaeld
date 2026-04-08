@@ -392,6 +392,8 @@ return [
     'manual_reconcile_help' => 'Saisissez le code du compte de contrepartie pour comptabiliser cette transaction.',
     'no_transactions' => 'Aucune transaction trouvée.',
     'enter_invoice_id' => 'Sélectionner ou saisir l\'ID de facture',
+    'search_invoice' => 'Rechercher une facture…',
+    'no_invoices_found' => 'Aucune facture ouverte trouvée.',
     'enter_expense_id' => 'Sélectionner ou saisir l\'ID de dépense',
     'file' => 'Fichier',
     'import' => 'Importer',

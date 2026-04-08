@@ -392,6 +392,8 @@ return [
     'manual_reconcile_help' => 'Inserisci il codice del conto di contropartita per registrare questa transazione.',
     'no_transactions' => 'Nessuna transazione trovata.',
     'enter_invoice_id' => 'Seleziona o inserisci ID fattura',
+    'search_invoice' => 'Cerca fattura…',
+    'no_invoices_found' => 'Nessuna fattura aperta trovata.',
     'enter_expense_id' => 'Seleziona o inserisci ID spesa',
     'file' => 'File',
     'import' => 'Importa',
