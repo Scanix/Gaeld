@@ -1148,6 +1148,13 @@ return [
     'help_export_title' => 'Ce qu\'il faut remettre à votre fiduciaire',
     'help_export_text' => 'En fin d\'exercice, votre fiduciaire a besoin d\'un dossier comptable complet. Cet export génère un fichier ZIP contenant tous les journaux, rapports, factures et décomptes TVA de l\'exercice sélectionné. Envoyez simplement le fichier ZIP à votre comptable.',
 
+    // Getting Started Checklist
+    'getting_started_checklist' => 'Premiers pas',
+    'getting_started_complete' => 'C\'est prêt ! Votre organisation est opérationnelle.',
+    'checklist_profile_complete' => 'Compléter le profil de votre organisation',
+    'checklist_customer_created' => 'Ajouter votre premier client',
+    'checklist_bank_account_created' => 'Configurer un compte bancaire',
+
     // Accounting Checklist
     'accounting_checklist' => 'Checklist comptable',
     'checklist_complete' => 'Votre comptabilité est complète pour cette période !',
