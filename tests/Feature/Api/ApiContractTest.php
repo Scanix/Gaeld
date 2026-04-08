@@ -8,6 +8,7 @@ use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
@@ -160,7 +161,7 @@ class ApiContractTest extends TestCase
 
     public function test_invoice_from_other_org_not_accessible(): void
     {
-        $otherOrg = \App\Domains\Organizations\Models\Organization::create([
+        $otherOrg = Organization::create([
             'name' => 'Other Org',
             'currency' => 'CHF',
         ]);

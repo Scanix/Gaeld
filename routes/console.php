@@ -6,6 +6,7 @@ use App\Domains\Invoicing\Jobs\SendPaymentRemindersJob;
 use App\Domains\Reporting\Jobs\GenerateReportsJob;
 use App\Support\FeatureFlag;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('about:gaeld', function () {
@@ -73,7 +74,7 @@ Schedule::command('horizon:snapshot')->everyFiveMinutes();
  * Configure SCHEDULE_HEARTBEAT_URL in .env (e.g. a Healthchecks.io ping URL).
  */
 if ($heartbeatUrl = env('SCHEDULE_HEARTBEAT_URL')) {
-    Schedule::call(fn () => \Illuminate\Support\Facades\Http::get($heartbeatUrl))
+    Schedule::call(fn () => Http::get($heartbeatUrl))
         ->everyFiveMinutes()
         ->name('heartbeat');
 }
