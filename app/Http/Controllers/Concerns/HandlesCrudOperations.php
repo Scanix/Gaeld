@@ -64,8 +64,13 @@ trait HandlesCrudOperations
         $key = Str::singular($this->routePrefix());
         $modelClass = $this->modelClass();
         $routeKey = (new $modelClass)->getRouteKeyName();
+        $value = request()->route($key);
 
-        return $modelClass::where($routeKey, request()->route($key))->firstOrFail();
+        if ($routeKey === 'uuid' && ! Str::isUuid((string) $value)) {
+            abort(404);
+        }
+
+        return $modelClass::where($routeKey, $value)->firstOrFail();
     }
 
     public function index(Request $request): Response

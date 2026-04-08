@@ -44,7 +44,7 @@ const { forceClear } = useUnsavedChanges(computed(() => form.isDirty))
 
 function submit() {
   forceClear.value = true
-  form.put(`/customers/${props.customer.id}`, {
+  form.put(`/customers/${props.customer.uuid}`, {
     onError: () => { forceClear.value = false },
   })
 }
@@ -57,7 +57,7 @@ const typeOptions = [
 
 <template>
   <AppLayout :title="t('edit_customer')" help-page="customers">
-    <Breadcrumb :items="[{ label: t('customers'), href: '/customers' }, { label: customer.name, href: `/customers/${customer.id}` }, { label: t('edit') }]" class="mb-4" />
+    <Breadcrumb :items="[{ label: t('customers'), href: '/customers' }, { label: customer.name, href: `/customers/${customer.uuid}` }, { label: t('edit') }]" class="mb-4" />
 
     <Card class="max-w-2xl">
       <CardHeader>
@@ -183,7 +183,7 @@ const typeOptions = [
           />
 
           <div class="flex flex-wrap justify-end gap-3">
-            <Button as="a" :href="`/customers/${customer.id}`" variant="outline">
+            <Button as="a" :href="`/customers/${customer.uuid}`" variant="outline">
               {{ t('cancel') }}
             </Button>
             <Button type="submit" :disabled="form.processing">

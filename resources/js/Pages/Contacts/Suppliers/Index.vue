@@ -30,7 +30,7 @@ function confirmDelete(supplier) {
 function executeDelete() {
   if (!deleteTarget.value) return
   deleting.value = true
-  router.delete(`/suppliers/${deleteTarget.value.id}`, {
+  router.delete(`/suppliers/${deleteTarget.value.uuid}`, {
     onFinish: () => {
       deleting.value = false
       deleteTarget.value = null
@@ -103,7 +103,7 @@ const countryFilters = computed(() => [
       :columns="columns"
       :rows="suppliers?.data ?? []"
       :pagination="suppliers"
-      :row-link="(row) => `/suppliers/${row.id}`"
+      :row-link="(row) => `/suppliers/${row.uuid}`"
       :sort="query.sort"
       :direction="query.direction"
       searchable
@@ -117,7 +117,7 @@ const countryFilters = computed(() => [
         <div class="flex justify-end gap-1">
           <Button
             as="a"
-            :href="`/suppliers/${row.id}`"
+            :href="`/suppliers/${row.uuid}`"
             variant="ghost"
             size="icon"
             :title="t('view')"
@@ -127,7 +127,7 @@ const countryFilters = computed(() => [
           </Button>
           <Button
             as="a"
-            :href="`/suppliers/${row.id}/edit`"
+            :href="`/suppliers/${row.uuid}/edit`"
             variant="ghost"
             size="icon"
             :title="t('edit')"

@@ -30,7 +30,7 @@ function confirmDelete(customer) {
 function executeDelete() {
   if (!deleteTarget.value) return
   deleting.value = true
-  router.delete(`/customers/${deleteTarget.value.id}`, {
+  router.delete(`/customers/${deleteTarget.value.uuid}`, {
     onFinish: () => {
       deleting.value = false
       deleteTarget.value = null
@@ -103,7 +103,7 @@ const countryFilters = computed(() => [
       :columns="columns"
       :rows="customers?.data ?? []"
       :pagination="customers"
-      :row-link="(row) => `/customers/${row.id}`"
+      :row-link="(row) => `/customers/${row.uuid}`"
       :sort="query.sort"
       :direction="query.direction"
       searchable
@@ -117,7 +117,7 @@ const countryFilters = computed(() => [
         <div class="flex justify-end gap-1">
           <Button
             as="a"
-            :href="`/customers/${row.id}`"
+            :href="`/customers/${row.uuid}`"
             variant="ghost"
             size="icon"
             :title="t('view')"
@@ -127,7 +127,7 @@ const countryFilters = computed(() => [
           </Button>
           <Button
             as="a"
-            :href="`/customers/${row.id}/edit`"
+            :href="`/customers/${row.uuid}/edit`"
             variant="ghost"
             size="icon"
             :title="t('edit')"

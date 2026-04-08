@@ -29,7 +29,7 @@ const statusVariant = {
   rejected: 'destructive',
 }
 
-const cp = useContactPersons('suppliers', props.supplier.id, props.supplier.contact_persons ?? [])
+const cp = useContactPersons('suppliers', props.supplier.uuid, props.supplier.contact_persons ?? [])
 </script>
 
 <template>
@@ -38,7 +38,7 @@ const cp = useContactPersons('suppliers', props.supplier.id, props.supplier.cont
 
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <h2 class="text-lg font-semibold">{{ supplier.name }}</h2>
-      <Button as="a" :href="`/suppliers/${supplier.id}/edit`" variant="outline" size="sm">
+      <Button as="a" :href="`/suppliers/${supplier.uuid}/edit`" variant="outline" size="sm">
         <Pencil class="mr-2 h-4 w-4" />
         {{ t('edit') }}
       </Button>
