@@ -1513,11 +1513,17 @@ return [
     // Banking UX
     'iban_placeholder' => 'CH93 0076 2011 6238 5295 7',
     'qr_iban_hint' => 'Pour les QR-factures suisses, utilisez un QR-IBAN (commence par CH..30 ou CH..31).',
+    'qr_iban_help_where_to_find' => 'Vous trouverez votre QR-IBAN dans le portail e-banking de votre banque, sous les paramètres de paiement.',
+    'qr_iban_detected' => 'QR-IBAN détecté — prêt pour les QR-factures suisses.',
+    'qr_iban_regular_warning' => 'Ceci est un IBAN classique, pas un QR-IBAN. Les QR-factures suisses nécessitent un QR-IBAN.',
+    'qr_iban_swiss_only' => 'Le QR-IBAN n\'est disponible que pour les comptes bancaires suisses (CH/LI).',
+    'iban_regular_detected' => 'IBAN classique détecté.',
     'go_to_banking' => 'Ajouter un compte bancaire',
     'empty_reconciliation_title' => 'Aucun compte bancaire',
     'empty_reconciliation_desc' => 'Créez d\'abord un compte bancaire pour commencer le rapprochement.',
 
     // Settings
+    'edit_settings' => 'Modifier les paramètres',
     'user_locale_hint' => 'Langue de l\'interface pour votre compte.',
     'org_locale_hint' => 'Langue par défaut pour les documents (factures, rapports).',
 
