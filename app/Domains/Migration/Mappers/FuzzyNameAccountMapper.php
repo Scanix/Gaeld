@@ -2,7 +2,6 @@
 
 namespace App\Domains\Migration\Mappers;
 
-use App\Domains\Accounting\Models\Account;
 use App\Domains\Migration\Contracts\AccountMapperInterface;
 use Illuminate\Support\Collection;
 

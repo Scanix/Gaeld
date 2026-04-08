@@ -3,20 +3,19 @@
 namespace App\Domains\Banking\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
-use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Domains\Banking\Exceptions\ReconciliationFailedException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\PaymentMethod;
-use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 /**
  * Reconciles bank transactions against invoices.
@@ -26,10 +25,13 @@ use Illuminate\Support\Str;
  */
 class InvoiceReconciler
 {
+    use ReconciliationPreconditions;
+    use ReconciliationReference;
+
     private const REFERENCE_PREFIX = 'REC-';
 
     public function __construct(
-        private LedgerService $ledgerService,
+        private LedgerQueryService $ledgerQuery,
         private InvoiceAccountingService $invoiceAccountingService,
         private BankingService $bankingService,
     ) {}
@@ -59,7 +61,7 @@ class InvoiceReconciler
      * Confirm a match: record the payment and mark the transaction as reconciled.
      *
      * @throws AlreadyReconciledException
-     * @throws InvalidPaymentException
+     * @throws ReconciliationFailedException
      * @throws UnlinkedBankAccountException
      */
     public function confirmMatch(BankMatch $match): BankTransaction
@@ -70,7 +72,7 @@ class InvoiceReconciler
 
         return DB::transaction(function () use ($match, $transaction, $invoice, $bankAccount) {
             if ($this->isDuplicatePayment($transaction, $invoice)) {
-                throw new InvalidPaymentException('This payment has already been recorded for this invoice.');
+                throw new ReconciliationFailedException('This payment has already been recorded for this invoice.');
             }
 
             $this->validatePreconditions($transaction, $bankAccount);
@@ -115,28 +117,6 @@ class InvoiceReconciler
             'matched_invoice_id' => $invoice->id,
             'is_reconciled' => true,
         ]);
-    }
-
-    private function validatePreconditions(BankTransaction $transaction, BankAccount $bankAccount): void
-    {
-        if (! $bankAccount->ledgerAccount) {
-            throw new UnlinkedBankAccountException;
-        }
-
-        if ($transaction->is_reconciled) {
-            throw new AlreadyReconciledException;
-        }
-    }
-
-    private function buildReference(string $orgId, BankTransaction $transaction): string
-    {
-        $reference = self::REFERENCE_PREFIX.($transaction->reference ?? $transaction->id);
-
-        if ($this->ledgerService->isDuplicateReference($orgId, $reference)) {
-            $reference .= '-'.Str::uuid()->toString();
-        }
-
-        return $reference;
     }
 
     private function resolvePaymentAmount(BankTransaction $transaction, Invoice $invoice): string

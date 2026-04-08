@@ -8,14 +8,17 @@ use App\Domains\Users\Models\User;
 use App\Support\FeatureFlag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithActiveSubscription;
 use Tests\Traits\WithOrganizationPermissions;
 
 class FeatureFlagTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
+    use RefreshDatabase, WithActiveSubscription, WithOrganizationPermissions;
 
     public function test_feature_flag_defaults_to_disabled(): void
     {
+        config(['features.bank_sync' => false]);
+
         $this->assertFalse(FeatureFlag::enabled('bank_sync'));
         $this->assertTrue(FeatureFlag::disabled('bank_sync'));
     }
@@ -83,6 +86,7 @@ class FeatureFlagTest extends TestCase
         ]);
         $org->users()->attach($user->id, ['role' => 'owner']);
         $this->assignOrganizationRole($user, $org, 'owner');
+        $this->ensureSubscriptionIfSaas($org);
 
         $response = $this->actingAs($user)->get('/banking');
 
@@ -102,6 +106,7 @@ class FeatureFlagTest extends TestCase
         ]);
         $org->users()->attach($user->id, ['role' => 'owner']);
         $this->assignOrganizationRole($user, $org, 'owner');
+        $this->ensureSubscriptionIfSaas($org);
         $bankAccount = BankAccount::create([
             'organization_id' => $org->id,
             'name' => 'Test',
@@ -109,7 +114,7 @@ class FeatureFlagTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
-            ->post("/reconciliation/{$bankAccount->id}/auto");
+            ->post("/reconciliation/{$bankAccount->uuid}/auto");
 
         $response->assertForbidden();
     }
@@ -127,6 +132,7 @@ class FeatureFlagTest extends TestCase
         ]);
         $org->users()->attach($user->id, ['role' => 'owner']);
         $this->assignOrganizationRole($user, $org, 'owner');
+        $this->ensureSubscriptionIfSaas($org);
         $bankAccount = BankAccount::create([
             'organization_id' => $org->id,
             'name' => 'Test',
@@ -134,7 +140,7 @@ class FeatureFlagTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
-            ->post("/reconciliation/{$bankAccount->id}/auto");
+            ->post("/reconciliation/{$bankAccount->uuid}/auto");
 
         // Should not be 403 — may redirect or return success depending on data
         $this->assertNotEquals(403, $response->getStatusCode());

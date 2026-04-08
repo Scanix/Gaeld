@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Organizations\Models\Organization;
@@ -45,6 +46,7 @@ class YearEndClosingController extends Controller
             'netResult' => $netResult,
             'closedYears' => $org->closed_fiscal_years ?? [],
             'canReopenYear' => $request->user()?->can('reopenYear', Account::class) ?? false,
+            'unsettledVatPeriods' => $this->getUnsettledVatPeriods($orgId, $year),
         ]);
     }
 
@@ -241,5 +243,36 @@ class YearEndClosingController extends Controller
         }
 
         return [$income, $expenses, $net];
+    }
+
+    /**
+     * Return quarter labels (e.g. "Q1", "Q2") for which no VAT settlement
+     * journal entry exists in the given year.
+     *
+     * @return string[]
+     */
+    private function getUnsettledVatPeriods(string $orgId, int $year): array
+    {
+        $quarters = [
+            1 => ["{$year}-01-01", "{$year}-03-31"],
+            2 => ["{$year}-04-01", "{$year}-06-30"],
+            3 => ["{$year}-07-01", "{$year}-09-30"],
+            4 => ["{$year}-10-01", "{$year}-12-31"],
+        ];
+
+        $unsettled = [];
+
+        foreach ($quarters as $q => [$from, $to]) {
+            $exists = JournalEntry::where('organization_id', $orgId)
+                ->where('type', 'vat_settlement')
+                ->where('reference', "VAT-SETTLEMENT-{$from}-{$to}")
+                ->exists();
+
+            if (! $exists) {
+                $unsettled[] = "Q{$q}";
+            }
+        }
+
+        return $unsettled;
     }
 }

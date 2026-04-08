@@ -140,13 +140,18 @@ class PaymentReminderFlowTest extends TestCase
     {
         Mail::fake();
 
-        $this->createOverdueInvoice();
+        $invoice = $this->createOverdueInvoice();
+        $this->assertSame(0, $invoice->reminder_count);
 
         app(SendPaymentRemindersJob::class)->handle(
             app(SendInvoiceReminderAction::class),
         );
 
         Mail::assertSent(InvoiceReminderMail::class, 1);
+
+        $invoice->refresh();
+        $this->assertSame(1, $invoice->reminder_count);
+        $this->assertNotNull($invoice->last_reminded_at);
     }
 
     public function test_job_respects_cooldown_period(): void
@@ -166,6 +171,9 @@ class PaymentReminderFlowTest extends TestCase
         );
 
         Mail::assertNothingSent();
+
+        $invoice->refresh();
+        $this->assertSame(1, $invoice->reminder_count, 'Reminder count should not change during cooldown');
     }
 
     public function test_job_sends_after_cooldown_expired(): void
@@ -185,6 +193,9 @@ class PaymentReminderFlowTest extends TestCase
         );
 
         Mail::assertSent(InvoiceReminderMail::class, 1);
+
+        $invoice->refresh();
+        $this->assertSame(2, $invoice->reminder_count);
     }
 
     public function test_job_skips_paid_invoices(): void
@@ -199,5 +210,9 @@ class PaymentReminderFlowTest extends TestCase
         );
 
         Mail::assertNothingSent();
+
+        $invoice->refresh();
+        $this->assertSame(0, $invoice->reminder_count, 'Paid invoices should not get reminders');
+        $this->assertTrue($invoice->status === InvoiceStatus::Paid);
     }
 }

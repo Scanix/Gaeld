@@ -5,6 +5,7 @@ namespace App\Domains\Invoicing\Models;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Support\Traits\Auditable;
+use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,18 +16,22 @@ use Illuminate\Support\Carbon;
  * Payment recorded against an invoice (partial or full).
  *
  * @property string $id
+ * @property string $organization_id
  * @property string $amount
  * @property Carbon $payment_date
  * @property PaymentMethod $payment_method
  * @property string|null $reference
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read Invoice $invoice
+ * @property-read JournalEntry|null $journalEntry
  */
 class InvoicePayment extends Model
 {
-    use Auditable, HasFactory, HasUuids;
+    use Auditable, BelongsToOrganization, HasFactory, HasUuids;
 
     protected $fillable = [
+        'organization_id',
         'invoice_id',
         'journal_entry_id',
         'amount',
@@ -44,11 +49,13 @@ class InvoicePayment extends Model
         ];
     }
 
+    /** @return BelongsTo<Invoice, $this> */
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
     }
 
+    /** @return BelongsTo<JournalEntry, $this> */
     public function journalEntry(): BelongsTo
     {
         return $this->belongsTo(JournalEntry::class);

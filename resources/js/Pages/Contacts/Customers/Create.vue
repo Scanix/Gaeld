@@ -36,10 +36,13 @@ const form = useForm({
   notes: '',
 })
 
-useUnsavedChanges(computed(() => form.isDirty))
+const { forceClear } = useUnsavedChanges(computed(() => form.isDirty))
 
 function submit() {
-  form.post('/customers')
+  forceClear.value = true
+  form.post('/customers', {
+    onError: () => { forceClear.value = false },
+  })
 }
 
 const typeOptions = [

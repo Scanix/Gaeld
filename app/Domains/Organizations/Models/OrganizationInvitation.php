@@ -8,6 +8,7 @@ use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Pending invitation for a user to join an organization.
@@ -15,6 +16,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Stores a hashed token (the plain-text version is only available
  * transiently after creation for the notification e-mail), an expiry
  * date, and acceptance state.
+ *
+ * @property string $id
+ * @property string $organization_id
+ * @property string $email
+ * @property string $role
+ * @property string $token
+ * @property string $invited_by
+ * @property Carbon $expires_at
+ * @property Carbon|null $accepted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Organization $organization
+ * @property-read User $inviter
  */
 class OrganizationInvitation extends Model
 {
@@ -44,11 +58,13 @@ class OrganizationInvitation extends Model
         ];
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function inviter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'invited_by');

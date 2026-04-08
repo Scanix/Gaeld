@@ -5,6 +5,7 @@ namespace Tests\Unit\Actions;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Payroll\Actions\PostPayrollAction;
 use App\Domains\Payroll\Models\Employee;
@@ -17,6 +18,8 @@ class PostPayrollActionTest extends TestCase
 {
     private LedgerService $ledger;
 
+    private LedgerQueryService $ledgerQuery;
+
     private PostPayrollAction $action;
 
     protected function setUp(): void
@@ -24,7 +27,8 @@ class PostPayrollActionTest extends TestCase
         parent::setUp();
 
         $this->ledger = Mockery::mock(LedgerService::class);
-        $this->action = new PostPayrollAction($this->ledger);
+        $this->ledgerQuery = Mockery::mock(LedgerQueryService::class);
+        $this->action = new PostPayrollAction($this->ledger, $this->ledgerQuery);
     }
 
     public function test_posts_salary_slip_with_no_deductions(): void
@@ -66,6 +70,7 @@ class PostPayrollActionTest extends TestCase
         $result = $this->action->execute($slip);
 
         $this->assertSame($slip, $result);
+        $this->assertNotNull($result);
     }
 
     public function test_builds_correct_journal_reference(): void
@@ -79,7 +84,7 @@ class PostPayrollActionTest extends TestCase
             periodMonth: 3,
         );
 
-        $this->ledger
+        $this->ledgerQuery
             ->shouldReceive('resolveAccount')
             ->andReturn($this->makeAccount('1'));
 
@@ -94,7 +99,9 @@ class PostPayrollActionTest extends TestCase
         $slip->shouldReceive('update')->once();
         $slip->shouldReceive('fresh')->once()->andReturnSelf();
 
-        $this->action->execute($slip);
+        $result = $this->action->execute($slip);
+
+        $this->assertSame($slip, $result);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -129,7 +136,7 @@ class PostPayrollActionTest extends TestCase
     {
         $account = $this->makeAccount('100');
 
-        $this->ledger->shouldReceive('resolveAccount')->andReturn($account);
+        $this->ledgerQuery->shouldReceive('resolveAccount')->andReturn($account);
 
         $journalEntry = $this->makeJournalEntry(1);
 

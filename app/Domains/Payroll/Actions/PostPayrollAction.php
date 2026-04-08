@@ -5,6 +5,7 @@ namespace App\Domains\Payroll\Actions;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Support\Money;
@@ -16,6 +17,7 @@ class PostPayrollAction
 {
     public function __construct(
         private LedgerService $ledger,
+        private LedgerQueryService $ledgerQuery,
     ) {}
 
     public function execute(SalarySlip $slip): SalarySlip
@@ -27,12 +29,12 @@ class PostPayrollAction
         $description = "Salary {$employee->fullName()} — {$slip->period_month}/{$slip->period_year}";
 
         // Resolve accounts
-        $salaryAccount = $this->ledger->resolveAccount($orgId, AccountCode::SALARIES);
-        $socialChargesAccount = $this->ledger->resolveAccount($orgId, AccountCode::SOCIAL_CHARGES_EMPLOYER);
-        $bankAccount = $this->ledger->resolveAccount($orgId, AccountCode::BANK_CASH);
-        $avsAccount = $this->ledger->resolveAccount($orgId, AccountCode::AVS_PAYABLE);
-        $acAccount = $this->ledger->resolveAccount($orgId, AccountCode::AC_PAYABLE);
-        $lppAccount = $this->ledger->resolveAccount($orgId, AccountCode::LPP_PAYABLE);
+        $salaryAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::SALARIES);
+        $socialChargesAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::SOCIAL_CHARGES_EMPLOYER);
+        $bankAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::BANK_CASH);
+        $avsAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::AVS_PAYABLE);
+        $acAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::AC_PAYABLE);
+        $lppAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::LPP_PAYABLE);
 
         // Calculate aggregated amounts for liability accounts
         $avsTotal = Money::add(

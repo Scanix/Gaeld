@@ -78,7 +78,7 @@ class FeatureFlagEnforcementTest extends SecurityTestCase
 
         $this->actingAs($this->ownerA)
             ->withSession(['current_organization_id' => $this->orgA->id])
-            ->post("/reconciliation/{$ba->id}/auto")
+            ->post("/reconciliation/{$ba->uuid}/auto")
             ->assertForbidden();
     }
 

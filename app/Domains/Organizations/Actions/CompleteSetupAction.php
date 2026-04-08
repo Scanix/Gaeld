@@ -28,7 +28,8 @@ class CompleteSetupAction
 
             $org = $this->organizationService->create($user, $data->organization);
 
-            $this->organizationSetupService->seedSwissDefaults($org);
+            $template = $data->organization->businessType?->chartTemplate() ?? 'swiss_sme';
+            $this->organizationSetupService->seedChartOfAccounts($org, $template);
 
             return $user;
         });

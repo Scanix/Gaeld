@@ -25,6 +25,7 @@ readonly class UpdateEmployeeData
         public bool $isSourceTaxSubject = false,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['first_name', 'last_name', 'entry_date', 'gross_salary']);

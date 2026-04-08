@@ -24,6 +24,7 @@ readonly class JournalEntryData
         public array $lines,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['date', 'lines']);
@@ -39,6 +40,7 @@ readonly class JournalEntryData
         );
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

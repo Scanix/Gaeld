@@ -6,6 +6,8 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
+use App\Support\Traits\HasPublicUuid;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +22,7 @@ use Illuminate\Support\Carbon;
  * Supports soft-deletes and audit logging.
  *
  * @property int $id
+ * @property string $uuid
  * @property string $organization_id
  * @property int|null $account_id
  * @property string $name
@@ -32,12 +35,16 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read Organization $organization
+ * @property-read Account|null $ledgerAccount
+ * @property-read Collection<int, BankTransaction> $transactions
  */
 class BankAccount extends Model
 {
-    use Auditable, BelongsToOrganization, HasFactory, SoftDeletes;
+    use Auditable, BelongsToOrganization, HasFactory, HasPublicUuid, SoftDeletes;
 
     protected $fillable = [
+        'uuid',
         'organization_id',
         'account_id',
         'name',
@@ -58,16 +65,19 @@ class BankAccount extends Model
         ];
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return BelongsTo<Account, $this> */
     public function ledgerAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'account_id');
     }
 
+    /** @return HasMany<BankTransaction, $this> */
     public function transactions(): HasMany
     {
         return $this->hasMany(BankTransaction::class);

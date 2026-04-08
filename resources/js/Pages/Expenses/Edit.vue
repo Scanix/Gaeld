@@ -16,6 +16,8 @@ import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import FormFileInput from '@/Components/UI/FormFileInput.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
+import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
+import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import { Plus, FileText } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -23,6 +25,8 @@ const props = defineProps({
   vatRates: { type: Array, default: () => [] },
   suppliers: { type: Array, default: () => [] },
   categories: { type: Array, default: () => [] },
+  expenseAccounts: { type: Array, default: () => [] },
+  bankAccounts: { type: Array, default: () => [] },
   receiptUrl: { type: String, default: null },
 })
 
@@ -37,19 +41,25 @@ const form = useForm({
   supplier_id: props.expense.supplier_id ?? '',
   currency: props.expense.currency ?? 'CHF',
   payment_method: props.expense.payment_method ?? '',
+  expense_account_code: props.expense.expense_account_code ?? '',
+  bank_account_code: props.expense.bank_account_code ?? '',
   receipt: null,
 })
 
-useUnsavedChanges(computed(() => form.isDirty))
+const { forceClear } = useUnsavedChanges(computed(() => form.isDirty))
 
 function submit() {
+  forceClear.value = true
   form.post(`/expenses/${props.expense.id}`, {
     forceFormData: true,
     headers: { 'X-HTTP-Method-Override': 'PUT' },
+    onError: () => { forceClear.value = false },
   })
 }
 
 const { t } = useTranslations()
+
+const { isClosed: isDateClosed, closedYear } = useClosedFiscalYear(() => form.date)
 
 const categoryOptions = props.categories.map(c => ({ value: c.name, label: c.name }))
 
@@ -64,6 +74,18 @@ const paymentMethodOptions = [
   { value: 'card', label: t('payment_card') },
   { value: 'bank_transfer', label: t('payment_bank_transfer') },
   { value: 'other', label: t('payment_other') },
+]
+
+const expenseAccountOptions = [
+  { value: '', label: '—' },
+  ...props.expenseAccounts.map(a => ({ value: a.code, label: `${a.code} — ${a.name}` })),
+]
+
+const bankAccountOptions = [
+  { value: '', label: '—' },
+  ...props.bankAccounts
+    .filter(ba => ba.ledger_account?.code)
+    .map(ba => ({ value: ba.ledger_account.code, label: `${ba.name}${ba.iban ? ` (${ba.iban})` : ''}` })),
 ]
 
 const supplierList = reactive([...props.suppliers])
@@ -97,6 +119,8 @@ const isImage = computed(() => {
 <template>
   <AppLayout :title="t('edit_expense')" help-page="expenses">
     <Breadcrumb :items="[{ label: t('expenses'), href: '/expenses' }, { label: t('edit_expense') }]" class="mb-4" />
+
+    <ClosedYearBanner v-if="isDateClosed" :year="closedYear" />
 
     <Card class="max-w-2xl">
       <CardHeader>
@@ -187,6 +211,26 @@ const isImage = computed(() => {
             :label="t('description')"
           />
 
+          <!-- Accounting -->
+          <hr class="border-[hsl(var(--border))]" />
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('accounting') }}</h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormSelect
+              id="expense_account_code"
+              v-model="form.expense_account_code"
+              :label="t('expense_account')"
+              :options="expenseAccountOptions"
+              :error="form.errors.expense_account_code"
+            />
+            <FormSelect
+              id="bank_account_code"
+              v-model="form.bank_account_code"
+              :label="t('bank_account')"
+              :options="bankAccountOptions"
+              :error="form.errors.bank_account_code"
+            />
+          </div>
+
           <!-- Attachment -->
           <hr class="border-[hsl(var(--border))]" />
 
@@ -219,7 +263,7 @@ const isImage = computed(() => {
 
           <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" :href="`/expenses/${expense.id}`" variant="outline">{{ t('cancel') }}</Button>
-            <Button type="submit" :disabled="form.processing">{{ t('save_changes') }}</Button>
+            <Button type="submit" :disabled="form.processing || isDateClosed" :title="isDateClosed ? t('fiscal_year_closed_action_disabled') : undefined">{{ t('save_changes') }}</Button>
           </div>
         </form>
       </CardContent>

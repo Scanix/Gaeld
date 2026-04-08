@@ -79,19 +79,7 @@ class SuggestionService
             ? $cachedMatches
             : $this->matchingService->findAndStoreMatches($transaction);
 
-        $invoiceSuggestions = $matches->map(function ($match) {
-            $invoice = $match->invoice?->load(['customer']);
-            if (! $invoice) {
-                return null;
-            }
-
-            return new InvoiceSuggestion(
-                invoice: $invoice,
-                score: $match->confidence,
-                matchType: $match->match_type,
-                matchId: $match->id,
-            );
-        })->filter()->sortByDesc(fn ($s) => $s->score)->values();
+        $invoiceSuggestions = $this->mapMatchesToSuggestions($matches);
 
         $expenseSuggestions = $this->suggestExpenses(
             $transaction->bankAccount->organization_id,
@@ -120,7 +108,26 @@ class SuggestionService
 
         $matches = $this->matchingService->findAndStoreMatches($transaction);
 
-        $invoiceSuggestions = $matches->map(function ($match) {
+        $invoiceSuggestions = $this->mapMatchesToSuggestions($matches);
+
+        $expenseSuggestions = $this->suggestExpenses($orgId, $transaction, $amount);
+
+        return [
+            'invoices' => $invoiceSuggestions,
+            'expenses' => $expenseSuggestions,
+            'matches' => $matches,
+        ];
+    }
+
+    /**
+     * Map BankMatch records to InvoiceSuggestion DTOs, sorted by score descending.
+     *
+     * @param  Collection<int, BankMatch>  $matches
+     * @return Collection<int, InvoiceSuggestion>
+     */
+    private function mapMatchesToSuggestions(Collection $matches): Collection
+    {
+        return $matches->map(function ($match) {
             $invoice = $match->invoice?->load(['customer']);
             if (! $invoice) {
                 return null;
@@ -133,14 +140,6 @@ class SuggestionService
                 matchId: $match->id,
             );
         })->filter()->sortByDesc(fn ($s) => $s->score)->values();
-
-        $expenseSuggestions = $this->suggestExpenses($orgId, $transaction, $amount);
-
-        return [
-            'invoices' => $invoiceSuggestions,
-            'expenses' => $expenseSuggestions,
-            'matches' => $matches,
-        ];
     }
 
     // ──────────────────────────────────────────────────────────────

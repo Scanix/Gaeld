@@ -2,9 +2,11 @@
 
 namespace App\Domains\Api\Resources;
 
+use App\Domains\Api\Models\Webhook;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Webhook */
 class WebhookResource extends JsonResource
 {
     public function toArray(Request $request): array

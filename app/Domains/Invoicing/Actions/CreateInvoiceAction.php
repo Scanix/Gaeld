@@ -4,6 +4,7 @@ namespace App\Domains\Invoicing\Actions;
 
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 
@@ -24,6 +25,7 @@ class CreateInvoiceAction
                 'customer_id' => $data->customerId,
                 'number' => $data->number,
                 'status' => InvoiceStatus::Draft,
+                'type' => InvoiceType::Invoice,
                 'issue_date' => $data->issueDate,
                 'due_date' => $data->dueDate,
                 'currency' => $data->currency,

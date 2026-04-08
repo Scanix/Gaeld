@@ -5,18 +5,24 @@ namespace App\Domains\Organizations\Controllers;
 use App\Domains\Expenses\Controllers\ExpenseCategoryController;
 use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
 use App\Domains\Organizations\Actions\UpdateOrganizationAction;
+use App\Domains\Organizations\DTOs\UpdateCommunicationsData;
+use App\Domains\Organizations\DTOs\UpdateInvoiceSettingsData;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
+use App\Domains\Organizations\Jobs\ExportOrganizationDataJob;
 use App\Domains\Organizations\Requests\UpdateCommunicationsRequest;
 use App\Domains\Organizations\Requests\UpdateInvoiceSettingsRequest;
 use App\Domains\Organizations\Requests\UpdateOrganizationSettingsRequest;
 use App\Domains\Organizations\Requests\UploadLogoRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Organizations\Services\OrganizationService;
 use App\Http\Controllers\Controller;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -26,6 +32,7 @@ class OrganizationSettingsController extends Controller
 {
     public function __construct(
         private FileUploadService $uploadService,
+        private OrganizationService $organizationService,
     ) {}
 
     public function show(CurrentOrganization $currentOrg): Response
@@ -61,7 +68,7 @@ class OrganizationSettingsController extends Controller
         $organization = $currentOrg->get();
         $this->authorize('update', $organization);
 
-        $organization->update($request->validated());
+        $this->organizationService->updateInvoiceSettings($organization, UpdateInvoiceSettingsData::fromArray($request->validated()));
 
         return redirect()->route('settings')
             ->with('success', __('app.invoice_settings_updated'));
@@ -113,9 +120,36 @@ class OrganizationSettingsController extends Controller
         $organization = $currentOrg->get();
         $this->authorize('update', $organization);
 
-        $organization->update($request->validated());
+        $this->organizationService->updateCommunications($organization, UpdateCommunicationsData::fromArray($request->validated()));
 
         return redirect()->route('settings')
             ->with('success', __('app.communication_settings_updated'));
+    }
+
+    public function exportData(CurrentOrganization $currentOrg): RedirectResponse
+    {
+        $organization = $currentOrg->get();
+        $this->authorize('update', $organization);
+
+        ExportOrganizationDataJob::dispatch(
+            $organization->id,
+            (string) request()->user()->id,
+        );
+
+        return redirect()->route('settings')
+            ->with('success', __('app.export_dispatched'));
+    }
+
+    public function downloadExport(Request $request): BinaryFileResponse
+    {
+        abort_unless($request->hasValidSignature(), 403);
+
+        $path = $request->query('path', '');
+
+        $absolutePath = Storage::disk('local')->path('exports/'.basename($path));
+
+        abort_unless(file_exists($absolutePath), 404);
+
+        return response()->download($absolutePath);
     }
 }

@@ -7,7 +7,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
-import { Plus, Pencil, Trash2, Copy, Eye, FileText } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Copy, Eye, FileText, Download } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import { ref, computed } from 'vue'
@@ -82,7 +82,7 @@ const columns = computed(() => [
   { key: 'due_date', label: t('due'), format: (v) => formatDate(v), sortable: true },
   { key: 'total', label: t('total'), class: 'text-right', format: (v) => formatCurrency(v), sortable: true },
   { key: 'status', label: t('status'), sortable: true },
-  { key: 'actions', label: '', class: 'text-right w-40' },
+  { key: 'actions', label: '', class: 'text-right w-48' },
 ])
 
 const statusVariant = {
@@ -180,6 +180,17 @@ const statusFilters = computed(() => [
             @click.stop
           >
             <Eye class="h-4 w-4" />
+          </Button>
+          <Button
+            v-if="row.status !== 'draft' && row.status !== 'cancelled'"
+            as="a"
+            :href="`/invoices/${row.id}/qr-pdf`"
+            variant="ghost"
+            size="icon"
+            :title="t('download_qr_invoice')"
+            @click.stop
+          >
+            <Download class="h-4 w-4" />
           </Button>
           <Button
             v-if="row.status === 'draft'"

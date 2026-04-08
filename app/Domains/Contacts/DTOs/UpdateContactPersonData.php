@@ -21,6 +21,7 @@ readonly class UpdateContactPersonData
         public ?string $notes = null,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         return new self(

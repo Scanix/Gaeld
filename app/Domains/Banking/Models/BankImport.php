@@ -6,6 +6,7 @@ use App\Domains\Banking\Enums\CamtFormat;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,9 @@ use Illuminate\Support\Carbon;
  * @property int $transaction_count
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read Organization $organization
+ * @property-read BankAccount $bankAccount
+ * @property-read Collection<int, BankTransaction> $transactions
  */
 class BankImport extends Model
 {
@@ -48,16 +52,19 @@ class BankImport extends Model
         ];
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return BelongsTo<BankAccount, $this> */
     public function bankAccount(): BelongsTo
     {
         return $this->belongsTo(BankAccount::class);
     }
 
+    /** @return HasMany<BankTransaction, $this> */
     public function transactions(): HasMany
     {
         return $this->hasMany(BankTransaction::class, 'bank_import_id');

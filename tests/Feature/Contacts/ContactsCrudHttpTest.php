@@ -48,7 +48,7 @@ class ContactsCrudHttpTest extends TestCase
         ]);
 
         $this->actingAs($this->user)
-            ->get("/customers/{$customer->id}")
+            ->get("/customers/{$customer->uuid}")
             ->assertStatus(200)
             ->assertInertia(fn ($page) => $page
                 ->component('Contacts/Customers/Show')
@@ -66,7 +66,7 @@ class ContactsCrudHttpTest extends TestCase
         ]);
 
         $this->actingAs($this->user)
-            ->get("/customers/{$customer->id}/edit")
+            ->get("/customers/{$customer->uuid}/edit")
             ->assertStatus(200)
             ->assertInertia(fn ($page) => $page->component('Contacts/Customers/Edit'));
     }
@@ -81,7 +81,7 @@ class ContactsCrudHttpTest extends TestCase
         ]);
 
         $this->actingAs($this->user)
-            ->put("/customers/{$customer->id}", [
+            ->put("/customers/{$customer->uuid}", [
                 'name' => 'New Name',
                 'country' => 'CH',
                 'currency' => 'EUR',
@@ -138,7 +138,7 @@ class ContactsCrudHttpTest extends TestCase
         ]);
 
         $this->actingAs($this->user)
-            ->put("/suppliers/{$supplier->id}", [
+            ->put("/suppliers/{$supplier->uuid}", [
                 'name' => 'New Supplier',
                 'country' => 'DE',
                 'currency' => 'EUR',
@@ -161,7 +161,7 @@ class ContactsCrudHttpTest extends TestCase
         ]);
 
         $this->actingAs($this->user)
-            ->delete("/suppliers/{$supplier->id}")
+            ->delete("/suppliers/{$supplier->uuid}")
             ->assertRedirect('/suppliers');
 
         $this->assertSoftDeleted('suppliers', ['id' => $supplier->id]);

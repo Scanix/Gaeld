@@ -49,11 +49,13 @@ class JournalEntry extends Model
         ];
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return HasMany<TransactionLine, $this> */
     public function lines(): HasMany
     {
         return $this->hasMany(TransactionLine::class);

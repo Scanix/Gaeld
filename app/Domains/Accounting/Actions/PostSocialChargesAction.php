@@ -6,6 +6,7 @@ use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 
 /**
@@ -15,12 +16,13 @@ final class PostSocialChargesAction
 {
     public function __construct(
         private readonly LedgerService $ledgerService,
+        private readonly LedgerQueryService $ledgerQuery,
     ) {}
 
     public function execute(string $organizationId, string $amount, string $description, ?string $date = null): JournalEntry
     {
-        $socialAccount = $this->ledgerService->resolveAccount($organizationId, AccountCode::SOCIAL_CHARGES);
-        $bankAccount = $this->ledgerService->resolveAccount($organizationId, AccountCode::BANK_CASH);
+        $socialAccount = $this->ledgerQuery->resolveAccount($organizationId, AccountCode::SOCIAL_CHARGES);
+        $bankAccount = $this->ledgerQuery->resolveAccount($organizationId, AccountCode::BANK_CASH);
 
         $entry = new JournalEntryData(
             date: $date ?? now()->format('Y-m-d'),

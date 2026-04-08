@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Models;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
+use App\Support\Traits\HasPublicUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,6 +18,7 @@ use Illuminate\Support\Carbon;
  * can be marked as the organization default.
  *
  * @property int $id
+ * @property string $uuid
  * @property string $organization_id
  * @property string $name
  * @property string $rate
@@ -28,7 +30,7 @@ use Illuminate\Support\Carbon;
  */
 class VatRate extends Model
 {
-    use Auditable, BelongsToOrganization, HasFactory;
+    use Auditable, BelongsToOrganization, HasFactory, HasPublicUuid;
 
     protected $fillable = [
         'organization_id',
@@ -48,6 +50,7 @@ class VatRate extends Model
         ];
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);

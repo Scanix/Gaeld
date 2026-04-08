@@ -1,0 +1,13 @@
+[program:gaeld-horizon]
+process_name=%(program_name)s
+command=php /var/www/gaeld/current/artisan horizon
+directory=/var/www/gaeld/current
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=deploy
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/www/gaeld/shared/storage/logs/horizon.log
+stopwaitsecs=3600

@@ -10,11 +10,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Tests\TestCase;
+use Tests\Traits\WithActiveSubscription;
 use Tests\Traits\WithOrganizationPermissions;
 
 class InvitationFlowTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
+    use RefreshDatabase, WithActiveSubscription, WithOrganizationPermissions;
 
     private User $owner;
 
@@ -34,6 +35,8 @@ class InvitationFlowTest extends TestCase
 
         $this->organization->users()->attach($this->owner->id, ['role' => 'owner']);
         $this->assignOrganizationRole($this->owner, $this->organization, 'owner');
+
+        $this->ensureSubscriptionIfSaas($this->organization);
     }
 
     public function test_invitation_creates_record_and_sends_notification(): void

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Organizations\DTOs;
 
+use App\Domains\Organizations\Enums\BusinessType;
 use App\Support\AddressData;
 use App\Support\ValidatesFromArray;
 
@@ -24,6 +25,7 @@ readonly class UpdateOrganizationData
      * @param  string  $currency  ISO 4217 currency code used as the organization default (e.g. 'CHF').
      * @param  string  $locale  BCP 47 locale tag for UI language and number formatting (e.g. 'en').
      * @param  int  $defaultPaymentTermsDays  Number of days after invoice date before payment is due.
+     * @param  bool  $requireTwoFactor  Whether 2FA is mandatory for all organization users.
      */
     public function __construct(
         public string $name,
@@ -33,6 +35,8 @@ readonly class UpdateOrganizationData
         public string $currency = 'CHF',
         public string $locale = 'en',
         public int $defaultPaymentTermsDays = 30,
+        public ?BusinessType $businessType = null,
+        public bool $requireTwoFactor = false,
     ) {}
 
     /**
@@ -45,6 +49,7 @@ readonly class UpdateOrganizationData
      *
      * @throws \InvalidArgumentException when the `name` key is missing.
      */
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         self::assertRequired($data, ['name']);
@@ -57,6 +62,8 @@ readonly class UpdateOrganizationData
             currency: $data['currency'] ?? 'CHF',
             locale: $data['locale'] ?? 'en',
             defaultPaymentTermsDays: (int) ($data['default_payment_terms_days'] ?? 30),
+            businessType: isset($data['business_type']) ? BusinessType::tryFrom($data['business_type']) : null,
+            requireTwoFactor: (bool) ($data['require_two_factor'] ?? false),
         );
     }
 
@@ -69,6 +76,7 @@ readonly class UpdateOrganizationData
      *
      * @return array<string, mixed>
      */
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         // Filter null address fields to avoid NOT NULL constraint violations
@@ -83,6 +91,8 @@ readonly class UpdateOrganizationData
             'currency' => $this->currency,
             'locale' => $this->locale,
             'default_payment_terms_days' => $this->defaultPaymentTermsDays,
+            'business_type' => $this->businessType?->value,
+            'require_two_factor' => $this->requireTwoFactor,
         ] + $address;
     }
 }

@@ -61,17 +61,6 @@ final class SocialChargesService
      */
     public function calculate(string $annualIncome): array
     {
-        if (bccomp($annualIncome, '0', 2) <= 0) {
-            return [
-                'avs' => '0.00',
-                'ai' => '0.00',
-                'apg' => '0.00',
-                'total' => '0.00',
-                'rate' => '0.00',
-                'income' => $annualIncome,
-            ];
-        }
-
         if (bccomp($annualIncome, self::MIN_INCOME, 2) < 0) {
             return [
                 'avs' => '0.00',

@@ -11,7 +11,6 @@ use App\Domains\Migration\DTOs\JournalEntryImportRow;
 use App\Domains\Migration\Enums\DataType;
 use App\Domains\Migration\Enums\Platform;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Collection;
 
 /**
  * Parses Abacus CSV/XML export files.
@@ -20,6 +19,8 @@ use Illuminate\Support\Collection;
  */
 class AbacusParser implements PlatformParserInterface
 {
+    use CsvRowLookup;
+
     public function platform(): Platform
     {
         return Platform::Abacus;
@@ -48,19 +49,6 @@ class AbacusParser implements PlatformParserInterface
     public function acceptedExtensions(): array
     {
         return ['csv', 'xml', 'txt'];
-    }
-
-    public function parse(UploadedFile $file, DataType $dataType): Collection
-    {
-        $content = $file->get();
-        $rows = $this->parseCsv($content);
-
-        if (empty($rows)) {
-            return collect();
-        }
-
-        return collect($rows)->map(fn (array $row, int $index) => $this->mapRow($row, $index + 1, $dataType))
-            ->filter();
     }
 
     public function detectDataType(UploadedFile $file): ?DataType
@@ -232,23 +220,6 @@ class AbacusParser implements PlatformParserInterface
         }
 
         return $importRow;
-    }
-
-    /**
-     * @param  string[]  $keys
-     */
-    private function findValue(array $row, array $keys): ?string
-    {
-        $lowered = array_change_key_case($row, CASE_LOWER);
-
-        foreach ($keys as $key) {
-            $key = strtolower($key);
-            if (isset($lowered[$key]) && $lowered[$key] !== '') {
-                return trim($lowered[$key]);
-            }
-        }
-
-        return null;
     }
 
     private function mapAccountType(?string $type): string

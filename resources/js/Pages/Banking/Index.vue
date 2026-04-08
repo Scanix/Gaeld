@@ -13,6 +13,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import { Plus, Landmark } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
+import IbanHint from '@/Components/IbanHint.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { currencyOptions } from '@/lib/contactOptions'
 import { ref, computed } from 'vue'
@@ -87,7 +88,7 @@ const columns = computed(() => [
       <form class="space-y-6" @submit.prevent="submit">
         <FormInput id="name" v-model="form.name" :label="t('account_name')" :error="form.errors.name" required />
         <FormInput id="iban" v-model="form.iban" :label="t('iban')" :placeholder="t('iban_placeholder')" :error="form.errors.iban" />
-        <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('qr_iban_hint') }}</p>
+        <IbanHint :iban="form.iban" mode="any" />
         <FormInput id="bank_name" v-model="form.bank_name" :label="t('bank_name')" :error="form.errors.bank_name" />
         <FormSelect
           id="currency"

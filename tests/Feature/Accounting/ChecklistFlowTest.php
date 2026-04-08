@@ -8,7 +8,7 @@ use App\Domains\Contacts\Models\Customer;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
-use App\Domains\Reporting\Services\ChecklistService;
+use App\Domains\Organizations\Services\ChecklistService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;

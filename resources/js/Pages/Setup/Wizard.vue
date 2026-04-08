@@ -11,7 +11,7 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { currencyOptions } from '@/lib/contactOptions'
-import { Check } from 'lucide-vue-next'
+import { Check, User, Building2, Calculator } from 'lucide-vue-next'
 
 const cantons = ['AG','AI','AR','BE','BL','BS','FR','GE','GL','GR','JU','LU','NE','NW','OW','SG','SH','SO','SZ','TG','TI','UR','VD','VS','ZG','ZH']
 
@@ -20,6 +20,7 @@ const form = useForm({
   user_email: '',
   user_password: '',
   user_password_confirmation: '',
+  business_type: '',
   org_name: '',
   org_legal_name: '',
   org_address: '',
@@ -48,8 +49,15 @@ const currentStep = ref(0)
 
 const steps = [
   { key: 'account', label: () => t('step_account') },
+  { key: 'business_type', label: () => t('step_business_type') },
   { key: 'organization', label: () => t('step_organization') },
   { key: 'settings', label: () => t('step_settings') },
+]
+
+const businessTypes = [
+  { value: 'freelancer', icon: User, label: () => t('business_type_freelancer'), desc: () => t('business_type_freelancer_desc') },
+  { value: 'sme', icon: Building2, label: () => t('business_type_sme'), desc: () => t('business_type_sme_desc') },
+  { value: 'fiduciary', icon: Calculator, label: () => t('business_type_fiduciary'), desc: () => t('business_type_fiduciary_desc') },
 ]
 
 function nextStep() {
@@ -118,8 +126,27 @@ function prevStep() {
             <FormInput id="user_password_confirmation" v-model="form.user_password_confirmation" type="password" :label="t('confirm_password')" required />
           </fieldset>
 
-          <!-- Step 2: Organization -->
+          <!-- Step 2: Business Type -->
           <fieldset v-show="currentStep === 1" class="space-y-6">
+            <legend class="text-lg font-semibold">{{ t('business_type') }}</legend>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <button
+                v-for="bt in businessTypes"
+                :key="bt.value"
+                type="button"
+                class="flex flex-col items-center gap-3 rounded-xl border-2 p-6 text-center transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]"
+                :class="form.business_type === bt.value ? 'border-[hsl(var(--primary))] bg-[hsl(var(--accent))]' : 'border-[hsl(var(--border))]'"
+                @click="form.business_type = bt.value"
+              >
+                <component :is="bt.icon" class="h-8 w-8" :class="form.business_type === bt.value ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]'" />
+                <span class="text-sm font-semibold">{{ bt.label() }}</span>
+                <span class="text-xs text-[hsl(var(--muted-foreground))]">{{ bt.desc() }}</span>
+              </button>
+            </div>
+          </fieldset>
+
+          <!-- Step 3: Organization -->
+          <fieldset v-show="currentStep === 2" class="space-y-6">
             <legend class="text-lg font-semibold">{{ t('organization') }}</legend>
             <FormInput id="org_name" v-model="form.org_name" :label="t('company_name')" :error="form.errors.org_name" required />
             <FormInput id="org_legal_name" v-model="form.org_legal_name" :label="t('legal_name_different')" />
@@ -134,8 +161,8 @@ function prevStep() {
             </div>
           </fieldset>
 
-          <!-- Step 3: Settings -->
-          <fieldset v-show="currentStep === 2" class="space-y-6">
+          <!-- Step 4: Settings -->
+          <fieldset v-show="currentStep === 3" class="space-y-6">
             <legend class="text-lg font-semibold">{{ t('settings') }}</legend>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormSelect id="currency" v-model="form.currency" :label="t('currency')" :options="currencyOptions(t)" required />

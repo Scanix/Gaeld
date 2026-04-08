@@ -3,8 +3,11 @@
 namespace App\Domains\Organizations\Services;
 
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
+use App\Domains\Organizations\DTOs\UpdateCommunicationsData;
+use App\Domains\Organizations\DTOs\UpdateInvoiceSettingsData;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Enums\Role;
+use App\Domains\Organizations\Events\MemberRemoved;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +46,20 @@ class OrganizationService
         return $organization;
     }
 
+    public function updateInvoiceSettings(Organization $organization, UpdateInvoiceSettingsData $data): Organization
+    {
+        $organization->update($data->toArray());
+
+        return $organization;
+    }
+
+    public function updateCommunications(Organization $organization, UpdateCommunicationsData $data): Organization
+    {
+        $organization->update($data->toArray());
+
+        return $organization;
+    }
+
     // ──────────────────────────────────────────────────────────────
     //  Membership
     // ──────────────────────────────────────────────────────────────
@@ -67,18 +84,10 @@ class OrganizationService
     {
         $organization->users()->detach($user->id);
 
-        // Revoke any API tokens scoped to this organization
-        $user->tokens()
-            ->where('name', 'like', '%')
-            ->each(function ($token) use ($organization) {
-                $abilities = $token->abilities ?? [];
-                if (in_array("org:{$organization->id}", $abilities)) {
-                    $token->delete();
-                }
-            });
-
         app()[PermissionRegistrar::class]->setPermissionsTeamId($organization->id);
         $user->roles()->detach();
+
+        MemberRemoved::dispatch($organization, $user);
     }
 
     /**

@@ -53,10 +53,41 @@ class AgingReportService
 
             $grandTotal = array_reduce($brackets, fn ($carry, $b) => bcadd($carry, $b['total'], 2), '0.00');
 
+            // Build flat rows for the frontend (one row per item, amount placed in the matching bracket column)
+            $bracketKeyMap = [
+                'current' => 'current',
+                '1_30' => 'b1_30',
+                '31_60' => 'b31_60',
+                '61_90' => 'b61_90',
+                '90_plus' => 'b90plus',
+            ];
+
+            $rows = [];
+            foreach ($brackets as $bracketKey => $bracket) {
+                $frontendKey = $bracketKeyMap[$bracketKey];
+                foreach ($bracket['items'] as $item) {
+                    $row = [
+                        'id' => $item['document_number'],
+                        'name' => $item['name'],
+                        'document_number' => $item['document_number'],
+                        'date' => $item['date'],
+                        'due_date' => $item['due_date'],
+                        'current' => 0,
+                        'b1_30' => 0,
+                        'b31_60' => 0,
+                        'b61_90' => 0,
+                        'b90plus' => 0,
+                    ];
+                    $row[$frontendKey] = (float) $item['amount'];
+                    $rows[] = $row;
+                }
+            }
+
             return [
                 'type' => $type,
                 'as_of_date' => $asOfString,
                 'brackets' => $brackets,
+                'rows' => $rows,
                 'grand_total' => $grandTotal,
             ];
         });

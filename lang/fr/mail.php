@@ -22,6 +22,14 @@ return [
     'accounting_export_button' => 'Télécharger l\'export',
     'accounting_export_expiry' => 'Ce lien expirera dans 24 heures.',
 
+    // Export des données de l'organisation
+    'org_export_subject' => 'Votre export des données de l\'organisation est prêt',
+    'org_export_greeting' => 'Bonjour :name,',
+    'org_export_body' => 'Votre export complet des données de l\'organisation a été généré et est prêt à être téléchargé. L\'archive contient toutes les données commerciales aux formats JSON et CSV.',
+    'org_export_button' => 'Télécharger l\'export',
+    'org_export_expiry' => 'Ce lien expirera dans 48 heures.',
+    'org_export_regards' => 'Cordialement',
+
     // Rappels de paiement
     'reminder_subject_first' => 'Rappel de paiement — Facture :number',
     'reminder_subject_second' => 'Deuxième rappel — Facture :number',

@@ -28,6 +28,16 @@ trait ExpenseValidationRules
             'currency' => 'string|size:3',
             'type' => ['sometimes', Rule::enum(ExpenseType::class)],
             'receipt' => 'nullable|file|mimes:'.config('uploads.allowed_mimes.receipt').'|max:'.config('uploads.max_size.receipt'),
+            'expense_account_code' => [
+                'nullable',
+                'string',
+                Rule::exists('accounts', 'code')->where('organization_id', $orgId),
+            ],
+            'bank_account_code' => [
+                'nullable',
+                'string',
+                Rule::exists('accounts', 'code')->where('organization_id', $orgId),
+            ],
         ];
     }
 }
