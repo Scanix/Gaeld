@@ -4,6 +4,8 @@ namespace Tests\Traits;
 
 use App\Domains\Organizations\Models\Organization;
 use App\Support\FeatureFlag;
+use Plugins\GaeldEE\Domains\Billing\Models\Plan;
+use Plugins\GaeldEE\Domains\Billing\Models\Subscription;
 
 /**
  * Provides a helper to create an active subscription for an organization
@@ -18,17 +20,17 @@ trait WithActiveSubscription
             return;
         }
 
-        if (! class_exists(\Plugins\GaeldEE\Domains\Billing\Models\Plan::class)) {
+        if (! class_exists(Plan::class)) {
             return;
         }
 
-        $plan = \Plugins\GaeldEE\Domains\Billing\Models\Plan::where('slug', 'business')->first();
+        $plan = Plan::where('slug', 'business')->first();
 
         if (! $plan) {
             return;
         }
 
-        \Plugins\GaeldEE\Domains\Billing\Models\Subscription::create([
+        Subscription::create([
             'organization_id' => $org->id,
             'plan_id' => $plan->id,
             'status' => 'active',
