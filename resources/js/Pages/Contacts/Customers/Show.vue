@@ -30,7 +30,7 @@ const statusVariant = {
   cancelled: 'outline',
 }
 
-const cp = useContactPersons('customers', props.customer.id, props.customer.contact_persons ?? [])
+const cp = useContactPersons('customers', props.customer.uuid, props.customer.contact_persons ?? [])
 </script>
 
 <template>
@@ -39,7 +39,7 @@ const cp = useContactPersons('customers', props.customer.id, props.customer.cont
 
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <h2 class="text-lg font-semibold">{{ customer.name }}</h2>
-      <Button as="a" :href="`/customers/${customer.id}/edit`" variant="outline" size="sm">
+      <Button as="a" :href="`/customers/${customer.uuid}/edit`" variant="outline" size="sm">
         <Pencil class="mr-2 h-4 w-4" />
         {{ t('edit') }}
       </Button>
