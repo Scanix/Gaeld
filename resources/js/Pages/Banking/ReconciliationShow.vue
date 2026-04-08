@@ -12,10 +12,11 @@ import Modal from '@/Components/UI/Modal.vue'
 import CsvColumnMappingModal from '@/Components/CsvColumnMappingModal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import Combobox from '@/Components/UI/Combobox.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed, nextTick } from 'vue'
-import { Upload, Check, Link2, RotateCcw, Loader2, UserX } from 'lucide-vue-next'
+import { Upload, Check, Link2, RotateCcw, Loader2, UserX, Plus } from 'lucide-vue-next'
 
 const props = defineProps({
   bankAccount: Object,
@@ -23,6 +24,7 @@ const props = defineProps({
   suggestions: { type: Object, default: () => ({}) },
   personalSuggestions: { type: Array, default: () => [] },
   filter: { type: String, default: 'unreconciled' },
+  openInvoices: { type: Array, default: () => [] },
   pageFeatures: { type: Object, default: () => ({}) },
 })
 
@@ -81,9 +83,22 @@ const matchInvoiceForm = useForm({ invoice_id: '' })
 const matchExpenseForm = useForm({ expense_id: '', expense_account_code: '6530' })
 const matchManualForm = useForm({ contra_account_code: '' })
 
+// Invoice combobox options: "INV-001 — Customer Name (CHF 1'500.00)"
+const invoiceOptions = computed(() =>
+  props.openInvoices.map((inv) => ({
+    value: inv.id,
+    label: `${inv.number} — ${inv.customer?.name || '—'} (${formatCurrency(inv.total, inv.currency)})`,
+  }))
+)
+
+function createInvoiceFromTransaction() {
+  router.visit('/invoices/create')
+}
+
 function openMatchModal(transaction) {
   matchingTransaction.value = transaction
   matchType.value = transaction.type === 'credit' ? 'invoice' : 'expense'
+  matchInvoiceForm.invoice_id = ''
   showMatchModal.value = true
 }
 
@@ -495,32 +510,27 @@ const currentSuggestions = computed(() => {
               <span v-if="inv.customer || inv.client" class="text-xs text-muted-foreground">{{ (inv.customer ?? inv.client).name }}</span>
             </button>
           </div>
-          <details v-if="currentSuggestions.invoices?.length" class="text-sm">
-            <summary class="cursor-pointer text-muted-foreground hover:text-foreground">{{ t('manual_entry') }}</summary>
-            <div class="mt-2">
-              <FormInput
-                id="invoice_id"
-                v-model="matchInvoiceForm.invoice_id"
-                :label="t('invoice_id')"
-                :error="matchInvoiceForm.errors.invoice_id"
-                :placeholder="t('enter_invoice_id')"
-              />
-            </div>
-          </details>
-          <template v-else>
-            <FormInput
-              id="invoice_id"
+          <div class="space-y-1">
+            <label class="text-sm font-medium">{{ t('invoice') }}</label>
+            <Combobox
               v-model="matchInvoiceForm.invoice_id"
-              :label="t('invoice_id')"
+              :options="invoiceOptions"
+              :placeholder="t('search_invoice')"
+              :emptyText="t('no_invoices_found')"
               :error="matchInvoiceForm.errors.invoice_id"
-              :placeholder="t('enter_invoice_id')"
             />
-          </template>
-          <div class="flex justify-end gap-3">
-            <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') }}</Button>
-            <Button type="submit" :disabled="matchInvoiceForm.processing || !matchInvoiceForm.invoice_id">
-              <Check class="mr-2 h-4 w-4" /> {{ t('reconcile') }}
+            <p v-if="matchInvoiceForm.errors.invoice_id" class="text-xs text-[hsl(var(--destructive))]">{{ matchInvoiceForm.errors.invoice_id }}</p>
+          </div>
+          <div class="flex justify-between gap-3">
+            <Button variant="ghost" size="sm" type="button" @click="createInvoiceFromTransaction">
+              <Plus class="mr-1 h-4 w-4" /> {{ t('create_invoice') }}
             </Button>
+            <div class="flex gap-3">
+              <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') }}</Button>
+              <Button type="submit" :disabled="matchInvoiceForm.processing || !matchInvoiceForm.invoice_id">
+                <Check class="mr-2 h-4 w-4" /> {{ t('reconcile') }}
+              </Button>
+            </div>
           </div>
         </form>
 

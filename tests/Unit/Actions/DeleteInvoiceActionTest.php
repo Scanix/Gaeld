@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Actions;
 
+use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Invoicing\Actions\DeleteInvoiceAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
@@ -45,6 +46,7 @@ class DeleteInvoiceActionTest extends TestCase
     {
         $invoice = Mockery::mock(Invoice::class)->makePartial();
         $invoice->status = InvoiceStatus::Cancelled;
+        $invoice->journal_entry_id = null;
 
         $linesRelation = Mockery::mock(HasMany::class);
         $linesRelation->shouldReceive('delete')->once();
@@ -59,7 +61,8 @@ class DeleteInvoiceActionTest extends TestCase
     {
         $invoice = Mockery::mock(Invoice::class)->makePartial();
         $invoice->status = InvoiceStatus::Draft;
-        /** @var Invoice $invoice */
+        $invoice->journal_entry_id = null;
+
         $linesRelation = Mockery::mock(HasMany::class);
         $linesRelation->shouldReceive('delete')->once();
 
