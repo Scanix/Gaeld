@@ -58,6 +58,8 @@ return [
     'invoices_per_month' => 'Rechnungen / Monat',
     'payment_failed_warning' => 'Ihre letzte Zahlung ist fehlgeschlagen. Bitte aktualisieren Sie Ihre Zahlungsmethode, um den Zugang zu behalten.',
     'update_payment_method' => 'Zahlungsmethode aktualisieren',
+    'trial_complete_payment_hint' => 'Fügen Sie jetzt eine Zahlungsmethode hinzu, damit Ihr Abonnement am Ende der Testphase automatisch weiterläuft.',
+    'add_payment_method' => 'Zahlungsmethode hinzufügen',
     'trial_ends' => 'Testphase endet am',
     'subscription_status_active' => 'Aktiv',
     'subscription_status_trialing' => 'Testphase',
