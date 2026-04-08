@@ -52,7 +52,7 @@ const editForm = useForm({
 })
 
 function recordTransaction() {
-  transactionForm.post(`/banking/${props.bankAccount.id}/transactions`, {
+  transactionForm.post(`/banking/${props.bankAccount.uuid}/transactions`, {
     onSuccess: () => {
       showTransactionModal.value = false
       transactionForm.reset()
@@ -61,14 +61,14 @@ function recordTransaction() {
 }
 
 function submitEdit() {
-  editForm.put(`/banking/${props.bankAccount.id}`, {
+  editForm.put(`/banking/${props.bankAccount.uuid}`, {
     onSuccess: () => { showEditModal.value = false },
   })
 }
 
 function executeDelete() {
   deleting.value = true
-  router.delete(`/banking/${props.bankAccount.id}`, {
+  router.delete(`/banking/${props.bankAccount.uuid}`, {
     onFinish: () => { deleting.value = false },
   })
 }
