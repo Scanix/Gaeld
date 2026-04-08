@@ -548,7 +548,7 @@ return [
     'chart_swiss_freelancer_desc' => 'Plan comptable simplifié pour les indépendants avec ~30 comptes essentiels.',
     'chart_swiss_association' => 'Association (Verein)',
     'chart_swiss_association_desc' => 'Adapté aux associations avec cotisations, dons et comptes d\'événements.',
-    'chart_none' => 'Vide \u2014 je cr\u00e9erai le mien',
+    'chart_none' => 'Vide — je créerai le mien',
     'chart_of_accounts_help' => 'Choisissez un modèle adapté à votre type d\'organisation. Les comptes standards et les taux de TVA seront créés automatiquement. Vous pourrez toujours ajouter ou supprimer des comptes plus tard.',
     'chart_of_accounts_signup_help' => 'Comptes suisses et taux de TVA préconfigurés. Vous pourrez les personnaliser plus tard.',
 
@@ -585,6 +585,13 @@ return [
     'show_help_desc' => 'Afficher les explications et conseils dans l\'application. Vous pouvez désactiver cette option quand vous vous sentez à l\'aise.',
     'hide_help' => 'Masquer l\'aide',
     'show_help' => 'Afficher l\'aide',
+
+    // Onboarding
+    'onboarding_reset_title' => 'Prise en main',
+    'onboarding_reset_desc' => 'Réafficher la liste « Premiers pas » sur votre tableau de bord.',
+    'reset_onboarding' => 'Réinitialiser la prise en main',
+    'onboarding_reset' => 'La liste « Premiers pas » est de nouveau visible sur votre tableau de bord.',
+    'dismiss_onboarding' => 'Masquer « Premiers pas »',
 
     // Contextual help texts
     'help_dashboard_title' => 'Votre aperçu financier',
@@ -1147,6 +1154,13 @@ return [
     'export_format_note' => 'Tous les documents sont générés en PDF et CSV, prêts à être transmis à votre fiduciaire.',
     'help_export_title' => 'Ce qu\'il faut remettre à votre fiduciaire',
     'help_export_text' => 'En fin d\'exercice, votre fiduciaire a besoin d\'un dossier comptable complet. Cet export génère un fichier ZIP contenant tous les journaux, rapports, factures et décomptes TVA de l\'exercice sélectionné. Envoyez simplement le fichier ZIP à votre comptable.',
+
+    // Getting Started Checklist
+    'getting_started_checklist' => 'Premiers pas',
+    'getting_started_complete' => 'C\'est prêt ! Votre organisation est opérationnelle.',
+    'checklist_profile_complete' => 'Compléter le profil de votre organisation',
+    'checklist_customer_created' => 'Ajouter votre premier client',
+    'checklist_bank_account_created' => 'Configurer un compte bancaire',
 
     // Accounting Checklist
     'accounting_checklist' => 'Checklist comptable',

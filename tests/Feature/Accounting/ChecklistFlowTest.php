@@ -27,13 +27,16 @@ class ChecklistFlowTest extends TestCase
         $this->service = app(ChecklistService::class);
     }
 
-    public function test_empty_org_returns_all_items_not_done(): void
+    public function test_empty_org_returns_two_tier_structure(): void
     {
         $checklist = $this->service->checklist($this->org->id);
 
-        $this->assertCount(11, $checklist);
+        $this->assertArrayHasKey('getting_started', $checklist);
+        $this->assertArrayHasKey('accounting', $checklist);
+        $this->assertCount(5, $checklist['getting_started']);
+        $this->assertCount(9, $checklist['accounting']);
 
-        foreach ($checklist as $item) {
+        foreach ([...$checklist['getting_started'], ...$checklist['accounting']] as $item) {
             $this->assertFalse($item['done'], "Item {$item['key']} should be not done for empty org");
         }
     }
@@ -42,18 +45,23 @@ class ChecklistFlowTest extends TestCase
     {
         $checklist = $this->service->checklist($this->org->id);
 
-        $keys = array_column($checklist, 'key');
-        $this->assertContains('checklist_chart_configured', $keys);
-        $this->assertContains('checklist_invoices_created', $keys);
-        $this->assertContains('checklist_expenses_posted', $keys);
-        $this->assertContains('checklist_bank_imported', $keys);
-        $this->assertContains('checklist_reconciliation_done', $keys);
-        $this->assertContains('checklist_vat_declared', $keys);
-        $this->assertContains('checklist_depreciation_posted', $keys);
-        $this->assertContains('checklist_social_charges', $keys);
-        $this->assertContains('checklist_year_end_closed', $keys);
-        $this->assertContains('checklist_fiduciary_exported', $keys);
-        $this->assertContains('checklist_data_imported', $keys);
+        $gettingStartedKeys = array_column($checklist['getting_started'], 'key');
+        $this->assertContains('checklist_profile_complete', $gettingStartedKeys);
+        $this->assertContains('checklist_chart_configured', $gettingStartedKeys);
+        $this->assertContains('checklist_customer_created', $gettingStartedKeys);
+        $this->assertContains('checklist_bank_account_created', $gettingStartedKeys);
+        $this->assertContains('checklist_invoices_created', $gettingStartedKeys);
+
+        $accountingKeys = array_column($checklist['accounting'], 'key');
+        $this->assertContains('checklist_expenses_posted', $accountingKeys);
+        $this->assertContains('checklist_bank_imported', $accountingKeys);
+        $this->assertContains('checklist_reconciliation_done', $accountingKeys);
+        $this->assertContains('checklist_vat_declared', $accountingKeys);
+        $this->assertContains('checklist_depreciation_posted', $accountingKeys);
+        $this->assertContains('checklist_social_charges', $accountingKeys);
+        $this->assertContains('checklist_year_end_closed', $accountingKeys);
+        $this->assertContains('checklist_fiduciary_exported', $accountingKeys);
+        $this->assertContains('checklist_data_imported', $accountingKeys);
     }
 
     public function test_chart_configured_is_done_when_accounts_exist(): void
@@ -66,7 +74,7 @@ class ChecklistFlowTest extends TestCase
         ]);
 
         $checklist = $this->service->checklist($this->org->id);
-        $item = collect($checklist)->firstWhere('key', 'checklist_chart_configured');
+        $item = collect($checklist['getting_started'])->firstWhere('key', 'checklist_chart_configured');
 
         $this->assertTrue($item['done']);
     }
@@ -94,7 +102,7 @@ class ChecklistFlowTest extends TestCase
         ]));
 
         $checklist = $this->service->checklist($this->org->id);
-        $item = collect($checklist)->firstWhere('key', 'checklist_invoices_created');
+        $item = collect($checklist['getting_started'])->firstWhere('key', 'checklist_invoices_created');
 
         $this->assertTrue($item['done']);
     }
@@ -111,7 +119,7 @@ class ChecklistFlowTest extends TestCase
         ]);
 
         $checklist = $this->service->checklist($this->org->id);
-        $item = collect($checklist)->firstWhere('key', 'checklist_expenses_posted');
+        $item = collect($checklist['accounting'])->firstWhere('key', 'checklist_expenses_posted');
 
         $this->assertTrue($item['done']);
     }
@@ -120,7 +128,7 @@ class ChecklistFlowTest extends TestCase
     {
         $checklist = $this->service->checklist($this->org->id);
 
-        foreach ($checklist as $item) {
+        foreach ([...$checklist['getting_started'], ...$checklist['accounting']] as $item) {
             $this->assertArrayHasKey('href', $item, "Item {$item['key']} should have an href");
             $this->assertNotEmpty($item['href']);
         }

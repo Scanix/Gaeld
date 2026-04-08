@@ -587,6 +587,13 @@ return [
     'hide_help' => 'Hilfe ausblenden',
     'show_help' => 'Hilfe anzeigen',
 
+    // Onboarding
+    'onboarding_reset_title' => 'Erste Schritte',
+    'onboarding_reset_desc' => 'Die Checkliste «Erste Schritte» wieder auf Ihrem Dashboard anzeigen.',
+    'reset_onboarding' => 'Erste Schritte zurücksetzen',
+    'onboarding_reset' => 'Die Checkliste «Erste Schritte» wird wieder auf Ihrem Dashboard angezeigt.',
+    'dismiss_onboarding' => '«Erste Schritte» ausblenden',
+
     // Contextual help texts
     'help_dashboard_title' => 'Ihre Finanzübersicht',
     'help_dashboard_text' => 'Dieses Dashboard zeigt eine Zusammenfassung Ihrer Finanzen: Einnahmen (verdientes Geld), Ausgaben (ausgegebenes Geld), Gewinn (Einnahmen minus Ausgaben) und Kontostand (Geld auf Ihren Bankkonten). Das Diagramm vergleicht Ihre monatlichen Einnahmen und Ausgaben.',
@@ -1149,6 +1156,13 @@ return [
     'export_format_note' => 'Alle Dokumente werden als PDF und CSV generiert, bereit für die Übergabe an Ihren Treuhänder.',
     'help_export_title' => 'Was Sie Ihrem Treuhänder geben',
     'help_export_text' => 'Am Jahresende benötigt Ihr Treuhänder vollständige Buchhaltungsunterlagen. Dieser Export generiert ein ZIP-Archiv mit allen Journalen, Berichten, Rechnungen und MWST-Abrechnungen des gewählten Geschäftsjahres.',
+
+    // Getting Started Checklist
+    'getting_started_checklist' => 'Erste Schritte',
+    'getting_started_complete' => 'Alles bereit! Ihre Organisation ist einsatzbereit.',
+    'checklist_profile_complete' => 'Organisationsprofil vervollständigen',
+    'checklist_customer_created' => 'Ersten Kunden anlegen',
+    'checklist_bank_account_created' => 'Bankkonto einrichten',
 
     // Accounting Checklist
     'accounting_checklist' => 'Buchhaltungs-Checkliste',

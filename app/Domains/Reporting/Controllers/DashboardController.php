@@ -21,12 +21,19 @@ class DashboardController extends Controller
         $this->authorize('viewAny', Account::class);
 
         $orgId = $currentOrg->id();
+        $checklist = $checklistService->checklist($orgId);
+
+        // Hide getting_started section once the user has dismissed onboarding
+        if ($request->user()->onboarding_completed_at) {
+            $checklist['getting_started'] = [];
+        }
 
         return Inertia::render('Dashboard', array_merge(
             $dashboardService->metrics($orgId),
             [
-                'checklist' => $checklistService->checklist($orgId),
+                'checklist' => $checklist,
                 'dashboardLayout' => $request->user()->dashboard_layout,
+                'onboardingCompleted' => (bool) $request->user()->onboarding_completed_at,
             ],
         ));
     }

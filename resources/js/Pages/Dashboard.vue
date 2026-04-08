@@ -45,7 +45,7 @@ const props = defineProps({
   receivablesAging: { type: Object, default: null },
   recentTransactions: { type: Array, default: () => [] },
   monthlyBreakdown: { type: Object, default: () => ({ labels: [], revenue: [], expenses: [], forecast: [], revenueItems: [], expenseItems: [], forecastItems: [] }) },
-  checklist: { type: Array, default: () => [] },
+  checklist: { type: Object, default: () => ({ getting_started: [], accounting: [] }) },
   dashboardLayout: { type: Object, default: null },
 })
 
@@ -360,8 +360,8 @@ const transactionColumns = computed(() => [
     <template v-for="widget in widgetLayout" :key="widget.id">
 
       <!-- Accounting Checklist -->
-      <div v-if="widget.id === 'checklist' && widget.visible && checklist.length" class="mt-6">
-        <AccountingChecklist :items="checklist" />
+      <div v-if="widget.id === 'checklist' && widget.visible && (checklist.getting_started?.length || checklist.accounting?.length)" class="mt-6">
+        <AccountingChecklist :getting-started="checklist.getting_started ?? []" :accounting="checklist.accounting ?? []" />
       </div>
 
       <!-- Action Cards -->

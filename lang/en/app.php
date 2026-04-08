@@ -597,6 +597,13 @@ return [
     'hide_help' => 'Hide help',
     'show_help' => 'Show help',
 
+    // Onboarding
+    'onboarding_reset_title' => 'Onboarding',
+    'onboarding_reset_desc' => 'Show the Getting Started checklist on your dashboard again.',
+    'reset_onboarding' => 'Reset onboarding',
+    'onboarding_reset' => 'Getting Started checklist restored on your dashboard.',
+    'dismiss_onboarding' => 'Dismiss Getting Started',
+
     // Contextual help texts
     'help_dashboard_title' => 'Your financial overview',
     'help_dashboard_text' => 'This dashboard shows a summary of your finances: revenue (money earned), expenses (money spent), profit (revenue minus expenses), and cash balance (money in your bank accounts). The chart below compares your monthly revenue and expenses.',
@@ -1164,6 +1171,13 @@ return [
     'export_format_note' => 'All documents are generated in PDF and CSV formats, ready to hand over to your fiduciary.',
     'help_export_title' => 'What to give your fiduciary',
     'help_export_text' => 'At year-end, your fiduciary needs a complete accounting package. This export generates a ZIP archive containing all journals, reports, invoices, and VAT declarations for the selected fiscal year. Simply email the ZIP file to your accountant.',
+
+    // Getting Started Checklist
+    'getting_started_checklist' => 'Getting Started',
+    'getting_started_complete' => 'You\'re all set! Your organization is ready to go.',
+    'checklist_profile_complete' => 'Complete your organization profile',
+    'checklist_customer_created' => 'Add your first customer',
+    'checklist_bank_account_created' => 'Set up a bank account',
 
     // Accounting Checklist
     'accounting_checklist' => 'Accounting Checklist',
