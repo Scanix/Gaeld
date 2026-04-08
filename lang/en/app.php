@@ -1505,11 +1505,17 @@ return [
     // Banking UX
     'iban_placeholder' => 'CH93 0076 2011 6238 5295 7',
     'qr_iban_hint' => 'For Swiss QR-bills, use a QR-IBAN (starts with CH..30 or CH..31).',
+    'qr_iban_help_where_to_find' => 'You can find your QR-IBAN in your bank\'s e-banking portal under payment settings.',
+    'qr_iban_detected' => 'QR-IBAN detected — ready for Swiss QR-bills.',
+    'qr_iban_regular_warning' => 'This is a regular IBAN, not a QR-IBAN. Swiss QR-bills require a QR-IBAN.',
+    'qr_iban_swiss_only' => 'QR-IBAN is only available for Swiss bank accounts (CH/LI).',
+    'iban_regular_detected' => 'Regular IBAN detected.',
     'go_to_banking' => 'Add a bank account',
     'empty_reconciliation_title' => 'No bank accounts',
     'empty_reconciliation_desc' => 'Create a bank account first to start reconciling transactions.',
 
     // Settings
+    'edit_settings' => 'Edit settings',
     'user_locale_hint' => 'Interface language for your account.',
     'org_locale_hint' => 'Default language for documents (invoices, reports).',
 
