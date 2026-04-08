@@ -587,6 +587,13 @@ return [
     'hide_help' => 'Hilfe ausblenden',
     'show_help' => 'Hilfe anzeigen',
 
+    // Onboarding
+    'onboarding_reset_title' => 'Erste Schritte',
+    'onboarding_reset_desc' => 'Die Checkliste «Erste Schritte» wieder auf Ihrem Dashboard anzeigen.',
+    'reset_onboarding' => 'Erste Schritte zurücksetzen',
+    'onboarding_reset' => 'Die Checkliste «Erste Schritte» wird wieder auf Ihrem Dashboard angezeigt.',
+    'dismiss_onboarding' => '«Erste Schritte» ausblenden',
+
     // Contextual help texts
     'help_dashboard_title' => 'Ihre Finanzübersicht',
     'help_dashboard_text' => 'Dieses Dashboard zeigt eine Zusammenfassung Ihrer Finanzen: Einnahmen (verdientes Geld), Ausgaben (ausgegebenes Geld), Gewinn (Einnahmen minus Ausgaben) und Kontostand (Geld auf Ihren Bankkonten). Das Diagramm vergleicht Ihre monatlichen Einnahmen und Ausgaben.',

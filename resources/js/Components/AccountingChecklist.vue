@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { Link } from '@inertiajs/vue3'
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, Rocket, BookOpen } from 'lucide-vue-next'
+import { Link, router } from '@inertiajs/vue3'
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, Rocket, BookOpen, X } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 
 const { t } = useTranslations()
@@ -36,26 +36,37 @@ const progressColor = (pct) => {
   if (pct >= 60) return 'bg-yellow-500'
   return 'bg-blue-500'
 }
+
+function dismissOnboarding() {
+  router.post('/profile/onboarding/dismiss', {}, { preserveScroll: true })
+}
 </script>
 
 <template>
   <div class="space-y-4">
     <!-- Getting Started Section -->
     <div v-if="gettingStarted.length" class="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
-      <button
-        class="flex w-full items-center justify-between px-6 py-4 text-left"
-        :aria-expanded="!gsCollapsed"
-        @click="gsCollapsed = !gsCollapsed"
-      >
-        <div class="flex items-center gap-3 min-w-0">
+      <div class="flex items-center justify-between px-6 py-4">
+        <button
+          class="flex items-center gap-3 min-w-0 text-left"
+          :aria-expanded="!gsCollapsed"
+          @click="gsCollapsed = !gsCollapsed"
+        >
           <Rocket class="h-4 w-4 text-blue-500" />
           <span class="font-semibold text-sm">{{ t('getting_started_checklist') }}</span>
           <span class="rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs font-medium text-[hsl(var(--muted-foreground))]">
             {{ gsDone }}/{{ gsTotal }}
           </span>
-        </div>
-        <component :is="gsCollapsed ? ChevronDown : ChevronUp" class="h-4 w-4 shrink-0 text-[hsl(var(--muted-foreground))]" />
-      </button>
+          <component :is="gsCollapsed ? ChevronDown : ChevronUp" class="h-4 w-4 shrink-0 text-[hsl(var(--muted-foreground))]" />
+        </button>
+        <button
+          :title="t('dismiss_onboarding')"
+          class="rounded p-1 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
+          @click.stop="dismissOnboarding"
+        >
+          <X class="h-4 w-4" />
+        </button>
+      </div>
 
       <div class="px-6 pb-2">
         <div class="h-1.5 w-full overflow-hidden rounded-full bg-[hsl(var(--muted))]">

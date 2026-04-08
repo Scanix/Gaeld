@@ -88,6 +88,28 @@ class UserController extends Controller
         return back();
     }
 
+    public function dismissOnboarding(Request $request): RedirectResponse
+    {
+        $this->authorize('update', $request->user());
+
+        $request->user()->update([
+            'onboarding_completed_at' => now(),
+        ]);
+
+        return back();
+    }
+
+    public function resetOnboarding(Request $request): RedirectResponse
+    {
+        $this->authorize('update', $request->user());
+
+        $request->user()->update([
+            'onboarding_completed_at' => null,
+        ]);
+
+        return back()->with('success', __('app.onboarding_reset'));
+    }
+
     /**
      * Queue an export of all personal data for the authenticated user (GDPR Art. 15 / Art. 20).
      */
