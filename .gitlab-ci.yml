@@ -4,6 +4,10 @@
 #  Runs on self-hosted Docker runners.
 #  Full pipeline: lint → analyse → test (CE+EE, coverage gate) → docs → deploy
 #
+#  This file lives ONLY on the `production` branch (default on GitLab).
+#  The `main` branch is the public mirror pushed to GitHub and does NOT
+#  contain this file nor docker/ci/.
+#
 #  The `deploy` stage is manual, triggered only on the `production` branch.
 # =============================================================================
 
@@ -123,9 +127,8 @@ pint:
     policy: pull-push
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_COMMIT_BRANCH == "develop"
     - if: $CI_COMMIT_BRANCH == "production"
+    - if: $CI_COMMIT_BRANCH == "develop"
 
 # ---------------------------------------------------------------------------
 #  Stage: analyse
@@ -142,9 +145,8 @@ phpstan:
   needs: ["pint"]
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_COMMIT_BRANCH == "develop"
     - if: $CI_COMMIT_BRANCH == "production"
+    - if: $CI_COMMIT_BRANCH == "develop"
 
 # ---------------------------------------------------------------------------
 #  Stage: test
@@ -197,9 +199,8 @@ test:
   coverage: '/Line coverage: (\d+\.\d+)%/'
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_COMMIT_BRANCH == "develop"
     - if: $CI_COMMIT_BRANCH == "production"
+    - if: $CI_COMMIT_BRANCH == "develop"
 
 # ---------------------------------------------------------------------------
 #  Stage: docs (Scribe API docs regeneration)
@@ -225,8 +226,8 @@ scribe:
       - public/docs/
     expire_in: 30 days
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "production"
+    - if: $CI_COMMIT_BRANCH == "develop"
 
 # ---------------------------------------------------------------------------
 #  Stage: performance (k6 load tests — manual trigger)
@@ -265,8 +266,6 @@ k6:
     expire_in: 14 days
   rules:
     - if: $CI_COMMIT_BRANCH == "production"
-      when: manual
-    - if: $CI_COMMIT_BRANCH == "main"
       when: manual
   allow_failure: true
 
