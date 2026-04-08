@@ -86,8 +86,14 @@ variables:
     - |
       if [ -n "$GAELD_EE_DEPLOY_KEY" ]; then
         eval $(ssh-agent -s)
-        chmod 600 "$GAELD_EE_DEPLOY_KEY"
-        ssh-add "$GAELD_EE_DEPLOY_KEY"
+        # Sanitise key file: strip \r, ensure trailing newline
+        tr -d '\r' < "$GAELD_EE_DEPLOY_KEY" > /tmp/ee_deploy_key
+        chmod 600 /tmp/ee_deploy_key
+        # Debug: show first/last line to verify format (safe — no secret data)
+        head -1 /tmp/ee_deploy_key
+        tail -1 /tmp/ee_deploy_key
+        ssh-add /tmp/ee_deploy_key
+        rm -f /tmp/ee_deploy_key
         mkdir -p ~/.ssh
         ssh-keyscan -H gitlab.nectoria.com >> ~/.ssh/known_hosts 2>/dev/null
         mkdir -p plugins/gaeld-ee
