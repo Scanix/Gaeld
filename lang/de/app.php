@@ -392,6 +392,8 @@ return [
     'manual_reconcile_help' => 'Geben Sie die Gegenkonto-Nr. ein, um diese Transaktion zu verbuchen.',
     'no_transactions' => 'Keine Transaktionen gefunden.',
     'enter_invoice_id' => 'Rechnungs-ID auswählen oder eingeben',
+    'search_invoice' => 'Rechnung suchen…',
+    'no_invoices_found' => 'Keine offenen Rechnungen gefunden.',
     'enter_expense_id' => 'Ausgaben-ID auswählen oder eingeben',
     'file' => 'Datei',
     'import' => 'Importieren',

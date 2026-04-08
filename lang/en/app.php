@@ -395,6 +395,8 @@ return [
     'manual_reconcile_help' => 'Enter the contra account code to post this transaction to the ledger.',
     'no_transactions' => 'No transactions found.',
     'enter_invoice_id' => 'Select or enter invoice ID',
+    'search_invoice' => 'Search invoice…',
+    'no_invoices_found' => 'No open invoices found.',
     'enter_expense_id' => 'Select or enter expense ID',
     'file' => 'File',
     'import' => 'Import',
