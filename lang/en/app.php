@@ -1196,7 +1196,7 @@ return [
     // Tooltips
     'tooltip_expense_category' => 'Categories map expenses to specific accounts in your chart of accounts for correct financial reporting.',
     'tooltip_vat_rate' => 'Standard Swiss VAT rates: 8.1% (standard), 3.8% (accommodation), 2.6% (food/books/medicine). Select "No VAT" for exempt transactions.',
-    'tooltip_qr_iban' => 'The QR-IBAN starts with CH and is specific to Swiss QR invoices. It differs from your regular IBAN. You can find it on your bank portal.',
+    'tooltip_qr_iban' => 'The QR-IBAN is specific to Swiss QR invoices and differs from your regular IBAN (digits 5-9 are in range 30000-31999). Find it in your e-banking under payment slips/QR-bills, or ask your bank.',
     'tooltip_journal_balance' => 'In double-entry bookkeeping, total debits must always equal total credits. An unbalanced entry cannot be posted.',
 
     // Lettrage (account line matching)
@@ -1504,10 +1504,10 @@ return [
 
     // Banking UX
     'iban_placeholder' => 'CH93 0076 2011 6238 5295 7',
-    'qr_iban_hint' => 'For Swiss QR-bills, use a QR-IBAN (starts with CH..30 or CH..31).',
-    'qr_iban_help_where_to_find' => 'You can find your QR-IBAN in your bank\'s e-banking portal under payment settings.',
+    'qr_iban_hint' => 'For Swiss QR-bills, use a QR-IBAN (digits 5-9 are in range 30000-31999).',
+    'qr_iban_help_where_to_find' => 'Your QR-IBAN is different from your regular IBAN. Find it in your e-banking under payment slips/QR-bills, or ask your bank to activate it.',
     'qr_iban_detected' => 'QR-IBAN detected — ready for Swiss QR-bills.',
-    'qr_iban_regular_warning' => 'This is a regular IBAN, not a QR-IBAN. Swiss QR-bills require a QR-IBAN.',
+    'qr_iban_regular_warning' => 'This is a regular IBAN, not a QR-IBAN. Check your e-banking portal (payment slips section) or contact your bank to get your QR-IBAN.',
     'qr_iban_swiss_only' => 'QR-IBAN is only available for Swiss bank accounts (CH/LI).',
     'iban_regular_detected' => 'Regular IBAN detected.',
     'go_to_banking' => 'Add a bank account',

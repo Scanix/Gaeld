@@ -1179,7 +1179,7 @@ return [
     // Tooltips
     'tooltip_expense_category' => 'Les catégories associent vos charges aux comptes du plan comptable pour un reporting financier correct.',
     'tooltip_vat_rate' => 'Taux TVA suisses standard : 8,1% (taux normal), 3,8% (hébergement), 2,6% (alimentation/livres/médicaments). Choisissez "Sans TVA" pour les transactions exonérées.',
-    'tooltip_qr_iban' => 'Le QR-IBAN commence par CH et est spécifique aux QR-factures suisses. Il diffère de votre IBAN ordinaire. Vous le trouverez sur votre portail bancaire.',
+    'tooltip_qr_iban' => 'Le QR-IBAN est spécifique aux QR-factures suisses et diffère de votre IBAN habituel (chiffres 5 à 9 entre 30000 et 31999). Consultez votre e-banking sous bulletins de versement ou demandez-le à votre banque.',
     'tooltip_journal_balance' => 'En comptabilité en partie double, le total des débits doit toujours égaler le total des crédits. Une écriture déséquilibrée ne peut pas être comptabilisée.',
 
     // Lettrage
@@ -1512,10 +1512,10 @@ return [
 
     // Banking UX
     'iban_placeholder' => 'CH93 0076 2011 6238 5295 7',
-    'qr_iban_hint' => 'Pour les QR-factures suisses, utilisez un QR-IBAN (commence par CH..30 ou CH..31).',
-    'qr_iban_help_where_to_find' => 'Vous trouverez votre QR-IBAN dans le portail e-banking de votre banque, sous les paramètres de paiement.',
+    'qr_iban_hint' => 'Pour les QR-factures suisses, utilisez un QR-IBAN (chiffres 5 à 9 entre 30000 et 31999).',
+    'qr_iban_help_where_to_find' => 'Votre QR-IBAN est différent de votre IBAN habituel. Vous le trouverez dans votre e-banking sous bulletins de versement/QR-factures (ex : portail QR chez UBS), ou demandez-le à votre banque.',
     'qr_iban_detected' => 'QR-IBAN détecté — prêt pour les QR-factures suisses.',
-    'qr_iban_regular_warning' => 'Ceci est un IBAN classique, pas un QR-IBAN. Les QR-factures suisses nécessitent un QR-IBAN.',
+    'qr_iban_regular_warning' => 'Ceci est un IBAN classique, pas un QR-IBAN. Consultez votre e-banking (rubrique bulletins de versement) ou contactez votre banque pour obtenir votre QR-IBAN.',
     'qr_iban_swiss_only' => 'Le QR-IBAN n\'est disponible que pour les comptes bancaires suisses (CH/LI).',
     'iban_regular_detected' => 'IBAN classique détecté.',
     'go_to_banking' => 'Ajouter un compte bancaire',
