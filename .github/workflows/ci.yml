@@ -119,6 +119,19 @@ jobs:
           REDIS_PORT: 6379
         run: php artisan test --coverage-clover coverage/clover.xml
 
+      - name: Coverage summary
+        if: always()
+        run: |
+          if [ -f coverage/clover.xml ]; then
+            total=$(grep -oP 'statements="\K[0-9]+' coverage/clover.xml | head -1)
+            covered=$(grep -oP 'coveredstatements="\K[0-9]+' coverage/clover.xml | head -1)
+            if [ "$total" -gt 0 ]; then
+              pct=$(echo "scale=1; $covered * 100 / $total" | bc)
+              echo "### Code Coverage: ${pct}%" >> $GITHUB_STEP_SUMMARY
+              echo "Covered ${covered} of ${total} statements" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v4

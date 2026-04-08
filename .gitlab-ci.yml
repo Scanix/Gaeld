@@ -12,6 +12,7 @@ stages:
   - analyse
   - test
   - docs
+  - performance
   - deploy
 
 variables:
@@ -209,6 +210,50 @@ scribe:
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "production"
+
+# ---------------------------------------------------------------------------
+#  Stage: performance (k6 load tests — manual trigger)
+# ---------------------------------------------------------------------------
+
+k6:
+  stage: performance
+  image: grafana/k6:latest
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+    - name: redis:7-alpine
+      alias: redis
+  before_script:
+    # Setup PHP app for k6 to hit (same as test job)
+    - apk add --no-cache php84 php84-pdo php84-pdo_pgsql php84-redis php84-mbstring php84-xml php84-curl php84-zip php84-tokenizer php84-dom php84-xmlwriter composer
+    - cp .env.example .env
+    - composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+    - php84 artisan key:generate
+    - php84 artisan migrate --force
+    # Start built-in server in background
+    - php84 artisan serve --host=0.0.0.0 --port=8000 &
+    - sleep 3
+  script:
+    - k6 run --out json=k6-results.json tests/Performance/full-suite.js
+  variables:
+    K6_BASE_URL: "http://localhost:8000"
+  cache:
+    <<: *default-cache
+    policy: pull
+  needs: ["test"]
+  artifacts:
+    when: always
+    paths:
+      - k6-results.json
+    expire_in: 14 days
+  tags:
+    - nectoria
+  rules:
+    - if: $CI_COMMIT_BRANCH == "production"
+      when: manual
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  allow_failure: true
 
 # ---------------------------------------------------------------------------
 #  Stage: deploy (manual, production branch only)
