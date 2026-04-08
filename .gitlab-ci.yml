@@ -45,20 +45,22 @@ variables:
   SCOUT_DRIVER: "null"
   APP_ENV: testing
   APP_KEY: "base64:s25aRLcFtz+CDCWpI2dW7Lhr1NJW9koLQSciHu35Nk4="
-  # EE feature flags — enabled in CI to cover all code paths
-  FEATURE_SAAS: "true"
-  FEATURE_AUTO_RECONCILIATION: "true"
-  FEATURE_BANK_SYNC: "true"
-  FEATURE_API_ACCESS: "true"
-  FEATURE_AUTOMATION: "true"
-  FEATURE_MULTI_CURRENCY: "true"
-  FEATURE_RULE_ENGINE: "true"
-  FEATURE_ADVANCED_PERMISSIONS: "true"
-  FEATURE_ANALYTICAL: "true"
-  FEATURE_WITHHOLDING_TAX: "true"
-  FEATURE_TAX_DECLARATION: "true"
-  FEATURE_E_INVOICING: "true"
-  FEATURE_CONSOLIDATION: "true"
+  # EE feature flags — disabled in CI when running CE-only (no GAELD_EE_DEPLOY_KEY).
+  # EE routes (billing.index, signup) are not registered without the EE plugin,
+  # so enabling SaaS flags without EE code causes RouteNotFoundException crashes.
+  FEATURE_SAAS: "false"
+  FEATURE_AUTO_RECONCILIATION: "false"
+  FEATURE_BANK_SYNC: "false"
+  FEATURE_API_ACCESS: "false"
+  FEATURE_AUTOMATION: "false"
+  FEATURE_MULTI_CURRENCY: "false"
+  FEATURE_RULE_ENGINE: "false"
+  FEATURE_ADVANCED_PERMISSIONS: "false"
+  FEATURE_ANALYTICAL: "false"
+  FEATURE_WITHHOLDING_TAX: "false"
+  FEATURE_TAX_DECLARATION: "false"
+  FEATURE_E_INVOICING: "false"
+  FEATURE_CONSOLIDATION: "false"
   # Composer / pnpm caching
   COMPOSER_HOME: "$CI_PROJECT_DIR/.composer-cache"
   PNPM_HOME: "$CI_PROJECT_DIR/.pnpm-store"
