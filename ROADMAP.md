@@ -2,16 +2,16 @@
 
 Remaining items from the ecosystem backlog. Completed items omitted.
 
-## Priority 1 — Push & Validate
+## Priority 1 — Push & Validate ✅
 
-- [ ] Push all 5 repos to remotes (41 commits total across api, docs, web, dl-stockaj, orchestrator)
-- [ ] Validate GitLab CI pipeline on self-hosted Nectoria runners
-- [ ] Validate GitHub Actions CI passes on main
+- [x] Push all 5 repos to remotes (41 commits total across api, docs, web, dl-stockaj, orchestrator)
+- [x] Validate GitLab CI pipeline on self-hosted Nectoria runners (1012 tests, 65.66% coverage)
+- [x] Validate GitHub Actions CI passes on main
 
-## Priority 2 — Web Frontend (Phase C)
+## Priority 2 — Web Frontend (Phase C) ✅
 
-- [ ] **C4: Accessibility audit** — Run axe-core or Lighthouse against key pages, document findings
-- [ ] **C5: Bundle analysis** — Add `@next/bundle-analyzer`, run `ANALYZE=true pnpm build`, review Three.js chunk sizes and lazy loading
+- [x] **C4: Accessibility audit** — axe-core WCAG 2.1 AA, all 5 pages pass (16 violations fixed)
+- [x] **C5: Bundle analysis** — `@next/bundle-analyzer` added, Three.js ~350K gz (lazy-loaded), total 671K gz
 
 ## Priority 3 — Security & Performance (Phase D)
 
