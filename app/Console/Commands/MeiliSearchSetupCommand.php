@@ -84,12 +84,12 @@ class MeiliSearchSetupCommand extends Command
             'customers' => [
                 'filterableAttributes' => ['organization_id'],
                 'sortableAttributes' => ['name'],
-                'searchableAttributes' => ['name', 'email', 'city', 'vat_number'],
+                'searchableAttributes' => ['name', 'email', 'city', 'vat_number', 'contact_persons'],
             ],
             'suppliers' => [
                 'filterableAttributes' => ['organization_id'],
                 'sortableAttributes' => ['name'],
-                'searchableAttributes' => ['name', 'email', 'city', 'vat_number', 'default_expense_category'],
+                'searchableAttributes' => ['name', 'email', 'city', 'vat_number', 'default_expense_category', 'contact_persons'],
             ],
             'expenses' => [
                 'filterableAttributes' => ['organization_id', 'status', 'category'],

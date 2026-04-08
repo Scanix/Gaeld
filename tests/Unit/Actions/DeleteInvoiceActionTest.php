@@ -26,7 +26,7 @@ class DeleteInvoiceActionTest extends TestCase
         $invoice = $this->makeInvoice(InvoiceStatus::Sent);
 
         $this->expectException(InvalidInvoiceStateException::class);
-        $this->expectExceptionMessage('Only draft invoices can be deleted.');
+        $this->expectExceptionMessage('Only draft or cancelled invoices can be deleted.');
 
         $this->action->execute($invoice);
     }
@@ -36,17 +36,21 @@ class DeleteInvoiceActionTest extends TestCase
         $invoice = $this->makeInvoice(InvoiceStatus::Paid);
 
         $this->expectException(InvalidInvoiceStateException::class);
-        $this->expectExceptionMessage('Only draft invoices can be deleted.');
+        $this->expectExceptionMessage('Only draft or cancelled invoices can be deleted.');
 
         $this->action->execute($invoice);
     }
 
-    public function test_rejects_cancelled_invoice(): void
+    public function test_deletes_cancelled_invoice(): void
     {
-        $invoice = $this->makeInvoice(InvoiceStatus::Cancelled);
+        $invoice = Mockery::mock(Invoice::class)->makePartial();
+        $invoice->status = InvoiceStatus::Cancelled;
 
-        $this->expectException(InvalidInvoiceStateException::class);
-        $this->expectExceptionMessage('Only draft invoices can be deleted.');
+        $linesRelation = Mockery::mock(HasMany::class);
+        $linesRelation->shouldReceive('delete')->once();
+
+        $invoice->shouldReceive('lines')->once()->andReturn($linesRelation);
+        $invoice->shouldReceive('delete')->once();
 
         $this->action->execute($invoice);
     }

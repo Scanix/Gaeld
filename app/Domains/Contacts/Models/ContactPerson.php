@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use Laravel\Scout\Searchable;
 
 /**
  * Individual contact person attached to a Customer or Supplier (polymorphic).
@@ -32,6 +33,18 @@ class ContactPerson extends Model
     use Auditable, HasUuids;
 
     protected $table = 'contact_persons';
+
+    protected static function booted(): void
+    {
+        $reindexParent = function (ContactPerson $cp) {
+            if ($cp->contactable && in_array(Searchable::class, class_uses_recursive($cp->contactable))) {
+                $cp->contactable->searchable();
+            }
+        };
+
+        static::saved($reindexParent);
+        static::deleted($reindexParent);
+    }
 
     protected $fillable = [
         'contactable_type',
