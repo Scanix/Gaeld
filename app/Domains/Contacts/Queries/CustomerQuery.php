@@ -17,7 +17,7 @@ class CustomerQuery
         return QueryBuilder::for(Customer::query(), $request)
             ->allowedSorts(['name', 'email', 'city', 'country', 'created_at'], 'name', 'asc')
             ->allowedFilters(['country', 'currency'])
-            ->searchable(['name', 'email', 'city', 'vat_number'])
+            ->searchable(['name', 'email', 'city', 'vat_number', 'contactPersons.first_name', 'contactPersons.last_name', 'contactPersons.email'])
             ->apply()
             ->paginate($perPage)
             ->withQueryString();

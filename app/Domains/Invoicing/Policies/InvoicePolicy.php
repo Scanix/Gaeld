@@ -70,4 +70,12 @@ class InvoicePolicy extends BasePolicy
             && $user->hasPermissionTo(Permission::InvoicingEdit)
             && $invoice->status->canTransitionTo(InvoiceStatus::Cancelled);
     }
+
+    public function forceDelete(User $user, Invoice $invoice): bool
+    {
+        return $this->belongsToOrganization($user, $invoice)
+            && $user->hasPermissionTo(Permission::InvoicingDelete)
+            && $user->hasRole('owner')
+            && ($invoice->trashed() || $invoice->status === InvoiceStatus::Cancelled);
+    }
 }

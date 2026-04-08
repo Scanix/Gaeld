@@ -7,6 +7,9 @@ use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
+use App\Domains\Invoicing\Services\SwissQrInvoiceService;
+use App\Domains\Organizations\Models\Organization;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Mockery;
 use Tests\TestCase;
@@ -17,12 +20,16 @@ class FinalizeInvoiceActionTest extends TestCase
 
     private $accountingService;
 
+    private $qrService;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->accountingService = Mockery::mock(InvoiceAccountingService::class);
-        $this->action = new FinalizeInvoiceAction($this->accountingService);
+        $this->qrService = Mockery::mock(SwissQrInvoiceService::class);
+        $this->qrService->shouldReceive('ensureQrReference')->byDefault();
+        $this->action = new FinalizeInvoiceAction($this->accountingService, $this->qrService);
     }
 
     public function test_rejects_sent_invoice(): void
@@ -84,6 +91,9 @@ class FinalizeInvoiceActionTest extends TestCase
     {
         $invoice = Mockery::mock(Invoice::class)->makePartial();
         $invoice->status = $status;
+
+        $org = Mockery::mock(Organization::class)->makePartial();
+        $invoice->shouldReceive('getAttribute')->with('organization')->andReturn($org);
 
         $linesRelation = Mockery::mock(HasMany::class);
         $linesRelation->shouldReceive('count')->andReturn($lineCount);

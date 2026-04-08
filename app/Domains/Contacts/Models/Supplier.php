@@ -108,6 +108,9 @@ class Supplier extends Model
             'city' => $this->city ?? '',
             'vat_number' => $this->vat_number ?? '',
             'default_expense_category' => $this->default_expense_category ?? '',
+            'contact_persons' => $this->contactPersons
+                ->map(fn (ContactPerson $cp) => $cp->full_name.' '.$cp->email)
+                ->implode(' | '),
         ];
     }
 

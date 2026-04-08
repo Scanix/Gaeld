@@ -161,15 +161,15 @@ function onJustificatifChange(e) {
 }
 
 const customerList = reactive([...props.customers])
-const clientOptions = ref(customerList.map(c => ({ value: c.id, label: c.name })))
+const clientOptions = ref(customerList.map(c => ({ value: String(c.id), label: c.name })))
 
 const showCreateCustomer = ref(false)
 const showPreview = ref(false)
 
 function onCustomerCreated(customer) {
   customerList.push(customer)
-  clientOptions.value = customerList.map(c => ({ value: c.id, label: c.name }))
-  form.customer_id = customer.id
+  clientOptions.value = customerList.map(c => ({ value: String(c.id), label: c.name }))
+  form.customer_id = String(customer.id)
 }
 
 const vatOptions = [
@@ -200,7 +200,7 @@ function computeDueDate(issueDate, paymentTermsDays) {
 
 function applyPaymentTerms() {
   if (dueDateManuallyEdited.value) return
-  const customer = customerList.find(c => c.id === form.customer_id)
+  const customer = customerList.find(c => String(c.id) === form.customer_id)
   const days = customer?.payment_terms || props.defaultPaymentTermsDays
   if (days) {
     form.payment_terms = String(days)
