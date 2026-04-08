@@ -2,9 +2,9 @@
 
 namespace App\Domains\Api\Resources;
 
+use App\Domains\Api\Models\PersonalAccessToken;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Laravel\Sanctum\PersonalAccessToken;
 
 /** @mixin PersonalAccessToken */
 class ApiTokenResource extends JsonResource

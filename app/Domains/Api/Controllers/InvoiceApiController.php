@@ -195,6 +195,10 @@ class InvoiceApiController extends Controller
         return response()->json(null, 204);
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $lines
+     * @return array<int, array<string, mixed>>
+     */
     private function resolveLineVatRateUuids(array $lines, string $orgId): array
     {
         foreach ($lines as &$line) {
