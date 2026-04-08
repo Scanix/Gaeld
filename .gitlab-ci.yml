@@ -86,13 +86,26 @@ variables:
     - |
       if [ -n "$GAELD_EE_DEPLOY_KEY" ]; then
         eval $(ssh-agent -s)
-        # Sanitise key file: strip \r, ensure trailing newline
+        # Debug: inspect the raw variable and key file
+        echo "--- Variable type check ---"
+        echo "GAELD_EE_DEPLOY_KEY value starts with: $(echo "$GAELD_EE_DEPLOY_KEY" | head -c 30)"
+        echo "Is it a file path? $(file "$GAELD_EE_DEPLOY_KEY" 2>&1 || echo 'not a file')"
+        ls -la "$GAELD_EE_DEPLOY_KEY" 2>/dev/null || echo "Not a file on disk"
+        wc -l < "$GAELD_EE_DEPLOY_KEY" 2>/dev/null || echo "Cannot read as file"
+        wc -c < "$GAELD_EE_DEPLOY_KEY" 2>/dev/null || echo "Cannot get byte count"
+        echo "--- Raw hex of first 64 bytes ---"
+        xxd -l 64 "$GAELD_EE_DEPLOY_KEY" 2>/dev/null || od -A x -t x1z -N 64 "$GAELD_EE_DEPLOY_KEY" 2>/dev/null || echo "No hex dump tool"
+        echo "--- Sanitising key ---"
         tr -d '\r' < "$GAELD_EE_DEPLOY_KEY" > /tmp/ee_deploy_key
+        echo "" >> /tmp/ee_deploy_key
         chmod 600 /tmp/ee_deploy_key
-        # Debug: show first/last line to verify format (safe — no secret data)
         head -1 /tmp/ee_deploy_key
         tail -1 /tmp/ee_deploy_key
-        ssh-add /tmp/ee_deploy_key
+        wc -l /tmp/ee_deploy_key
+        echo "--- ssh-add verbose ---"
+        ssh-add /tmp/ee_deploy_key 2>&1 || true
+        echo "--- ssh-keygen check ---"
+        ssh-keygen -l -f /tmp/ee_deploy_key 2>&1 || true
         rm -f /tmp/ee_deploy_key
         mkdir -p ~/.ssh
         ssh-keyscan -H gitlab.nectoria.com >> ~/.ssh/known_hosts 2>/dev/null
