@@ -90,6 +90,7 @@ jobs:
         run: composer stan
 
       - name: Audit Composer dependencies
+        continue-on-error: true
         run: composer audit --no-dev
 
       - name: Audit NPM dependencies

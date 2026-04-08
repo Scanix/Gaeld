@@ -58,6 +58,8 @@ return [
     'invoices_per_month' => 'fatture / mese',
     'payment_failed_warning' => 'Il tuo ultimo pagamento è fallito. Aggiorna il tuo metodo di pagamento per mantenere l\'accesso.',
     'update_payment_method' => 'Aggiorna metodo di pagamento',
+    'trial_complete_payment_hint' => 'Aggiungi un metodo di pagamento ora per continuare automaticamente l\'abbonamento al termine della prova.',
+    'add_payment_method' => 'Aggiungi metodo di pagamento',
     'trial_ends' => 'La prova termina il',
     'subscription_status_active' => 'Attivo',
     'subscription_status_trialing' => 'Periodo di prova',
