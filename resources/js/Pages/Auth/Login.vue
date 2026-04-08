@@ -47,7 +47,7 @@ async function loginWithPasskey() {
     })
 
     if (!optionsRes.ok) {
-      throw new Error('Failed to get authentication options')
+      throw new Error(t('passkey_auth_options_failed'))
     }
 
     const options = await optionsRes.json()
@@ -66,7 +66,7 @@ async function loginWithPasskey() {
 
     if (!loginRes.ok) {
       const data = await loginRes.json()
-      throw new Error(data.message || 'Passkey authentication failed')
+      throw new Error(data.message || t('passkey_login_failed'))
     }
 
     const data = await loginRes.json()
