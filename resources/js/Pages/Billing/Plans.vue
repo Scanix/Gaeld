@@ -31,6 +31,10 @@ const checkoutResult = computed(() => {
 
 const hasPlans = computed(() => props.plans.length > 0)
 
+const isTrialingWithoutStripe = computed(() =>
+  props.currentSubscription?.status === 'trialing' && !props.currentSubscription?.has_stripe
+)
+
 const statusBadgeClass = {
   active: 'text-[hsl(var(--primary))] bg-[hsl(var(--accent))]',
   trialing: 'text-blue-700 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/50',
@@ -41,6 +45,13 @@ const statusBadgeClass = {
 
 function checkout(planId) {
   router.post(`/billing/checkout/${planId}`)
+}
+
+function checkoutCurrentPlan() {
+  const currentPlan = props.plans.find(p => p.slug === props.currentSubscription?.plan_slug)
+  if (currentPlan) {
+    checkout(currentPlan.id)
+  }
 }
 
 function openPortal() {
@@ -77,6 +88,21 @@ function openPortal() {
         <AlertCircle class="h-4 w-4 shrink-0" />
         <span>{{ t('payment_failed_warning') }}</span>
         <button class="ml-auto underline font-medium" @click="openPortal">{{ t('update_payment_method') }}</button>
+      </div>
+
+      <!-- Trial without payment method — prompt to complete setup -->
+      <div
+        v-if="isTrialingWithoutStripe"
+        class="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/50 p-4 text-sm text-blue-700 dark:text-blue-400"
+      >
+        <CreditCard class="h-4 w-4 shrink-0" />
+        <span>{{ t('trial_complete_payment_hint') }}</span>
+        <button
+          class="ml-auto underline font-medium whitespace-nowrap"
+          @click="checkoutCurrentPlan"
+        >
+          {{ t('add_payment_method') }}
+        </button>
       </div>
 
       <!-- ══ MY SUBSCRIPTION ══ -->
@@ -249,15 +275,19 @@ function openPortal() {
               </ul>
 
               <Button
-                v-if="currentSubscription?.plan_slug !== plan.slug"
+                v-if="currentSubscription?.plan_slug !== plan.slug || isTrialingWithoutStripe"
                 class="w-full"
                 :disabled="!plan.is_checkout_available"
                 @click="checkout(plan.id)"
               >
                 {{
-                  plan.is_checkout_available
-                    ? (currentSubscription ? t('switch_plan') : t('start_trial'))
-                    : t('plan_checkout_unavailable')
+                  !plan.is_checkout_available
+                    ? t('plan_checkout_unavailable')
+                    : isTrialingWithoutStripe && currentSubscription?.plan_slug === plan.slug
+                      ? t('add_payment_method')
+                      : currentSubscription
+                        ? t('switch_plan')
+                        : t('start_trial')
                 }}
               </Button>
             </CardContent>
