@@ -59,7 +59,7 @@ class ChecklistService
         return [
             ['key' => 'checklist_profile_complete',    'done' => $profileComplete,    'href' => '/settings'],
             ['key' => 'checklist_chart_configured',    'done' => $chartConfigured,    'href' => '/accounting/chart-of-accounts'],
-            ['key' => 'checklist_customer_created',    'done' => $customerCreated,    'href' => '/contacts/customers/create'],
+            ['key' => 'checklist_customer_created',    'done' => $customerCreated,    'href' => '/customers/create'],
             ['key' => 'checklist_bank_account_created', 'done' => $bankAccountCreated, 'href' => '/banking'],
             ['key' => 'checklist_invoices_created',    'done' => $invoicesCreated,    'href' => '/invoices/create'],
         ];
