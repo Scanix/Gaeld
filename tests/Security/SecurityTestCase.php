@@ -10,6 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\WithActiveSubscription;
 use Tests\Traits\WithOrganizationPermissions;
 
 /**
@@ -20,7 +21,7 @@ use Tests\Traits\WithOrganizationPermissions;
  */
 abstract class SecurityTestCase extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
+    use RefreshDatabase, WithActiveSubscription, WithOrganizationPermissions;
 
     protected Organization $orgA;
 
@@ -50,6 +51,9 @@ abstract class SecurityTestCase extends TestCase
 
         $this->assignOrganizationRole($this->ownerA, $this->orgA, 'owner');
         $this->assignOrganizationRole($this->ownerB, $this->orgB, 'owner');
+
+        $this->ensureSubscriptionIfSaas($this->orgA);
+        $this->ensureSubscriptionIfSaas($this->orgB);
     }
 
     /**
