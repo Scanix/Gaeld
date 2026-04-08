@@ -40,10 +40,13 @@ const form = useForm({
   notes: props.customer.notes?.default ?? '',
 })
 
-useUnsavedChanges(computed(() => form.isDirty))
+const { forceClear } = useUnsavedChanges(computed(() => form.isDirty))
 
 function submit() {
-  form.put(`/customers/${props.customer.id}`)
+  forceClear.value = true
+  form.put(`/customers/${props.customer.id}`, {
+    onError: () => { forceClear.value = false },
+  })
 }
 
 const typeOptions = [

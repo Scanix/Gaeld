@@ -8,11 +8,12 @@ use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
+use Tests\Traits\WithActiveSubscription;
 use Tests\Traits\WithOrganizationPermissions;
 
 class MemberManagementTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
+    use RefreshDatabase, WithActiveSubscription, WithOrganizationPermissions;
 
     private User $owner;
 
@@ -47,6 +48,8 @@ class MemberManagementTest extends TestCase
 
         $this->organization->users()->attach($this->member->id, ['role' => 'member']);
         $this->assignOrganizationRole($this->member, $this->organization, 'member');
+
+        $this->ensureSubscriptionIfSaas($this->organization);
     }
 
     // --- Invite Member ---

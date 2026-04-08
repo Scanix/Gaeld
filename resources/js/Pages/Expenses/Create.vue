@@ -17,12 +17,16 @@ import FormFileInput from '@/Components/UI/FormFileInput.vue'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
+import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
+import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import { Plus, HelpCircle } from 'lucide-vue-next'
 
 const props = defineProps({
   vatRates: { type: Array, default: () => [] },
   suppliers: { type: Array, default: () => [] },
   categories: { type: Array, default: () => [] },
+  expenseAccounts: { type: Array, default: () => [] },
+  bankAccounts: { type: Array, default: () => [] },
 })
 
 const form = useForm({
@@ -36,13 +40,19 @@ const form = useForm({
   supplier_id: '',
   currency: 'CHF',
   payment_method: '',
+  expense_account_code: '',
+  bank_account_code: '',
   receipt: null,
 })
 
-useUnsavedChanges(computed(() => form.isDirty))
+const { forceClear } = useUnsavedChanges(computed(() => form.isDirty))
 
 function submit() {
-  form.post('/expenses', { forceFormData: true })
+  forceClear.value = true
+  form.post('/expenses', {
+    forceFormData: true,
+    onError: () => { forceClear.value = false },
+  })
 }
 
 function onReceiptChange(e) {
@@ -50,6 +60,8 @@ function onReceiptChange(e) {
 }
 
 const { t } = useTranslations()
+
+const { isClosed: isDateClosed, closedYear } = useClosedFiscalYear(() => form.date)
 
 const categoryOptions = props.categories.map(c => ({ value: c.name, label: c.name }))
 
@@ -64,6 +76,18 @@ const paymentMethodOptions = [
   { value: 'card', label: t('payment_card') },
   { value: 'bank_transfer', label: t('payment_bank_transfer') },
   { value: 'other', label: t('payment_other') },
+]
+
+const expenseAccountOptions = [
+  { value: '', label: '—' },
+  ...props.expenseAccounts.map(a => ({ value: a.code, label: `${a.code} — ${a.name}` })),
+]
+
+const bankAccountOptions = [
+  { value: '', label: '—' },
+  ...props.bankAccounts
+    .filter(ba => ba.ledger_account?.code)
+    .map(ba => ({ value: ba.ledger_account.code, label: `${ba.name}${ba.iban ? ` (${ba.iban})` : ''}` })),
 ]
 
 const supplierList = reactive([...props.suppliers])
@@ -93,6 +117,8 @@ function onSupplierCreated(supplier) {
 <template>
   <AppLayout :title="t('create_expense')" help-page="expenses">
     <Breadcrumb :items="[{ label: t('expenses'), href: '/expenses' }, { label: t('create_expense') }]" class="mb-4" />
+
+    <ClosedYearBanner v-if="isDateClosed" :year="closedYear" />
 
     <Card class="max-w-2xl">
       <CardHeader>
@@ -193,6 +219,26 @@ function onSupplierCreated(supplier) {
             :label="t('description')"
           />
 
+          <!-- Accounting -->
+          <hr class="border-[hsl(var(--border))]" />
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('accounting') }}</h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormSelect
+              id="expense_account_code"
+              v-model="form.expense_account_code"
+              :label="t('expense_account')"
+              :options="expenseAccountOptions"
+              :error="form.errors.expense_account_code"
+            />
+            <FormSelect
+              id="bank_account_code"
+              v-model="form.bank_account_code"
+              :label="t('bank_account')"
+              :options="bankAccountOptions"
+              :error="form.errors.bank_account_code"
+            />
+          </div>
+
           <!-- Attachment -->
           <hr class="border-[hsl(var(--border))]" />
 
@@ -205,7 +251,7 @@ function onSupplierCreated(supplier) {
 
           <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" href="/expenses" variant="outline">{{ t('cancel') }}</Button>
-            <Button type="submit" :disabled="form.processing">{{ t('create_expense') }}</Button>
+            <Button type="submit" :disabled="form.processing || isDateClosed" :title="isDateClosed ? t('fiscal_year_closed_action_disabled') : undefined">{{ t('create_expense') }}</Button>
           </div>
         </form>
       </CardContent>

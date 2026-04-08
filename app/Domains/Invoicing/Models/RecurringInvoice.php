@@ -7,6 +7,7 @@ use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
+use App\Support\Traits\HasPublicUuid;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * the next issue date to determine when the next invoice is due.
  *
  * @property int $id
+ * @property string $uuid
  * @property string $organization_id
  * @property int $customer_id
  * @property RecurrenceFrequency $frequency
@@ -28,12 +30,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Organization $organization
+ * @property-read Customer $customer
  */
 class RecurringInvoice extends Model
 {
-    use Auditable, BelongsToOrganization;
+    use Auditable, BelongsToOrganization, HasPublicUuid;
 
     protected $fillable = [
+        'uuid',
         'organization_id',
         'customer_id',
         'frequency',
@@ -54,11 +59,13 @@ class RecurringInvoice extends Model
         ];
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);

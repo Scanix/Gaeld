@@ -14,6 +14,7 @@ import HelpText from '@/Components/HelpText.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
+import { AlertTriangle } from 'lucide-vue-next'
 
 const props = defineProps({
   year:         { type: Number, required: true },
@@ -24,6 +25,7 @@ const props = defineProps({
   netResult:    { type: String, default: '0' },
   closedYears:  { type: Array, default: () => [] },
   canReopenYear: { type: Boolean, default: false },
+  unsettledVatPeriods: { type: Array, default: () => [] },
 })
 
 const { t } = useTranslations()
@@ -47,6 +49,7 @@ const reopenForm = useForm({
 
 const hasAccounts = computed(() => props.income.length > 0 || props.expenses.length > 0)
 const isYearClosed = computed(() => props.closedYears.includes(props.year))
+const hasUnsettledVat = computed(() => props.unsettledVatPeriods.length > 0)
 
 const netResultNum = computed(() => parseFloat(props.netResult ?? 0))
 const isProfit     = computed(() => netResultNum.value >= 0)
@@ -115,6 +118,12 @@ function runReopen() {
     <!-- Info banner -->
     <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
       {{ t('closing_warning') }}
+    </div>
+
+    <!-- VAT unsettled warning -->
+    <div v-if="hasUnsettledVat && !isYearClosed" class="mb-6 flex items-center gap-3 rounded-lg border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800 dark:border-orange-800 dark:bg-orange-950/30 dark:text-orange-200">
+      <AlertTriangle class="h-4 w-4 shrink-0" />
+      <span>{{ t('vat_unsettled_warning', { periods: unsettledVatPeriods.join(', ') }) }}</span>
     </div>
 
     <div v-if="!hasAccounts" class="rounded-lg border p-6 text-center text-[hsl(var(--muted-foreground))]">

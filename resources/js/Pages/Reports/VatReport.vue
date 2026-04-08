@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -14,6 +14,8 @@ import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
+import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
+import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import { FileSpreadsheet, Receipt } from 'lucide-vue-next'
 
@@ -58,6 +60,13 @@ function applyFilter() {
   router.get('/reports/vat', exportParams.value, { preserveState: true })
 }
 
+// Auto-reload when quarter/year/mode changes
+watch([mode, year, quarter], () => {
+  if (mode.value === 'quarter') {
+    applyFilter()
+  }
+})
+
 // Settlement confirm dialog
 const showSettle = ref(false)
 const settleForm = useForm({
@@ -74,6 +83,14 @@ function postSettlement() {
     onSuccess: () => { showSettle.value = false },
   })
 }
+
+// Closed fiscal year detection based on selected period
+const periodYear = computed(() => {
+  if (mode.value === 'quarter') return year.value
+  // For custom range, use the 'from' date year
+  return customFrom.value ? parseInt(customFrom.value.slice(0, 4), 10) : null
+})
+const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
 </script>
 
 <template>
@@ -109,13 +126,15 @@ function postSettlement() {
         <FormInput id="vat-to" v-model="customTo" type="date" :label="t('to')" />
       </template>
 
-      <Button @click="applyFilter">{{ t('apply') }}</Button>
+      <Button v-if="mode === 'custom'" @click="applyFilter">{{ t('apply') }}</Button>
 
       <div class="ml-auto flex gap-2">
         <ExportDropdown base-url="/reports/vat/export" :params="exportParams" />
         <Button
           v-if="report"
           variant="outline"
+          :disabled="isPeriodClosed"
+          :title="isPeriodClosed ? t('fiscal_year_closed_action_disabled') : undefined"
           @click="showSettle = true"
         >
           <FileSpreadsheet class="mr-1.5 h-4 w-4" />
@@ -123,6 +142,8 @@ function postSettlement() {
         </Button>
       </div>
     </div>
+
+    <ClosedYearBanner v-if="isPeriodClosed" :year="closedYear" />
 
     <template v-if="report">
       <!-- Section 200: Umsatz (Revenue) -->

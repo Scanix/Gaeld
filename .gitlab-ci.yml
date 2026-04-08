@@ -1,0 +1,344 @@
+# =============================================================================
+#  Gäld API — GitLab CI/CD Pipeline
+#
+#  Runs on self-hosted Docker runners.
+#  Full pipeline: lint → analyse → test (CE+EE, coverage gate) → docs → deploy
+#
+#  The `deploy` stage is manual, triggered only on the `production` branch.
+# =============================================================================
+
+stages:
+  - lint
+  - analyse
+  - test
+  - docs
+  - performance
+  - deploy
+
+default:
+  image: $CI_IMAGE
+  tags:
+    - docker
+
+variables:
+  # Create a dedicated Docker network per build so service containers
+  # (postgres, redis) are reachable by hostname from the build container.
+  FF_NETWORK_PER_BUILD: "true"
+  CI_IMAGE: registry.nectoria.com/nectoria/products/gaeld/gaeld-ee/ci:php8.4-node24
+  PHP_VERSION: "8.4"
+  NODE_VERSION: "24"
+  POSTGRES_DB: gaeld_test
+  POSTGRES_USER: gaeld
+  POSTGRES_PASSWORD: password
+  DB_CONNECTION: pgsql
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_DATABASE: gaeld_test
+  DB_USERNAME: gaeld
+  DB_PASSWORD: password
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  CACHE_STORE: array
+  SESSION_DRIVER: array
+  QUEUE_CONNECTION: sync
+  MAIL_MAILER: array
+  SCOUT_DRIVER: "null"
+  APP_ENV: testing
+  APP_KEY: "base64:s25aRLcFtz+CDCWpI2dW7Lhr1NJW9koLQSciHu35Nk4="
+  # EE feature flags — enabled when GAELD_EE_DEPLOY_KEY is set so CI
+  # covers all code paths (billing, SaaS middleware, etc.).
+  FEATURE_SAAS: "true"
+  FEATURE_AUTO_RECONCILIATION: "true"
+  FEATURE_BANK_SYNC: "true"
+  FEATURE_API_ACCESS: "true"
+  FEATURE_AUTOMATION: "true"
+  FEATURE_MULTI_CURRENCY: "true"
+  FEATURE_RULE_ENGINE: "true"
+  FEATURE_ADVANCED_PERMISSIONS: "true"
+  FEATURE_ANALYTICAL: "true"
+  FEATURE_WITHHOLDING_TAX: "true"
+  FEATURE_TAX_DECLARATION: "true"
+  FEATURE_E_INVOICING: "true"
+  FEATURE_CONSOLIDATION: "true"
+  # Stripe test mode — allows EE billing tests to call Stripe API.
+  # Use `sk_test_` / `pk_test_` keys from the Stripe dashboard.
+  STRIPE_KEY: "${STRIPE_TEST_KEY}"
+  STRIPE_SECRET: "${STRIPE_TEST_SECRET}"
+  STRIPE_WEBHOOK_SECRET: "${STRIPE_TEST_WEBHOOK_SECRET}"
+  # Composer / pnpm caching
+  COMPOSER_HOME: "$CI_PROJECT_DIR/.composer-cache"
+  PNPM_HOME: "$CI_PROJECT_DIR/.pnpm-store"
+
+# ---------------------------------------------------------------------------
+#  Cache & Services
+# ---------------------------------------------------------------------------
+
+.default-cache: &default-cache
+  key:
+    files:
+      - composer.lock
+      - pnpm-lock.yaml
+  paths:
+    - .composer-cache/
+    - .pnpm-store/
+    - vendor/
+    - node_modules/
+
+.php-setup: &php-setup
+  before_script:
+    - cp .env.example .env
+    # Clone EE plugin (available on GitLab, not on GitHub)
+    - |
+      if [ -n "$GAELD_EE_DEPLOY_KEY" ]; then
+        eval $(ssh-agent -s)
+        tr -d '\r' < "$GAELD_EE_DEPLOY_KEY" > /tmp/ee_deploy_key
+        echo "" >> /tmp/ee_deploy_key
+        chmod 600 /tmp/ee_deploy_key
+        ssh-add /tmp/ee_deploy_key
+        rm -f /tmp/ee_deploy_key
+        mkdir -p ~/.ssh
+        ssh-keyscan -H gitlab.nectoria.com >> ~/.ssh/known_hosts 2>/dev/null
+        git clone --depth 1 git@gitlab.nectoria.com:nectoria/products/gaeld/gaeld-ee.git plugins/gaeld-ee
+      else
+        echo "⚠ GAELD_EE_DEPLOY_KEY not set — running CE-only"
+      fi
+    - composer install --no-interaction --prefer-dist --optimize-autoloader
+    - php artisan key:generate
+
+.node-setup: &node-setup
+  before_script:
+    - pnpm install --frozen-lockfile
+
+# ---------------------------------------------------------------------------
+#  Stage: lint
+# ---------------------------------------------------------------------------
+
+pint:
+  stage: lint
+  <<: *php-setup
+  script:
+    - composer lint
+  cache:
+    <<: *default-cache
+    policy: pull-push
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "production"
+
+# ---------------------------------------------------------------------------
+#  Stage: analyse
+# ---------------------------------------------------------------------------
+
+phpstan:
+  stage: analyse
+  <<: *php-setup
+  script:
+    - composer stan
+  cache:
+    <<: *default-cache
+    policy: pull
+  needs: ["pint"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "production"
+
+# ---------------------------------------------------------------------------
+#  Stage: test
+# ---------------------------------------------------------------------------
+
+test:
+  stage: test
+  <<: *php-setup
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+    - name: redis:7-alpine
+      alias: redis
+  script:
+    # Build frontend assets (required for Inertia tests)
+    - pnpm install --frozen-lockfile
+    - pnpm build
+    # Run migrations
+    - php artisan migrate --force
+    # Run tests with coverage
+    - php artisan test --coverage-clover coverage/clover.xml
+    # Enforce minimum coverage (70% line coverage)
+    - |
+      COVERAGE=$(php -r "
+        \$xml = simplexml_load_file('coverage/clover.xml');
+        \$metrics = \$xml->project->metrics;
+        \$stmts = (int)\$metrics['statements'];
+        \$covered = (int)\$metrics['coveredstatements'];
+        echo \$stmts > 0 ? round((\$covered / \$stmts) * 100, 2) : 0;
+      ")
+      echo "Line coverage: ${COVERAGE}%"
+      php -r "exit((float)'${COVERAGE}' >= 70.0 ? 0 : 1);" || {
+        echo "❌ Coverage ${COVERAGE}% is below the 70% minimum"
+        exit 1
+      }
+      echo "✅ Coverage gate passed: ${COVERAGE}%"
+  cache:
+    <<: *default-cache
+    policy: pull
+  needs: ["pint"]
+  artifacts:
+    when: always
+    paths:
+      - coverage/clover.xml
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/clover.xml
+    expire_in: 30 days
+  coverage: '/Line coverage: (\d+\.\d+)%/'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "production"
+
+# ---------------------------------------------------------------------------
+#  Stage: docs (Scribe API docs regeneration)
+# ---------------------------------------------------------------------------
+
+scribe:
+  stage: docs
+  <<: *php-setup
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+    - name: redis:7-alpine
+      alias: redis
+  script:
+    - php artisan migrate --force
+    - php artisan scribe:generate
+  cache:
+    <<: *default-cache
+    policy: pull
+  needs: ["test"]
+  artifacts:
+    paths:
+      - public/docs/
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "production"
+
+# ---------------------------------------------------------------------------
+#  Stage: performance (k6 load tests — manual trigger)
+# ---------------------------------------------------------------------------
+
+k6:
+  stage: performance
+  image: grafana/k6:latest
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+    - name: redis:7-alpine
+      alias: redis
+  before_script:
+    # Setup PHP app for k6 to hit (same as test job)
+    - apk add --no-cache php84 php84-pdo php84-pdo_pgsql php84-redis php84-mbstring php84-xml php84-curl php84-zip php84-tokenizer php84-dom php84-xmlwriter composer
+    - cp .env.example .env
+    - composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+    - php84 artisan key:generate
+    - php84 artisan migrate --force
+    # Start built-in server in background
+    - php84 artisan serve --host=0.0.0.0 --port=8000 &
+    - sleep 3
+  script:
+    - k6 run --out json=k6-results.json tests/Performance/full-suite.js
+  variables:
+    K6_BASE_URL: "http://localhost:8000"
+  cache:
+    <<: *default-cache
+    policy: pull
+  needs: ["test"]
+  artifacts:
+    when: always
+    paths:
+      - k6-results.json
+    expire_in: 14 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == "production"
+      when: manual
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  allow_failure: true
+
+# ---------------------------------------------------------------------------
+#  Stage: deploy (manual, production branch only)
+# ---------------------------------------------------------------------------
+
+deploy:api:
+  stage: deploy
+  before_script:
+    - cp .env.example .env
+    - composer install --no-interaction --prefer-dist --optimize-autoloader
+  script:
+    - vendor/bin/dep deploy
+  after_script:
+    # Post-deploy health check
+    - |
+      sleep 10
+      HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "${DEPLOY_APP_URL:-https://app.gaeld.ch}/up")
+      if [ "$HTTP_STATUS" = "200" ]; then
+        echo "✅ Health check passed (HTTP ${HTTP_STATUS})"
+      else
+        echo "❌ Health check failed (HTTP ${HTTP_STATUS})"
+        exit 1
+      fi
+  environment:
+    name: production
+    url: https://app.gaeld.ch
+  cache:
+    <<: *default-cache
+    policy: pull
+  needs: ["test", "scribe"]
+  tags:
+    - docker
+  rules:
+    - if: $CI_COMMIT_BRANCH == "production"
+      when: manual
+  allow_failure: false
+
+deploy:ee:plugin:
+  stage: deploy
+  script:
+    - |
+      cd plugins/gaeld-ee
+      git push origin main --tags
+  rules:
+    - if: $CI_COMMIT_BRANCH == "production"
+      when: manual
+      changes:
+        - plugins/gaeld-ee/**/*
+  allow_failure: true
+
+# ---------------------------------------------------------------------------
+#  Build CI image (auto on Dockerfile change, manual otherwise)
+# ---------------------------------------------------------------------------
+
+build:ci-image:
+  stage: .pre
+  image: docker:27
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $CI_IMAGE -f docker/ci/Dockerfile .
+    - docker push $CI_IMAGE
+  rules:
+    - changes:
+        - docker/ci/Dockerfile
+      when: always
+    - when: manual
+  allow_failure: true

@@ -14,6 +14,7 @@ readonly class CompleteSetupData
         public CreateOrganizationData $organization,
     ) {}
 
+    /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): self
     {
         return new self(
@@ -33,6 +34,7 @@ readonly class CompleteSetupData
                 'canton' => $data['org_canton'] ?? null,
                 'currency' => $data['currency'],
                 'locale' => $data['locale'],
+                'business_type' => $data['business_type'] ?? null,
             ]),
         );
     }

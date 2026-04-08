@@ -15,7 +15,8 @@ class StoreInvoiceApiRequest extends FormRequest
         return [
             'customer_id' => [
                 'required',
-                Rule::exists('customers', 'id')->where('organization_id', $orgId),
+                'uuid',
+                Rule::exists('customers', 'uuid')->where('organization_id', $orgId),
             ],
             'number' => 'nullable|string|max:50',
             'issue_date' => 'required|date',
@@ -29,7 +30,8 @@ class StoreInvoiceApiRequest extends FormRequest
             'lines.*.unit_price' => 'required|numeric|min:0',
             'lines.*.vat_rate_id' => [
                 'nullable',
-                Rule::exists('vat_rates', 'id')->where('organization_id', $orgId),
+                'uuid',
+                Rule::exists('vat_rates', 'uuid')->where('organization_id', $orgId),
             ],
         ];
     }

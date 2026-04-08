@@ -14,7 +14,7 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { Upload, Check, Link2, RotateCcw, Loader2, UserX } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -85,6 +85,16 @@ function openMatchModal(transaction) {
   matchingTransaction.value = transaction
   matchType.value = transaction.type === 'credit' ? 'invoice' : 'expense'
   showMatchModal.value = true
+}
+
+function selectInvoiceSuggestion(inv) {
+  matchInvoiceForm.invoice_id = inv.id
+  nextTick(() => submitMatch())
+}
+
+function selectExpenseSuggestion(exp) {
+  matchExpenseForm.expense_id = exp.id
+  nextTick(() => submitMatch())
 }
 
 function submitMatch() {
@@ -474,8 +484,9 @@ const currentSuggestions = computed(() => {
               :key="inv.id"
               type="button"
               class="w-full text-left rounded-md border p-2 text-sm hover:bg-muted/50 transition-colors"
-              :class="matchInvoiceForm.invoice_id === inv.id ? 'border-[hsl(var(--primary))] bg-muted/50' : ''"
-              @click="matchInvoiceForm.invoice_id = inv.id"
+              :class="matchInvoiceForm.invoice_id === inv.id ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10' : ''"
+              :disabled="matchInvoiceForm.processing"
+              @click="selectInvoiceSuggestion(inv)"
             >
               <div class="flex justify-between">
                 <span class="font-medium">{{ inv.number }}</span>
@@ -484,13 +495,27 @@ const currentSuggestions = computed(() => {
               <span v-if="inv.customer || inv.client" class="text-xs text-muted-foreground">{{ (inv.customer ?? inv.client).name }}</span>
             </button>
           </div>
-          <FormInput
-            id="invoice_id"
-            v-model="matchInvoiceForm.invoice_id"
-            :label="t('invoice_id')"
-            :error="matchInvoiceForm.errors.invoice_id"
-            :placeholder="t('enter_invoice_id')"
-          />
+          <details v-if="currentSuggestions.invoices?.length" class="text-sm">
+            <summary class="cursor-pointer text-muted-foreground hover:text-foreground">{{ t('manual_entry') }}</summary>
+            <div class="mt-2">
+              <FormInput
+                id="invoice_id"
+                v-model="matchInvoiceForm.invoice_id"
+                :label="t('invoice_id')"
+                :error="matchInvoiceForm.errors.invoice_id"
+                :placeholder="t('enter_invoice_id')"
+              />
+            </div>
+          </details>
+          <template v-else>
+            <FormInput
+              id="invoice_id"
+              v-model="matchInvoiceForm.invoice_id"
+              :label="t('invoice_id')"
+              :error="matchInvoiceForm.errors.invoice_id"
+              :placeholder="t('enter_invoice_id')"
+            />
+          </template>
           <div class="flex justify-end gap-3">
             <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') }}</Button>
             <Button type="submit" :disabled="matchInvoiceForm.processing || !matchInvoiceForm.invoice_id">
@@ -508,8 +533,9 @@ const currentSuggestions = computed(() => {
               :key="exp.id"
               type="button"
               class="w-full text-left rounded-md border p-2 text-sm hover:bg-muted/50 transition-colors"
-              :class="matchExpenseForm.expense_id === exp.id ? 'border-[hsl(var(--primary))] bg-muted/50' : ''"
-              @click="matchExpenseForm.expense_id = exp.id"
+              :class="matchExpenseForm.expense_id === exp.id ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10' : ''"
+              :disabled="matchExpenseForm.processing"
+              @click="selectExpenseSuggestion(exp)"
             >
               <div class="flex justify-between">
                 <span class="font-medium">{{ exp.description }}</span>
@@ -518,20 +544,41 @@ const currentSuggestions = computed(() => {
               <span class="text-xs text-muted-foreground">{{ exp.vendor }} — {{ exp.category }}</span>
             </button>
           </div>
-          <FormInput
-            id="expense_id"
-            v-model="matchExpenseForm.expense_id"
-            :label="t('expense_id')"
-            :error="matchExpenseForm.errors.expense_id"
-            :placeholder="t('enter_expense_id')"
-          />
-          <FormInput
-            id="expense_account_code"
-            v-model="matchExpenseForm.expense_account_code"
-            :label="t('expense_account')"
-            :error="matchExpenseForm.errors.expense_account_code"
-            placeholder="6530"
-          />
+          <details v-if="currentSuggestions.expenses?.length" class="text-sm">
+            <summary class="cursor-pointer text-muted-foreground hover:text-foreground">{{ t('manual_entry') }}</summary>
+            <div class="mt-2 space-y-3">
+              <FormInput
+                id="expense_id"
+                v-model="matchExpenseForm.expense_id"
+                :label="t('expense_id')"
+                :error="matchExpenseForm.errors.expense_id"
+                :placeholder="t('enter_expense_id')"
+              />
+              <FormInput
+                id="expense_account_code"
+                v-model="matchExpenseForm.expense_account_code"
+                :label="t('expense_account')"
+                :error="matchExpenseForm.errors.expense_account_code"
+                placeholder="6530"
+              />
+            </div>
+          </details>
+          <template v-else>
+            <FormInput
+              id="expense_id"
+              v-model="matchExpenseForm.expense_id"
+              :label="t('expense_id')"
+              :error="matchExpenseForm.errors.expense_id"
+              :placeholder="t('enter_expense_id')"
+            />
+            <FormInput
+              id="expense_account_code"
+              v-model="matchExpenseForm.expense_account_code"
+              :label="t('expense_account')"
+              :error="matchExpenseForm.errors.expense_account_code"
+              placeholder="6530"
+            />
+          </template>
           <div class="flex justify-end gap-3">
             <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') }}</Button>
             <Button type="submit" :disabled="matchExpenseForm.processing || !matchExpenseForm.expense_id">

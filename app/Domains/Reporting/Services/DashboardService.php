@@ -5,7 +5,7 @@ namespace App\Domains\Reporting\Services;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Models\Budget;
 use App\Domains\Accounting\Models\JournalEntry;
-use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\VatReportService;
 use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Invoicing\Queries\InvoiceReportingQuery;
@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Cache;
 class DashboardService
 {
     public function __construct(
-        private readonly LedgerService $ledgerService,
+        private readonly LedgerQueryService $ledgerService,
         private readonly InvoiceReportingQuery $invoiceQuery,
         private readonly ExpenseService $expenseService,
         private readonly VatReportService $vatReportService,

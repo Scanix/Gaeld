@@ -22,6 +22,14 @@ return [
     'accounting_export_button' => 'Scarica l\'export',
     'accounting_export_expiry' => 'Questo link scadrà tra 24 ore.',
 
+    // Export dati organizzazione
+    'org_export_subject' => 'Il tuo export dei dati dell\'organizzazione è pronto',
+    'org_export_greeting' => 'Ciao :name,',
+    'org_export_body' => 'Il tuo export completo dei dati dell\'organizzazione è stato generato ed è pronto per il download. L\'archivio contiene tutti i dati aziendali in formato JSON e CSV.',
+    'org_export_button' => 'Scarica l\'export',
+    'org_export_expiry' => 'Questo link scadrà tra 48 ore.',
+    'org_export_regards' => 'Cordiali saluti',
+
     // Solleciti di pagamento
     'reminder_subject_first' => 'Promemoria di pagamento — Fattura :number',
     'reminder_subject_second' => 'Secondo promemoria — Fattura :number',

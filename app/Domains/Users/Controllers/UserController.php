@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,7 +38,7 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'locale' => 'required|string|in:en,fr,de,it,rm',
+            'locale' => ['required', 'string', Rule::in(config('accounting.supported_locales'))],
         ]);
 
         $userService->updateProfile($request->user(), UpdateUserProfileData::fromArray($validated));

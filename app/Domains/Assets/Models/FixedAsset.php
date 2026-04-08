@@ -83,31 +83,37 @@ class FixedAsset extends Model
         ];
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return BelongsTo<Account, $this> */
     public function assetAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'asset_account_id');
     }
 
+    /** @return BelongsTo<Account, $this> */
     public function depreciationExpenseAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'depreciation_expense_account_id');
     }
 
+    /** @return BelongsTo<Account, $this> */
     public function accumulatedDepreciationAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'accumulated_depreciation_account_id');
     }
 
+    /** @return HasMany<DepreciationEntry, $this> */
     public function depreciationEntries(): HasMany
     {
         return $this->hasMany(DepreciationEntry::class);
     }
 
+    /** @return HasManyThrough<JournalEntry, DepreciationEntry, $this> */
     public function journalEntries(): HasManyThrough
     {
         return $this->hasManyThrough(

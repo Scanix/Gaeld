@@ -9,6 +9,7 @@ use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 
 /**
@@ -22,6 +23,7 @@ class GenerateOpeningBalancesAction
 {
     public function __construct(
         private readonly LedgerService $ledger,
+        private readonly LedgerQueryService $ledgerQuery,
     ) {}
 
     /**
@@ -46,7 +48,7 @@ class GenerateOpeningBalancesAction
             ->orderBy('code')
             ->get();
 
-        $openingAccount = $this->ledger->resolveAccount($orgId, AccountCode::OPENING_BALANCE);
+        $openingAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::OPENING_BALANCE);
 
         $lines = [];
         $totalDebit = '0';
@@ -65,46 +67,23 @@ class GenerateOpeningBalancesAction
             }
 
             $isDebitNormal = $account->type->isDebitNormal();
+            $isPositive = bccomp($balance, '0', 2) > 0;
+            $absBalance = $isPositive ? $balance : bcmul($balance, '-1', 2);
 
-            if (bccomp($balance, '0', 2) > 0) {
-                // Positive balance: debit for debit-normal, credit for credit-normal
-                if ($isDebitNormal) {
-                    $lines[] = new JournalLineData(
-                        accountId: (string) $account->id,
-                        debit: $balance,
-                        credit: '0',
-                        description: "Solde d'ouverture {$nextYear} — {$account->code}",
-                    );
-                    $totalDebit = bcadd($totalDebit, $balance, 2);
-                } else {
-                    $lines[] = new JournalLineData(
-                        accountId: (string) $account->id,
-                        debit: '0',
-                        credit: $balance,
-                        description: "Solde d'ouverture {$nextYear} — {$account->code}",
-                    );
-                    $totalCredit = bcadd($totalCredit, $balance, 2);
-                }
+            // Debit when positive+debit-normal or negative+credit-normal
+            $shouldDebit = $isPositive === $isDebitNormal;
+
+            $lines[] = new JournalLineData(
+                accountId: (string) $account->id,
+                debit: $shouldDebit ? $absBalance : '0',
+                credit: $shouldDebit ? '0' : $absBalance,
+                description: "Solde d'ouverture {$nextYear} — {$account->code}",
+            );
+
+            if ($shouldDebit) {
+                $totalDebit = bcadd($totalDebit, $absBalance, 2);
             } else {
-                // Negative balance (rare but possible): reverse
-                $absBalance = bcmul($balance, '-1', 2);
-                if ($isDebitNormal) {
-                    $lines[] = new JournalLineData(
-                        accountId: (string) $account->id,
-                        debit: '0',
-                        credit: $absBalance,
-                        description: "Solde d'ouverture {$nextYear} — {$account->code}",
-                    );
-                    $totalCredit = bcadd($totalCredit, $absBalance, 2);
-                } else {
-                    $lines[] = new JournalLineData(
-                        accountId: (string) $account->id,
-                        debit: $absBalance,
-                        credit: '0',
-                        description: "Solde d'ouverture {$nextYear} — {$account->code}",
-                    );
-                    $totalDebit = bcadd($totalDebit, $absBalance, 2);
-                }
+                $totalCredit = bcadd($totalCredit, $absBalance, 2);
             }
         }
 

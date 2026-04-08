@@ -6,6 +6,7 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
@@ -19,6 +20,8 @@ class CacheInvalidationTest extends TestCase
 
     private LedgerService $ledgerService;
 
+    private LedgerQueryService $queryService;
+
     private Organization $organization;
 
     private array $accounts = [];
@@ -27,7 +30,8 @@ class CacheInvalidationTest extends TestCase
     {
         parent::setUp();
 
-        $this->ledgerService = new LedgerService;
+        $this->queryService = app(LedgerQueryService::class);
+        $this->ledgerService = app(LedgerService::class);
 
         $user = User::factory()->create();
         $this->organization = Organization::create(['name' => 'Cache Test Org', 'currency' => 'CHF']);
@@ -51,11 +55,11 @@ class CacheInvalidationTest extends TestCase
         $accountId = $this->accounts['ar']->id;
 
         // First call should miss cache and compute
-        $balance1 = $this->ledgerService->accountBalance($accountId);
+        $balance1 = $this->queryService->accountBalance($accountId);
         $this->assertEquals(0.0, $balance1);
 
         // Second call should return same value (from cache on array driver)
-        $balance2 = $this->ledgerService->accountBalance($accountId);
+        $balance2 = $this->queryService->accountBalance($accountId);
         $this->assertEquals($balance1, $balance2);
     }
 
@@ -64,9 +68,9 @@ class CacheInvalidationTest extends TestCase
         Cache::flush();
 
         // Prime the cache with initial balance
-        $this->ledgerService->accountBalance($this->accounts['ar']->id);
-        $this->ledgerService->accountBalance($this->accounts['revenue']->id);
-        $this->ledgerService->trialBalance($this->organization->id);
+        $this->queryService->accountBalance($this->accounts['ar']->id);
+        $this->queryService->accountBalance($this->accounts['revenue']->id);
+        $this->queryService->trialBalance($this->organization->id);
 
         // Post a new entry — should flush the cached balances
         $this->ledgerService->postEntry($this->organization->id, new JournalEntryData(
@@ -80,7 +84,7 @@ class CacheInvalidationTest extends TestCase
         ));
 
         // After posting, balance should reflect the new entry (cache was flushed)
-        $balance = $this->ledgerService->accountBalance($this->accounts['ar']->id);
+        $balance = $this->queryService->accountBalance($this->accounts['ar']->id);
 
         $this->assertEquals(500.0, $balance);
     }
@@ -89,8 +93,8 @@ class CacheInvalidationTest extends TestCase
     {
         Cache::flush();
 
-        $tb1 = $this->ledgerService->trialBalance($this->organization->id);
-        $tb2 = $this->ledgerService->trialBalance($this->organization->id);
+        $tb1 = $this->queryService->trialBalance($this->organization->id);
+        $tb2 = $this->queryService->trialBalance($this->organization->id);
 
         // Both results should be identical arrays (second is from cache)
         $this->assertIsArray($tb1);
@@ -102,8 +106,8 @@ class CacheInvalidationTest extends TestCase
         Cache::flush();
 
         // Prime both caches
-        $this->ledgerService->accountBalance($this->accounts['ar']->id);
-        $this->ledgerService->trialBalance($this->organization->id);
+        $this->queryService->accountBalance($this->accounts['ar']->id);
+        $this->queryService->trialBalance($this->organization->id);
 
         // Manually flush cache
         $this->ledgerService->flushCache($this->organization->id);
@@ -119,7 +123,7 @@ class CacheInvalidationTest extends TestCase
             ],
         ));
 
-        $balance = $this->ledgerService->accountBalance($this->accounts['ar']->id);
+        $balance = $this->queryService->accountBalance($this->accounts['ar']->id);
         $this->assertEquals(200.0, $balance);
     }
 }

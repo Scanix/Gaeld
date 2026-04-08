@@ -147,7 +147,7 @@ class VerticalPrivilegeTest extends SecurityTestCase
     {
         $this->actingAs($this->member)
             ->withSession(['current_organization_id' => $this->orgA->id])
-            ->delete("/customers/{$this->customer->id}")
+            ->delete("/customers/{$this->customer->uuid}")
             ->assertForbidden();
     }
 

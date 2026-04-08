@@ -1,5 +1,5 @@
 <script setup>
-import { useForm, usePage, router } from '@inertiajs/vue3'
+import { usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -33,34 +33,6 @@ const currentUserOrgRole = computed(() =>
 )
 const isOwner = computed(() => currentUserOrgRole.value === 'owner')
 const isOwnerOrAdmin = computed(() => ['owner', 'admin'].includes(currentUserOrgRole.value))
-
-// --- Edit Organization Modal ---
-const showEditModal = ref(false)
-const form = useForm({
-  name: props.organization.name,
-  legal_name: props.organization.legal_name || '',
-  address: props.organization.address || '',
-  city: props.organization.city || '',
-  postal_code: props.organization.postal_code || '',
-  canton: props.organization.canton || '',
-  vat_number: props.organization.vat_number || '',
-  currency: props.organization.currency || 'CHF',
-  locale: props.organization.locale || 'en',
-  require_two_factor: props.organization.require_two_factor || false,
-  default_payment_terms_days: props.organization.default_payment_terms_days ?? 30,
-})
-
-function submitUpdate() {
-  form.put(`/organizations/${props.organization.id}`, {
-    onSuccess: () => { showEditModal.value = false },
-  })
-}
-
-const cantonOptions = [
-  'AG', 'AI', 'AR', 'BE', 'BL', 'BS', 'FR', 'GE', 'GL', 'GR',
-  'JU', 'LU', 'NE', 'NW', 'OW', 'SG', 'SH', 'SO', 'SZ', 'TG',
-  'TI', 'UR', 'VD', 'VS', 'ZG', 'ZH',
-].map(c => ({ value: c, label: c }))
 
 const localeOptions = [
   { value: 'en', label: t('locale_en') },
@@ -193,7 +165,7 @@ function canChangeUserRole(user) {
           variant="outline"
           @click="showLeaveConfirm = true"
         >{{ t('leave_organization') }}</Button>
-        <Button v-if="isOwnerOrAdmin" @click="showEditModal = true">{{ t('edit') }}</Button>
+        <Button v-if="isOwnerOrAdmin" as="a" href="/settings">{{ t('edit_settings') }}</Button>
       </div>
     </div>
 
@@ -311,56 +283,6 @@ function canChangeUserRole(user) {
         </DataTable>
       </CardContent>
     </Card>
-
-    <!-- Edit Organization Modal -->
-    <Modal :show="showEditModal" @close="showEditModal = false" :title="t('edit_organization')">
-      <form class="space-y-6" @submit.prevent="submitUpdate">
-        <FormInput id="name" v-model="form.name" :label="t('name')" :error="form.errors.name" required />
-        <FormInput id="legal_name" v-model="form.legal_name" :label="t('legal_name')" :error="form.errors.legal_name" />
-        <FormInput id="address" v-model="form.address" :label="t('address')" :error="form.errors.address" />
-        <div class="grid grid-cols-2 gap-4">
-          <FormInput id="city" v-model="form.city" :label="t('city')" :error="form.errors.city" />
-          <FormInput id="postal_code" v-model="form.postal_code" :label="t('postal_code')" :error="form.errors.postal_code" />
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <FormSelect id="canton" v-model="form.canton" :label="t('canton')" :options="cantonOptions" :placeholder="t('select')" :error="form.errors.canton" />
-          <FormSelect id="locale" v-model="form.locale" :label="t('locale')" :options="localeOptions" :error="form.errors.locale" />
-        </div>
-        <FormInput id="vat_number" v-model="form.vat_number" :label="t('vat_number')" :error="form.errors.vat_number" />
-        <FormInput
-          id="default_payment_terms_days"
-          v-model.number="form.default_payment_terms_days"
-          type="number"
-          min="0"
-          max="365"
-          :label="t('default_payment_terms')"
-          :error="form.errors.default_payment_terms_days"
-        />
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('require_two_factor') }}</p>
-            <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('require_two_factor_desc') }}</p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            :aria-checked="form.require_two_factor"
-            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2"
-            :class="form.require_two_factor ? 'bg-[hsl(var(--primary))]' : 'bg-[hsl(var(--input))]'"
-            @click="form.require_two_factor = !form.require_two_factor"
-          >
-            <span
-              class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-              :class="form.require_two_factor ? 'translate-x-5' : 'translate-x-0'"
-            />
-          </button>
-        </div>
-        <div class="flex justify-end gap-3">
-          <Button variant="outline" @click="showEditModal = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="form.processing">{{ t('save') }}</Button>
-        </div>
-      </form>
-    </Modal>
 
     <!-- Invite Member Modal -->
     <Modal :show="showInviteModal" @close="showInviteModal = false" :title="t('invite_member')">

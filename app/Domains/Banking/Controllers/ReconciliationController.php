@@ -3,6 +3,7 @@
 namespace App\Domains\Banking\Controllers;
 
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Domains\Banking\Exceptions\ReconciliationFailedException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
@@ -16,7 +17,6 @@ use App\Domains\Banking\Services\PersonalPatternService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Expenses\Models\Expense;
-use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Http\Controllers\Controller;
 use App\Support\Exceptions\FeatureDisabledException;
@@ -233,7 +233,7 @@ class ReconciliationController extends Controller
 
         try {
             $this->reconciliationService->confirmMatch($match);
-        } catch (AlreadyReconciledException|UnlinkedBankAccountException|InvalidPaymentException $e) {
+        } catch (AlreadyReconciledException|UnlinkedBankAccountException|ReconciliationFailedException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 
@@ -263,6 +263,7 @@ class ReconciliationController extends Controller
      */
     public function reconcilePersonal(BankTransaction $transaction): RedirectResponse
     {
+        $transaction->loadMissing('bankAccount');
         /** @var BankAccount $bankAccount */
         $bankAccount = $transaction->bankAccount;
         $this->authorize('update', $bankAccount);
@@ -297,7 +298,8 @@ class ReconciliationController extends Controller
             'transaction_ids.*' => 'integer|exists:bank_transactions,id',
         ]);
 
-        $transactions = BankTransaction::where('bank_account_id', $bankAccount->id)
+        $transactions = BankTransaction::with('bankAccount')
+            ->where('bank_account_id', $bankAccount->id)
             ->whereIn('id', $validated['transaction_ids'])
             ->where('is_reconciled', false)
             ->get();

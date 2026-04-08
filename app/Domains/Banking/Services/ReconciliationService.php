@@ -5,12 +5,12 @@ namespace App\Domains\Banking\Services;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Banking\Enums\MatchConfidence;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Domains\Banking\Exceptions\ReconciliationFailedException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Expenses\Models\Expense;
-use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Support\Exceptions\FeatureDisabledException;
 use App\Support\FeatureFlag;
@@ -22,8 +22,6 @@ use Illuminate\Support\Facades\Log;
  *
  * Coordinates InvoiceReconciler, ExpenseReconciler, and ContraAccountReconciler,
  * plus the auto-reconciliation engine (EE only).
- *
- * @deprecated Inject the specific reconciler directly for new code.
  */
 class ReconciliationService
 {
@@ -116,7 +114,7 @@ class ReconciliationService
                 $this->invoiceReconciler->confirmMatch($exactMatch);
 
                 return true;
-            } catch (AlreadyReconciledException|UnlinkedBankAccountException|InvalidPaymentException $e) {
+            } catch (AlreadyReconciledException|UnlinkedBankAccountException|ReconciliationFailedException $e) {
                 Log::warning('Auto-reconcile: skipped match', [
                     'transaction_id' => $transaction->id,
                     'error' => $e->getMessage(),

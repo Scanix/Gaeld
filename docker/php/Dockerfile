@@ -12,7 +12,10 @@ RUN apk add --no-cache \
     unzip \
     icu-dev \
     postgresql-dev \
-    oniguruma-dev
+    oniguruma-dev \
+    tesseract-ocr \
+    tesseract-ocr-data-deu \
+    tesseract-ocr-data-fra
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -32,13 +35,14 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Install Redis extension (best effort for restricted networks)
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
     && (pecl install redis && docker-php-ext-enable redis || echo "Skipping redis pecl extension: unavailable") \
+    && (pecl install pcov && docker-php-ext-enable pcov || echo "Skipping pcov extension: unavailable") \
     && apk del .build-deps
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install Node.js (for frontend build)
-RUN apk add --no-cache nodejs npm
+# Install Node.js and pnpm (for frontend build)
+RUN apk add --no-cache nodejs npm && npm install -g pnpm
 
 # Create Sail-compatible user expected by vendor/bin/sail
 RUN addgroup -S -g 1000 sail \

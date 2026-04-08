@@ -4,8 +4,10 @@ namespace Database\Seeders;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Banking\Enums\BankMatchType;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
+use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankingService;
 use App\Domains\Contacts\Models\Customer;
@@ -21,6 +23,7 @@ use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
+use App\Domains\Invoicing\Services\SwissQrInvoiceService;
 use App\Domains\Organizations\Enums\Role;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
@@ -50,6 +53,7 @@ class ShowcaseDataSeeder extends Seeder
         private readonly PostExpenseAction $postExpense,
         private readonly BankingService $bankingService,
         private readonly InvoiceAccountingService $accountingService,
+        private readonly SwissQrInvoiceService $qrService,
     ) {}
 
     // ──────────────────────────────────────────────────────────────
@@ -62,6 +66,7 @@ class ShowcaseDataSeeder extends Seeder
             'de' => [
                 'org' => ['name' => 'PixelCraft GmbH', 'legal_name' => 'PixelCraft GmbH', 'address' => 'Pilatusstrasse 22', 'city' => 'Luzern', 'postal_code' => '6003', 'canton' => 'LU', 'vat_number' => 'CHE-345.678.901 MWST'],
                 'prefix' => 'PC',
+                'qr_iban' => 'CH4431999123000889012',
                 'bank' => ['iban' => 'CH39 0900 0000 1556 7890 1', 'name' => 'Geschäftskonto', 'bank_name' => 'Luzerner Kantonalbank'],
                 'users' => [
                     ['email' => 'sophie@pixelcraft.ch', 'name' => 'Sophie Brunner',  'role' => 'owner'],
@@ -157,6 +162,7 @@ class ShowcaseDataSeeder extends Seeder
             'fr' => [
                 'org' => ['name' => 'NovaTech Sàrl', 'legal_name' => 'NovaTech Sàrl', 'address' => 'Rue du Mont-Blanc 18', 'city' => 'Genève', 'postal_code' => '1201', 'canton' => 'GE', 'vat_number' => 'CHE-456.789.012 TVA'],
                 'prefix' => 'NT',
+                'qr_iban' => 'CH4431999123000889012',
                 'bank' => ['iban' => 'CH56 0483 5012 3456 7800 9', 'name' => 'Compte courant', 'bank_name' => 'Banque Cantonale de Genève'],
                 'users' => [
                     ['email' => 'claire@novatech-ge.ch',  'name' => 'Claire Dubois',   'role' => 'owner'],
@@ -252,6 +258,7 @@ class ShowcaseDataSeeder extends Seeder
             'it' => [
                 'org' => ['name' => 'AlpinCode Sagl', 'legal_name' => 'AlpinCode Sagl', 'address' => 'Via Nassa 32', 'city' => 'Lugano', 'postal_code' => '6900', 'canton' => 'TI', 'vat_number' => 'CHE-567.890.123 IVA'],
                 'prefix' => 'AC',
+                'qr_iban' => 'CH4431999123000889012',
                 'bank' => ['iban' => 'CH12 0024 0024 1234 5678 9', 'name' => 'Conto corrente', 'bank_name' => 'Banca dello Stato del Cantone Ticino'],
                 'users' => [
                     ['email' => 'giulia@alpincode.ch',  'name' => 'Giulia Bernasconi', 'role' => 'owner'],
@@ -347,6 +354,7 @@ class ShowcaseDataSeeder extends Seeder
             'en' => [
                 'org' => ['name' => 'BrightPath Solutions Ltd', 'legal_name' => 'BrightPath Solutions Ltd', 'address' => 'Limmatquai 72', 'city' => 'Zürich', 'postal_code' => '8001', 'canton' => 'ZH', 'vat_number' => 'CHE-678.901.234 MWST'],
                 'prefix' => 'BP',
+                'qr_iban' => 'CH4431999123000889012',
                 'bank' => ['iban' => 'CH78 0070 0110 0012 3456 7', 'name' => 'Business Account', 'bank_name' => 'Zürcher Kantonalbank'],
                 'users' => [
                     ['email' => 'anna@brightpath.ch',   'name' => 'Anna Weber',     'role' => 'owner'],
@@ -481,6 +489,7 @@ class ShowcaseDataSeeder extends Seeder
                 'locale' => $locale,
                 'fiscal_year_start' => 1,
                 'default_payment_terms_days' => 30,
+                'qr_iban' => $pack['qr_iban'] ?? null,
             ]));
 
         $syncData = [];
@@ -510,7 +519,13 @@ class ShowcaseDataSeeder extends Seeder
             return;
         }
 
-        $vatNormal = VatRate::where('organization_id', $org->id)->where('code', 'NORMAL')->first();
+        $vatRates = [];
+        foreach (['NORMAL', 'REDUCED', 'ACCOMMODATION', 'EXEMPT'] as $code) {
+            $vatRates[$code] = VatRate::where('organization_id', $org->id)->where('code', $code)->first();
+        }
+        $vatNormal = $vatRates['NORMAL'];
+        $qrPrefix = substr(preg_replace('/\D/', '', $org->vat_number ?? ''), 0, 6) ?: '000000';
+        $reconcileCutoff = now()->subMonths(2);
 
         // ── Bank Account ─────────────────────────────────────────
         $bankLedger = Account::where('organization_id', $org->id)->where('code', '1020')->firstOrFail();
@@ -521,7 +536,7 @@ class ShowcaseDataSeeder extends Seeder
                 'name' => $pack['bank']['name'],
                 'bank_name' => $pack['bank']['bank_name'],
                 'currency' => 'CHF',
-                'balance' => 30000.00,
+                'balance' => 80000.00,
             ]
         );
 
@@ -542,6 +557,56 @@ class ShowcaseDataSeeder extends Seeder
             );
         }
 
+        // Build supplier lookup + create ad-hoc suppliers from expense vendors
+        $vendorCategories = [];
+        foreach ([$pack['monthlyExpenses'], $pack['quarterlyExpenses'], $pack['occasionalExpenses']] as $expSet) {
+            foreach ($expSet as $exp) {
+                if (! isset($vendorCategories[$exp['vendor']])) {
+                    $vendorCategories[$exp['vendor']] = $exp['category'];
+                }
+            }
+        }
+        $supplierMap = [];
+        foreach (Supplier::where('organization_id', $org->id)->get() as $s) {
+            $supplierMap[$s->name] = $s->id;
+        }
+        foreach ($vendorCategories as $vendorName => $category) {
+            if (! isset($supplierMap[$vendorName])) {
+                $supplier = Supplier::create([
+                    'organization_id' => $org->id,
+                    'name' => $vendorName,
+                    'country' => 'CH',
+                    'default_expense_category' => $category,
+                ]);
+                $supplierMap[$vendorName] = $supplier->id;
+            }
+        }
+
+        // ── Contact Persons ──────────────────────────────────────
+        $contactNames = $this->contactPersonNames()[$locale];
+        foreach ($customers as $i => $customer) {
+            $emailDomain = explode('@', $customer->email)[1] ?? 'example.ch';
+            $primary = $contactNames[$i % count($contactNames)];
+            $customer->contactPersons()->create([
+                'first_name' => $primary['first_name'],
+                'last_name' => $primary['last_name'],
+                'email' => strtolower($primary['first_name']).'.'.strtolower($primary['last_name']).'@'.$emailDomain,
+                'phone' => $customer->phone,
+                'position' => $primary['position'],
+                'is_primary' => true,
+            ]);
+            if ($i % 2 === 0) {
+                $secondary = $contactNames[($i + 5) % count($contactNames)];
+                $customer->contactPersons()->create([
+                    'first_name' => $secondary['first_name'],
+                    'last_name' => $secondary['last_name'],
+                    'email' => strtolower($secondary['first_name']).'.'.strtolower($secondary['last_name']).'@'.$emailDomain,
+                    'position' => $secondary['position'],
+                    'is_primary' => false,
+                ]);
+            }
+        }
+
         // ──────────────────────────────────────────────────────────
         //  3 YEARS OF DATA (2024 → Mar 2026)
         // ──────────────────────────────────────────────────────────
@@ -560,14 +625,16 @@ class ShowcaseDataSeeder extends Seeder
                 // ── Monthly recurring expenses ───────────────────
                 foreach ($pack['monthlyExpenses'] as $me) {
                     $date = $monthStart->copy()->addDays(mt_rand(0, 5));
-                    $this->createPostedExpense($org, $me, $date, $vatNormal, $bankAccount, $bankTxNum);
+                    $expVat = $this->resolveExpenseVatRate($me['category'], $vatRates);
+                    $this->createPostedExpense($org, $me, $date, $expVat, $bankAccount, $bankTxNum, $supplierMap);
                 }
 
                 // ── Quarterly expenses (Jan, Apr, Jul, Oct) ──────
                 if (in_array($month, [1, 4, 7, 10])) {
                     foreach ($pack['quarterlyExpenses'] as $qe) {
                         $date = $monthStart->copy()->addDays(mt_rand(5, 15));
-                        $this->createPostedExpense($org, $qe, $date, $vatNormal, $bankAccount, $bankTxNum);
+                        $expVat = $this->resolveExpenseVatRate($qe['category'], $vatRates);
+                        $this->createPostedExpense($org, $qe, $date, $expVat, $bankAccount, $bankTxNum, $supplierMap);
                     }
                 }
 
@@ -587,6 +654,7 @@ class ShowcaseDataSeeder extends Seeder
                         'reference' => sprintf('SAL-%04d-%03d', $year, $bankTxNum),
                     ]);
                     $this->bankingService->postBankTransaction($tx, '5000');
+                    $tx->update(['is_reconciled' => true]);
 
                     $bankTxNum++;
                     $nameParts = explode(' ', $sal['desc']);
@@ -600,10 +668,11 @@ class ShowcaseDataSeeder extends Seeder
                         'reference' => sprintf('SOC-%04d-%03d', $year, $bankTxNum),
                     ]);
                     $this->bankingService->postBankTransaction($txSocial, '5700');
+                    $txSocial->update(['is_reconciled' => true]);
                 }
 
-                // ── Client invoices — 2-4 per month ──────────────
-                $invoiceCount = mt_rand(2, 4);
+                // ── Client invoices — 4-6 per month ──────────────
+                $invoiceCount = mt_rand(4, 6);
                 for ($i = 0; $i < $invoiceCount; $i++) {
                     $invoiceNum++;
                     $project = $pack['projects'][mt_rand(0, count($pack['projects']) - 1)];
@@ -615,6 +684,11 @@ class ShowcaseDataSeeder extends Seeder
                     $issueDate = $monthStart->copy()->addDays(mt_rand(0, 20));
                     $dueDate = $issueDate->copy()->addDays(30);
                     $invNumber = sprintf('%s-%04d-%03d', $pack['prefix'], $year, $invoiceNum);
+
+                    $qrIban = $pack['qr_iban'] ?? null;
+                    $qrReference = $qrIban
+                        ? $this->qrService->generateQrReference($qrPrefix, $invNumber)
+                        : null;
 
                     $invoice = Invoice::create([
                         'organization_id' => $org->id,
@@ -629,6 +703,9 @@ class ShowcaseDataSeeder extends Seeder
                         'currency' => 'CHF',
                         'notes' => $pack['invoiceNotes'],
                         'payment_terms' => 'Net 30',
+                        'qr_iban' => $qrIban,
+                        'qr_reference' => $qrReference,
+                        'qr_type' => $qrReference ? 'QRR' : null,
                     ]);
 
                     InvoiceLine::create([
@@ -673,53 +750,80 @@ class ShowcaseDataSeeder extends Seeder
                         if (mt_rand(1, 10) <= 9) {
                             $invoice->refresh();
                             $payDate = $issueDate->copy()->addDays(mt_rand(15, 35));
-                            $this->accountingService->recordPayment($invoice, new RecordPaymentData(
+                            $payment = $this->accountingService->recordPayment($invoice, new RecordPaymentData(
                                 amount: (string) $total,
                                 paymentDate: $payDate->toDateString(),
                                 paymentMethod: mt_rand(1, 4) === 1 ? PaymentMethod::Card : PaymentMethod::Bank,
                                 reference: null,
                             ));
                             $bankTxNum++;
-                            BankTransaction::create([
+                            $shouldReconcile = $payDate->isBefore($reconcileCutoff);
+                            $payBankTx = BankTransaction::create([
                                 'bank_account_id' => $bankAccount->id,
                                 'date' => $payDate,
                                 'description' => $pack['paymentLabel'].' '.$invNumber.' — '.$customer->name,
                                 'amount' => $total,
                                 'type' => BankTransactionType::Credit,
                                 'reference' => sprintf('DEP-%04d-%03d', $year, $bankTxNum),
+                                'matched_invoice_id' => $shouldReconcile ? $invoice->id : null,
+                                'journal_entry_id' => $shouldReconcile ? $payment->journal_entry_id : null,
+                                'is_reconciled' => $shouldReconcile,
                             ]);
+                            if (! $shouldReconcile) {
+                                BankMatch::create([
+                                    'bank_transaction_id' => $payBankTx->id,
+                                    'invoice_id' => $invoice->id,
+                                    'confidence' => mt_rand(75, 95),
+                                    'match_type' => BankMatchType::QrReference,
+                                    'is_confirmed' => false,
+                                ]);
+                            }
                         }
                     } elseif ($daysSince > 30) {
                         $roll = mt_rand(1, 10);
                         if ($roll <= 5) {
                             $invoice->refresh();
                             $payDate = $issueDate->copy()->addDays(mt_rand(25, 40));
-                            $this->accountingService->recordPayment($invoice, new RecordPaymentData(
+                            $payment = $this->accountingService->recordPayment($invoice, new RecordPaymentData(
                                 amount: (string) $total,
                                 paymentDate: $payDate->toDateString(),
                                 paymentMethod: PaymentMethod::Bank,
                                 reference: null,
                             ));
                             $bankTxNum++;
-                            BankTransaction::create([
+                            $shouldReconcile = $payDate->isBefore($reconcileCutoff);
+                            $payBankTx = BankTransaction::create([
                                 'bank_account_id' => $bankAccount->id,
                                 'date' => $payDate,
                                 'description' => $pack['paymentLabel'].' '.$invNumber.' — '.$customer->name,
                                 'amount' => $total,
                                 'type' => BankTransactionType::Credit,
                                 'reference' => sprintf('DEP-%04d-%03d', $year, $bankTxNum),
+                                'matched_invoice_id' => $shouldReconcile ? $invoice->id : null,
+                                'journal_entry_id' => $shouldReconcile ? $payment->journal_entry_id : null,
+                                'is_reconciled' => $shouldReconcile,
                             ]);
+                            if (! $shouldReconcile) {
+                                BankMatch::create([
+                                    'bank_transaction_id' => $payBankTx->id,
+                                    'invoice_id' => $invoice->id,
+                                    'confidence' => mt_rand(70, 90),
+                                    'match_type' => BankMatchType::AmountCustomer,
+                                    'is_confirmed' => false,
+                                ]);
+                            }
                         } elseif ($roll <= 7) {
                             $partAmt = round($total * (mt_rand(30, 60) / 100), 2);
                             $invoice->refresh();
                             $payDate = $issueDate->copy()->addDays(mt_rand(20, 35));
-                            $this->accountingService->recordPayment($invoice, new RecordPaymentData(
+                            $payment = $this->accountingService->recordPayment($invoice, new RecordPaymentData(
                                 amount: (string) $partAmt,
                                 paymentDate: $payDate->toDateString(),
                                 paymentMethod: PaymentMethod::Bank,
-                                reference: $pack['partialRef'],
+                                reference: $pack['partialRef'].' '.$invNumber,
                             ));
                             $bankTxNum++;
+                            $shouldReconcile = $payDate->isBefore($reconcileCutoff);
                             BankTransaction::create([
                                 'bank_account_id' => $bankAccount->id,
                                 'date' => $payDate,
@@ -727,6 +831,9 @@ class ShowcaseDataSeeder extends Seeder
                                 'amount' => $partAmt,
                                 'type' => BankTransactionType::Credit,
                                 'reference' => sprintf('DEP-%04d-%03d', $year, $bankTxNum),
+                                'matched_invoice_id' => $shouldReconcile ? $invoice->id : null,
+                                'journal_entry_id' => $shouldReconcile ? $payment->journal_entry_id : null,
+                                'is_reconciled' => $shouldReconcile,
                             ]);
                         }
                     }
@@ -740,11 +847,15 @@ class ShowcaseDataSeeder extends Seeder
                     $ch = mt_rand(5, 15);
                     $cs = round($ch * $cp['rate'], 2);
                     $cv = round($cs * 0.081, 2);
+                    $cancelNum = sprintf('%s-%04d-%03d', $pack['prefix'], $year, $invoiceNum);
+                    $cancelQrRef = $qrIban
+                        ? $this->qrService->generateQrReference($qrPrefix, $cancelNum)
+                        : null;
 
                     $cancelInv = Invoice::create([
                         'organization_id' => $org->id,
                         'customer_id' => $cc->id,
-                        'number' => sprintf('%s-%04d-%03d', $pack['prefix'], $year, $invoiceNum),
+                        'number' => $cancelNum,
                         'status' => InvoiceStatus::Cancelled,
                         'issue_date' => $monthStart->copy()->addDays(mt_rand(0, 10)),
                         'due_date' => $monthStart->copy()->addDays(40),
@@ -753,6 +864,9 @@ class ShowcaseDataSeeder extends Seeder
                         'total' => $cs + $cv,
                         'currency' => 'CHF',
                         'notes' => $pack['cancelledNotes'],
+                        'qr_iban' => $qrIban,
+                        'qr_reference' => $cancelQrRef,
+                        'qr_type' => $cancelQrRef ? 'QRR' : null,
                     ]);
 
                     InvoiceLine::create([
@@ -775,17 +889,24 @@ class ShowcaseDataSeeder extends Seeder
         foreach ($pack['occasionalExpenses'] as $oe) {
             [$y, $m] = explode('-', $oe['month']);
             $date = Carbon::create((int) $y, (int) $m, mt_rand(1, 20));
-            $this->createPostedExpense($org, $oe, $date, $vatNormal, $bankAccount, $bankTxNum);
+            $expVat = $this->resolveExpenseVatRate($oe['category'], $vatRates);
+            $this->createPostedExpense($org, $oe, $date, $expVat, $bankAccount, $bankTxNum, $supplierMap);
         }
 
         // ── Draft invoices ───────────────────────────────────────
         foreach ($pack['draftProjects'] as $idx => $dp) {
             $sub = $dp['hours'] * $dp['rate'];
             $vat = round($sub * 0.081, 2);
-            Invoice::create([
+            $draftNum = sprintf('%s-2026-D%02d', $pack['prefix'], $idx + 1);
+            $draftQrIban = $pack['qr_iban'] ?? null;
+            $draftQrRef = $draftQrIban
+                ? $this->qrService->generateQrReference($qrPrefix, $draftNum)
+                : null;
+
+            $draftInvoice = Invoice::create([
                 'organization_id' => $org->id,
                 'customer_id' => $customers[$dp['cust']]->id,
-                'number' => sprintf('%s-2026-D%02d', $pack['prefix'], $idx + 1),
+                'number' => $draftNum,
                 'status' => InvoiceStatus::Draft->value,
                 'issue_date' => now(),
                 'due_date' => now()->addDays(30),
@@ -794,12 +915,27 @@ class ShowcaseDataSeeder extends Seeder
                 'total' => $sub + $vat,
                 'currency' => 'CHF',
                 'payment_terms' => 'Net 30',
+                'qr_iban' => $draftQrIban,
+                'qr_reference' => $draftQrRef,
+                'qr_type' => $draftQrRef ? 'QRR' : null,
+            ]);
+
+            InvoiceLine::create([
+                'invoice_id' => $draftInvoice->id,
+                'description' => $dp['desc'],
+                'quantity' => $dp['hours'],
+                'unit_price' => $dp['rate'],
+                'amount' => $sub,
+                'vat_rate_id' => $vatNormal?->id,
+                'vat_amount' => $vat,
+                'sort_order' => 1,
             ]);
         }
 
         // ── Pending / approved expenses ──────────────────────────
         Expense::create([
             'organization_id' => $org->id,
+            'supplier_id' => $supplierMap[$pack['pendingExpenses'][0]['vendor']] ?? null,
             'category' => $pack['pendingExpenses'][0]['category'],
             'description' => $pack['pendingExpenses'][0]['desc'],
             'amount' => $pack['pendingExpenses'][0]['amount'],
@@ -813,6 +949,7 @@ class ShowcaseDataSeeder extends Seeder
         $approvedExp = Expense::create([
             'organization_id' => $org->id,
             'vat_rate_id' => $vatNormal?->id,
+            'supplier_id' => $supplierMap[$pack['pendingExpenses'][1]['vendor']] ?? null,
             'category' => $pack['pendingExpenses'][1]['category'],
             'description' => $pack['pendingExpenses'][1]['desc'],
             'amount' => $pack['pendingExpenses'][1]['amount'],
@@ -836,6 +973,13 @@ class ShowcaseDataSeeder extends Seeder
             ]);
         }
 
+        // ── Recalculate bank account balance ─────────────────────
+        $totalCredits = (float) BankTransaction::where('bank_account_id', $bankAccount->id)
+            ->where('type', BankTransactionType::Credit)->sum('amount');
+        $totalDebits = (float) BankTransaction::where('bank_account_id', $bankAccount->id)
+            ->where('type', BankTransactionType::Debit)->sum('amount');
+        $bankAccount->update(['balance' => round(80000 + $totalCredits - $totalDebits, 2)]);
+
         $owner = $pack['users'][0];
         $this->command?->info("  ✓ {$pack['org']['name']} [{$locale}] — login: {$owner['email']} / password");
     }
@@ -849,12 +993,15 @@ class ShowcaseDataSeeder extends Seeder
         ?VatRate $vatRate,
         BankAccount $bankAccount,
         int &$bankTxNum,
-    ): void {
+        array $supplierMap = [],
+        bool $reconcile = true,
+    ): Expense {
         $vatAmount = $vatRate ? round($data['amount'] * ($vatRate->rate / 100), 2) : 0;
 
         $expense = Expense::create([
             'organization_id' => $org->id,
             'vat_rate_id' => $vatRate?->id,
+            'supplier_id' => $supplierMap[$data['vendor']] ?? null,
             'category' => $data['category'],
             'description' => $data['desc'],
             'amount' => $data['amount'],
@@ -866,7 +1013,7 @@ class ShowcaseDataSeeder extends Seeder
         ]);
 
         $this->approveExpense->execute($expense);
-        $this->postExpense->execute($expense, $data['account']);
+        $postedExpense = $this->postExpense->execute($expense, $data['account']);
 
         $bankTxNum++;
         BankTransaction::create([
@@ -876,6 +1023,74 @@ class ShowcaseDataSeeder extends Seeder
             'amount' => $data['amount'],
             'type' => BankTransactionType::Debit,
             'reference' => sprintf('EXP-%04d-%03d', $date->year, $bankTxNum),
+            'matched_expense_id' => $reconcile ? $postedExpense->id : null,
+            'journal_entry_id' => $reconcile ? $postedExpense->journal_entry_id : null,
+            'is_reconciled' => $reconcile,
         ]);
+
+        return $postedExpense;
+    }
+
+    private function resolveExpenseVatRate(string $category, array $vatRates): ?VatRate
+    {
+        return match ($category) {
+            'Insurance' => $vatRates['EXEMPT'],
+            'Travel Expenses' => $vatRates['ACCOMMODATION'],
+            default => $vatRates['NORMAL'],
+        };
+    }
+
+    private function contactPersonNames(): array
+    {
+        return [
+            'de' => [
+                ['first_name' => 'Stefan', 'last_name' => 'Meier', 'position' => 'Geschäftsführer'],
+                ['first_name' => 'Sandra', 'last_name' => 'Huber', 'position' => 'Projektleiterin'],
+                ['first_name' => 'Patrick', 'last_name' => 'Zimmermann', 'position' => 'Buchhaltung'],
+                ['first_name' => 'Monika', 'last_name' => 'Fischer', 'position' => 'Marketing'],
+                ['first_name' => 'Andreas', 'last_name' => 'Schmid', 'position' => 'IT-Leiter'],
+                ['first_name' => 'Claudia', 'last_name' => 'Bauer', 'position' => 'Einkauf'],
+                ['first_name' => 'Markus', 'last_name' => 'Steiner', 'position' => 'Vertrieb'],
+                ['first_name' => 'Eva', 'last_name' => 'Müller', 'position' => 'Assistenz'],
+                ['first_name' => 'Daniel', 'last_name' => 'Wyss', 'position' => 'Finanzen'],
+                ['first_name' => 'Nina', 'last_name' => 'Gerber', 'position' => 'Personalwesen'],
+            ],
+            'fr' => [
+                ['first_name' => 'Pierre', 'last_name' => 'Martin', 'position' => 'Directeur'],
+                ['first_name' => 'Isabelle', 'last_name' => 'Laurent', 'position' => 'Chef de projet'],
+                ['first_name' => 'Julien', 'last_name' => 'Dupont', 'position' => 'Comptabilité'],
+                ['first_name' => 'Céline', 'last_name' => 'Bernard', 'position' => 'Marketing'],
+                ['first_name' => 'Nicolas', 'last_name' => 'Roux', 'position' => 'Responsable IT'],
+                ['first_name' => 'Marie', 'last_name' => 'Blanc', 'position' => 'Achats'],
+                ['first_name' => 'Antoine', 'last_name' => 'Girard', 'position' => 'Commercial'],
+                ['first_name' => 'Sophie', 'last_name' => 'Morel', 'position' => 'Assistante'],
+                ['first_name' => 'Laurent', 'last_name' => 'Petit', 'position' => 'Finances'],
+                ['first_name' => 'Aurélie', 'last_name' => 'Leroy', 'position' => 'RH'],
+            ],
+            'it' => [
+                ['first_name' => 'Luca', 'last_name' => 'Rossi', 'position' => 'Direttore'],
+                ['first_name' => 'Francesca', 'last_name' => 'Bianchi', 'position' => 'Responsabile progetto'],
+                ['first_name' => 'Alessandro', 'last_name' => 'Colombo', 'position' => 'Contabilità'],
+                ['first_name' => 'Chiara', 'last_name' => 'Ferrari', 'position' => 'Marketing'],
+                ['first_name' => 'Davide', 'last_name' => 'Ricci', 'position' => 'Responsabile IT'],
+                ['first_name' => 'Valentina', 'last_name' => 'Romano', 'position' => 'Acquisti'],
+                ['first_name' => 'Matteo', 'last_name' => 'Galli', 'position' => 'Commerciale'],
+                ['first_name' => 'Sara', 'last_name' => 'Conti', 'position' => 'Assistente'],
+                ['first_name' => 'Roberto', 'last_name' => 'Greco', 'position' => 'Finanze'],
+                ['first_name' => 'Anna', 'last_name' => 'Marchetti', 'position' => 'Risorse umane'],
+            ],
+            'en' => [
+                ['first_name' => 'David', 'last_name' => 'Miller', 'position' => 'Managing Director'],
+                ['first_name' => 'Sarah', 'last_name' => 'Johnson', 'position' => 'Project Manager'],
+                ['first_name' => 'Michael', 'last_name' => 'Brown', 'position' => 'Accountant'],
+                ['first_name' => 'Emily', 'last_name' => 'Taylor', 'position' => 'Marketing Lead'],
+                ['first_name' => 'Robert', 'last_name' => 'Anderson', 'position' => 'IT Manager'],
+                ['first_name' => 'Jennifer', 'last_name' => 'Wilson', 'position' => 'Procurement'],
+                ['first_name' => 'Thomas', 'last_name' => 'Moore', 'position' => 'Sales Manager'],
+                ['first_name' => 'Lisa', 'last_name' => 'Davis', 'position' => 'Executive Assistant'],
+                ['first_name' => 'Andrew', 'last_name' => 'Clark', 'position' => 'Finance Director'],
+                ['first_name' => 'Rachel', 'last_name' => 'Hughes', 'position' => 'HR Manager'],
+            ],
+        ];
     }
 }

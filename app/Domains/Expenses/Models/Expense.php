@@ -40,9 +40,15 @@ use Laravel\Scout\Searchable;
  * @property ExpenseType $type
  * @property int|null $supplier_id
  * @property string|null $payment_method
+ * @property string|null $expense_account_code
+ * @property string|null $bank_account_code
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read Organization $organization
+ * @property-read JournalEntry|null $journalEntry
+ * @property-read VatRate|null $vatRate
+ * @property-read Supplier|null $supplier
  */
 class Expense extends Model
 {
@@ -64,6 +70,8 @@ class Expense extends Model
         'type',
         'supplier_id',
         'payment_method',
+        'expense_account_code',
+        'bank_account_code',
     ];
 
     protected function casts(): array
@@ -77,21 +85,25 @@ class Expense extends Model
         ];
     }
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return BelongsTo<JournalEntry, $this> */
     public function journalEntry(): BelongsTo
     {
         return $this->belongsTo(JournalEntry::class);
     }
 
+    /** @return BelongsTo<VatRate, $this> */
     public function vatRate(): BelongsTo
     {
         return $this->belongsTo(VatRate::class);
     }
 
+    /** @return BelongsTo<Supplier, $this> */
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);

@@ -20,7 +20,8 @@ class UpdateExpenseApiRequest extends FormRequest
             'vat_amount' => 'nullable|numeric|min:0',
             'vat_rate_id' => [
                 'nullable',
-                Rule::exists('vat_rates', 'id')->where('organization_id', $orgId),
+                'uuid',
+                Rule::exists('vat_rates', 'uuid')->where('organization_id', $orgId),
             ],
             'vendor' => 'nullable|string|max:255',
             'currency' => 'nullable|string|size:3',

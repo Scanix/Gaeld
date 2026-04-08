@@ -243,7 +243,7 @@ class ContactsFlowTest extends TestCase
             'currency' => 'CHF',
         ]);
 
-        $response = $this->delete("/customers/{$customer->id}");
+        $response = $this->delete("/customers/{$customer->uuid}");
 
         $response->assertRedirect('/customers');
         $this->assertSoftDeleted('customers', ['id' => $customer->id]);

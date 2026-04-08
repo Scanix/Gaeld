@@ -109,7 +109,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         $this->assertDenied(
             $this->actingAs($this->ownerA)
                 ->withSession(['current_organization_id' => $this->orgA->id])
-                ->get("/customers/{$this->customerB->id}")
+                ->get("/customers/{$this->customerB->uuid}")
         );
     }
 
@@ -118,7 +118,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         $this->assertDenied(
             $this->actingAs($this->ownerA)
                 ->withSession(['current_organization_id' => $this->orgA->id])
-                ->put("/customers/{$this->customerB->id}", ['name' => 'Hacked'])
+                ->put("/customers/{$this->customerB->uuid}", ['name' => 'Hacked'])
         );
     }
 
@@ -127,7 +127,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         $this->assertDenied(
             $this->actingAs($this->ownerA)
                 ->withSession(['current_organization_id' => $this->orgA->id])
-                ->delete("/customers/{$this->customerB->id}")
+                ->delete("/customers/{$this->customerB->uuid}")
         );
     }
 
@@ -220,7 +220,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         $this->assertDenied(
             $this->actingAs($this->ownerA)
                 ->withSession(['current_organization_id' => $this->orgA->id])
-                ->get("/banking/{$this->bankAccountB->id}")
+                ->get("/banking/{$this->bankAccountB->uuid}")
         );
     }
 
@@ -231,7 +231,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         $this->assertDenied(
             $this->actingAs($this->ownerA)
                 ->withSession(['current_organization_id' => $this->orgA->id])
-                ->post("/reconciliation/{$this->bankAccountB->id}/import", [
+                ->post("/reconciliation/{$this->bankAccountB->uuid}/import", [
                     'camt_file' => $file,
                 ])
         );
@@ -242,7 +242,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         $this->assertDenied(
             $this->actingAs($this->ownerA)
                 ->withSession(['current_organization_id' => $this->orgA->id])
-                ->get("/reconciliation/{$this->bankAccountB->id}")
+                ->get("/reconciliation/{$this->bankAccountB->uuid}")
         );
     }
 
@@ -264,7 +264,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         $token = $this->createApiToken($this->ownerA, $this->orgA);
 
         $this->withToken($token)
-            ->getJson("/api/v1/customers/{$this->customerB->id}")
+            ->getJson("/api/v1/customers/{$this->customerB->uuid}")
             ->assertStatus(404);
     }
 

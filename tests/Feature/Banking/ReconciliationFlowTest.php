@@ -406,7 +406,7 @@ class ReconciliationFlowTest extends TestCase
 
     public function test_reconciliation_show_page_accessible(): void
     {
-        $response = $this->actingAs($this->user)->get("/reconciliation/{$this->bankAccount->id}");
+        $response = $this->actingAs($this->user)->get("/reconciliation/{$this->bankAccount->uuid}");
 
         $response->assertStatus(200);
     }
@@ -416,7 +416,7 @@ class ReconciliationFlowTest extends TestCase
         config(['features.auto_reconciliation' => false]);
 
         $response = $this->actingAs($this->user)
-            ->post("/reconciliation/{$this->bankAccount->id}/auto");
+            ->post("/reconciliation/{$this->bankAccount->uuid}/auto");
 
         $response->assertForbidden();
     }
@@ -427,7 +427,7 @@ class ReconciliationFlowTest extends TestCase
         $file = UploadedFile::fake()->createWithContent('test.xml', $xmlContent);
 
         $response = $this->actingAs($this->user)
-            ->post("/reconciliation/{$this->bankAccount->id}/import", [
+            ->post("/reconciliation/{$this->bankAccount->uuid}/import", [
                 'camt_file' => $file,
             ]);
 

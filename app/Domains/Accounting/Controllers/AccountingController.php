@@ -5,7 +5,7 @@ namespace App\Domains\Accounting\Controllers;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
-use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
@@ -70,7 +70,7 @@ class AccountingController extends Controller
         ]);
     }
 
-    public function trialBalance(Request $request, LedgerService $ledgerService, CurrentOrganization $currentOrg): Response
+    public function trialBalance(Request $request, LedgerQueryService $ledgerService, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', Account::class);
 
@@ -87,7 +87,7 @@ class AccountingController extends Controller
 
     public function exportTrialBalance(
         Request $request,
-        LedgerService $ledgerService,
+        LedgerQueryService $ledgerService,
         CurrentOrganization $currentOrg,
         PdfExportService $pdf,
         CsvExportService $csv,
@@ -124,7 +124,6 @@ class AccountingController extends Controller
 
     public function exportJournalEntries(
         Request $request,
-        LedgerService $ledgerService,
         CurrentOrganization $currentOrg,
         PdfExportService $pdf,
         CsvExportService $csv,

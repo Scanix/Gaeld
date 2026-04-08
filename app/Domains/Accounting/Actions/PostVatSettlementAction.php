@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Actions;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\VatReportService;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,7 @@ final class PostVatSettlementAction
 {
     public function __construct(
         private readonly LedgerService $ledgerService,
+        private readonly LedgerQueryService $ledgerQuery,
         private readonly VatReportService $vatReportService,
     ) {}
 
@@ -33,9 +35,9 @@ final class PostVatSettlementAction
         $totalInputVat = $report['input_vat'];
         $netVat = $report['net_vat'];
 
-        $vatOutputAccount = $this->ledgerService->resolveAccount($orgId, '2200');
-        $vatInputAccount = $this->ledgerService->resolveAccount($orgId, '1170');
-        $vatSettlementAccount = $this->ledgerService->resolveAccount($orgId, '2201');
+        $vatOutputAccount = $this->ledgerQuery->resolveAccount($orgId, '2200');
+        $vatInputAccount = $this->ledgerQuery->resolveAccount($orgId, '1170');
+        $vatSettlementAccount = $this->ledgerQuery->resolveAccount($orgId, '2201');
 
         // Build balanced lines
         $lines = [];

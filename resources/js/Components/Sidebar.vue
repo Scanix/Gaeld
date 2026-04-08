@@ -13,7 +13,6 @@ import {
   ChevronRight,
   ChevronDown,
   Check,
-  ArrowLeftRight,
   Users,
   X,
   CreditCard,
@@ -72,93 +71,112 @@ function isExpanded(item) {
   return expandedGroups.value.has(item.key) || isGroupActive(item)
 }
 
-const navigation = computed(() => [
-  { key: 'dashboard', href: '/', icon: LayoutDashboard },
-  { key: 'invoices', href: '/invoices', icon: FileText, children: [
-    { key: 'invoices', href: '/invoices' },
-    { key: 'recurring', href: '/invoices/recurring', icon: Repeat },
-  ]},
-  { key: 'expenses', href: '/expenses', icon: Receipt },
-  { key: 'contacts', href: '/customers', icon: Users, children: [
-    { key: 'customers', href: '/customers' },
-    { key: 'suppliers', href: '/suppliers' },
-  ]},
-  { key: 'accounting', href: '/accounting/chart-of-accounts', icon: BookOpen, children: [
-    // Core
-    { type: 'separator', label: 'accounting_core' },
-    { key: 'chart_of_accounts', href: '/accounting/chart-of-accounts' },
-    { key: 'journal_entries', href: '/accounting/journal-entries' },
-    { key: 'trial_balance', href: '/accounting/trial-balance' },
-    // Tax & VAT
-    { type: 'separator', label: 'accounting_tax' },
-    { key: 'vat_rates', href: '/accounting/vat-rates' },
-    { key: 'social_charges', href: '/accounting/social-charges' },
-    ...(features.value.tax_declaration ? [
-      { key: 'tax_declarations', href: '/accounting/tax-declarations' },
+const businessType = computed(() => currentOrg.value?.business_type)
+
+const navigation = computed(() => {
+  const bt = businessType.value
+  const isFidu = bt === 'fiduciary'
+  const isFreelancer = bt === 'freelancer'
+
+  return [
+    { key: 'dashboard', href: '/', icon: LayoutDashboard },
+    // ── Activity ──
+    { type: 'group', label: 'nav_activity' },
+    ...(!isFidu ? [
+      { key: 'invoices', href: '/invoices', icon: FileText, children: [
+        { key: 'invoices', href: '/invoices' },
+        { key: 'recurring', href: '/invoices/recurring', icon: Repeat },
+      ]},
+      { key: 'expenses', href: '/expenses', icon: Receipt },
+      { key: 'contacts', href: '/customers', icon: Users, children: [
+        { key: 'customers', href: '/customers' },
+        { key: 'suppliers', href: '/suppliers' },
+      ]},
     ] : []),
-    // Reports & Archives
-    { type: 'separator', label: 'accounting_reports' },
-    { key: 'lettrage', href: '/accounting/lettrage' },
-    { key: 'fiduciary_export', href: '/accounting/export' },
-    ...(can('accounting.view') ? [
-      { key: 'legal_archives', href: '/accounting/archives' },
+    ...(isFidu ? [
+      { key: 'contacts', href: '/customers', icon: Users, children: [
+        { key: 'customers', href: '/customers' },
+        { key: 'suppliers', href: '/suppliers' },
+      ]},
     ] : []),
-    // Period
-    { type: 'separator', label: 'accounting_period' },
-    { key: 'budget', href: '/accounting/budgets' },
-    ...(can('accounting.close-year') ? [
-      { key: 'year_end_closing', href: '/accounting/year-end-closing' },
-    ] : []),
-    // Advanced (feature-gated)
-    ...((features.value.analytical || features.value.consolidation || features.value.multi_currency) ? [
-      { type: 'separator', label: 'accounting_advanced' },
-    ] : []),
-    ...(features.value.analytical ? [
-      { key: 'cost_centers', href: '/accounting/cost-centers' },
-      { key: 'analytical_report', href: '/accounting/analytical-report' },
-    ] : []),
-    ...(features.value.consolidation ? [
-      { key: 'consolidation', href: '/accounting/consolidation' },
-    ] : []),
-    ...(features.value.multi_currency ? [
-      { key: 'exchange_rates', href: '/accounting/exchange-rates' },
-    ] : []),
-  ]},
-  { key: 'assets', href: '/assets', icon: Package },
-  ...(features.value.payroll !== false ? [
-    { key: 'payroll', href: '/payroll/employees', icon: Briefcase, children: [
-      { key: 'employees', href: '/payroll/employees' },
-      { key: 'salary_slips', href: '/payroll/salary-slips' },
-      { key: 'run_payroll', href: '/payroll/run' },
-      ...(features.value.withholding_tax ? [
-        { key: 'withholding_tax', href: '/payroll/withholding-tax' },
+    // ── Finances ──
+    { type: 'group', label: 'nav_finances' },
+    { key: 'banking', href: '/banking', icon: Landmark, children: [
+      { key: 'bank_accounts', href: '/banking' },
+      { key: 'reconciliation', href: '/reconciliation' },
+    ]},
+    { key: 'accounting', href: '/accounting/chart-of-accounts', icon: BookOpen, children: [
+      { key: 'chart_of_accounts', href: '/accounting/chart-of-accounts' },
+      { key: 'journal_entries', href: '/accounting/journal-entries' },
+      { key: 'vat_rates', href: '/accounting/vat-rates' },
+      { key: 'social_charges', href: '/accounting/social-charges' },
+      ...(features.value.tax_declaration ? [
+        { key: 'tax_declarations', href: '/accounting/tax-declarations' },
+      ] : []),
+      { key: 'trial_balance', href: '/accounting/trial-balance' },
+      { key: 'budget', href: '/accounting/budgets' },
+      ...(can('accounting.close-year') ? [
+        { key: 'year_end_closing', href: '/accounting/year-end-closing' },
+      ] : []),
+      { key: 'lettrage', href: '/accounting/lettrage' },
+      { key: 'fiduciary_export', href: '/accounting/export' },
+      ...(can('accounting.view') ? [
+        { key: 'legal_archives', href: '/accounting/archives' },
+      ] : []),
+      // Advanced (feature-gated)
+      ...(features.value.analytical ? [
+        { key: 'cost_centers', href: '/accounting/cost-centers' },
+        { key: 'analytical_report', href: '/accounting/analytical-report' },
+      ] : []),
+      ...(features.value.consolidation ? [
+        { key: 'consolidation', href: '/accounting/consolidation' },
+      ] : []),
+      ...(features.value.multi_currency ? [
+        { key: 'exchange_rates', href: '/accounting/exchange-rates' },
       ] : []),
     ]},
-  ] : []),
-  { key: 'reports', href: '/reports/profit-and-loss', icon: BarChart3, children: [
-    { key: 'profit_and_loss', href: '/reports/profit-and-loss' },
-    { key: 'balance_sheet', href: '/reports/balance-sheet' },
-    { key: 'cash_flow', href: '/reports/cash-flow' },
-    { key: 'vat_report', href: '/reports/vat' },
-    { key: 'aging_report', href: '/reports/aging' },
-  ]},
-  { key: 'banking', href: '/banking', icon: Landmark },
-  { key: 'reconciliation', href: '/reconciliation', icon: ArrowLeftRight },
-  { key: 'organization', href: '/organizations', icon: Building2 },
-  { key: 'settings', href: '/settings', icon: Settings, children: [
-    { key: 'settings_general', href: '/settings' },
-    ...(can('migration.import') ? [
-      { key: 'data_migration', href: '/migration' },
+    { key: 'reports', href: '/reports/profit-and-loss', icon: BarChart3, children: [
+      { key: 'profit_and_loss', href: '/reports/profit-and-loss' },
+      { key: 'balance_sheet', href: '/reports/balance-sheet' },
+      { key: 'cash_flow', href: '/reports/cash-flow' },
+      { key: 'vat_report', href: '/reports/vat' },
+      { key: 'aging_report', href: '/reports/aging' },
+    ]},
+    ...(!isFreelancer ? [
+      { key: 'assets', href: '/assets', icon: Package },
     ] : []),
-    ...(can('organization.view-audit-log') ? [
-      { key: 'activity_log', href: '/settings/activity-log' },
+    // ── Management ──
+    { type: 'group', label: 'nav_management' },
+    ...(!isFreelancer && !isFidu && features.value.payroll !== false ? [
+      { key: 'payroll', href: '/payroll/employees', icon: Briefcase, children: [
+        { key: 'employees', href: '/payroll/employees' },
+        { key: 'salary_slips', href: '/payroll/salary-slips' },
+        { key: 'run_payroll', href: '/payroll/run' },
+        ...(features.value.withholding_tax ? [
+          { key: 'withholding_tax', href: '/payroll/withholding-tax' },
+        ] : []),
+      ]},
     ] : []),
-    ...(features.value.api_access ? [
-      { key: 'api_tokens', href: '/settings/api-tokens' },
-      { key: 'webhooks', href: '/settings/webhooks' },
+    ...(!isFreelancer ? [
+      { key: 'organization', href: '/organizations', icon: Building2 },
     ] : []),
-  ]},
-])
+    { key: 'settings', href: '/settings', icon: Settings, children: [
+      { key: 'settings_general', href: '/settings' },
+      ...(can('migration.import') ? [
+        { key: 'data_migration', href: '/migration' },
+      ] : []),
+      ...(can('organization.view-audit-log') ? [
+        { key: 'activity_log', href: '/settings/activity-log' },
+      ] : []),
+      ...(features.value.api_access ? [
+        { key: 'api_tokens', href: '/settings/api-tokens' },
+        { key: 'webhooks', href: '/settings/webhooks' },
+      ] : []),
+    ]},
+    // Show "all features" link when menu is filtered
+    ...(bt ? [{ key: 'all_features', href: '/settings', type: 'all-features' }] : []),
+  ]
+})
 
 const billingNav = computed(() =>
   features.value.saas ? [{ key: 'billing', href: '/billing', icon: CreditCard }] : []
@@ -246,8 +264,27 @@ function isGroupActive(item) {
 
     <!-- Navigation -->
     <nav class="flex-1 overflow-y-auto p-3 space-y-1">
-      <template v-for="item in navigation" :key="item.key">
-        <div v-if="item.children">
+      <template v-for="item in navigation" :key="item.key || item.label">
+        <!-- Section group label -->
+        <div
+          v-if="item.type === 'group'"
+          class="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]"
+          :class="collapsed ? 'sr-only' : ''"
+        >
+          {{ t(item.label) }}
+        </div>
+
+        <!-- "All features" link -->
+        <div v-else-if="item.type === 'all-features'" class="mt-2 border-t border-[hsl(var(--sidebar-border))] pt-2">
+          <Link
+            href="/settings"
+            class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--sidebar-foreground))] transition-colors"
+          >
+            <span v-if="!collapsed">{{ t('all_features') }}</span>
+          </Link>
+        </div>
+
+        <div v-else-if="item.children">
           <Tooltip :content="collapsed ? t(item.key) : ''" side="right">
             <div class="flex items-center">
               <Link

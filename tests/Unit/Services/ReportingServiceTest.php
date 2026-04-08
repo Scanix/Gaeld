@@ -4,7 +4,7 @@ namespace Tests\Unit\Services;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Reporting\Services\ReportingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -37,7 +37,7 @@ class ReportingServiceTest extends TestCase
         $zeroRevenue = $this->makeAccount('3200', 'Other Revenue', AccountType::Revenue);
         $expense = $this->makeAccount('6530', 'Software', AccountType::Expense);
 
-        $ledgerService = Mockery::mock(LedgerService::class);
+        $ledgerService = Mockery::mock(LedgerQueryService::class);
         $ledgerService->shouldReceive('accountBalance')->once()->with($revenue->id, '2026-01-01', '2026-03-31')->andReturn('1200.00');
         $ledgerService->shouldReceive('accountBalance')->once()->with($zeroRevenue->id, '2026-01-01', '2026-03-31')->andReturn('0.00');
         $ledgerService->shouldReceive('accountBalance')->once()->with($expense->id, '2026-01-01', '2026-03-31')->andReturn('350.50');
@@ -64,7 +64,7 @@ class ReportingServiceTest extends TestCase
         $revenue = $this->makeAccount('3000', 'Revenue', AccountType::Revenue);
         $expense = $this->makeAccount('6530', 'Software', AccountType::Expense);
 
-        $ledgerService = Mockery::mock(LedgerService::class);
+        $ledgerService = Mockery::mock(LedgerQueryService::class);
         // Balance sheet accounts (cumulative since inception)
         $ledgerService->shouldReceive('accountBalance')->once()->with($asset->id, null, '2026-03-31')->andReturn('1500.00');
         $ledgerService->shouldReceive('accountBalance')->once()->with($liability->id, null, '2026-03-31')->andReturn('600.00');
@@ -101,7 +101,7 @@ class ReportingServiceTest extends TestCase
         $revenue = $this->makeAccount('3000', 'Revenue', AccountType::Revenue);
         $expense = $this->makeAccount('6530', 'Software', AccountType::Expense);
 
-        $ledgerService = Mockery::mock(LedgerService::class);
+        $ledgerService = Mockery::mock(LedgerQueryService::class);
         $ledgerService->shouldReceive('accountBalance')->with($revenue->id, '2026-01-01', '2026-03-31')->andReturn('1000.00');
         $ledgerService->shouldReceive('accountBalance')->with($expense->id, '2026-01-01', '2026-03-31')->andReturn('400.00');
 
@@ -117,7 +117,7 @@ class ReportingServiceTest extends TestCase
         $revenue = $this->makeAccount('3000', 'Revenue', AccountType::Revenue);
         $expense = $this->makeAccount('6530', 'Software', AccountType::Expense);
 
-        $ledgerService = Mockery::mock(LedgerService::class);
+        $ledgerService = Mockery::mock(LedgerQueryService::class);
 
         // Current period
         $ledgerService->shouldReceive('accountBalance')->with($revenue->id, '2026-01-01', '2026-12-31')->andReturn('12000.00');

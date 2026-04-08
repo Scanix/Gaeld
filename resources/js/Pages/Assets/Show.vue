@@ -17,6 +17,8 @@ import Combobox from '@/Components/UI/Combobox.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
+import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
+import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import { computed } from 'vue'
 
 const { t } = useTranslations()
@@ -48,6 +50,12 @@ function submitDisposal() {
   })
 }
 
+// For depreciation: current year; for disposal: disposal_date year
+const { isClosed: isCurrentYearClosed, closedYear: currentClosedYear } = useClosedFiscalYear(() => new Date().getFullYear())
+const { isClosed: isDisposalYearClosed, closedYear: disposalClosedYear } = useClosedFiscalYear(() => disposeForm.disposal_date)
+const isAnyClosed = computed(() => isCurrentYearClosed.value || isDisposalYearClosed.value)
+const displayClosedYear = computed(() => currentClosedYear.value ?? disposalClosedYear.value)
+
 
 
 const depreciationProgress = computed(() => {
@@ -68,6 +76,8 @@ const historyColumns = computed(() => [
 <template>
   <AppLayout :title="asset.name" help-page="assets">
     <Breadcrumb :items="[{ label: t('assets'), href: '/assets' }, { label: asset.name }]" class="mb-4" />
+
+    <ClosedYearBanner v-if="isAnyClosed" :year="displayClosedYear" />
 
     <!-- Asset card -->
     <div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -135,7 +145,8 @@ const historyColumns = computed(() => [
         <CardContent class="flex flex-col gap-3">
           <Button
             v-if="asset.status === 'active'"
-            :disabled="recordForm.processing"
+            :disabled="recordForm.processing || isCurrentYearClosed"
+            :title="isCurrentYearClosed ? t('fiscal_year_closed_action_disabled') : undefined"
             class="w-full"
             @click="recordDepreciation"
           >
@@ -144,6 +155,8 @@ const historyColumns = computed(() => [
           <Button
             v-if="asset.status === 'active'"
             variant="destructive"
+            :disabled="isCurrentYearClosed"
+            :title="isCurrentYearClosed ? t('fiscal_year_closed_action_disabled') : undefined"
             class="w-full"
             @click="showDisposeModal = true"
           >

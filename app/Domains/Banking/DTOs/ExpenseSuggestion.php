@@ -21,6 +21,7 @@ readonly class ExpenseSuggestion implements \JsonSerializable
     /**
      * Serialise for Inertia/JSON: flatten expense attributes plus the score.
      */
+    /** @return array<string, mixed> */
     public function jsonSerialize(): array
     {
         return array_merge($this->expense->toArray(), ['match_score' => $this->score]);

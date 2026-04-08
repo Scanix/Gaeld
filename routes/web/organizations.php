@@ -8,7 +8,7 @@ use App\Domains\Organizations\Controllers\OrganizationController;
 use App\Domains\Organizations\Controllers\OrganizationSettingsController;
 use Illuminate\Support\Facades\Route;
 
-Route::resource('organizations', OrganizationController::class)->only(['index', 'show', 'store', 'update']);
+Route::resource('organizations', OrganizationController::class)->only(['index', 'show', 'store']);
 Route::post('/organizations/{organization}/switch', [OrganizationController::class, 'switchOrganization'])->name('organizations.switch');
 
 // Organization settings
@@ -19,6 +19,10 @@ Route::post('/settings/invoice/logo', [OrganizationSettingsController::class, 'u
 Route::delete('/settings/invoice/logo', [OrganizationSettingsController::class, 'deleteLogo'])->name('settings.logo.delete');
 Route::get('/settings/logo', [OrganizationSettingsController::class, 'serveLogo'])->name('settings.logo');
 Route::put('/settings/communications', [OrganizationSettingsController::class, 'updateCommunications'])->name('settings.communications');
+
+// Organization data export (GDPR portability)
+Route::post('/settings/export', [OrganizationSettingsController::class, 'exportData'])->name('settings.export');
+Route::get('/settings/export/download', [OrganizationSettingsController::class, 'downloadExport'])->name('settings.export.download');
 
 // Expense categories
 Route::get('/settings/expense-categories', [ExpenseCategoryController::class, 'index'])->name('settings.expense-categories.index');

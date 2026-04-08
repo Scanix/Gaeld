@@ -11,7 +11,7 @@ import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { currencyOptions } from '@/lib/contactOptions'
-import { ArrowRightLeft } from 'lucide-vue-next'
+import { ArrowRightLeft, User, Building2, Calculator } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 
@@ -28,7 +28,27 @@ const form = useForm({
   currency: 'CHF',
   locale: 'en',
   chart_of_accounts: 'swiss_sme',
+  business_type: '',
 })
+
+const businessTypes = [
+  { value: 'freelancer', icon: User, label: () => t('business_type_freelancer'), desc: () => t('business_type_freelancer_desc') },
+  { value: 'sme', icon: Building2, label: () => t('business_type_sme'), desc: () => t('business_type_sme_desc') },
+  { value: 'fiduciary', icon: Calculator, label: () => t('business_type_fiduciary'), desc: () => t('business_type_fiduciary_desc') },
+]
+
+const businessTypeChartMap = {
+  freelancer: 'swiss_freelancer',
+  sme: 'swiss_sme',
+  fiduciary: 'swiss_sme',
+}
+
+function selectBusinessType(value) {
+  form.business_type = value
+  if (businessTypeChartMap[value]) {
+    form.chart_of_accounts = businessTypeChartMap[value]
+  }
+}
 
 const chartOptions = [
   { value: 'swiss_sme', label: t('chart_swiss_sme') },
@@ -73,6 +93,25 @@ const localeOptions = [
         </CardHeader>
         <CardContent>
           <form class="space-y-6" @submit.prevent="submit">
+            <!-- Business type selector -->
+            <fieldset class="space-y-4">
+              <legend class="text-lg font-semibold">{{ t('business_type') }}</legend>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <button
+                  v-for="bt in businessTypes"
+                  :key="bt.value"
+                  type="button"
+                  class="flex flex-col items-center gap-3 rounded-xl border-2 p-5 text-center transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]"
+                  :class="form.business_type === bt.value ? 'border-[hsl(var(--primary))] bg-[hsl(var(--accent))]' : 'border-[hsl(var(--border))]'"
+                  @click="selectBusinessType(bt.value)"
+                >
+                  <component :is="bt.icon" class="h-7 w-7" :class="form.business_type === bt.value ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]'" />
+                  <span class="text-sm font-semibold">{{ bt.label() }}</span>
+                  <span class="text-xs text-[hsl(var(--muted-foreground))]">{{ bt.desc() }}</span>
+                </button>
+              </div>
+            </fieldset>
+
             <fieldset class="space-y-6">
               <FormInput id="name" v-model="form.name" :label="t('company_name')" :error="form.errors.name" required />
               <FormInput id="legal_name" v-model="form.legal_name" :label="t('legal_name_different')" :error="form.errors.legal_name" />

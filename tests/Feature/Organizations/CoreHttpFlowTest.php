@@ -127,6 +127,7 @@ class CoreHttpFlowTest extends TestCase
             'date' => '2026-03-12',
             'vendor' => 'GitHub',
             'currency' => 'CHF',
+            'expense_account_code' => '6530',
         ]);
 
         $expense = Expense::where('description', 'HTTP expense')->firstOrFail();
@@ -140,9 +141,8 @@ class CoreHttpFlowTest extends TestCase
         $expense->refresh();
         $this->assertSame(ExpenseStatus::Approved, $expense->status);
 
-        $this->actAsOrg()->post("/expenses/{$expense->id}/post", [
-            'expense_account_code' => '6530',
-        ])->assertRedirect(route('expenses.show', $expense));
+        $this->actAsOrg()->post("/expenses/{$expense->id}/post")
+            ->assertRedirect(route('expenses.show', $expense));
 
         $expense->refresh();
         $this->assertSame(ExpenseStatus::Posted, $expense->status);
@@ -167,7 +167,7 @@ class CoreHttpFlowTest extends TestCase
 
         $create->assertRedirect(route('banking.show', $bankAccount));
 
-        $this->actAsOrg()->post("/banking/{$bankAccount->id}/transactions", [
+        $this->actAsOrg()->post("/banking/{$bankAccount->uuid}/transactions", [
             'date' => '2026-03-14',
             'description' => 'HTTP transfer',
             'amount' => 150.00,

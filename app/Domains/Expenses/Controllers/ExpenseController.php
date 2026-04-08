@@ -2,7 +2,10 @@
 
 namespace App\Domains\Expenses\Controllers;
 
+use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Queries\AccountQuery;
 use App\Domains\Accounting\Queries\VatRateQuery;
+use App\Domains\Banking\Queries\BankAccountQuery;
 use App\Domains\Contacts\Queries\SupplierQuery;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\DeleteExpenseAction;
@@ -56,6 +59,8 @@ class ExpenseController extends Controller
             'vatRates' => VatRateQuery::active(),
             'suppliers' => SupplierQuery::forSelect(),
             'categories' => ExpenseCategoryQuery::forSelect(),
+            'expenseAccounts' => AccountQuery::forSelect(AccountType::Expense),
+            'bankAccounts' => BankAccountQuery::forSelect(),
         ]);
     }
 
@@ -102,6 +107,8 @@ class ExpenseController extends Controller
             'vatRates' => VatRateQuery::active(),
             'suppliers' => SupplierQuery::forSelect(),
             'categories' => ExpenseCategoryQuery::forSelect(),
+            'expenseAccounts' => AccountQuery::forSelect(AccountType::Expense),
+            'bankAccounts' => BankAccountQuery::forSelect(),
             'receiptUrl' => $expense->receipt_path ? route('expenses.receipt.download', $expense) : null,
         ]);
     }

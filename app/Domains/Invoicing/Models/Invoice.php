@@ -10,6 +10,7 @@ use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -49,6 +50,8 @@ use Laravel\Scout\Searchable;
  * @property Carbon|null $deleted_at
  * @property-read Customer|null $customer
  * @property-read Organization $organization
+ * @property-read Collection<int, InvoiceLine> $lines
+ * @property-read Collection<int, InvoicePayment> $payments
  */
 class Invoice extends Model
 {
@@ -95,36 +98,43 @@ class Invoice extends Model
 
     // STATUS_* constants removed — use InvoiceStatus enum: InvoiceStatus::Draft, ::Sent, ::Paid, ::Overdue, ::Cancelled
 
+    /** @return BelongsTo<Organization, $this> */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return BelongsTo<JournalEntry, $this> */
     public function journalEntry(): BelongsTo
     {
         return $this->belongsTo(JournalEntry::class);
     }
 
+    /** @return HasMany<InvoiceLine, $this> */
     public function lines(): HasMany
     {
         return $this->hasMany(InvoiceLine::class);
     }
 
+    /** @return HasMany<InvoicePayment, $this> */
     public function payments(): HasMany
     {
         return $this->hasMany(InvoicePayment::class);
     }
 
+    /** @return BelongsTo<self, $this> */
     public function relatedInvoice(): BelongsTo
     {
         return $this->belongsTo(self::class, 'related_invoice_id');
     }
 
+    /** @return HasMany<self, $this> */
     public function creditNotes(): HasMany
     {
         return $this->hasMany(self::class, 'related_invoice_id');
@@ -204,7 +214,8 @@ class Invoice extends Model
     public function recalculate(): void
     {
         $totals = $this->lines()
-            ->selectRaw('SUM(amount) as total_amount, SUM(vat_amount) as total_vat')
+            ->selectRaw("SUM(CASE WHEN type = 'discount' THEN -amount ELSE amount END) as total_amount")
+            ->selectRaw("SUM(CASE WHEN type = 'discount' THEN -vat_amount ELSE vat_amount END) as total_vat")
             ->first();
 
         $this->subtotal = $totals->total_amount ?? '0';

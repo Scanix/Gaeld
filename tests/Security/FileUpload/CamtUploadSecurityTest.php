@@ -57,7 +57,7 @@ class CamtUploadSecurityTest extends SecurityTestCase
         // Must not return 200 or 500 — either validation error (422/302) or parse error
         $response = $this->actingAs($this->ownerA)
             ->withSession(['current_organization_id' => $this->orgA->id])
-            ->post("/reconciliation/{$this->bankAccountA->id}/import", [
+            ->post("/reconciliation/{$this->bankAccountA->uuid}/import", [
                 'camt_file' => $file,
             ]);
 
@@ -73,7 +73,7 @@ class CamtUploadSecurityTest extends SecurityTestCase
 
         $response = $this->actingAs($this->ownerA)
             ->withSession(['current_organization_id' => $this->orgA->id])
-            ->post("/reconciliation/{$this->bankAccountA->id}/import", [
+            ->post("/reconciliation/{$this->bankAccountA->uuid}/import", [
                 'camt_file' => $file,
             ]);
 
@@ -92,7 +92,7 @@ class CamtUploadSecurityTest extends SecurityTestCase
 
         $response = $this->actingAs($this->ownerA)
             ->withSession(['current_organization_id' => $this->orgA->id])
-            ->post("/reconciliation/{$this->bankAccountA->id}/import", [
+            ->post("/reconciliation/{$this->bankAccountA->uuid}/import", [
                 'camt_file' => $file,
             ]);
 
@@ -116,7 +116,7 @@ class CamtUploadSecurityTest extends SecurityTestCase
 
         $response = $this->actingAs($this->ownerA)
             ->withSession(['current_organization_id' => $this->orgA->id])
-            ->post("/reconciliation/{$this->bankAccountA->id}/import", [
+            ->post("/reconciliation/{$this->bankAccountA->uuid}/import", [
                 'camt_file' => $file,
             ]);
 
@@ -149,7 +149,7 @@ XML;
 
         $response = $this->actingAs($this->ownerA)
             ->withSession(['current_organization_id' => $this->orgA->id])
-            ->post("/reconciliation/{$this->bankAccountA->id}/import", [
+            ->post("/reconciliation/{$this->bankAccountA->uuid}/import", [
                 'camt_file' => $file,
             ]);
 
@@ -189,7 +189,7 @@ XML;
         $this->assertDenied(
             $this->actingAs($this->ownerA)
                 ->withSession(['current_organization_id' => $this->orgA->id])
-                ->post("/reconciliation/{$bankAccountB->id}/import", [
+                ->post("/reconciliation/{$bankAccountB->uuid}/import", [
                     'camt_file' => $file,
                 ])
         );
@@ -203,7 +203,7 @@ XML;
     {
         $response = $this->actingAs($this->ownerA)
             ->withSession(['current_organization_id' => $this->orgA->id])
-            ->post("/reconciliation/{$this->bankAccountA->id}/import", []);
+            ->post("/reconciliation/{$this->bankAccountA->uuid}/import", []);
 
         // Web forms redirect back with validation errors (302) or JSON returns 422
         $this->assertContains($response->status(), [302, 422],

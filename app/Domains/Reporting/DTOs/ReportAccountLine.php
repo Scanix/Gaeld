@@ -15,6 +15,7 @@ readonly class ReportAccountLine
         public ?string $budgetVariance = null,
     ) {}
 
+    /** @return array<string, string|null> */
     public function toArray(): array
     {
         $data = [

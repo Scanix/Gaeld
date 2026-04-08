@@ -5,7 +5,7 @@ namespace App\Domains\Reporting\Services;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\Budget;
-use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Assets\Models\DepreciationEntry;
 use App\Domains\Organizations\Models\Organization;
 use Carbon\Carbon;
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Cache;
 class ReportingService
 {
     public function __construct(
-        private LedgerService $ledgerService,
+        private LedgerQueryService $ledgerService,
     ) {}
 
     /**
@@ -61,46 +61,7 @@ class ReportingService
             ];
 
             if ($compareFrom && $compareTo) {
-                $compRevenue = $this->accountsWithBalances($organizationId, AccountType::Revenue, $compareFrom, $compareTo);
-                $compExpenses = $this->accountsWithBalances($organizationId, AccountType::Expense, $compareFrom, $compareTo);
-
-                $compTotalRevenue = $compRevenue->sum('balance');
-                $compTotalExpenses = $compExpenses->sum('balance');
-                $compNetProfit = bcsub((string) $compTotalRevenue, (string) $compTotalExpenses, 2);
-
-                $result['comparison'] = [
-                    'period' => ['from' => $compareFrom, 'to' => $compareTo],
-                    'revenue' => $compRevenue->values()->toArray(),
-                    'expenses' => $compExpenses->values()->toArray(),
-                    'total_revenue' => $compTotalRevenue,
-                    'total_expenses' => $compTotalExpenses,
-                    'net_profit' => $compNetProfit,
-                ];
-
-                $revenueVariance = bcsub((string) $totalRevenue, (string) $compTotalRevenue, 2);
-                $expenseVariance = bcsub((string) $totalExpenses, (string) $compTotalExpenses, 2);
-                $netProfitVariance = bcsub($result['net_profit'], $compNetProfit, 2);
-
-                $result['variance'] = [
-                    'total_revenue' => [
-                        'amount' => $revenueVariance,
-                        'percentage' => bccomp((string) $compTotalRevenue, '0', 2) !== 0
-                            ? bcmul(bcdiv($revenueVariance, (string) $compTotalRevenue, 4), '100', 2)
-                            : null,
-                    ],
-                    'total_expenses' => [
-                        'amount' => $expenseVariance,
-                        'percentage' => bccomp((string) $compTotalExpenses, '0', 2) !== 0
-                            ? bcmul(bcdiv($expenseVariance, (string) $compTotalExpenses, 4), '100', 2)
-                            : null,
-                    ],
-                    'net_profit' => [
-                        'amount' => $netProfitVariance,
-                        'percentage' => bccomp($compNetProfit, '0', 2) !== 0
-                            ? bcmul(bcdiv($netProfitVariance, $compNetProfit, 4), '100', 2)
-                            : null,
-                    ],
-                ];
+                $result = $this->computeComparison($result, $organizationId, $compareFrom, $compareTo);
             }
 
             // Budget enrichment
@@ -196,6 +157,52 @@ class ReportingService
         }
 
         return $fiscalStart->toDateString();
+    }
+
+    /**
+     * @param  array<string, mixed>  $result
+     * @return array<string, mixed>
+     */
+    private function computeComparison(array $result, string $organizationId, string $compareFrom, string $compareTo): array
+    {
+        $compRevenue = $this->accountsWithBalances($organizationId, AccountType::Revenue, $compareFrom, $compareTo);
+        $compExpenses = $this->accountsWithBalances($organizationId, AccountType::Expense, $compareFrom, $compareTo);
+
+        $compTotalRevenue = $compRevenue->sum('balance');
+        $compTotalExpenses = $compExpenses->sum('balance');
+        $compNetProfit = bcsub((string) $compTotalRevenue, (string) $compTotalExpenses, 2);
+
+        $result['comparison'] = [
+            'period' => ['from' => $compareFrom, 'to' => $compareTo],
+            'revenue' => $compRevenue->values()->toArray(),
+            'expenses' => $compExpenses->values()->toArray(),
+            'total_revenue' => $compTotalRevenue,
+            'total_expenses' => $compTotalExpenses,
+            'net_profit' => $compNetProfit,
+        ];
+
+        $result['variance'] = [
+            'total_revenue' => $this->computeVariance((string) $result['total_revenue'], (string) $compTotalRevenue),
+            'total_expenses' => $this->computeVariance((string) $result['total_expenses'], (string) $compTotalExpenses),
+            'net_profit' => $this->computeVariance($result['net_profit'], $compNetProfit),
+        ];
+
+        return $result;
+    }
+
+    /**
+     * @return array{amount: string, percentage: string|null}
+     */
+    private function computeVariance(string $current, string $previous): array
+    {
+        $amount = bcsub($current, $previous, 2);
+
+        return [
+            'amount' => $amount,
+            'percentage' => bccomp($previous, '0', 2) !== 0
+                ? bcmul(bcdiv($amount, $previous, 4), '100', 2)
+                : null,
+        ];
     }
 
     private function accountsWithBalances(string $organizationId, AccountType $type, ?string $fromDate, ?string $toDate): Collection

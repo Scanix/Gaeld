@@ -8,6 +8,7 @@ use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Exceptions\AlreadyPostedException;
 use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
@@ -32,6 +33,8 @@ class LedgerServiceTest extends TestCase
 
     private LedgerService $ledgerService;
 
+    private LedgerQueryService $queryService;
+
     private Organization $organization;
 
     private array $accounts = [];
@@ -40,7 +43,8 @@ class LedgerServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->ledgerService = new LedgerService;
+        $this->queryService = app(LedgerQueryService::class);
+        $this->ledgerService = app(LedgerService::class);
 
         $user = User::factory()->create();
         $this->organization = Organization::create([
@@ -200,7 +204,7 @@ class LedgerServiceTest extends TestCase
             ],
         ));
 
-        $balance = $this->ledgerService->accountBalance($this->accounts['bank']->id);
+        $balance = $this->queryService->accountBalance($this->accounts['bank']->id);
 
         $this->assertSame('1000.00', $balance);
     }
@@ -218,7 +222,7 @@ class LedgerServiceTest extends TestCase
             ],
         ));
 
-        $balance = $this->ledgerService->accountBalance($this->accounts['revenue']->id);
+        $balance = $this->queryService->accountBalance($this->accounts['revenue']->id);
 
         $this->assertSame('500.00', $balance);
     }
@@ -238,8 +242,8 @@ class LedgerServiceTest extends TestCase
         $this->ledgerService->reverseEntry($entry, 'Test reversal');
 
         // Net balance for both accounts should be zero after reversal
-        $this->assertSame('0.00', $this->ledgerService->accountBalance($this->accounts['ar']->id));
-        $this->assertSame('0.00', $this->ledgerService->accountBalance($this->accounts['revenue']->id));
+        $this->assertSame('0.00', $this->queryService->accountBalance($this->accounts['ar']->id));
+        $this->assertSame('0.00', $this->queryService->accountBalance($this->accounts['revenue']->id));
     }
 
     public function test_create_draft_does_not_affect_account_balance(): void
@@ -256,7 +260,7 @@ class LedgerServiceTest extends TestCase
 
         $this->assertFalse($draft->is_posted);
         // Draft entries must not appear in account balance
-        $this->assertSame('0.00', $this->ledgerService->accountBalance($this->accounts['bank']->id));
+        $this->assertSame('0.00', $this->queryService->accountBalance($this->accounts['bank']->id));
     }
 
     public function test_post_draft_marks_entry_as_posted(): void
@@ -274,7 +278,7 @@ class LedgerServiceTest extends TestCase
         $posted = $this->ledgerService->postDraft($draft);
 
         $this->assertTrue($posted->is_posted);
-        $this->assertSame('300.00', $this->ledgerService->accountBalance($this->accounts['bank']->id));
+        $this->assertSame('300.00', $this->queryService->accountBalance($this->accounts['bank']->id));
     }
 
     public function test_post_draft_rejects_already_posted_entry(): void
@@ -305,7 +309,7 @@ class LedgerServiceTest extends TestCase
             ],
         ));
 
-        $trialBalance = $this->ledgerService->trialBalance($this->organization->id);
+        $trialBalance = $this->queryService->trialBalance($this->organization->id);
 
         $codes = array_column($trialBalance, 'account_code');
         $this->assertContains('1020', $codes); // bank (debit-normal, debit side)

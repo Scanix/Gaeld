@@ -200,7 +200,7 @@ class ApiTest extends TestCase
         ]);
 
         $this->withToken($this->token)
-            ->deleteJson("/api/v1/org-tokens/{$orgToken->accessToken->id}")
+            ->deleteJson("/api/v1/org-tokens/{$orgToken->accessToken->uuid}")
             ->assertStatus(204);
     }
 
@@ -294,7 +294,7 @@ class ApiTest extends TestCase
         ]);
 
         $this->withToken($this->token)
-            ->getJson("/api/v1/customers/{$customer->id}")
+            ->getJson("/api/v1/customers/{$customer->uuid}")
             ->assertOk()
             ->assertJsonPath('data.name', 'Show Me AG');
     }
@@ -309,7 +309,7 @@ class ApiTest extends TestCase
         ]);
 
         $this->withToken($this->token)
-            ->putJson("/api/v1/customers/{$customer->id}", [
+            ->putJson("/api/v1/customers/{$customer->uuid}", [
                 'name' => 'New Name',
                 'country' => 'CH',
                 'currency' => 'CHF',
@@ -328,7 +328,7 @@ class ApiTest extends TestCase
         ]);
 
         $this->withToken($this->token)
-            ->deleteJson("/api/v1/customers/{$customer->id}")
+            ->deleteJson("/api/v1/customers/{$customer->uuid}")
             ->assertStatus(204);
     }
 
@@ -349,7 +349,7 @@ class ApiTest extends TestCase
         $customer->saveQuietly();
 
         $this->withToken($this->token)
-            ->getJson("/api/v1/customers/{$customer->id}")
+            ->getJson("/api/v1/customers/{$customer->uuid}")
             ->assertStatus(404);
     }
 
