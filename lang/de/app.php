@@ -1488,11 +1488,17 @@ return [
     // Banking UX
     'iban_placeholder' => 'CH93 0076 2011 6238 5295 7',
     'qr_iban_hint' => 'Für Schweizer QR-Rechnungen verwenden Sie eine QR-IBAN (beginnt mit CH..30 oder CH..31).',
+    'qr_iban_help_where_to_find' => 'Ihre QR-IBAN finden Sie im E-Banking-Portal Ihrer Bank unter den Zahlungseinstellungen.',
+    'qr_iban_detected' => 'QR-IBAN erkannt — bereit für Schweizer QR-Rechnungen.',
+    'qr_iban_regular_warning' => 'Dies ist eine reguläre IBAN, keine QR-IBAN. Schweizer QR-Rechnungen benötigen eine QR-IBAN.',
+    'qr_iban_swiss_only' => 'QR-IBAN ist nur für Schweizer Bankkonten verfügbar (CH/LI).',
+    'iban_regular_detected' => 'Reguläre IBAN erkannt.',
     'go_to_banking' => 'Bankkonto hinzufügen',
     'empty_reconciliation_title' => 'Keine Bankkonten',
     'empty_reconciliation_desc' => 'Erstellen Sie zuerst ein Bankkonto, um mit dem Abgleich zu beginnen.',
 
     // Settings
+    'edit_settings' => 'Einstellungen bearbeiten',
     'user_locale_hint' => 'Sprache der Benutzeroberfläche für Ihr Konto.',
     'org_locale_hint' => 'Standardsprache für Dokumente (Rechnungen, Berichte).',
 
