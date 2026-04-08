@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Upload, X, FileText } from 'lucide-vue-next'
+import { useTranslations } from '@/lib/useTranslations'
+
+const { t } = useTranslations()
 
 const props = defineProps({
   accept: { type: String, default: '' },
@@ -58,7 +61,7 @@ function processFile(f) {
 
   // Validate file size
   if (f.size > props.maxSizeMb * 1024 * 1024) {
-    localError.value = `File size exceeds ${props.maxSizeMb}MB limit.`
+    localError.value = t('file_size_exceeds', { size: props.maxSizeMb })
     return
   }
 
@@ -72,7 +75,7 @@ function processFile(f) {
       return f.type === ext
     })
     if (!matches) {
-      localError.value = `Invalid file type. Accepted: ${acceptExtensions.value}`
+      localError.value = t('invalid_file_type', { types: acceptExtensions.value })
       return
     }
   }
@@ -123,12 +126,12 @@ function formatSize(bytes) {
     >
       <Upload :class="['h-8 w-8 mb-2', isDragging ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]']" />
       <p class="text-sm font-medium">
-        <span class="text-[hsl(var(--primary))]">{{ $t?.('click_to_upload') || 'Click to upload' }}</span>
-        {{ $t?.('or_drag_and_drop') || 'or drag and drop' }}
+        <span class="text-[hsl(var(--primary))]">{{ t('click_to_upload') }}</span>
+        {{ t('or_drag_and_drop') }}
       </p>
       <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
         <template v-if="acceptExtensions">{{ acceptExtensions }} · </template>
-        Max {{ maxSizeMb }}MB
+        {{ t('max_file_size', { size: maxSizeMb }) }}
       </p>
       <input
         ref="fileInput"

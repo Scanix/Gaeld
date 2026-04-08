@@ -210,7 +210,7 @@ function updatePlan(plan) {
                 <span class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('active_subscriptions').toLowerCase() }}</span>
               </div>
               <div class="border-t border-[hsl(var(--border))] pt-3">
-                <label class="block text-xs font-medium text-[hsl(var(--muted-foreground))] mb-1">Stripe Price ID</label>
+                <label class="block text-xs font-medium text-[hsl(var(--muted-foreground))] mb-1">{{ t('stripe_price_id') }}</label>
                 <div class="flex gap-2">
                   <input
                     v-model="initPlanForm(plan).stripe_price_id"
@@ -223,7 +223,7 @@ function updatePlan(plan) {
                   </Button>
                 </div>
                 <p v-if="!initPlanForm(plan).stripe_price_id" class="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                  ⚠ Checkout disabled — no Stripe Price ID
+                  ⚠ {{ t('checkout_disabled_no_stripe') }}
                 </p>
               </div>
             </div>
