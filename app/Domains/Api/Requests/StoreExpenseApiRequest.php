@@ -10,7 +10,8 @@ class StoreExpenseApiRequest extends FormRequest
 {
     public function rules(): array
     {
-        $orgId = app(CurrentOrganization::class)->id();
+        $org = app(CurrentOrganization::class);
+        $orgId = $org->isBound() ? $org->id() : 0;
 
         return [
             'category' => 'required|string|max:100',

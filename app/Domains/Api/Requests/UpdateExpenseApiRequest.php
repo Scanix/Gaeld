@@ -10,7 +10,8 @@ class UpdateExpenseApiRequest extends FormRequest
 {
     public function rules(): array
     {
-        $orgId = app(CurrentOrganization::class)->id();
+        $org = app(CurrentOrganization::class);
+        $orgId = $org->isBound() ? $org->id() : 0;
 
         return [
             'category' => 'sometimes|string|max:100',
