@@ -12,6 +12,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetGuestLocale;
 use App\Support\FeatureFlag;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -59,6 +60,14 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Convert invalid UUID queries (e.g. /banking/6 instead of /banking/{uuid})
+        // into 404 responses instead of 500 errors.
+        $exceptions->renderable(function (QueryException $e) {
+            if ($e->getCode() === '22P02' && str_contains($e->getMessage(), 'uuid')) {
+                abort(404);
+            }
+        });
+
         $exceptions->renderable(function (FiscalYearClosedException $e) {
             if (request()->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 422);

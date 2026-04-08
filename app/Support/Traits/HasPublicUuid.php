@@ -24,4 +24,15 @@ trait HasPublicUuid
     {
         return 'uuid';
     }
+
+    /** @return static|null */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if (! Str::isUuid((string) $value)) {
+            return null;
+        }
+
+        /** @var static|null */
+        return parent::resolveRouteBinding($value, $field);
+    }
 }
