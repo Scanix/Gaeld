@@ -8,11 +8,12 @@ use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithActiveSubscription;
 use Tests\Traits\WithOrganizationPermissions;
 
 class YearEndClosingTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
+    use RefreshDatabase, WithActiveSubscription, WithOrganizationPermissions;
 
     private User $owner;
 
@@ -47,6 +48,8 @@ class YearEndClosingTest extends TestCase
             'name' => 'Debtors',
             'type' => AccountType::Asset->value,
         ]);
+
+        $this->ensureSubscriptionIfSaas($this->organization);
     }
 
     private function asOwner(): self
