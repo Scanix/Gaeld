@@ -14,7 +14,7 @@
         "laravel-vite-plugin": "^3.0.1",
         "postcss": "^8.5.8",
         "tailwindcss": "^4.2.2",
-        "vite": "^8.0.6"
+        "vite": "^8.0.7"
     },
     "dependencies": {
         "@simplewebauthn/browser": "^13.3.0",
