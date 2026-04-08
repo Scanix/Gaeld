@@ -320,7 +320,11 @@ build:ci-image:
   stage: .pre
   image: docker:27
   services:
-    - docker:27-dind
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $CI_IMAGE -f docker/ci/Dockerfile .
