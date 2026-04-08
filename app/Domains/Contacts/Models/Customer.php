@@ -106,6 +106,9 @@ class Customer extends Model
             'email' => $this->email ?? '',
             'city' => $this->city ?? '',
             'vat_number' => $this->vat_number ?? '',
+            'contact_persons' => $this->contactPersons
+                ->map(fn (ContactPerson $cp) => $cp->full_name.' '.$cp->email)
+                ->implode(' | '),
         ];
     }
 

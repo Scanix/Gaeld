@@ -54,9 +54,10 @@ class InvoiceStatusTest extends TestCase
         $this->assertFalse(InvoiceStatus::Paid->isEditable());
     }
 
-    public function test_only_draft_is_deletable(): void
+    public function test_only_draft_and_cancelled_are_deletable(): void
     {
         $this->assertTrue(InvoiceStatus::Draft->isDeletable());
+        $this->assertTrue(InvoiceStatus::Cancelled->isDeletable());
         $this->assertFalse(InvoiceStatus::Sent->isDeletable());
         $this->assertFalse(InvoiceStatus::Paid->isDeletable());
     }

@@ -157,4 +157,32 @@ class SwissQrInvoiceServiceTest extends TestCase
 
         $this->assertCount(0, $violations, 'EUR violations: '.implode(', ', array_map(fn ($v) => $v->getMessage(), iterator_to_array($violations))));
     }
+
+    public function test_auto_generates_qr_reference_for_qr_iban(): void
+    {
+        $invoice = Invoice::create([
+            'organization_id' => $this->org->id,
+            'customer_id' => $this->client->id,
+            'number' => 'INV-2026-005',
+            'status' => 'sent',
+            'issue_date' => '2026-01-15',
+            'due_date' => '2026-02-15',
+            'currency' => 'CHF',
+            'subtotal' => '750.00',
+            'vat_amount' => '0.00',
+            'total' => '750.00',
+            'qr_iban' => 'CH4431999123000889012',
+        ]);
+
+        $this->assertNull($invoice->qr_reference);
+
+        $qrBill = $this->service->buildQrBill($invoice, $this->org);
+        $violations = $qrBill->getViolations();
+
+        $invoice->refresh();
+        $this->assertNotNull($invoice->qr_reference);
+        $this->assertEquals('QRR', $invoice->qr_type);
+        $this->assertEquals(27, strlen($invoice->qr_reference));
+        $this->assertCount(0, $violations, 'Auto-generated QR ref violations: '.implode(', ', array_map(fn ($v) => $v->getMessage(), iterator_to_array($violations))));
+    }
 }

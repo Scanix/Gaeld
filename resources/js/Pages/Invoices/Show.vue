@@ -23,6 +23,7 @@ import HelpText from '@/Components/HelpText.vue'
 
 const props = defineProps({
   invoice: Object,
+  canForceDelete: { type: Boolean, default: false },
   justificatifUrl: { type: String, default: null },
   bankAccounts: { type: Array, default: () => [] },
   creditNotes: { type: Array, default: () => [] },
@@ -37,8 +38,10 @@ const { formatCurrency, formatDate } = useFormatters()
 const showPaymentModal = ref(false)
 const showDeleteDialog = ref(false)
 const showCancelDialog = ref(false)
+const showPurgeDialog = ref(false)
 const deleting = ref(false)
 const cancelling = ref(false)
+const purging = ref(false)
 
 const creditNoteForm = useForm({})
 const sendForm = useForm({})
@@ -109,6 +112,16 @@ function executeCancel() {
     onFinish: () => {
       cancelling.value = false
       showCancelDialog.value = false
+    },
+  })
+}
+
+function executePurge() {
+  purging.value = true
+  router.delete(`/invoices/${props.invoice.id}/purge`, {
+    onFinish: () => {
+      purging.value = false
+      showPurgeDialog.value = false
     },
   })
 }
@@ -261,12 +274,20 @@ const bankAccountOptions = computed(() =>
                 {{ t('cancel_invoice') }}
               </button>
               <button
-                v-if="invoice?.status === 'draft'"
+                v-if="invoice?.status === 'draft' || invoice?.status === 'cancelled'"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
                 @click="showDeleteDialog = true; close()"
               >
                 <Trash2 class="h-4 w-4 shrink-0" />
                 {{ t('delete') }}
+              </button>
+              <button
+                v-if="canForceDelete"
+                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
+                @click="showPurgeDialog = true; close()"
+              >
+                <Trash2 class="h-4 w-4 shrink-0" />
+                {{ t('purge_invoice') }}
               </button>
             </template>
           </DropdownMenu>
@@ -459,6 +480,17 @@ const bankAccountOptions = computed(() =>
       :processing="cancelling"
       @confirm="executeCancel"
       @cancel="showCancelDialog = false"
+    />
+
+    <!-- Purge Confirmation -->
+    <ConfirmDialog
+      :open="showPurgeDialog"
+      :title="t('purge_invoice')"
+      :message="t('purge_invoice_confirm', { number: invoice?.number })"
+      :confirm-label="t('purge_invoice')"
+      :processing="purging"
+      @confirm="executePurge"
+      @cancel="showPurgeDialog = false"
     />
   </AppLayout>
 </template>

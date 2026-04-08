@@ -54,6 +54,8 @@ class SwissQrInvoiceService
     {
         $invoice->loadMissing(['customer']);
 
+        $this->ensureQrReference($invoice, $organization);
+
         $qrBill = QrBill::create();
 
         $this->setCreditorInfo($qrBill, $invoice, $organization);
@@ -71,6 +73,55 @@ class SwissQrInvoiceService
     // ──────────────────────────────────────────────────────────────
     //  Bill Component Builders
     // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Auto-generate and persist a QR reference when the IBAN is a QR-IBAN
+     * and the invoice does not already have one.
+     */
+    public function ensureQrReference(Invoice $invoice, Organization $organization): void
+    {
+        if ($invoice->qr_reference) {
+            return;
+        }
+
+        $iban = $invoice->qr_iban ?? $organization->qr_iban ?? '';
+        if (! $this->isQrIban($iban)) {
+            return;
+        }
+
+        $customerIdentification = str_pad(
+            (string) ($invoice->customer_id ? crc32((string) $invoice->customer_id) % 100000 : 0),
+            5,
+            '0',
+            STR_PAD_LEFT,
+        );
+
+        $qrReference = $this->generateQrReference(
+            $customerIdentification,
+            $invoice->number ?? '',
+        );
+
+        $invoice->updateQuietly([
+            'qr_reference' => $qrReference,
+            'qr_type' => 'QRR',
+        ]);
+    }
+
+    /**
+     * Determine whether the given IBAN is a Swiss QR-IBAN (IID 30000–31999).
+     */
+    private function isQrIban(string $iban): bool
+    {
+        $iban = preg_replace('/\s+/', '', $iban);
+
+        if (! preg_match('/^(CH|LI)/i', $iban)) {
+            return false;
+        }
+
+        $iid = (int) substr($iban, 4, 5);
+
+        return $iid >= 30000 && $iid <= 31999;
+    }
 
     private function setCreditorInfo(QrBill $qrBill, Invoice $invoice, Organization $organization): void
     {

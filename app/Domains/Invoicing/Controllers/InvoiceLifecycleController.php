@@ -6,6 +6,7 @@ use App\Domains\Invoicing\Actions\CancelInvoiceAction;
 use App\Domains\Invoicing\Actions\CreateCreditNoteAction;
 use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
+use App\Domains\Invoicing\Actions\PurgeInvoiceAction;
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
@@ -89,5 +90,19 @@ class InvoiceLifecycleController extends Controller
 
         return redirect()->route('invoices.show', $creditNote)
             ->with('success', __('app.credit_note_created'));
+    }
+
+    public function purge(Invoice $invoice, PurgeInvoiceAction $action): RedirectResponse
+    {
+        $this->authorize('forceDelete', $invoice);
+
+        try {
+            $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('invoices.index')
+            ->with('success', __('app.invoice_purged'));
     }
 }
