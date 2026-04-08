@@ -5,32 +5,76 @@ namespace App\Domains\Organizations\Services;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Assets\Models\DepreciationEntry;
+use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
+use App\Domains\Contacts\Models\Customer;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Migration\Models\MigrationSession;
+use App\Domains\Organizations\Models\Organization;
 
 /**
- * Provides a guided getting-started checklist for new organizations,
- * checking completion of key onboarding steps (accounts, invoices, etc.).
+ * Provides a two-tier guided checklist for organizations:
+ *   - getting_started: essential first steps any new user should complete
+ *   - accounting: advanced accounting lifecycle items
  */
 class ChecklistService
 {
     /**
-     * Returns a list of checklist items for the current organization.
+     * Returns both getting-started and accounting checklists.
      *
-     * Each item has:
-     *   - key: string
-     *   - done: bool
-     *   - href: string|null
-     *
-     * @return array<int, array{key: string, done: bool, href: string|null}>
+     * @return array{getting_started: array<int, array{key: string, done: bool, href: string|null}>, accounting: array<int, array{key: string, done: bool, href: string|null}>}
      */
     public function checklist(string $organizationId): array
     {
+        return [
+            'getting_started' => $this->gettingStarted($organizationId),
+            'accounting' => $this->accounting($organizationId),
+        ];
+    }
+
+    /**
+     * Essential first steps for a new user.
+     *
+     * @return array<int, array{key: string, done: bool, href: string|null}>
+     */
+    private function gettingStarted(string $organizationId): array
+    {
+        $org = Organization::find($organizationId);
+
+        $profileComplete = $org
+            && $org->legal_name
+            && $org->address
+            && $org->city
+            && $org->postal_code;
+
         $chartConfigured = Account::where('organization_id', $organizationId)->exists();
 
+        $customerCreated = Customer::where('organization_id', $organizationId)->exists();
+
+        $bankAccountCreated = BankAccount::where('organization_id', $organizationId)->exists();
+
         $invoicesCreated = Invoice::where('organization_id', $organizationId)->exists();
+
+        return [
+            ['key' => 'checklist_profile_complete',    'done' => $profileComplete,    'href' => '/settings'],
+            ['key' => 'checklist_chart_configured',    'done' => $chartConfigured,    'href' => '/accounting/chart-of-accounts'],
+            ['key' => 'checklist_customer_created',    'done' => $customerCreated,    'href' => '/contacts/customers/create'],
+            ['key' => 'checklist_bank_account_created', 'done' => $bankAccountCreated, 'href' => '/banking'],
+            ['key' => 'checklist_invoices_created',    'done' => $invoicesCreated,    'href' => '/invoices/create'],
+        ];
+    }
+
+    /**
+     * Advanced accounting lifecycle items.
+     *
+     * @return array<int, array{key: string, done: bool, href: string|null}>
+     */
+    private function accounting(string $organizationId): array
+    {
+        $dataImported = MigrationSession::where('organization_id', $organizationId)
+            ->where('status', 'completed')
+            ->exists();
 
         $expensesPosted = Expense::where('organization_id', $organizationId)
             ->where('status', 'posted')
@@ -59,14 +103,8 @@ class ChecklistService
 
         $fiduciaryExported = false; // Would require an export log table
 
-        $dataImported = MigrationSession::where('organization_id', $organizationId)
-            ->where('status', 'completed')
-            ->exists();
-
         return [
-            ['key' => 'checklist_chart_configured',    'done' => $chartConfigured,    'href' => '/accounting/chart-of-accounts'],
             ['key' => 'checklist_data_imported',       'done' => $dataImported,       'href' => '/migration'],
-            ['key' => 'checklist_invoices_created',    'done' => $invoicesCreated,    'href' => '/invoices'],
             ['key' => 'checklist_expenses_posted',     'done' => $expensesPosted,     'href' => '/expenses'],
             ['key' => 'checklist_bank_imported',       'done' => $bankImported,       'href' => '/banking'],
             ['key' => 'checklist_reconciliation_done', 'done' => $reconciliationDone, 'href' => '/reconciliation'],
