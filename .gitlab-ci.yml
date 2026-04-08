@@ -1,7 +1,7 @@
 # =============================================================================
 #  Gäld API — GitLab CI/CD Pipeline
 #
-#  Runs on self-hosted Nectoria runners.
+#  Runs on self-hosted Docker runners.
 #  Full pipeline: lint → analyse → test (CE+EE, coverage gate) → docs → deploy
 #
 #  The `deploy` stage is manual, triggered only on the `production` branch.
@@ -15,7 +15,13 @@ stages:
   - performance
   - deploy
 
+default:
+  image: $CI_IMAGE
+  tags:
+    - docker
+
 variables:
+  CI_IMAGE: registry.nectoria.com/nectoria/products/gaeld/gaeld-ee/ci:php8.4-node24
   PHP_VERSION: "8.4"
   NODE_VERSION: "24"
   POSTGRES_DB: gaeld_test
@@ -82,13 +88,9 @@ variables:
       fi
     - composer install --no-interaction --prefer-dist --optimize-autoloader
     - php artisan key:generate
-  tags:
-    - nectoria
 
 .node-setup: &node-setup
   before_script:
-    - corepack enable
-    - corepack prepare pnpm@latest --activate
     - pnpm install --frozen-lockfile
 
 # ---------------------------------------------------------------------------
@@ -142,7 +144,6 @@ test:
       alias: redis
   script:
     # Build frontend assets (required for Inertia tests)
-    - corepack enable && corepack prepare pnpm@latest --activate
     - pnpm install --frozen-lockfile
     - pnpm build
     # Run migrations
@@ -246,8 +247,6 @@ k6:
     paths:
       - k6-results.json
     expire_in: 14 days
-  tags:
-    - nectoria
   rules:
     - if: $CI_COMMIT_BRANCH == "production"
       when: manual
@@ -285,7 +284,7 @@ deploy:api:
     policy: pull
   needs: ["test", "scribe"]
   tags:
-    - nectoria
+    - docker
   rules:
     - if: $CI_COMMIT_BRANCH == "production"
       when: manual
@@ -297,11 +296,29 @@ deploy:ee:plugin:
     - |
       cd plugins/gaeld-ee
       git push origin main --tags
-  tags:
-    - nectoria
   rules:
     - if: $CI_COMMIT_BRANCH == "production"
       when: manual
       changes:
         - plugins/gaeld-ee/**/*
+  allow_failure: true
+
+# ---------------------------------------------------------------------------
+#  Build CI image (auto on Dockerfile change, manual otherwise)
+# ---------------------------------------------------------------------------
+
+build:ci-image:
+  stage: .pre
+  image: docker:27
+  services:
+    - docker:27-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $CI_IMAGE -f docker/ci/Dockerfile .
+    - docker push $CI_IMAGE
+  rules:
+    - changes:
+        - docker/ci/Dockerfile
+      when: always
+    - when: manual
   allow_failure: true
