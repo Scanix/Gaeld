@@ -1181,7 +1181,7 @@ return [
     // Tooltips
     'tooltip_expense_category' => 'Kategorien ordnen Aufwände den richtigen Konten im Kontenplan zu.',
     'tooltip_vat_rate' => 'Schweizer MWST-Sätze: 8,1% (Normalsatz), 3,8% (Beherbergung), 2,6% (Lebensmittel/Bücher/Medikamente). Wählen Sie "Ohne MWST" für steuerbefreite Umsätze.',
-    'tooltip_qr_iban' => 'Die QR-IBAN beginnt mit CH und ist spezifisch für Schweizer QR-Rechnungen. Sie unterscheidet sich von Ihrer regulären IBAN und ist im E-Banking abrufbar.',
+    'tooltip_qr_iban' => 'Die QR-IBAN ist spezifisch für Schweizer QR-Rechnungen und unterscheidet sich von Ihrer normalen IBAN (Stellen 5–9 im Bereich 30000–31999). Sie finden sie im E-Banking unter Einzahlungsscheine oder fragen Sie Ihre Bank.',
     'tooltip_journal_balance' => 'In der doppelten Buchhaltung müssen Soll und Haben immer übereinstimmen. Eine unausgeglichene Buchung kann nicht gebucht werden.',
 
     // VAT Rates management
@@ -1487,10 +1487,10 @@ return [
 
     // Banking UX
     'iban_placeholder' => 'CH93 0076 2011 6238 5295 7',
-    'qr_iban_hint' => 'Für Schweizer QR-Rechnungen verwenden Sie eine QR-IBAN (beginnt mit CH..30 oder CH..31).',
-    'qr_iban_help_where_to_find' => 'Ihre QR-IBAN finden Sie im E-Banking-Portal Ihrer Bank unter den Zahlungseinstellungen.',
+    'qr_iban_hint' => 'Für Schweizer QR-Rechnungen verwenden Sie eine QR-IBAN (Stellen 5–9 im Bereich 30000–31999).',
+    'qr_iban_help_where_to_find' => 'Ihre QR-IBAN unterscheidet sich von Ihrer normalen IBAN. Sie finden sie im E-Banking unter Einzahlungsscheine/QR-Rechnungen (z. B. QR-Portal bei UBS) oder fragen Sie Ihre Bank.',
     'qr_iban_detected' => 'QR-IBAN erkannt — bereit für Schweizer QR-Rechnungen.',
-    'qr_iban_regular_warning' => 'Dies ist eine reguläre IBAN, keine QR-IBAN. Schweizer QR-Rechnungen benötigen eine QR-IBAN.',
+    'qr_iban_regular_warning' => 'Dies ist eine reguläre IBAN, keine QR-IBAN. Prüfen Sie Ihr E-Banking (Bereich Einzahlungsscheine) oder kontaktieren Sie Ihre Bank, um Ihre QR-IBAN zu erhalten.',
     'qr_iban_swiss_only' => 'QR-IBAN ist nur für Schweizer Bankkonten verfügbar (CH/LI).',
     'iban_regular_detected' => 'Reguläre IBAN erkannt.',
     'go_to_banking' => 'Bankkonto hinzufügen',
