@@ -33,6 +33,7 @@ class VatRate extends Model
     use Auditable, BelongsToOrganization, HasFactory, HasPublicUuid;
 
     protected $fillable = [
+        'uuid',
         'organization_id',
         'name',
         'rate',
