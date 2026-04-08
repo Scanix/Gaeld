@@ -38,7 +38,7 @@ class ContactPerson extends Model
     {
         $reindexParent = function (ContactPerson $cp) {
             if ($cp->contactable && in_array(Searchable::class, class_uses_recursive($cp->contactable))) {
-                $cp->contactable->searchable();
+                $cp->contactable->searchable(); // @phpstan-ignore method.notFound
             }
         };
 
