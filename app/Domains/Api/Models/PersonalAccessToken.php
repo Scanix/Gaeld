@@ -42,6 +42,7 @@ class PersonalAccessToken extends SanctumToken
     use HasPublicUuid;
 
     protected $fillable = [
+        'uuid',
         'name',
         'token',
         'abilities',
