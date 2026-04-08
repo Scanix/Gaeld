@@ -1801,4 +1801,28 @@ return [
     'fiscal_year_closed_banner' => 'L\'esercizio fiscale :year è chiuso. Non è possibile registrare scritture per questo periodo.',
     'fiscal_year_closed_action_disabled' => 'Azione non disponibile — esercizio fiscale chiuso',
     'vat_unsettled_warning' => 'La dichiarazione IVA non è stata registrata per :periods. Si consiglia di registrare le dichiarazioni IVA prima di chiudere l\'esercizio.',
+
+    // Onboarding reset
+    'onboarding_reset_title' => 'Primi passi',
+    'onboarding_reset_desc' => 'Mostra di nuovo la checklist «Primi passi» sulla tua dashboard.',
+    'reset_onboarding' => 'Ripristina i primi passi',
+    'onboarding_reset' => 'La checklist «Primi passi» è di nuovo visibile sulla tua dashboard.',
+    'dismiss_onboarding' => 'Nascondi «Primi passi»',
+
+    // Getting started checklist
+    'getting_started_checklist' => 'Primi passi',
+    'getting_started_complete' => 'Tutto pronto! La tua organizzazione è operativa.',
+    'checklist_profile_complete' => 'Completa il profilo della tua organizzazione',
+    'checklist_customer_created' => 'Aggiungi il tuo primo cliente',
+    'checklist_bank_account_created' => 'Configura un conto bancario',
+
+    // QR-IBAN
+    'qr_iban_help_where_to_find' => 'Il tuo QR-IBAN è diverso dal tuo IBAN abituale. Lo trovi nel tuo e-banking nella sezione bollettini di versamento/fatture QR, oppure chiedi alla tua banca di attivarlo.',
+    'qr_iban_detected' => 'QR-IBAN rilevato — pronto per le fatture QR svizzere.',
+    'qr_iban_regular_warning' => 'Questo è un IBAN classico, non un QR-IBAN. Controlla il tuo portale e-banking (sezione bollettini di versamento) o contatta la tua banca per ottenere il tuo QR-IBAN.',
+    'qr_iban_swiss_only' => 'Il QR-IBAN è disponibile solo per i conti bancari svizzeri (CH/LI).',
+    'iban_regular_detected' => 'IBAN classico rilevato.',
+
+    // Settings
+    'edit_settings' => 'Modifica impostazioni',
 ];
