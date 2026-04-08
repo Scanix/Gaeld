@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+# Pre-push hook: runs Pint and PHPStan before pushing to production.
+# Prevents pushing code that would fail CI lint/analyse stages.
+#
+
+REMOTE="$1"
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Only enforce on pushes to production
+if [ "$BRANCH" != "production" ]; then
+    exit 0
+fi
+
+echo "🔒 Pushing to production — running pre-push checks..."
+echo ""
+
+# 1. Pint (code style)
+echo "🔍 [1/2] Running Pint..."
+./vendor/bin/pint --test
+PINT_EXIT=$?
+
+if [ $PINT_EXIT -ne 0 ]; then
+    echo ""
+    echo "❌ Pint found code style issues. Run 'composer format' to fix them."
+    echo "   Push to production aborted."
+    exit 1
+fi
+
+echo "✅ Pint passed."
+echo ""
+
+# 2. PHPStan (static analysis)
+echo "🔍 [2/2] Running PHPStan..."
+./vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+PHPSTAN_EXIT=$?
+
+if [ $PHPSTAN_EXIT -ne 0 ]; then
+    echo ""
+    echo "❌ PHPStan found errors. Fix them before pushing to production."
+    echo "   Push to production aborted."
+    exit 1
+fi
+
+echo ""
+echo "✅ All pre-push checks passed. Pushing to production..."
+exit 0
