@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Actions;
 
-use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Invoicing\Actions\DeleteInvoiceAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
