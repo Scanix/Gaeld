@@ -9,7 +9,6 @@ use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use App\Domains\Invoicing\Services\SwissQrInvoiceService;
 use App\Domains\Organizations\Models\Organization;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Mockery;
 use Tests\TestCase;
