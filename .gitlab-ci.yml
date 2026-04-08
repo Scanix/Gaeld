@@ -85,8 +85,12 @@ variables:
     # Clone EE plugin (available on GitLab, not on GitHub)
     - |
       if [ -n "$GAELD_EE_DEPLOY_KEY" ]; then
+        eval $(ssh-agent -s)
+        echo "$GAELD_EE_DEPLOY_KEY" | tr -d '\r' | ssh-add -
+        mkdir -p ~/.ssh
+        ssh-keyscan -H gitlab.nectoria.com >> ~/.ssh/known_hosts 2>/dev/null
         mkdir -p plugins/gaeld-ee
-        git clone --depth 1 "$GAELD_EE_REPO" plugins/gaeld-ee
+        git clone --depth 1 git@gitlab.nectoria.com:nectoria/products/gaeld/gaeld-ee.git plugins/gaeld-ee
       else
         echo "⚠ GAELD_EE_DEPLOY_KEY not set — running CE-only"
       fi
