@@ -548,7 +548,7 @@ return [
     'chart_swiss_freelancer_desc' => 'Plan comptable simplifié pour les indépendants avec ~30 comptes essentiels.',
     'chart_swiss_association' => 'Association (Verein)',
     'chart_swiss_association_desc' => 'Adapté aux associations avec cotisations, dons et comptes d\'événements.',
-    'chart_none' => 'Vide \u2014 je cr\u00e9erai le mien',
+    'chart_none' => 'Vide — je créerai le mien',
     'chart_of_accounts_help' => 'Choisissez un modèle adapté à votre type d\'organisation. Les comptes standards et les taux de TVA seront créés automatiquement. Vous pourrez toujours ajouter ou supprimer des comptes plus tard.',
     'chart_of_accounts_signup_help' => 'Comptes suisses et taux de TVA préconfigurés. Vous pourrez les personnaliser plus tard.',
 
