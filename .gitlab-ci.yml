@@ -21,6 +21,9 @@ default:
     - docker
 
 variables:
+  # Create a dedicated Docker network per build so service containers
+  # (postgres, redis) are reachable by hostname from the build container.
+  FF_NETWORK_PER_BUILD: "true"
   CI_IMAGE: registry.nectoria.com/nectoria/products/gaeld/gaeld-ee/ci:php8.4-node24
   PHP_VERSION: "8.4"
   NODE_VERSION: "24"
