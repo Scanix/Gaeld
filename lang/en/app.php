@@ -1165,6 +1165,13 @@ return [
     'help_export_title' => 'What to give your fiduciary',
     'help_export_text' => 'At year-end, your fiduciary needs a complete accounting package. This export generates a ZIP archive containing all journals, reports, invoices, and VAT declarations for the selected fiscal year. Simply email the ZIP file to your accountant.',
 
+    // Getting Started Checklist
+    'getting_started_checklist' => 'Getting Started',
+    'getting_started_complete' => 'You\'re all set! Your organization is ready to go.',
+    'checklist_profile_complete' => 'Complete your organization profile',
+    'checklist_customer_created' => 'Add your first customer',
+    'checklist_bank_account_created' => 'Set up a bank account',
+
     // Accounting Checklist
     'accounting_checklist' => 'Accounting Checklist',
     'checklist_complete' => 'Your accounting is complete for this period!',

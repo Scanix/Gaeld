@@ -1150,6 +1150,13 @@ return [
     'help_export_title' => 'Was Sie Ihrem Treuhänder geben',
     'help_export_text' => 'Am Jahresende benötigt Ihr Treuhänder vollständige Buchhaltungsunterlagen. Dieser Export generiert ein ZIP-Archiv mit allen Journalen, Berichten, Rechnungen und MWST-Abrechnungen des gewählten Geschäftsjahres.',
 
+    // Getting Started Checklist
+    'getting_started_checklist' => 'Erste Schritte',
+    'getting_started_complete' => 'Alles bereit! Ihre Organisation ist einsatzbereit.',
+    'checklist_profile_complete' => 'Organisationsprofil vervollständigen',
+    'checklist_customer_created' => 'Ersten Kunden anlegen',
+    'checklist_bank_account_created' => 'Bankkonto einrichten',
+
     // Accounting Checklist
     'accounting_checklist' => 'Buchhaltungs-Checkliste',
     'checklist_complete' => 'Ihre Buchhaltung ist für diese Periode vollständig!',
