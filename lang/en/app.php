@@ -597,6 +597,13 @@ return [
     'hide_help' => 'Hide help',
     'show_help' => 'Show help',
 
+    // Onboarding
+    'onboarding_reset_title' => 'Onboarding',
+    'onboarding_reset_desc' => 'Show the Getting Started checklist on your dashboard again.',
+    'reset_onboarding' => 'Reset onboarding',
+    'onboarding_reset' => 'Getting Started checklist restored on your dashboard.',
+    'dismiss_onboarding' => 'Dismiss Getting Started',
+
     // Contextual help texts
     'help_dashboard_title' => 'Your financial overview',
     'help_dashboard_text' => 'This dashboard shows a summary of your finances: revenue (money earned), expenses (money spent), profit (revenue minus expenses), and cash balance (money in your bank accounts). The chart below compares your monthly revenue and expenses.',

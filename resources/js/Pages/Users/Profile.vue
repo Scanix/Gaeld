@@ -72,6 +72,10 @@ function cancelEmailChange() {
   router.delete('/profile/email', { preserveScroll: true })
 }
 
+function resetOnboarding() {
+  router.post('/profile/onboarding/reset', {}, { preserveScroll: true })
+}
+
 const { t } = useTranslations()
 const { showHelp, toggleHelp } = useHelp()
 
@@ -345,6 +349,17 @@ function confirmDeletePasskey() {
               />
             </button>
           </div>
+        </CardContent>
+      </Card>
+
+      <!-- Reset Onboarding -->
+      <Card v-if="props.user.onboarding_completed_at">
+        <CardHeader>
+          <CardTitle>{{ t('onboarding_reset_title') }}</CardTitle>
+          <CardDescription>{{ t('onboarding_reset_desc') }}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" @click="resetOnboarding">{{ t('reset_onboarding') }}</Button>
         </CardContent>
       </Card>
 

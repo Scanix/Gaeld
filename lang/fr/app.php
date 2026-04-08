@@ -586,6 +586,13 @@ return [
     'hide_help' => 'Masquer l\'aide',
     'show_help' => 'Afficher l\'aide',
 
+    // Onboarding
+    'onboarding_reset_title' => 'Prise en main',
+    'onboarding_reset_desc' => 'Réafficher la liste « Premiers pas » sur votre tableau de bord.',
+    'reset_onboarding' => 'Réinitialiser la prise en main',
+    'onboarding_reset' => 'La liste « Premiers pas » est de nouveau visible sur votre tableau de bord.',
+    'dismiss_onboarding' => 'Masquer « Premiers pas »',
+
     // Contextual help texts
     'help_dashboard_title' => 'Votre aperçu financier',
     'help_dashboard_text' => 'Ce tableau de bord affiche un résumé de vos finances : revenus (argent gagné), dépenses (argent dépensé), bénéfice (revenus moins dépenses) et solde de trésorerie (argent sur vos comptes bancaires). Le graphique ci-dessous compare vos revenus et dépenses mensuels.',
