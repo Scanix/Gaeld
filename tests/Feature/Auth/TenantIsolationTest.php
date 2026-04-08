@@ -18,10 +18,11 @@ use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
+use Tests\Traits\WithActiveSubscription;
 
 class TenantIsolationTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, WithActiveSubscription;
 
     private Organization $orgA;
 
@@ -43,6 +44,9 @@ class TenantIsolationTest extends TestCase
 
         $this->orgA->users()->attach($this->userA->id, ['role' => 'owner']);
         $this->orgB->users()->attach($this->userB->id, ['role' => 'owner']);
+
+        $this->ensureSubscriptionIfSaas($this->orgA);
+        $this->ensureSubscriptionIfSaas($this->orgB);
     }
 
     private function setCurrentOrg(Organization $org): void

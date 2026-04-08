@@ -13,7 +13,7 @@ use App\Domains\Users\Models\User;
  */
 trait WithAuthenticatedOrganization
 {
-    use WithOrganizationPermissions;
+    use WithActiveSubscription, WithOrganizationPermissions;
 
     protected User $user;
 
@@ -33,6 +33,8 @@ trait WithAuthenticatedOrganization
         $this->assignOrganizationRole($this->user, $this->organization, 'owner');
 
         app(CurrentOrganization::class)->set($this->organization);
+
+        $this->ensureSubscriptionIfSaas($this->organization);
     }
 
     protected function actAsOrg(): static

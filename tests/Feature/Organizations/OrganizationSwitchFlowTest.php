@@ -6,11 +6,12 @@ use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\WithActiveSubscription;
 use Tests\Traits\WithOrganizationPermissions;
 
 class OrganizationSwitchFlowTest extends TestCase
 {
-    use RefreshDatabase, WithOrganizationPermissions;
+    use RefreshDatabase, WithActiveSubscription, WithOrganizationPermissions;
 
     public function test_switch_route_updates_active_organization_in_session(): void
     {
@@ -25,6 +26,8 @@ class OrganizationSwitchFlowTest extends TestCase
         $this->assignOrganizationRole($user, $orgA, 'owner');
         $orgB->users()->attach($user->id, ['role' => 'owner']);
         $this->assignOrganizationRole($user, $orgB, 'owner');
+        $this->ensureSubscriptionIfSaas($orgA);
+        $this->ensureSubscriptionIfSaas($orgB);
 
         $switch = $this->actingAs($user)
             ->withSession(['current_organization_id' => $orgA->id])
@@ -46,6 +49,7 @@ class OrganizationSwitchFlowTest extends TestCase
 
         $orgA->users()->attach($user->id, ['role' => 'owner']);
         $this->assignOrganizationRole($user, $orgA, 'owner');
+        $this->ensureSubscriptionIfSaas($orgA);
 
         $response = $this->actingAs($user)
             ->withSession(['current_organization_id' => $orgA->id])
@@ -63,6 +67,7 @@ class OrganizationSwitchFlowTest extends TestCase
         $organization = Organization::create(['name' => 'Fallback Org', 'currency' => 'CHF']);
         $organization->users()->attach($user->id, ['role' => 'owner']);
         $this->assignOrganizationRole($user, $organization, 'owner');
+        $this->ensureSubscriptionIfSaas($organization);
 
         $response = $this->actingAs($user)
             ->withSession(['current_organization_id' => (string) fake()->uuid()])

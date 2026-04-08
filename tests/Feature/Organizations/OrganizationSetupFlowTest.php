@@ -13,6 +13,14 @@ class OrganizationSetupFlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Setup wizard is CE-only; in SaaS mode it redirects to /signup.
+        config(['features.saas' => false]);
+    }
+
     public function test_setup_page_renders_for_guest_without_organization(): void
     {
         $response = $this->get('/setup');
