@@ -48,7 +48,8 @@ variables:
   MAIL_MAILER: array
   SCOUT_DRIVER: "null"
   APP_ENV: testing
-  APP_KEY: "base64:s25aRLcFtz+CDCWpI2dW7Lhr1NJW9koLQSciHu35Nk4="
+  # APP_KEY is generated at runtime by `php artisan key:generate` in before_script.
+  # NEVER hardcode secrets in CI config — use GitLab CI/CD variables instead.
   # EE feature flags — enabled when GAELD_EE_DEPLOY_KEY is set so CI
   # covers all code paths (billing, SaaS middleware, etc.).
   FEATURE_SAAS: "true"
