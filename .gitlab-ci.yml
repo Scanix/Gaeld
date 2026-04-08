@@ -60,6 +60,11 @@ variables:
   FEATURE_TAX_DECLARATION: "true"
   FEATURE_E_INVOICING: "true"
   FEATURE_CONSOLIDATION: "true"
+  # Stripe test mode — allows EE billing tests to call Stripe API.
+  # Use `sk_test_` / `pk_test_` keys from the Stripe dashboard.
+  STRIPE_KEY: "${STRIPE_TEST_KEY}"
+  STRIPE_SECRET: "${STRIPE_TEST_SECRET}"
+  STRIPE_WEBHOOK_SECRET: "${STRIPE_TEST_WEBHOOK_SECRET}"
   # Composer / pnpm caching
   COMPOSER_HOME: "$CI_PROJECT_DIR/.composer-cache"
   PNPM_HOME: "$CI_PROJECT_DIR/.pnpm-store"
@@ -86,30 +91,13 @@ variables:
     - |
       if [ -n "$GAELD_EE_DEPLOY_KEY" ]; then
         eval $(ssh-agent -s)
-        # Debug: inspect the raw variable and key file
-        echo "--- Variable type check ---"
-        echo "GAELD_EE_DEPLOY_KEY value starts with: $(echo "$GAELD_EE_DEPLOY_KEY" | head -c 30)"
-        echo "Is it a file path? $(file "$GAELD_EE_DEPLOY_KEY" 2>&1 || echo 'not a file')"
-        ls -la "$GAELD_EE_DEPLOY_KEY" 2>/dev/null || echo "Not a file on disk"
-        wc -l < "$GAELD_EE_DEPLOY_KEY" 2>/dev/null || echo "Cannot read as file"
-        wc -c < "$GAELD_EE_DEPLOY_KEY" 2>/dev/null || echo "Cannot get byte count"
-        echo "--- Raw hex of first 64 bytes ---"
-        xxd -l 64 "$GAELD_EE_DEPLOY_KEY" 2>/dev/null || od -A x -t x1z -N 64 "$GAELD_EE_DEPLOY_KEY" 2>/dev/null || echo "No hex dump tool"
-        echo "--- Sanitising key ---"
         tr -d '\r' < "$GAELD_EE_DEPLOY_KEY" > /tmp/ee_deploy_key
         echo "" >> /tmp/ee_deploy_key
         chmod 600 /tmp/ee_deploy_key
-        head -1 /tmp/ee_deploy_key
-        tail -1 /tmp/ee_deploy_key
-        wc -l /tmp/ee_deploy_key
-        echo "--- ssh-add verbose ---"
-        ssh-add /tmp/ee_deploy_key 2>&1 || true
-        echo "--- ssh-keygen check ---"
-        ssh-keygen -l -f /tmp/ee_deploy_key 2>&1 || true
+        ssh-add /tmp/ee_deploy_key
         rm -f /tmp/ee_deploy_key
         mkdir -p ~/.ssh
         ssh-keyscan -H gitlab.nectoria.com >> ~/.ssh/known_hosts 2>/dev/null
-        mkdir -p plugins/gaeld-ee
         git clone --depth 1 git@gitlab.nectoria.com:nectoria/products/gaeld/gaeld-ee.git plugins/gaeld-ee
       else
         echo "⚠ GAELD_EE_DEPLOY_KEY not set — running CE-only"
