@@ -242,7 +242,7 @@ const expirationOptions = [
             :label="t('token_name')"
             :error="createForm.errors.name"
             required
-            placeholder="e.g. CI/CD Pipeline"
+            :placeholder="t('token_name_placeholder')"
           />
           <FormSelect
             v-model="createForm.expires_in_days"
