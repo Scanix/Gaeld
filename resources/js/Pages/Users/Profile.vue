@@ -233,7 +233,7 @@ async function registerPasskey() {
       credentials: 'same-origin',
     })
 
-    if (!optionsRes.ok) throw new Error('Failed to get registration options')
+    if (!optionsRes.ok) throw new Error(t('passkey_register_options_failed'))
 
     const options = await optionsRes.json()
     const attestation = await startRegistration({ optionsJSON: options })
@@ -249,7 +249,7 @@ async function registerPasskey() {
       body: JSON.stringify(attestation),
     })
 
-    if (!registerRes.ok) throw new Error('Failed to register passkey')
+    if (!registerRes.ok) throw new Error(t('passkey_register_failed'))
 
     await loadPasskeys()
   } catch (err) {

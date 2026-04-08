@@ -383,7 +383,7 @@ const total = computed(() => subtotal.value + vatTotal.value)
               id="payment_terms"
               v-model="form.payment_terms"
               :label="t('payment_terms')"
-              placeholder="Net 30"
+              :placeholder="t('payment_terms_example')"
             />
           </div>
 
