@@ -5,6 +5,7 @@ namespace App\Domains\Invoicing\Actions;
 use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 
 /**
  * Creates a new draft invoice by duplicating an existing one.
@@ -13,6 +14,7 @@ class DuplicateInvoiceAction
 {
     public function __construct(
         private SyncInvoiceLinesAction $syncInvoiceLines,
+        private InvoiceNumberGenerator $numberGenerator,
     ) {}
 
     public function execute(Invoice $invoice): Invoice
@@ -20,7 +22,7 @@ class DuplicateInvoiceAction
         $newInvoice = Invoice::create([
             'organization_id' => $invoice->organization_id,
             'customer_id' => $invoice->customer_id,
-            'number' => $invoice->number.'-COPY',
+            'number' => $this->numberGenerator->next($invoice->organization_id),
             'status' => InvoiceStatus::Draft,
             'issue_date' => now()->toDateString(),
             'due_date' => now()->addDays(30)->toDateString(),

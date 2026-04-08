@@ -17,7 +17,7 @@ class SupplierQuery
         return QueryBuilder::for(Supplier::query(), $request)
             ->allowedSorts(['name', 'email', 'city', 'country', 'created_at'], 'name', 'asc')
             ->allowedFilters(['country', 'currency', 'default_expense_category'])
-            ->searchable(['name', 'email', 'city', 'vat_number', 'default_expense_category'])
+            ->searchable(['name', 'email', 'city', 'vat_number', 'default_expense_category', 'contactPersons.first_name', 'contactPersons.last_name', 'contactPersons.email'])
             ->apply()
             ->paginate($perPage)
             ->withQueryString();

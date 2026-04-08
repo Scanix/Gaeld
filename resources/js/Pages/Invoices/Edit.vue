@@ -37,7 +37,7 @@ const { formatCurrency } = useFormatters()
 const { isClosed: isIssueDateClosed, closedYear } = useClosedFiscalYear(() => form.issue_date)
 
 const form = useForm({
-  customer_id: props.invoice.customer_id ?? '',
+  customer_id: props.invoice.customer_id != null ? String(props.invoice.customer_id) : '',
   number: props.invoice.number ?? '',
   issue_date: props.invoice.issue_date?.slice(0, 10) ?? '',
   due_date: props.invoice.due_date?.slice(0, 10) ?? '',
@@ -108,14 +108,14 @@ function onJustificatifChange(e) {
 }
 
 const customerList = reactive([...props.customers])
-const clientOptions = ref(customerList.map(c => ({ value: c.id, label: c.name })))
+const clientOptions = ref(customerList.map(c => ({ value: String(c.id), label: c.name })))
 
 const showCreateCustomer = ref(false)
 
 function onCustomerCreated(customer) {
   customerList.push(customer)
-  clientOptions.value = customerList.map(c => ({ value: c.id, label: c.name }))
-  form.customer_id = customer.id
+  clientOptions.value = customerList.map(c => ({ value: String(c.id), label: c.name }))
+  form.customer_id = String(customer.id)
 }
 
 const vatOptions = [

@@ -86,12 +86,13 @@ class InvoiceController extends Controller
             ->with('success', __('app.invoice_created'));
     }
 
-    public function show(Invoice $invoice): Response
+    public function show(Request $request, Invoice $invoice): Response
     {
         $this->authorize('view', $invoice);
 
         return Inertia::render('Invoices/Show', [
             'invoice' => $invoice->load(['customer', 'lines.vatRate', 'journalEntry.lines.account', 'payments.journalEntry']),
+            'canForceDelete' => $request->user()->can('forceDelete', $invoice),
             'justificatifUrl' => $invoice->justificatif_path
                 ? route('invoices.justificatif.download', $invoice)
                 : null,

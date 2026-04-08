@@ -4,8 +4,11 @@ namespace Tests\Feature\Invoicing;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Contacts\Models\Customer;
+use App\Domains\Invoicing\Actions\CancelInvoiceAction;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
@@ -188,5 +191,36 @@ class InvoiceFlowTest extends TestCase
         $this->assertEquals($invoice->customer_id, $duplicate->customer_id);
         $this->assertEquals($invoice->lines()->count(), $duplicate->lines()->count());
         $this->assertNull($duplicate->journal_entry_id);
+    }
+
+    public function test_cancel_finalized_invoice_reverses_journal_entry(): void
+    {
+        // 1. Create and finalize
+        $invoice = $this->createInvoice();
+        $invoice = app(FinalizeInvoiceAction::class)->execute($invoice);
+
+        $this->assertEquals(InvoiceStatus::Sent, $invoice->status);
+        $this->assertNotNull($invoice->journal_entry_id);
+
+        $originalRef = $invoice->journalEntry->reference;
+
+        // 2. Cancel — should reverse the journal entry
+        $invoice = app(CancelInvoiceAction::class)->execute($invoice);
+
+        $this->assertEquals(InvoiceStatus::Cancelled, $invoice->status);
+
+        // 3. Verify reversal entry exists
+        $reversal = JournalEntry::where('organization_id', $this->org->id)
+            ->where('reference', 'REV-'.$originalRef)
+            ->first();
+
+        $this->assertNotNull($reversal, 'Reversal journal entry should exist');
+        $this->assertTrue($reversal->isBalanced());
+
+        // 4. Verify AR balance nets to zero
+        $ar = Account::where('organization_id', $this->org->id)->where('code', '1100')->first();
+        $ledgerQuery = app(LedgerQueryService::class);
+        $arBalance = $ledgerQuery->accountBalance($ar->id);
+        $this->assertEquals('0.00', number_format((float) $arBalance, 2, '.', ''));
     }
 }

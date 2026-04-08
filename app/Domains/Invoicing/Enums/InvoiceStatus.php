@@ -44,6 +44,6 @@ enum InvoiceStatus: string
 
     public function isDeletable(): bool
     {
-        return $this === self::Draft;
+        return in_array($this, [self::Draft, self::Cancelled], true);
     }
 }
