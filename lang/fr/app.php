@@ -50,6 +50,8 @@ return [
     'invoices_per_month' => 'factures / mois',
     'payment_failed_warning' => 'Votre dernier paiement a échoué. Veuillez mettre à jour votre moyen de paiement pour conserver l\'accès.',
     'update_payment_method' => 'Mettre à jour le moyen de paiement',
+    'trial_complete_payment_hint' => 'Ajoutez un moyen de paiement pour que votre abonnement se poursuive automatiquement à la fin de l\'essai.',
+    'add_payment_method' => 'Ajouter un moyen de paiement',
     'trial_ends' => 'Essai se termine le',
     'subscription_status_active' => 'Actif',
     'subscription_status_trialing' => 'Période d\'essai',

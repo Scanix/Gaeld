@@ -50,6 +50,8 @@ return [
     'invoices_per_month' => 'invoices / month',
     'payment_failed_warning' => 'Your last payment failed. Please update your payment method to keep access.',
     'update_payment_method' => 'Update payment method',
+    'trial_complete_payment_hint' => 'Add a payment method now so your subscription continues automatically when the trial ends.',
+    'add_payment_method' => 'Add payment method',
     'trial_ends' => 'Trial ends',
     'subscription_status_active' => 'Active',
     'subscription_status_trialing' => 'Trial',
