@@ -9,7 +9,7 @@ const { t } = useTranslations()
 const props = defineProps({
   page: {
     type: String,
-    required: true,
+    default: null,
   },
   baseUrl: {
     type: String,
@@ -28,7 +28,7 @@ const localizedPath = computed(() => {
   const prefix = props.locale && props.locale !== 'en'
     ? `/${props.locale}`
     : ''
-  return `${prefix}/docs/${props.page}`
+  return props.page ? `${prefix}/docs/${props.page}` : `${prefix}/docs`
 })
 const iframeSrc = computed(() => props.baseUrl ? `${props.baseUrl}${localizedPath.value}` : null)
 const loadError = ref(!props.baseUrl)

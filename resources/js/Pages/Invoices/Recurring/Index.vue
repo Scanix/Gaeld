@@ -32,7 +32,7 @@ function confirmDelete(item) {
 function executeDelete() {
   if (!deleteTarget.value) return
   deleting.value = true
-  router.delete(`/invoices/recurring/${deleteTarget.value.id}`, {
+  router.delete(`/invoices/recurring/${deleteTarget.value.uuid}`, {
     onFinish: () => {
       deleting.value = false
       deleteTarget.value = null
@@ -42,9 +42,9 @@ function executeDelete() {
 
 function togglePause(item) {
   if (!item.is_active) {
-    router.post(`/invoices/recurring/${item.id}/resume`)
+    router.post(`/invoices/recurring/${item.uuid}/resume`)
   } else {
-    router.post(`/invoices/recurring/${item.id}/pause`)
+    router.post(`/invoices/recurring/${item.uuid}/pause`)
   }
 }
 
@@ -89,7 +89,7 @@ const columns = computed(() => [
             <div class="flex justify-end gap-1">
               <Button
                 as="a"
-                :href="`/invoices/recurring/${row.id}/edit`"
+                :href="`/invoices/recurring/${row.uuid}/edit`"
                 variant="ghost"
                 size="icon"
                 :title="t('edit')"

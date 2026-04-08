@@ -37,7 +37,7 @@ const csvHeaders = ref([])
 const pendingCsvFile = ref(null)
 
 function submitUpload() {
-  uploadForm.post(`/reconciliation/${props.bankAccount.id}/import`, {
+  uploadForm.post(`/reconciliation/${props.bankAccount.uuid}/import`, {
     forceFormData: true,
     onSuccess: () => { showUploadModal.value = false; uploadForm.reset() },
   })
@@ -160,7 +160,7 @@ const autoReconciling = ref(false)
 function autoReconcile() {
   if (autoReconciling.value) return
   autoReconciling.value = true
-  router.post(`/reconciliation/${props.bankAccount.id}/auto`, {}, {
+  router.post(`/reconciliation/${props.bankAccount.uuid}/auto`, {}, {
     onFinish: () => { autoReconciling.value = false },
   })
 }
@@ -191,7 +191,7 @@ function togglePersonalSelection(txId) {
 function bulkMarkAsPersonal() {
   if (bulkProcessing.value || selectedForPersonal.value.size === 0) return
   bulkProcessing.value = true
-  router.post(`/reconciliation/${props.bankAccount.id}/bulk-personal`, {
+  router.post(`/reconciliation/${props.bankAccount.uuid}/bulk-personal`, {
     transaction_ids: Array.from(selectedForPersonal.value),
   }, {
     onFinish: () => {
@@ -213,7 +213,7 @@ const triageSummary = computed(() => {
 })
 
 function changeFilter(newFilter) {
-  router.get(`/reconciliation/${props.bankAccount.id}`, { filter: newFilter }, { preserveState: true })
+  router.get(`/reconciliation/${props.bankAccount.uuid}`, { filter: newFilter }, { preserveState: true })
 }
 
 const currentSuggestions = computed(() => {
