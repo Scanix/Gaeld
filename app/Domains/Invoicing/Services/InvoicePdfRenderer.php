@@ -6,6 +6,7 @@ use App\Domains\Invoicing\Enums\InvoiceLineType;
 use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
+use Illuminate\Support\Facades\Storage;
 use TCPDF;
 
 /**
@@ -70,8 +71,11 @@ class InvoicePdfRenderer
     public function renderInvoiceHeader(TCPDF $tcpdf, Invoice $invoice, Organization $organization): void
     {
         // Organization logo (if configured)
-        if ($organization->logo_path && file_exists(storage_path('app/'.$organization->logo_path))) {
-            $tcpdf->Image(storage_path('app/'.$organization->logo_path), 150, 15, 30);
+        $logoFullPath = $organization->logo_path
+            ? Storage::disk('local')->path($organization->logo_path)
+            : null;
+        if ($logoFullPath && file_exists($logoFullPath)) {
+            $tcpdf->Image($logoFullPath, 150, 15, 30);
         }
 
         // Organization info (top right)
