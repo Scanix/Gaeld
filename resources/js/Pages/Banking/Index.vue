@@ -67,7 +67,7 @@ const columns = computed(() => [
 
     <Card v-if="(bankAccounts?.data ?? []).length">
       <CardContent class="pt-6">
-        <DataTable :columns="columns" :rows="bankAccounts?.data ?? []" :pagination="bankAccounts" :row-link="row => `/banking/${row.id}`">
+        <DataTable :columns="columns" :rows="bankAccounts?.data ?? []" :pagination="bankAccounts" :row-link="row => `/banking/${row.uuid}`">
           <template #cell-name="{ row, value }">
             {{ value }}
             <Badge v-if="row.is_mixed_use" variant="outline" class="ml-2 text-xs">{{ t('mixed') }}</Badge>

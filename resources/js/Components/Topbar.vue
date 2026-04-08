@@ -76,7 +76,6 @@ function logout() {
       </Button>
 
       <Button
-        v-if="docsUrl"
         variant="ghost"
         size="icon"
         class="hidden sm:inline-flex"

@@ -134,7 +134,7 @@ const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
         </div>
       </div>
 
-      <Topbar :helpPage="helpPage" :docs-url="docsBaseUrl ? `${docsBaseUrl}/docs/${helpPage}` : null" @toggleHelp="toggleHelp" @toggleDocs="showDocs = !showDocs" @toggleMobile="mobileOpen = !mobileOpen">
+      <Topbar :helpPage="helpPage" :docs-url="docsBaseUrl" @toggleHelp="toggleHelp" @toggleDocs="showDocs = !showDocs" @toggleMobile="mobileOpen = !mobileOpen">
         <template #heading>
           {{ title }}
         </template>
@@ -150,7 +150,7 @@ const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
     <ToastContainer />
 
     <HelpSidebar
-      v-if="helpPage && showDocs"
+      v-if="showDocs"
       :page="helpPage"
       :base-url="docsBaseUrl"
       :locale="locale"

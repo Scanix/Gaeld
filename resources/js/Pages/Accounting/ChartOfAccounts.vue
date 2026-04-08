@@ -118,7 +118,7 @@ function confirmDelete(account) {
 function performDelete() {
   if (!deletingAccount.value) return
   deleteProcessing.value = true
-  router.delete(`/accounting/accounts/${deletingAccount.value.id}`, {
+  router.delete(`/accounting/accounts/${deletingAccount.value.uuid}`, {
     preserveScroll: true,
     onFinish: () => {
       deleteProcessing.value = false
