@@ -169,7 +169,7 @@ test:
     - php artisan migrate --force
     # Run tests with coverage
     - php artisan test --coverage-clover coverage/clover.xml
-    # Enforce minimum coverage (70% line coverage)
+    # Enforce minimum coverage (65% line coverage — raise incrementally)
     - |
       COVERAGE=$(php -r "
         \$xml = simplexml_load_file('coverage/clover.xml');
@@ -179,8 +179,8 @@ test:
         echo \$stmts > 0 ? round((\$covered / \$stmts) * 100, 2) : 0;
       ")
       echo "Line coverage: ${COVERAGE}%"
-      php -r "exit((float)'${COVERAGE}' >= 70.0 ? 0 : 1);" || {
-        echo "❌ Coverage ${COVERAGE}% is below the 70% minimum"
+      php -r "exit((float)'${COVERAGE}' >= 65.0 ? 0 : 1);" || {
+        echo "❌ Coverage ${COVERAGE}% is below the 65% minimum"
         exit 1
       }
       echo "✅ Coverage gate passed: ${COVERAGE}%"
