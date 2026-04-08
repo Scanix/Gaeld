@@ -1,0 +1,4 @@
+# Production-only files — keep ours on merge from main
+.gitlab-ci.yml merge=keep-ours
+docker/ci/Dockerfile merge=keep-ours
+deploy.php merge=keep-ours
