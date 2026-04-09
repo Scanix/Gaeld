@@ -48,17 +48,15 @@ if (FeatureFlag::enabled('auto_reconciliation')) {
 /**
  * Monthly depreciation of fixed assets (1st of each month at 05:00).
  */
-Schedule::job(MonthlyDepreciationJob::class)->monthly();
+Schedule::job(MonthlyDepreciationJob::class)->monthlyOn(1, '05:00');
 
 // ──────────────────────────────────────────────────────────────
-//  Backup & Horizon
+//  Horizon
 // ──────────────────────────────────────────────────────────────
 
-/**
- * Nightly database backup (00:30) with cleanup of old backups.
- */
-Schedule::command('backup:run --only-db')->dailyAt('00:30');
-Schedule::command('backup:clean')->dailyAt('01:30');
+// NOTE: Database and file backups are handled by the system-level
+// backup scripts in /data/backups/scripts/ (postgres, files) and
+// synced nightly to OneDrive via rclone. No app-level backup needed.
 
 /**
  * Horizon queue metrics snapshot (every 5 min).
