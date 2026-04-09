@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [2.6.0] — 2026-04-09
+
 ### Added
 - **FormFileInput.vue** — reusable file upload component with label, error, and slot support.
 - **Setup Wizard stepper** — 3-step wizard (Account → Organisation → Settings) with visual progress indicator.
@@ -15,11 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Global search quick navigation** — ⌘K shows page quick links when empty; navigation results mixed into search.
 - **Form section headings** — all Create/Edit forms use `<h3>` + `<hr>` section dividers.
 - **Tooltip help** — contextual tooltips on internal notes, AHV number, IBAN fields.
+- **Telegram alerts for Horizon** — long-wait queue events now trigger a Telegram notification instead of Slack.
 
 ### Improved
 - **Mobile responsiveness** — action headers use `flex-wrap` + icon-only buttons on mobile across all Show/Create/Edit pages.
 - **Address field ordering** — Customer/Supplier forms reorder to Address → Postal → City → Country.
 - **i18n** — ~30 new keys across EN, FR, DE, IT.
+- **Security headers** — added `Permissions-Policy`, upgraded HSTS `max-age` to 1 year, fixed autocomplete on sensitive fields.
+
+### Fixed
+- **Scheduler** — `MonthlyDepreciationJob` was running at 00:00 on the 1st; now correctly fires at 05:00 (`monthlyOn(1, '05:00')`).
+- **Scheduler** — removed redundant `backup:run` / `backup:clean` app-level commands; DB and file backups are handled by system scripts with OneDrive sync via rclone.
 
 ---
 
