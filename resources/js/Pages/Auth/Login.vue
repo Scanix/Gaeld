@@ -116,6 +116,7 @@ function getCsrfToken() {
               type="password"
               :label="t('password')"
               :error="form.errors.password"
+              autocomplete="current-password"
               required
             />
 
