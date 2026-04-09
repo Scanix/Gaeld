@@ -47,4 +47,4 @@ k6 run --vus 50 --duration 2m tests/Performance/invoice-crud.js
 
 k6 outputs per-request metrics. The `thresholds` block in each script
 defines pass/fail criteria matching the targets in
-`docs/POST_ACQUISITION_ROADMAP.md` Phase 8.3.
+the internal post-acquisition roadmap (Phase 8.3).

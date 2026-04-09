@@ -56,6 +56,7 @@ WORKDIR /var/www/html
 
 # Copy and set entrypoint
 COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/php/zz-gaeld-pool.conf /usr/local/etc/php-fpm.d/zz-gaeld-pool.conf
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 

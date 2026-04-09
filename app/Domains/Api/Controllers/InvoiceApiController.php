@@ -13,10 +13,12 @@ use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -101,29 +103,43 @@ class InvoiceApiController extends Controller
         $validated = $request->validated();
         $validated['organization_id'] = $currentOrg->id();
 
-        // Auto-generate invoice number when not provided
-        if (empty($validated['number'])) {
-            $validated['number'] = $numberGenerator->next($currentOrg->id());
+        $shouldAutoGenerateNumber = empty($validated['number']);
+        $maxAttempts = $shouldAutoGenerateNumber ? 3 : 1;
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $payload = $validated;
+
+            if ($shouldAutoGenerateNumber) {
+                $payload['number'] = $numberGenerator->next($currentOrg->id());
+            }
+
+            // Resolve customer UUID to internal integer FK
+            if (isset($payload['customer_id'])) {
+                $payload['customer_id'] = Customer::where('uuid', $payload['customer_id'])
+                    ->where('organization_id', $currentOrg->id())
+                    ->value('id');
+            }
+
+            // Resolve vat_rate_id UUIDs to internal integer FKs in lines
+            if (isset($payload['lines'])) {
+                $payload['lines'] = $this->resolveLineVatRateUuids($payload['lines'], $currentOrg->id());
+            }
+
+            try {
+                $dto = CreateInvoiceData::fromArray($payload);
+                $invoice = $action->execute($dto);
+
+                return (new InvoiceResource($invoice->load(['customer', 'lines.vatRate'])))
+                    ->response()
+                    ->setStatusCode(201);
+            } catch (QueryException $exception) {
+                if (! $shouldAutoGenerateNumber || ! $this->isInvoiceNumberConflict($exception) || $attempt === $maxAttempts) {
+                    throw $exception;
+                }
+            }
         }
 
-        // Resolve customer UUID to internal integer FK
-        if (isset($validated['customer_id'])) {
-            $validated['customer_id'] = Customer::where('uuid', $validated['customer_id'])
-                ->where('organization_id', $currentOrg->id())
-                ->value('id');
-        }
-
-        // Resolve vat_rate_id UUIDs to internal integer FKs in lines
-        if (isset($validated['lines'])) {
-            $validated['lines'] = $this->resolveLineVatRateUuids($validated['lines'], $currentOrg->id());
-        }
-
-        $dto = CreateInvoiceData::fromArray($validated);
-        $invoice = $action->execute($dto);
-
-        return (new InvoiceResource($invoice->load(['customer', 'lines.vatRate'])))
-            ->response()
-            ->setStatusCode(201);
+        throw new \RuntimeException('Unable to create invoice after retrying invoice number generation.');
     }
 
     /**
@@ -170,6 +186,8 @@ class InvoiceApiController extends Controller
             $validated['lines'] = $this->resolveLineVatRateUuids($validated['lines'], $currentOrg->id());
         }
 
+        $validated = $this->completeUpdatePayload($invoice, $validated, $currentOrg->id());
+
         $dto = UpdateInvoiceData::fromArray($validated);
         $action->execute($invoice, $dto);
 
@@ -210,5 +228,61 @@ class InvoiceApiController extends Controller
         }
 
         return $lines;
+    }
+
+    /**
+     * The update DTO still expects a full invoice payload, so sparse API updates
+     * need to be hydrated from the existing draft invoice before mapping.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function completeUpdatePayload(Invoice $invoice, array $validated, string $organizationId): array
+    {
+        $invoice->loadMissing('lines');
+
+        return [
+            'organization_id' => $organizationId,
+            'customer_id' => $validated['customer_id'] ?? $invoice->customer_id,
+            'number' => $validated['number'] ?? $invoice->number,
+            'issue_date' => $validated['issue_date'] ?? $invoice->issue_date->toDateString(),
+            'due_date' => array_key_exists('due_date', $validated)
+                ? $validated['due_date']
+                : $invoice->due_date->toDateString(),
+            'currency' => $validated['currency'] ?? $invoice->currency,
+            'notes' => array_key_exists('notes', $validated)
+                ? $validated['notes']
+                : $invoice->notes,
+            'payment_terms' => array_key_exists('payment_terms', $validated)
+                ? $validated['payment_terms']
+                : $invoice->payment_terms,
+            'lines' => $validated['lines'] ?? $this->serializeExistingLines($invoice),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function serializeExistingLines(Invoice $invoice): array
+    {
+        return $invoice->lines
+            ->map(fn (InvoiceLine $line): array => [
+                'description' => $line->description,
+                'quantity' => $line->quantity,
+                'unit_price' => $line->unit_price,
+                'type' => $line->type->value,
+                'discount_type' => $line->discount_type,
+                'vat_rate_id' => $line->vat_rate_id,
+                'sort_order' => $line->sort_order,
+            ])
+            ->all();
+    }
+
+    private function isInvoiceNumberConflict(QueryException $exception): bool
+    {
+        $sqlState = $exception->errorInfo[0] ?? (string) $exception->getCode();
+
+        return $sqlState === '23505'
+            && str_contains($exception->getMessage(), 'invoices_organization_id_number_unique');
     }
 }

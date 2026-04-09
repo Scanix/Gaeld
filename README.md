@@ -30,7 +30,7 @@ Gäld covers the full accounting workflow for a small Swiss business:
 - **Bank reconciliation** — import CAMT.053 files from your bank, match transactions against invoices and expenses
 - **Contacts** — shared customer and supplier directory across all modules
 - **Financial reports** — profit & loss, balance sheet, trial balance
-- **Multi-language** — English, French, German, Italian, Romansh (EN / FR / DE / IT / RM)
+- **Multi-language** — English, French, German, Italian (EN / FR / DE / IT)
 - **Plugin system** — extend functionality without touching the core codebase
 
 ---
