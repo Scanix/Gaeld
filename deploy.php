@@ -42,7 +42,7 @@ host('production')
 // Build frontend assets on the server so Vite reads the production .env
 // (incl. VITE_COOKIE_DOMAIN) that is already symlinked via deploy:shared.
 task('assets:build', function () {
-    run('source ~/.nvm/nvm.sh && cd {{release_path}} && CI=true pnpm install --frozen-lockfile && pnpm build');
+    run('source ~/.nvm/nvm.sh && nvm use && cd {{release_path}} && CI=true pnpm install --frozen-lockfile && pnpm build');
 })->desc('Build frontend assets on the server');
 
 task('deploy:fpm:restart', function () {
