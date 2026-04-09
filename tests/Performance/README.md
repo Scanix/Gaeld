@@ -17,6 +17,8 @@ docker run --rm -i grafana/k6 run -
 export K6_BASE_URL=http://localhost  # or staging URL
 export K6_API_TOKEN=your-sanctum-token
 export K6_ORG_ID=your-organization-uuid
+export K6_CUSTOMER_ID=your-customer-uuid
+export K6_VAT_RATE_ID=your-vat-rate-uuid  # optional
 
 # Run individual scenarios
 k6 run tests/Performance/invoice-crud.js

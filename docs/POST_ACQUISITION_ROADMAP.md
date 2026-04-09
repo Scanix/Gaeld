@@ -177,12 +177,13 @@ These fixes are already merged in this commit:
 - [ ] Remove "early beta" disclaimer from README once Phase 1–3 complete
 - [ ] Define SLA tiers (uptime, response time, data retention)
 - [ ] Establish release cadence (e.g., biweekly)
-- [ ] Implement semantic versioning with automated CHANGELOG generation
+- [x] Document semantic versioning and API deprecation policy in `docs/API_VERSIONING_STRATEGY.md`
+- [ ] Implement automated CHANGELOG generation
 
 ### 5.4 Disaster Recovery
-- [ ] Document RTO (Recovery Time Objective) and RPO (Recovery Point Objective)
+- [x] Document RTO (Recovery Time Objective) and RPO (Recovery Point Objective) in `docs/OPERATIONS.md`
 - [ ] Test full restore from backup to clean server
-- [ ] Document database failover procedure
+- [x] Document database restore, Redis rebuild, and worker restart procedure in `docs/OPERATIONS.md`
 - [ ] Set up read replica for reporting queries
 
 ---
@@ -286,8 +287,8 @@ These fixes are already merged in this commit:
 - [x] Fixed 1 lazy loading violation (`BankTransaction.bankAccount` in `ReconciliationController`)
 - [x] Created migration with 10 composite indexes across 6 tables (invoices, expenses, journal_entries, transaction_lines, bank_transactions, accounts)
 - [x] Verified Redis cache already configured for chart of accounts (`AccountQuery`) and VAT rates (`VatRateQuery`)
-- [ ] Evaluate Octane for production (Swoole/FrankenPHP) — deferred
-- [ ] Add response time assertions to critical API endpoint tests — deferred
+- [x] Decision documented in `docs/OCTANE_EVALUATION.md` — keep PHP-FPM until staging benchmarks justify Octane
+- [ ] Add response time assertions to critical API endpoint tests — k6 suite executed locally on 2026-04-09 but thresholds failed and need remediation
 
 ### 7.3 PHPStan Baseline Reduction ✅ IMPLEMENTED
 - [x] Reduced PHPStan baseline from **729 → 467 entries** (36% reduction, target was <500)
@@ -312,12 +313,12 @@ These fixes are already merged in this commit:
 > (staging environment, team growth) should be met by Phase 7 completion.
 
 ### 8.1 Laravel 13 Feature Adoption ✅ *(deferred from Phase 6.3)*
-- [ ] **JSON:API Resources** — Deferred: current resource transformations are consistent; evaluate when expanding public API
+- [x] **JSON:API Resources** — Evaluation captured in `docs/FUTURE_RFC_EVALUATIONS.md`; keep current API contract for now
 - [x] **Queue Routing** — Centralized 10 jobs via `Queue::route()` in `AppServiceProvider`: webhooks, processing, exports, scheduled queues
-- [ ] **PHP Attributes** — Deferred: middleware is registered in `bootstrap/app.php` and route files, not on individual controllers
+- [x] **PHP Attributes** — Evaluation captured in `docs/FUTURE_RFC_EVALUATIONS.md`; keep route-file and bootstrap middleware registration
 - [x] **Cache::touch()** — Audited: no get-then-put TTL extension patterns found in codebase
-- [ ] **Semantic / Vector Search** — Future: requires pgvector extension installation
-- [ ] **Laravel AI SDK** — Future: evaluate when AI features are planned
+- [x] **Semantic / Vector Search** — Evaluation captured in `docs/FUTURE_RFC_EVALUATIONS.md`; defer until a concrete search feature exists
+- [x] **Laravel AI SDK** — Evaluation captured in `docs/FUTURE_RFC_EVALUATIONS.md`; defer until a product requirement exists
 
 **Files changed:**
 - `app/Providers/AppServiceProvider.php` — added `Queue::route()` mapping for 10 jobs across 4 queues
@@ -362,8 +363,9 @@ Set up k6 load testing suite with scripts for all critical paths:
 - [x] `dashboard.js` — dashboard aggregation queries (< 300ms p95 threshold)
 - [x] `full-suite.js` — orchestrates all scenarios with staged VU ramp-up
 - [x] `README.md` — usage instructions, prerequisites, threshold reference
+- [x] Local execution completed on 2026-04-09 against the Docker test stack; baseline recorded for future tuning
 - [ ] Automate in CI — requires staging environment (Phase 8.6)
-- [ ] Stress test multi-tenant isolation under concurrent load — requires staging
+- [ ] Stress test multi-tenant isolation under concurrent load — requires staging-quality runtime and data volume
 
 **Files created:**
 - `tests/Performance/README.md`

@@ -1,6 +1,6 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { apiHeaders, apiUrl } from './helpers.js';
+import { apiHeaders, apiUrl, CUSTOMER_ID, VAT_RATE_ID } from './helpers.js';
 
 export const options = {
   stages: [
@@ -22,11 +22,11 @@ export default function () {
 
   // Create
   const invoice = {
-    customer_id: null, // uses first available customer
-    date: '2026-04-07',
+    customer_id: CUSTOMER_ID,
+    issue_date: '2026-04-07',
     due_date: '2026-05-07',
     lines: [
-      { description: 'k6 load test item', quantity: 1, unit_price: '100.00', vat_rate_id: null },
+      { description: 'k6 load test item', quantity: 1, unit_price: '100.00', vat_rate_id: VAT_RATE_ID || null },
     ],
   };
 
@@ -59,7 +59,7 @@ export default function () {
   // Update
   const updateRes = http.put(
     apiUrl(`/invoices/${invoiceId}`),
-    JSON.stringify({ description: 'Updated by k6' }),
+    JSON.stringify({ notes: 'Updated by k6' }),
     { ...params, tags: { name: 'update_invoice' } },
   );
   check(updateRes, { 'invoice updated': (r) => r.status === 200 });
