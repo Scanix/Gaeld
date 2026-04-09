@@ -1,9 +1,13 @@
-# Gäld
+<p align="center">
+  <img src="public/logo-wide.svg" alt="Gäld" width="280">
+</p>
 
-[![CI](https://github.com/Scanix/Gaeld/actions/workflows/ci.yml/badge.svg)](https://github.com/Scanix/Gaeld/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PHP 8.4+](https://img.shields.io/badge/PHP-8.4%2B-777BB4.svg)](https://www.php.net/)
-[![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20.svg)](https://laravel.com/)
+<p align="center">
+  <a href="https://github.com/Scanix/Gaeld/actions/workflows/ci.yml"><img src="https://github.com/Scanix/Gaeld/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-8.4%2B-777BB4.svg" alt="PHP 8.4+"></a>
+  <a href="https://laravel.com/"><img src="https://img.shields.io/badge/Laravel-13-FF2D20.svg" alt="Laravel 13"></a>
+</p>
 
 **Open-source accounting for Swiss freelancers and small businesses.**
 
@@ -76,7 +80,7 @@ Runs pending migrations, clears caches, and restarts the queue worker — safe t
 
 | Layer | Technology |
 |---|---|
-| Backend | Laravel 12 |
+| Backend | Laravel 13 |
 | Frontend | Inertia.js + Vue 3 |
 | Database | PostgreSQL |
 | Cache / Queue | Redis |
