@@ -48,16 +48,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Slack
+    | Telegram
     |--------------------------------------------------------------------------
     |
-    | SLACK_HORIZON_WEBHOOK — Incoming Webhook URL for Horizon alerts
-    |   (long wait, failed jobs). Create one at https://api.slack.com/messaging/webhooks
+    | TELEGRAM_BOT_TOKEN — Bot token from @BotFather
+    | TELEGRAM_CHAT_ID   — Chat or group ID to receive Horizon alerts
     |
     */
 
-    'slack' => [
-        'horizon_webhook' => env('SLACK_HORIZON_WEBHOOK'),
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'chat_id' => env('TELEGRAM_CHAT_ID'),
     ],
 
 ];
