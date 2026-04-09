@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/Scanix/Gaeld/actions/workflows/ci.yml"><img src="https://github.com/Scanix/Gaeld/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-  <a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-8.4%2B-777BB4.svg" alt="PHP 8.4+"></a>
+  <a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-8.3%2B-777BB4.svg" alt="PHP 8.3+"></a>
   <a href="https://laravel.com/"><img src="https://img.shields.io/badge/Laravel-13-FF2D20.svg" alt="Laravel 13"></a>
 </p>
 
