@@ -21,7 +21,7 @@ set('keep_releases', 5);
 
 // --- Shared files/dirs (persisted across releases) ---
 add('shared_files', ['.env']);
-add('shared_dirs', ['storage', 'node_modules']);
+add('shared_dirs', ['storage']);
 
 // --- Writable dirs ---
 add('writable_dirs', ['bootstrap/cache', 'storage']);
