@@ -3,7 +3,7 @@
     "type": "project",
     "description": "Open-source Swiss accounting platform for freelancers and small businesses",
     "keywords": ["accounting", "switzerland", "laravel", "double-entry", "invoicing"],
-    "license": "MIT",
+    "license": "AGPL-3.0-or-later",
     "require": {
         "php": "^8.2",
         "appstract/laravel-opcache": "^4.0",
