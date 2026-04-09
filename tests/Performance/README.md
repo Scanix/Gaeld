@@ -17,6 +17,8 @@ docker run --rm -i grafana/k6 run -
 export K6_BASE_URL=http://localhost  # or staging URL
 export K6_API_TOKEN=your-sanctum-token
 export K6_ORG_ID=your-organization-uuid
+export K6_CUSTOMER_ID=your-customer-uuid
+export K6_VAT_RATE_ID=your-vat-rate-uuid  # optional
 
 # Run individual scenarios
 k6 run tests/Performance/invoice-crud.js
@@ -45,4 +47,4 @@ k6 run --vus 50 --duration 2m tests/Performance/invoice-crud.js
 
 k6 outputs per-request metrics. The `thresholds` block in each script
 defines pass/fail criteria matching the targets in
-`docs/POST_ACQUISITION_ROADMAP.md` Phase 8.3.
+the internal post-acquisition roadmap (Phase 8.3).

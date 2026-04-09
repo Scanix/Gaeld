@@ -32,6 +32,7 @@ class AccountApiController extends Controller
         $this->authorize('viewAny', Account::class);
 
         $accounts = Account::query()
+            ->with('parent')
             ->when($request->input('type'), fn ($q, $type) => $q->where('type', $type))
             ->when($request->boolean('active_only'), fn ($q) => $q->where('is_active', true))
             ->orderBy('code')
