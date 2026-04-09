@@ -65,9 +65,9 @@ task('deploy:storage:link', function () {
     run('ln -s {{deploy_path}}/shared/storage/app/public {{release_path}}/public/storage');
 })->desc('Symlink public/storage to shared storage');
 
-task('deploy:worker:restart', function () {
-    run('sudo systemctl restart gaeld-worker');
-})->desc('Restart gaeld-worker systemd service after deploy');
+task('deploy:horizon:restart', function () {
+    run('sudo systemctl restart gaeld-horizon');
+})->desc('Restart Horizon after deploy');
 
 // --- SaaS-specific tasks ---
 
@@ -121,7 +121,7 @@ task('deploy', [
     'deploy:fpm:restart',
     'deploy:publish',
     'deploy:opcache:clear',
-    'deploy:worker:restart',
+    'deploy:horizon:restart',
 ])->desc('Deploy the SaaS application');
 
 // --- Hooks ---
