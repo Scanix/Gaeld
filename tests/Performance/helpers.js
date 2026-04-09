@@ -4,6 +4,8 @@
 export const BASE_URL = __ENV.K6_BASE_URL || 'http://localhost';
 export const API_TOKEN = __ENV.K6_API_TOKEN || '';
 export const ORG_ID = __ENV.K6_ORG_ID || '';
+export const CUSTOMER_ID = __ENV.K6_CUSTOMER_ID || '';
+export const VAT_RATE_ID = __ENV.K6_VAT_RATE_ID || '';
 
 export function apiHeaders() {
   return {

@@ -37,6 +37,7 @@ yarn-error.log
 # Scribe API docs (generated output)
 /public/docs
 /.scribe
+/docs/
 
 # EE proprietary plugin — distributed via private GitLab repo, cloned on deploy
 /plugins/gaeld-ee/
