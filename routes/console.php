@@ -71,7 +71,7 @@ Schedule::command('horizon:snapshot')->everyFiveMinutes();
  * Heartbeat check — alerts if the scheduler itself stops running.
  * Configure SCHEDULE_HEARTBEAT_URL in .env (e.g. a Healthchecks.io ping URL).
  */
-if ($heartbeatUrl = env('SCHEDULE_HEARTBEAT_URL')) {
+if ($heartbeatUrl = config('features.schedule_heartbeat_url')) {
     Schedule::call(fn () => Http::get($heartbeatUrl))
         ->everyFiveMinutes()
         ->name('heartbeat');

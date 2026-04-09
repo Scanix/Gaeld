@@ -7,6 +7,7 @@ use App\Domains\Users\Models\User;
 use App\Support\FeatureFlag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 /**
@@ -38,6 +39,9 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
             ],
             'twoFactor' => fn () => $request->session()->get('twoFactor'),
+            'systemMessage' => FeatureFlag::isSaas()
+                ? Cache::get('saas:system_message')
+                : null,
         ]);
     }
 

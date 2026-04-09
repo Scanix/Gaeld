@@ -54,6 +54,7 @@ const trialDaysLeft = computed(() => {
 const showTrialBanner = computed(() => trialDaysLeft.value !== null && trialDaysLeft.value <= 7)
 const showPastDueBanner = computed(() => subscription.value?.status === 'past_due')
 const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
+const systemMessage = computed(() => page.props.systemMessage ?? null)
 </script>
 
 <template>
@@ -131,6 +132,18 @@ const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
         <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
           <span>{{ t('payment_failed_warning') }}</span>
           <Link href="/billing" class="underline underline-offset-2 font-semibold hover:opacity-80 whitespace-nowrap">{{ t('update_payment_method') }}</Link>
+        </div>
+      </div>
+
+      <!-- System message banner (set by SaaS admin) -->
+      <div
+        v-if="systemMessage"
+        class="relative z-40 bg-blue-600 text-white text-sm font-medium"
+        role="status"
+      >
+        <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>{{ systemMessage }}</span>
         </div>
       </div>
 
