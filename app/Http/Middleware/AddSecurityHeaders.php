@@ -15,7 +15,7 @@ class AddSecurityHeaders
         $response->headers->remove('X-Powered-By');
 
         if (! $response->headers->has('Strict-Transport-Security')) {
-            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+            $response->headers->set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
         }
 
         if (! $response->headers->has('X-Frame-Options')) {
@@ -31,6 +31,10 @@ class AddSecurityHeaders
         }
 
         $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
+
+        if (! $response->headers->has('Permissions-Policy')) {
+            $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+        }
 
         if (! $response->headers->has('Content-Security-Policy')) {
             $response->headers->set(

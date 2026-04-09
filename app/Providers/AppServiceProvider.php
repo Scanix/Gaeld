@@ -31,6 +31,7 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Jobs\GenerateReportsJob;
 use App\Domains\Users\Jobs\ExportUserDataJob;
 use App\Http\Services\GlobalSearchService;
+use App\Listeners\SendHorizonTelegramAlert;
 use App\Support\Listeners\AuthAuditSubscriber;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -42,6 +43,7 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Horizon\Events\LongWaitDetected;
 use Laravel\Sanctum\Sanctum;
 
 /**
@@ -99,6 +101,7 @@ class AppServiceProvider extends ServiceProvider
         Event::subscribe(AuthAuditSubscriber::class);
         Event::subscribe(JournalEventSubscriber::class);
         Event::listen(MemberRemoved::class, RevokeOrganizationTokens::class);
+        Event::listen(LongWaitDetected::class, SendHorizonTelegramAlert::class);
 
         Gate::policy(Customer::class, ContactPolicy::class);
         Gate::policy(Supplier::class, ContactPolicy::class);

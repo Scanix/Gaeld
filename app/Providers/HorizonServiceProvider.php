@@ -17,9 +17,8 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
 
         Horizon::routeMailNotificationsTo(config('mail.from.address'));
 
-        if ($slackWebhook = config('services.slack.horizon_webhook')) {
-            Horizon::routeSlackNotificationsTo($slackWebhook, '#gaeld-alerts');
-        }
+        // Telegram alerts are handled via SendHorizonTelegramAlert listener
+        // registered in AppServiceProvider (Event::listen LongWaitDetected).
     }
 
     /**
