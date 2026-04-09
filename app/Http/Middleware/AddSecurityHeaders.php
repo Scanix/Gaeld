@@ -37,14 +37,20 @@ class AddSecurityHeaders
         }
 
         if (! $response->headers->has('Content-Security-Policy')) {
+            // Horizon uses fonts.bunny.net (not Google Fonts) and Vue requires unsafe-eval.
+            $isHorizon = $request->is('horizon') || $request->is('horizon/*');
+            $scriptSrc = $isHorizon
+                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com"
+                : "script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com";
+
             $response->headers->set(
                 'Content-Security-Policy',
                 implode('; ', [
                     "default-src 'self'",
-                    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com",
-                    "style-src 'self' 'unsafe-inline' https://tagmanager.google.com https://fonts.googleapis.com",
+                    $scriptSrc,
+                    "style-src 'self' 'unsafe-inline' https://tagmanager.google.com https://fonts.googleapis.com https://fonts.bunny.net",
                     "img-src 'self' data: https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.googletagmanager.com",
-                    "font-src 'self' https://fonts.gstatic.com",
+                    "font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net",
                     "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://region1.google-analytics.com",
                     'frame-src https://js.stripe.com https://hooks.stripe.com',
                     "frame-ancestors 'none'",

@@ -12,6 +12,9 @@ return [
     |
     */
 
+    // Monitoring
+    'schedule_heartbeat_url' => env('SCHEDULE_HEARTBEAT_URL'),
+
     // CE features (enabled by default)
     'bank_import' => env('FEATURE_BANK_IMPORT', true),
 

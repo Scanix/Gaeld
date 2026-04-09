@@ -8,7 +8,7 @@ import Button from '@/Components/UI/Button.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
-import { TrendingUp, Users, AlertCircle, CreditCard, Clock, ShieldCheck, Ban, ArrowRightLeft, Settings, Save } from 'lucide-vue-next'
+import { TrendingUp, Users, AlertCircle, CreditCard, Clock, ShieldCheck, Ban, ArrowRightLeft, Settings, Save, ExternalLink, MessageSquare, Trash2 } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 
@@ -20,6 +20,8 @@ const props = defineProps({
   plans: { type: Array, default: () => [] },
   subscriptions: { type: Array, default: () => [] },
   unsubscribed_orgs: { type: Array, default: () => [] },
+  horizon_url: { type: String, default: '/horizon' },
+  system_message: { type: String, default: null },
 })
 
 const statusClass = {
@@ -98,6 +100,25 @@ function updatePlan(plan) {
     onFinish: () => { savingPlan.value[plan.id] = false },
   })
 }
+
+// System message
+const messageInput = ref(props.system_message ?? '')
+const savingMessage = ref(false)
+
+function setSystemMessage() {
+  if (!messageInput.value.trim()) return
+  savingMessage.value = true
+  router.post('/saas-admin/system-message', { message: messageInput.value }, {
+    onFinish: () => { savingMessage.value = false },
+  })
+}
+
+function clearSystemMessage() {
+  savingMessage.value = true
+  router.delete('/saas-admin/system-message', {
+    onFinish: () => { savingMessage.value = false, messageInput.value = '' },
+  })
+}
 </script>
 
 <template>
@@ -113,6 +134,64 @@ function updatePlan(plan) {
           <h1 class="text-xl font-bold">{{ t('saas_admin') }}</h1>
           <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('saas_admin_subtitle') }}</p>
         </div>
+      </div>
+
+      <!-- Quick Links + System Message -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Quick Links -->
+        <Card>
+          <CardHeader>
+            <CardTitle class="flex items-center gap-2">
+              <ExternalLink class="h-4 w-4" />
+              {{ t('quick_links') }}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div class="flex flex-wrap gap-2">
+              <a
+                :href="horizon_url"
+                target="_blank"
+                rel="noopener"
+                class="inline-flex items-center gap-2 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-sm font-medium text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] transition-colors"
+              >
+                <svg class="h-4 w-4 text-[hsl(var(--primary))]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                {{ t('horizon_dashboard') }}
+                <ExternalLink class="h-3 w-3 opacity-50" />
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- System message -->
+        <Card>
+          <CardHeader>
+            <CardTitle class="flex items-center gap-2">
+              <MessageSquare class="h-4 w-4" />
+              {{ t('system_message') }}
+            </CardTitle>
+          </CardHeader>
+          <CardContent class="space-y-3">
+            <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('system_message_desc') }}</p>
+            <div v-if="system_message" class="rounded-md bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-2 text-sm text-blue-800 dark:text-blue-200">
+              {{ system_message }}
+            </div>
+            <div class="flex gap-2">
+              <input
+                v-model="messageInput"
+                type="text"
+                :placeholder="t('system_message_placeholder')"
+                maxlength="500"
+                class="flex-1 text-sm border border-[hsl(var(--border))] rounded-md px-3 py-1.5 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]"
+              />
+              <Button size="sm" @click="setSystemMessage" :disabled="!messageInput.trim() || savingMessage">
+                <Save class="h-3 w-3" />
+              </Button>
+              <Button v-if="system_message" size="sm" variant="outline" @click="clearSystemMessage" :disabled="savingMessage">
+                <Trash2 class="h-3 w-3" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <!-- KPI row -->
