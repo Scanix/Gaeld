@@ -133,4 +133,4 @@ We use a Git Flow model internally — `main` is the stable development branch. 
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE).
+By contributing, you agree that your contributions will be licensed under the [AGPL-3.0-or-later licence](LICENSE).

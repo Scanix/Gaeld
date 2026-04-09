@@ -143,6 +143,42 @@ class ApiContractTest extends TestCase
             ->assertOk();
     }
 
+    public function test_update_invoice_with_partial_payload(): void
+    {
+        $customer = Customer::create([
+            'organization_id' => $this->org->id,
+            'name' => 'Partial Update Invoice Customer',
+            'country' => 'CH',
+            'currency' => 'CHF',
+        ]);
+
+        $createResponse = $this->withToken($this->token)
+            ->postJson('/api/v1/invoices', [
+                'customer_id' => $customer->uuid,
+                'issue_date' => '2026-04-07',
+                'due_date' => '2026-05-07',
+                'currency' => 'CHF',
+                'lines' => [
+                    [
+                        'description' => 'Initial line',
+                        'quantity' => 1,
+                        'unit_price' => '100.00',
+                    ],
+                ],
+            ])
+            ->assertStatus(201);
+
+        $invoiceId = (string) $createResponse->json('data.id');
+
+        $this->withToken($this->token)
+            ->putJson("/api/v1/invoices/{$invoiceId}", [
+                'notes' => 'updated from partial payload',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.notes', 'updated from partial payload')
+            ->assertJsonPath('data.lines.0.description', 'Initial line');
+    }
+
     public function test_delete_invoice(): void
     {
         $customer = Customer::create([
