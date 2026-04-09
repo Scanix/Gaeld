@@ -39,17 +39,11 @@ host('production')
 
 // --- Tasks ---
 
-// Build assets locally to avoid CPU spikes on production.
+// Build frontend assets on the server so Vite reads the production .env
+// (incl. VITE_COOKIE_DOMAIN) that is already symlinked via deploy:shared.
 task('assets:build', function () {
-    runLocally('CI=true pnpm install --frozen-lockfile');
-    // VITE_COOKIE_DOMAIN must be set so the cookie is scoped to .gaeld.ch and shared
-    // between gaeld.ch and app.gaeld.ch. It is a build-time var (not a secret).
-    runLocally('VITE_COOKIE_DOMAIN=.gaeld.ch pnpm build');
-})->desc('Build frontend assets locally');
-
-task('assets:upload', function () {
-    upload(__DIR__.'/public/build/', '{{release_path}}/public/build/');
-})->desc('Upload built assets to release path');
+    run('source ~/.nvm/nvm.sh && cd {{release_path}} && CI=true pnpm install --frozen-lockfile && pnpm build');
+})->desc('Build frontend assets on the server');
 
 task('deploy:fpm:restart', function () {
     run('sudo systemctl reload php8.4-fpm');
@@ -110,7 +104,6 @@ task('deploy', [
     'deploy:vendors',
     'deploy:ee:plugin',
     'assets:build',
-    'assets:upload',
     'deploy:storage:link',
     'artisan:migrate',
     'artisan:config:cache',
