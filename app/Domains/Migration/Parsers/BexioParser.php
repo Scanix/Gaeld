@@ -215,7 +215,7 @@ class BexioParser implements PlatformParserInterface
         // Bexio XLSX addresses export columns
         $firstName = $this->findValue($row, ['First name', 'first_name', 'Vorname', 'prenom']);
         $lastName = $this->findValue($row, ['Last name', 'last_name', 'Nachname', 'nom']);
-        $company = $this->findValue($row, ['Company name', 'company_name', 'Firmenname', 'nom_entreprise', 'firma']);
+        $company = $this->findValue($row, ['Company name', 'company_name', 'Firmenname', 'nom_entreprise', 'firma', 'Kontaktname', 'contact_name']);
         $typeLabel = $this->findValue($row, ['Contact type description', 'contact_type', 'typ', 'Type', 'type']);
 
         // Build a displayable name
