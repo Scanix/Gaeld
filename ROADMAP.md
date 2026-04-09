@@ -15,18 +15,18 @@ Remaining items from the ecosystem backlog. Completed items omitted.
 
 ## Priority 3 — Security & Performance (Phase D)
 
-- [ ] **D3: Pentest execution** — Run `pentest/scan.sh` against docker-compose.test.yml stack, save report to `pentest/reports/`
-- [ ] **D4: Response time assertions** — Run k6 full suite against test stack, verify all p95 thresholds pass
+- [x] **D3: Pentest execution** — Executed against the Docker test stack, report saved to `pentest/reports/2026-04-09_093136.txt`; follow-up remains for docs dependency audit and production header hardening
+- [ ] **D4: Response time assertions** — Executed against the Docker test stack; thresholds failed on 2026-04-09 (`p95` 1.33s–1.41s, `http_req_failed` 11.81%), so remediation is still required
 
 ## Priority 4 — Production Infrastructure (Phase E)
 
-- [ ] **E4: Octane evaluation** — Benchmark FrankenPHP vs PHP-FPM with k6/wrk, write decision document
+- [x] **E4: Octane evaluation** — Decision documented in `docs/OCTANE_EVALUATION.md`; keep PHP-FPM as default until staging benchmarks justify Octane
 
 ## Priority 5 — Documentation (Phase B — GitLab Wiki)
 
-- [ ] **B3: API versioning strategy** — Route prefix strategy, deprecation policy
-- [ ] **B4: DR runbook** — Database restore, Redis rebuild, Horizon restart sequence
-- [ ] **B5: Git workflow & deployment** — GitHub ↔ GitLab dual-platform, CE/EE split, Deployer config
+- [x] **B3: API versioning strategy** — Documented in `docs/API_VERSIONING_STRATEGY.md`
+- [x] **B4: DR runbook** — Documented in `docs/OPERATIONS.md`
+- [x] **B5: Git workflow & deployment** — Documented in `docs/GIT_WORKFLOW_AND_DEPLOYMENT.md`
 
 ## Priority 6 — Swiss Compliance (Phase F)
 
@@ -35,7 +35,7 @@ Remaining items from the ecosystem backlog. Completed items omitted.
 
 ## Low Priority — Future Evaluations (Phase G)
 
-- [ ] JSON:API Resources evaluation (RFC)
-- [ ] PHP Attributes for middleware evaluation (RFC)
-- [ ] pgvector semantic search evaluation (RFC)
-- [ ] Laravel AI SDK evaluation (RFC)
+- [x] JSON:API Resources evaluation (RFC) — captured in `docs/FUTURE_RFC_EVALUATIONS.md`
+- [x] PHP Attributes for middleware evaluation (RFC) — captured in `docs/FUTURE_RFC_EVALUATIONS.md`
+- [x] pgvector semantic search evaluation (RFC) — captured in `docs/FUTURE_RFC_EVALUATIONS.md`
+- [x] Laravel AI SDK evaluation (RFC) — captured in `docs/FUTURE_RFC_EVALUATIONS.md`

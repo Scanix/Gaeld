@@ -111,7 +111,11 @@ class AppServiceProvider extends ServiceProvider
                     return;
                 }
                 foreach ($tags as $tag) {
-                    Cache::tags(["org:{$orgId}:{$tag}"])->flush();
+                    try {
+                        Cache::tags(["org:{$orgId}:{$tag}"])->flush();
+                    } catch (\BadMethodCallException) {
+                        // File/array caches used in testing do not support tags.
+                    }
                 }
             };
         };

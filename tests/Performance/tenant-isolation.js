@@ -1,13 +1,13 @@
 import http from 'k6/http';
 import { check, fail } from 'k6';
 import { SharedArray } from 'k6/data';
-import { apiUrl } from './helpers.js';
+import { apiUrl, CUSTOMER_ID, VAT_RATE_ID } from './helpers.js';
 
 /**
  * Multi-tenant isolation stress test.
  *
  * Supply two (or more) org tokens via the K6_TOKENS env var
- * as a JSON array of objects: [{"token":"…","orgId":"…"}, …]
+ * as a JSON array of objects: [{"token":"…","orgId":"…","customerId":"…","vatRateId":"…"}, …]
  *
  * Each VU picks a token (round-robin). On every iteration the VU:
  *   1. Creates an invoice under its org.
@@ -16,7 +16,7 @@ import { apiUrl } from './helpers.js';
  *   4. Cleans up the invoice.
  *
  * Usage:
- *   K6_BASE_URL=http://localhost K6_TOKENS='[{"token":"tok_a","orgId":"uuid_a"},{"token":"tok_b","orgId":"uuid_b"}]' \
+ *   K6_BASE_URL=http://localhost K6_TOKENS='[{"token":"tok_a","orgId":"uuid_a","customerId":"cust_a"},{"token":"tok_b","orgId":"uuid_b","customerId":"cust_b"}]' \
  *     k6 run tests/Performance/tenant-isolation.js
  */
 
@@ -60,9 +60,10 @@ export default function () {
   const createRes = http.post(
     apiUrl('/invoices'),
     JSON.stringify({
-      date: '2026-06-01',
+      customer_id: mine.customerId || CUSTOMER_ID,
+      issue_date: '2026-06-01',
       due_date: '2026-07-01',
-      lines: [{ description: 'Isolation test', quantity: 1, unit_price: '50.00' }],
+      lines: [{ description: 'Isolation test', quantity: 1, unit_price: '50.00', vat_rate_id: mine.vatRateId || VAT_RATE_ID || null }],
     }),
     { ...params, tags: { name: 'create_own' } },
   );
