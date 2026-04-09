@@ -7,14 +7,14 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "@inertiajs/vue3": "^3.0.2",
+        "@inertiajs/vue3": "^3.0.3",
         "@tailwindcss/vite": "^4.2.2",
         "@vitejs/plugin-vue": "^6.0.5",
         "autoprefixer": "^10.4.27",
         "laravel-vite-plugin": "^3.0.1",
-        "postcss": "^8.5.8",
+        "postcss": "^8.5.9",
         "tailwindcss": "^4.2.2",
-        "vite": "^8.0.6"
+        "vite": "^8.0.7"
     },
     "dependencies": {
         "@simplewebauthn/browser": "^13.3.0",
