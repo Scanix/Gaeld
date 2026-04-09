@@ -15,7 +15,7 @@ Remaining items from the ecosystem backlog. Completed items omitted.
 
 ## Priority 3 — Security & Performance (Phase D)
 
-- [x] **D3: Pentest execution** — Executed against the Docker test stack, report saved to `pentest/reports/2026-04-09_093136.txt`; follow-up remains for docs dependency audit and production header hardening
+- [x] **D3: Pentest execution** — Rerun against the Docker test stack with report saved to `pentest/reports/2026-04-09_095429.txt`; no high/critical issues detected in the local scan
 - [ ] **D4: Response time assertions** — Executed against the Docker test stack; thresholds failed on 2026-04-09 (`p95` 1.33s–1.41s, `http_req_failed` 11.81%), so remediation is still required
 
 ## Priority 4 — Production Infrastructure (Phase E)

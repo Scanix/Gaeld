@@ -32,6 +32,9 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     intl \
     opcache
 
+# Disable PHP version disclosure in HTTP responses.
+RUN printf 'expose_php=Off\n' > /usr/local/etc/php/conf.d/security.ini
+
 # Install Redis extension (best effort for restricted networks)
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
     && (pecl install redis && docker-php-ext-enable redis || echo "Skipping redis pecl extension: unavailable") \

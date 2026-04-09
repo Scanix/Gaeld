@@ -387,6 +387,12 @@ Set up k6 load testing suite with scripts for all critical paths:
 - [ ] Configure alert thresholds: queue depth > 100, failed jobs > 0, response time p95 > 500ms
 - [ ] Document on-call runbook in `docs/OPERATIONS.md`
 
+### 8.5.1 Local Security Validation
+- [x] Local pentest rerun completed on 2026-04-09 with report `pentest/reports/2026-04-09_095429.txt`
+- [x] Dependency audits clean for `api`, `web`, and `docs`
+- [x] Local HTTP test stack now returns hardened security headers and suppresses `X-Powered-By`
+- [ ] Install `testssl.sh` and `nuclei` locally or in CI for full TLS and template-scan coverage
+
 ### 8.6 Deployment Pipeline *(deferred from Phase 6.4)*
 - [ ] Deploy Laravel 13 to staging and smoke-test critical paths (invoicing, bank import, ledger posting)
 - [ ] Deploy to production with zero-downtime strategy (Deployer `deploy:unlock` / rolling restart)
