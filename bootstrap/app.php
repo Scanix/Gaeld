@@ -2,6 +2,7 @@
 
 use App\Domains\Accounting\Exceptions\FiscalYearClosedException;
 use App\Domains\Organizations\Models\Organization;
+use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\DisableThrottleInTesting;
 use App\Http\Middleware\EnsureActiveSubscription;
 use App\Http\Middleware\EnsureApiOrganization;
@@ -27,6 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(AddSecurityHeaders::class);
+
         $middleware->web(append: [
             SetGuestLocale::class,
             HandleInertiaRequests::class,
