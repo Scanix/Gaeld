@@ -42,7 +42,9 @@ host('production')
 // Build assets locally to avoid CPU spikes on production.
 task('assets:build', function () {
     runLocally('CI=true pnpm install --frozen-lockfile');
-    runLocally('pnpm build');
+    // VITE_COOKIE_DOMAIN must be set so the cookie is scoped to .gaeld.ch and shared
+    // between gaeld.ch and app.gaeld.ch. It is a build-time var (not a secret).
+    runLocally('VITE_COOKIE_DOMAIN=.gaeld.ch pnpm build');
 })->desc('Build frontend assets locally');
 
 task('assets:upload', function () {
