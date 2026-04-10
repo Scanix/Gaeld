@@ -13,7 +13,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
-import FormFileInput from '@/Components/UI/FormFileInput.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
@@ -106,8 +106,8 @@ function onSupplierCreated(supplier) {
   form.vendor = supplier.name
 }
 
-function onReceiptChange(e) {
-  form.receipt = e.target.files[0] ?? null
+function onReceiptChange(file) {
+  form.receipt = file ?? null
 }
 
 const isImage = computed(() => {
@@ -234,8 +234,8 @@ const isImage = computed(() => {
           <!-- Attachment -->
           <hr class="border-[hsl(var(--border))]" />
 
-          <FormFileInput
-            id="receipt"
+          <FileUpload
+            size="compact"
             :label="t('receipt')"
             :error="form.errors.receipt"
             @change="onReceiptChange"
@@ -259,7 +259,7 @@ const isImage = computed(() => {
                 </div>
               </a>
             </div>
-          </FormFileInput>
+          </FileUpload>
 
           <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" :href="`/expenses/${expense.id}`" variant="outline">{{ t('cancel') }}</Button>

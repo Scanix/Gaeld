@@ -8,6 +8,7 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
+import StatCard from '@/Components/UI/StatCard.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X, AlertTriangle, Receipt, Target, Settings, GripVertical, Eye, EyeOff, ChevronUp, ChevronDown } from 'lucide-vue-next'
@@ -342,18 +343,15 @@ const transactionColumns = computed(() => [
 
     <!-- Summary Cards (always visible) -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <Card v-for="card in summaryCards" :key="card.title">
-        <CardHeader class="flex flex-row items-center justify-between pb-2">
-          <CardDescription>{{ card.title }}</CardDescription>
-          <component :is="card.icon" :class="['h-4 w-4', card.color]" />
-        </CardHeader>
-        <CardContent>
-          <div class="text-2xl font-bold">{{ card.value }}</div>
-          <p v-if="card.trend !== null && Number.isFinite(parseFloat(card.trend))" :class="['mt-1 text-xs', parseFloat(card.trend) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400']">
-            {{ parseFloat(card.trend) >= 0 ? '+' : '' }}{{ card.trend }}% {{ t('vs_last_year') }}
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        v-for="card in summaryCards"
+        :key="card.title"
+        :title="card.title"
+        :value="card.value"
+        :icon="card.icon"
+        :icon-class="card.color"
+        :trend="card.trend"
+      />
     </div>
 
     <!-- Dynamic widget sections rendered in user-defined order -->

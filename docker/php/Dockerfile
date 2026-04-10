@@ -15,7 +15,8 @@ RUN apk add --no-cache \
     oniguruma-dev \
     tesseract-ocr \
     tesseract-ocr-data-deu \
-    tesseract-ocr-data-fra
+    tesseract-ocr-data-fra \
+    tesseract-ocr-data-eng
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \

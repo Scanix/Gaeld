@@ -8,6 +8,7 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
+import SharePrintButton from '@/Components/UI/SharePrintButton.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
@@ -86,7 +87,10 @@ function grandTotal() {
           {{ t('payables') }}
         </button>
       </div>
-      <ExportDropdown base-url="/reports/aging/export" :params="exportParams" />
+      <div class="flex items-center gap-2">
+        <SharePrintButton :title="t('aging_report')" />
+        <ExportDropdown base-url="/reports/aging/export" :params="exportParams" />
+      </div>
     </div>
 
     <Card>

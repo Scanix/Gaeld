@@ -202,9 +202,9 @@ function exportCsv() {
 <template>
   <div class="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
     <!-- Toolbar: Search + Filters + Column Toggle + Export -->
-    <div v-if="hasToolbar || exportable" class="flex flex-wrap items-center gap-3 border-b border-[hsl(var(--border))] px-4 py-3">
+    <div v-if="hasToolbar || exportable" class="flex flex-col gap-3 border-b border-[hsl(var(--border))] px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center">
       <!-- Search -->
-      <div v-if="searchable" class="relative flex-1 min-w-[200px] max-w-sm">
+      <div v-if="searchable" class="relative w-full sm:flex-1 sm:min-w-[200px] sm:max-w-sm">
         <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
         <input
           v-model="localSearch"
@@ -225,20 +225,22 @@ function exportCsv() {
       </div>
 
       <!-- Filter dropdowns -->
-      <div v-for="filter in filters" :key="filter.key" class="flex items-center gap-1">
-        <select
-          :value="filter.value ?? ''"
-          class="h-9 rounded-md border border-[hsl(var(--input))] bg-transparent px-3 text-sm text-[hsl(var(--foreground))] outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
-          @change="handleFilter(filter.key, $event.target.value)"
-        >
-          <option value="">{{ filter.label }}</option>
-          <option v-for="opt in filter.options" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
+      <div v-if="filters.length" class="flex flex-wrap gap-2 sm:contents">
+        <div v-for="filter in filters" :key="filter.key">
+          <select
+            :value="filter.value ?? ''"
+            class="h-9 rounded-md border border-[hsl(var(--input))] bg-transparent px-3 text-sm text-[hsl(var(--foreground))] outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+            @change="handleFilter(filter.key, $event.target.value)"
+          >
+            <option value="">{{ filter.label }}</option>
+            <option v-for="opt in filter.options" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </div>
       </div>
 
-      <div class="ml-auto flex items-center gap-2">
+      <div class="flex items-center gap-2 self-end sm:ml-auto sm:self-auto">
         <!-- Column visibility toggle -->
         <div ref="columnMenuRef" class="relative">
           <Button variant="outline" size="sm" :aria-label="t('columns')" @click="showColumnMenu = !showColumnMenu">

@@ -1,6 +1,7 @@
 <script setup>
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
+import Alert from '@/Components/UI/Alert.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
 import CardTitle from '@/Components/UI/CardTitle.vue'
@@ -376,12 +377,7 @@ function confirmDeletePasskey() {
         </CardHeader>
         <CardContent>
           <!-- Org enforcement banner -->
-          <div
-            v-if="orgRequiresTwoFactor && !twoFactorEnabled"
-            class="mb-4 rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200"
-          >
-            {{ t('two_factor_required_by_org') }}
-          </div>
+          <Alert v-if="orgRequiresTwoFactor && !twoFactorEnabled" variant="warning" class="mb-4">{{ t('two_factor_required_by_org') }}</Alert>
 
           <!-- Not enabled: show Enable button -->
           <div v-if="!twoFactorEnabled && !showQrSetup">

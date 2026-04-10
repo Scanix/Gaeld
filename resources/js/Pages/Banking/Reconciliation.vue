@@ -10,6 +10,7 @@ import { ArrowLeftRight } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import EmptyState from '@/Components/UI/EmptyState.vue'
+import PageHeader from '@/Components/UI/PageHeader.vue'
 import { computed } from 'vue'
 import HelpText from '@/Components/HelpText.vue'
 
@@ -35,9 +36,7 @@ const columns = computed(() => [
       <p>{{ t('help_reconciliation_text') }}</p>
     </HelpText>
 
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-semibold">{{ t('reconciliation') }}</h2>
-    </div>
+    <PageHeader :title="t('reconciliation')" />
 
     <Card v-if="(bankAccounts?.data ?? []).length">
       <CardHeader>

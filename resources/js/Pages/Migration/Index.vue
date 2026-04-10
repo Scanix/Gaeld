@@ -10,6 +10,8 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import Modal from '@/Components/UI/Modal.vue'
+import EmptyState from '@/Components/UI/EmptyState.vue'
+import PageHeader from '@/Components/UI/PageHeader.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import {
@@ -73,16 +75,18 @@ const platformIcons = {
 
 <template>
   <AppLayout :title="t('migration.migration')">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold">{{ t('migration.migration') }}</h1>
-        <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('migration.migration_description') }}</p>
-      </div>
+    <PageHeader>
+      <template #start>
+        <div>
+          <h1 class="text-2xl font-bold">{{ t('migration.migration') }}</h1>
+          <p class="mt-0.5 text-sm text-[hsl(var(--muted-foreground))]">{{ t('migration.migration_description') }}</p>
+        </div>
+      </template>
       <Button @click="showPlatformPicker = true">
         <Plus class="mr-2 h-4 w-4" />
         {{ t('migration.new_import') }}
       </Button>
-    </div>
+    </PageHeader>
 
     <!-- Import history -->
     <Card>
@@ -90,10 +94,11 @@ const platformIcons = {
         <CardTitle>{{ t('migration.import_history') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div v-if="(sessions?.data ?? []).length === 0" class="py-12 text-center text-sm text-[hsl(var(--muted-foreground))]">
-          <ArrowRightLeft class="mx-auto mb-3 h-10 w-10 opacity-40" />
-          <p>{{ t('migration.no_sessions') }}</p>
-        </div>
+        <EmptyState
+          v-if="(sessions?.data ?? []).length === 0"
+          :icon="ArrowRightLeft"
+          :title="t('migration.no_sessions')"
+        />
 
         <div v-else class="divide-y divide-[hsl(var(--border))]">
           <div

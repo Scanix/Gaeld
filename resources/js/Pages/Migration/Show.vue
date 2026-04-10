@@ -10,7 +10,7 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
-import FileUploadDropzone from '@/Components/FileUploadDropzone.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import {
@@ -265,11 +265,11 @@ function formatColumns(row) {
             :options="dataTypeOptions"
           />
 
-          <FileUploadDropzone
+          <FileUpload
             :accept="acceptString"
             :label="t('migration.upload_file')"
             :error="uploadError"
-            @file-selected="onFileSelected"
+            @change="onFileSelected"
           />
 
           <div class="flex justify-end">

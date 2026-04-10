@@ -152,3 +152,38 @@
   transition: width 0.4s ease, opacity 0.2s ease;
   pointer-events: none;
 }
+
+/* ── Print styles ─────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide navigation chrome and interactive elements */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Remove sidebar offset from main content */
+  [class*='lg:pl-'] {
+    padding-left: 0 !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Prevent table rows from splitting across pages */
+  table {
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  thead {
+    display: table-header-group;
+  }
+
+  /* Show elements that should only appear in print output */
+  .print-only {
+    display: block !important;
+  }
+}

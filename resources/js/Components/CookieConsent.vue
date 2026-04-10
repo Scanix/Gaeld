@@ -5,7 +5,7 @@
       type="button"
       @click="openPreferences"
       :aria-label="'Open cookie preferences'"
-      class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-md transition duration-300 ease-in-out hover:bg-[hsl(var(--primary))]/90 hover:shadow-lg"
+      class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-[hsl(var(--primary))] text-white shadow-md transition duration-300 ease-in-out hover:bg-[hsl(var(--primary))]/90 hover:shadow-lg"
     >
       <CookieIcon :size="20" />
     </button>

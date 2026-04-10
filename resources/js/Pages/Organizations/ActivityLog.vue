@@ -14,6 +14,7 @@ import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { computed, ref } from 'vue'
 import { ArrowLeft, History, Search } from 'lucide-vue-next'
+import PageHeader from '@/Components/UI/PageHeader.vue'
 
 const props = defineProps({
   activities: Object,
@@ -103,17 +104,19 @@ const eventOptions = [
 
 <template>
   <AppLayout :title="t('activity_log')">
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3">
-        <Button as="a" href="/settings" variant="outline" size="sm">
-          <ArrowLeft class="mr-2 h-4 w-4" /> {{ t('settings') }}
-        </Button>
-        <h2 class="text-xl font-semibold">
-          <History class="inline mr-2 h-5 w-5" />
-          {{ t('activity_log') }}
-        </h2>
-      </div>
-    </div>
+    <PageHeader>
+      <template #start>
+        <div class="flex items-center gap-3">
+          <Button as="a" href="/settings" variant="outline" size="sm">
+            <ArrowLeft class="mr-2 h-4 w-4" /> {{ t('settings') }}
+          </Button>
+          <h2 class="text-xl font-semibold">
+            <History class="inline mr-2 h-5 w-5" />
+            {{ t('activity_log') }}
+          </h2>
+        </div>
+      </template>
+    </PageHeader>
 
     <!-- Filters -->
     <Card class="mb-4">

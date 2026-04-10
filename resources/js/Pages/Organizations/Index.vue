@@ -8,6 +8,8 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import { Building2, ArrowRightLeft } from 'lucide-vue-next'
+import EmptyState from '@/Components/UI/EmptyState.vue'
+import PageHeader from '@/Components/UI/PageHeader.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
@@ -35,11 +37,7 @@ const { t } = useTranslations()
 
 <template>
   <AppLayout :title="t('organizations')">
-    <div class="flex items-center justify-between mb-6">
-      <p class="text-sm text-[hsl(var(--muted-foreground))]">
-        {{ t('your_organizations') }}
-      </p>
-    </div>
+    <PageHeader :description="t('your_organizations')" />
 
     <p v-if="switchError" class="mb-4 text-sm text-[hsl(var(--destructive))]">{{ switchError }}</p>
 
@@ -90,9 +88,8 @@ const { t } = useTranslations()
     </div>
 
     <Card v-else>
-      <CardContent class="flex flex-col items-center justify-center py-12">
-        <Building2 class="mb-4 h-12 w-12 text-[hsl(var(--muted-foreground))]" />
-        <p class="mb-4 text-[hsl(var(--muted-foreground))]">{{ t('no_organizations') }}</p>
+      <CardContent>
+        <EmptyState :icon="Building2" :title="t('no_organizations')" />
       </CardContent>
     </Card>
   </AppLayout>
