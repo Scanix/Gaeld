@@ -19,6 +19,7 @@ import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
 import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { computed } from 'vue'
 
 const { t } = useTranslations()
@@ -200,9 +201,7 @@ const historyColumns = computed(() => [
             <span v-else class="text-[hsl(var(--muted-foreground))]">—</span>
           </template>
         </DataTable>
-        <p v-if="!depreciationHistory.length" class="py-8 text-center text-sm text-[hsl(var(--muted-foreground))]">
-          {{ t('no_depreciation_history') }}
-        </p>
+        <EmptyState v-if="!depreciationHistory.length" :title="t('no_depreciation_history')" />
       </CardContent>
     </Card>
 

@@ -11,6 +11,7 @@ import Badge from '@/Components/UI/Badge.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
@@ -147,11 +148,6 @@ const eventGroups = computed(() => {
         </Button>
       </div>
 
-      <!-- Flash messages -->
-      <div v-if="flash.success" class="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
-        {{ flash.success }}
-      </div>
-
       <!-- Webhook secret display (shown once after creation/regeneration) -->
       <div v-if="flash.webhookSecret" class="rounded-md border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
         <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
@@ -177,9 +173,7 @@ const eventGroups = computed(() => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div v-if="!webhooks.length" class="py-8 text-center text-sm text-muted-foreground">
-            {{ t('no_webhooks') }}
-          </div>
+          <EmptyState v-if="!webhooks.length" :title="t('no_webhooks')" />
           <div v-else class="space-y-4">
             <div
               v-for="webhook in webhooks"

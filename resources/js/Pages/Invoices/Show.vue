@@ -12,6 +12,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import DropdownMenu from '@/Components/UI/DropdownMenu.vue'
+import SharePrintButton from '@/Components/UI/SharePrintButton.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useFormatters } from '@/lib/useFormatters'
@@ -189,6 +190,7 @@ const bankAccountOptions = computed(() =>
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
+          <SharePrintButton :title="`${t('invoice')} ${invoice?.number}`" />
           <Button
             v-if="invoice?.status === 'draft'"
             as="a"

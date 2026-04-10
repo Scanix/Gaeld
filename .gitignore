@@ -42,10 +42,9 @@ yarn-error.log
 # EE proprietary plugin — distributed via private GitLab repo, cloned on deploy
 /plugins/gaeld-ee/
 
-# On the `main` branch (open-source / GitHub), deploy.php is gitignored.
-# On the `production` branch (GitLab), deploy.php is tracked — un-ignored below.
-# deploy.php
-!deploy.php
+# deploy.php holds real credentials / paths — only tracked on `production`.
+# On `main` and `develop` it stays gitignored; deploy.php.example is the template.
+deploy.php
 
 # Production docker configs — templates provided as *.example
 docker/nginx/default.conf

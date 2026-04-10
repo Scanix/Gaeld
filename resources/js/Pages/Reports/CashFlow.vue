@@ -9,6 +9,7 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
+import SharePrintButton from '@/Components/UI/SharePrintButton.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { ChevronDown, ChevronRight, Banknote } from 'lucide-vue-next'
@@ -54,7 +55,10 @@ function sectionTotal(rows) {
         <FormInput id="cf-to" v-model="to" type="date" :label="t('to')" />
         <Button @click="applyFilter">{{ t('apply') }}</Button>
       </div>
-      <ExportDropdown base-url="/reports/cash-flow/export" :params="exportParams" />
+      <div class="flex items-center gap-2">
+        <SharePrintButton :title="t('cash_flow')" />
+        <ExportDropdown base-url="/reports/cash-flow/export" :params="exportParams" />
+      </div>
     </div>
 
     <template v-if="report">

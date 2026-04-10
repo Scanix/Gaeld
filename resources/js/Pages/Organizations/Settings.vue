@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -11,6 +11,7 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { currencyOptions } from '@/lib/contactOptions'
 import IbanHint from '@/Components/IbanHint.vue'
@@ -24,7 +25,6 @@ const props = defineProps({
 
 const { t } = useTranslations()
 const page = usePage()
-const flash = computed(() => page.props.flash || {})
 
 // --- Tabs ---
 const activeTab = ref('general')
@@ -80,8 +80,7 @@ const logoFile = ref(null)
 const logoPreview = ref(null)
 const logoUploading = ref(false)
 
-function onLogoSelect(event) {
-  const file = event.target.files[0]
+function onLogoSelect(file) {
   if (!file) return
   logoFile.value = file
   logoPreview.value = URL.createObjectURL(file)
@@ -165,11 +164,6 @@ const cantonOptions = [
 <template>
   <AppLayout :title="t('organization_settings')" helpPage="settings">
     <div class="max-w-3xl space-y-6">
-      <!-- Flash message -->
-      <div v-if="flash.success" class="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
-        {{ flash.success }}
-      </div>
-
       <!-- Tabs -->
       <div class="flex gap-1 rounded-lg bg-[hsl(var(--muted))] p-1">
         <button
@@ -338,21 +332,11 @@ const cantonOptions = [
               </div>
 
               <!-- Upload input -->
-              <div>
-                <label
-                  class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[hsl(var(--border))] px-6 py-4 text-sm text-[hsl(var(--muted-foreground))] transition-colors hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--foreground))]"
-                >
-                  <Upload class="h-5 w-5" />
-                  {{ t('settings_logo_upload') }}
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg"
-                    class="hidden"
-                    @change="onLogoSelect"
-                  >
-                </label>
-                <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('settings_logo_hint') }}</p>
-              </div>
+              <FileUpload
+                accept="image/png,image/jpeg"
+                :help-text="t('settings_logo_hint')"
+                @change="onLogoSelect"
+              />
             </div>
           </CardContent>
         </Card>

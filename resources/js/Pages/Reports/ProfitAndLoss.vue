@@ -9,6 +9,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Button from '@/Components/UI/Button.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
+import SharePrintButton from '@/Components/UI/SharePrintButton.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed, watch } from 'vue'
@@ -115,7 +116,10 @@ function mergeComparison(rows, compRows, isExpense = false) {
         <FormInput id="to" v-model="to" type="date" :label="t('to')" />
         <Button @click="applyFilter">{{ t('apply') }}</Button>
       </div>
-      <ExportDropdown base-url="/reports/profit-and-loss/export" :params="{ from, to }" />
+      <div class="flex items-center gap-2">
+        <SharePrintButton :title="t('profit_and_loss')" />
+        <ExportDropdown base-url="/reports/profit-and-loss/export" :params="{ from, to }" />
+      </div>
     </div>
 
     <!-- Comparison toggle -->

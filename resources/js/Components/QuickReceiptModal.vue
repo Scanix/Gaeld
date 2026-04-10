@@ -4,9 +4,11 @@ import Modal from '@/Components/UI/Modal.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
+import Alert from '@/Components/UI/Alert.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { router } from '@inertiajs/vue3'
-import { Camera, Loader2, Check, AlertCircle } from 'lucide-vue-next'
+import { Loader2 } from 'lucide-vue-next'
 
 const props = defineProps({
   open: Boolean,
@@ -22,7 +24,6 @@ const error = ref(null)
 const submitting = ref(false)
 
 // File & preview
-const fileInput = ref(null)
 const selectedFile = ref(null)
 const previewUrl = ref(null)
 
@@ -53,8 +54,7 @@ const categoryOptions = computed(() => [
   { value: 'Other', label: t('cat_other') },
 ])
 
-function onFileSelected(e) {
-  const file = e.target.files[0]
+function onFileSelected(file) {
   if (!file) return
 
   selectedFile.value = file
@@ -65,10 +65,6 @@ function onFileSelected(e) {
 
   // Immediately start scanning
   scanReceipt()
-}
-
-function triggerCapture() {
-  fileInput.value?.click()
 }
 
 async function scanReceipt() {
@@ -211,30 +207,17 @@ function resetAndClose() {
 
 <template>
   <Modal :open="open" :title="t('quick_receipt')" @close="resetAndClose">
-    <!-- Hidden file input — opens camera on mobile -->
-    <input
-      ref="fileInput"
-      type="file"
-      accept="image/jpeg,image/png"
-      capture="environment"
-      class="hidden"
-      @change="onFileSelected"
-    />
-
     <!-- CAPTURE STAGE -->
     <div v-if="stage === 'capture'" class="space-y-4">
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('quick_receipt_description') }}
       </p>
 
-      <div
-        class="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[hsl(var(--border))] p-8 transition-colors hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]/50"
-        @click="triggerCapture"
-      >
-        <Camera class="mb-3 h-10 w-10 text-[hsl(var(--muted-foreground))]" />
-        <span class="text-sm font-medium">{{ t('take_photo_or_upload') }}</span>
-        <span class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('receipt_file_formats') }}</span>
-      </div>
+      <FileUpload
+        accept="image/jpeg,image/png"
+        capture="environment"
+        @change="onFileSelected"
+      />
 
       <div v-if="error" class="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
         <AlertCircle class="h-4 w-4 shrink-0" />
@@ -271,18 +254,15 @@ function resetAndClose() {
         />
       </div>
 
-      <div class="rounded-md bg-green-50 p-3 dark:bg-green-950">
+      <Alert variant="success">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-300">
-            <Check class="h-4 w-4" />
-            {{ t('scan_complete') }}
-          </div>
-          <span v-if="ocrConfidence != null" class="text-xs tabular-nums text-[hsl(var(--muted-foreground))]">
+          <span>{{ t('scan_complete') }}</span>
+          <span v-if="ocrConfidence != null" class="text-xs tabular-nums opacity-70">
             {{ t('ocr_confidence') }}: {{ Math.round(ocrConfidence * 100) }}%
           </span>
         </div>
-        <p class="mt-1 text-xs text-green-600 dark:text-green-400">{{ t('review_and_adjust') }}</p>
-      </div>
+        <p class="mt-1 text-xs opacity-75">{{ t('review_and_adjust') }}</p>
+      </Alert>
 
       <!-- Editable form fields -->
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -315,10 +295,7 @@ function resetAndClose() {
         />
       </div>
 
-      <div v-if="error" class="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-        <AlertCircle class="h-4 w-4 shrink-0" />
-        {{ error }}
-      </div>
+      <Alert v-if="error" variant="error">{{ error }}</Alert>
 
       <div class="flex justify-end gap-3">
         <Button variant="outline" @click="resetAndClose">{{ t('cancel') }}</Button>
