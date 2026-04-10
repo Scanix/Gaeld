@@ -9,6 +9,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Button from '@/Components/UI/Button.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
+import SharePrintButton from '@/Components/UI/SharePrintButton.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
@@ -49,7 +50,10 @@ const sections = computed(() => [
         <FormInput id="as_of_date" v-model="asOfDate" type="date" :label="t('as_of_date')" />
         <Button @click="applyFilter">{{ t('apply') }}</Button>
       </div>
-      <ExportDropdown base-url="/reports/balance-sheet/export" :params="{ as_of_date: asOfDate }" />
+      <div class="flex items-center gap-2">
+        <SharePrintButton :title="t('balance_sheet')" />
+        <ExportDropdown base-url="/reports/balance-sheet/export" :params="{ as_of_date: asOfDate }" />
+      </div>
     </div>
 
     <div class="space-y-6">

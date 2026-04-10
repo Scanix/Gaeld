@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import Modal from '@/Components/UI/Modal.vue'
 import Button from '@/Components/UI/Button.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { router } from '@inertiajs/vue3'
 
@@ -23,8 +24,8 @@ watch(() => props.open, (val) => {
   }
 })
 
-function onFileChange(e) {
-  file.value = e.target.files[0] ?? null
+function onFileChange(selected) {
+  file.value = selected ?? null
 }
 
 function submit() {
@@ -55,17 +56,13 @@ function submit() {
 <template>
   <Modal :open="open" :title="t('import_accounts')" @close="$emit('close')">
     <form class="space-y-4" @submit.prevent="submit">
-      <div class="space-y-2">
-        <label class="block text-sm font-medium">{{ t('import_file') }}</label>
-        <input
-          type="file"
-          accept=".csv,.json"
-          class="block w-full text-sm file:mr-4 file:rounded file:border-0 file:bg-[hsl(var(--primary))] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[hsl(var(--primary-foreground))] hover:file:opacity-90"
-          @change="onFileChange"
-        />
-        <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('import_format_help') }}</p>
-        <p v-if="errors.file" class="text-xs text-[hsl(var(--destructive))]">{{ errors.file }}</p>
-      </div>
+      <FileUpload
+        accept=".csv,.json"
+        :label="t('import_file')"
+        :error="errors.file"
+        :help-text="t('import_format_help')"
+        @change="onFileChange"
+      />
 
       <div class="space-y-2">
         <label class="block text-sm font-medium">{{ t('import_mode') }}</label>

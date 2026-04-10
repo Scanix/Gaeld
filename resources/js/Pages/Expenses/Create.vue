@@ -13,7 +13,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
-import FormFileInput from '@/Components/UI/FormFileInput.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
@@ -55,8 +55,8 @@ function submit() {
   })
 }
 
-function onReceiptChange(e) {
-  form.receipt = e.target.files[0] ?? null
+function onReceiptChange(file) {
+  form.receipt = file ?? null
 }
 
 const { t } = useTranslations()
@@ -242,8 +242,8 @@ function onSupplierCreated(supplier) {
           <!-- Attachment -->
           <hr class="border-[hsl(var(--border))]" />
 
-          <FormFileInput
-            id="receipt"
+          <FileUpload
+            size="compact"
             :label="t('receipt')"
             :error="form.errors.receipt"
             @change="onReceiptChange"

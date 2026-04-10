@@ -9,6 +9,7 @@ import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { computed } from 'vue'
@@ -138,9 +139,7 @@ const salaryColumns = computed(() => [
             </Link>
           </template>
         </DataTable>
-        <p v-if="!salarySlips.length" class="py-8 text-center text-sm text-[hsl(var(--muted-foreground))]">
-          {{ t('no_salary_slips') }}
-        </p>
+        <EmptyState v-if="!salarySlips.length" :title="t('no_salary_slips')" />
       </CardContent>
     </Card>
   </AppLayout>

@@ -21,7 +21,7 @@ import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import UnsavedChangesDialog from '@/Components/UI/UnsavedChangesDialog.vue'
 import { useFormValidation, z } from '@/lib/useFormValidation'
-import FormFileInput from '@/Components/UI/FormFileInput.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
 import { Plus, Trash2, HelpCircle } from 'lucide-vue-next'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 
@@ -156,8 +156,8 @@ const vatTotal = computed(() =>
 
 const total = computed(() => subtotal.value + vatTotal.value)
 
-function onJustificatifChange(e) {
-  form.justificatif = e.target.files[0] ?? null
+function onJustificatifChange(file) {
+  form.justificatif = file ?? null
 }
 
 const customerList = reactive([...props.customers])
@@ -434,8 +434,8 @@ function onDueDateManualEdit() {
             </div>
           </div>
 
-          <FormFileInput
-            id="justificatif"
+          <FileUpload
+            size="compact"
             :label="t('justificatif')"
             :error="form.errors.justificatif"
             @change="onJustificatifChange"
