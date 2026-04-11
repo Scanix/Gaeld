@@ -7,6 +7,7 @@ use App\Domains\Accounting\ChartTemplates\ChartTemplateInterface;
 use App\Domains\Accounting\ChartTemplates\SwissAssociationTemplate;
 use App\Domains\Accounting\ChartTemplates\SwissFreelancerTemplate;
 use App\Domains\Accounting\ChartTemplates\SwissSmeTemplate;
+use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Organizations\Models\Organization;
@@ -86,6 +87,11 @@ class ChartTemplateService
 
         $locale = $organization->locale ?? 'en';
 
+        $systemCodes = array_filter(
+            (new \ReflectionClass(AccountCode::class))->getConstants(),
+            fn ($v) => is_string($v) && ctype_digit($v),
+        );
+
         foreach ($template->accounts() as $account) {
             $def = new AccountDefinition(
                 code: $account['code'],
@@ -100,6 +106,7 @@ class ChartTemplateService
                 'code' => $def->code,
                 'name' => $name,
                 'type' => $def->type->value,
+                'is_system' => in_array($def->code, $systemCodes, true),
             ]);
         }
     }
