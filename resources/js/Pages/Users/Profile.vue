@@ -277,6 +277,18 @@ function confirmDeletePasskey() {
     },
   })
 }
+
+const notificationPrefsForm = useForm({
+  notification_preferences: {
+    ocr_email: page.props.auth?.user?.notification_preferences?.ocr_email ?? true,
+  },
+})
+
+function submitNotificationPrefs() {
+  notificationPrefsForm.put('/profile/notification-preferences', {
+    preserveScroll: true,
+  })
+}
 </script>
 
 <template>
@@ -549,6 +561,30 @@ function confirmDeletePasskey() {
             />
             <div class="flex justify-end">
               <Button type="submit" :disabled="passwordForm.processing">{{ t('update_password') }}</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <!-- Notification Preferences -->
+      <Card>
+        <CardHeader>
+          <CardTitle>{{ t('notification_prefs_title') }}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form class="space-y-4" @submit.prevent="submitNotificationPrefs">
+            <label class="flex cursor-pointer items-center justify-between gap-4">
+              <span class="text-sm text-[hsl(var(--foreground))]">{{ t('notification_prefs_ocr_email') }}</span>
+              <input
+                v-model="notificationPrefsForm.notification_preferences.ocr_email"
+                type="checkbox"
+                class="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))]"
+              />
+            </label>
+            <div class="flex justify-end">
+              <Button type="submit" :disabled="notificationPrefsForm.processing">
+                {{ t('save') }}
+              </Button>
             </div>
           </form>
         </CardContent>

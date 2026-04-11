@@ -46,6 +46,8 @@ const { toast } = useToast()
 watch(flash, (f) => {
   if (f.success) toast(f.success, 'success')
   if (f.error) toast(f.error, 'error')
+  if (f.warning) toast(f.warning, 'warning')
+  if (f.info) toast(f.info, 'info')
 }, { immediate: true })
 
 const trialDaysLeft = computed(() => {
@@ -55,6 +57,11 @@ const trialDaysLeft = computed(() => {
 })
 const showTrialBanner = computed(() => trialDaysLeft.value !== null && trialDaysLeft.value <= 7)
 const showPastDueBanner = computed(() => subscription.value?.status === 'past_due')
+const showGracePeriodBanner = computed(() => {
+  if (subscription.value?.status !== 'canceled' || !subscription.value?.ends_at) return false
+  return new Date(subscription.value.ends_at) > new Date()
+})
+const showPausedBanner = computed(() => subscription.value?.status === 'paused')
 const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
 const systemMessage = computed(() => page.props.systemMessage ?? null)
 </script>
@@ -114,6 +121,18 @@ const systemMessage = computed(() => page.props.systemMessage ?? null)
       <Banner v-if="showPastDueBanner" color="destructive">
         <span>{{ tl('payment_failed_warning') }}</span>
         <Link href="/billing" class="underline underline-offset-2 font-semibold hover:opacity-80 whitespace-nowrap">{{ tl('update_payment_method') }}</Link>
+      </Banner>
+
+      <!-- Canceled (grace period) banner -->
+      <Banner v-if="showGracePeriodBanner" color="amber" :dismissable="true">
+        <span>{{ tl('subscription_grace_period', { date: subscription.ends_at }) }}</span>
+        <Link href="/billing" class="underline underline-offset-2 font-semibold hover:text-amber-900 whitespace-nowrap">{{ tl('resubscribe') }}</Link>
+      </Banner>
+
+      <!-- Paused subscription banner -->
+      <Banner v-if="showPausedBanner" color="blue">
+        <span>{{ tl('subscription_paused_banner') }}</span>
+        <Link href="/billing" class="underline underline-offset-2 font-semibold hover:opacity-80 whitespace-nowrap">{{ tl('resume_subscription') }}</Link>
       </Banner>
 
       <!-- System message banner (set by SaaS admin) -->

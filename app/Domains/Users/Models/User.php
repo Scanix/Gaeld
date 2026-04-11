@@ -24,6 +24,7 @@ use Spatie\Permission\Traits\HasRoles;
  * role-based permissions (Spatie), and per-user locale preference.
  *
  * @property Carbon|null $email_change_requested_at
+ * @property array<string, mixed>|null $notification_preferences
  */
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, WebAuthnAuthenticatable
 {
@@ -35,7 +36,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         'password',
         'locale',
         'show_help',
-        'dashboard_layout',
+        'notification_preferences',
         'onboarding_completed_at',
         'accepted_privacy_at',
         'accepted_terms_at',
@@ -57,7 +58,6 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'show_help' => 'boolean',
-            'dashboard_layout' => 'array',
             'onboarding_completed_at' => 'datetime',
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
@@ -65,7 +65,15 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'accepted_privacy_at' => 'datetime',
             'accepted_terms_at' => 'datetime',
             'email_change_requested_at' => 'datetime',
+            'notification_preferences' => 'array',
         ];
+    }
+
+    public function wantsEmailNotification(string $type): bool
+    {
+        $prefs = is_array($this->notification_preferences) ? $this->notification_preferences : [];
+
+        return (bool) ($prefs[$type] ?? true);
     }
 
     public function hasTwoFactorEnabled(): bool
