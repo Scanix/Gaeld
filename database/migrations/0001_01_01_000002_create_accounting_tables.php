@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('type'); // asset, liability, equity, revenue, expense
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_system')->default(false);
             $table->text('description')->nullable();
             $table->timestamps();
 

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Organizations\Models\Organization;
@@ -99,9 +100,15 @@ class SwissChartOfAccountsSeeder extends Seeder
             ['code' => '9100', 'name' => 'Profit and Loss Summary', 'type' => AccountType::Equity->value],
         ];
 
+        $systemCodes = array_filter(
+            (new \ReflectionClass(AccountCode::class))->getConstants(),
+            fn ($v) => is_string($v) && ctype_digit($v),
+        );
+
         foreach ($accounts as $account) {
             Account::create(array_merge($account, [
                 'organization_id' => $organization->id,
+                'is_system' => in_array($account['code'], $systemCodes, true),
             ]));
         }
     }

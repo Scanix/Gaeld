@@ -5,10 +5,10 @@ namespace App\Domains\Accounting\Controllers;
 use App\Domains\Accounting\Actions\GenerateOpeningBalancesAction;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
-use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
-use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Accounting\Services\ClosingAccountsService;
+use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
@@ -24,6 +24,10 @@ use Inertia\Response;
  */
 class YearEndClosingController extends Controller
 {
+    public function __construct(
+        private readonly ClosingAccountsService $closingAccounts,
+        private readonly LegalArchivingService $archiving,
+    ) {}
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('closeYear', Account::class);
@@ -33,7 +37,7 @@ class YearEndClosingController extends Controller
         $from = "{$year}-01-01";
         $to = "{$year}-12-31";
 
-        [$income, $expenses, $netResult] = $this->computeClosingAccounts($orgId, $from, $to);
+        [$income, $expenses, $netResult] = $this->closingAccounts->compute($orgId, $from, $to);
 
         $org = Organization::findOrFail($orgId);
 
@@ -67,12 +71,24 @@ class YearEndClosingController extends Controller
         $from = "{$year}-01-01";
         $to = "{$year}-12-31";
 
-        [$income, $expenses] = $this->computeClosingAccounts($orgId, $from, $to);
+        [$income, $expenses] = $this->closingAccounts->compute($orgId, $from, $to);
 
         $allAccounts = array_merge($income, $expenses);
 
         if (empty($allAccounts)) {
             return redirect()->back()->with('error', 'No accounts to close for this period.');
+        }
+
+        // Hard block: require all VAT periods to be settled before closing
+        $unsettled = $this->getUnsettledVatPeriods($orgId, $year);
+        if (! empty($unsettled)) {
+            return redirect()->back()->with(
+                'error',
+                __('app.fiscal_year_unsettled_vat', [
+                    'year'    => $year,
+                    'periods' => implode(', ', $unsettled),
+                ])
+            );
         }
 
         // Find the result account
@@ -148,6 +164,9 @@ class YearEndClosingController extends Controller
             $org = Organization::findOrFail($orgId);
             $org->closeFiscalYear($year);
 
+            // Archive all documents for the closed fiscal year (Swiss OR 10-year retention)
+            $this->archiving->archiveFiscalYear($orgId, $year);
+
             // Generate opening balance entries for the next fiscal year
             app(GenerateOpeningBalancesAction::class)->execute($orgId, $year);
         } catch (\Throwable $e) {
@@ -188,62 +207,6 @@ class YearEndClosingController extends Controller
     // ──────────────────────────────────────────────────────────────
     //  Helpers
     // ──────────────────────────────────────────────────────────────
-
-    /**
-     * @return array{0: array[], 1: array[], 2: string}
-     */
-    private function computeClosingAccounts(string $orgId, string $from, string $to): array
-    {
-        $accounts = Account::where('organization_id', $orgId)
-            ->where('is_active', true)
-            ->whereIn('type', [AccountType::Revenue->value, AccountType::Expense->value])
-            ->orderBy('code')
-            ->get();
-
-        $income = [];
-        $expenses = [];
-        $net = '0';
-
-        foreach ($accounts as $account) {
-            $query = TransactionLine::where('account_id', $account->id)
-                ->whereHas('journalEntry', fn ($q) => $q
-                    ->where('is_posted', true)
-                    ->where('date', '>=', $from)
-                    ->where('date', '<=', $to)
-                );
-
-            $debits = (string) (clone $query)->sum('debit');
-            $credits = (string) (clone $query)->sum('credit');
-
-            // Revenue is credit-normal: balance = credits − debits
-            // Expense is debit-normal:  balance = debits − credits
-            $isDebitNormal = $account->type->isDebitNormal();
-            $balance = $isDebitNormal
-                ? bcsub($debits, $credits, 2)
-                : bcsub($credits, $debits, 2);
-
-            if (bccomp($balance, '0', 2) === 0) {
-                continue;
-            }
-
-            $row = [
-                'account_id' => $account->id,
-                'code' => $account->code,
-                'name' => $account->name,
-                'balance' => $balance,
-            ];
-
-            if ($account->type === AccountType::Revenue) {
-                $income[] = $row;
-                $net = bcadd($net, $balance, 2);
-            } else {
-                $expenses[] = $row;
-                $net = bcsub($net, $balance, 2);
-            }
-        }
-
-        return [$income, $expenses, $net];
-    }
 
     /**
      * Return quarter labels (e.g. "Q1", "Q2") for which no VAT settlement

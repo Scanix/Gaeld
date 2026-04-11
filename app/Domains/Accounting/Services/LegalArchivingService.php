@@ -139,7 +139,8 @@ class LegalArchivingService
             });
 
         // Salary slips
-        SalarySlip::where('organization_id', $orgId)
+        SalarySlip::with('employee')
+            ->where('organization_id', $orgId)
             ->where('period_year', $year)
             ->whereNull('archived_at')
             ->each(function ($doc) {

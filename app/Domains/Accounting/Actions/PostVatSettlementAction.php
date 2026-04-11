@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Actions;
 
+use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\JournalEntry;
@@ -35,9 +36,9 @@ final class PostVatSettlementAction
         $totalInputVat = $report['input_vat'];
         $netVat = $report['net_vat'];
 
-        $vatOutputAccount = $this->ledgerQuery->resolveAccount($orgId, '2200');
-        $vatInputAccount = $this->ledgerQuery->resolveAccount($orgId, '1170');
-        $vatSettlementAccount = $this->ledgerQuery->resolveAccount($orgId, '2201');
+        $vatOutputAccount     = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_OUTPUT);
+        $vatInputAccount      = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_INPUT);
+        $vatSettlementAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_PAYABLE_AFC);
 
         // Build balanced lines
         $lines = [];
@@ -78,7 +79,7 @@ final class PostVatSettlementAction
         $reference = "VAT-SETTLEMENT-{$fromDate}-{$toDate}";
 
         $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
-            date: now()->toDateString(),
+            date: $toDate,
             reference: $reference,
             description: "VAT settlement for period {$fromDate} to {$toDate}",
             lines: $lines,
