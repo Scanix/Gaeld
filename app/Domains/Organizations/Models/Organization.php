@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Plugins\GaeldEE\Domains\Billing\Models\Subscription;
 
 /**
  * Multi-tenant organization (company / business entity).
@@ -42,6 +43,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $default_payment_terms_days
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read Subscription|null $activeSubscription Injected by GaeldEEServiceProvider via resolveRelationUsing.
  */
 class Organization extends Model
 {
