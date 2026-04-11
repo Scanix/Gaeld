@@ -33,6 +33,7 @@ return [
         'driver' => env('OCR_DRIVER', 'tesseract'),
         'tesseract_binary' => env('TESSERACT_BINARY', 'tesseract'),
         'tesseract_lang' => env('TESSERACT_LANG', 'deu+fra+eng'),
+        'daily_limit' => env('OCR_DAILY_LIMIT', 3),
     ],
 
     /*

@@ -61,7 +61,7 @@ class GenerateRecurringInvoicesJob implements ShouldQueue
         $invoiceData = CreateInvoiceData::fromArray([
             'organization_id' => $recurring->organization_id,
             'customer_id' => (string) $recurring->customer_id,
-            'number' => $numberGenerator->next($recurring->organization_id),
+            'number' => $numberGenerator->next($recurring->organization_id, null, $recurring->next_issue_date->year),
             'issue_date' => $issueDate,
             'due_date' => $dueDate,
             'currency' => $template['currency'] ?? 'CHF',

@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
  */
 trait OmitsNullValues
 {
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         $result = [];

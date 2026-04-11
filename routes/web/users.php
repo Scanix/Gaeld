@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Users\Controllers\NotificationController;
 use App\Domains\Users\Controllers\PasskeyController;
 use App\Domains\Users\Controllers\TwoFactorController;
 use App\Domains\Users\Controllers\UserController;
@@ -10,7 +11,6 @@ Route::get('/profile', [UserController::class, 'profile'])->name('profile');
 Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
 Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
 Route::post('/profile/toggle-help', [UserController::class, 'toggleHelp'])->name('profile.toggle-help');
-Route::put('/profile/dashboard-layout', [UserController::class, 'updateDashboardLayout'])->name('profile.dashboard-layout');
 Route::post('/profile/onboarding/dismiss', [UserController::class, 'dismissOnboarding'])->name('profile.onboarding.dismiss');
 Route::post('/profile/onboarding/reset', [UserController::class, 'resetOnboarding'])->name('profile.onboarding.reset');
 Route::post('/profile/export', [UserController::class, 'exportData'])->name('profile.export');
@@ -34,3 +34,11 @@ Route::post('/profile/passkeys/register/options', [PasskeyController::class, 're
 Route::post('/profile/passkeys/register', [PasskeyController::class, 'register'])->name('passkeys.register');
 Route::get('/profile/passkeys', [PasskeyController::class, 'index'])->name('passkeys.index');
 Route::delete('/profile/passkeys/{credential}', [PasskeyController::class, 'destroy'])->name('passkeys.destroy');
+
+// Notification preferences
+Route::put('/profile/notification-preferences', [UserController::class, 'updateNotificationPreferences'])->name('profile.notification-preferences');
+
+// Notifications
+Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');

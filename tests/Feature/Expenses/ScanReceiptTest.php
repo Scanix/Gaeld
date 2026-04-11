@@ -220,7 +220,7 @@ class ScanReceiptTest extends TestCase
         // Create a fake image file
         Storage::disk('local')->put($receiptPath, 'fake-image-content');
 
-        $job = new ProcessReceiptOcrJob($scanId, $receiptPath);
+        $job = new ProcessReceiptOcrJob($scanId, $receiptPath, $this->user->id, $this->organization->id);
         $job->handle(app(ReceiptOcrInterface::class));
 
         $cached = Cache::get("receipt_scan:{$scanId}");

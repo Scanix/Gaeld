@@ -19,6 +19,7 @@ readonly class ReceiptOcrResult
         public ?float $amount = null,
         public ?string $date = null,
         public ?string $vendor = null,
+        public ?float $vat = null,
         public ?float $confidence = null,
     ) {}
 

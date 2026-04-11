@@ -9,6 +9,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.9.0] — 2026-04-11
+
+### Added
+- **In-app notifications** — notification bell in Topbar, NotificationController, preferences per user, Horizon queue config.
+- **Receipt scan tracking** — ReceiptScan model with ReceiptScanStatus enum, NullOcrService fallback, scan result persistence.
+- **Year-end closing service** — ClosingAccountsService extracts closing logic from controller, new FiscalYearCoherenceTest.
+- **Dashboard refactor** — DashboardService simplified, layout persistence removed (drop_dashboard_layout migration).
+- **Payroll 2026** — Swiss social-deduction rates extended for 2026 in SwissDeductionService.
+- **OCR improvements** — TesseractOcrService hardened with better text parsing; QuickReceiptButton/Modal upgraded.
+- **Chart of accounts** — new AccountCode constants, ChartTemplateService improvements, seeder additions.
+
+### Fixed
+- **Invoicing** — harden recurring-invoice generation job and invoice number sequencing edge cases.
+- **Multi-currency** — correct exchange-rate cache key collision (gaeld-ee).
+
+### Improved
+- **i18n** — notification-related keys added across DE, EN, FR, IT.
+- **PHPStan** — baseline regenerated (reduced from ~800 to 532 errors).
+- **Support traits** — strict-type declarations on MapsToSnakeCase, OmitsNullValues, Auditable.
+
+---
+
+## [2.8.0] — 2026-04-10
+
+### Added
+- **PWA** — service worker (`sw.js`), OfflineBanner component, updated `site.webmanifest`.
+- **UI components** — Alert, Banner, FileUpload (replaces FileUploadDropzone + FormFileInput), PageHeader, SharePrintButton, StatCard.
+- **Full i18n translation files** — `de.json`, `en.json`, `fr.json`, `it.json` + `actions.php`, `auth.php`, `http-statuses.php`, `pagination.php`, `passwords.php` per locale.
+- **Security headers** — updated AddSecurityHeaders middleware, CookieConsent improvements.
+
+### Fixed
+- **deploy.php** — untracked on develop/main (production-only); Deployer `cd` to release_path before `nvm use`; build Vite assets on server.
+- **Cookie consent** — bake `VITE_COOKIE_DOMAIN=.gaeld.ch` into Vite production build.
+- **CORS** — add `docs.gaeld.ch` to allowed origins.
+- **Bexio import** — map `Kontaktname` CSV header in BexioParser contact import.
+
+### Improved
+- Pages updated: Dashboard, Banking, Expenses, Invoices, Migration, Organizations, Payroll, Reports, Settings, Users/Profile, Assets, Auth.
+
+---
+
+## [2.7.0] — 2026-04-09
+
+### Added
+- **Bexio XLSX import** — support for Bexio `.xlsx` exports (addresses, invoices, bills, expenses).
+
+### Fixed
+- **CSP** — add `docs.gaeld.ch` to `frame-src` Content Security Policy directive.
+- **Horizon** — CSP header fix, heartbeat config, system message banner, SaaS admin Horizon link.
+- **Deploy** — replace `gaeld-worker` with `gaeld-horizon` restart; add `CI=true` for pnpm install; use pnpm in assets:build.
+
+### CI/CD
+- Pre-push hook enforcing Pint + PHPStan before pushing to production.
+- CI pipeline switched to production branch only.
+- Keep-ours merge driver for production-only files.
+- Coverage threshold lowered to 65% (to raise incrementally).
+- Removed hardcoded `APP_KEY` from CI config.
+
+---
+
 ## [2.6.0] — 2026-04-09
 
 ### Added

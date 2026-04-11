@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
  */
 trait MapsToSnakeCase
 {
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         $result = [];

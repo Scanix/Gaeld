@@ -1,6 +1,7 @@
 <script setup>
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
+import Alert from '@/Components/UI/Alert.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
 import CardTitle from '@/Components/UI/CardTitle.vue'
@@ -276,6 +277,18 @@ function confirmDeletePasskey() {
     },
   })
 }
+
+const notificationPrefsForm = useForm({
+  notification_preferences: {
+    ocr_email: page.props.auth?.user?.notification_preferences?.ocr_email ?? true,
+  },
+})
+
+function submitNotificationPrefs() {
+  notificationPrefsForm.put('/profile/notification-preferences', {
+    preserveScroll: true,
+  })
+}
 </script>
 
 <template>
@@ -376,12 +389,7 @@ function confirmDeletePasskey() {
         </CardHeader>
         <CardContent>
           <!-- Org enforcement banner -->
-          <div
-            v-if="orgRequiresTwoFactor && !twoFactorEnabled"
-            class="mb-4 rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200"
-          >
-            {{ t('two_factor_required_by_org') }}
-          </div>
+          <Alert v-if="orgRequiresTwoFactor && !twoFactorEnabled" variant="warning" class="mb-4">{{ t('two_factor_required_by_org') }}</Alert>
 
           <!-- Not enabled: show Enable button -->
           <div v-if="!twoFactorEnabled && !showQrSetup">
@@ -553,6 +561,30 @@ function confirmDeletePasskey() {
             />
             <div class="flex justify-end">
               <Button type="submit" :disabled="passwordForm.processing">{{ t('update_password') }}</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <!-- Notification Preferences -->
+      <Card>
+        <CardHeader>
+          <CardTitle>{{ t('notification_prefs_title') }}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form class="space-y-4" @submit.prevent="submitNotificationPrefs">
+            <label class="flex cursor-pointer items-center justify-between gap-4">
+              <span class="text-sm text-[hsl(var(--foreground))]">{{ t('notification_prefs_ocr_email') }}</span>
+              <input
+                v-model="notificationPrefsForm.notification_preferences.ocr_email"
+                type="checkbox"
+                class="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))]"
+              />
+            </label>
+            <div class="flex justify-end">
+              <Button type="submit" :disabled="notificationPrefsForm.processing">
+                {{ t('save') }}
+              </Button>
             </div>
           </form>
         </CardContent>

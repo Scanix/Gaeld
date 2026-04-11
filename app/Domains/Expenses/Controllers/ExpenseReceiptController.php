@@ -4,9 +4,11 @@ namespace App\Domains\Expenses\Controllers;
 
 use App\Domains\Expenses\Jobs\ProcessReceiptOcrJob;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Expenses\Models\ReceiptScan;
 use App\Domains\Expenses\Requests\ScanReceiptRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use App\Support\FeatureFlag;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -56,8 +58,26 @@ class ExpenseReceiptController extends Controller
     {
         $this->authorize('create', Expense::class);
 
-        $receiptPath = $this->uploadService->store($request->file('receipt'), "receipts/{$currentOrg->id()}");
+        $orgId = $currentOrg->id();
+        $dailyKey = "ocr_daily:{$orgId}:".now()->toDateString();
+
+        $limit = $this->resolveOcrDailyLimit($currentOrg);
+
+        if ($limit !== -1 && (int) Cache::get($dailyKey, 0) >= $limit) {
+            return response()->json(['message' => __('app.ocr_daily_limit_reached')], 429);
+        }
+
+        $receiptPath = $this->uploadService->store($request->file('receipt'), "receipts/{$orgId}");
         $scanId = Str::uuid()->toString();
+
+        ReceiptScan::create([
+            'organization_id' => $orgId,
+            'user_id'         => $request->user()->id,
+            'scan_id'         => $scanId,
+            'receipt_path'    => $receiptPath,
+            'status'          => 'pending',
+            'expires_at'      => now()->addHours(48),
+        ]);
 
         Cache::put("receipt_scan:{$scanId}", [
             'status' => 'processing',
@@ -65,7 +85,10 @@ class ExpenseReceiptController extends Controller
             'extracted' => null,
         ], now()->addMinutes(30));
 
-        ProcessReceiptOcrJob::dispatch($scanId, $receiptPath);
+        ProcessReceiptOcrJob::dispatch($scanId, $receiptPath, $request->user()->id, $orgId);
+
+        Cache::add($dailyKey, 0, now()->startOfDay()->addDay());
+        Cache::increment($dailyKey);
 
         return response()->json([
             'scan_id' => $scanId,
@@ -73,14 +96,41 @@ class ExpenseReceiptController extends Controller
         ]);
     }
 
-    public function scanReceiptStatus(Request $request, string $scanId): JsonResponse
+    private function resolveOcrDailyLimit(CurrentOrganization $currentOrg): int
+    {
+        if (FeatureFlag::isSaas()) {
+            $org = $currentOrg->get();
+            $plan = $org->activeSubscription?->plan;
+            if ($plan && isset($plan->max_ocr_scans_per_day)) {
+                return (int) $plan->max_ocr_scans_per_day;
+            }
+        }
+
+        return (int) config('services.ocr.daily_limit', 3);
+    }
+
+    public function scanReceiptStatus(Request $request, CurrentOrganization $currentOrg, string $scanId): JsonResponse
     {
         $this->authorize('create', Expense::class);
 
         $data = Cache::get("receipt_scan:{$scanId}");
 
         if (! $data) {
-            return response()->json(['status' => 'not_found'], 404);
+            // Cache expired (30 min TTL) — fall back to DB record (48 h TTL)
+            $scan = ReceiptScan::where('scan_id', $scanId)
+                ->where('organization_id', $currentOrg->id())
+                ->where('expires_at', '>', now())
+                ->first();
+
+            if (! $scan) {
+                return response()->json(['status' => 'not_found'], 404);
+            }
+
+            $data = [
+                'status'       => $scan->status->value,
+                'receipt_path' => $scan->receipt_path,
+                'extracted'    => $scan->extracted_data,
+            ];
         }
 
         return response()->json($data);

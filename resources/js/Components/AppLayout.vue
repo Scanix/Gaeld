@@ -17,6 +17,8 @@ import Topbar from '@/Components/Topbar.vue'
 import HelpSidebar from '@/Components/HelpSidebar.vue'
 import ToastContainer from '@/Components/ToastContainer.vue'
 import ErrorBoundary from '@/Components/ErrorBoundary.vue'
+import OfflineBanner from '@/Components/OfflineBanner.vue'
+import Banner from '@/Components/UI/Banner.vue'
 import { useHelp } from '@/lib/useHelp'
 import { useToast } from '@/lib/useToast'
 
@@ -44,6 +46,8 @@ const { toast } = useToast()
 watch(flash, (f) => {
   if (f.success) toast(f.success, 'success')
   if (f.error) toast(f.error, 'error')
+  if (f.warning) toast(f.warning, 'warning')
+  if (f.info) toast(f.info, 'info')
 }, { immediate: true })
 
 const trialDaysLeft = computed(() => {
@@ -53,6 +57,11 @@ const trialDaysLeft = computed(() => {
 })
 const showTrialBanner = computed(() => trialDaysLeft.value !== null && trialDaysLeft.value <= 7)
 const showPastDueBanner = computed(() => subscription.value?.status === 'past_due')
+const showGracePeriodBanner = computed(() => {
+  if (subscription.value?.status !== 'canceled' || !subscription.value?.ends_at) return false
+  return new Date(subscription.value.ends_at) > new Date()
+})
+const showPausedBanner = computed(() => subscription.value?.status === 'paused')
 const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
 const systemMessage = computed(() => page.props.systemMessage ?? null)
 </script>
@@ -70,84 +79,69 @@ const systemMessage = computed(() => page.props.systemMessage ?? null)
     <Sidebar
       v-model:collapsed="collapsed"
       :mobileOpen="mobileOpen"
+      class="print:hidden"
       @closeMobile="mobileOpen = false"
     />
 
     <!-- Main content area (offset by sidebar on desktop) -->
     <div
       :class="[
-        'transition-all duration-200',
+        'transition-all duration-200 print:pl-0',
         collapsed ? 'lg:pl-16' : 'lg:pl-60',
       ]"
     >
+      <!-- Offline banner -->
+      <OfflineBanner />
+
       <!-- SaaS Admin Banner -->
-      <div
-        v-if="isSaasAdmin"
-        class="relative z-40 bg-red-600 text-white text-sm font-semibold"
-        role="alert"
-      >
-        <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
-          <span class="inline-flex items-center gap-1.5">
-            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-            {{ tl('saas_admin_warning') }}
-          </span>
-          <Link href="/saas-admin" class="underline underline-offset-2 hover:text-red-100 whitespace-nowrap">{{ tl('admin_dashboard') }}</Link>
-        </div>
-      </div>
+      <Banner v-if="isSaasAdmin" color="red" role="alert">
+        <span class="inline-flex items-center gap-1.5">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          {{ tl('saas_admin_warning') }}
+        </span>
+        <Link href="/saas-admin" class="underline underline-offset-2 hover:text-red-100 whitespace-nowrap">{{ tl('admin_dashboard') }}</Link>
+      </Banner>
 
       <!-- Early Beta Banner -->
-      <div
-        v-if="!betaDismissed"
-        class="relative z-40 bg-amber-400 text-amber-950 text-sm font-medium"
-        role="alert"
-      >
-        <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
-          <span class="inline-flex items-center gap-1.5">
-            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-            <strong>{{ tl('early_beta') }}</strong> — {{ tl('early_beta_notice') }}
-          </span>
-          <a href="https://github.com/gaeld/gaeld-app" target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-amber-900 whitespace-nowrap">{{ tl('follow_on_github') }}</a>
-          <button @click="dismissBeta" class="ml-2 opacity-60 hover:opacity-100 transition-opacity" :aria-label="tl('dismiss')">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-      </div>
+      <Banner v-if="!betaDismissed" color="amber" :dismissable="true" @dismiss="dismissBeta">
+        <span class="inline-flex items-center gap-1.5">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          <strong>{{ tl('early_beta') }}</strong> — {{ tl('early_beta_notice') }}
+        </span>
+        <a href="https://github.com/gaeld/gaeld-app" target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-amber-900 whitespace-nowrap">{{ tl('follow_on_github') }}</a>
+      </Banner>
 
       <!-- Trial ending banner -->
-      <div
-        v-if="showTrialBanner"
-        class="relative z-40 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-sm font-medium"
-      >
-        <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
-          <span>{{ t('trial_ends_in', { days: trialDaysLeft }) }}</span>
-          <Link href="/billing" class="underline underline-offset-2 font-semibold hover:opacity-80 whitespace-nowrap">{{ t('upgrade_now') }}</Link>
-        </div>
-      </div>
+      <Banner v-if="showTrialBanner" color="primary">
+        <span>{{ tl('trial_ends_in', { days: trialDaysLeft }) }}</span>
+        <Link href="/billing" class="underline underline-offset-2 font-semibold hover:opacity-80 whitespace-nowrap">{{ tl('upgrade_now') }}</Link>
+      </Banner>
 
       <!-- Past-due payment banner -->
-      <div
-        v-if="showPastDueBanner"
-        class="relative z-40 bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] text-sm font-medium"
-      >
-        <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
-          <span>{{ t('payment_failed_warning') }}</span>
-          <Link href="/billing" class="underline underline-offset-2 font-semibold hover:opacity-80 whitespace-nowrap">{{ t('update_payment_method') }}</Link>
-        </div>
-      </div>
+      <Banner v-if="showPastDueBanner" color="destructive">
+        <span>{{ tl('payment_failed_warning') }}</span>
+        <Link href="/billing" class="underline underline-offset-2 font-semibold hover:opacity-80 whitespace-nowrap">{{ tl('update_payment_method') }}</Link>
+      </Banner>
+
+      <!-- Canceled (grace period) banner -->
+      <Banner v-if="showGracePeriodBanner" color="amber" :dismissable="true">
+        <span>{{ tl('subscription_grace_period', { date: subscription.ends_at }) }}</span>
+        <Link href="/billing" class="underline underline-offset-2 font-semibold hover:text-amber-900 whitespace-nowrap">{{ tl('resubscribe') }}</Link>
+      </Banner>
+
+      <!-- Paused subscription banner -->
+      <Banner v-if="showPausedBanner" color="blue">
+        <span>{{ tl('subscription_paused_banner') }}</span>
+        <Link href="/billing" class="underline underline-offset-2 font-semibold hover:opacity-80 whitespace-nowrap">{{ tl('resume_subscription') }}</Link>
+      </Banner>
 
       <!-- System message banner (set by SaaS admin) -->
-      <div
-        v-if="systemMessage"
-        class="relative z-40 bg-blue-600 text-white text-sm font-medium"
-        role="status"
-      >
-        <div class="max-w-full px-6 py-2 flex items-center justify-center gap-3">
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span>{{ systemMessage }}</span>
-        </div>
-      </div>
+      <Banner v-if="systemMessage" color="blue" role="status">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>{{ systemMessage }}</span>
+      </Banner>
 
-      <Topbar :helpPage="helpPage" :docs-url="docsBaseUrl" @toggleHelp="toggleHelp" @toggleDocs="showDocs = !showDocs" @toggleMobile="mobileOpen = !mobileOpen">
+      <Topbar :helpPage="helpPage" :docs-url="docsBaseUrl" class="print:hidden" @toggleHelp="toggleHelp" @toggleDocs="showDocs = !showDocs" @toggleMobile="mobileOpen = !mobileOpen">
         <template #heading>
           {{ title }}
         </template>

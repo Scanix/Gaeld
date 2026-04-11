@@ -7,6 +7,7 @@ use App\Domains\Users\Jobs\ExportUserDataJob;
 use App\Domains\Users\Notifications\VerifyNewEmailNotification;
 use App\Domains\Users\Services\UserService;
 use App\Http\Controllers\Controller;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -71,23 +72,6 @@ class UserController extends Controller
         return back();
     }
 
-    public function updateDashboardLayout(Request $request): RedirectResponse
-    {
-        $this->authorize('update', $request->user());
-
-        $validated = $request->validate([
-            'widgets' => 'required|array',
-            'widgets.*.id' => 'required|string|in:checklist,action_cards,budget,chart,transactions',
-            'widgets.*.visible' => 'required|boolean',
-        ]);
-
-        $request->user()->update([
-            'dashboard_layout' => $validated,
-        ]);
-
-        return back();
-    }
-
     public function dismissOnboarding(Request $request): RedirectResponse
     {
         $this->authorize('update', $request->user());
@@ -129,12 +113,15 @@ class UserController extends Controller
     {
         $path = 'exports/'.$filename;
 
-        abort_unless(Storage::disk('local')->exists($path), 404);
+        /** @var FilesystemAdapter $disk */
+        $disk = Storage::disk('local');
+
+        abort_unless($disk->exists($path), 404);
 
         // Ensure the file belongs to the authenticated user
         abort_unless(str_starts_with($filename, 'user-'.$request->user()->id.'-'), 403);
 
-        return Storage::disk('local')->download($path, 'gaeld-data-export.json', [
+        return $disk->download($path, 'gaeld-data-export.json', [
             'Content-Type' => 'application/json',
         ]);
     }
@@ -228,5 +215,19 @@ class UserController extends Controller
         ]);
 
         return back()->with('success', __('app.email_change_cancelled'));
+    }
+
+    public function updateNotificationPreferences(Request $request): RedirectResponse
+    {
+        $this->authorize('update', $request->user());
+
+        $validated = $request->validate([
+            'notification_preferences' => ['required', 'array'],
+            'notification_preferences.*' => ['boolean'],
+        ]);
+
+        $request->user()->update($validated);
+
+        return back()->with('success', __('app.profile_updated'));
     }
 }

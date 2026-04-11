@@ -15,10 +15,13 @@ class InvoiceNumberGenerator
      * Generate the next invoice number for a given organization.
      *
      * Format: {PREFIX}-YYYY-NNN (e.g. INV-2026-001, CN-2026-001)
+     *
+     * Pass $forYear to pin the year (e.g. for a recurring invoice scheduled in a past year
+     * that is generated today). Defaults to the current year when null.
      */
-    public function next(string $organizationId, ?string $prefix = null): string
+    public function next(string $organizationId, ?string $prefix = null, ?int $forYear = null): string
     {
-        $year = now()->year;
+        $year = $forYear ?? now()->year;
         $configPrefix = $prefix ?? config('accounting.invoice_number_prefix', 'INV');
         $fullPrefix = "{$configPrefix}-{$year}-";
         $prefixLen = strlen($fullPrefix);

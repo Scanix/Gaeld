@@ -41,6 +41,10 @@ class AccountController extends Controller
 
         $validated = $request->validated();
 
+        if (array_key_exists('code', $validated)) {
+            $this->authorize('updateCode', $account);
+        }
+
         $account->update($validated);
 
         return redirect()->route('accounting.chart')

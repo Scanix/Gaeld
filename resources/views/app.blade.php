@@ -14,6 +14,10 @@
         <link rel="manifest" href="/site.webmanifest">
         <meta name="msapplication-config" content="/browserconfig.xml">
         <meta name="theme-color" content="#33cc66">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="Gäld">
 
         {{-- Prevent flash of wrong theme --}}
         <script>
@@ -28,6 +32,15 @@
         @vite('resources/js/cookieConsent.js')
         @include('partials.google-analytics')
         @inertiaHead
+
+        {{-- Register PWA service worker --}}
+        <script>
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+              navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
+            });
+          }
+        </script>
     </head>
     <body>
         @if(config('services.google.gtm_id'))
