@@ -72,11 +72,11 @@ class ExpenseReceiptController extends Controller
 
         ReceiptScan::create([
             'organization_id' => $orgId,
-            'user_id'         => $request->user()->id,
-            'scan_id'         => $scanId,
-            'receipt_path'    => $receiptPath,
-            'status'          => 'pending',
-            'expires_at'      => now()->addHours(48),
+            'user_id' => $request->user()->id,
+            'scan_id' => $scanId,
+            'receipt_path' => $receiptPath,
+            'status' => 'pending',
+            'expires_at' => now()->addHours(48),
         ]);
 
         Cache::put("receipt_scan:{$scanId}", [
@@ -127,9 +127,9 @@ class ExpenseReceiptController extends Controller
             }
 
             $data = [
-                'status'       => $scan->status->value,
+                'status' => $scan->status->value,
                 'receipt_path' => $scan->receipt_path,
-                'extracted'    => $scan->extracted_data,
+                'extracted' => $scan->extracted_data,
             ];
         }
 

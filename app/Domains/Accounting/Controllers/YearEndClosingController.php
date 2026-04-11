@@ -8,8 +8,8 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\ClosingAccountsService;
-use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
@@ -28,6 +28,7 @@ class YearEndClosingController extends Controller
         private readonly ClosingAccountsService $closingAccounts,
         private readonly LegalArchivingService $archiving,
     ) {}
+
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('closeYear', Account::class);
@@ -85,7 +86,7 @@ class YearEndClosingController extends Controller
             return redirect()->back()->with(
                 'error',
                 __('app.fiscal_year_unsettled_vat', [
-                    'year'    => $year,
+                    'year' => $year,
                     'periods' => implode(', ', $unsettled),
                 ])
             );
