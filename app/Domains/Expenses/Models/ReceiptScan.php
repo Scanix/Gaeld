@@ -44,9 +44,9 @@ class ReceiptScan extends Model
     protected function casts(): array
     {
         return [
-            'status'         => ReceiptScanStatus::class,
+            'status' => ReceiptScanStatus::class,
             'extracted_data' => 'array',
-            'expires_at'     => 'datetime',
+            'expires_at' => 'datetime',
         ];
     }
 

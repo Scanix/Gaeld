@@ -3,6 +3,7 @@
 namespace App\Support\Traits;
 
 use Spatie\Activitylog\Contracts\Activity;
+use Spatie\Activitylog\Models\Activity as ActivityModel;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -31,9 +32,11 @@ trait Auditable
     public function tapActivity(Activity $activity): void
     {
         if (property_exists($this, 'organization_id') && $this->organization_id) {
-            $activity->properties = $activity->properties->merge([
-                'organization_id' => $this->organization_id,
-            ]);
+            if ($activity instanceof ActivityModel) {
+                $activity->properties = $activity->properties->merge([
+                    'organization_id' => $this->organization_id,
+                ]);
+            }
         }
     }
 }

@@ -5,6 +5,8 @@ namespace Tests\Feature\Accounting;
 use App\Domains\Accounting\Actions\PostSocialChargesAction;
 use App\Domains\Accounting\Actions\PostVatSettlementAction;
 use App\Domains\Accounting\Actions\YearEndClosingAction;
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Exceptions\FiscalYearClosedException;
 use App\Domains\Accounting\Models\Account;
@@ -61,32 +63,53 @@ class FiscalYearCoherenceTest extends TestCase
 
     // ── Accounts ──────────────────────────────────────────────────
     private Account $bank;          // 1020
+
     private Account $ar;            // 1100
+
     private Account $vatInput;      // 1170
+
     private Account $fixedAssetAcct; // 1500
+
     private Account $accumDepr;     // 1509
+
     private Account $ap;            // 2000
+
     private Account $vatOutput;     // 2200
+
     private Account $vatPayable;    // 2201
+
     private Account $avsPayable;    // 2270
+
     private Account $acPayable;     // 2271
+
     private Account $lppPayable;    // 2272
+
     private Account $shareCapital;  // 2800
+
     private Account $annualResult;  // 2900
+
     private Account $revenue;       // 3000
+
     private Account $rounding;      // 3900
+
     private Account $salaries;      // 5000
+
     private Account $socialCharges; // 5700
+
     private Account $generalExpenses; // 6530
+
     private Account $deprExpense;   // 6800
+
     private Account $openingBalance; // 9000
 
     // ── Invoicing ─────────────────────────────────────────────────
     private VatRate $vatNormal;
+
     private Customer $customer;
 
     // ── Payroll ───────────────────────────────────────────────────
     private Employee $jean;
+
     private Employee $marie;
 
     // ── Fixed asset ───────────────────────────────────────────────
@@ -228,18 +251,18 @@ class FiscalYearCoherenceTest extends TestCase
             ['EXP-2025-MSFT',  '2025-06-30', '12.71', 'Microsoft 365 – Jun'],
             ['EXP-2025-RENT',  '2025-09-30', '385.00', 'Office rent – Sep'],
         ] as [$ref, $date, $amount, $desc]) {
-            $ledger->postEntry($orgId, new \App\Domains\Accounting\DTOs\JournalEntryData(
+            $ledger->postEntry($orgId, new JournalEntryData(
                 date: $date,
                 reference: $ref,
                 description: $desc,
                 lines: [
-                    new \App\Domains\Accounting\DTOs\JournalLineData(
+                    new JournalLineData(
                         accountId: (string) $this->generalExpenses->id,
                         debit: $amount,
                         credit: '0.00',
                         description: $desc,
                     ),
-                    new \App\Domains\Accounting\DTOs\JournalLineData(
+                    new JournalLineData(
                         accountId: (string) $this->ap->id,
                         debit: '0.00',
                         credit: $amount,
@@ -410,7 +433,7 @@ class FiscalYearCoherenceTest extends TestCase
         );
 
         // ── J4: Result account (2900) holds the net income ───────
-        $resultDebit  = (string) TransactionLine::where('account_id', $this->annualResult->id)
+        $resultDebit = (string) TransactionLine::where('account_id', $this->annualResult->id)
             ->whereHas('journalEntry', fn ($q) => $q->where('is_posted', true))
             ->sum('debit');
         $resultCredit = (string) TransactionLine::where('account_id', $this->annualResult->id)
@@ -450,18 +473,18 @@ class FiscalYearCoherenceTest extends TestCase
 
         // ── J8: Posting to closed year throws FiscalYearClosedException ──
         try {
-            app(LedgerService::class)->postEntry($orgId, new \App\Domains\Accounting\DTOs\JournalEntryData(
+            app(LedgerService::class)->postEntry($orgId, new JournalEntryData(
                 date: '2025-06-15',
                 reference: 'BLOCKED-TEST-'.uniqid(),
                 description: 'Should be blocked by fiscal year guard',
                 lines: [
-                    new \App\Domains\Accounting\DTOs\JournalLineData(
+                    new JournalLineData(
                         accountId: (string) $this->bank->id,
                         debit: '100.00',
                         credit: '0.00',
                         description: 'test',
                     ),
-                    new \App\Domains\Accounting\DTOs\JournalLineData(
+                    new JournalLineData(
                         accountId: (string) $this->revenue->id,
                         debit: '0.00',
                         credit: '100.00',
@@ -592,76 +615,76 @@ class FiscalYearCoherenceTest extends TestCase
         foreach ($defs as [$code, $name, $type]) {
             $map[$code] = Account::create([
                 'organization_id' => $this->org->id,
-                'code'            => $code,
-                'name'            => $name,
-                'type'            => $type->value,
-                'is_active'       => true,
+                'code' => $code,
+                'name' => $name,
+                'type' => $type->value,
+                'is_active' => true,
             ]);
         }
 
-        $this->bank             = $map['1020'];
-        $this->ar               = $map['1100'];
-        $this->vatInput         = $map['1170'];
-        $this->fixedAssetAcct   = $map['1500'];
-        $this->accumDepr        = $map['1509'];
-        $this->ap               = $map['2000'];
-        $this->vatOutput        = $map['2200'];
-        $this->vatPayable       = $map['2201'];
-        $this->avsPayable       = $map['2270'];
-        $this->acPayable        = $map['2271'];
-        $this->lppPayable       = $map['2272'];
-        $this->shareCapital     = $map['2800'];
-        $this->annualResult     = $map['2900'];
-        $this->revenue          = $map['3000'];
-        $this->rounding         = $map['3900'];
-        $this->salaries         = $map['5000'];
-        $this->socialCharges    = $map['5700'];
-        $this->generalExpenses  = $map['6530'];
-        $this->deprExpense      = $map['6800'];
-        $this->openingBalance   = $map['9000'];
+        $this->bank = $map['1020'];
+        $this->ar = $map['1100'];
+        $this->vatInput = $map['1170'];
+        $this->fixedAssetAcct = $map['1500'];
+        $this->accumDepr = $map['1509'];
+        $this->ap = $map['2000'];
+        $this->vatOutput = $map['2200'];
+        $this->vatPayable = $map['2201'];
+        $this->avsPayable = $map['2270'];
+        $this->acPayable = $map['2271'];
+        $this->lppPayable = $map['2272'];
+        $this->shareCapital = $map['2800'];
+        $this->annualResult = $map['2900'];
+        $this->revenue = $map['3000'];
+        $this->rounding = $map['3900'];
+        $this->salaries = $map['5000'];
+        $this->socialCharges = $map['5700'];
+        $this->generalExpenses = $map['6530'];
+        $this->deprExpense = $map['6800'];
+        $this->openingBalance = $map['9000'];
     }
 
     private function createInvoicingFixtures(): void
     {
         $this->vatNormal = VatRate::create([
             'organization_id' => $this->org->id,
-            'name'            => 'Standard',
-            'rate'            => '8.10',
-            'code'            => 'NORMAL',
-            'is_default'      => true,
-            'is_active'       => true,
+            'name' => 'Standard',
+            'rate' => '8.10',
+            'code' => 'NORMAL',
+            'is_default' => true,
+            'is_active' => true,
         ]);
 
         $this->customer = Customer::create([
             'organization_id' => $this->org->id,
-            'name'            => 'Client AG',
-            'email'           => 'client@example.com',
+            'name' => 'Client AG',
+            'email' => 'client@example.com',
         ]);
     }
 
     private function createPayrollFixtures(): void
     {
         $this->jean = Employee::create([
-            'organization_id'     => $this->org->id,
-            'first_name'          => 'Jean',
-            'last_name'           => 'Dupont',
-            'email'               => 'jean.dupont@example.com',
-            'ahv_number'          => '756.1234.5678.01',
-            'entry_date'          => '2024-01-01',
-            'gross_salary'        => '6500.00',
-            'is_active'           => true,
+            'organization_id' => $this->org->id,
+            'first_name' => 'Jean',
+            'last_name' => 'Dupont',
+            'email' => 'jean.dupont@example.com',
+            'ahv_number' => '756.1234.5678.01',
+            'entry_date' => '2024-01-01',
+            'gross_salary' => '6500.00',
+            'is_active' => true,
             'is_source_tax_subject' => false,
         ]);
 
         $this->marie = Employee::create([
-            'organization_id'     => $this->org->id,
-            'first_name'          => 'Marie',
-            'last_name'           => 'Martin',
-            'email'               => 'marie.martin@example.com',
-            'ahv_number'          => '756.9876.5432.10',
-            'entry_date'          => '2024-01-01',
-            'gross_salary'        => '5200.00',
-            'is_active'           => true,
+            'organization_id' => $this->org->id,
+            'first_name' => 'Marie',
+            'last_name' => 'Martin',
+            'email' => 'marie.martin@example.com',
+            'ahv_number' => '756.9876.5432.10',
+            'entry_date' => '2024-01-01',
+            'gross_salary' => '5200.00',
+            'is_active' => true,
             'is_source_tax_subject' => false,
         ]);
     }
@@ -669,17 +692,17 @@ class FiscalYearCoherenceTest extends TestCase
     private function createAssetFixtures(): void
     {
         $this->laptop = FixedAsset::create([
-            'organization_id'                   => $this->org->id,
-            'name'                              => 'Laptop MacBook Pro',
-            'purchase_date'                     => '2024-12-31',
-            'purchase_amount'                   => '2500.00',
-            'useful_life_years'                 => 3,
-            'salvage_value'                     => '0.00',
-            'depreciation_method'               => DepreciationMethod::Linear,
-            'asset_account_id'                  => $this->fixedAssetAcct->id,
-            'depreciation_expense_account_id'   => $this->deprExpense->id,
+            'organization_id' => $this->org->id,
+            'name' => 'Laptop MacBook Pro',
+            'purchase_date' => '2024-12-31',
+            'purchase_amount' => '2500.00',
+            'useful_life_years' => 3,
+            'salvage_value' => '0.00',
+            'depreciation_method' => DepreciationMethod::Linear,
+            'asset_account_id' => $this->fixedAssetAcct->id,
+            'depreciation_expense_account_id' => $this->deprExpense->id,
             'accumulated_depreciation_account_id' => $this->accumDepr->id,
-            'is_active'                         => true,
+            'is_active' => true,
         ]);
     }
 
@@ -687,21 +710,21 @@ class FiscalYearCoherenceTest extends TestCase
     {
         $this->recurringTemplate = RecurringInvoice::create([
             'organization_id' => $this->org->id,
-            'customer_id'     => $this->customer->id,
-            'frequency'       => RecurrenceFrequency::Monthly,
+            'customer_id' => $this->customer->id,
+            'frequency' => RecurrenceFrequency::Monthly,
             'next_issue_date' => '2025-06-01',
-            'is_active'       => true,
-            'template_data'   => [
-                'currency'      => 'CHF',
-                'notes'         => null,
+            'is_active' => true,
+            'template_data' => [
+                'currency' => 'CHF',
+                'notes' => null,
                 'payment_terms' => null,
-                'lines'         => [
+                'lines' => [
                     [
                         'description' => 'Service mensuel récurrent',
-                        'quantity'    => 1,
-                        'unit_price'  => '2000.00',
+                        'quantity' => 1,
+                        'unit_price' => '2000.00',
                         'vat_rate_id' => $this->vatNormal->id,
-                        'sort_order'  => 0,
+                        'sort_order' => 0,
                     ],
                 ],
             ],

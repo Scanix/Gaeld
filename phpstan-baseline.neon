@@ -67,12 +67,6 @@ parameters:
 			path: app/Domains/Accounting/Controllers/LettrageController.php
 
 		-
-			message: '#^Method App\\Domains\\Accounting\\Controllers\\YearEndClosingController\:\:computeClosingAccounts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
-			path: app/Domains/Accounting/Controllers/YearEndClosingController.php
-
-		-
 			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
 			identifier: argument.type
 			count: 2
@@ -85,34 +79,10 @@ parameters:
 			path: app/Domains/Accounting/Controllers/YearEndClosingController.php
 
 		-
-			message: '#^Method App\\Domains\\Accounting\\DTOs\\CreateAccountData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Accounting/DTOs/CreateAccountData.php
-
-		-
-			message: '#^Method App\\Domains\\Accounting\\DTOs\\JournalLineData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Accounting/DTOs/JournalLineData.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Accounting/Models/Account.php
-
-		-
 			message: '#^Class App\\Domains\\Accounting\\Models\\Account uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Domains/Accounting/Models/Account.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Accounting/Models/Budget.php
 
 		-
 			message: '#^Method App\\Domains\\Accounting\\Models\\Budget\:\:scopeForYear\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
@@ -127,28 +97,10 @@ parameters:
 			path: app/Domains/Accounting/Models/Budget.php
 
 		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Accounting/Models/JournalEntry.php
-
-		-
 			message: '#^Class App\\Domains\\Accounting\\Models\\JournalEntry uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Domains/Accounting/Models/JournalEntry.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Accounting/Models/LegalArchive.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Accounting/Models/LettrageLot.php
 
 		-
 			message: '#^Class App\\Domains\\Accounting\\Models\\LettrageLot has PHPDoc tag @property for property \$line_ids with no value type specified in iterable type array\.$#'
@@ -157,34 +109,16 @@ parameters:
 			path: app/Domains/Accounting/Models/LettrageLot.php
 
 		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Accounting/Models/TransactionLine.php
-
-		-
 			message: '#^Class App\\Domains\\Accounting\\Models\\TransactionLine uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Domains/Accounting/Models/TransactionLine.php
 
 		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Accounting/Models/VatEntry.php
-
-		-
 			message: '#^Class App\\Domains\\Accounting\\Models\\VatEntry uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Domains/Accounting/Models/VatEntry.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Accounting/Models/VatRate.php
 
 		-
 			message: '#^Class App\\Domains\\Accounting\\Models\\VatRate uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
@@ -379,22 +313,10 @@ parameters:
 			path: app/Domains/Api/Jobs/DispatchWebhookJob.php
 
 		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Api/Models/Webhook.php
-
-		-
 			message: '#^Class App\\Domains\\Api\\Models\\Webhook has PHPDoc tag @property for property \$events with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: app/Domains/Api/Models/Webhook.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Api/Models/WebhookCall.php
 
 		-
 			message: '#^Class App\\Domains\\Api\\Models\\WebhookCall has PHPDoc tag @property for property \$payload with no value type specified in iterable type array\.$#'
@@ -589,18 +511,6 @@ parameters:
 			path: app/Domains/Assets/Actions/DisposeAssetAction.php
 
 		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Assets/Models/DepreciationEntry.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Assets/Models/FixedAsset.php
-
-		-
 			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
 			identifier: argument.type
 			count: 1
@@ -679,58 +589,16 @@ parameters:
 			path: app/Domains/Banking/Controllers/ReconciliationController.php
 
 		-
-			message: '#^Method App\\Domains\\Banking\\DTOs\\CreateBankAccountData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Banking/DTOs/CreateBankAccountData.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\DTOs\\RecordBankTransactionData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Banking/DTOs/RecordBankTransactionData.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Banking/Models/BankAccount.php
-
-		-
 			message: '#^Class App\\Domains\\Banking\\Models\\BankAccount uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Domains/Banking/Models/BankAccount.php
 
 		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Banking/Models/BankImport.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Banking/Models/BankMatch.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Banking/Models/BankTransaction.php
-
-		-
 			message: '#^Class App\\Domains\\Banking\\Models\\BankTransaction uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Domains/Banking/Models/BankTransaction.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Banking/Models/PersonalTransactionPattern.php
 
 		-
 			message: '#^Access to an undefined property DOMNameSpaceNode\|DOMNode\:\:\$textContent\.$#'
@@ -1111,30 +979,6 @@ parameters:
 			path: app/Domains/Contacts/Controllers/SupplierController.php
 
 		-
-			message: '#^Method App\\Domains\\Contacts\\DTOs\\CreateContactPersonData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Contacts/DTOs/CreateContactPersonData.php
-
-		-
-			message: '#^Method App\\Domains\\Contacts\\DTOs\\UpdateContactPersonData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Contacts/DTOs/UpdateContactPersonData.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Contacts/Models/ContactPerson.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Contacts/Models/Customer.php
-
-		-
 			message: '#^Class App\\Domains\\Contacts\\Models\\Customer has PHPDoc tag @property for property \$notes with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1151,12 +995,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: app/Domains/Contacts/Models/Customer.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Contacts/Models/Supplier.php
 
 		-
 			message: '#^Class App\\Domains\\Contacts\\Models\\Supplier has PHPDoc tag @property for property \$notes with no value type specified in iterable type array\.$#'
@@ -1201,40 +1039,10 @@ parameters:
 			path: app/Domains/Contacts/Queries/SupplierQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Expenses\\DTOs\\CreateExpenseData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Expenses/DTOs/CreateExpenseData.php
-
-		-
-			message: '#^Method App\\Domains\\Expenses\\DTOs\\ReceiptOcrResult\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Expenses/DTOs/ReceiptOcrResult.php
-
-		-
-			message: '#^Method App\\Domains\\Expenses\\DTOs\\RecordExpensePaymentData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Expenses/DTOs/RecordExpensePaymentData.php
-
-		-
-			message: '#^Method App\\Domains\\Expenses\\DTOs\\UpdateExpenseData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Expenses/DTOs/UpdateExpenseData.php
-
-		-
 			message: '#^Method App\\Domains\\Expenses\\Enums\\ExpenseStatus\:\:allowedTransitions\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: app/Domains/Expenses/Enums/ExpenseStatus.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Expenses/Models/Expense.php
 
 		-
 			message: '#^Class App\\Domains\\Expenses\\Models\\Expense uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
@@ -1253,12 +1061,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: app/Domains/Expenses/Models/Expense.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Expenses/Models/ExpenseCategory.php
 
 		-
 			message: '#^Method App\\Domains\\Expenses\\Queries\\ExpenseCategoryQuery\:\:all\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
@@ -1347,7 +1149,7 @@ parameters:
 		-
 			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|false given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 2
 			path: app/Domains/Expenses/Services/TesseractOcrService.php
 
 		-
@@ -1369,22 +1171,10 @@ parameters:
 			path: app/Domains/Invoicing/Actions/RecordPaymentAction.php
 
 		-
-			message: '#^Method App\\Domains\\Invoicing\\DTOs\\InvoiceLineData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Invoicing/DTOs/InvoiceLineData.php
-
-		-
 			message: '#^Unsafe usage of new static\(\)\.$#'
 			identifier: new.static
 			count: 1
 			path: app/Domains/Invoicing/DTOs/InvoicePayloadData.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\DTOs\\RecordPaymentData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Invoicing/DTOs/RecordPaymentData.php
 
 		-
 			message: '#^Method App\\Domains\\Invoicing\\Enums\\InvoiceStatus\:\:allowedTransitions\(\) return type has no value type specified in iterable type array\.$#'
@@ -1397,12 +1187,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Invoicing/Mail/InvoiceMail.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Invoicing/Models/Invoice.php
 
 		-
 			message: '#^Class App\\Domains\\Invoicing\\Models\\Invoice uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
@@ -1513,22 +1297,10 @@ parameters:
 			path: app/Domains/Invoicing/Models/InvoiceLine.php
 
 		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Invoicing/Models/InvoicePayment.php
-
-		-
 			message: '#^Class App\\Domains\\Invoicing\\Models\\InvoicePayment uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Domains/Invoicing/Models/InvoicePayment.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Invoicing/Models/RecurringInvoice.php
 
 		-
 			message: '#^Class App\\Domains\\Invoicing\\Models\\RecurringInvoice has PHPDoc tag @property for property \$template_data with no value type specified in iterable type array\.$#'
@@ -1879,22 +1651,10 @@ parameters:
 			path: app/Domains/Organizations/Controllers/MemberController.php
 
 		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Organizations/Models/Organization.php
-
-		-
 			message: '#^Class App\\Domains\\Organizations\\Models\\Organization uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Domains/Organizations/Models/Organization.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Organizations/Models/OrganizationInvitation.php
 
 		-
 			message: '#^Method App\\Domains\\Organizations\\Models\\OrganizationInvitation\:\:scopePending\(\) has no return type specified\.$#'
@@ -1963,40 +1723,10 @@ parameters:
 			path: app/Domains/Payroll/Controllers/SalarySlipController.php
 
 		-
-			message: '#^Method App\\Domains\\Payroll\\DTOs\\CreateEmployeeData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Payroll/DTOs/CreateEmployeeData.php
-
-		-
-			message: '#^Method App\\Domains\\Payroll\\DTOs\\UpdateEmployeeData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Payroll/DTOs/UpdateEmployeeData.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Payroll/Models/DeductionRate.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Payroll/Models/Employee.php
-
-		-
 			message: '#^Class App\\Domains\\Payroll\\Models\\Employee uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Domains/Payroll/Models/Employee.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Payroll/Models/SalarySlip.php
 
 		-
 			message: '#^Class App\\Domains\\Payroll\\Models\\SalarySlip has PHPDoc tag @property for property \$deductions with no value type specified in iterable type array\.$#'
@@ -2155,7 +1885,7 @@ parameters:
 			path: app/Domains/Reporting/Services/DashboardService.php
 
 		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\DashboardService\:\:metrics\(\) should return array\{revenue\: string, expenses\: string, cashBalance\: string, unpaidInvoices\: array\{count\: int, total\: string\}, pendingExpenses\: array\{count\: int, total\: string\}, balance\: string, recentTransactions\: Illuminate\\Support\\Collection, monthlyBreakdown\: array\} but returns array\.$#'
+			message: '#^Method App\\Domains\\Reporting\\Services\\DashboardService\:\:metrics\(\) should return array\{revenue\: string, expenses\: string, cashBalance\: string, unpaidInvoices\: array\{count\: int, total\: string\}, pendingExpenses\: array\{count\: int, total\: string\}, balance\: string, recentTransactions\: Illuminate\\Support\\Collection, monthlyBreakdown\: array, \.\.\.\} but returns array\.$#'
 			identifier: return.type
 			count: 1
 			path: app/Domains/Reporting/Services/DashboardService.php
@@ -2381,12 +2111,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Users/Jobs/ExportUserDataJob.php
-
-		-
-			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Users/Models/User.php
 
 		-
 			message: '#^Class App\\Domains\\Users\\Models\\User uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
