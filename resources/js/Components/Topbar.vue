@@ -4,6 +4,7 @@ import { LogOut, User, HelpCircle, BookOpen, Menu, Sun, Moon, ShieldCheck } from
 import { ref, computed } from 'vue'
 import Button from './UI/Button.vue'
 import GlobalSearch from './GlobalSearch.vue'
+import NotificationBell from './NotificationBell.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useTheme } from '@/lib/useTheme'
 
@@ -84,6 +85,8 @@ function logout() {
       >
         <BookOpen class="h-4 w-4" />
       </Button>
+
+      <NotificationBell />
 
       <div class="relative">
         <Button

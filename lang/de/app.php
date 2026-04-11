@@ -58,6 +58,10 @@ return [
     'invoices_per_month' => 'Rechnungen / Monat',
     'payment_failed_warning' => 'Ihre letzte Zahlung ist fehlgeschlagen. Bitte aktualisieren Sie Ihre Zahlungsmethode, um den Zugang zu behalten.',
     'update_payment_method' => 'Zahlungsmethode aktualisieren',
+    'subscription_grace_period' => 'Ihr Abonnement ist gekündigt und endet am :date. Erneuern Sie es, um den Zugang zu behalten.',
+    'resubscribe' => 'Erneut abonnieren →',
+    'subscription_paused_banner' => 'Ihr Abonnement ist derzeit pausiert.',
+    'resume_subscription' => 'Abonnement fortsetzen →',
     'trial_complete_payment_hint' => 'Fügen Sie jetzt eine Zahlungsmethode hinzu, damit Ihr Abonnement am Ende der Testphase automatisch weiterläuft.',
     'add_payment_method' => 'Zahlungsmethode hinzufügen',
     'trial_ends' => 'Testphase endet am',
@@ -278,6 +282,8 @@ return [
     'extracting_fields' => 'Betrag, Datum und Lieferant werden extrahiert…',
     'scan_complete' => 'Scan abgeschlossen',
     'scan_failed' => 'Beleg konnte nicht gescannt werden. Bitte versuchen Sie es erneut oder geben Sie die Details manuell ein.',
+    'ocr_pending_widget_title' => 'OCR-Belege ausstehend',
+    'ocr_pending_widget_description' => 'Beleg(e) zur Validierung ausstehend',
     'review_and_adjust' => 'Überprüfen Sie die erkannten Felder und passen Sie sie bei Bedarf an.',
 
     // Customers
@@ -826,6 +832,7 @@ return [
     'fiscal_year_closed' => 'Buchung im abgeschlossenen Geschäftsjahr :year nicht möglich.',
     'fiscal_year_reopened' => 'Geschäftsjahr :year wurde wiedereröffnet.',
     'fiscal_year_not_closed' => 'Geschäftsjahr :year ist nicht abgeschlossen.',
+    'fiscal_year_unsettled_vat' => 'Geschäftsjahr :year kann nicht abgeschlossen werden: offene MWST-Perioden: :periods. Bitte alle MWST-Abrechnungen vor dem Abschluss verbuchen.',
     'reopen_fiscal_year' => 'Geschäftsjahr wiedereröffnen',
     'reopen_fiscal_year_confirm' => 'Möchten Sie das Geschäftsjahr :year wirklich wiedereröffnen? Dies ermöglicht neue Buchungen in diesem Zeitraum.',
     'year_closed_badge' => 'Abgeschlossen',
@@ -1699,6 +1706,9 @@ return [
     'contact_type_individual' => 'Einzelperson',
     'contact_type_organization' => 'Organisation',
     'camt_format_csv' => 'CSV',
+    'camt_format_camt053' => 'CAMT.053',
+    'camt_format_camt054' => 'CAMT.054',
+    'camt_format_mt940' => 'MT940',
     'bank_match_type_qr_reference' => 'QR-Referenz',
     'bank_match_type_amount_customer' => 'Betrag + Kunde',
     'bank_match_type_heuristic' => 'Heuristisch',
@@ -1847,4 +1857,20 @@ return [
     'fiscal_year_closed_banner' => 'Das Geschäftsjahr :year ist abgeschlossen. Es können keine Buchungen für diesen Zeitraum erfasst werden.',
     'fiscal_year_closed_action_disabled' => 'Aktion nicht verfügbar — Geschäftsjahr abgeschlossen',
     'vat_unsettled_warning' => 'Die MWST-Abrechnung wurde für :periods nicht gebucht. Es wird empfohlen, die MWST-Abrechnungen vor dem Jahresabschluss zu buchen.',
+
+    // OCR rate limiting
+    'ocr_daily_limit_reached' => 'Tägliches Scanlimit erreicht. Sie können :limit Belege pro Tag scannen.',
+
+    // Notifications
+    'notifications_title' => 'Benachrichtigungen',
+    'notifications_empty' => 'Keine Benachrichtigungen',
+    'notifications_mark_all_read' => 'Alle als gelesen markieren',
+    'notifications_mark_read' => 'Als gelesen markieren',
+    'notification_ocr_completed' => 'Belegscan abgeschlossen für :filename.',
+    'notification_ocr_failed' => 'Belegscan fehlgeschlagen für :filename.',
+    'notification_prefs_title' => 'Benachrichtigungseinstellungen',
+    'notification_prefs_ocr_email' => 'E-Mail senden wenn ein Belegscan abgeschlossen ist',
+    'notification_trial_expiring' => 'Ihre Testphase läuft in :days Tag(en) ab. Upgraden Sie, um den Zugang zu behalten.',
+    'notification_upgrade_nudge' => 'Upgraden Sie Ihren Plan, um alle Funktionen freizuschalten.',
+    'notification_unknown' => 'Sie haben eine neue Benachrichtigung.',
 ];

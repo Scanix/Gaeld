@@ -8,11 +8,15 @@ final class AccountCode
 
     public const BANK_CASH = '1020';
 
+    public const VAT_INPUT = '1170';
+
     public const REVENUE = '3000';
 
     public const ROUNDING_DIFFERENCE = '3900';
 
     public const VAT_OUTPUT = '2200';
+
+    public const VAT_PAYABLE_AFC = '2201';
 
     public const SOCIAL_CHARGES = '5700';
 

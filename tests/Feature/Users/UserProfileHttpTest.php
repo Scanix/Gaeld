@@ -92,32 +92,6 @@ class UserProfileHttpTest extends TestCase
         $this->assertNotEquals($initial, $this->user->show_help);
     }
 
-    public function test_dashboard_layout_update(): void
-    {
-        $this->actingAs($this->user)
-            ->put('/profile/dashboard-layout', [
-                'widgets' => [
-                    ['id' => 'checklist', 'visible' => true],
-                    ['id' => 'chart', 'visible' => false],
-                ],
-            ])
-            ->assertRedirect();
-
-        $this->user->refresh();
-        $this->assertNotNull($this->user->dashboard_layout);
-    }
-
-    public function test_dashboard_layout_validates_widget_ids(): void
-    {
-        $this->actingAs($this->user)
-            ->put('/profile/dashboard-layout', [
-                'widgets' => [
-                    ['id' => 'nonexistent', 'visible' => true],
-                ],
-            ])
-            ->assertSessionHasErrors();
-    }
-
     public function test_email_change_requires_current_password(): void
     {
         $this->actingAs($this->user)

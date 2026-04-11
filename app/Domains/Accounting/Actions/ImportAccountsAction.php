@@ -90,6 +90,7 @@ class ImportAccountsAction
         return DB::transaction(function () use ($orgId, $rows, $mode): Collection {
             if ($mode === 'replace') {
                 Account::where('organization_id', $orgId)
+                    ->where('is_system', false)
                     ->whereDoesntHave('transactionLines')
                     ->delete();
             }

@@ -40,7 +40,19 @@ class AccountPolicy extends BasePolicy
     {
         return $this->belongsToOrganization($user, $account)
             && $user->hasPermissionTo(Permission::AccountingDelete)
+            && ! $account->is_system
             && $account->transactionLines()->doesntExist();
+    }
+
+    /**
+     * Whether the user may change the `code` field of this account.
+     * System accounts have their code locked to preserve app integrity.
+     */
+    public function updateCode(User $user, Account $account): bool
+    {
+        return $this->belongsToOrganization($user, $account)
+            && $user->hasPermissionTo(Permission::AccountingEdit)
+            && ! $account->is_system;
     }
 
     public function manage(User $user, Account $account): bool

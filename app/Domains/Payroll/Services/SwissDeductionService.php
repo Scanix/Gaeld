@@ -5,6 +5,7 @@ namespace App\Domains\Payroll\Services;
 use App\Domains\Payroll\Models\DeductionRate;
 use App\Support\Money;
 use Illuminate\Support\Collection;
+use Psr\Log\LoggerInterface;
 
 /**
  * Provides Swiss payroll deduction rates (AVS, AC, LPP, AANP, etc.)
@@ -40,6 +41,17 @@ class SwissDeductionService
      */
     public function calculateDeductions(string $grossSalary, ?Collection $rates = null): array
     {
+        if ($rates === null || $rates->isEmpty()) {
+            try {
+                app(LoggerInterface::class)->warning(
+                    'SwissDeductionService: no custom deduction rates found — falling back to built-in defaults. '
+                    .'Verify your organisation\'s deduction rates are up to date for the current fiscal year.',
+                );
+            } catch (\Throwable) {
+                // Logger not available in pure unit-test context — silently skip.
+            }
+        }
+
         $rateMap = $this->buildRateMap($rates);
 
         $deductions = [];

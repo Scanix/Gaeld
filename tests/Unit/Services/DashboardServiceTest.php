@@ -110,7 +110,7 @@ class DashboardServiceTest extends TestCase
         $this->assertSame('700.00', $metrics['unpaidInvoices']['total']);
         $this->assertSame('income', $metrics['recentTransactions']->first()['type']);
         $this->assertSame('expense', $metrics['recentTransactions']->last()['type']);
-        $this->assertCount(12, $metrics['monthlyBreakdown']['labels']);
+        $this->assertCount(12, $metrics['monthlyBreakdown']['monthIndices']);
         $this->assertSame('100', (string) $metrics['monthlyBreakdown']['revenue'][0]);
         $this->assertSame('300', (string) $metrics['monthlyBreakdown']['forecast'][2]);
     }
