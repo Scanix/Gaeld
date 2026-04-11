@@ -50,6 +50,10 @@ return [
     'invoices_per_month' => 'factures / mois',
     'payment_failed_warning' => 'Votre dernier paiement a échoué. Veuillez mettre à jour votre moyen de paiement pour conserver l\'accès.',
     'update_payment_method' => 'Mettre à jour le moyen de paiement',
+    'subscription_grace_period' => 'Votre abonnement est annulé et prendra fin le :date. Réabonnez-vous pour conserver l\'accès.',
+    'resubscribe' => 'Se réabonner →',
+    'subscription_paused_banner' => 'Votre abonnement est actuellement en pause.',
+    'resume_subscription' => 'Reprendre l\'abonnement →',
     'trial_complete_payment_hint' => 'Ajoutez un moyen de paiement pour que votre abonnement se poursuive automatiquement à la fin de l\'essai.',
     'add_payment_method' => 'Ajouter un moyen de paiement',
     'trial_ends' => 'Essai se termine le',
@@ -278,6 +282,8 @@ return [
     'extracting_fields' => 'Extraction du montant, de la date et du fournisseur…',
     'scan_complete' => 'Analyse terminée',
     'scan_failed' => 'Impossible d\'analyser le reçu. Veuillez réessayer ou saisir les détails manuellement.',
+    'ocr_pending_widget_title' => 'Justificatifs OCR en attente',
+    'ocr_pending_widget_description' => 'justificatif(s) à valider',
     'review_and_adjust' => 'Vérifiez les champs extraits et ajustez si nécessaire.',
 
     // Customers
@@ -826,6 +832,7 @@ return [
     'fiscal_year_closed' => 'Impossible de comptabiliser dans l\'exercice fiscal :year clôturé.',
     'fiscal_year_reopened' => 'L\'exercice fiscal :year a été réouvert.',
     'fiscal_year_not_closed' => 'L\'exercice fiscal :year n\'est pas clôturé.',
+    'fiscal_year_unsettled_vat' => 'Impossible de clôturer l\'exercice :year : périodes TVA non décomptées : :periods. Veuillez comptabiliser tous les décomptes TVA avant la clôture.',
     'reopen_fiscal_year' => 'Réouvrir l\'exercice fiscal',
     'reopen_fiscal_year_confirm' => 'Voulez-vous vraiment réouvrir l\'exercice fiscal :year ? Cela permettra de nouvelles écritures sur cette période.',
     'year_closed_badge' => 'Clôturé',
@@ -1723,6 +1730,9 @@ return [
     'contact_type_individual' => 'Personne physique',
     'contact_type_organization' => 'Organisation',
     'camt_format_csv' => 'CSV',
+    'camt_format_camt053' => 'CAMT.053',
+    'camt_format_camt054' => 'CAMT.054',
+    'camt_format_mt940' => 'MT940',
     'bank_match_type_qr_reference' => 'Référence QR',
     'bank_match_type_amount_customer' => 'Montant + Client',
     'bank_match_type_heuristic' => 'Heuristique',
@@ -1871,4 +1881,20 @@ return [
     'fiscal_year_closed_banner' => 'L\'exercice fiscal :year est clôturé. Aucune écriture ne peut être comptabilisée sur cette période.',
     'fiscal_year_closed_action_disabled' => 'Action indisponible — exercice fiscal clôturé',
     'vat_unsettled_warning' => 'Le décompte TVA n\'a pas été passé pour :periods. Il est recommandé de passer les décomptes TVA avant de clôturer l\'exercice.',
+
+    // OCR rate limiting
+    'ocr_daily_limit_reached' => 'Limite quotidienne atteinte. Vous pouvez analyser :limit reçus par jour.',
+
+    // Notifications
+    'notifications_title' => 'Notifications',
+    'notifications_empty' => 'Aucune notification',
+    'notifications_mark_all_read' => 'Tout marquer comme lu',
+    'notifications_mark_read' => 'Marquer comme lu',
+    'notification_ocr_completed' => 'Analyse du reçu terminée pour :filename.',
+    'notification_ocr_failed' => 'Analyse du reçu échouée pour :filename.',
+    'notification_prefs_title' => 'Préférences de notification',
+    'notification_prefs_ocr_email' => 'M\'envoyer un e-mail à la fin de l\'analyse d\'un reçu',
+    'notification_trial_expiring' => 'Votre essai expire dans :days jour(s). Passez à un forfait supérieur pour conserver l\'accès.',
+    'notification_upgrade_nudge' => 'Passez à un forfait supérieur pour débloquer toutes les fonctionnalités.',
+    'notification_unknown' => 'Vous avez une nouvelle notification.',
 ];

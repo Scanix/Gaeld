@@ -37,6 +37,8 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
+                'warning' => $request->session()->get('warning'),
+                'info' => $request->session()->get('info'),
             ],
             'twoFactor' => fn () => $request->session()->get('twoFactor'),
             'systemMessage' => FeatureFlag::isSaas()
@@ -56,6 +58,7 @@ class HandleInertiaRequests extends Middleware
                 'show_help' => $user->show_help,
                 'two_factor_enabled' => $user->hasTwoFactorEnabled(),
                 'has_passkeys' => $user->webAuthnCredentials()->exists(),
+                'notification_preferences' => $user->notification_preferences ?? [],
             ],
             'currentOrganization' => fn () => $this->resolveCurrentOrganization($user),
             'subscription' => $this->resolveSubscription($user),
@@ -72,6 +75,8 @@ class HandleInertiaRequests extends Middleware
             'is_saas_admin' => FeatureFlag::isSaas()
                 && config('ee.saas_admin_email')
                 && $user->email === config('ee.saas_admin_email'),
+            'ocr_quota' => fn () => $this->resolveOcrQuota($user),
+            'notifications_unread_count' => fn () => $user->unreadNotifications()->count(),
         ];
     }
 
@@ -97,6 +102,32 @@ class HandleInertiaRequests extends Middleware
             'trial_ends_at' => $sub->trial_ends_at?->toDateString(),
             'ends_at' => $sub->ends_at?->toDateString(),
         ];
+    }
+
+    /** @return array{ocr_scans_today: int, ocr_daily_limit: int} */
+    private function resolveOcrQuota(User $user): array
+    {
+        $org = $this->currentOrganization->isBound()
+            ? $this->currentOrganization->get()
+            : $user->resolveCurrentOrganization();
+
+        if (! $org) {
+            return ['ocr_scans_today' => 0, 'ocr_daily_limit' => config('services.ocr.daily_limit', 3)];
+        }
+
+        $orgId = $org->id;
+        $dailyKey = "ocr_daily:{$orgId}:".now()->toDateString();
+        $scansToday = (int) Cache::get($dailyKey, 0);
+
+        $limit = config('services.ocr.daily_limit', 3);
+        if (FeatureFlag::isSaas()) {
+            $plan = $org->activeSubscription?->plan;
+            if ($plan && isset($plan->max_ocr_scans_per_day)) {
+                $limit = (int) $plan->max_ocr_scans_per_day;
+            }
+        }
+
+        return ['ocr_scans_today' => $scansToday, 'ocr_daily_limit' => $limit];
     }
 
     /**

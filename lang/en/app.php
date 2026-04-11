@@ -50,6 +50,10 @@ return [
     'invoices_per_month' => 'invoices / month',
     'payment_failed_warning' => 'Your last payment failed. Please update your payment method to keep access.',
     'update_payment_method' => 'Update payment method',
+    'subscription_grace_period' => 'Your subscription is canceled and will end on :date. Resubscribe to keep access.',
+    'resubscribe' => 'Resubscribe →',
+    'subscription_paused_banner' => 'Your subscription is currently paused.',
+    'resume_subscription' => 'Resume subscription →',
     'trial_complete_payment_hint' => 'Add a payment method now so your subscription continues automatically when the trial ends.',
     'add_payment_method' => 'Add payment method',
     'trial_ends' => 'Trial ends',
@@ -280,6 +284,8 @@ return [
     'extracting_fields' => 'Extracting amount, date and vendor…',
     'scan_complete' => 'Scan complete',
     'scan_failed' => 'Could not scan the receipt. Please try again or enter details manually.',
+    'ocr_pending_widget_title' => 'OCR Receipts Pending',
+    'ocr_pending_widget_description' => 'receipt(s) awaiting validation',
     'review_and_adjust' => 'Review the extracted fields and adjust if needed.',
 
     // Customers
@@ -841,6 +847,7 @@ return [
     'fiscal_year_closed' => 'Cannot post to closed fiscal year :year.',
     'fiscal_year_reopened' => 'Fiscal year :year has been reopened.',
     'fiscal_year_not_closed' => 'Fiscal year :year is not closed.',
+    'fiscal_year_unsettled_vat' => 'Cannot close fiscal year :year: unsettled VAT periods: :periods. Please post all VAT settlements before closing.',
     'reopen_fiscal_year' => 'Reopen fiscal year',
     'reopen_fiscal_year_confirm' => 'Are you sure you want to reopen fiscal year :year? This will allow new postings to that period.',
     'year_closed_badge' => 'Closed',
@@ -1715,6 +1722,9 @@ return [
     'contact_type_individual' => 'Individual',
     'contact_type_organization' => 'Organization',
     'camt_format_csv' => 'CSV',
+    'camt_format_camt053' => 'CAMT.053',
+    'camt_format_camt054' => 'CAMT.054',
+    'camt_format_mt940' => 'MT940',
     'bank_match_type_qr_reference' => 'QR Reference',
     'bank_match_type_amount_customer' => 'Amount + Customer',
     'bank_match_type_heuristic' => 'Heuristic',
@@ -1863,4 +1873,20 @@ return [
     'fiscal_year_closed_banner' => 'Fiscal year :year is closed. No entries can be posted to this period.',
     'fiscal_year_closed_action_disabled' => 'Action unavailable — fiscal year is closed',
     'vat_unsettled_warning' => 'VAT settlement has not been posted for :periods. Consider posting VAT settlements before closing the fiscal year.',
+
+    // OCR rate limiting
+    'ocr_daily_limit_reached' => 'Daily scan limit reached. You can scan :limit receipts per day.',
+
+    // Notifications
+    'notifications_title' => 'Notifications',
+    'notifications_empty' => 'No notifications',
+    'notifications_mark_all_read' => 'Mark all as read',
+    'notifications_mark_read' => 'Mark as read',
+    'notification_ocr_completed' => 'Receipt scan completed for :filename.',
+    'notification_ocr_failed' => 'Receipt scan failed for :filename.',
+    'notification_prefs_title' => 'Notification Preferences',
+    'notification_prefs_ocr_email' => 'Email me when a receipt scan completes',
+    'notification_trial_expiring' => 'Your trial expires in :days day(s). Upgrade to keep access.',
+    'notification_upgrade_nudge' => 'Upgrade your plan to unlock all features.',
+    'notification_unknown' => 'You have a new notification.',
 ];

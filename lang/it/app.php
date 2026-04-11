@@ -58,6 +58,10 @@ return [
     'invoices_per_month' => 'fatture / mese',
     'payment_failed_warning' => 'Il tuo ultimo pagamento è fallito. Aggiorna il tuo metodo di pagamento per mantenere l\'accesso.',
     'update_payment_method' => 'Aggiorna metodo di pagamento',
+    'subscription_grace_period' => 'Il tuo abbonamento è stato annullato e terminerà il :date. Riabbonati per mantenere l\'accesso.',
+    'resubscribe' => 'Riabbonati →',
+    'subscription_paused_banner' => 'Il tuo abbonamento è attualmente in pausa.',
+    'resume_subscription' => 'Riprendi abbonamento →',
     'trial_complete_payment_hint' => 'Aggiungi un metodo di pagamento ora per continuare automaticamente l\'abbonamento al termine della prova.',
     'add_payment_method' => 'Aggiungi metodo di pagamento',
     'trial_ends' => 'La prova termina il',
@@ -278,6 +282,8 @@ return [
     'extracting_fields' => 'Estrazione di importo, data e fornitore…',
     'scan_complete' => 'Scansione completata',
     'scan_failed' => 'Impossibile scansionare la ricevuta. Riprova o inserisci i dettagli manualmente.',
+    'ocr_pending_widget_title' => 'Ricevute OCR in attesa',
+    'ocr_pending_widget_description' => 'ricevuta/e in attesa di validazione',
     'review_and_adjust' => 'Controlla i campi estratti e modificali se necessario.',
 
     // Customers
@@ -819,6 +825,7 @@ return [
     'fiscal_year_closed' => 'Impossibile registrare nell\'esercizio fiscale :year chiuso.',
     'fiscal_year_reopened' => 'L\'esercizio fiscale :year è stato riaperto.',
     'fiscal_year_not_closed' => 'L\'esercizio fiscale :year non è chiuso.',
+    'fiscal_year_unsettled_vat' => 'Impossibile chiudere l\'esercizio fiscale :year: periodi IVA non liquidati: :periods. Si prega di contabilizzare tutti i conguagli IVA prima della chiusura.',
     'reopen_fiscal_year' => 'Riaprire l\'esercizio fiscale',
     'reopen_fiscal_year_confirm' => 'Vuoi davvero riaprire l\'esercizio fiscale :year? Questo consentirà nuove registrazioni in quel periodo.',
     'year_closed_badge' => 'Chiuso',
@@ -1679,6 +1686,9 @@ return [
     'contact_type_individual' => 'Persona fisica',
     'contact_type_organization' => 'Organizzazione',
     'camt_format_csv' => 'CSV',
+    'camt_format_camt053' => 'CAMT.053',
+    'camt_format_camt054' => 'CAMT.054',
+    'camt_format_mt940' => 'MT940',
     'bank_match_type_qr_reference' => 'Riferimento QR',
     'bank_match_type_amount_customer' => 'Importo + Cliente',
     'bank_match_type_heuristic' => 'Euristico',
@@ -1851,4 +1861,20 @@ return [
 
     // Settings
     'edit_settings' => 'Modifica impostazioni',
+
+    // OCR rate limiting
+    'ocr_daily_limit_reached' => 'Limite giornaliero raggiunto. Puoi scansionare :limit scontrini al giorno.',
+
+    // Notifications
+    'notifications_title' => 'Notifiche',
+    'notifications_empty' => 'Nessuna notifica',
+    'notifications_mark_all_read' => 'Segna tutto come letto',
+    'notifications_mark_read' => 'Segna come letto',
+    'notification_ocr_completed' => 'Scansione dello scontrino completata per :filename.',
+    'notification_ocr_failed' => 'Scansione dello scontrino fallita per :filename.',
+    'notification_prefs_title' => 'Preferenze di notifica',
+    'notification_prefs_ocr_email' => 'Inviami un\'e-mail al completamento della scansione di uno scontrino',
+    'notification_trial_expiring' => 'La tua prova scade tra :days giorno/i. Effettua l\'upgrade per mantenere l\'accesso.',
+    'notification_upgrade_nudge' => 'Effettua l\'upgrade del tuo piano per sbloccare tutte le funzionalità.',
+    'notification_unknown' => 'Hai una nuova notifica.',
 ];
