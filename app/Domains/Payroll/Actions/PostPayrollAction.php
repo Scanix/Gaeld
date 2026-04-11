@@ -9,6 +9,7 @@ use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Support\Money;
+use Carbon\Carbon;
 
 /**
  * Posts a salary slip to the accounting ledger (gross salary, deductions, net pay).
@@ -114,7 +115,7 @@ class PostPayrollAction
         }
 
         $entry = new JournalEntryData(
-            date: now()->toDateString(),
+            date: Carbon::create($slip->period_year, $slip->period_month)->endOfMonth()->toDateString(),
             reference: "PAY-{$slip->employee_id}-{$slip->period_year}-{$slip->period_month}",
             description: $description,
             lines: $lines,
