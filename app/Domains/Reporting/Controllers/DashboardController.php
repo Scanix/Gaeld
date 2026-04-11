@@ -32,7 +32,6 @@ class DashboardController extends Controller
             $dashboardService->metrics($orgId),
             [
                 'checklist' => $checklist,
-                'dashboardLayout' => $request->user()->dashboard_layout,
                 'onboardingCompleted' => (bool) $request->user()->onboarding_completed_at,
             ],
         ));

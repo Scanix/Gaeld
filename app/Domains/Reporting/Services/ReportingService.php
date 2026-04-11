@@ -2,6 +2,7 @@
 
 namespace App\Domains\Reporting\Services;
 
+use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\Budget;
@@ -311,7 +312,7 @@ class ReportingService
             }
 
             // AR change (increase in AR = cash decrease)
-            $arDelta = $this->accountBalanceDelta($organizationId, '1100', $beginDate, $toDate);
+            $arDelta = $this->accountBalanceDelta($organizationId, AccountCode::ACCOUNTS_RECEIVABLE, $beginDate, $toDate);
             $arAdjustment = bcmul($arDelta, '-1', 2); // negate: AR up → less cash
 
             // AP change (increase in AP = cash increase)
@@ -392,7 +393,7 @@ class ReportingService
             $netChange = bcadd(bcadd($operatingTotal, $investingTotal, 2), $financingTotal, 2);
 
             $cashAccount = Account::where('organization_id', $organizationId)
-                ->where('code', '1020')
+                ->where('code', AccountCode::BANK_CASH)
                 ->first();
 
             $beginningCash = $cashAccount

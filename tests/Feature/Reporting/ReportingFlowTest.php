@@ -92,7 +92,7 @@ class ReportingFlowTest extends TestCase
             ->component('Dashboard')
             ->has('revenue')
             ->has('expenses')
-            ->has('monthlyBreakdown.labels'));
+            ->has('monthlyBreakdown.monthIndices'));
     }
 
     public function test_profit_and_loss_route_returns_report_payload(): void

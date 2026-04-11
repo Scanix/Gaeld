@@ -7,6 +7,7 @@ use App\Domains\Accounting\Models\Budget;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\VatReportService;
+use App\Domains\Expenses\Models\ReceiptScan;
 use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Invoicing\Queries\InvoiceReportingQuery;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -33,7 +34,7 @@ class DashboardService
     // ──────────────────────────────────────────────────────────────
 
     /**
-     * @return array{revenue: string, expenses: string, cashBalance: string, unpaidInvoices: array{count: int, total: string}, pendingExpenses: array{count: int, total: string}, balance: string, recentTransactions: Collection, monthlyBreakdown: array}
+     * @return array{revenue: string, expenses: string, cashBalance: string, unpaidInvoices: array{count: int, total: string}, pendingExpenses: array{count: int, total: string}, balance: string, recentTransactions: Collection, monthlyBreakdown: array, pendingOcrScans: int}
      */
     public function metrics(string $organizationId): array
     {
@@ -90,6 +91,7 @@ class DashboardService
             'budgetSummary' => $this->budgetSummary($organizationId, $year),
             'vatSummary' => $this->currentQuarterVat($organizationId),
             'receivablesAging' => $this->agingSummary($organizationId),
+            'pendingOcrScans' => $this->pendingOcrScans($organizationId),
         ];
     }
 
@@ -148,13 +150,13 @@ class DashboardService
         $forecastInvoices = $this->invoiceQuery->sentOrOverdueDueInYear($organizationId, $year)
             ->groupBy(fn ($i) => Carbon::parse($i->due_date)->month);
 
-        $monthlyData = collect(range(1, 12))->map(function ($month) use ($year, $paidInvoices, $expenses, $forecastInvoices) {
+        $monthlyData = collect(range(1, 12))->map(function ($month) use ($paidInvoices, $expenses, $forecastInvoices) {
             $monthPaid = $paidInvoices->get($month, collect());
             $monthExpenses = $expenses->get($month, collect());
             $monthForecast = $forecastInvoices->get($month, collect());
 
             return [
-                'month' => Carbon::create($year, $month, 1)->format('M'),
+                'monthIndex' => $month,
                 'revenue' => (string) $monthPaid->sum('total'),
                 'expenses' => (string) $monthExpenses->sum('amount'),
                 'forecast' => (string) $monthForecast->sum('total'),
@@ -165,7 +167,7 @@ class DashboardService
         });
 
         return [
-            'labels' => $monthlyData->pluck('month')->values(),
+            'monthIndices' => $monthlyData->pluck('monthIndex')->values(),
             'revenue' => $monthlyData->pluck('revenue')->values(),
             'expenses' => $monthlyData->pluck('expenses')->values(),
             'forecast' => $monthlyData->pluck('forecast')->values(),
@@ -296,5 +298,14 @@ class DashboardService
             'totalOverdue' => $totalOverdue,
             'brackets' => $bracketTotals,
         ];
+    }
+
+    private function pendingOcrScans(string $organizationId): int
+    {
+        return ReceiptScan::withoutGlobalScope('organization')
+            ->where('organization_id', $organizationId)
+            ->whereIn('status', ['pending', 'completed'])
+            ->where('expires_at', '>', now())
+            ->count();
     }
 }
