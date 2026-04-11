@@ -3,6 +3,9 @@
 namespace App\Domains\Expenses\Jobs;
 
 use App\Domains\Expenses\Contracts\ReceiptOcrInterface;
+use App\Domains\Expenses\Models\ReceiptScan;
+use App\Domains\Expenses\Notifications\OcrScanCompletedNotification;
+use App\Domains\Users\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -23,11 +26,14 @@ class ProcessReceiptOcrJob implements ShouldQueue
     public function __construct(
         public readonly string $scanId,
         public readonly string $receiptPath,
+        public readonly int $userId,
+        public readonly string $organizationId,
     ) {}
 
     public function handle(ReceiptOcrInterface $ocr): void
     {
         $cacheKey = "receipt_scan:{$this->scanId}";
+        $filename = basename($this->receiptPath);
 
         try {
             $absolutePath = Storage::disk('local')->path($this->receiptPath);
@@ -39,6 +45,12 @@ class ProcessReceiptOcrJob implements ShouldQueue
                 'receipt_path' => $this->receiptPath,
                 'extracted' => $result->toArray(),
             ], now()->addMinutes(30));
+
+            ReceiptScan::where('scan_id', $this->scanId)
+                ->where('organization_id', $this->organizationId)
+                ->update(['status' => 'completed', 'extracted_data' => $result->toArray()]);
+
+            $this->notifyUser($filename, true);
         } catch (\DomainException|\RuntimeException|\InvalidArgumentException $e) {
             Log::warning('ProcessReceiptOcrJob failed', [
                 'scan_id' => $this->scanId,
@@ -50,6 +62,36 @@ class ProcessReceiptOcrJob implements ShouldQueue
                 'receipt_path' => $this->receiptPath,
                 'extracted' => null,
             ], now()->addMinutes(30));
+
+            ReceiptScan::where('scan_id', $this->scanId)
+                ->where('organization_id', $this->organizationId)
+                ->update(['status' => 'failed']);
+
+            $this->notifyUser($filename, false);
         }
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        $filename = basename($this->receiptPath);
+
+        Cache::put("receipt_scan:{$this->scanId}", [
+            'status' => 'failed',
+            'receipt_path' => $this->receiptPath,
+            'extracted' => null,
+        ], now()->addMinutes(30));
+
+        ReceiptScan::where('scan_id', $this->scanId)
+            ->where('organization_id', $this->organizationId)
+            ->update(['status' => 'failed']);
+
+        $this->notifyUser($filename, false);
+    }
+
+    private function notifyUser(string $filename, bool $success): void
+    {
+        $user = User::find($this->userId);
+
+        $user?->notify(new OcrScanCompletedNotification($filename, $success));
     }
 }

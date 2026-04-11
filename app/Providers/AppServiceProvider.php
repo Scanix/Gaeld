@@ -18,6 +18,7 @@ use App\Domains\Expenses\Jobs\ProcessReceiptOcrJob;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Expenses\Search\ExpenseSearchProvider;
+use App\Domains\Expenses\Services\NullOcrService;
 use App\Domains\Expenses\Services\TesseractOcrService;
 use App\Domains\Invoicing\Jobs\GenerateRecurringInvoicesJob;
 use App\Domains\Invoicing\Jobs\SendPaymentRemindersJob;
@@ -54,7 +55,12 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(CurrentOrganization::class);
-        $this->app->singleton(ReceiptOcrInterface::class, TesseractOcrService::class);
+        $this->app->singleton(
+            ReceiptOcrInterface::class,
+            config('services.ocr.driver', 'tesseract') === 'tesseract'
+                ? TesseractOcrService::class
+                : NullOcrService::class,
+        );
 
         $this->app->singleton(GlobalSearchService::class, function ($app) {
             return new GlobalSearchService(
@@ -77,7 +83,7 @@ class AppServiceProvider extends ServiceProvider
         // per queue for priority / concurrency control.
         Queue::route([
             DispatchWebhookJob::class => [null, 'webhooks'],
-            ProcessReceiptOcrJob::class => [null, 'processing'],
+            ProcessReceiptOcrJob::class => [null, 'ocr'],
             ProcessMigrationImport::class => [null, 'processing'],
             ExportChartOfAccountsJob::class => [null, 'exports'],
             ExportUserDataJob::class => [null, 'exports'],
