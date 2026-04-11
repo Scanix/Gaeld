@@ -14,6 +14,7 @@ use App\Domains\Expenses\DTOs\CreateExpenseData;
 use App\Domains\Expenses\DTOs\UpdateExpenseData;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Expenses\Models\ReceiptScan;
 use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
 use App\Domains\Expenses\Queries\ExpenseQuery;
 use App\Domains\Expenses\Requests\StoreExpenseRequest;
@@ -83,6 +84,13 @@ class ExpenseController extends Controller
         $validated['organization_id'] = $currentOrg->id();
 
         $expense = $action->execute(CreateExpenseData::fromArray($validated));
+
+        if ($request->filled('scan_id')) {
+            ReceiptScan::where('scan_id', $request->input('scan_id'))
+                ->where('organization_id', $currentOrg->id())
+                ->whereIn('status', ['pending', 'completed'])
+                ->update(['status' => 'validated']);
+        }
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', __('app.expense_created'));

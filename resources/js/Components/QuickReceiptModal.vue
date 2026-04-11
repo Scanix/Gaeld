@@ -39,6 +39,7 @@ const form = ref({
   vendor: '',
   description: '',
   currency: 'CHF',
+  vat: '',
 })
 
 const categoryOptions = computed(() => [
@@ -130,6 +131,7 @@ async function pollForResults(scanId) {
       if (extracted.amount) form.value.amount = String(extracted.amount)
       if (extracted.date) form.value.date = extracted.date
       if (extracted.vendor) form.value.vendor = extracted.vendor
+      if (extracted.vat != null) form.value.vat = String(extracted.vat)
       ocrConfidence.value = extracted.confidence ?? data.confidence ?? null
       clearInterval(scanTimer.value)
       stage.value = 'review'
@@ -200,6 +202,7 @@ function resetAndClose() {
     vendor: '',
     description: '',
     currency: 'CHF',
+    vat: '',
   }
   emit('close')
 }
@@ -284,6 +287,14 @@ function resetAndClose() {
           id="qr-vendor"
           v-model="form.vendor"
           :label="t('vendor')"
+          class="sm:col-span-2"
+        />
+        <FormInput
+          id="qr-vat"
+          v-model="form.vat"
+          type="number"
+          step="0.01"
+          :label="t('vat_amount')"
           class="sm:col-span-2"
         />
         <FormSelect

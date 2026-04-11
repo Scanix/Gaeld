@@ -5,7 +5,7 @@ use App\Domains\Expenses\Controllers\ExpenseReceiptController;
 use App\Domains\Expenses\Controllers\ExpenseWorkflowController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/expenses/scan-receipt', [ExpenseReceiptController::class, 'scanReceipt'])->name('expenses.scan-receipt');
+Route::post('/expenses/scan-receipt', [ExpenseReceiptController::class, 'scanReceipt'])->middleware('throttle:20,1')->name('expenses.scan-receipt');
 Route::get('/expenses/scan-receipt/{scanId}', [ExpenseReceiptController::class, 'scanReceiptStatus'])->name('expenses.scan-receipt.status');
 Route::resource('expenses', ExpenseController::class);
 Route::post('/expenses/{expense}/approve', [ExpenseWorkflowController::class, 'approve'])->name('expenses.approve');
