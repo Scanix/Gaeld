@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
 import { Bell } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 import Button from './UI/Button.vue'
@@ -91,6 +91,15 @@ function getNotificationMessage(n) {
 function formatDate(iso) {
   return new Date(iso).toLocaleString()
 }
+
+function visitNotification(n) {
+  if (!n.read_at) markRead(n.id)
+  const url = n.data?.url
+  if (url) {
+    showDropdown.value = false
+    router.visit(url)
+  }
+}
 </script>
 
 <template>
@@ -141,7 +150,11 @@ function formatDate(iso) {
           v-for="n in notifications"
           :key="n.id"
           class="flex items-start gap-2 px-3 py-2.5 text-sm"
-          :class="{ 'bg-[hsl(var(--accent)/0.3)]': !n.read_at }"
+          :class="[
+            !n.read_at ? 'bg-[hsl(var(--accent)/0.3)]' : '',
+            n.data?.url ? 'cursor-pointer hover:bg-[hsl(var(--accent)/0.5)]' : '',
+          ]"
+          @click="visitNotification(n)"
         >
           <div class="min-w-0 flex-1">
             <p
@@ -155,7 +168,7 @@ function formatDate(iso) {
           <button
             v-if="!n.read_at"
             class="shrink-0 text-xs text-[hsl(var(--primary))] hover:underline"
-            @click="markRead(n.id)"
+            @click.stop="markRead(n.id)"
           >
             {{ t('notifications_mark_read') }}
           </button>

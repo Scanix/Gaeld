@@ -35,6 +35,7 @@ class OcrScanCompletedNotification extends Notification implements ShouldQueue
         return [
             'type' => $this->success ? 'ocr_completed' : 'ocr_failed',
             'filename' => $this->filename,
+            'url' => route('expenses.index'),
         ];
     }
 
