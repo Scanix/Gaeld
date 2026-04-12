@@ -1905,4 +1905,9 @@ return [
     'notification_trial_expiring' => 'Your trial expires in :days day(s). Upgrade to keep access.',
     'notification_upgrade_nudge' => 'Upgrade your plan to unlock all features.',
     'notification_unknown' => 'You have a new notification.',
+    'notifications_view_all' => 'View all notifications',
+    'ocr_prefilled_notice' => 'The form has been pre-filled with the scanned receipt data. Please review before saving.',
+    'expense_submitted_notification' => 'Expense submitted by :name is awaiting approval.',
+    'expense_approved_notification' => 'Your expense has been approved.',
+    'invoice_payment_recorded_notification' => 'Payment recorded for invoice :number.',
 ];

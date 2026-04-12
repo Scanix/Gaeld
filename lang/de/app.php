@@ -1889,4 +1889,9 @@ return [
     'notification_trial_expiring' => 'Ihre Testphase läuft in :days Tag(en) ab. Upgraden Sie, um den Zugang zu behalten.',
     'notification_upgrade_nudge' => 'Upgraden Sie Ihren Plan, um alle Funktionen freizuschalten.',
     'notification_unknown' => 'Sie haben eine neue Benachrichtigung.',
+    'notifications_view_all' => 'Alle Benachrichtigungen anzeigen',
+    'ocr_prefilled_notice' => 'Das Formular wurde mit den gescannten Belegdaten vorausgefüllt. Bitte vor dem Speichern überprüfen.',
+    'expense_submitted_notification' => 'Ausgabe von :name wartet auf Genehmigung.',
+    'expense_approved_notification' => 'Ihre Ausgabe wurde genehmigt.',
+    'invoice_payment_recorded_notification' => 'Zahlung für Rechnung :number erfasst.',
 ];

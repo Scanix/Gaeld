@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -13,8 +13,9 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
-import FormFileInput from '@/Components/UI/FormFileInput.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
 import Tooltip from '@/Components/UI/Tooltip.vue'
+import Alert from '@/Components/UI/Alert.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
@@ -27,6 +28,7 @@ const props = defineProps({
   categories: { type: Array, default: () => [] },
   expenseAccounts: { type: Array, default: () => [] },
   bankAccounts: { type: Array, default: () => [] },
+  ocrData: { type: Object, default: null },
 })
 
 const form = useForm({
@@ -43,6 +45,19 @@ const form = useForm({
   expense_account_code: '',
   bank_account_code: '',
   receipt: null,
+  receipt_path: '',
+  scan_id: '',
+})
+
+onMounted(() => {
+  if (props.ocrData) {
+    if (props.ocrData.amount) form.amount = String(props.ocrData.amount)
+    if (props.ocrData.date) form.date = props.ocrData.date
+    if (props.ocrData.vendor) form.vendor = props.ocrData.vendor
+    if (props.ocrData.vat != null) form.vat_amount = String(props.ocrData.vat)
+    if (props.ocrData.receipt_path) form.receipt_path = props.ocrData.receipt_path
+    if (props.ocrData.scan_id) form.scan_id = props.ocrData.scan_id
+  }
 })
 
 const { forceClear } = useUnsavedChanges(computed(() => form.isDirty))
@@ -55,8 +70,8 @@ function submit() {
   })
 }
 
-function onReceiptChange(e) {
-  form.receipt = e.target.files[0] ?? null
+function onReceiptChange(file) {
+  form.receipt = file ?? null
 }
 
 const { t } = useTranslations()
@@ -125,7 +140,12 @@ function onSupplierCreated(supplier) {
         <CardTitle>{{ t('new_expense') }}</CardTitle>
       </CardHeader>
       <CardContent>
+        <Alert v-if="ocrData" variant="info" class="mb-4">
+          {{ t('ocr_prefilled_notice') }}
+        </Alert>
         <form class="space-y-6" @submit.prevent="submit">
+          <input v-if="form.receipt_path" type="hidden" name="receipt_path" :value="form.receipt_path">
+          <input v-if="form.scan_id" type="hidden" name="scan_id" :value="form.scan_id">
           <!-- Expense Details -->
           <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('expense_details') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -242,8 +262,8 @@ function onSupplierCreated(supplier) {
           <!-- Attachment -->
           <hr class="border-[hsl(var(--border))]" />
 
-          <FormFileInput
-            id="receipt"
+          <FileUpload
+            size="compact"
             :label="t('receipt')"
             :error="form.errors.receipt"
             @change="onReceiptChange"
