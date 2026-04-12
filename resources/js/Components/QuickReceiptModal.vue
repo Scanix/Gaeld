@@ -8,7 +8,7 @@ import FileUpload from '@/Components/UI/FileUpload.vue'
 import Alert from '@/Components/UI/Alert.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { router } from '@inertiajs/vue3'
-import { Loader2 } from 'lucide-vue-next'
+import { Loader2, AlertCircle } from 'lucide-vue-next'
 
 const props = defineProps({
   open: Boolean,
@@ -170,6 +170,9 @@ function createExpense() {
   formData.append('currency', form.value.currency)
   if (receiptPath.value) {
     formData.append('receipt_path', receiptPath.value)
+  }
+  if (form.value.vat) {
+    formData.append('vat_amount', form.value.vat)
   }
 
   router.post('/expenses', formData, {

@@ -25,8 +25,12 @@ class UpdateExpenseAction
             'vat_rate_id' => $data->vatRateId ?? $expense->vat_rate_id,
             'date' => $data->date,
             'vendor' => $data->vendor ?? $expense->vendor,
+            'supplier_id' => $data->supplierId ?? $expense->supplier_id,
             'receipt_path' => $data->receiptPath ?? $expense->receipt_path,
             'currency' => $data->currency ?? $expense->currency,
+            'payment_method' => $data->paymentMethod ?? $expense->payment_method,
+            'expense_account_code' => $data->expenseAccountCode ?? $expense->expense_account_code,
+            'bank_account_code' => $data->bankAccountCode ?? $expense->bank_account_code,
         ]);
 
         return $expense->fresh();

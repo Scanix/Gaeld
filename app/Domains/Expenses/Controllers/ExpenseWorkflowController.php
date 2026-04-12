@@ -9,6 +9,7 @@ use App\Domains\Expenses\Exceptions\ExpenseLedgerPostingException;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Notifications\ExpenseApprovedNotification;
+use App\Domains\Reporting\Services\DashboardService;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +19,7 @@ use Illuminate\Http\RedirectResponse;
  */
 class ExpenseWorkflowController extends Controller
 {
-    public function approve(Expense $expense, ApproveExpenseAction $action): RedirectResponse
+    public function approve(Expense $expense, ApproveExpenseAction $action, DashboardService $dashboardService): RedirectResponse
     {
         $this->authorize('update', $expense);
 
@@ -27,6 +28,8 @@ class ExpenseWorkflowController extends Controller
         } catch (InvalidExpenseStateException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
+
+        $dashboardService->flushCache($expense->organization_id);
 
         // Notify the submitter if they're tracked on the expense
         $submitter = $expense->user;
@@ -38,7 +41,7 @@ class ExpenseWorkflowController extends Controller
             ->with('success', __('app.expense_approved'));
     }
 
-    public function postToLedger(Expense $expense, PostExpenseAction $action): RedirectResponse
+    public function postToLedger(Expense $expense, PostExpenseAction $action, DashboardService $dashboardService): RedirectResponse
     {
         $this->authorize('update', $expense);
 
@@ -57,6 +60,8 @@ class ExpenseWorkflowController extends Controller
         } catch (ModelNotFoundException) {
             return redirect()->back()->with('error', __('app.account_not_found', ['code' => $expense->expense_account_code]));
         }
+
+        $dashboardService->flushCache($expense->organization_id);
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', __('app.expense_posted'));

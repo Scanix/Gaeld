@@ -22,6 +22,7 @@ use App\Domains\Expenses\Requests\StoreExpenseRequest;
 use App\Domains\Expenses\Requests\UpdateExpenseRequest;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Reporting\Services\DashboardService;
 use App\Http\Controllers\Controller;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
@@ -99,6 +100,8 @@ class ExpenseController extends Controller
             $path = $request->input('receipt_path');
             if (str_starts_with($path, "receipts/{$currentOrg->id()}/") && Storage::disk('local')->exists($path)) {
                 $validated['receipt_path'] = $path;
+            } else {
+                $validated['receipt_path'] = null;
             }
         }
         $validated['organization_id'] = $currentOrg->id();
@@ -112,6 +115,8 @@ class ExpenseController extends Controller
                 ->whereIn('status', ['pending', 'completed'])
                 ->update(['status' => 'validated']);
         }
+
+        app(DashboardService::class)->flushCache($currentOrg->id());
 
         // Notify users with expense approval permission
         app()[PermissionRegistrar::class]->setPermissionsTeamId($currentOrg->id());
@@ -177,12 +182,16 @@ class ExpenseController extends Controller
     {
         $this->authorize('delete', $expense);
 
+        $orgId = $expense->organization_id;
+
         try {
             $this->uploadService->delete($expense->receipt_path);
             $action->execute($expense);
         } catch (InvalidExpenseStateException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
+
+        app(DashboardService::class)->flushCache($orgId);
 
         return redirect()->route('expenses.index')
             ->with('success', __('app.expense_deleted'));

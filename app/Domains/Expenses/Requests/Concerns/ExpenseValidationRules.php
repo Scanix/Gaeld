@@ -27,6 +27,7 @@ trait ExpenseValidationRules
             'vendor' => 'nullable|string|max:255',
             'currency' => 'string|size:3',
             'type' => ['sometimes', Rule::enum(ExpenseType::class)],
+            'payment_method' => ['nullable', Rule::in(['cash', 'card', 'bank_transfer', 'other'])],
             'receipt' => 'nullable|file|mimes:'.config('uploads.allowed_mimes.receipt').'|max:'.config('uploads.max_size.receipt'),
             'receipt_path' => ['nullable', 'string', 'starts_with:receipts/'],
             'scan_id' => ['nullable', 'string', 'uuid'],

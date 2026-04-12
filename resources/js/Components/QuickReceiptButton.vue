@@ -10,8 +10,8 @@ const showModal = ref(false)
 const { t } = useTranslations()
 
 const page = usePage()
-const scansToday = computed(() => page.props.ocr_scans_today ?? 0)
-const dailyLimit = computed(() => page.props.ocr_daily_limit ?? -1)
+const scansToday = computed(() => page.props.auth?.ocr_quota?.ocr_scans_today ?? 0)
+const dailyLimit = computed(() => page.props.auth?.ocr_quota?.ocr_daily_limit ?? -1)
 const limitReached = computed(() => dailyLimit.value !== -1 && scansToday.value >= dailyLimit.value)
 </script>
 

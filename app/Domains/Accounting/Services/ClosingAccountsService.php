@@ -33,9 +33,9 @@ class ClosingAccountsService
             ->orderBy('code')
             ->get();
 
-        $income   = [];
+        $income = [];
         $expenses = [];
-        $net      = '0';
+        $net = '0';
 
         foreach ($accounts as $account) {
             $query = TransactionLine::where('account_id', $account->id)
@@ -45,7 +45,7 @@ class ClosingAccountsService
                     ->where('date', '<=', $to)
                 );
 
-            $debits  = (string) (clone $query)->sum('debit');
+            $debits = (string) (clone $query)->sum('debit');
             $credits = (string) (clone $query)->sum('credit');
 
             $isDebitNormal = $account->type->isDebitNormal();
@@ -59,9 +59,9 @@ class ClosingAccountsService
 
             $row = [
                 'account_id' => $account->id,
-                'code'       => $account->code,
-                'name'       => $account->name,
-                'balance'    => $balance,
+                'code' => $account->code,
+                'name' => $account->name,
+                'balance' => $balance,
             ];
 
             if ($account->type === AccountType::Revenue) {

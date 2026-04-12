@@ -36,8 +36,8 @@ final class PostVatSettlementAction
         $totalInputVat = $report['input_vat'];
         $netVat = $report['net_vat'];
 
-        $vatOutputAccount     = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_OUTPUT);
-        $vatInputAccount      = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_INPUT);
+        $vatOutputAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_OUTPUT);
+        $vatInputAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_INPUT);
         $vatSettlementAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_PAYABLE_AFC);
 
         // Build balanced lines
