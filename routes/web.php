@@ -9,7 +9,6 @@ use App\Domains\Organizations\Controllers\SetupWizardController;
 use App\Domains\Reporting\Controllers\DashboardController;
 use App\Domains\Users\Controllers\AuthenticatedSessionController;
 use App\Domains\Users\Controllers\EmailVerificationController;
-use App\Domains\Users\Controllers\PasskeyController;
 use App\Domains\Users\Controllers\PasswordResetController;
 use App\Domains\Users\Controllers\RegisteredUserController;
 use App\Domains\Users\Controllers\TwoFactorChallengeController;
@@ -30,13 +29,11 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('/register', [RegisteredUserController::class, 'store'])->middleware('throttle:5,1')->name('register.store');
 
-    // Passkey login (unauthenticated)
-    Route::post('/passkey/login/options', [PasskeyController::class, 'loginOptions'])->middleware('throttle:10,1');
-    Route::post('/passkey/login', [PasskeyController::class, 'login'])->middleware('throttle:5,1');
-
     // Two-factor challenge
     Route::get('/two-factor-challenge', [TwoFactorChallengeController::class, 'create'])->name('two-factor.create');
     Route::post('/two-factor-challenge', [TwoFactorChallengeController::class, 'store'])->middleware('throttle:5,1')->name('two-factor.store');
+    Route::post('/two-factor-challenge/passkey/options', [TwoFactorChallengeController::class, 'passkeyOptions'])->middleware('throttle:10,1')->name('two-factor.passkey.options');
+    Route::post('/two-factor-challenge/passkey/verify', [TwoFactorChallengeController::class, 'passkeyVerify'])->middleware('throttle:5,1')->name('two-factor.passkey.verify');
 
     Route::get('/forgot-password', [PasswordResetController::class, 'requestForm'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->middleware('throttle:3,1')->name('password.email');

@@ -29,7 +29,7 @@ class EnsureOrganizationTwoFactor
             ? $this->currentOrganization->get()
             : null;
 
-        if ($org && $org->require_two_factor && ! $user->hasTwoFactorEnabled()) {
+        if ($org && $org->require_two_factor && ! $user->hasAnyTwoFactor()) {
             return redirect()->route('profile')
                 ->with('error', trans('app.two_factor_required_by_org'));
         }
