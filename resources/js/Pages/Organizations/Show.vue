@@ -105,6 +105,14 @@ function executeLeave() {
   })
 }
 
+// --- Delete Organization ---
+const showDeleteConfirm = ref(false)
+function executeDelete() {
+  router.delete(`/organizations/${props.organization.id}`, {
+    onFinish: () => { showDeleteConfirm.value = false },
+  })
+}
+
 // --- Invite Member Modal ---
 const showInviteModal = ref(false)
 const inviteForm = useForm({
@@ -166,6 +174,11 @@ function canChangeUserRole(user) {
           @click="showLeaveConfirm = true"
         >{{ t('leave_organization') }}</Button>
         <Button v-if="isOwnerOrAdmin" as="a" href="/settings">{{ t('edit_settings') }}</Button>
+        <Button
+          v-if="isOwner"
+          variant="destructive"
+          @click="showDeleteConfirm = true"
+        >{{ t('delete_organization') }}</Button>
       </div>
     </div>
 
@@ -325,6 +338,16 @@ function canChangeUserRole(user) {
       :message="t('confirm_leave_organization', { name: organization.name })"
       @confirm="executeLeave"
       @cancel="showLeaveConfirm = false"
+    />
+
+    <!-- Delete Organization Confirmation -->
+    <ConfirmDialog
+      :open="showDeleteConfirm"
+      :title="t('delete_organization')"
+      :message="t('confirm_delete_organization', { name: organization.name })"
+      variant="destructive"
+      @confirm="executeDelete"
+      @cancel="showDeleteConfirm = false"
     />
   </AppLayout>
 </template>

@@ -67,10 +67,10 @@ class ExpenseController extends Controller
                 ->whereIn('status', ['pending', 'completed'])
                 ->first();
 
-            if ($scan && is_array($scan->extracted_data)) {
+            if ($scan) {
                 $ocrData = array_merge(
                     ['scan_id' => $scan->scan_id, 'receipt_path' => $scan->receipt_path],
-                    $scan->extracted_data,
+                    is_array($scan->extracted_data) ? $scan->extracted_data : [],
                 );
             }
         }

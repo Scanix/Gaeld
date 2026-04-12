@@ -100,6 +100,7 @@ class OrganizationCrudFlowTest extends TestCase
                 'vat_number' => 'CHE-111.222.333',
                 'currency' => 'CHF',
                 'locale' => 'en',
+                'chart_of_accounts' => 'none',
             ]);
 
         $organization = Organization::where('name', 'Created Org')->firstOrFail();
@@ -113,6 +114,40 @@ class OrganizationCrudFlowTest extends TestCase
         $this->assertSame('Created Org SA', $organization->legal_name);
     }
 
+    public function test_owner_can_delete_organization_and_it_is_removed_from_db(): void
+    {
+        $orgToDelete = Organization::create(['name' => 'To Delete', 'currency' => 'CHF']);
+        $orgToDelete->users()->attach($this->owner->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($this->owner, $orgToDelete, 'owner');
+
+        $response = $this->actingAs($this->owner)
+            ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+            ->delete("/organizations/{$orgToDelete->id}");
+
+        $response->assertRedirect(route('organizations.index'));
+        $this->assertDatabaseMissing('organizations', ['id' => $orgToDelete->id]);
+    }
+
+    public function test_member_cannot_delete_organization(): void
+    {
+        $response = $this->actingAs($this->member)
+            ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+            ->delete("/organizations/{$this->primaryOrganization->id}");
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('organizations', ['id' => $this->primaryOrganization->id]);
+    }
+
+    public function test_outsider_cannot_delete_foreign_organization(): void
+    {
+        $response = $this->actingAs($this->outsider)
+            ->withSession(['current_organization_id' => $this->secondaryOrganization->id])
+            ->delete("/organizations/{$this->primaryOrganization->id}");
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('organizations', ['id' => $this->primaryOrganization->id]);
+    }
+
     public function test_store_rejects_invalid_payload(): void
     {
         $response = $this->actingAs($this->owner)
@@ -122,9 +157,10 @@ class OrganizationCrudFlowTest extends TestCase
                 'country' => 'CHE',
                 'currency' => 'TOOLONG',
                 'locale' => 'xx',
+                'chart_of_accounts' => 'unknown_template',
             ]);
 
-        $response->assertSessionHasErrors(['name', 'country', 'currency', 'locale']);
+        $response->assertSessionHasErrors(['name', 'country', 'currency', 'locale', 'chart_of_accounts']);
         $this->assertDatabaseMissing('organizations', ['name' => '']);
     }
 

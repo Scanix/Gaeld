@@ -46,6 +46,11 @@ class OrganizationService
         return $organization;
     }
 
+    public function delete(Organization $organization): void
+    {
+        $organization->delete();
+    }
+
     public function updateInvoiceSettings(Organization $organization, UpdateInvoiceSettingsData $data): Organization
     {
         $organization->update($data->toArray());

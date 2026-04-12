@@ -30,6 +30,7 @@ const previewUrl = ref(null)
 // OCR result
 const receiptPath = ref(null)
 const ocrConfidence = ref(null)
+const ocrHasData = ref(false)
 const scanElapsed = ref(0)
 const scanTimer = ref(null)
 const form = ref({
@@ -133,6 +134,7 @@ async function pollForResults(scanId) {
       if (extracted.vendor) form.value.vendor = extracted.vendor
       if (extracted.vat != null) form.value.vat = String(extracted.vat)
       ocrConfidence.value = extracted.confidence ?? data.confidence ?? null
+      ocrHasData.value = !!(extracted.amount || extracted.date || extracted.vendor)
       clearInterval(scanTimer.value)
       stage.value = 'review'
       return
@@ -190,6 +192,7 @@ function resetAndClose() {
   clearInterval(scanTimer.value)
   scanElapsed.value = 0
   ocrConfidence.value = null
+  ocrHasData.value = false
   if (previewUrl.value) {
     URL.revokeObjectURL(previewUrl.value)
     previewUrl.value = null
@@ -257,14 +260,14 @@ function resetAndClose() {
         />
       </div>
 
-      <Alert variant="success">
+      <Alert :variant="ocrHasData ? 'success' : 'warning'">
         <div class="flex items-center justify-between">
-          <span>{{ t('scan_complete') }}</span>
-          <span v-if="ocrConfidence != null" class="text-xs tabular-nums opacity-70">
+          <span>{{ ocrHasData ? t('scan_complete') : t('scan_no_data') }}</span>
+          <span v-if="ocrHasData && ocrConfidence != null" class="text-xs tabular-nums opacity-70">
             {{ t('ocr_confidence') }}: {{ Math.round(ocrConfidence * 100) }}%
           </span>
         </div>
-        <p class="mt-1 text-xs opacity-75">{{ t('review_and_adjust') }}</p>
+        <p v-if="ocrHasData" class="mt-1 text-xs opacity-75">{{ t('review_and_adjust') }}</p>
       </Alert>
 
       <!-- Editable form fields -->

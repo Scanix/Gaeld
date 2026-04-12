@@ -9,6 +9,7 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -35,7 +36,7 @@ class InvoiceDocumentController extends Controller
             ->with('success', __('app.justificatif_removed'));
     }
 
-    public function downloadJustificatif(Invoice $invoice): StreamedResponse|RedirectResponse
+    public function downloadJustificatif(Invoice $invoice, Request $request): StreamedResponse|RedirectResponse
     {
         $this->authorize('view', $invoice);
 
@@ -43,9 +44,18 @@ class InvoiceDocumentController extends Controller
             abort(404);
         }
 
+        $filename = basename($invoice->justificatif_path);
+
+        if ($request->boolean('inline')) {
+            return Storage::disk('local')->response(
+                $invoice->justificatif_path,
+                $filename,
+            );
+        }
+
         return Storage::disk('local')->download(
             $invoice->justificatif_path,
-            basename($invoice->justificatif_path),
+            $filename,
         );
     }
 

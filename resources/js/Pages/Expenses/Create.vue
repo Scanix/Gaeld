@@ -140,7 +140,7 @@ function onSupplierCreated(supplier) {
         <CardTitle>{{ t('new_expense') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <Alert v-if="ocrData" variant="info" class="mb-4">
+        <Alert v-if="ocrData?.amount || ocrData?.date || ocrData?.vendor" variant="info" class="mb-4">
           {{ t('ocr_prefilled_notice') }}
         </Alert>
         <form class="space-y-6" @submit.prevent="submit">

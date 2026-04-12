@@ -8,7 +8,7 @@ use App\Domains\Organizations\Controllers\OrganizationController;
 use App\Domains\Organizations\Controllers\OrganizationSettingsController;
 use Illuminate\Support\Facades\Route;
 
-Route::resource('organizations', OrganizationController::class)->only(['index', 'show', 'store']);
+Route::resource('organizations', OrganizationController::class)->only(['index', 'create', 'show', 'store', 'destroy']);
 Route::post('/organizations/{organization}/switch', [OrganizationController::class, 'switchOrganization'])->name('organizations.switch');
 
 // Organization settings
