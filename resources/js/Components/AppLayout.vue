@@ -79,8 +79,12 @@ const systemMessage = computed(() => page.props.systemMessage ?? null)
     <Sidebar
       v-model:collapsed="collapsed"
       :mobileOpen="mobileOpen"
+      :helpPage="helpPage"
+      :docsUrl="docsBaseUrl"
       class="print:hidden"
       @closeMobile="mobileOpen = false"
+      @toggleHelp="toggleHelp"
+      @toggleDocs="showDocs = !showDocs"
     />
 
     <!-- Main content area (offset by sidebar on desktop) -->
