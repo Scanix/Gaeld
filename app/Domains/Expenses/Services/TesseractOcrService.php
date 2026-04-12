@@ -170,7 +170,6 @@ class TesseractOcrService implements ReceiptOcrInterface
         /** @var array<string, list<string>> $wordsByLine key = "block-par-line" */
         $wordsByLine = [];
         $confidences = [];
-        $lastBlock = null;
         $lineKeys = []; // ordered list to detect block boundaries
 
         foreach ($lines as $line) {
