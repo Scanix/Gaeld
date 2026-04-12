@@ -46,5 +46,6 @@ Route::delete('/profile/sessions', [DeviceSessionController::class, 'destroyOthe
 
 // Notifications
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+Route::get('/notifications/all', [NotificationController::class, 'indexPage'])->name('notifications.all');
 Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
 Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
