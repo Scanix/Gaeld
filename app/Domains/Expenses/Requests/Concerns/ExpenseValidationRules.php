@@ -28,6 +28,8 @@ trait ExpenseValidationRules
             'currency' => 'string|size:3',
             'type' => ['sometimes', Rule::enum(ExpenseType::class)],
             'receipt' => 'nullable|file|mimes:'.config('uploads.allowed_mimes.receipt').'|max:'.config('uploads.max_size.receipt'),
+            'receipt_path' => ['nullable', 'string', 'starts_with:receipts/'],
+            'scan_id' => ['nullable', 'string', 'uuid'],
             'expense_account_code' => [
                 'nullable',
                 'string',

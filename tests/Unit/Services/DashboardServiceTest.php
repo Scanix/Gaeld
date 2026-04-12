@@ -58,6 +58,7 @@ class DashboardServiceTest extends TestCase
         $expenseService->shouldReceive('yearlyTotal')->with($this->orgId, 2026)->andReturn('450.00');
         $invoiceService->shouldReceive('unpaidSummary')->once()->with($this->orgId)->andReturn(new SummaryResult(2, '700.00'));
         $expenseService->shouldReceive('pendingSummary')->once()->with($this->orgId)->andReturn(new SummaryResult(1, '120.00'));
+        $ledgerService->shouldReceive('latestPostedEntryDate')->once()->with($this->orgId)->andReturn('2026-03-04');
         $ledgerService->shouldReceive('resolveAccount')->once()->with($this->orgId, '1020')->andReturn($bankAccount);
         $ledgerService->shouldReceive('accountBalance')->once()->with(10)->andReturn('800.00');
         $ledgerService->shouldReceive('recentEntries')->once()->with($this->orgId)->andReturn(collect([
@@ -113,6 +114,7 @@ class DashboardServiceTest extends TestCase
         $this->assertCount(12, $metrics['monthlyBreakdown']['monthIndices']);
         $this->assertSame('100', (string) $metrics['monthlyBreakdown']['revenue'][0]);
         $this->assertSame('300', (string) $metrics['monthlyBreakdown']['forecast'][2]);
+        $this->assertSame(2026, $metrics['displayYear']);
     }
 
     public function test_metrics_returns_zero_cash_balance_when_bank_account_is_missing(): void
@@ -127,6 +129,7 @@ class DashboardServiceTest extends TestCase
         $expenseService->shouldReceive('yearlyTotal')->andReturn('0.00');
         $invoiceService->shouldReceive('unpaidSummary')->once()->andReturn(new SummaryResult(0, '0.00'));
         $expenseService->shouldReceive('pendingSummary')->once()->andReturn(new SummaryResult(0, '0.00'));
+        $ledgerService->shouldReceive('latestPostedEntryDate')->once()->with($this->orgId)->andReturn(null);
         $ledgerService->shouldReceive('resolveAccount')->once()->andThrow(new ModelNotFoundException);
         $ledgerService->shouldReceive('recentEntries')->once()->andReturn(collect());
         $invoiceService->shouldReceive('paidInYear')->once()->andReturn(collect());

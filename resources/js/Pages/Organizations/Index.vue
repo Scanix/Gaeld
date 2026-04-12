@@ -37,7 +37,11 @@ const { t } = useTranslations()
 
 <template>
   <AppLayout :title="t('organizations')">
-    <PageHeader :description="t('your_organizations')" />
+    <PageHeader :description="t('your_organizations')">
+      <Button as="a" href="/organizations/create">
+        {{ t('new_organization') }}
+      </Button>
+    </PageHeader>
 
     <p v-if="switchError" class="mb-4 text-sm text-[hsl(var(--destructive))]">{{ switchError }}</p>
 

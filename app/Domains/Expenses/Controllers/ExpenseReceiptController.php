@@ -40,7 +40,7 @@ class ExpenseReceiptController extends Controller
             ->with('success', __('app.receipt_removed'));
     }
 
-    public function downloadReceipt(Expense $expense): StreamedResponse
+    public function downloadReceipt(Expense $expense, Request $request): StreamedResponse
     {
         $this->authorize('view', $expense);
 
@@ -48,9 +48,18 @@ class ExpenseReceiptController extends Controller
             abort(404);
         }
 
+        $filename = basename($expense->receipt_path);
+
+        if ($request->boolean('inline')) {
+            return Storage::disk('local')->response(
+                $expense->receipt_path,
+                $filename,
+            );
+        }
+
         return Storage::disk('local')->download(
             $expense->receipt_path,
-            basename($expense->receipt_path),
+            $filename,
         );
     }
 

@@ -50,6 +50,7 @@ const props = defineProps({
   monthlyBreakdown: { type: Object, default: () => ({ monthIndices: [], revenue: [], expenses: [], forecast: [], revenueItems: [], expenseItems: [], forecastItems: [] }) },
   checklist: { type: Object, default: () => ({ getting_started: [], accounting: [] }) },
   pendingOcrScans: { type: Number, default: 0 },
+  displayYear: { type: Number, default: () => new Date().getFullYear() },
 })
 
 const profit = computed(() => props.revenue - props.expenses)
@@ -130,16 +131,15 @@ function clearMonthFilter() {
 
 const filteredTransactions = computed(() => {
   if (!selectedMonth.value) return props.recentTransactions
-  const year = new Date().getFullYear()
   return props.recentTransactions.filter((transaction) => {
     const d = new Date(transaction.date)
-    return d.getFullYear() === year && d.getMonth() === selectedMonth.value - 1
+    return d.getFullYear() === props.displayYear && d.getMonth() === selectedMonth.value - 1
   })
 })
 
 const transactionsTitle = computed(() => {
   if (selectedMonth.value) {
-    return t('transactions_month', { month: intlMonthName(selectedMonth.value - 1), year: new Date().getFullYear() })
+    return t('transactions_month', { month: intlMonthName(selectedMonth.value - 1), year: props.displayYear })
   }
   return t('recent_transactions')
 })
@@ -162,7 +162,7 @@ const chartOptions = computed(() => {
         callbacks: {
           title: (items) => {
             if (!items.length) return ''
-            return `${items[0].label} ${new Date().getFullYear()}`
+            return `${items[0].label} ${props.displayYear}`
           },
           label: (item) => ` ${item.dataset.label}: ${formatCurrency(item.raw)}`,
           afterBody: (items) => {
@@ -261,7 +261,7 @@ const transactionColumns = computed(() => [
             {{ pendingOcrScans }} {{ t('ocr_pending_widget_description') }}
           </p>
         </div>
-        <a href="/expenses/new" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
+        <a href="/expenses" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
       </CardContent>
     </Card>
 
@@ -381,7 +381,7 @@ const transactionColumns = computed(() => [
     <Card class="mt-6">
       <CardHeader>
         <CardTitle>{{ t('revenue_vs_expenses') }}</CardTitle>
-        <CardDescription>{{ t('monthly_comparison') }} — {{ t('click_bar_filter') }}</CardDescription>
+        <CardDescription>{{ t('monthly_comparison') }} {{ props.displayYear }} — {{ t('click_bar_filter') }}</CardDescription>
       </CardHeader>
       <CardContent>
         <div class="h-96">
