@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.10.0] — 2026-04-12
+
+### Added
+- **Device session tracking** — DeviceSession model with user-agent parsing, DeviceSessionController (list, revoke single, revoke all others), active sessions UI on Profile page.
+- **Passkey as 2FA** — passkey can be used as a second factor alongside password; multi-method chooser on TwoFactorChallenge page (TOTP, passkey, recovery code); passwordless login removed.
+- **Cross-domain auth cookie** — `gaeld_auth` cookie set on login/2FA success (domain `.gaeld.ch`) to enable landing page redirect for authenticated users.
+- **Notification links** — clickable URLs in notification bell items.
+
+### Improved
+- **i18n** — active sessions and 2FA method chooser keys added across DE, EN, FR, IT.
+- **PHPStan** — baseline cleaned up (removed stale entries for refactored TwoFactorChallengeController).
+
+---
+
 ## [2.9.0] — 2026-04-11
 
 ### Added
