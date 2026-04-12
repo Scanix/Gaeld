@@ -289,6 +289,58 @@ function submitNotificationPrefs() {
     preserveScroll: true,
   })
 }
+
+// --- Active Sessions ---
+const deviceSessions = ref([])
+const revokeSessionForm = useForm({ current_password: '' })
+const revokingSessionId = ref(null)
+const revokeAllForm = useForm({ current_password: '' })
+const showRevokeAll = ref(false)
+
+async function loadSessions() {
+  try {
+    const res = await fetch('/profile/sessions', {
+      headers: { 'Accept': 'application/json' },
+      credentials: 'same-origin',
+    })
+    if (res.ok) {
+      deviceSessions.value = await res.json()
+    }
+  } catch {
+    // silently fail
+  }
+}
+
+onMounted(() => {
+  loadSessions()
+})
+
+function startRevokeSession(id) {
+  revokingSessionId.value = id
+  revokeSessionForm.reset()
+}
+
+function confirmRevokeSession() {
+  revokeSessionForm.delete(`/profile/sessions/${revokingSessionId.value}`, {
+    preserveScroll: true,
+    onSuccess: () => {
+      revokingSessionId.value = null
+      revokeSessionForm.reset()
+      loadSessions()
+    },
+  })
+}
+
+function confirmRevokeOtherSessions() {
+  revokeAllForm.delete('/profile/sessions', {
+    preserveScroll: true,
+    onSuccess: () => {
+      showRevokeAll.value = false
+      revokeAllForm.reset()
+      loadSessions()
+    },
+  })
+}
 </script>
 
 <template>
@@ -526,6 +578,100 @@ function submitNotificationPrefs() {
                 {{ t('register_passkey') }}
               </Button>
               <p v-if="passkeyError" class="mt-2 text-sm text-[hsl(var(--destructive))]">{{ passkeyError }}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Active Sessions -->
+      <Card>
+        <CardHeader>
+          <CardTitle>{{ t('active_sessions') }}</CardTitle>
+          <CardDescription>{{ t('active_sessions_desc') }}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="space-y-3">
+            <div
+              v-for="session in deviceSessions"
+              :key="session.id"
+              class="flex items-center justify-between rounded-md border border-[hsl(var(--border))] p-3"
+            >
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--muted))]">
+                  <svg v-if="session.is_mobile" class="h-5 w-5 text-[hsl(var(--muted-foreground))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <svg v-else class="h-5 w-5 text-[hsl(var(--muted-foreground))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <p class="text-sm font-medium">{{ session.device_name }}</p>
+                    <Badge v-if="session.is_current" variant="success" class="text-xs">{{ t('this_device') }}</Badge>
+                  </div>
+                  <p class="text-xs text-[hsl(var(--muted-foreground))]">
+                    {{ session.ip_address }} · {{ t('last_active') }}: {{ session.last_active_at }}
+                  </p>
+                </div>
+              </div>
+              <template v-if="!session.is_current">
+                <Button
+                  v-if="revokingSessionId !== session.id"
+                  variant="ghost"
+                  size="sm"
+                  @click="startRevokeSession(session.id)"
+                >
+                  {{ t('revoke_session') }}
+                </Button>
+                <form
+                  v-else
+                  class="flex items-center gap-2"
+                  @submit.prevent="confirmRevokeSession"
+                >
+                  <FormInput
+                    :id="'revoke_' + session.id"
+                    v-model="revokeSessionForm.current_password"
+                    type="password"
+                    :placeholder="t('current_password')"
+                    :error="revokeSessionForm.errors.current_password"
+                    class="w-40"
+                    required
+                  />
+                  <Button type="submit" variant="destructive" size="sm" :disabled="revokeSessionForm.processing">
+                    {{ t('confirm') }}
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" @click="revokingSessionId = null">
+                    {{ t('cancel') }}
+                  </Button>
+                </form>
+              </template>
+            </div>
+
+            <p v-if="deviceSessions.length === 0" class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('no_other_sessions') }}</p>
+
+            <div v-if="deviceSessions.filter(s => !s.is_current).length > 0" class="border-t border-[hsl(var(--border))] pt-4">
+              <div v-if="!showRevokeAll">
+                <Button variant="outline" @click="showRevokeAll = true">
+                  {{ t('revoke_other_sessions') }}
+                </Button>
+              </div>
+              <form v-else class="flex items-end gap-2" @submit.prevent="confirmRevokeOtherSessions">
+                <FormInput
+                  id="revoke_all_password"
+                  v-model="revokeAllForm.current_password"
+                  type="password"
+                  :label="t('current_password')"
+                  :error="revokeAllForm.errors.current_password"
+                  required
+                />
+                <Button type="submit" variant="destructive" :disabled="revokeAllForm.processing">
+                  {{ t('revoke_other_sessions') }}
+                </Button>
+                <Button type="button" variant="ghost" @click="showRevokeAll = false">
+                  {{ t('cancel') }}
+                </Button>
+              </form>
             </div>
           </div>
         </CardContent>
