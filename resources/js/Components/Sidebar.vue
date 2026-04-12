@@ -7,6 +7,7 @@ import {
   Receipt,
   BarChart3,
   BookOpen,
+  HelpCircle,
   Landmark,
   Building2,
   ChevronLeft,
@@ -20,20 +21,26 @@ import {
   Package,
   Briefcase,
   Settings,
+  Sun,
+  Moon,
 } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 import { usePermissions } from '@/lib/usePermissions'
+import { useTheme } from '@/lib/useTheme'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 
 const { t } = useTranslations()
 const { can } = usePermissions()
+const { isDark, toggleTheme } = useTheme()
 
 const props = defineProps({
   collapsed: { type: Boolean, default: false },
   mobileOpen: { type: Boolean, default: false },
+  helpPage: { type: String, default: null },
+  docsUrl: { type: String, default: null },
 })
 
-const emit = defineEmits(['update:collapsed', 'closeMobile'])
+const emit = defineEmits(['update:collapsed', 'closeMobile', 'toggleHelp', 'toggleDocs'])
 
 const page = usePage()
 const features = computed(() => page.props.features ?? {})
@@ -382,6 +389,35 @@ function isGroupActive(item) {
         </Tooltip>
       </template>
     </nav>
+
+    <!-- Mobile utility actions: theme, help, docs (desktop uses topbar) -->
+    <div class="border-t border-[hsl(var(--sidebar-border))] p-3 space-y-1 lg:hidden">
+      <button
+        class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] transition-colors"
+        :aria-label="isDark ? t('light_mode') : t('dark_mode')"
+        @click="toggleTheme"
+      >
+        <Sun v-if="isDark" class="h-4 w-4 shrink-0" />
+        <Moon v-else class="h-4 w-4 shrink-0" />
+        <span>{{ isDark ? t('light_mode') : t('dark_mode') }}</span>
+      </button>
+      <button
+        v-if="helpPage"
+        class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] transition-colors"
+        @click="emit('toggleHelp'); emit('closeMobile')"
+      >
+        <HelpCircle class="h-4 w-4 shrink-0" />
+        <span>{{ t('help') }}</span>
+      </button>
+      <button
+        v-if="docsUrl"
+        class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] transition-colors"
+        @click="emit('toggleDocs'); emit('closeMobile')"
+      >
+        <BookOpen class="h-4 w-4 shrink-0" />
+        <span>{{ t('documentation') }}</span>
+      </button>
+    </div>
 
     <!-- Collapse toggle (desktop only) -->
     <div class="hidden border-t border-[hsl(var(--sidebar-border))] p-3 lg:block">
