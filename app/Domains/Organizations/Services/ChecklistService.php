@@ -77,7 +77,7 @@ class ChecklistService
             ->exists();
 
         $expensesPosted = Expense::where('organization_id', $organizationId)
-            ->where('status', 'posted')
+            ->whereIn('status', ['approved', 'posted'])
             ->exists();
 
         $bankImported = BankImport::where('organization_id', $organizationId)->exists();
