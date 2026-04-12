@@ -114,22 +114,6 @@ function logout() {
             <User class="h-4 w-4" />
             {{ t('profile') }}
           </Link>
-          <button
-            v-if="helpPage"
-            class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] sm:hidden"
-            @click="$emit('toggleHelp'); showUserMenu = false"
-          >
-            <HelpCircle class="h-4 w-4" />
-            {{ t('help') }}
-          </button>
-          <button
-            v-if="docsUrl"
-            class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] sm:hidden"
-            @click="$emit('toggleDocs'); showUserMenu = false"
-          >
-            <BookOpen class="h-4 w-4" />
-            {{ t('documentation') }}
-          </button>
           <Link
             v-if="isSaasAdmin"
             href="/saas-admin"
