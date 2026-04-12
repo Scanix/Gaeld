@@ -12,10 +12,14 @@ use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Notifications\InvoicePaymentRecordedNotification;
 use App\Domains\Invoicing\Requests\RecordPaymentRequest;
+use App\Domains\Organizations\Enums\Permission;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Notification;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Invoice state transitions: finalize, cancel, duplicate, credit notes, and payments.
@@ -63,6 +67,16 @@ class InvoiceLifecycleController extends Controller
         } catch (ModelNotFoundException) {
             return redirect()->back()->with('error', __('app.account_not_found', ['code' => $validated['bank_account_code'] ?? '']));
         }
+
+        // Notify org users with invoice permissions (excluding the actor)
+        $org = $invoice->organization;
+        app()[PermissionRegistrar::class]->setPermissionsTeamId($org->id);
+        $recipients = $org->users()
+            ->permission(Permission::InvoicingView->value)
+            ->where('users.id', '!=', $request->user()->id)
+            ->get();
+
+        Notification::send($recipients, new InvoicePaymentRecordedNotification($invoice));
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', __('app.payment_recorded'));

@@ -15,18 +15,22 @@ use App\Domains\Expenses\DTOs\UpdateExpenseData;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Models\ReceiptScan;
+use App\Domains\Expenses\Notifications\ExpenseSubmittedNotification;
 use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
 use App\Domains\Expenses\Queries\ExpenseQuery;
 use App\Domains\Expenses\Requests\StoreExpenseRequest;
 use App\Domains\Expenses\Requests\UpdateExpenseRequest;
+use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Expense CRUD operations.
@@ -56,12 +60,28 @@ class ExpenseController extends Controller
     {
         $this->authorize('create', Expense::class);
 
+        $ocrData = null;
+        if ($request->filled('scan_id')) {
+            $scan = ReceiptScan::where('scan_id', $request->input('scan_id'))
+                ->where('user_id', $request->user()->id)
+                ->whereIn('status', ['pending', 'completed'])
+                ->first();
+
+            if ($scan && is_array($scan->extracted_data)) {
+                $ocrData = array_merge(
+                    ['scan_id' => $scan->scan_id, 'receipt_path' => $scan->receipt_path],
+                    $scan->extracted_data,
+                );
+            }
+        }
+
         return Inertia::render('Expenses/Create', [
             'vatRates' => VatRateQuery::active(),
             'suppliers' => SupplierQuery::forSelect(),
             'categories' => ExpenseCategoryQuery::forSelect(),
             'expenseAccounts' => AccountQuery::forSelect(AccountType::Expense),
             'bankAccounts' => BankAccountQuery::forSelect(),
+            'ocrData' => $ocrData,
         ]);
     }
 
@@ -82,6 +102,7 @@ class ExpenseController extends Controller
             }
         }
         $validated['organization_id'] = $currentOrg->id();
+        $validated['user_id'] = $request->user()->id;
 
         $expense = $action->execute(CreateExpenseData::fromArray($validated));
 
@@ -91,6 +112,15 @@ class ExpenseController extends Controller
                 ->whereIn('status', ['pending', 'completed'])
                 ->update(['status' => 'validated']);
         }
+
+        // Notify users with expense approval permission
+        app()[PermissionRegistrar::class]->setPermissionsTeamId($currentOrg->id());
+        $approvers = $currentOrg->get()->users()
+            ->permission(Permission::ExpensesApprove->value)
+            ->where('users.id', '!=', $request->user()->id)
+            ->get();
+
+        Notification::send($approvers, new ExpenseSubmittedNotification($expense, $request->user()->name));
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', __('app.expense_created'));

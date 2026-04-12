@@ -15,6 +15,7 @@ class OcrScanCompletedNotification extends Notification implements ShouldQueue
     public function __construct(
         public readonly string $filename,
         public readonly bool $success,
+        public readonly string $scanId = '',
     ) {}
 
     /** @return string[] */
@@ -32,10 +33,14 @@ class OcrScanCompletedNotification extends Notification implements ShouldQueue
     /** @return array<string, mixed> */
     public function toDatabase(object $notifiable): array
     {
+        $url = $this->success && $this->scanId !== ''
+            ? route('expenses.create', ['scan_id' => $this->scanId])
+            : route('expenses.index');
+
         return [
             'type' => $this->success ? 'ocr_completed' : 'ocr_failed',
             'filename' => $this->filename,
-            'url' => route('expenses.index'),
+            'url' => $url,
         ];
     }
 
@@ -48,6 +53,8 @@ class OcrScanCompletedNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject($subject)
             ->line($subject)
-            ->action(__('app.expenses'), route('expenses.index'));
+            ->action(__('app.expenses'), $this->success && $this->scanId !== ''
+                ? route('expenses.create', ['scan_id' => $this->scanId])
+                : route('expenses.index'));
     }
 }

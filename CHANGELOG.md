@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.11.0] — 2026-04-12
+
+### Added
+- **Expense notifications** — ExpenseSubmittedNotification (to approvers), ExpenseApprovedNotification (to submitter), InvoicePaymentRecordedNotification (to org users with invoice permissions).
+- **OCR → Expense pre-fill** — successful OCR scans link directly to Expense Create with pre-filled data (amount, date, vendor, VAT, receipt).
+- **Notifications full page** — `/notifications/all` Inertia page with pagination, mark-all-read, and "View all" link in NotificationBell dropdown.
+- **Expense user tracking** — `user_id` column on expenses table to track the submitter.
+
+### Improved
+- **i18n** — expense/invoice notification keys added across DE, EN, FR, IT.
+
+---
+
 ## [2.10.0] — 2026-04-12
 
 ### Added
