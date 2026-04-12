@@ -136,7 +136,8 @@ class ReportingFlowTest extends TestCase
             ->where('revenue', '1081.00')
             ->where('expenses', '200.00')
             ->where('cashBalance', '881.00')
-            ->where('balance', '881.00'));
+            ->where('balance', '881.00')
+            ->where('displayYear', 2026));
 
         $profitAndLoss = $this->actingAs($this->user)
             ->withSession(['current_organization_id' => $this->organization->id])

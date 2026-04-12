@@ -82,19 +82,21 @@ class BruteForceProtectionTest extends SecurityTestCase
     }
 
     // ──────────────────────────────────────────────────────────────
-    //  Passkey login — throttle:5,1
+    //  2FA passkey verify — throttle:5,1
     // ──────────────────────────────────────────────────────────────
 
-    public function test_passkey_login_is_throttled_after_five_attempts(): void
+    public function test_two_factor_passkey_verify_is_throttled_after_five_attempts(): void
     {
-        // Wrong body triggers validation failure — still counts toward rate limit
+        $user = User::factory()->create();
         $payload = ['invalid' => 'garbage'];
 
         for ($i = 0; $i < 5; $i++) {
-            $this->postJson('/passkey/login', $payload);
+            $this->withSession(['two_factor:user_id' => $user->id])
+                ->postJson('/two-factor-challenge/passkey/verify', $payload);
         }
 
-        $this->postJson('/passkey/login', $payload)
+        $this->withSession(['two_factor:user_id' => $user->id])
+            ->postJson('/two-factor-challenge/passkey/verify', $payload)
             ->assertTooManyRequests();
     }
 

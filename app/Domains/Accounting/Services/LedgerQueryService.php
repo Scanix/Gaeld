@@ -73,6 +73,17 @@ class LedgerQueryService
     }
 
     /**
+     * Return the date string of the most recent posted journal entry, or null when none exist.
+     */
+    public function latestPostedEntryDate(string $organizationId): ?string
+    {
+        return JournalEntry::where('organization_id', $organizationId)
+            ->where('is_posted', true)
+            ->orderByDesc('date')
+            ->value('date');
+    }
+
+    /**
      * Get trial balance for an organization.
      *
      * Returns all accounts with non-zero posted balances, ordered by code.

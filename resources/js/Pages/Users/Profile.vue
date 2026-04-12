@@ -517,17 +517,14 @@ function confirmRevokeOtherSessions() {
               </form>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      <!-- Passkeys -->
-      <Card v-if="supportsPasskeys">
-        <CardHeader>
-          <CardTitle>{{ t('passkeys') }}</CardTitle>
-          <CardDescription>{{ t('passkeys_description') }}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div class="space-y-4">
+          <!-- Passkeys (part of 2FA) -->
+          <div v-if="supportsPasskeys" class="mt-6 border-t border-[hsl(var(--border))] pt-6 space-y-4">
+            <div>
+              <p class="text-sm font-semibold">{{ t('passkeys') }}</p>
+              <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('passkeys_description') }}</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))] mt-1">{{ t('passkeys_2fa_hint') }}</p>
+            </div>
             <div v-if="passkeys.length > 0" class="space-y-2">
               <div
                 v-for="pk in passkeys"

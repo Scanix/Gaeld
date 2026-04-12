@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Laragear\WebAuthn\Http\Requests\AssertedRequest;
-use Laragear\WebAuthn\Http\Requests\AssertionRequest;
 use Laragear\WebAuthn\Http\Requests\AttestationRequest;
 use Laragear\WebAuthn\Http\Requests\AttestedRequest;
 
@@ -30,31 +28,6 @@ class PasskeyController extends Controller
         return response()->json([
             'id' => $id,
             'message' => trans('app.passkey_registered'),
-        ]);
-    }
-
-    public function loginOptions(AssertionRequest $request)
-    {
-        return $request->toVerify();
-    }
-
-    public function login(AssertedRequest $request): RedirectResponse|JsonResponse
-    {
-        $user = $request->login();
-
-        if (! $user) {
-            return response()->json([
-                'message' => trans('app.passkey_login_failed'),
-            ], 422);
-        }
-
-        $request->session()->regenerate();
-
-        // Passkey login counts as 2FA — skip the TOTP challenge
-        $request->session()->put('two_factor_authenticated', true);
-
-        return response()->json([
-            'redirect' => route('dashboard'),
         ]);
     }
 
