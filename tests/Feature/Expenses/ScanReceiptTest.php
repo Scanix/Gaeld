@@ -231,4 +231,32 @@ class ScanReceiptTest extends TestCase
         $this->assertEquals('2025-03-15', $cached['extracted']['date']);
         $this->assertEquals('Migros', $cached['extracted']['vendor']);
     }
+
+    public function test_create_expense_rejects_non_uuid_scan_id(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->post('/expenses', [
+                'category' => 'Office Supplies',
+                'amount' => '10.00',
+                'date' => '2025-03-15',
+                'scan_id' => 'not-a-uuid',
+            ]);
+
+        $response->assertSessionHasErrors(['scan_id']);
+    }
+
+    public function test_create_expense_rejects_receipt_path_without_receipts_prefix(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->post('/expenses', [
+                'category' => 'Office Supplies',
+                'amount' => '10.00',
+                'date' => '2025-03-15',
+                'receipt_path' => '../../../etc/passwd',
+            ]);
+
+        $response->assertSessionHasErrors(['receipt_path']);
+    }
 }

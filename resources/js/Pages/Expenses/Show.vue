@@ -13,7 +13,7 @@ import DropdownMenu from '@/Components/UI/DropdownMenu.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, CheckCircle } from 'lucide-vue-next'
+import { Pencil, Trash2, CheckCircle, Download, Eye, X } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 
 const props = defineProps({
@@ -23,6 +23,7 @@ const props = defineProps({
 
 const showPostDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showReceiptPreview = ref(false)
 const deleting = ref(false)
 const posting = ref(false)
 const approveForm = useForm({})
@@ -176,9 +177,19 @@ const journalColumns = computed(() => [
           </div>
         </CardHeader>
         <CardContent>
-          <a :href="receiptUrl" target="_blank" class="text-sm text-[hsl(var(--primary))] hover:underline">
-            {{ t('view_receipt') }}
-          </a>
+          <div class="flex flex-wrap items-center gap-3">
+            <Button variant="outline" size="sm" @click="showReceiptPreview = true">
+              <Eye class="mr-1.5 h-4 w-4" />
+              {{ t('view_receipt') }}
+            </Button>
+            <a
+              :href="receiptUrl"
+              class="inline-flex items-center gap-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
+            >
+              <Download class="h-4 w-4" />
+              {{ t('download') }}
+            </a>
+          </div>
         </CardContent>
       </Card>
 
@@ -213,4 +224,38 @@ const journalColumns = computed(() => [
       @cancel="showDeleteDialog = false"
     />
   </AppLayout>
+
+  <!-- Receipt preview overlay -->
+  <Teleport to="body">
+    <Transition name="modal">
+      <div v-if="showReceiptPreview" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/60" @click="showReceiptPreview = false" />
+        <div class="relative z-50 flex w-full max-w-4xl flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] shadow-xl" style="max-height: 90dvh;">
+          <div class="flex shrink-0 items-center justify-between border-b border-[hsl(var(--border))] px-4 py-3">
+            <h2 class="text-base font-semibold">{{ t('receipt') }}</h2>
+            <div class="flex items-center gap-2">
+              <a
+                :href="receiptUrl"
+                class="inline-flex items-center gap-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
+              >
+                <Download class="h-4 w-4" />
+                {{ t('download') }}
+              </a>
+              <Button variant="ghost" size="icon" :aria-label="t('close')" @click="showReceiptPreview = false">
+                <X class="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <div class="flex-1 overflow-hidden p-2">
+            <iframe
+              :src="`${receiptUrl}?inline=1`"
+              class="h-full w-full rounded border-0"
+              style="min-height: 70dvh;"
+              :title="t('receipt')"
+            />
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>

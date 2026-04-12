@@ -56,7 +56,7 @@ class DashboardService
 
     private function computeMetrics(string $organizationId): array
     {
-        $year = now()->year;
+        $year = $this->resolveDisplayYear($organizationId);
 
         $totalRevenue = $this->invoiceQuery->yearlyRevenue($organizationId, $year);
         $totalExpenses = $this->expenseService->yearlyTotal($organizationId, $year);
@@ -92,6 +92,7 @@ class DashboardService
             'vatSummary' => $this->currentQuarterVat($organizationId),
             'receivablesAging' => $this->agingSummary($organizationId),
             'pendingOcrScans' => $this->pendingOcrScans($organizationId),
+            'displayYear' => $year,
         ];
     }
 
@@ -298,6 +299,30 @@ class DashboardService
             'totalOverdue' => $totalOverdue,
             'brackets' => $bracketTotals,
         ];
+    }
+
+    /**
+     * Resolve the fiscal year to display on the dashboard.
+     *
+     * Uses the current calendar year when financial activity exists for it.
+     * Falls back to the most recent year that has posted journal entries,
+     * so the dashboard stays meaningful even when no data has been entered
+     * for the current year yet (e.g. after a fresh year-end closing).
+     */
+    private function resolveDisplayYear(string $organizationId): int
+    {
+        $currentYear = now()->year;
+
+        $latestDate = $this->ledgerService->latestPostedEntryDate($organizationId);
+
+        if ($latestDate) {
+            $latestYear = (int) Carbon::parse($latestDate)->year;
+
+            // Never project into a future year; use the current year at most.
+            return min($latestYear, $currentYear);
+        }
+
+        return $currentYear;
     }
 
     private function pendingOcrScans(string $organizationId): int

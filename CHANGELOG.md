@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.12.0] — 2026-04-12
+
+### Added
+- **Organization management** — Create page (`Organizations/Create.vue`), delete action with session cleanup, chart-of-accounts seeding on creation.
+- **Dashboard smart year** — `resolveDisplayYear()` falls back to the most recent year with posted entries instead of always using the current year.
+- **Receipt preview** — inline image/PDF preview modal on Expense Show and Invoice Show pages with download link.
+- **OCR pending widget** — dashboard widget showing pending OCR scans count with link to expenses.
+- **Ledger query** — `latestPostedEntryDate()` method on LedgerQueryService.
+
+### Fixed
+- **Lang files** — missing commas causing PHP parse errors in all 4 locales.
+- **Dashboard year** — chart tooltips, transaction filtering and chart description now use the resolved display year.
+
+### Removed
+- **WebAuthn legacy controllers** — deleted unused `WebAuthnLoginController` and `WebAuthnRegisterController`; removed stale `loginOptions()` from PasskeyController.
+
+### Improved
+- **Tests** — updated ScanReceiptTest, OrganizationCrudFlowTest, ReportingFlowTest, BruteForceProtectionTest, DashboardServiceTest.
+- **i18n** — OCR widget, receipt preview, and organization CRUD keys added across DE, EN, FR, IT.
+- **PHPStan** — baseline cleaned up (removed stale PasskeyController entry).
+
+---
+
 ## [2.11.0] — 2026-04-12
 
 ### Added
