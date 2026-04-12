@@ -29,6 +29,7 @@ readonly class CreateExpenseData
         public string $type = 'invoice',
         public ?string $expenseAccountCode = null,
         public ?string $bankAccountCode = null,
+        public ?string $paymentMethod = null,
     ) {}
 
     /** @param  array<string, mixed>  $data */
@@ -52,6 +53,7 @@ readonly class CreateExpenseData
             type: $data['type'] ?? 'invoice',
             expenseAccountCode: $data['expense_account_code'] ?? null,
             bankAccountCode: $data['bank_account_code'] ?? null,
+            paymentMethod: $data['payment_method'] ?? null,
         );
     }
 }

@@ -7,8 +7,10 @@ use App\Domains\Accounting\Models\Budget;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\VatReportService;
+use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Models\ReceiptScan;
 use App\Domains\Expenses\Services\ExpenseService;
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Queries\InvoiceReportingQuery;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
@@ -304,10 +306,14 @@ class DashboardService
     /**
      * Resolve the fiscal year to display on the dashboard.
      *
-     * Uses the current calendar year when financial activity exists for it.
-     * Falls back to the most recent year that has posted journal entries,
-     * so the dashboard stays meaningful even when no data has been entered
-     * for the current year yet (e.g. after a fresh year-end closing).
+     * Priority order:
+     * 1. Most recent year with posted journal entries (capped at current year).
+     * 2. Most recent year with any expense or invoice activity (capped at current year).
+     * 3. Current calendar year (no data at all).
+     *
+     * This prevents the dashboard from showing 0.00 CHF when an org has
+     * expenses/invoices dated in a prior year but has not yet posted any
+     * journal entries.
      */
     private function resolveDisplayYear(string $organizationId): int
     {
@@ -320,6 +326,20 @@ class DashboardService
 
             // Never project into a future year; use the current year at most.
             return min($latestYear, $currentYear);
+        }
+
+        // No posted journal entries yet — fall back to the most recent year
+        // that has any expense or invoice activity so the dashboard is useful.
+        $latestExpenseDate = Expense::where('organization_id', $organizationId)->max('date');
+        $latestInvoiceDate = Invoice::where('organization_id', $organizationId)->max('issue_date');
+
+        $activityYears = array_filter([
+            $latestExpenseDate ? (int) Carbon::parse($latestExpenseDate)->year : null,
+            $latestInvoiceDate ? (int) Carbon::parse($latestInvoiceDate)->year : null,
+        ]);
+
+        if (! empty($activityYears)) {
+            return min(max($activityYears), $currentYear);
         }
 
         return $currentYear;
