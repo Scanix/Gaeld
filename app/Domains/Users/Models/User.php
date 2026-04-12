@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -81,6 +82,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->two_factor_confirmed_at !== null;
     }
 
+    public function hasAnyTwoFactor(): bool
+    {
+        return $this->hasTwoFactorEnabled() || $this->webAuthnCredentials()->exists();
+    }
+
     /** @return BelongsToMany<Organization, $this> */
     public function organizations(): BelongsToMany
     {
@@ -113,5 +119,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function preferredLocale(): string
     {
         return $this->locale;
+    }
+
+    /** @return HasMany<DeviceSession, $this> */
+    public function deviceSessions(): HasMany
+    {
+        return $this->hasMany(DeviceSession::class);
     }
 }

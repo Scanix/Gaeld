@@ -510,6 +510,22 @@ return [
     'require_two_factor' => 'Richiedi autenticazione a due fattori',
     'require_two_factor_desc' => 'Richiedi a tutti i membri di attivare l\'autenticazione a due fattori.',
 
+    // Active sessions
+    'active_sessions' => 'Sessioni attive',
+    'active_sessions_desc' => 'Gestisci e revoca le tue sessioni attive su altri browser e dispositivi.',
+    'this_device' => 'Questo dispositivo',
+    'last_active' => 'Ultima attività',
+    'revoke_session' => 'Revoca',
+    'revoke_other_sessions' => 'Revoca altre sessioni',
+    'no_other_sessions' => 'Nessuna altra sessione attiva.',
+    'session_revoked' => 'Sessione revocata con successo.',
+    'other_sessions_revoked' => 'Tutte le altre sessioni sono state revocate.',
+
+    // 2FA method chooser
+    'use_passkey' => 'Usa una passkey',
+    'two_factor_passkey_desc' => 'Verifica con impronta digitale, volto o chiave di sicurezza.',
+    'two_factor_choose_method' => 'Scegli il metodo di verifica',
+
     // Topbar
     'help' => 'Aiuto',
     'sign_out' => 'Esci',
