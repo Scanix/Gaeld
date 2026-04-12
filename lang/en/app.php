@@ -513,6 +513,22 @@ return [
     'require_two_factor' => 'Require Two-Factor Authentication',
     'require_two_factor_desc' => 'Require all members to enable two-factor authentication.',
 
+    // Active sessions
+    'active_sessions' => 'Active Sessions',
+    'active_sessions_desc' => 'Manage and revoke your active sessions on other browsers and devices.',
+    'this_device' => 'This device',
+    'last_active' => 'Last active',
+    'revoke_session' => 'Revoke',
+    'revoke_other_sessions' => 'Revoke other sessions',
+    'no_other_sessions' => 'No other active sessions.',
+    'session_revoked' => 'Session revoked successfully.',
+    'other_sessions_revoked' => 'All other sessions have been revoked.',
+
+    // 2FA method chooser
+    'use_passkey' => 'Use a passkey',
+    'two_factor_passkey_desc' => 'Verify with your fingerprint, face, or security key.',
+    'two_factor_choose_method' => 'Choose verification method',
+
     // Topbar
     'help' => 'Help',
     'sign_out' => 'Sign out',

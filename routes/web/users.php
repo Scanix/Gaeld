@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Users\Controllers\DeviceSessionController;
 use App\Domains\Users\Controllers\NotificationController;
 use App\Domains\Users\Controllers\PasskeyController;
 use App\Domains\Users\Controllers\TwoFactorController;
@@ -37,6 +38,11 @@ Route::delete('/profile/passkeys/{credential}', [PasskeyController::class, 'dest
 
 // Notification preferences
 Route::put('/profile/notification-preferences', [UserController::class, 'updateNotificationPreferences'])->name('profile.notification-preferences');
+
+// Active sessions / devices
+Route::get('/profile/sessions', [DeviceSessionController::class, 'index'])->name('profile.sessions');
+Route::delete('/profile/sessions/{id}', [DeviceSessionController::class, 'destroy'])->name('profile.sessions.destroy');
+Route::delete('/profile/sessions', [DeviceSessionController::class, 'destroyOthers'])->name('profile.sessions.destroy-others');
 
 // Notifications
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
