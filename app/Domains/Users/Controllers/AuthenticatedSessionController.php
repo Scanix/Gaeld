@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Cookie;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -44,8 +45,8 @@ class AuthenticatedSessionController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // If user has 2FA enabled, redirect to challenge instead of completing login
-        if ($user->hasTwoFactorEnabled()) {
+        // If user has any 2FA method (TOTP or passkey), redirect to challenge
+        if ($user->hasAnyTwoFactor()) {
             $userId = $user->id;
 
             Auth::guard('web')->logout();
@@ -68,7 +69,8 @@ class AuthenticatedSessionController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(route('dashboard'))
+            ->withCookie($this->authCookie(true));
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -78,6 +80,27 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect()->route('login')
+            ->withCookie($this->authCookie(false));
+    }
+
+    /**
+     * Create a cross-domain cookie to signal login state to the landing site.
+     */
+    private function authCookie(bool $authenticated): Cookie
+    {
+        $domain = config('session.domain') ?: null;
+
+        return cookie(
+            'gaeld_auth',
+            $authenticated ? '1' : '',
+            $authenticated ? config('session.lifetime') : -1,
+            '/',
+            $domain,
+            config('session.secure', true),
+            false, // httpOnly=false so JS on landing site can read it
+            false,
+            config('session.same_site', 'lax'),
+        );
     }
 }
