@@ -8,6 +8,7 @@ use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Exceptions\ExpenseLedgerPostingException;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Expenses\Notifications\ExpenseApprovedNotification;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +26,12 @@ class ExpenseWorkflowController extends Controller
             $action->execute($expense);
         } catch (InvalidExpenseStateException $e) {
             return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        // Notify the submitter if they're tracked on the expense
+        $submitter = $expense->user;
+        if ($submitter) {
+            $submitter->notify(new ExpenseApprovedNotification($expense));
         }
 
         return redirect()->route('expenses.show', $expense)

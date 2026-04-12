@@ -81,6 +81,9 @@ const notificationResolvers = {
   ocr_failed: (data) => t('notification_ocr_failed', { filename: data.filename ?? '' }),
   trial_expiring: (data) => t('notification_trial_expiring', { days: data.days_remaining ?? 0 }),
   upgrade_nudge: () => t('notification_upgrade_nudge'),
+  expense_submitted: (data) => t('expense_submitted_notification', { name: data.submitter_name ?? '' }),
+  expense_approved: () => t('expense_approved_notification'),
+  invoice_payment_recorded: (data) => t('invoice_payment_recorded_notification', { number: data.invoice_number ?? '' }),
 }
 
 function getNotificationMessage(n) {
@@ -174,6 +177,14 @@ function visitNotification(n) {
           </button>
         </li>
       </ul>
+      <div class="border-t border-[hsl(var(--border))] px-3 py-2 text-center">
+        <button
+          class="text-xs text-[hsl(var(--primary))] hover:underline"
+          @click="() => { showDropdown = false; router.visit('/notifications/all') }"
+        >
+          {{ t('notifications_view_all') }}
+        </button>
+      </div>
     </div>
   </div>
 </template>

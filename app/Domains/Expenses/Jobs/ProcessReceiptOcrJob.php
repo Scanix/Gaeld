@@ -92,6 +92,6 @@ class ProcessReceiptOcrJob implements ShouldQueue
     {
         $user = User::find($this->userId);
 
-        $user?->notify(new OcrScanCompletedNotification($filename, $success));
+        $user?->notify(new OcrScanCompletedNotification($filename, $success, $this->scanId));
     }
 }

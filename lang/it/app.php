@@ -1893,4 +1893,9 @@ return [
     'notification_trial_expiring' => 'La tua prova scade tra :days giorno/i. Effettua l\'upgrade per mantenere l\'accesso.',
     'notification_upgrade_nudge' => 'Effettua l\'upgrade del tuo piano per sbloccare tutte le funzionalità.',
     'notification_unknown' => 'Hai una nuova notifica.',
+    'notifications_view_all' => 'Visualizza tutte le notifiche',
+    'ocr_prefilled_notice' => 'Il modulo è stato precompilato con i dati dello scontrino scansionato. Verifica prima di salvare.',
+    'expense_submitted_notification' => 'La spesa inviata da :name attende approvazione.',
+    'expense_approved_notification' => 'La tua spesa è stata approvata.',
+    'invoice_payment_recorded_notification' => 'Pagamento registrato per la fattura :number.',
 ];

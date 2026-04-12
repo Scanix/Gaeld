@@ -8,6 +8,7 @@ use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Enums\ExpenseType;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Users\Models\User;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -26,6 +27,7 @@ use Laravel\Scout\Searchable;
  *
  * @property string $id
  * @property string $organization_id
+ * @property int|null $user_id
  * @property string|null $journal_entry_id
  * @property int|null $vat_rate_id
  * @property string $category
@@ -56,6 +58,7 @@ class Expense extends Model
 
     protected $fillable = [
         'organization_id',
+        'user_id',
         'journal_entry_id',
         'vat_rate_id',
         'category',
@@ -89,6 +92,12 @@ class Expense extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /** @return BelongsTo<JournalEntry, $this> */

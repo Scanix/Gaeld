@@ -1913,4 +1913,9 @@ return [
     'notification_trial_expiring' => 'Votre essai expire dans :days jour(s). Passez à un forfait supérieur pour conserver l\'accès.',
     'notification_upgrade_nudge' => 'Passez à un forfait supérieur pour débloquer toutes les fonctionnalités.',
     'notification_unknown' => 'Vous avez une nouvelle notification.',
+    'notifications_view_all' => 'Voir toutes les notifications',
+    'ocr_prefilled_notice' => 'Le formulaire a été pré-rempli avec les données du reçu scanné. Veuillez vérifier avant d\'enregistrer.',
+    'expense_submitted_notification' => 'La dépense soumise par :name est en attente d\'approbation.',
+    'expense_approved_notification' => 'Votre dépense a été approuvée.',
+    'invoice_payment_recorded_notification' => 'Paiement enregistré pour la facture :number.',
 ];
