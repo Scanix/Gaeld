@@ -271,7 +271,7 @@ function onSupplierCreated(supplier) {
 
           <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" href="/expenses" variant="outline">{{ t('cancel') }}</Button>
-            <Button type="submit" :disabled="form.processing || isDateClosed" :title="isDateClosed ? t('fiscal_year_closed_action_disabled') : undefined">{{ t('create_expense') }}</Button>
+            <Button type="submit" :disabled="form.processing || isDateClosed" :loading="form.processing" :title="isDateClosed ? t('fiscal_year_closed_action_disabled') : undefined">{{ t('create_expense') }}</Button>
           </div>
         </form>
       </CardContent>

@@ -263,7 +263,7 @@ const isImage = computed(() => {
 
           <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" :href="`/expenses/${expense.id}`" variant="outline">{{ t('cancel') }}</Button>
-            <Button type="submit" :disabled="form.processing || isDateClosed" :title="isDateClosed ? t('fiscal_year_closed_action_disabled') : undefined">{{ t('save_changes') }}</Button>
+            <Button type="submit" :disabled="form.processing || isDateClosed" :loading="form.processing" :title="isDateClosed ? t('fiscal_year_closed_action_disabled') : undefined">{{ t('save_changes') }}</Button>
           </div>
         </form>
       </CardContent>

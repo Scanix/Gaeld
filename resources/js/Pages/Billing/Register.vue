@@ -84,14 +84,14 @@ function submit() {
       <div class="bg-[hsl(var(--card))] rounded-lg border border-[hsl(var(--border))] shadow-sm py-8 px-6">
         <form @submit.prevent="submit" class="space-y-5">
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('full_name') }}</label>
               <input
                 v-model="form.name"
                 type="text"
                 required
-                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
               <p v-if="form.errors.name" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.name }}</p>
             </div>
@@ -101,7 +101,7 @@ function submit() {
                 v-model="form.org_name"
                 type="text"
                 required
-                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
               <p v-if="form.errors.org_name" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.org_name }}</p>
             </div>
@@ -113,7 +113,7 @@ function submit() {
               v-model="form.email"
               type="email"
               required
-              class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+              class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
             />
             <p v-if="form.errors.email" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.email }}</p>
           </div>
@@ -122,7 +122,7 @@ function submit() {
             <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('chart_of_accounts') }}</label>
             <select
               v-model="form.chart_of_accounts"
-              class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+              class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
             >
               <option v-for="tpl in chart_templates" :key="tpl.key" :value="tpl.key">{{ t(tpl.label_key) }}</option>
               <option value="none">{{ t('chart_none') }}</option>
@@ -131,14 +131,14 @@ function submit() {
             <p v-if="form.errors.chart_of_accounts" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.chart_of_accounts }}</p>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('password') }}</label>
               <input
                 v-model="form.password"
                 type="password"
                 required
-                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
               <p v-if="form.errors.password" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.password }}</p>
             </div>
@@ -148,7 +148,7 @@ function submit() {
                 v-model="form.password_confirmation"
                 type="password"
                 required
-                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+                class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
             </div>
           </div>

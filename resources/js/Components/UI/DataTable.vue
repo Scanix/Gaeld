@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3'
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown, Search, X, Columns3, Download } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, ChevronDown, ArrowUp, ArrowDown, ArrowUpDown, Search, X, Columns3, Download } from 'lucide-vue-next'
 import Button from './Button.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useMediaQuery } from '@/lib/useMediaQuery'
@@ -74,6 +74,10 @@ const props = defineProps({
   exportFilename: {
     type: String,
     default: 'export',
+  },
+  expandable: {
+    type: Boolean,
+    default: false,
   },
 })
 
@@ -179,6 +183,19 @@ function toggleRow(id) {
   emit('selection-change', [...next])
 }
 
+// Row expansion
+const expandedRows = ref(new Set())
+
+watch(() => props.rows, () => {
+  expandedRows.value = new Set()
+})
+
+function toggleExpand(id) {
+  const next = new Set(expandedRows.value)
+  next.has(id) ? next.delete(id) : next.add(id)
+  expandedRows.value = next
+}
+
 // CSV export
 function exportCsv() {
   const cols = visibleColumns.value
@@ -229,6 +246,7 @@ function exportCsv() {
         <div v-for="filter in filters" :key="filter.key">
           <select
             :value="filter.value ?? ''"
+            :aria-label="filter.label"
             class="h-9 rounded-md border border-[hsl(var(--input))] bg-transparent px-3 text-sm text-[hsl(var(--foreground))] outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
             @change="handleFilter(filter.key, $event.target.value)"
           >
@@ -270,29 +288,41 @@ function exportCsv() {
       </div>
     </div>
 
-    <div class="overflow-auto">
+    <div class="overflow-auto relative">
+      <!-- Scroll hint for horizontal overflow on non-mobile -->
+      <div v-if="!isMobile" class="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[hsl(var(--card))] to-transparent opacity-0 transition-opacity sm:hidden" aria-hidden="true" />
+
       <!-- Mobile card view -->
       <div v-if="isMobile" class="divide-y divide-[hsl(var(--border))]">
-        <component
-          :is="rowLink ? Link : 'div'"
-          v-for="(row, i) in rows"
-          :key="row.id ?? i"
-          v-bind="rowLink ? { href: rowLink(row) } : {}"
-          class="block px-4 py-3 space-y-1"
-          :class="rowLink ? 'hover:bg-[hsl(var(--muted))]/50' : ''"
-        >
-          <div v-if="selectable" class="flex items-center gap-2 pb-1">
-            <input type="checkbox" :checked="selectedIds.has(row.id)" :aria-label="t('select_row')" class="rounded border-[hsl(var(--input))]" @change="toggleRow(row.id)" />
+        <template v-for="(row, i) in rows" :key="row.id ?? i">
+          <component
+            :is="rowLink ? Link : 'div'"
+            v-bind="rowLink ? { href: rowLink(row) } : {}"
+            class="block px-4 py-3 space-y-1"
+            :class="rowLink ? 'hover:bg-[hsl(var(--muted))]/50' : ''"
+          >
+            <div v-if="expandable" class="pb-1">
+              <button type="button" class="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" :aria-label="expandedRows.has(row.id) ? t('collapse') : t('expand')" @click.prevent="toggleExpand(row.id)">
+                <ChevronDown v-if="expandedRows.has(row.id)" class="h-4 w-4" />
+                <ChevronRight v-else class="h-4 w-4" />
+              </button>
+            </div>
+            <div v-if="selectable" class="flex items-center gap-2 pb-1">
+              <input type="checkbox" :checked="selectedIds.has(row.id)" :aria-label="t('select_row')" class="rounded border-[hsl(var(--input))]" @change="toggleRow(row.id)" />
+            </div>
+            <div v-for="col in visibleColumns" :key="col.key" class="flex justify-between gap-2 text-sm py-0.5">
+              <span class="text-[hsl(var(--muted-foreground))] shrink-0">{{ col.label }}</span>
+              <span :class="col.class" class="text-right min-w-0 break-words">
+                <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
+                  {{ col.format ? col.format(row[col.key], row) : row[col.key] }}
+                </slot>
+              </span>
+            </div>
+          </component>
+          <div v-if="expandable && expandedRows.has(row.id)" class="bg-[hsl(var(--muted))]/30 px-4 py-3">
+            <slot name="expand-row" :row="row" />
           </div>
-          <div v-for="col in visibleColumns" :key="col.key" class="flex justify-between gap-2 text-sm">
-            <span class="text-[hsl(var(--muted-foreground))] shrink-0">{{ col.label }}</span>
-            <span :class="col.class" class="text-right">
-              <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
-                {{ col.format ? col.format(row[col.key], row) : row[col.key] }}
-              </slot>
-            </span>
-          </div>
-        </component>
+        </template>
         <div v-if="rows.length === 0" class="px-4 py-8 text-center text-[hsl(var(--muted-foreground))]">
           <slot name="empty">
             {{ emptyMessage ?? t('no_records') }}
@@ -307,6 +337,7 @@ function exportCsv() {
             <th v-if="selectable" scope="col" class="w-10 px-4 py-3">
               <input type="checkbox" :checked="allSelected" :aria-label="t('select_all')" class="rounded border-[hsl(var(--input))]" @change="toggleAll" />
             </th>
+            <th v-if="expandable" scope="col" class="w-8 px-2 py-3" />
             <th
               v-for="col in visibleColumns"
               :key="col.key"
@@ -329,31 +360,40 @@ function exportCsv() {
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="(row, i) in rows"
-            :key="row.id ?? i"
-            class="border-b border-[hsl(var(--border))] last:border-0 transition-colors hover:bg-[hsl(var(--muted))]/50"
-          >
-            <td v-if="selectable" class="w-10 px-4 py-3">
-              <input type="checkbox" :checked="selectedIds.has(row.id)" :aria-label="t('select_row')" class="rounded border-[hsl(var(--input))]" @change="toggleRow(row.id)" />
-            </td>
-            <td
-              v-for="col in visibleColumns"
-              :key="col.key"
-              :class="['px-4 py-3', col.class]"
-            >
-              <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
-                <Link v-if="rowLink" :href="rowLink(row)" class="hover:underline">
-                  {{ col.format ? col.format(row[col.key], row) : row[col.key] }}
-                </Link>
-                <template v-else>
-                  {{ col.format ? col.format(row[col.key], row) : row[col.key] }}
-                </template>
-              </slot>
-            </td>
-          </tr>
+          <template v-for="(row, i) in rows" :key="row.id ?? i">
+            <tr class="border-b border-[hsl(var(--border))] last:border-0 transition-colors hover:bg-[hsl(var(--muted))]/50">
+              <td v-if="selectable" class="w-10 px-4 py-3">
+                <input type="checkbox" :checked="selectedIds.has(row.id)" :aria-label="t('select_row')" class="rounded border-[hsl(var(--input))]" @change="toggleRow(row.id)" />
+              </td>
+              <td v-if="expandable" class="w-8 px-2 py-3">
+                <button type="button" class="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" :aria-label="expandedRows.has(row.id) ? t('collapse') : t('expand')" @click="toggleExpand(row.id)">
+                  <ChevronDown v-if="expandedRows.has(row.id)" class="h-4 w-4 transition-transform" />
+                  <ChevronRight v-else class="h-4 w-4 transition-transform" />
+                </button>
+              </td>
+              <td
+                v-for="col in visibleColumns"
+                :key="col.key"
+                :class="['px-4 py-3', col.class]"
+              >
+                <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
+                  <Link v-if="rowLink" :href="rowLink(row)" class="hover:underline">
+                    {{ col.format ? col.format(row[col.key], row) : row[col.key] }}
+                  </Link>
+                  <template v-else>
+                    {{ col.format ? col.format(row[col.key], row) : row[col.key] }}
+                  </template>
+                </slot>
+              </td>
+            </tr>
+            <tr v-if="expandable && expandedRows.has(row.id)" class="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30">
+              <td :colspan="visibleColumns.length + (selectable ? 1 : 0) + 1" class="px-4 py-3">
+                <slot name="expand-row" :row="row" />
+              </td>
+            </tr>
+          </template>
           <tr v-if="rows.length === 0">
-            <td :colspan="visibleColumns.length + (selectable ? 1 : 0)" class="px-4 py-8 text-center text-[hsl(var(--muted-foreground))]">
+            <td :colspan="visibleColumns.length + (selectable ? 1 : 0) + (expandable ? 1 : 0)" class="px-4 py-8 text-center text-[hsl(var(--muted-foreground))]">
               <slot name="empty">
                 {{ emptyMessage ?? t('no_records') }}
               </slot>
@@ -373,11 +413,11 @@ function exportCsv() {
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('page_of', { current: pagination.current_page, last: pagination.last_page }) }}
       </p>
-      <div class="flex gap-1">
+      <div class="flex gap-2">
         <Link
           v-if="pagination.prev_page_url"
           :href="pagination.prev_page_url"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 text-xs sm:h-8 border border-[hsl(var(--input))] bg-[hsl(var(--background))] shadow-sm hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium h-11 w-11 sm:h-8 sm:w-auto sm:px-3 border border-[hsl(var(--input))] bg-[hsl(var(--background))] shadow-sm hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
           :aria-label="t('previous_page')"
         >
           <ChevronLeft class="h-4 w-4" />
@@ -385,7 +425,7 @@ function exportCsv() {
         <Link
           v-if="pagination.next_page_url"
           :href="pagination.next_page_url"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 text-xs sm:h-8 border border-[hsl(var(--input))] bg-[hsl(var(--background))] shadow-sm hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium h-11 w-11 sm:h-8 sm:w-auto sm:px-3 border border-[hsl(var(--input))] bg-[hsl(var(--background))] shadow-sm hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
           :aria-label="t('next_page')"
         >
           <ChevronRight class="h-4 w-4" />

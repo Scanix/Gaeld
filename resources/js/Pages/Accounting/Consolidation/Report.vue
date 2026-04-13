@@ -153,7 +153,7 @@ function performDeleteElim() {
         <FormInput id="description" v-model="elimForm.description" :label="t('description')" :error="elimForm.errors.description" />
         <div class="flex justify-end gap-2">
           <Button variant="outline" type="button" @click="showElimForm = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="elimForm.processing">{{ t('save') }}</Button>
+          <Button type="submit" :disabled="elimForm.processing" :loading="elimForm.processing">{{ t('save') }}</Button>
         </div>
       </form>
     </Modal>

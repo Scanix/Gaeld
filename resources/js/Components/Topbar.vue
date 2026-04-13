@@ -31,6 +31,18 @@ const { isDark, toggleTheme } = useTheme()
 
 const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin)
 
+const userMenuRef = ref(null)
+
+function handleClickOutsideUserMenu(e) {
+  if (userMenuRef.value && !userMenuRef.value.contains(e.target)) {
+    showUserMenu.value = false
+  }
+}
+
+import { onMounted, onUnmounted } from 'vue'
+onMounted(() => document.addEventListener('mousedown', handleClickOutsideUserMenu))
+onUnmounted(() => document.removeEventListener('mousedown', handleClickOutsideUserMenu))
+
 function logout() {
   logoutForm.post('/logout')
 }
@@ -88,7 +100,7 @@ function logout() {
 
       <NotificationBell />
 
-      <div class="relative">
+      <div ref="userMenuRef" class="relative">
         <Button
           variant="ghost"
           size="sm"
@@ -105,7 +117,6 @@ function logout() {
           v-if="showUserMenu"
           role="menu"
           class="absolute right-0 top-full mt-1 w-48 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--popover))] p-1 shadow-lg"
-          @mouseleave="showUserMenu = false"
         >
           <Link
             href="/profile"

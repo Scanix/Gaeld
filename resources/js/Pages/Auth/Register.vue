@@ -20,6 +20,13 @@ const form = useForm({
   accepted_privacy: false,
 })
 
+const passwordConfirmationError = computed(() => {
+  if (form.password_confirmation && form.password !== form.password_confirmation) {
+    return t('passwords_do_not_match')
+  }
+  return form.errors.password_confirmation
+})
+
 function submit() {
   form.post('/register', {
     onFinish: () => form.reset('password', 'password_confirmation'),
@@ -78,6 +85,7 @@ function submit() {
               v-model="form.password_confirmation"
               type="password"
               :label="t('confirm_password')"
+              :error="passwordConfirmationError"
               required
             />
 
@@ -99,7 +107,7 @@ function submit() {
               <p v-if="form.errors.accepted_privacy" class="text-sm text-[hsl(var(--destructive))]">{{ form.errors.accepted_privacy }}</p>
             </div>
 
-            <Button type="submit" class="w-full" :disabled="form.processing">
+            <Button type="submit" class="w-full" :disabled="form.processing" :loading="form.processing">
               {{ t('create_account_btn') }}
             </Button>
           </form>

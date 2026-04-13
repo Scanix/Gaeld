@@ -219,7 +219,7 @@ const vatOptions = computed(() => [
 
           <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" href="/invoices/recurring" variant="outline">{{ t('cancel') }}</Button>
-            <Button type="submit" :disabled="form.processing">{{ t('create_recurring_invoice') }}</Button>
+            <Button type="submit" :disabled="form.processing" :loading="form.processing">{{ t('create_recurring_invoice') }}</Button>
           </div>
         </form>
       </CardContent>

@@ -212,7 +212,7 @@ const columns = computed(() => [
         />
         <div class="flex justify-end gap-3">
           <Button type="button" variant="outline" @click="showTransactionModal = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="transactionForm.processing">{{ t('record') }}</Button>
+          <Button type="submit" :disabled="transactionForm.processing" :loading="transactionForm.processing">{{ t('record') }}</Button>
         </div>
       </form>
     </Modal>
@@ -252,7 +252,7 @@ const columns = computed(() => [
         </div>
         <div class="flex justify-end gap-3">
           <Button type="button" variant="outline" @click="showEditModal = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="editForm.processing">{{ t('save_changes') }}</Button>
+          <Button type="submit" :disabled="editForm.processing" :loading="editForm.processing">{{ t('save_changes') }}</Button>
         </div>
       </form>
     </Modal>

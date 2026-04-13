@@ -58,7 +58,7 @@ const columns = computed(() => [
   { key: 'frequency', label: t('frequency'), format: (v) => t(`frequency_${v}`) },
   { key: 'next_issue_date', label: t('next_issue_date'), format: (v) => v ? formatDate(v) : '—' },
   { key: 'is_active', label: t('status') },
-  { key: 'actions', label: '', class: 'text-right w-32' },
+  { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 </script>
 

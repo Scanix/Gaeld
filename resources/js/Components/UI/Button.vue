@@ -19,6 +19,7 @@ const props = defineProps({
     default: 'button',
   },
   disabled: Boolean,
+  loading: Boolean,
 })
 
 const buttonVariants = cva(
@@ -34,10 +35,10 @@ const buttonVariants = cva(
         link: 'text-[hsl(var(--primary))] underline-offset-4 hover:underline',
       },
       size: {
-        default: 'h-10 px-4 py-2 sm:h-9',
-        sm: 'h-9 rounded-md px-3 text-xs sm:h-8',
-        lg: 'h-11 rounded-md px-8 sm:h-10',
-        icon: 'h-10 w-10 sm:h-9 sm:w-9',
+        default: 'h-11 px-4 py-2 sm:h-9',
+        sm: 'h-10 rounded-md px-3 text-xs sm:h-8',
+        lg: 'h-12 rounded-md px-8 sm:h-10',
+        icon: 'h-11 w-11 sm:h-9 sm:w-9',
       },
     },
     defaultVariants: {
@@ -54,8 +55,12 @@ const classes = computed(() => buttonVariants({ variant: props.variant, size: pr
   <component
     :is="as"
     :class="cn(classes, $attrs.class)"
-    :disabled="disabled"
+    :disabled="disabled || loading"
   >
+    <svg v-if="loading" class="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
     <slot />
   </component>
 </template>

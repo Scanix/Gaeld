@@ -82,7 +82,7 @@ const columns = computed(() => [
   { key: 'due_date', label: t('due'), format: (v) => formatDate(v), sortable: true },
   { key: 'total', label: t('total'), class: 'text-right', format: (v) => formatCurrency(v), sortable: true },
   { key: 'status', label: t('status'), sortable: true },
-  { key: 'actions', label: '', class: 'text-right w-48' },
+  { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 
 const statusVariant = {
@@ -124,7 +124,7 @@ const statusFilters = computed(() => [
       <p>{{ t('help_invoices_text') }}</p>
     </HelpText>
 
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('manage_invoices') }}
       </p>
@@ -176,6 +176,7 @@ const statusFilters = computed(() => [
             :href="`/invoices/${row.id}`"
             variant="ghost"
             size="icon"
+            :aria-label="t('view') + ' ' + row.number"
             :title="t('view')"
             @click.stop
           >
@@ -187,6 +188,7 @@ const statusFilters = computed(() => [
             :href="`/invoices/${row.id}/qr-pdf`"
             variant="ghost"
             size="icon"
+            :aria-label="t('download_qr_invoice') + ' ' + row.number"
             :title="t('download_qr_invoice')"
             @click.stop
           >
@@ -198,6 +200,7 @@ const statusFilters = computed(() => [
             :href="`/invoices/${row.id}/edit`"
             variant="ghost"
             size="icon"
+            :aria-label="t('edit') + ' ' + row.number"
             :title="t('edit')"
             @click.stop
           >
@@ -206,6 +209,7 @@ const statusFilters = computed(() => [
           <Button
             variant="ghost"
             size="icon"
+            :aria-label="t('duplicate') + ' ' + row.number"
             :title="t('duplicate')"
             @click.stop="duplicate(row)"
           >
@@ -215,6 +219,7 @@ const statusFilters = computed(() => [
             v-if="row.status === 'draft'"
             variant="ghost"
             size="icon"
+            :aria-label="t('delete') + ' ' + row.number"
             :title="t('delete')"
             @click.stop="confirmDelete(row)"
           >

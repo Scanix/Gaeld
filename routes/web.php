@@ -13,6 +13,7 @@ use App\Domains\Users\Controllers\PasswordResetController;
 use App\Domains\Users\Controllers\RegisteredUserController;
 use App\Domains\Users\Controllers\TwoFactorChallengeController;
 use App\Http\Controllers\GlobalSearchController;
+use App\Http\Controllers\HealthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +21,9 @@ use Illuminate\Support\Facades\Route;
 | Web Routes
 |--------------------------------------------------------------------------
 */
+
+// Health check (public, no auth required)
+Route::get('/health', HealthController::class)->name('health');
 
 // Setup wizard (only accessible if no organization exists)
 Route::middleware('guest')->group(function () {
