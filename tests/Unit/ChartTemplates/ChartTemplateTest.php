@@ -6,11 +6,18 @@ use App\Domains\Accounting\ChartTemplates\ChartTemplateInterface;
 use App\Domains\Accounting\ChartTemplates\SwissAssociationTemplate;
 use App\Domains\Accounting\ChartTemplates\SwissFreelancerTemplate;
 use App\Domains\Accounting\ChartTemplates\SwissSmeTemplate;
+use App\Domains\Accounting\Constants\AccountCode;
+use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Services\ChartTemplateService;
+use App\Domains\Organizations\Models\Organization;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ChartTemplateTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * @return array<string, array{ChartTemplateInterface}>
      */
@@ -108,5 +115,92 @@ class ChartTemplateTest extends TestCase
         $templates = [new SwissSmeTemplate, new SwissFreelancerTemplate, new SwissAssociationTemplate];
         $keys = array_map(fn ($t) => $t->key(), $templates);
         $this->assertSame(count($keys), count(array_unique($keys)));
+    }
+
+    public function test_ensure_system_accounts_creates_accounts_when_none_exist(): void
+    {
+        $org = Organization::factory()->create(['locale' => 'en']);
+        $service = app(ChartTemplateService::class);
+
+        $this->assertSame(0, Account::where('organization_id', $org->id)->count());
+
+        $service->ensureSystemAccounts($org);
+
+        $accounts = Account::where('organization_id', $org->id)->get();
+        $codes = $accounts->pluck('code')->all();
+
+        $this->assertContains(AccountCode::ACCOUNTS_RECEIVABLE, $codes);
+        $this->assertContains(AccountCode::BANK_CASH, $codes);
+        $this->assertContains(AccountCode::VAT_OUTPUT, $codes);
+        $this->assertContains(AccountCode::REVENUE, $codes);
+        $this->assertContains(AccountCode::ROUNDING_DIFFERENCE, $codes);
+        $this->assertContains(AccountCode::OPENING_BALANCE, $codes);
+
+        $this->assertTrue(
+            $accounts->every(fn (Account $a) => $a->is_system),
+            'All created accounts must be marked as system accounts',
+        );
+    }
+
+    public function test_ensure_system_accounts_skips_existing_accounts(): void
+    {
+        $org = Organization::factory()->create(['locale' => 'en']);
+        $service = app(ChartTemplateService::class);
+
+        Account::create([
+            'organization_id' => $org->id,
+            'code' => AccountCode::ACCOUNTS_RECEIVABLE,
+            'name' => 'My Custom AR',
+            'type' => 'asset',
+            'is_system' => true,
+        ]);
+
+        $service->ensureSystemAccounts($org);
+
+        $ar = Account::where('organization_id', $org->id)
+            ->where('code', AccountCode::ACCOUNTS_RECEIVABLE)
+            ->get();
+
+        $this->assertCount(1, $ar, 'Must not duplicate existing account');
+        $this->assertSame('My Custom AR', $ar->first()->name, 'Must not overwrite existing name');
+    }
+
+    public function test_ensure_system_accounts_respects_organization_locale(): void
+    {
+        $org = Organization::factory()->create(['locale' => 'de']);
+        $service = app(ChartTemplateService::class);
+
+        $service->ensureSystemAccounts($org);
+
+        $ar = Account::where('organization_id', $org->id)
+            ->where('code', AccountCode::ACCOUNTS_RECEIVABLE)
+            ->first();
+
+        $this->assertSame('Debitoren', $ar->name);
+    }
+
+    public function test_seed_template_also_ensures_system_accounts(): void
+    {
+        $org = Organization::factory()->create(['locale' => 'en']);
+        $service = app(ChartTemplateService::class);
+
+        $service->seedTemplate($org, 'swiss_sme');
+
+        $systemCodes = [
+            AccountCode::ACCOUNTS_RECEIVABLE,
+            AccountCode::BANK_CASH,
+            AccountCode::VAT_OUTPUT,
+            AccountCode::REVENUE,
+            AccountCode::ROUNDING_DIFFERENCE,
+        ];
+
+        foreach ($systemCodes as $code) {
+            $account = Account::where('organization_id', $org->id)
+                ->where('code', $code)
+                ->first();
+
+            $this->assertNotNull($account, "System account {$code} must exist after seeding");
+            $this->assertTrue($account->is_system, "Account {$code} must be marked as system");
+        }
     }
 }

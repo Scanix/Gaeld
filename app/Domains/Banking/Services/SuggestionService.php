@@ -161,7 +161,11 @@ class SuggestionService
             return collect();
         }
 
-        $reconciledExpenseIds = BankTransaction::whereNotNull('matched_expense_id')
+        $reconciledExpenseIds = BankTransaction::whereHas(
+            'bankAccount',
+            fn ($q) => $q->where('organization_id', $orgId)
+        )
+            ->whereNotNull('matched_expense_id')
             ->pluck('matched_expense_id');
 
         $candidateExpenses = Expense::where('organization_id', $orgId)

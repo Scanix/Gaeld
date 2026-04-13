@@ -49,7 +49,8 @@ class SwissDeductionService
                     .'Verify your organisation\'s deduction rates are up to date for the current fiscal year.',
                 );
             } catch (\Throwable) {
-                // Logger not available in pure unit-test context — silently skip.
+                // Logger not available in pure unit-test context — skip gracefully.
+                // In production the warning above will be logged normally.
             }
         }
 

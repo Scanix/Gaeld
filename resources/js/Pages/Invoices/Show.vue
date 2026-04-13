@@ -75,11 +75,6 @@ const amountDue = computed(() => {
   return Math.max(0, parseFloat(props.invoice?.total || 0) - paid)
 })
 
-function openPaymentModal() {
-  paymentForm.amount = amountDue.value > 0 ? amountDue.value.toFixed(2) : ''
-  showPaymentModal.value = true
-}
-
 const isOverdue = computed(() => {
   if (!props.invoice?.due_date) return false
   return props.invoice.status === 'sent' && new Date(props.invoice.due_date) < new Date()
@@ -212,7 +207,6 @@ const bankAccountOptions = computed(() =>
             variant="outline"
             size="sm"
             :disabled="finalizeForm.processing"
-            :loading="finalizeForm.processing"
             @click="finalize"
           >
             {{ t('finalize') }}
@@ -220,7 +214,7 @@ const bankAccountOptions = computed(() =>
           <Button
             v-if="invoice?.status === 'sent' || invoice?.status === 'overdue'"
             size="sm"
-            @click="openPaymentModal"
+            @click="showPaymentModal = true"
           >
             {{ t('record_payment') }}
           </Button>
@@ -474,7 +468,7 @@ const bankAccountOptions = computed(() =>
         />
         <div class="flex justify-end gap-3">
           <Button type="button" variant="outline" @click="showPaymentModal = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="paymentForm.processing" :loading="paymentForm.processing">{{ t('record') }}</Button>
+          <Button type="submit" :disabled="paymentForm.processing">{{ t('record') }}</Button>
         </div>
       </form>
     </Modal>
@@ -514,21 +508,36 @@ const bankAccountOptions = computed(() =>
   </AppLayout>
 
   <!-- Justificatif preview overlay -->
-  <Modal :open="showJustificatifPreview" :title="t('justificatif')" @close="showJustificatifPreview = false">
-    <div class="flex justify-end mb-2">
-      <a
-        :href="justificatifUrl"
-        class="inline-flex items-center gap-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
-      >
-        <Download class="h-4 w-4" />
-        {{ t('download') }}
-      </a>
-    </div>
-    <iframe
-      :src="`${justificatifUrl}?inline=1`"
-      class="h-full w-full rounded border-0"
-      style="min-height: 60dvh;"
-      :title="t('justificatif')"
-    />
-  </Modal>
+  <Teleport to="body">
+    <Transition name="modal">
+      <div v-if="showJustificatifPreview" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/60" @click="showJustificatifPreview = false" />
+        <div class="relative z-50 flex w-full max-w-4xl flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] shadow-xl" style="max-height: 90dvh;">
+          <div class="flex shrink-0 items-center justify-between border-b border-[hsl(var(--border))] px-4 py-3">
+            <h2 class="text-base font-semibold">{{ t('justificatif') }}</h2>
+            <div class="flex items-center gap-2">
+              <a
+                :href="justificatifUrl"
+                class="inline-flex items-center gap-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
+              >
+                <Download class="h-4 w-4" />
+                {{ t('download') }}
+              </a>
+              <Button variant="ghost" size="icon" :aria-label="t('close')" @click="showJustificatifPreview = false">
+                <X class="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <div class="flex-1 overflow-hidden p-2">
+            <iframe
+              :src="`${justificatifUrl}?inline=1`"
+              class="h-full w-full rounded border-0"
+              style="min-height: 70dvh;"
+              :title="t('justificatif')"
+            />
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>

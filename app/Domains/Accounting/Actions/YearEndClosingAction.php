@@ -87,6 +87,13 @@ class YearEndClosingAction
             );
 
             $this->ledger->postEntry($orgId, $entry);
+
+            Log::info('Year-end closing journal entry posted', [
+                'organization_id' => $orgId,
+                'fiscal_year' => $year,
+                'closing_date' => $closingDate,
+                'line_count' => count($lines),
+            ]);
         });
 
         // Archive all documents for the closed fiscal year (Swiss OR Art. 958f CO)

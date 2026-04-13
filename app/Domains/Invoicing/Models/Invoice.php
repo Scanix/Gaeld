@@ -222,7 +222,7 @@ class Invoice extends Model
             'organization_id' => $this->organization_id,
             'number' => $this->number ?? '',
             'status' => $this->status->value,
-            'customer_name' => $this->customer->name ?? '',
+            'customer_name' => $this->customer?->name ?? '',
             'total' => (float) $this->total,
             'currency' => $this->currency,
         ];

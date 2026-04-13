@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref } from 'vue'
 import { Link, useForm, usePage } from '@inertiajs/vue3'
 import {
   LayoutDashboard,
@@ -55,15 +55,6 @@ function switchOrg(orgId) {
   const form = useForm({})
   form.post(`/organizations/${orgId}/switch`)
 }
-
-const orgMenuRef = ref(null)
-function handleOrgMenuClickOutside(e) {
-  if (orgMenuRef.value && !orgMenuRef.value.contains(e.target)) {
-    showOrgMenu.value = false
-  }
-}
-onMounted(() => document.addEventListener('mousedown', handleOrgMenuClickOutside))
-onUnmounted(() => document.removeEventListener('mousedown', handleOrgMenuClickOutside))
 
 // Collapsible sidebar sections with localStorage persistence
 const STORAGE_KEY = 'gaeld-sidebar-expanded'
@@ -236,7 +227,7 @@ function isGroupActive(item) {
         <img v-if="!collapsed" src="/logo-wide.svg" alt="Gäld" class="h-6 w-auto shrink-0" />
       </Link>
       <button
-        class="ml-2 rounded p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] lg:hidden"
+        class="ml-2 rounded p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] lg:hidden"
         :aria-label="t('close_navigation')"
         @click="emit('closeMobile')"
       >
@@ -245,7 +236,7 @@ function isGroupActive(item) {
     </div>
 
     <!-- Organization Switcher -->
-    <div v-if="currentOrg" ref="orgMenuRef" class="relative border-b border-[hsl(var(--sidebar-border))] px-3 py-2">
+    <div v-if="currentOrg" class="relative border-b border-[hsl(var(--sidebar-border))] px-3 py-2">
       <button
         class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-[hsl(var(--sidebar-foreground))] transition-colors hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
         :class="collapsed ? 'justify-center' : ''"
@@ -264,6 +255,7 @@ function isGroupActive(item) {
           'absolute z-50 w-56 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-1 shadow-lg',
           collapsed ? 'left-full top-0 ml-1' : 'left-3 right-3 top-full mt-1 w-auto',
         ]"
+        @mouseleave="showOrgMenu = false"
       >
         <button
           v-for="org in organizations"

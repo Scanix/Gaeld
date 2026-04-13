@@ -59,7 +59,7 @@ const salaryColumns = computed(() => [
           </div>
         </CardHeader>
         <CardContent>
-          <div class="grid grid-cols-2 gap-4 text-sm">
+          <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('email') }}</p>
               <p class="font-medium">{{ employee.email ?? '—' }}</p>

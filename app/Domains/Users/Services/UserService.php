@@ -7,6 +7,7 @@ use App\Domains\Users\DTOs\UpdateUserProfileData;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\Models\Activity;
 
 /**
@@ -53,6 +54,8 @@ class UserService
         $user->update([
             'password' => Hash::make($newPassword),
         ]);
+
+        Log::info('Password changed', ['user_id' => $user->id]);
     }
 
     // ──────────────────────────────────────────────────────────────

@@ -291,7 +291,7 @@ class InvoiceApiController extends Controller
         Invoice $invoice,
         RecordPaymentAction $action,
     ): InvoiceResource|JsonResponse {
-        $this->authorize('view', $invoice);
+        $this->authorize('recordPayment', $invoice);
 
         $dto = RecordPaymentData::fromArray($request->validated());
 

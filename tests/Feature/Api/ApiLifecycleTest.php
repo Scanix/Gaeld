@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Api;
 
+use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Api\Enums\TokenType;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
@@ -9,7 +12,9 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Models\InvoiceLine;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -32,6 +37,36 @@ class ApiLifecycleTest extends TestCase
         config(['features.api_access' => true]);
 
         $this->setUpOrganization();
+
+        // Organization fields required for Swiss QR bill PDF generation
+        $this->org->update([
+            'address' => 'Bahnhofstrasse 1',
+            'postal_code' => '8001',
+            'city' => 'Zürich',
+            'iban' => 'CH9300762011623852957',
+            'qr_iban' => 'CH4431999123000889012',
+        ]);
+
+        // Required accounting accounts for invoice lifecycle operations
+        foreach ([
+            ['code' => '1100', 'name' => 'Accounts Receivable', 'type' => AccountType::Asset->value],
+            ['code' => '3000', 'name' => 'Revenue', 'type' => AccountType::Revenue->value],
+            ['code' => '1020', 'name' => 'Bank', 'type' => AccountType::Asset->value],
+            ['code' => '2200', 'name' => 'VAT Output', 'type' => AccountType::Liability->value],
+            ['code' => '3900', 'name' => 'Rounding', 'type' => AccountType::Revenue->value],
+        ] as $account) {
+            Account::create(array_merge($account, ['organization_id' => $this->org->id]));
+        }
+
+        VatRate::create([
+            'organization_id' => $this->org->id,
+            'name' => 'Standard',
+            'rate' => 8.10,
+            'code' => 'NORMAL',
+            'is_default' => true,
+        ]);
+
+        Mail::fake();
 
         $sanctumToken = $this->user->createToken('lifecycle-test', ['*']);
         $sanctumToken->accessToken->update([
@@ -107,7 +142,7 @@ class ApiLifecycleTest extends TestCase
             ->deleteJson("/api/v1/suppliers/{$supplier->getRouteKey()}")
             ->assertStatus(204);
 
-        $this->assertDatabaseMissing('suppliers', ['id' => $supplier->id]);
+        $this->assertSoftDeleted('suppliers', ['id' => $supplier->id]);
     }
 
     public function test_supplier_from_other_org_not_accessible(): void
@@ -116,7 +151,7 @@ class ApiLifecycleTest extends TestCase
 
         $this->withToken($this->token)
             ->getJson("/api/v1/suppliers/{$otherSupplier->getRouteKey()}")
-            ->assertStatus(403);
+            ->assertStatus(404);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -151,7 +186,7 @@ class ApiLifecycleTest extends TestCase
             ->postJson("/api/v1/invoices/{$invoice->getRouteKey()}/record-payment", [
                 'amount' => '100.00',
                 'payment_date' => '2026-04-13',
-                'payment_method' => 'bank_transfer',
+                'payment_method' => 'bank',
             ])
             ->assertOk()
             ->assertJsonStructure(['data' => ['id', 'amount_paid']]);
@@ -248,6 +283,9 @@ class ApiLifecycleTest extends TestCase
             'country' => 'CH',
             'currency' => 'CHF',
             'email' => 'customer@example.ch',
+            'address' => 'Bundesplatz 3',
+            'postal_code' => '3003',
+            'city' => 'Bern',
         ]);
     }
 
@@ -255,38 +293,71 @@ class ApiLifecycleTest extends TestCase
     {
         $customer = $this->makeCustomer();
 
-        return Invoice::factory()
+        $invoice = Invoice::factory()
             ->for($this->org, 'organization')
             ->for($customer)
             ->create([
                 'status' => InvoiceStatus::Draft,
-                'email' => $customer->email,
+                'subtotal' => '100.00',
+                'vat_amount' => '0.00',
+                'total' => '100.00',
             ]);
+
+        InvoiceLine::create([
+            'invoice_id' => $invoice->id,
+            'description' => 'Test Service',
+            'quantity' => 1,
+            'unit_price' => 100.00,
+            'amount' => 100.00,
+            'sort_order' => 1,
+        ]);
+
+        return $invoice;
     }
 
     private function makeSentInvoice(): Invoice
     {
         $customer = $this->makeCustomer();
 
-        return Invoice::factory()
+        $invoice = Invoice::factory()
             ->for($this->org, 'organization')
             ->for($customer)
             ->sent()
-            ->create([
-                'email' => $customer->email,
-            ]);
+            ->create();
+
+        InvoiceLine::create([
+            'invoice_id' => $invoice->id,
+            'description' => 'Test Service',
+            'quantity' => 1,
+            'unit_price' => 100.00,
+            'amount' => 100.00,
+            'sort_order' => 1,
+        ]);
+
+        return $invoice;
     }
 
     private function makeOverdueInvoice(): Invoice
     {
         $customer = $this->makeCustomer();
 
-        return Invoice::factory()
+        $invoice = Invoice::factory()
             ->for($this->org, 'organization')
             ->for($customer)
-            ->overdue()
             ->create([
-                'email' => $customer->email,
+                'status' => InvoiceStatus::Sent,
+                'due_date' => now()->subDays(10)->toDateString(),
             ]);
+
+        InvoiceLine::create([
+            'invoice_id' => $invoice->id,
+            'description' => 'Test Service',
+            'quantity' => 1,
+            'unit_price' => 100.00,
+            'amount' => 100.00,
+            'sort_order' => 1,
+        ]);
+
+        return $invoice;
     }
 }

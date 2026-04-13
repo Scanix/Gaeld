@@ -112,6 +112,64 @@ class ChartTemplateService
     }
 
     /**
+     * Ensure the mandatory system accounts exist for an organization.
+     *
+     * These accounts are required by core operations (invoice posting,
+     * payment recording, VAT settlement) and must exist even when the
+     * user chooses a custom chart of accounts or selects 'none'.
+     */
+    public function ensureSystemAccounts(Organization $organization): void
+    {
+        $locale = $organization->locale ?? 'en';
+
+        $systemAccounts = [
+            ['code' => AccountCode::BANK_CASH, 'type' => AccountType::Asset, 'name' => [
+                'en' => 'Bank Account CHF', 'fr' => 'Compte bancaire CHF', 'de' => 'Bankkonto CHF', 'it' => 'Conto bancario CHF',
+            ]],
+            ['code' => AccountCode::ACCOUNTS_RECEIVABLE, 'type' => AccountType::Asset, 'name' => [
+                'en' => 'Accounts Receivable', 'fr' => 'Débiteurs', 'de' => 'Debitoren', 'it' => 'Debitori',
+            ]],
+            ['code' => AccountCode::VAT_INPUT, 'type' => AccountType::Asset, 'name' => [
+                'en' => 'VAT Input Tax', 'fr' => 'Impôt préalable', 'de' => 'Vorsteuer', 'it' => 'Imposta precedente',
+            ]],
+            ['code' => AccountCode::VAT_OUTPUT, 'type' => AccountType::Liability, 'name' => [
+                'en' => 'VAT Output Tax', 'fr' => 'TVA due', 'de' => 'Umsatzsteuer (MWST)', 'it' => 'IVA dovuta',
+            ]],
+            ['code' => AccountCode::VAT_PAYABLE_AFC, 'type' => AccountType::Liability, 'name' => [
+                'en' => 'VAT Payable AFC', 'fr' => 'TVA à payer AFC', 'de' => 'MWST-Zahllast ESTV', 'it' => 'IVA da versare AFC',
+            ]],
+            ['code' => AccountCode::REVENUE, 'type' => AccountType::Revenue, 'name' => [
+                'en' => 'Revenue from Services', 'fr' => 'Produits des prestations de services', 'de' => 'Dienstleistungserlöse', 'it' => 'Ricavi da prestazioni di servizi',
+            ]],
+            ['code' => AccountCode::ROUNDING_DIFFERENCE, 'type' => AccountType::Revenue, 'name' => [
+                'en' => 'Revenue Corrections', 'fr' => 'Corrections de produits', 'de' => 'Erlösberichtigungen', 'it' => 'Rettifiche di ricavi',
+            ]],
+            ['code' => AccountCode::OPENING_BALANCE, 'type' => AccountType::Equity, 'name' => [
+                'en' => 'Opening Balance', 'fr' => 'Bilan d\'ouverture', 'de' => 'Eröffnungsbilanz', 'it' => 'Bilancio di apertura',
+            ]],
+        ];
+
+        $existingCodes = Account::where('organization_id', $organization->id)
+            ->whereIn('code', array_column($systemAccounts, 'code'))
+            ->pluck('code')
+            ->all();
+
+        foreach ($systemAccounts as $account) {
+            if (in_array($account['code'], $existingCodes, true)) {
+                continue;
+            }
+
+            Account::create([
+                'organization_id' => $organization->id,
+                'code' => $account['code'],
+                'name' => $account['name'][$locale] ?? $account['name']['en'],
+                'type' => $account['type']->value,
+                'is_system' => true,
+            ]);
+        }
+    }
+
+    /**
      * Whether the template also provides VAT rates.
      */
     public function templateSeedsVatRates(string $templateKey): bool

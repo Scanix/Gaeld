@@ -12,7 +12,7 @@ class RecordPaymentApiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:99999999.99',
             'payment_date' => 'required|date',
             'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'reference' => 'nullable|string|max:100',

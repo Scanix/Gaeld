@@ -122,7 +122,7 @@ const eventOptions = [
     <Card class="mb-4">
       <CardContent class="pt-4">
         <div class="flex flex-wrap items-end gap-3">
-          <div class="w-48">
+          <div class="w-full sm:w-48">
             <FormSelect
               :modelValue="selectedType"
               @update:modelValue="v => { selectedType = v; applyFilters() }"
@@ -130,7 +130,7 @@ const eventOptions = [
               :label="t('entity_type')"
             />
           </div>
-          <div class="w-40">
+          <div class="w-full sm:w-40">
             <FormSelect
               :modelValue="selectedEvent"
               @update:modelValue="v => { selectedEvent = v; applyFilters() }"

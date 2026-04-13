@@ -15,6 +15,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @group Suppliers
@@ -149,6 +150,8 @@ class SupplierApiController extends Controller
             $supplier->delete();
         } catch (QueryException $e) {
             if (in_array($e->errorInfo[0] ?? '', ['23503', '23000'])) {
+                Log::info('Supplier deletion blocked by foreign key', ['supplier_id' => $supplier->id]);
+
                 return response()->json(
                     ['message' => __('app.supplier_has_linked_records')],
                     409,

@@ -6,7 +6,6 @@ use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
-use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
@@ -53,8 +52,8 @@ class LedgerQueryService
             $credits = (string) (clone $query)->sum('credit');
 
             return $this->isDebitNormalAccount($account->type)
-                ? Money::subtract($debits, $credits)
-                : Money::subtract($credits, $debits);
+                ? bcsub($debits, $credits, 2)
+                : bcsub($credits, $debits, 2);
         });
     }
 
@@ -164,16 +163,16 @@ class LedgerQueryService
             /** @var numeric-string $totalCredit */
             $totalCredit = (string) $row->total_credit;
             $balance = $isDebitNormal
-                ? Money::subtract($totalDebit, $totalCredit)
-                : Money::subtract($totalCredit, $totalDebit);
+                ? bcsub($totalDebit, $totalCredit, 2)
+                : bcsub($totalCredit, $totalDebit, 2);
 
-            if (! Money::isZero($balance)) {
+            if (bccomp($balance, '0', 2) !== 0) {
                 $balances[] = [
                     'account_code' => $row->code,
                     'account_name' => $row->name,
                     'account_type' => $row->type,
-                    'debit' => $isDebitNormal && Money::isPositive($balance) ? $balance : '0',
-                    'credit' => ! $isDebitNormal && Money::isPositive($balance) ? $balance : '0',
+                    'debit' => $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
+                    'credit' => ! $isDebitNormal && bccomp($balance, '0', 2) > 0 ? $balance : '0',
                 ];
             }
         }

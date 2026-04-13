@@ -55,7 +55,7 @@ const columns = computed(() => [
             <Badge :variant="value ? 'success' : 'warning'">{{ value ? t('posted') : t('draft') }}</Badge>
           </template>
           <template #expand-row="{ row }">
-            <div v-if="row.lines?.length">
+            <div v-if="row.lines?.length" class="overflow-x-auto">
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b text-left text-[hsl(var(--muted-foreground))]">
