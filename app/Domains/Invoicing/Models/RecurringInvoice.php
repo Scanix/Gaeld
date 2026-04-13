@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property RecurrenceFrequency $frequency
  * @property Carbon $next_issue_date
  * @property Carbon|null $end_date
- * @property array $template_data
+ * @property array<string, mixed> $template_data
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -71,11 +71,19 @@ class RecurringInvoice extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeDue(Builder $query, Carbon $date): Builder
     {
         return $query->where('next_issue_date', '<=', $date);

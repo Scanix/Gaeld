@@ -1,52 +1,10 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Accounting/Actions/GenerateOpeningBalancesAction.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Accounting/Actions/GenerateOpeningBalancesAction.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Accounting/Actions/GenerateOpeningBalancesAction.php
-
-		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(string\|null\)\: mixed\)\|null, ''trim'' given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Accounting/Actions/ImportAccountsAction.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Accounting/Actions/PostVatSettlementAction.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Accounting/Actions/PostVatSettlementAction.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Accounting/Actions/YearEndClosingAction.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Accounting/Actions/YearEndClosingAction.php
 
 		-
 			message: '#^Access to an undefined property App\\Domains\\Accounting\\Models\\Account\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domains\\Accounting\\Models\\Account\>\:\:\$id\.$#'
@@ -59,96 +17,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Accounting/Controllers/LettrageController.php
-
-		-
-			message: '#^Parameter \#1 \$account of method App\\Domains\\Accounting\\Services\\LettrageService\:\:letterLines\(\) expects App\\Domains\\Accounting\\Models\\Account, App\\Domains\\Accounting\\Models\\Account\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domains\\Accounting\\Models\\Account\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Accounting/Controllers/LettrageController.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Accounting/Controllers/YearEndClosingController.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Accounting/Controllers/YearEndClosingController.php
-
-		-
-			message: '#^Class App\\Domains\\Accounting\\Models\\Account uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Accounting/Models/Account.php
-
-		-
-			message: '#^Method App\\Domains\\Accounting\\Models\\Budget\:\:scopeForYear\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Accounting/Models/Budget.php
-
-		-
-			message: '#^Method App\\Domains\\Accounting\\Models\\Budget\:\:scopeForYear\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Accounting/Models/Budget.php
-
-		-
-			message: '#^Class App\\Domains\\Accounting\\Models\\JournalEntry uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Accounting/Models/JournalEntry.php
-
-		-
-			message: '#^Class App\\Domains\\Accounting\\Models\\LettrageLot has PHPDoc tag @property for property \$line_ids with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Accounting/Models/LettrageLot.php
-
-		-
-			message: '#^Class App\\Domains\\Accounting\\Models\\TransactionLine uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Accounting/Models/TransactionLine.php
-
-		-
-			message: '#^Class App\\Domains\\Accounting\\Models\\VatEntry uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Accounting/Models/VatEntry.php
-
-		-
-			message: '#^Class App\\Domains\\Accounting\\Models\\VatRate uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Accounting/Models/VatRate.php
-
-		-
-			message: '#^Method App\\Domains\\Accounting\\Queries\\VatRateQuery\:\:active\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Accounting/Queries/VatRateQuery.php
-
-		-
-			message: '#^Method App\\Domains\\Accounting\\Requests\\ImportAccountsRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Accounting/Requests/ImportAccountsRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Accounting\\Requests\\StoreAccountRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Accounting/Requests/StoreAccountRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Accounting\\Requests\\StoreVatRateRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Accounting/Requests/StoreVatRateRequest.php
 
 		-
 			message: '#^Access to an undefined property \(object\|string\)\:\:\$id\.$#'
@@ -169,70 +37,16 @@ parameters:
 			path: app/Domains/Accounting/Requests/UpdateAccountRequest.php
 
 		-
-			message: '#^Method App\\Domains\\Accounting\\Requests\\UpdateAccountRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Accounting/Requests/UpdateAccountRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Accounting\\Requests\\UpdateVatRateRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Accounting/Requests/UpdateVatRateRequest.php
-
-		-
 			message: '#^Parameter \#1 \$rows of method App\\Domains\\Accounting\\Services\\LedgerQueryService\:\:computeTrialBalances\(\) expects Illuminate\\Support\\Collection\<int, stdClass\>, Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domains\\Accounting\\Models\\Account\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Accounting/Services/LedgerQueryService.php
 
 		-
-			message: '#^Method App\\Domains\\Accounting\\Services\\LedgerService\:\:validateBalance\(\) has parameter \$lines with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Accounting/Services/LedgerService.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
+			message: '#^Parameter \#1 \$lines of method App\\Domains\\Accounting\\Services\\LedgerService\:\:validateBalance\(\) expects array\<string, mixed\>, array\<int, App\\Domains\\Accounting\\DTOs\\JournalLineData\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: app/Domains/Accounting/Services/LedgerService.php
-
-		-
-			message: '#^Method App\\Domains\\Accounting\\Services\\LettrageService\:\:getOpenItems\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Accounting/Services/LettrageService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 4
-			path: app/Domains/Accounting/Services/SocialChargesService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 5
-			path: app/Domains/Accounting/Services/SocialChargesService.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Accounting/Services/SocialChargesService.php
-
-		-
-			message: '#^Method App\\Domains\\Accounting\\Services\\VatReportService\:\:generate\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 2
-			path: app/Domains/Accounting/Services/VatReportService.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 3
-			path: app/Domains/Accounting/Services/VatReportService.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\MorphMany\<Laravel\\Sanctum\\PersonalAccessToken, App\\Domains\\Users\\Models\\User\>\:\:personal\(\)\.$#'
@@ -241,6 +55,12 @@ parameters:
 			path: app/Domains/Api/Controllers/ApiTokenController.php
 
 		-
+			message: '#^Dead catch \- Illuminate\\Database\\QueryException is never thrown in the try block\.$#'
+			identifier: catch.neverThrown
+			count: 1
+			path: app/Domains/Api/Controllers/CustomerApiController.php
+
+		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
@@ -259,10 +79,10 @@ parameters:
 			path: app/Domains/Api/Controllers/OrgTokenController.php
 
 		-
-			message: '#^Using nullsafe property access on non\-nullable type Illuminate\\Database\\Eloquent\\Model\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
+			message: '#^Dead catch \- Illuminate\\Database\\QueryException is never thrown in the try block\.$#'
+			identifier: catch.neverThrown
 			count: 1
-			path: app/Domains/Api/Controllers/OrgTokenController.php
+			path: app/Domains/Api/Controllers/SupplierApiController.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
@@ -289,250 +109,10 @@ parameters:
 			path: app/Domains/Api/Controllers/TokenSettingsController.php
 
 		-
-			message: '#^Using nullsafe property access on non\-nullable type Illuminate\\Database\\Eloquent\\Model\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Domains/Api/Controllers/TokenSettingsController.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Enums\\WebhookEvent\:\:all\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Enums/WebhookEvent.php
-
-		-
 			message: '#^Negated boolean expression is always false\.$#'
 			identifier: booleanNot.alwaysFalse
 			count: 1
 			path: app/Domains/Api/Jobs/DispatchWebhookJob.php
-
-		-
-			message: '#^Property App\\Domains\\Api\\Jobs\\DispatchWebhookJob\:\:\$backoff type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Jobs/DispatchWebhookJob.php
-
-		-
-			message: '#^Class App\\Domains\\Api\\Models\\Webhook has PHPDoc tag @property for property \$events with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Models/Webhook.php
-
-		-
-			message: '#^Class App\\Domains\\Api\\Models\\WebhookCall has PHPDoc tag @property for property \$payload with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Models/WebhookCall.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Requests\\StoreApiTokenRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Requests/StoreApiTokenRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Requests\\StoreCustomerApiRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Requests/StoreCustomerApiRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Requests\\StoreExpenseApiRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Requests/StoreExpenseApiRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Requests\\StoreInvoiceApiRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Requests/StoreInvoiceApiRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Requests\\StoreOrgTokenRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Requests/StoreOrgTokenRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Requests\\StoreWebhookRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Requests/StoreWebhookRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Requests\\UpdateCustomerApiRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Requests/UpdateCustomerApiRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Requests\\UpdateExpenseApiRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Requests/UpdateExpenseApiRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Requests\\UpdateInvoiceApiRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Requests/UpdateInvoiceApiRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Requests\\UpdateWebhookRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Requests/UpdateWebhookRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Resources\\AccountResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Resources/AccountResource.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Resources\\ApiTokenResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Resources/ApiTokenResource.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Resources\\BankAccountResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Resources/BankAccountResource.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Resources\\ContactPersonResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Resources/ContactPersonResource.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Resources\\CustomerResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Resources/CustomerResource.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Resources\\ExpenseResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Resources/ExpenseResource.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Domains/Api/Resources/ExpenseResource.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Resources\\InvoiceLineResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Resources/InvoiceLineResource.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Resources\\InvoicePaymentResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Resources/InvoicePaymentResource.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Domains/Api/Resources/InvoicePaymentResource.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Domains\\Invoicing\\Enums\\PaymentMethod\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Domains/Api/Resources/InvoicePaymentResource.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Resources\\InvoiceResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Resources/InvoiceResource.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Domains/Api/Resources/InvoiceResource.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Resources\\WebhookResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Resources/WebhookResource.php
-
-		-
-			message: '#^Method App\\Domains\\Api\\Services\\WebhookService\:\:dispatch\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Api/Services/WebhookService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 3
-			path: app/Domains/Assets/Actions/DepreciateAssetAction.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Assets/Actions/DepreciateAssetAction.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Assets/Actions/DepreciateAssetAction.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Assets/Actions/DisposeAssetAction.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Assets/Actions/DisposeAssetAction.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Assets/Actions/DisposeAssetAction.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Assets/Models/FixedAsset.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Assets/Models/FixedAsset.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Assets/Models/FixedAsset.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Assets/Models/FixedAsset.php
 
 		-
 			message: '#^Property ''net_book_value'' does not exist in model\.$#'
@@ -541,64 +121,16 @@ parameters:
 			path: app/Domains/Assets/Models/FixedAsset.php
 
 		-
-			message: '#^Method App\\Domains\\Assets\\Queries\\FixedAssetQuery\:\:list\(\) return type with generic interface Illuminate\\Contracts\\Pagination\\LengthAwarePaginator does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
+			message: '#^Method App\\Domains\\Assets\\Queries\\FixedAssetQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Assets\\Models\\FixedAsset\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
 			count: 1
 			path: app/Domains/Assets/Queries/FixedAssetQuery.php
 
 		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
+			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Assets\\Models\\FixedAsset\> given\.$#'
 			identifier: argument.type
 			count: 1
-			path: app/Domains/Assets/Services/DepreciationCalculator.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 3
-			path: app/Domains/Assets/Services/DepreciationCalculator.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Assets/Services/DepreciationCalculator.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Assets/Services/DepreciationCalculator.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\Invoicing\\Models\\Invoice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domains\\Invoicing\\Models\\Invoice\>\:\:\$number\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Banking/Controllers/ReconciliationController.php
-
-		-
-			message: '#^Parameter \#2 \$expense of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:reconcileWithExpense\(\) expects App\\Domains\\Expenses\\Models\\Expense, App\\Domains\\Expenses\\Models\\Expense\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domains\\Expenses\\Models\\Expense\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Controllers/ReconciliationController.php
-
-		-
-			message: '#^Parameter \#2 \$invoice of method App\\Domains\\Banking\\Services\\ReconciliationService\:\:reconcileWithInvoice\(\) expects App\\Domains\\Invoicing\\Models\\Invoice, App\\Domains\\Invoicing\\Models\\Invoice\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domains\\Invoicing\\Models\\Invoice\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Controllers/ReconciliationController.php
-
-		-
-			message: '#^Class App\\Domains\\Banking\\Models\\BankAccount uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Banking/Models/BankAccount.php
-
-		-
-			message: '#^Class App\\Domains\\Banking\\Models\\BankTransaction uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Banking/Models/BankTransaction.php
+			path: app/Domains/Assets/Queries/FixedAssetQuery.php
 
 		-
 			message: '#^Access to an undefined property DOMNameSpaceNode\|DOMNode\:\:\$textContent\.$#'
@@ -703,16 +235,16 @@ parameters:
 			path: app/Domains/Banking/Parsers/Mt940Parser.php
 
 		-
-			message: '#^Method App\\Domains\\Banking\\Queries\\BankAccountQuery\:\:list\(\) return type with generic interface Illuminate\\Contracts\\Pagination\\LengthAwarePaginator does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
+			message: '#^Method App\\Domains\\Banking\\Queries\\BankAccountQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Banking\\Models\\BankAccount\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
 			count: 1
 			path: app/Domains/Banking/Queries/BankAccountQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Banking\\Requests\\ImportCamtRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Banking\\Models\\BankAccount\> given\.$#'
+			identifier: argument.type
 			count: 1
-			path: app/Domains/Banking/Requests/ImportCamtRequest.php
+			path: app/Domains/Banking/Queries/BankAccountQuery.php
 
 		-
 			message: '#^Access to an undefined property \(object\|string\)\:\:\$bankAccount\.$#'
@@ -721,82 +253,10 @@ parameters:
 			path: app/Domains/Banking/Requests/ReconcileExpenseRequest.php
 
 		-
-			message: '#^Method App\\Domains\\Banking\\Requests\\ReconcileExpenseRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Banking/Requests/ReconcileExpenseRequest.php
-
-		-
 			message: '#^Access to an undefined property \(object\|string\)\:\:\$bankAccount\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Domains/Banking/Requests/ReconcileInvoiceRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Requests\\ReconcileInvoiceRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Banking/Requests/ReconcileInvoiceRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Requests\\ReconcileManualRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Banking/Requests/ReconcileManualRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Requests\\RecordTransactionRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Banking/Requests/RecordTransactionRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Requests\\StoreBankAccountRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Banking/Requests/StoreBankAccountRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Requests\\UpdateBankAccountRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Banking/Requests/UpdateBankAccountRequest.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Rules/RecurringEntryRule.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Rules/RecurringEntryRule.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/BankingService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/BankingService.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/BankingService.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/BankingService.php
 
 		-
 			message: '#^Parameter \$accountId of class App\\Domains\\Accounting\\DTOs\\JournalLineData constructor expects string, int given\.$#'
@@ -805,152 +265,20 @@ parameters:
 			path: app/Domains/Banking/Services/BankingService.php
 
 		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Banking/Services/InvoiceReconciler.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/InvoiceReconciler.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\MatchingService\:\:findAndStoreMatches\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Banking/Services/MatchingService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\MatchingService\:\:matchByAmountAndCustomer\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Banking/Services/MatchingService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\MatchingService\:\:matchByHeuristics\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Banking/Services/MatchingService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\MatchingService\:\:storeMatches\(\) has parameter \$matches with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Banking/Services/MatchingService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\MatchingService\:\:storeMatches\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Banking/Services/MatchingService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/MatchingService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/MatchingService.php
-
-		-
 			message: '#^Method App\\Domains\\Banking\\Services\\ExpenseReconciler\:\:reconcileWithExpense\(\) invoked with 2 parameters, 3 required\.$#'
 			identifier: arguments.count
 			count: 1
 			path: app/Domains/Banking/Services/ReconciliationService.php
 
 		-
-			message: '#^Method App\\Domains\\Banking\\Services\\ReconciliationService\:\:bulkReconcileAsPersonal\(\) has parameter \$transactions with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\ReconciliationService\:\:bulkReconcileAsPersonal\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\ReconciliationService\:\:tryAutoReconcileTransaction\(\) has parameter \$suggestions with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\RuleEngineService\:\:evaluateRules\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Banking/Services/RuleEngineService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\SuggestionService\:\:generateSuggestions\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 3
-			path: app/Domains/Banking/Services/SuggestionService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\SuggestionService\:\:generateSuggestionsForTransactions\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 3
-			path: app/Domains/Banking/Services/SuggestionService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\SuggestionService\:\:generateSuggestionsForTransactions\(\) should return array\<string, array\{invoices\: Illuminate\\Support\\Collection, expenses\: Illuminate\\Support\\Collection, matches\: Illuminate\\Support\\Collection\}\> but returns array\<int, array\{invoices\: Illuminate\\Support\\Collection, expenses\: Illuminate\\Support\\Collection, matches\: Illuminate\\Support\\Collection\}\>\.$#'
+			message: '#^Method App\\Domains\\Banking\\Services\\SuggestionService\:\:generateSuggestionsForTransactions\(\) should return array\<string, array\{invoices\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\DTOs\\InvoiceSuggestion\>, expenses\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\DTOs\\ExpenseSuggestion\>, matches\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\Models\\BankMatch\>\}\> but returns array\<int, array\{invoices\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\DTOs\\InvoiceSuggestion\>, expenses\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\DTOs\\ExpenseSuggestion\>, matches\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\Models\\BankMatch\>\}\>\.$#'
 			identifier: return.type
 			count: 1
 			path: app/Domains/Banking/Services/SuggestionService.php
 
 		-
-			message: '#^Method App\\Domains\\Banking\\Services\\SuggestionService\:\:generateSuggestionsWithCache\(\) has parameter \$cachedMatches with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Banking/Services/SuggestionService.php
-
-		-
-			message: '#^Method App\\Domains\\Banking\\Services\\SuggestionService\:\:generateSuggestionsWithCache\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 3
-			path: app/Domains/Banking/Services/SuggestionService.php
-
-		-
 			message: '#^Negated boolean expression is always false\.$#'
 			identifier: booleanNot.alwaysFalse
-			count: 1
-			path: app/Domains/Banking/Services/SuggestionService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/SuggestionService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/SuggestionService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/SuggestionService.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Banking/Services/SuggestionService.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type App\\Domains\\Invoicing\\Models\\Invoice\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Domains/Banking/Services/SuggestionService.php
 
@@ -979,100 +307,64 @@ parameters:
 			path: app/Domains/Contacts/Controllers/SupplierController.php
 
 		-
-			message: '#^Class App\\Domains\\Contacts\\Models\\Customer has PHPDoc tag @property for property \$notes with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Contacts/Models/Customer.php
-
-		-
-			message: '#^Class App\\Domains\\Contacts\\Models\\Customer uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Contacts/Models/Customer.php
-
-		-
-			message: '#^Method App\\Domains\\Contacts\\Models\\Customer\:\:toSearchableArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Contacts/Models/Customer.php
-
-		-
-			message: '#^Class App\\Domains\\Contacts\\Models\\Supplier has PHPDoc tag @property for property \$notes with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Contacts/Models/Supplier.php
-
-		-
-			message: '#^Class App\\Domains\\Contacts\\Models\\Supplier uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Contacts/Models/Supplier.php
-
-		-
-			message: '#^Method App\\Domains\\Contacts\\Models\\Supplier\:\:toSearchableArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Contacts/Models/Supplier.php
-
-		-
-			message: '#^Method App\\Domains\\Contacts\\Queries\\CustomerQuery\:\:forSelect\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
-			identifier: missingType.generics
+			message: '#^Method App\\Domains\\Contacts\\Queries\\CustomerQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Contacts\\Models\\Customer\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
 			count: 1
 			path: app/Domains/Contacts/Queries/CustomerQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Contacts\\Queries\\CustomerQuery\:\:list\(\) return type with generic interface Illuminate\\Contracts\\Pagination\\LengthAwarePaginator does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
+			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Contacts\\Models\\Customer\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: app/Domains/Contacts/Queries/CustomerQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Contacts\\Queries\\SupplierQuery\:\:forSelect\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
-			identifier: missingType.generics
+			message: '#^Method App\\Domains\\Contacts\\Queries\\SupplierQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Contacts\\Models\\Supplier\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
 			count: 1
 			path: app/Domains/Contacts/Queries/SupplierQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Contacts\\Queries\\SupplierQuery\:\:list\(\) return type with generic interface Illuminate\\Contracts\\Pagination\\LengthAwarePaginator does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
+			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Contacts\\Models\\Supplier\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: app/Domains/Contacts/Queries/SupplierQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Expenses\\Enums\\ExpenseStatus\:\:allowedTransitions\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Expenses/Enums/ExpenseStatus.php
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$city\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Contacts/Search/ContactSearchProvider.php
 
 		-
-			message: '#^Class App\\Domains\\Expenses\\Models\\Expense uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Expenses/Models/Expense.php
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Contacts/Search/ContactSearchProvider.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Contacts/Search/ContactSearchProvider.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Contacts/Search/ContactSearchProvider.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 2
+			path: app/Domains/Contacts/Search/ContactSearchProvider.php
 
 		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
 			identifier: nullCoalesce.expr
 			count: 1
 			path: app/Domains/Expenses/Models/Expense.php
-
-		-
-			message: '#^Method App\\Domains\\Expenses\\Models\\Expense\:\:toSearchableArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Expenses/Models/Expense.php
-
-		-
-			message: '#^Method App\\Domains\\Expenses\\Queries\\ExpenseCategoryQuery\:\:all\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Expenses/Queries/ExpenseCategoryQuery.php
-
-		-
-			message: '#^Method App\\Domains\\Expenses\\Queries\\ExpenseCategoryQuery\:\:forSelect\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Expenses/Queries/ExpenseCategoryQuery.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$supplier\.$#'
@@ -1087,28 +379,16 @@ parameters:
 			path: app/Domains/Expenses/Queries/ExpenseQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Expenses\\Queries\\ExpenseQuery\:\:inYear\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
+			message: '#^Method App\\Domains\\Expenses\\Queries\\ExpenseQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Expenses\\Models\\Expense\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
 			count: 1
 			path: app/Domains/Expenses/Queries/ExpenseQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Expenses\\Queries\\ExpenseQuery\:\:list\(\) return type with generic interface Illuminate\\Contracts\\Pagination\\LengthAwarePaginator does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
+			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Expenses\\Models\\Expense\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: app/Domains/Expenses/Queries/ExpenseQuery.php
-
-		-
-			message: '#^Method App\\Domains\\Expenses\\Requests\\ScanReceiptRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Expenses/Requests/ScanReceiptRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Expenses\\Requests\\StoreExpenseRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Expenses/Requests/StoreExpenseRequest.php
 
 		-
 			message: '#^Access to an undefined property \(object\|string\)\:\:\$organization_id\.$#'
@@ -1117,34 +397,34 @@ parameters:
 			path: app/Domains/Expenses/Requests/UpdateExpenseRequest.php
 
 		-
-			message: '#^Method App\\Domains\\Expenses\\Requests\\UpdateExpenseRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$amount\.$#'
+			identifier: property.notFound
 			count: 1
-			path: app/Domains/Expenses/Requests/UpdateExpenseRequest.php
+			path: app/Domains/Expenses/Search/ExpenseSearchProvider.php
 
 		-
-			message: '#^Method App\\Domains\\Expenses\\Services\\ExpenseService\:\:inYear\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$category\.$#'
+			identifier: property.notFound
 			count: 1
-			path: app/Domains/Expenses/Services/ExpenseService.php
+			path: app/Domains/Expenses/Search/ExpenseSearchProvider.php
 
 		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 3
-			path: app/Domains/Expenses/Services/ExpenseService.php
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Expenses/Search/ExpenseSearchProvider.php
 
 		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
 			count: 1
-			path: app/Domains/Expenses/Services/ExpenseService.php
+			path: app/Domains/Expenses/Search/ExpenseSearchProvider.php
 
 		-
-			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
 			count: 1
-			path: app/Domains/Expenses/Services/ExpenseService.php
+			path: app/Domains/Expenses/Search/ExpenseSearchProvider.php
 
 		-
 			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|false given\.$#'
@@ -1153,34 +433,10 @@ parameters:
 			path: app/Domains/Expenses/Services/TesseractOcrService.php
 
 		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Invoicing/Actions/CreateCreditNoteAction.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Invoicing/Actions/RecordPaymentAction.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Invoicing/Actions/RecordPaymentAction.php
-
-		-
 			message: '#^Unsafe usage of new static\(\)\.$#'
 			identifier: new.static
 			count: 1
 			path: app/Domains/Invoicing/DTOs/InvoicePayloadData.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Enums\\InvoiceStatus\:\:allowedTransitions\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Invoicing/Enums/InvoiceStatus.php
 
 		-
 			message: '#^Parameter \#1 \$num of function number_format expects float, int\|string given\.$#'
@@ -1189,178 +445,16 @@ parameters:
 			path: app/Domains/Invoicing/Mail/InvoiceMail.php
 
 		-
-			message: '#^Class App\\Domains\\Invoicing\\Models\\Invoice uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\Invoice\:\:scopeByAmountRange\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\Invoice\:\:scopeByAmountRange\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\Invoice\:\:scopeOfType\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\Invoice\:\:scopeOfType\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\Invoice\:\:scopeOpen\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\Invoice\:\:scopeOpen\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\Invoice\:\:scopeOverdue\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\Invoice\:\:scopeOverdue\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\Invoice\:\:toSearchableArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Class App\\Domains\\Invoicing\\Models\\InvoiceLine uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/InvoiceLine.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Invoicing/Models/InvoiceLine.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Invoicing/Models/InvoiceLine.php
-
-		-
-			message: '#^Class App\\Domains\\Invoicing\\Models\\InvoicePayment uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/InvoicePayment.php
-
-		-
-			message: '#^Class App\\Domains\\Invoicing\\Models\\RecurringInvoice has PHPDoc tag @property for property \$template_data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Invoicing/Models/RecurringInvoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\RecurringInvoice\:\:scopeActive\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/RecurringInvoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\RecurringInvoice\:\:scopeActive\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/RecurringInvoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\RecurringInvoice\:\:scopeDue\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/RecurringInvoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Models\\RecurringInvoice\:\:scopeDue\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Models/RecurringInvoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Queries\\InvoiceQuery\:\:list\(\) return type with generic interface Illuminate\\Contracts\\Pagination\\LengthAwarePaginator does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
+			message: '#^Method App\\Domains\\Invoicing\\Queries\\InvoiceQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Invoicing\\Models\\Invoice\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
 			count: 1
 			path: app/Domains/Invoicing/Queries/InvoiceQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Invoicing\\Queries\\InvoiceReportingQuery\:\:paidInYear\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
+			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Invoicing\\Models\\Invoice\> given\.$#'
+			identifier: argument.type
 			count: 1
-			path: app/Domains/Invoicing/Queries/InvoiceReportingQuery.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Queries\\InvoiceReportingQuery\:\:sentOrOverdueDueInYear\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Invoicing/Queries/InvoiceReportingQuery.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Requests\\RecordPaymentRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Invoicing/Requests/RecordPaymentRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Requests\\StoreInvoiceRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Invoicing/Requests/StoreInvoiceRequest.php
+			path: app/Domains/Invoicing/Queries/InvoiceQuery.php
 
 		-
 			message: '#^Access to an undefined property \(object\|string\)\:\:\$organization_id\.$#'
@@ -1369,118 +463,34 @@ parameters:
 			path: app/Domains/Invoicing/Requests/UpdateInvoiceRequest.php
 
 		-
-			message: '#^Method App\\Domains\\Invoicing\\Requests\\UpdateInvoiceRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
 			count: 1
-			path: app/Domains/Invoicing/Requests/UpdateInvoiceRequest.php
+			path: app/Domains/Invoicing/Search/InvoiceSearchProvider.php
 
 		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
 			count: 1
-			path: app/Domains/Invoicing/Services/InvoiceAccountingService.php
+			path: app/Domains/Invoicing/Search/InvoiceSearchProvider.php
 
 		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 4
-			path: app/Domains/Invoicing/Services/InvoiceAccountingService.php
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Search/InvoiceSearchProvider.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Domains/Invoicing/Services/InvoiceAccountingService.php
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Invoicing/Search/InvoiceSearchProvider.php
 
 		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
 			identifier: nullCoalesce.expr
 			count: 2
 			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\DTOs\\ParseResult\:\:invalidRows\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Migration/DTOs/ParseResult.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\DTOs\\ParseResult\:\:validRows\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Migration/DTOs/ParseResult.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Jobs\\ProcessMigrationImport\:\:__construct\(\) has parameter \$rowsByType with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Migration/Jobs/ProcessMigrationImport.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Models\\MigrationSession\:\:addErrors\(\) has parameter \$errors with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Models/MigrationSession.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Models\\MigrationSession\:\:addImportedRecordIds\(\) has parameter \$ids with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Models/MigrationSession.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\AbacusParser\:\:findValue\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/AbacusParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\AbacusParser\:\:mapAccount\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/AbacusParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\AbacusParser\:\:mapContact\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/AbacusParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\AbacusParser\:\:mapFixedAsset\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/AbacusParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\AbacusParser\:\:mapJournalEntry\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/AbacusParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\AbacusParser\:\:mapRow\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/AbacusParser.php
 
 		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(string\|null\)\: mixed\)\|null, ''trim'' given\.$#'
@@ -1493,36 +503,6 @@ parameters:
 			identifier: argument.type
 			count: 2
 			path: app/Domains/Migration/Parsers/AbacusParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\BananaParser\:\:findValue\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/BananaParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\BananaParser\:\:mapAccount\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/BananaParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\BananaParser\:\:mapJournalEntry\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/BananaParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\BananaParser\:\:mapOpeningBalance\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/BananaParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\BananaParser\:\:mapRow\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/BananaParser.php
 
 		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(string\|null\)\: mixed\)\|null, ''trim'' given\.$#'
@@ -1543,60 +523,6 @@ parameters:
 			path: app/Domains/Migration/Parsers/BananaParser.php
 
 		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\BexioParser\:\:findValue\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/BexioParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\BexioParser\:\:mapAccount\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/BexioParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\BexioParser\:\:mapContact\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/BexioParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\BexioParser\:\:mapExpense\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/BexioParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\BexioParser\:\:mapInvoice\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/BexioParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\BexioParser\:\:mapRow\(\) has parameter \$row with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/BexioParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\GenericCsvParser\:\:applyMapping\(\) has parameter \$values with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/GenericCsvParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\GenericCsvParser\:\:buildJournalLines\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/GenericCsvParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Parsers\\GenericCsvParser\:\:createRow\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Parsers/GenericCsvParser.php
-
-		-
 			message: '#^Parameter \#1 \$str of function strtok expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
@@ -1607,36 +533,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Migration/Parsers/GenericCsvParser.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Requests\\ExecuteMigrationRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Requests/ExecuteMigrationRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Requests\\StartMigrationRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Requests/StartMigrationRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Requests\\UploadMigrationFileRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Migration/Requests/UploadMigrationFileRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Services\\MigrationOrchestrator\:\:rollback\(\) should return array\{deleted\: int, errors\: array\<string\>\} but returns array\{deleted\: float\|int, errors\: list\<non\-falsy\-string\>\}\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domains/Migration/Services/MigrationOrchestrator.php
-
-		-
-			message: '#^Method App\\Domains\\Migration\\Services\\MigrationOrchestrator\:\:suggestAccountMappings\(\) has parameter \$rows with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Migration/Services/MigrationOrchestrator.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$role\.$#'
@@ -1651,63 +547,51 @@ parameters:
 			path: app/Domains/Organizations/Controllers/MemberController.php
 
 		-
-			message: '#^Class App\\Domains\\Organizations\\Models\\Organization uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
+			message: '#^Offset ''aanp_employee'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: app/Domains/Organizations/Models/Organization.php
+			path: app/Domains/Payroll/Actions/PostPayrollAction.php
 
 		-
-			message: '#^Method App\\Domains\\Organizations\\Models\\OrganizationInvitation\:\:scopePending\(\) has no return type specified\.$#'
-			identifier: missingType.return
+			message: '#^Offset ''ac_employee'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: app/Domains/Organizations/Models/OrganizationInvitation.php
+			path: app/Domains/Payroll/Actions/PostPayrollAction.php
 
 		-
-			message: '#^Method App\\Domains\\Organizations\\Models\\OrganizationInvitation\:\:scopePending\(\) has parameter \$query with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Offset ''ac_employer'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: app/Domains/Organizations/Models/OrganizationInvitation.php
+			path: app/Domains/Payroll/Actions/PostPayrollAction.php
 
 		-
-			message: '#^Method App\\Domains\\Organizations\\Notifications\\InvitationNotification\:\:via\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Offset ''avs_employee'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: app/Domains/Organizations/Notifications/InvitationNotification.php
+			path: app/Domains/Payroll/Actions/PostPayrollAction.php
 
 		-
-			message: '#^Method App\\Domains\\Organizations\\Requests\\SetupWizardRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Offset ''avs_employer'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: app/Domains/Organizations/Requests/SetupWizardRequest.php
+			path: app/Domains/Payroll/Actions/PostPayrollAction.php
 
 		-
-			message: '#^Method App\\Domains\\Organizations\\Requests\\UpdateCommunicationsRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Offset ''lpp_employee'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: app/Domains/Organizations/Requests/UpdateCommunicationsRequest.php
+			path: app/Domains/Payroll/Actions/PostPayrollAction.php
 
 		-
-			message: '#^Method App\\Domains\\Organizations\\Requests\\UpdateInvoiceSettingsRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Offset ''lpp_employer'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: app/Domains/Organizations/Requests/UpdateInvoiceSettingsRequest.php
+			path: app/Domains/Payroll/Actions/PostPayrollAction.php
 
 		-
-			message: '#^Method App\\Domains\\Organizations\\Requests\\UpdateOrganizationSettingsRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Offset ''total_employer'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: app/Domains/Organizations/Requests/UpdateOrganizationSettingsRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Organizations\\Requests\\UploadLogoRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Organizations/Requests/UploadLogoRequest.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 3
 			path: app/Domains/Payroll/Actions/PostPayrollAction.php
 
 		-
@@ -1723,86 +607,26 @@ parameters:
 			path: app/Domains/Payroll/Controllers/SalarySlipController.php
 
 		-
-			message: '#^Class App\\Domains\\Payroll\\Models\\Employee uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Payroll/Models/Employee.php
-
-		-
-			message: '#^Class App\\Domains\\Payroll\\Models\\SalarySlip has PHPDoc tag @property for property \$deductions with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Payroll/Models/SalarySlip.php
-
-		-
-			message: '#^Method App\\Domains\\Payroll\\Queries\\EmployeeQuery\:\:list\(\) return type with generic interface Illuminate\\Contracts\\Pagination\\LengthAwarePaginator does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
+			message: '#^Method App\\Domains\\Payroll\\Queries\\EmployeeQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Payroll\\Models\\Employee\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
 			count: 1
 			path: app/Domains/Payroll/Queries/EmployeeQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Payroll\\Services\\SwissDeductionService\:\:buildRateMap\(\) has parameter \$rates with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
+			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Payroll\\Models\\Employee\> given\.$#'
+			identifier: argument.type
 			count: 1
-			path: app/Domains/Payroll/Services/SwissDeductionService.php
+			path: app/Domains/Payroll/Queries/EmployeeQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Payroll\\Services\\SwissDeductionService\:\:buildRateMap\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Payroll/Services/SwissDeductionService.php
-
-		-
-			message: '#^Method App\\Domains\\Payroll\\Services\\SwissDeductionService\:\:calculateDeductions\(\) has parameter \$rates with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Payroll/Services/SwissDeductionService.php
-
-		-
-			message: '#^Method App\\Domains\\Payroll\\Services\\SwissDeductionService\:\:calculateDeductions\(\) should return array\{avs_employee\: string, avs_employer\: string, ac_employee\: string, ac_employer\: string, aanp_employee\: string, lpp_employee\: string, lpp_employer\: string, total_employee\: string, \.\.\.\} but returns non\-empty\-array\<string\>\.$#'
+			message: '#^Method App\\Domains\\Payroll\\Services\\SwissDeductionService\:\:calculateDeductions\(\) should return array\{avs_employee\: string, avs_employer\: string, ac_employee\: string, ac_employer\: string, aanp_employee\: string, lpp_employee\: string, lpp_employer\: string, total_employee\: string, \.\.\.\} but returns non\-empty\-array\<string, numeric\-string\>\.$#'
 			identifier: return.type
 			count: 1
 			path: app/Domains/Payroll/Services/SwissDeductionService.php
 
 		-
-			message: '#^Class App\\Domains\\Reporting\\DTOs\\BalanceSheetReport implements generic interface Illuminate\\Contracts\\Support\\Arrayable but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Reporting/DTOs/BalanceSheetReport.php
-
-		-
-			message: '#^Class App\\Domains\\Reporting\\DTOs\\ProfitAndLossReport implements generic interface Illuminate\\Contracts\\Support\\Arrayable but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Reporting/DTOs/ProfitAndLossReport.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Requests\\BalanceSheetRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Requests/BalanceSheetRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Requests\\ProfitAndLossRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Requests/ProfitAndLossRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Requests\\VatReportRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Requests/VatReportRequest.php
-
-		-
 			message: '#^Cannot access property \$value on App\\Domains\\Accounting\\Enums\\AccountType\|string\.$#'
 			identifier: property.nonObject
-			count: 1
-			path: app/Domains/Reporting/Services/AccountingExportService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\AccountingExportService\:\:writeCsv\(\) has parameter \$rows with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: app/Domains/Reporting/Services/AccountingExportService.php
 
@@ -1825,163 +649,13 @@ parameters:
 			path: app/Domains/Reporting/Services/AccountingExportService.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Domains/Reporting/Services/AccountingExportService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Domains/Reporting/Services/AccountingExportService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\AgingReportService\:\:generate\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Services/AgingReportService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\AgingReportService\:\:payableItems\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Services/AgingReportService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\AgingReportService\:\:receivableItems\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Services/AgingReportService.php
-
-		-
-			message: '#^Offset ''total'' might not exist on array\{items\: non\-empty\-list, total\?\: numeric\-string\}\.$#'
+			message: '#^Offset ''total'' might not exist on array\{items\: non\-empty\-list\<mixed\>, total\?\: numeric\-string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: app/Domains/Reporting/Services/AgingReportService.php
 
 		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Reporting/Services/AgingReportService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\DashboardService\:\:computeMetrics\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Services/DashboardService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\DashboardService\:\:metrics\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Services/DashboardService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\DashboardService\:\:metrics\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Reporting/Services/DashboardService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\DashboardService\:\:metrics\(\) should return array\{revenue\: string, expenses\: string, cashBalance\: string, unpaidInvoices\: array\{count\: int, total\: string\}, pendingExpenses\: array\{count\: int, total\: string\}, balance\: string, recentTransactions\: Illuminate\\Support\\Collection, monthlyBreakdown\: array, \.\.\.\} but returns array\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domains/Reporting/Services/DashboardService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\DashboardService\:\:monthlyBreakdown\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Services/DashboardService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\DashboardService\:\:recentTransactions\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Reporting/Services/DashboardService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Reporting/Services/DashboardService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 4
-			path: app/Domains/Reporting/Services/DashboardService.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Reporting/Services/DashboardService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Domains/Reporting/Services/DashboardService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\ReportingService\:\:accountsWithBalances\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\ReportingService\:\:applyBudgetToAccounts\(\) has parameter \$accountIdsByCode with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\ReportingService\:\:applyBudgetToAccounts\(\) has parameter \$accounts with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\ReportingService\:\:applyBudgetToAccounts\(\) has parameter \$budgets with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
 			message: '#^Method App\\Domains\\Reporting\\Services\\ReportingService\:\:balanceSheet\(\) should return array\{as_of_date\: string, assets\: array\{accounts\: array\<int, array\{code\: string, name\: string, balance\: string\}\>, total\: mixed\}, liabilities\: array\{accounts\: array\<int, array\{code\: string, name\: string, balance\: string\}\>, total\: mixed\}, equity\: array\{accounts\: array\<int, array\{code\: string, name\: string, balance\: string\}\>, total\: mixed\}\} but returns array\{as_of_date\: string, assets\: array\{accounts\: array\<mixed\>, total\?\: mixed\}, liabilities\: array\{accounts\: array\<mixed\>, total\?\: mixed\}, equity\: array\{accounts\: array\<mixed\>, total\?\: mixed\}\}\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\ReportingService\:\:cashFlow\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\ReportingService\:\:enrichWithBudget\(\) has parameter \$result with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\ReportingService\:\:enrichWithBudget\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\ReportingService\:\:profitAndLoss\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 3
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Method App\\Domains\\Reporting\\Services\\ReportingService\:\:profitAndLoss\(\) should return array\{period\: array\{from\: string, to\: string\}, revenue\: array\<int, array\{code\: string, name\: string, balance\: string\}\>, expenses\: array\<int, array\{code\: string, name\: string, balance\: string\}\>, total_revenue\: string, total_expenses\: string, net_profit\: string, comparison\: array\|null, variance\: array\|null, \.\.\.\} but returns non\-empty\-array\.$#'
 			identifier: return.type
 			count: 1
 			path: app/Domains/Reporting/Services/ReportingService.php
@@ -1993,57 +667,21 @@ parameters:
 			path: app/Domains/Reporting/Services/ReportingService.php
 
 		-
-			message: '#^Parameter \#1 \$num1 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 4
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 3
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 10
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 8
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
 			message: '#^Parameter \#2 \$subject of function preg_split expects string, int\|string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Reporting/Services/ReportingService.php
 
 		-
-			message: '#^Method App\\Domains\\Users\\Controllers\\PasskeyController\:\:registerOptions\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Domains/Users/Controllers/PasskeyController.php
+			message: '#^Parameter \#3 \$accountIdsByCode of method App\\Domains\\Reporting\\Services\\ReportingService\:\:applyBudgetToAccounts\(\) expects array\<string, string\>, Illuminate\\Support\\Collection\<\(int\|string\), mixed\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Domains/Reporting/Services/ReportingService.php
 
 		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
+			message: '#^Method App\\Domains\\Users\\Controllers\\PasskeyController\:\:registerOptions\(\) should return Illuminate\\Http\\JsonResponse but returns Illuminate\\Contracts\\Support\\Responsable\.$#'
+			identifier: return.type
+			count: 1
 			path: app/Domains/Users/Controllers/PasskeyController.php
 
 		-
@@ -2071,12 +709,6 @@ parameters:
 			path: app/Domains/Users/Controllers/TwoFactorChallengeController.php
 
 		-
-			message: '#^Method App\\Domains\\Users\\Controllers\\TwoFactorController\:\:generateRecoveryCodes\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Users/Controllers/TwoFactorController.php
-
-		-
 			message: '#^Unsafe usage of new static\(\)\.$#'
 			identifier: new.static
 			count: 1
@@ -2087,48 +719,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Users/Jobs/ExportUserDataJob.php
-
-		-
-			message: '#^Class App\\Domains\\Users\\Models\\User uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domains/Users/Models/User.php
-
-		-
-			message: '#^Method App\\Domains\\Users\\Notifications\\TwoFactorDisabledNotification\:\:via\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Users/Notifications/TwoFactorDisabledNotification.php
-
-		-
-			message: '#^Method App\\Domains\\Users\\Notifications\\VerifyNewEmailNotification\:\:via\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Users/Notifications/VerifyNewEmailNotification.php
-
-		-
-			message: '#^Method App\\Domains\\Users\\Requests\\ForgotPasswordRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Users/Requests/ForgotPasswordRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Users\\Requests\\LoginRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Users/Requests/LoginRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Users\\Requests\\ResetPasswordRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Users/Requests/ResetPasswordRequest.php
-
-		-
-			message: '#^Method App\\Domains\\Users\\Requests\\TwoFactorChallengeRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domains/Users/Requests/TwoFactorChallengeRequest.php
 
 		-
 			message: '#^Access to an undefined property App\\Domains\\Organizations\\Models\\Organization\:\:\$pivot\.$#'
@@ -2161,26 +751,14 @@ parameters:
 			path: app/Domains/Users/Services/DataExportService.php
 
 		-
-			message: '#^Method App\\Http\\Middleware\\Api\\TokenPermissionMap\:\:get\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method App\\Http\\Middleware\\Api\\TokenPermissionMap\:\:get\(\) should return array\<string, string\> but returns array\<string, array\<string, App\\Domains\\Organizations\\Enums\\Permission\>\>\.$#'
+			identifier: return.type
 			count: 1
 			path: app/Http/Middleware/Api/TokenPermissionMap.php
 
 		-
-			message: '#^Method App\\Http\\Middleware\\DisableThrottleInTesting\:\:handle\(\) has parameter \$params with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: app/Http/Middleware/DisableThrottleInTesting.php
-
-		-
-			message: '#^Method App\\Http\\Middleware\\EnsureApiOrganization\:\:resolveOrganization\(\) has parameter \$token with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
-			message: '#^Method App\\Http\\Middleware\\EnsureApiOrganization\:\:resolveOrganization\(\) should return App\\Domains\\Organizations\\Models\\Organization\|null but returns App\\Domains\\Organizations\\Models\\Organization\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domains\\Organizations\\Models\\Organization\>\|null\.$#'
-			identifier: return.type
+			message: '#^Offset string on string on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
 			path: app/Http/Middleware/EnsureApiOrganization.php
 
@@ -2191,44 +769,32 @@ parameters:
 			path: app/Http/Middleware/EnsureApiOrganization.php
 
 		-
+			message: '#^Strict comparison using \=\=\= between null and null will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: app/Http/Middleware/EnsureApiOrganization.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Domains\\Api\\Enums\\TokenType\:\:Organization will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Http/Middleware/EnsureApiOrganization.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Http/Middleware/EnsureApiOrganization.php
+
+		-
 			message: '#^Parameter \#1 \$string of function trim expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Http/Middleware/FakeTimeMiddleware.php
 
 		-
-			message: '#^Method App\\Http\\Middleware\\HandleInertiaRequests\:\:resolveAuth\(\) has parameter \$user with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Method App\\Http\\Middleware\\HandleInertiaRequests\:\:resolveAuth\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Method App\\Http\\Middleware\\HandleInertiaRequests\:\:resolveCurrentRole\(\) has parameter \$user with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Method App\\Http\\Middleware\\HandleInertiaRequests\:\:resolvePermissions\(\) has parameter \$user with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Method App\\Http\\Middleware\\HandleInertiaRequests\:\:resolveSubscription\(\) has parameter \$user with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Method App\\Http\\Middleware\\HandleInertiaRequests\:\:resolveSubscription\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Access to an undefined property App\\Domains\\Organizations\\Models\\Organization\:\:\$pivot\.$#'
+			identifier: property.notFound
 			count: 1
 			path: app/Http/Middleware/HandleInertiaRequests.php
 
@@ -2239,70 +805,16 @@ parameters:
 			path: app/Http/Services/BaseSearchProvider.php
 
 		-
-			message: '#^Method App\\Http\\Services\\BaseSearchProvider\:\:searchModel\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Http/Services/BaseSearchProvider.php
-
-		-
 			message: '#^Cannot access offset ''router'' on Illuminate\\Contracts\\Foundation\\Application\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: app/Providers/FeatureFlagServiceProvider.php
 
 		-
-			message: '#^Method App\\Providers\\PluginServiceProvider\:\:loadPlugin\(\) has parameter \$manifest with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Parameter \#3 \$loading of method App\\Providers\\PluginServiceProvider\:\:loadPluginWithDeps\(\) expects array\<string, mixed\>, array\<int\|string, mixed\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: app/Providers/PluginServiceProvider.php
-
-		-
-			message: '#^Method App\\Providers\\PluginServiceProvider\:\:loadPluginWithDeps\(\) has parameter \$loading with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Providers/PluginServiceProvider.php
-
-		-
-			message: '#^Method App\\Providers\\PluginServiceProvider\:\:loadPluginWithDeps\(\) has parameter \$manifests with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Providers/PluginServiceProvider.php
-
-		-
-			message: '#^Method App\\Providers\\PluginServiceProvider\:\:readManifest\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Providers/PluginServiceProvider.php
-
-		-
-			message: '#^Property App\\Providers\\PluginServiceProvider\:\:\$loadedPlugins type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Providers/PluginServiceProvider.php
-
-		-
-			message: '#^Property App\\Providers\\PluginServiceProvider\:\:\$manifests type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Providers/PluginServiceProvider.php
-
-		-
-			message: '#^Method App\\Support\\AddressData\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Support/AddressData.php
-
-		-
-			message: '#^Method App\\Support\\AddressData\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Support/AddressData.php
-
-		-
-			message: '#^Method App\\Support\\CsvExportService\:\:export\(\) has parameter \$rows with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Support/CsvExportService.php
 
 		-
 			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
@@ -2323,18 +835,6 @@ parameters:
 			path: app/Support/CsvExportService.php
 
 		-
-			message: '#^Method App\\Support\\FeatureFlag\:\:all\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Support/FeatureFlag.php
-
-		-
-			message: '#^Method App\\Support\\Listeners\\AuthAuditSubscriber\:\:subscribe\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Support/Listeners/AuthAuditSubscriber.php
-
-		-
 			message: '#^Negated boolean expression is always false\.$#'
 			identifier: booleanNot.alwaysFalse
 			count: 1
@@ -2345,60 +845,6 @@ parameters:
 			identifier: argument.type
 			count: 2
 			path: app/Support/Listeners/AuthAuditSubscriber.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Support/Money.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bccomp expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Support/Money.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Support/Money.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Support/Money.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcadd expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Support/Money.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Support/Money.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Support/Money.php
-
-		-
-			message: '#^Method App\\Support\\PdfExportService\:\:download\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Support/PdfExportService.php
-
-		-
-			message: '#^Method App\\Support\\PdfExportService\:\:stream\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Support/PdfExportService.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$organization_id\.$#'
@@ -2413,50 +859,26 @@ parameters:
 			path: app/Support/QueryBuilder.php
 
 		-
-			message: '#^Method App\\Support\\QueryBuilder\:\:__construct\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
+			message: '#^Call to an undefined static method Illuminate\\Database\\Eloquent\\Model\:\:search\(\)\.$#'
+			identifier: staticMethod.notFound
 			count: 1
 			path: app/Support/QueryBuilder.php
 
 		-
-			message: '#^Method App\\Support\\QueryBuilder\:\:apply\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
+			message: '#^Cannot call method getTable\(\) on class\-string\<Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: method.nonObject
 			count: 1
 			path: app/Support/QueryBuilder.php
 
 		-
-			message: '#^Method App\\Support\\QueryBuilder\:\:applyMeiliSearch\(\) has parameter \$model with no type specified\.$#'
-			identifier: missingType.parameter
+			message: '#^Method App\\Support\\QueryBuilder\:\:for\(\) should return static\(App\\Support\\QueryBuilder\<TModel of Illuminate\\Database\\Eloquent\\Model\>\) but returns static\(App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\)\.$#'
+			identifier: return.type
 			count: 1
 			path: app/Support/QueryBuilder.php
 
 		-
-			message: '#^Method App\\Support\\QueryBuilder\:\:for\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Support/QueryBuilder.php
-
-		-
-			message: '#^Property App\\Support\\QueryBuilder\:\:\$allowedFilters type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Support/QueryBuilder.php
-
-		-
-			message: '#^Property App\\Support\\QueryBuilder\:\:\$allowedSorts type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Support/QueryBuilder.php
-
-		-
-			message: '#^Property App\\Support\\QueryBuilder\:\:\$query with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Support/QueryBuilder.php
-
-		-
-			message: '#^Property App\\Support\\QueryBuilder\:\:\$searchColumns type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Parameter \#2 \$model of method App\\Support\\QueryBuilder\<TModel of Illuminate\\Database\\Eloquent\\Model\>\:\:applyMeiliSearch\(\) expects class\-string\<Illuminate\\Database\\Eloquent\\Model\>, TModel of Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
 			count: 1
 			path: app/Support/QueryBuilder.php
 
@@ -2471,23 +893,5 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: app/Support/Services/FileUploadService.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Support/SwissRounding.php
-
-		-
-			message: '#^Parameter \#1 \$num1 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Support/SwissRounding.php
-
-		-
-			message: '#^Parameter \#2 \$num2 of function bcsub expects numeric\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Support/SwissRounding.php
 
 
