@@ -196,6 +196,7 @@ class MigrationOrchestrator
     /**
      * Suggest account mappings for rows that reference external account codes.
      *
+     * @param  Collection<int, ImportRowInterface>  $rows
      * @return array<string, array{source_code: string, source_name: string, target_code: ?string, target_name: ?string, confidence: float}>
      */
     private function suggestAccountMappings(Collection $rows, Organization $organization): array
@@ -299,10 +300,10 @@ class MigrationOrchestrator
                 if (is_array($models)) {
                     // Contacts: try each model type
                     foreach ($models as $modelClass) {
-                        $totalDeleted += $modelClass::whereIn('id', $ids)->delete();
+                        $totalDeleted += (int) $modelClass::whereIn('id', $ids)->delete();
                     }
                 } elseif ($models !== null) {
-                    $totalDeleted += $models::whereIn('id', $ids)->delete();
+                    $totalDeleted += (int) $models::whereIn('id', $ids)->delete();
                 }
             }
         });

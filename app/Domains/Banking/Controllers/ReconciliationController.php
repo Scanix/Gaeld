@@ -168,6 +168,7 @@ class ReconciliationController extends Controller
 
         $validated = $request->validated();
 
+        /** @var Invoice $invoice */
         $invoice = Invoice::where('organization_id', $bankAccount->organization_id)
             ->findOrFail($validated['invoice_id']);
 
@@ -191,6 +192,7 @@ class ReconciliationController extends Controller
 
         $validated = $request->validated();
 
+        /** @var Expense $expense */
         $expense = Expense::where('organization_id', $bankAccount->organization_id)
             ->findOrFail($validated['expense_id']);
 

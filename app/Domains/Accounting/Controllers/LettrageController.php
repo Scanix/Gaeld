@@ -70,6 +70,7 @@ class LettrageController extends Controller
             'line_ids.*' => ['required', 'integer'],
         ]);
 
+        /** @var Account $account */
         $account = Account::where('organization_id', $currentOrg->id())
             ->findOrFail($validated['account_id']);
 
