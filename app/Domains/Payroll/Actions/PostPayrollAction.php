@@ -67,7 +67,7 @@ class PostPayrollAction
 
         // Debit: Employer social charges
         $totalEmployer = $deductions['total_employer'] ?? '0';
-        if (bccomp($totalEmployer, '0', 2) > 0) {
+        if (Money::isPositive($totalEmployer)) {
             $lines[] = new JournalLineData(
                 accountId: (string) $socialChargesAccount->id,
                 debit: $totalEmployer,
@@ -85,7 +85,7 @@ class PostPayrollAction
         );
 
         // Credit: AVS/AI/APG payable
-        if (bccomp($avsTotal, '0', 2) > 0) {
+        if (Money::isPositive($avsTotal)) {
             $lines[] = new JournalLineData(
                 accountId: (string) $avsAccount->id,
                 debit: '0',
@@ -95,7 +95,7 @@ class PostPayrollAction
         }
 
         // Credit: AC payable
-        if (bccomp($acTotal, '0', 2) > 0) {
+        if (Money::isPositive($acTotal)) {
             $lines[] = new JournalLineData(
                 accountId: (string) $acAccount->id,
                 debit: '0',
@@ -105,7 +105,7 @@ class PostPayrollAction
         }
 
         // Credit: LPP payable
-        if (bccomp($lppTotal, '0', 2) > 0) {
+        if (Money::isPositive($lppTotal)) {
             $lines[] = new JournalLineData(
                 accountId: (string) $lppAccount->id,
                 debit: '0',

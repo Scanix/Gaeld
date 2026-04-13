@@ -15,6 +15,9 @@ class VerifyNewEmailNotification extends Notification
         private string $token,
     ) {}
 
+    /**
+     * @return array<int, string>
+     */
     public function via(object $notifiable): array
     {
         return ['mail'];

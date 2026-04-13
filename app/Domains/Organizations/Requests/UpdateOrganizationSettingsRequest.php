@@ -14,6 +14,9 @@ class UpdateOrganizationSettingsRequest extends FormRequest
         return $this->user()->can('update', $this->route('organization') ?? app(CurrentOrganization::class)->get());
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

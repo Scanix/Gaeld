@@ -21,7 +21,7 @@ class ProcessMigrationImport implements ShouldQueue
     public int $timeout = 600;
 
     /**
-     * @param  array<string, Collection>  $rowsByType
+     * @param  array<string, Collection<int, mixed>>  $rowsByType
      */
     public function __construct(
         private readonly MigrationSession $session,

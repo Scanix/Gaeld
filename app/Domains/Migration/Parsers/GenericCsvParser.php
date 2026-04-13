@@ -123,7 +123,8 @@ class GenericCsvParser implements PlatformParserInterface
     }
 
     /**
-     * @return array<string, ?string>
+     * @param  array<int, string|null>  $values
+     * @return array<string, string|null>
      */
     private function applyMapping(array $values): array
     {
@@ -135,6 +136,9 @@ class GenericCsvParser implements PlatformParserInterface
         return $mapped;
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     private function createRow(array $data, int $sourceRow, DataType $dataType): ImportRowInterface
     {
         return match ($dataType) {
@@ -208,7 +212,8 @@ class GenericCsvParser implements PlatformParserInterface
     }
 
     /**
-     * @return array<array{account_code: string, debit: ?string, credit: ?string, description: ?string}>
+     * @param  array<string, mixed>  $data
+     * @return array<int, array{account_code: string, debit: ?string, credit: ?string, description: ?string}>
      */
     private function buildJournalLines(array $data): array
     {

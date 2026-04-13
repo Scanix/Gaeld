@@ -154,6 +154,7 @@ const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
           <CardTitle>{{ t('vat_section_200') }}</CardTitle>
         </CardHeader>
         <CardContent>
+          <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b text-left text-xs font-medium text-[hsl(var(--muted-foreground))]">
@@ -175,6 +176,7 @@ const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
               </tr>
             </tbody>
           </table>
+          </div>
         </CardContent>
       </Card>
 
@@ -184,6 +186,7 @@ const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
           <CardTitle>{{ t('vat_section_300') }}</CardTitle>
         </CardHeader>
         <CardContent>
+          <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b text-left text-xs font-medium text-[hsl(var(--muted-foreground))]">
@@ -211,6 +214,7 @@ const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
               </tr>
             </tbody>
           </table>
+          </div>
         </CardContent>
       </Card>
 

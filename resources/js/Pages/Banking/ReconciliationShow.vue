@@ -276,7 +276,7 @@ const currentSuggestions = computed(() => {
     </div>
 
     <!-- Triage summary for mixed-use accounts -->
-    <div v-if="triageSummary" class="mb-4 flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-2 text-sm">
+    <div v-if="triageSummary" class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-muted/30 px-4 py-2 text-sm">
       <span>{{ triageSummary.unclassified }} {{ t('unclassified') }}</span>
       <span class="text-muted-foreground">|</span>
       <span class="text-purple-600 dark:text-purple-400">{{ triageSummary.personal }} {{ t('personal') }}</span>

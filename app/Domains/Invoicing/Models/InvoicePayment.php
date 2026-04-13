@@ -7,6 +7,7 @@ use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +29,7 @@ use Illuminate\Support\Carbon;
  */
 class InvoicePayment extends Model
 {
+    /** @use HasFactory<Factory<static>> */
     use Auditable, BelongsToOrganization, HasFactory, HasUuids;
 
     protected $fillable = [

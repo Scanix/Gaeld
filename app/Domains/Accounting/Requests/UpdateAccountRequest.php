@@ -9,6 +9,9 @@ use Illuminate\Validation\Rules\Enum;
 
 class UpdateAccountRequest extends FormRequest
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $account = $this->route('account');

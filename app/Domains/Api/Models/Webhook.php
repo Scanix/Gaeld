@@ -23,7 +23,7 @@ use Illuminate\Support\Str;
  * @property string $organization_id
  * @property string $url
  * @property string $secret
- * @property array $events
+ * @property array<int, mixed> $events
  * @property bool $is_active
  * @property Carbon|null $last_triggered_at
  * @property Carbon|null $created_at

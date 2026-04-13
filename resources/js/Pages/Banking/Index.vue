@@ -119,7 +119,7 @@ const columns = computed(() => [
         </div>
         <div class="flex justify-end gap-3">
           <Button variant="outline" @click="showModal = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="form.processing">{{ t('create') }}</Button>
+          <Button type="submit" :disabled="form.processing" :loading="form.processing">{{ t('create') }}</Button>
         </div>
       </form>
     </Modal>

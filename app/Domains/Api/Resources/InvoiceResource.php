@@ -9,6 +9,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** @mixin Invoice */
 class InvoiceResource extends JsonResource
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [
@@ -18,8 +21,8 @@ class InvoiceResource extends JsonResource
             'type' => $this->type->value,
             'related_invoice_id' => $this->related_invoice_id,
             'customer' => new CustomerResource($this->whenLoaded('customer')),
-            'issue_date' => $this->issue_date?->toDateString(),
-            'due_date' => $this->due_date?->toDateString(),
+            'issue_date' => $this->issue_date->toDateString(),
+            'due_date' => $this->due_date->toDateString(),
             'subtotal' => $this->subtotal,
             'vat_amount' => $this->vat_amount,
             'total' => $this->total,

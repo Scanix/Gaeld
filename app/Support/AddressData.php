@@ -17,6 +17,9 @@ readonly class AddressData
         public ?string $canton = null,
     ) {}
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public static function fromArray(array $data, bool $includeCanton = false, ?string $defaultCountry = null): ?self
     {
         $address = $data['address'] ?? null;
@@ -43,6 +46,9 @@ readonly class AddressData
         return new self(canton: $includeCanton ? null : null);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(bool $includeCanton = false): array
     {
         $data = [

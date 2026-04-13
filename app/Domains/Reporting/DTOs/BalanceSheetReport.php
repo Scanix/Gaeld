@@ -7,6 +7,8 @@ use JsonSerializable;
 
 /**
  * Immutable value object representing a balance sheet (assets, liabilities, equity).
+ *
+ * @implements Arrayable<string, mixed>
  */
 readonly class BalanceSheetReport implements Arrayable, JsonSerializable
 {

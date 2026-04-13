@@ -55,8 +55,8 @@ class RecurringEntryRule extends BaseRule
             ->where('date', '>=', $lookback)
             ->where('id', '!=', $transaction->id)
             ->whereBetween('amount', [
-                '-'.bcadd($absAmount, '0.05', 2),
-                '-'.bcsub($absAmount, '0.05', 2),
+                '-'.Money::add($absAmount, '0.05'),
+                '-'.Money::subtract($absAmount, '0.05'),
             ])
             ->count();
 

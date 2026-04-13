@@ -8,6 +8,7 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Assets\Models\FixedAsset;
+use App\Support\Money;
 use Carbon\Carbon;
 
 /**
@@ -26,13 +27,13 @@ class DisposeAssetAction
         $nbv = $asset->netBookValue();
 
         // Gain or loss: disposal proceeds - net book value
-        $gainLoss = bcsub($disposalAmount, $nbv, 2);
-        $isGain = bccomp($gainLoss, '0', 2) >= 0;
+        $gainLoss = Money::subtract($disposalAmount, $nbv);
+        $isGain = ! Money::isNegative($gainLoss);
 
         $lines = [];
 
         // Debit accumulated depreciation account (remove accumulated depr.)
-        if (bccomp($totalDepreciated, '0', 2) > 0) {
+        if (Money::isPositive($totalDepreciated)) {
             $lines[] = new JournalLineData(
                 accountId: (string) $asset->accumulated_depreciation_account_id,
                 debit: $totalDepreciated,
@@ -42,7 +43,7 @@ class DisposeAssetAction
         }
 
         // Debit bank for disposal proceeds
-        if (bccomp($disposalAmount, '0', 2) > 0) {
+        if (Money::isPositive($disposalAmount)) {
             $bankAccount = $this->ledgerQuery->resolveAccount($asset->organization_id, AccountCode::BANK_CASH);
             $lines[] = new JournalLineData(
                 accountId: (string) $bankAccount->id,
@@ -61,11 +62,11 @@ class DisposeAssetAction
         );
 
         // Gain or loss
-        $absGainLoss = bccomp($gainLoss, '0', 2) < 0
-            ? bcmul($gainLoss, '-1', 2)
+        $absGainLoss = Money::isNegative($gainLoss)
+            ? Money::negate($gainLoss)
             : $gainLoss;
 
-        if (bccomp($absGainLoss, '0', 2) > 0) {
+        if (Money::isPositive($absGainLoss)) {
             if ($isGain) {
                 $gainAccount = $this->ledgerQuery->resolveAccount($asset->organization_id, AccountCode::ASSET_DISPOSAL_GAIN);
                 $lines[] = new JournalLineData(

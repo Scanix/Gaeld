@@ -5,6 +5,7 @@ namespace App\Domains\Organizations\Models;
 use App\Domains\Users\Models\User;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -70,7 +71,11 @@ class OrganizationInvitation extends Model
         return $this->belongsTo(User::class, 'invited_by');
     }
 
-    public function scopePending($query)
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopePending(Builder $query): Builder
     {
         return $query->whereNull('accepted_at')
             ->where('expires_at', '>', now());

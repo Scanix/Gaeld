@@ -64,7 +64,7 @@ const columns = computed(() => [
   { key: 'city', label: t('city'), sortable: true },
   { key: 'country', label: t('country'), sortable: true },
   { key: 'default_expense_category', label: t('category') },
-  { key: 'actions', label: '', class: 'text-right w-32' },
+  { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 
 const countryFilters = computed(() => [
@@ -89,7 +89,7 @@ const countryFilters = computed(() => [
       <p>{{ t('help_suppliers_text') }}</p>
     </HelpText>
 
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('manage_suppliers') }}
       </p>
@@ -120,6 +120,7 @@ const countryFilters = computed(() => [
             :href="`/suppliers/${row.uuid}`"
             variant="ghost"
             size="icon"
+            :aria-label="t('view') + ' ' + row.name"
             :title="t('view')"
             @click.stop
           >
@@ -130,6 +131,7 @@ const countryFilters = computed(() => [
             :href="`/suppliers/${row.uuid}/edit`"
             variant="ghost"
             size="icon"
+            :aria-label="t('edit') + ' ' + row.name"
             :title="t('edit')"
             @click.stop
           >
@@ -138,6 +140,7 @@ const countryFilters = computed(() => [
           <Button
             variant="ghost"
             size="icon"
+            :aria-label="t('delete') + ' ' + row.name"
             :title="t('delete')"
             @click.stop="confirmDelete(row)"
           >

@@ -16,6 +16,9 @@ class StoreExpenseRequest extends FormRequest
         return $this->user()->can('create', Expense::class);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return $this->sharedRules(app(CurrentOrganization::class)->id());

@@ -12,6 +12,8 @@ use App\Domains\Expenses\Models\ReceiptScan;
 use App\Domains\Expenses\Services\ExpenseService;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Queries\InvoiceReportingQuery;
+use App\Domains\Organizations\Models\Organization;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -36,7 +38,7 @@ class DashboardService
     // ──────────────────────────────────────────────────────────────
 
     /**
-     * @return array{revenue: string, expenses: string, cashBalance: string, unpaidInvoices: array{count: int, total: string}, pendingExpenses: array{count: int, total: string}, balance: string, recentTransactions: Collection, monthlyBreakdown: array, pendingOcrScans: int}
+     * @return array<string, mixed>
      */
     public function metrics(string $organizationId): array
     {
@@ -56,6 +58,9 @@ class DashboardService
     //  Core Computation
     // ──────────────────────────────────────────────────────────────
 
+    /**
+     * @return array<string, mixed>
+     */
     private function computeMetrics(string $organizationId): array
     {
         $year = $this->resolveDisplayYear($organizationId);
@@ -84,10 +89,10 @@ class DashboardService
                 'count' => $pendingExpenses->count,
                 'total' => $pendingExpenses->total,
             ],
-            'balance' => bcsub($totalRevenue, $totalExpenses, 2),
+            'balance' => Money::subtract($totalRevenue, $totalExpenses),
             'previousRevenue' => $previousRevenue,
             'previousExpenses' => $previousExpenses,
-            'previousBalance' => bcsub($previousRevenue, $previousExpenses, 2),
+            'previousBalance' => Money::subtract($previousRevenue, $previousExpenses),
             'recentTransactions' => $this->recentTransactions($organizationId),
             'monthlyBreakdown' => $this->monthlyBreakdown($organizationId, $year),
             'budgetSummary' => $this->budgetSummary($organizationId, $year),
@@ -113,6 +118,9 @@ class DashboardService
         return $this->ledgerService->accountBalance($bankAccount->id);
     }
 
+    /**
+     * @return Collection<int, mixed>
+     */
     private function recentTransactions(string $organizationId): Collection
     {
         return $this->ledgerService->recentEntries($organizationId)
@@ -130,17 +138,20 @@ class DashboardService
 
     private function classifyTransactionType(JournalEntry $entry): string
     {
-        $hasRevenue = $entry->lines->contains(fn ($line) => AccountCode::isRevenue($line->account?->code ?? ''));
+        $hasRevenue = $entry->lines->contains(fn ($line) => AccountCode::isRevenue($line->account->code ?? ''));
 
         if ($hasRevenue) {
             return 'income';
         }
 
-        $hasExpense = $entry->lines->contains(fn ($line) => AccountCode::isExpense($line->account?->code ?? ''));
+        $hasExpense = $entry->lines->contains(fn ($line) => AccountCode::isExpense($line->account->code ?? ''));
 
         return $hasExpense ? 'expense' : 'transfer';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function monthlyBreakdown(string $organizationId, int $year): array
     {
         // Fetch all data for the year in 3 queries instead of 6*12
@@ -199,19 +210,19 @@ class DashboardService
             return null;
         }
 
-        $monthsElapsed = now()->month;
+        $monthsElapsed = $this->computeMonthsElapsed($organizationId, $year);
 
         $budgetedRevenue = '0.00';
         $budgetedExpenses = '0.00';
 
         foreach ($budgets as $budget) {
             $code = $budget->account->code ?? '';
-            $annualBudget = bcmul((string) $budget->monthly_amount, '12', 2);
+            $annualBudget = Money::multiply2((string) $budget->monthly_amount, '12');
 
             if (AccountCode::isRevenue($code)) {
-                $budgetedRevenue = bcadd($budgetedRevenue, $annualBudget, 2);
+                $budgetedRevenue = Money::add($budgetedRevenue, $annualBudget);
             } elseif (AccountCode::isExpense($code)) {
-                $budgetedExpenses = bcadd($budgetedExpenses, $annualBudget, 2);
+                $budgetedExpenses = Money::add($budgetedExpenses, $annualBudget);
             }
         }
 
@@ -220,8 +231,8 @@ class DashboardService
         $actualExpenses = $this->expenseService->yearlyTotal($organizationId, $year);
 
         // Pro-rated budget based on months elapsed
-        $proRatedRevenue = bcmul(bcdiv($budgetedRevenue, '12', 6), (string) $monthsElapsed, 2);
-        $proRatedExpenses = bcmul(bcdiv($budgetedExpenses, '12', 6), (string) $monthsElapsed, 2);
+        $proRatedRevenue = Money::multiply2(Money::divide4($budgetedRevenue, '12'), (string) $monthsElapsed);
+        $proRatedExpenses = Money::multiply2(Money::divide4($budgetedExpenses, '12'), (string) $monthsElapsed);
 
         return [
             'budgetedRevenue' => $budgetedRevenue,
@@ -230,14 +241,41 @@ class DashboardService
             'proRatedExpenses' => $proRatedExpenses,
             'actualRevenue' => $actualRevenue,
             'actualExpenses' => $actualExpenses,
-            'revenueVariance' => bccomp($proRatedRevenue, '0', 2) !== 0
-                ? bcmul(bcdiv(bcsub($actualRevenue, $proRatedRevenue, 2), $proRatedRevenue, 4), '100', 1)
-                : '0.0',
-            'expenseVariance' => bccomp($proRatedExpenses, '0', 2) !== 0
-                ? bcmul(bcdiv(bcsub($actualExpenses, $proRatedExpenses, 2), $proRatedExpenses, 4), '100', 1)
-                : '0.0',
+            'revenueVariance' => ! Money::isZero($proRatedRevenue)
+                ? Money::multiply2(Money::divide4(Money::subtract($actualRevenue, $proRatedRevenue), $proRatedRevenue), '100')
+                : '0.00',
+            'expenseVariance' => ! Money::isZero($proRatedExpenses)
+                ? Money::multiply2(Money::divide4(Money::subtract($actualExpenses, $proRatedExpenses), $proRatedExpenses), '100')
+                : '0.00',
             'monthsElapsed' => $monthsElapsed,
         ];
+    }
+
+    /**
+     * Compute months elapsed for a given fiscal year, respecting org fiscal_year_start.
+     *
+     * For past years returns 12 (full year). For the current fiscal year returns
+     * the number of months elapsed since the fiscal year start.
+     */
+    private function computeMonthsElapsed(string $organizationId, int $year): int
+    {
+        $org = Organization::find($organizationId);
+        $fyStartMonth = $org->fiscal_year_start ?? 1;
+
+        $fyStart = Carbon::create($year, $fyStartMonth, 1)->startOfDay();
+        $fyEnd = $fyStart->copy()->addYear()->subDay()->endOfDay();
+
+        $now = now();
+
+        if ($now->greaterThan($fyEnd)) {
+            return 12;
+        }
+
+        if ($now->lessThan($fyStart)) {
+            return 0;
+        }
+
+        return (int) $fyStart->diffInMonths($now->startOfMonth()) + 1;
     }
 
     /**
@@ -287,12 +325,12 @@ class DashboardService
 
         foreach ($overdueBrackets as $key) {
             $bracket = $report['brackets'][$key];
-            $totalOverdue = bcadd($totalOverdue, $bracket['total'], 2);
+            $totalOverdue = Money::add($totalOverdue, $bracket['total']);
             $overdueCount += count($bracket['items']);
             $bracketTotals[$key] = $bracket['total'];
         }
 
-        if (bccomp($totalOverdue, '0', 2) === 0) {
+        if (Money::isZero($totalOverdue)) {
             return null;
         }
 

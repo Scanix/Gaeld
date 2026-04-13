@@ -9,6 +9,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\VatReportService;
+use App\Support\Money;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -60,7 +61,7 @@ final class PostVatSettlementAction
         );
 
         // Net to 2201 (positive → credit = payable; negative → debit = refund due)
-        if (bccomp($netVat, '0', 2) >= 0) {
+        if (! Money::isNegative($netVat)) {
             $lines[] = new JournalLineData(
                 accountId: (string) $vatSettlementAccount->id,
                 debit: '0.00',
@@ -70,7 +71,7 @@ final class PostVatSettlementAction
         } else {
             $lines[] = new JournalLineData(
                 accountId: (string) $vatSettlementAccount->id,
-                debit: bcmul($netVat, '-1', 2),
+                debit: Money::negate($netVat),
                 credit: '0.00',
                 description: 'VAT settlement: VAT refund due from AFC',
             );

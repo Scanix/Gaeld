@@ -80,12 +80,12 @@ class InvoiceAccountingService
                 $vatAmount = '0';
 
                 foreach ($invoiceLines as $line) {
-                    $netAmount = bcadd($netAmount, Money::absoluteAmount((string) $line->amount), 2);
-                    $vatAmount = bcadd($vatAmount, Money::absoluteAmount((string) ($line->vat_amount ?? '0')), 2);
+                    $netAmount = Money::add($netAmount, Money::absoluteAmount((string) $line->amount));
+                    $vatAmount = Money::add($vatAmount, Money::absoluteAmount((string) ($line->vat_amount ?? '0')));
                 }
 
                 // Revenue line: Credit for invoice, Debit for credit note
-                if (bccomp($netAmount, '0', 2) > 0) {
+                if (Money::isPositive($netAmount)) {
                     $vatLabel = $vatRateId !== 'none' && $invoiceLines->first()->vatRate
                         ? " ({$invoiceLines->first()->vatRate->name})"
                         : '';
@@ -98,9 +98,9 @@ class InvoiceAccountingService
                 }
 
                 // VAT line: Credit for invoice, Debit for credit note
-                if (bccomp($vatAmount, '0', 2) > 0) {
+                if (Money::isPositive($vatAmount)) {
                     $vatOutputAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_OUTPUT);
-                    $rateName = $invoiceLines->first()->vatRate?->name ?? 'VAT';
+                    $rateName = $invoiceLines->first()->vatRate->name ?? 'VAT';
                     $lines[] = new JournalLineData(
                         accountId: (string) $vatOutputAccount->id,
                         debit: $isCreditNote ? $vatAmount : '0',
@@ -115,7 +115,7 @@ class InvoiceAccountingService
                 $originalTotal = $isCreditNote
                     ? Money::absoluteAmount((string) $invoice->total)
                     : (string) $invoice->total;
-                $adj = SwissRounding::adjustment($originalTotal);
+                $adj = SwissRounding::adjustment(Money::of($originalTotal));
 
                 if ($adj) {
                     $roundingAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ROUNDING_DIFFERENCE);
@@ -130,7 +130,7 @@ class InvoiceAccountingService
 
                     // Post the rounding difference to keep the entry balanced
                     $absDiff = Money::absoluteAmount($adj['diff']);
-                    $isRoundedDown = bccomp($adj['diff'], '0', 2) < 0;
+                    $isRoundedDown = Money::isNegative($adj['diff']);
                     $lines[] = new JournalLineData(
                         accountId: (string) $roundingAccount->id,
                         debit: $isCreditNote ? ($isRoundedDown ? '0' : $adj['diff']) : ($isRoundedDown ? $absDiff : '0'),
@@ -144,7 +144,7 @@ class InvoiceAccountingService
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
                 date: $invoice->issue_date->toDateString(),
                 reference: $invoice->number,
-                description: "{$docType} {$invoice->number} — ".($invoice->customer?->name ?? 'N/A'),
+                description: "{$docType} {$invoice->number} — ".($invoice->customer->name ?? 'N/A'),
                 lines: $lines,
             ));
 
@@ -157,11 +157,11 @@ class InvoiceAccountingService
                 $netAmount = '0';
                 $vatAmount = '0';
                 foreach ($invoiceLines as $line) {
-                    $netAmount = bcadd($netAmount, Money::absoluteAmount((string) $line->amount), 2);
-                    $vatAmount = bcadd($vatAmount, Money::absoluteAmount((string) ($line->vat_amount ?? '0')), 2);
+                    $netAmount = Money::add($netAmount, Money::absoluteAmount((string) $line->amount));
+                    $vatAmount = Money::add($vatAmount, Money::absoluteAmount((string) ($line->vat_amount ?? '0')));
                 }
 
-                if (bccomp($vatAmount, '0', 2) > 0) {
+                if (Money::isPositive($vatAmount)) {
                     VatEntry::create([
                         'journal_entry_id' => $journalEntry->id,
                         'vat_rate_id' => $vatRateId,

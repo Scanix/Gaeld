@@ -49,7 +49,7 @@ class EnsureApiOrganization
         return $next($request);
     }
 
-    private function resolveOrganization(Request $request, $token): ?Organization
+    private function resolveOrganization(Request $request, \Laravel\Sanctum\PersonalAccessToken $token): ?Organization
     {
         if ($token->type === TokenType::Organization) {
             return Organization::find($token->organization_id);

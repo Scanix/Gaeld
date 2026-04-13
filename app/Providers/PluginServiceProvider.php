@@ -11,8 +11,10 @@ use Illuminate\Support\ServiceProvider;
  */
 class PluginServiceProvider extends ServiceProvider
 {
+    /** @var array<string, bool> */
     private array $loadedPlugins = [];
 
+    /** @var array<string, array<string, mixed>> */
     private array $manifests = [];
 
     public function register(): void
@@ -42,6 +44,9 @@ class PluginServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function readManifest(string $pluginDir): ?array
     {
         $manifestPath = $pluginDir.'/plugin.json';
@@ -67,6 +72,10 @@ class PluginServiceProvider extends ServiceProvider
         return $manifest;
     }
 
+    /**
+     * @param  array<string, mixed>  $manifests
+     * @param  array<string, mixed>  $loading
+     */
     private function loadPluginWithDeps(string $slug, array $manifests, array $loading): void
     {
         if (isset($this->loadedPlugins[$slug])) {
@@ -107,6 +116,9 @@ class PluginServiceProvider extends ServiceProvider
         $this->loadedPlugins[$slug] = $manifest['version'] ?? '0.0.0';
     }
 
+    /**
+     * @param  array<string, mixed>  $manifest
+     */
     private function loadPlugin(string $pluginDir, array $manifest): void
     {
         $providerClass = $manifest['provider'];

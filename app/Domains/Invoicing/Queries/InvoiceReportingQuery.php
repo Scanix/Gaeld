@@ -36,6 +36,9 @@ class InvoiceReportingQuery
         );
     }
 
+    /**
+     * @return Collection<int, Invoice>
+     */
     public function paidInYear(string $orgId, int $year): Collection
     {
         return Invoice::where('organization_id', $orgId)
@@ -45,6 +48,9 @@ class InvoiceReportingQuery
             ->get();
     }
 
+    /**
+     * @return Collection<int, Invoice>
+     */
     public function sentOrOverdueDueInYear(string $orgId, int $year): Collection
     {
         return Invoice::where('organization_id', $orgId)

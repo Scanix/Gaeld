@@ -24,7 +24,7 @@ use Illuminate\Support\Carbon;
  * @property string $gross_salary
  * @property string $net_salary
  * @property string|null $journal_entry_id
- * @property array $deductions
+ * @property array<int, mixed> $deductions
  * @property Carbon|null $posted_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at

@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class DisableThrottleInTesting
 {
-    public function handle(Request $request, Closure $next, ...$params): Response
+    public function handle(Request $request, Closure $next, string ...$params): Response
     {
         return $next($request);
     }

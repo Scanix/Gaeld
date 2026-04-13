@@ -69,7 +69,7 @@ const columns = computed(() => [
   { key: 'vendor', label: t('vendor'), sortable: true },
   { key: 'amount', label: t('amount'), class: 'text-right', format: (v) => formatCurrency(v), sortable: true },
   { key: 'status', label: t('status'), sortable: true },
-  { key: 'actions', label: '', class: 'text-right w-28' },
+  { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 
 const statusVariant = {
@@ -98,7 +98,7 @@ const statusFilters = computed(() => [
       <p>{{ t('help_expenses_text') }}</p>
     </HelpText>
 
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('track_expenses') }}
       </p>
@@ -134,6 +134,7 @@ const statusFilters = computed(() => [
             :href="`/expenses/${row.id}`"
             variant="ghost"
             size="icon"
+            :aria-label="t('view')"
             :title="t('view')"
             @click.stop
           >
@@ -145,6 +146,7 @@ const statusFilters = computed(() => [
             :href="`/expenses/${row.id}/edit`"
             variant="ghost"
             size="icon"
+            :aria-label="t('edit')"
             :title="t('edit')"
             @click.stop
           >
@@ -154,6 +156,7 @@ const statusFilters = computed(() => [
             v-if="row.status === 'pending'"
             variant="ghost"
             size="icon"
+            :aria-label="t('delete')"
             :title="t('delete')"
             @click.stop="confirmDelete(row)"
           >

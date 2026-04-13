@@ -400,7 +400,7 @@ const total = computed(() => subtotal.value + vatTotal.value)
 
           <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" :href="`/invoices/${invoice.id}`" variant="outline">{{ t('cancel') }}</Button>
-            <Button type="submit" :disabled="form.processing">{{ t('save_changes') }}</Button>
+            <Button type="submit" :disabled="form.processing" :loading="form.processing">{{ t('save_changes') }}</Button>
           </div>
         </form>
       </CardContent>

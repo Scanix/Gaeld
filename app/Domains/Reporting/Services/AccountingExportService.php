@@ -108,8 +108,8 @@ class AccountingExportService
                     $entry->date->toDateString(),
                     $entry->reference,
                     $entry->description ?? '',
-                    $line->account?->code ?? '',
-                    $line->account?->name ?? '',
+                    $line->account->code ?? '',
+                    $line->account->name ?? '',
                     $line->debit,
                     $line->credit,
                 ];
@@ -251,6 +251,10 @@ class AccountingExportService
      *
      * @param  string[]  $headers
      * @param  array<int, array>  $rows
+     */
+    /**
+     * @param  array<int, mixed>  $headers
+     * @param  array<int, mixed>  $rows
      */
     private function writeCsv(string $path, array $headers, array $rows): void
     {

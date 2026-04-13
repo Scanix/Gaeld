@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 
 class EmployeeQuery
 {
+    /**
+     * @return LengthAwarePaginator<int, Employee>
+     */
     public static function list(Request $request, int $perPage = 25): LengthAwarePaginator
     {
         return QueryBuilder::for(Employee::query(), $request)

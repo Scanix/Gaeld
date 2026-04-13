@@ -79,6 +79,9 @@ class AbacusParser implements PlatformParserInterface
         return null;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapRow(array $row, int $sourceRow, DataType $dataType): ?ImportRowInterface
     {
         return match ($dataType) {
@@ -90,6 +93,9 @@ class AbacusParser implements PlatformParserInterface
         };
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapAccount(array $row, int $sourceRow): AccountImportRow
     {
         $code = $this->findValue($row, ['kontonr', 'account_no', 'konto', 'code']);
@@ -111,6 +117,9 @@ class AbacusParser implements PlatformParserInterface
         return $importRow;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapContact(array $row, int $sourceRow): ContactImportRow
     {
         $name = $this->findValue($row, ['name', 'firma', 'bezeichnung', 'nachname']);
@@ -146,6 +155,9 @@ class AbacusParser implements PlatformParserInterface
         return $importRow;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapJournalEntry(array $row, int $sourceRow): JournalEntryImportRow
     {
         $date = $this->findValue($row, ['datum', 'date', 'buchungsdatum']);
@@ -189,6 +201,9 @@ class AbacusParser implements PlatformParserInterface
         return $importRow;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapFixedAsset(array $row, int $sourceRow): FixedAssetImportRow
     {
         $name = $this->findValue($row, ['bezeichnung', 'name', 'description', 'anlagename']);

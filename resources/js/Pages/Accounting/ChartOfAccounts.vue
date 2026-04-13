@@ -144,9 +144,9 @@ function requestExport() {
 
     <Card>
       <CardHeader>
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>{{ t('chart_of_accounts') }}</CardTitle>
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-2">
             <Button v-if="can?.create" variant="outline" size="sm" @click="showImport = true">
               <Upload class="mr-1 h-4 w-4" /> {{ t('import') }}
             </Button>

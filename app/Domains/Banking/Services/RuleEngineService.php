@@ -53,6 +53,9 @@ class RuleEngineService
      *
      * @throws FeatureDisabledException in CE (feature flag disabled)
      */
+    /**
+     * @return Collection<int, mixed>
+     */
     public function evaluateRules(BankTransaction $transaction): Collection
     {
         if (FeatureFlag::disabled('rule_engine')) {

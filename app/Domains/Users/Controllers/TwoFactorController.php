@@ -158,6 +158,9 @@ class TwoFactorController extends Controller
             ]);
     }
 
+    /**
+     * @return Collection<int, string>
+     */
     private function generateRecoveryCodes(): Collection
     {
         return Collection::times(8, fn () => Str::random(16));

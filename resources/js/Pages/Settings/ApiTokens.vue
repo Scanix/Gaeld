@@ -153,11 +153,11 @@ const expirationOptions = [
             <div
               v-for="token in personalTokens"
               :key="token.id"
-              class="flex items-center justify-between rounded-lg border p-3"
+              class="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
             >
-              <div>
-                <p class="text-sm font-medium">{{ token.name }}</p>
-                <div class="flex gap-3 mt-1 text-xs text-muted-foreground">
+              <div class="min-w-0">
+                <p class="text-sm font-medium truncate">{{ token.name }}</p>
+                <div class="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
                   <span v-if="token.last_used_at">
                     {{ t('last_used') }}: {{ formatDate(token.last_used_at) }}
                   </span>
@@ -172,7 +172,7 @@ const expirationOptions = [
                   </Badge>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" class="text-destructive" @click="confirmDelete(token, 'personal')">
+              <Button variant="ghost" size="sm" class="text-destructive self-end sm:self-auto" @click="confirmDelete(token, 'personal')">
                 <Trash2 class="h-4 w-4" />
               </Button>
             </div>

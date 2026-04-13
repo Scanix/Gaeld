@@ -9,11 +9,12 @@ import CardDescription from '@/Components/UI/CardDescription.vue'
 import Button from '@/Components/UI/Button.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import FormSelect from '@/Components/UI/FormSelect.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -25,6 +26,7 @@ const props = defineProps({
   netResult:    { type: String, default: '0' },
   closedYears:  { type: Array, default: () => [] },
   canReopenYear: { type: Boolean, default: false },
+  availableYears: { type: Array, default: () => [] },
   unsettledVatPeriods: { type: Array, default: () => [] },
 })
 
@@ -60,9 +62,9 @@ const accountColumns = computed(() => [
   { key: 'balance', label: t('balance'), class: 'text-right', format: v => formatCurrency(v) },
 ])
 
-function applyYear() {
-  router.get('/accounting/year-end-closing', { year: selectedYear.value }, { preserveState: true })
-}
+watch(selectedYear, (val) => {
+  router.get('/accounting/year-end-closing', { year: Number(val) }, { preserveState: true })
+})
 
 function runClosing() {
   processing.value = true
@@ -92,13 +94,12 @@ function runReopen() {
 
     <!-- Year selector -->
     <div class="mb-6 flex items-center gap-4">
-      <FormInput
+      <FormSelect
         id="year"
         v-model="selectedYear"
-        type="number"
         :label="t('fiscal_year')"
+        :options="availableYears.map(y => ({ value: y, label: String(y) }))"
       />
-      <Button variant="outline" @click="applyYear">{{ t('apply') }}</Button>
       <span
         v-if="isYearClosed"
         class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-300"

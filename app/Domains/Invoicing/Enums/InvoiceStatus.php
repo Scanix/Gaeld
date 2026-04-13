@@ -16,6 +16,9 @@ enum InvoiceStatus: string
         return in_array($target, $this->allowedTransitions(), true);
     }
 
+    /**
+     * @return array<int, self>
+     */
     public function allowedTransitions(): array
     {
         return match ($this) {

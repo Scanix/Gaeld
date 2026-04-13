@@ -30,7 +30,7 @@ const salaryColumns = computed(() => [
   { key: 'gross_salary', label: t('gross_salary'), class: 'text-right' },
   { key: 'net_salary', label: t('net_salary'), class: 'text-right' },
   { key: 'status', label: t('status') },
-  { key: 'actions', label: '', class: 'text-right w-20' },
+  { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 </script>
 
@@ -59,7 +59,7 @@ const salaryColumns = computed(() => [
           </div>
         </CardHeader>
         <CardContent>
-          <div class="grid grid-cols-2 gap-4 text-sm">
+          <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('email') }}</p>
               <p class="font-medium">{{ employee.email ?? '—' }}</p>

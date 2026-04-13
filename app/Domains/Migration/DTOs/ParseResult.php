@@ -24,11 +24,17 @@ class ParseResult
         return empty($this->errors) && $this->rows->isNotEmpty();
     }
 
+    /**
+     * @return Collection<int, mixed>
+     */
     public function validRows(): Collection
     {
         return $this->rows->filter(fn (ImportRowInterface $row) => $row->isValid());
     }
 
+    /**
+     * @return Collection<int, mixed>
+     */
     public function invalidRows(): Collection
     {
         return $this->rows->reject(fn (ImportRowInterface $row) => $row->isValid());

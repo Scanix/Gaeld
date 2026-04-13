@@ -52,6 +52,8 @@ class OnboardingController extends Controller
 
             if ($validated['chart_of_accounts'] !== 'none') {
                 $setupService->seedChartOfAccounts($org, $validated['chart_of_accounts']);
+            } else {
+                $setupService->ensureSystemAccounts($org);
             }
 
             return $org;

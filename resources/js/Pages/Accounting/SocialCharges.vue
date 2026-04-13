@@ -138,7 +138,7 @@ function postToLedger() {
     <!-- Breakdown Results -->
     <Card v-if="breakdown" class="mt-6">
       <CardHeader>
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>
             <Calculator class="mr-2 inline h-4 w-4" />
             {{ t('social_breakdown') }}
@@ -148,7 +148,7 @@ function postToLedger() {
       </CardHeader>
       <CardContent>
         <div class="space-y-3">
-          <div class="grid grid-cols-2 gap-4 text-sm">
+          <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
             <div class="rounded-lg border border-[hsl(var(--border))] p-4">
               <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('social_avs') }}</p>
               <p class="mt-1 text-xl font-bold tabular-nums">{{ formatCurrency(breakdown.avs) }}</p>

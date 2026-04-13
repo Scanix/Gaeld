@@ -3,21 +3,32 @@
 namespace App\Domains\Api\Controllers;
 
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Api\Requests\RecordPaymentApiRequest;
 use App\Domains\Api\Requests\StoreInvoiceApiRequest;
 use App\Domains\Api\Requests\UpdateInvoiceApiRequest;
 use App\Domains\Api\Resources\InvoiceResource;
 use App\Domains\Contacts\Models\Customer;
+use App\Domains\Invoicing\Actions\CancelInvoiceAction;
+use App\Domains\Invoicing\Actions\CreateCreditNoteAction;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DeleteInvoiceAction;
+use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
+use App\Domains\Invoicing\Actions\RecordPaymentAction;
+use App\Domains\Invoicing\Actions\SendInvoiceAction;
+use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
+use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
+use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -211,6 +222,159 @@ class InvoiceApiController extends Controller
         $action->execute($invoice);
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Finalize invoice
+     *
+     * Transitions a draft invoice to finalized status. Only draft invoices can be finalized.
+     *
+     * @urlParam invoice string required The UUID of the invoice. Example: 9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b
+     *
+     * @response 200 scenario="Finalized" {"data":{"id":"9c8f...","number":"INV-2025-042","status":"finalized"}}
+     * @response 422 scenario="Invalid state" {"message":"Invoice cannot be finalized in its current state."}
+     */
+    public function finalize(Invoice $invoice, FinalizeInvoiceAction $action): InvoiceResource|JsonResponse
+    {
+        $this->authorize('finalize', $invoice);
+
+        try {
+            $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments']));
+    }
+
+    /**
+     * Cancel invoice
+     *
+     * Cancels an invoice. Only finalized or sent invoices can be cancelled.
+     *
+     * @urlParam invoice string required The UUID of the invoice. Example: 9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b
+     *
+     * @response 200 scenario="Cancelled" {"data":{"id":"9c8f...","number":"INV-2025-042","status":"cancelled"}}
+     * @response 422 scenario="Invalid state" {"message":"Invoice cannot be cancelled in its current state."}
+     */
+    public function cancel(Invoice $invoice, CancelInvoiceAction $action): InvoiceResource|JsonResponse
+    {
+        $this->authorize('cancel', $invoice);
+
+        try {
+            $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments']));
+    }
+
+    /**
+     * Record payment
+     *
+     * Records a payment against an invoice.
+     *
+     * @urlParam invoice string required The UUID of the invoice. Example: 9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b
+     *
+     * @bodyParam amount number required The payment amount. Example: 500.00
+     * @bodyParam payment_date string required Date in YYYY-MM-DD format. Example: 2025-02-01
+     * @bodyParam payment_method string required One of: bank_transfer, cash, card, other. Example: bank_transfer
+     * @bodyParam reference string Optional payment reference. Example: TXN-12345
+     * @bodyParam bank_account_code string Optional bank account code. Example: 1020
+     *
+     * @response 200 scenario="Recorded" {"data":{"id":"9c8f...","number":"INV-2025-042","status":"sent","amount_paid":"500.00","amount_due":"581.00"}}
+     * @response 422 scenario="Invalid state" {"message":"Cannot record payment for this invoice."}
+     */
+    public function recordPayment(
+        RecordPaymentApiRequest $request,
+        Invoice $invoice,
+        RecordPaymentAction $action,
+    ): InvoiceResource|JsonResponse {
+        $this->authorize('recordPayment', $invoice);
+
+        $dto = RecordPaymentData::fromArray($request->validated());
+
+        try {
+            $action->execute($invoice, $dto);
+        } catch (InvalidInvoiceStateException|InvalidPaymentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (ModelNotFoundException) {
+            return response()->json(['message' => 'Bank account not found.'], 404);
+        }
+
+        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments']));
+    }
+
+    /**
+     * Send invoice
+     *
+     * Sends the invoice to the customer via email.
+     *
+     * @urlParam invoice string required The UUID of the invoice. Example: 9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b
+     *
+     * @response 200 scenario="Sent" {"data":{"id":"9c8f...","number":"INV-2025-042","status":"sent"}}
+     * @response 422 scenario="Invalid state" {"message":"Invoice cannot be sent in its current state."}
+     */
+    public function send(Invoice $invoice, SendInvoiceAction $action): InvoiceResource|JsonResponse
+    {
+        $this->authorize('send', $invoice);
+
+        try {
+            $action->execute($invoice->load('customer'));
+        } catch (InvalidInvoiceStateException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments']));
+    }
+
+    /**
+     * Send reminder
+     *
+     * Sends a payment reminder to the customer for an overdue invoice.
+     *
+     * @urlParam invoice string required The UUID of the invoice. Example: 9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b
+     *
+     * @response 200 scenario="Reminder sent" {"data":{"id":"9c8f...","number":"INV-2025-042","status":"sent"}}
+     * @response 422 scenario="Invalid state" {"message":"Reminder cannot be sent for this invoice."}
+     */
+    public function reminder(Invoice $invoice, SendInvoiceReminderAction $action): InvoiceResource|JsonResponse
+    {
+        $this->authorize('send', $invoice);
+
+        try {
+            $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments']));
+    }
+
+    /**
+     * Create credit note
+     *
+     * Creates a credit note from an existing invoice.
+     *
+     * @urlParam invoice string required The UUID of the invoice. Example: 9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b
+     *
+     * @response 201 scenario="Created" {"data":{"id":"9c8f...","number":"CN-2025-001","status":"draft","type":"credit_note"}}
+     * @response 422 scenario="Invalid state" {"message":"Credit note cannot be created for this invoice."}
+     */
+    public function creditNote(Invoice $invoice, CreateCreditNoteAction $action): InvoiceResource|JsonResponse
+    {
+        $this->authorize('view', $invoice);
+
+        try {
+            $creditNote = $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return (new InvoiceResource($creditNote->load(['customer', 'lines.vatRate'])))
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**

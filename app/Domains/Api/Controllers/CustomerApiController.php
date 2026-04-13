@@ -11,9 +11,11 @@ use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Queries\CustomerQuery;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @group Customers
@@ -142,7 +144,20 @@ class CustomerApiController extends Controller
     {
         $this->authorize('delete', $customer);
 
-        $customer->delete();
+        try {
+            $customer->delete();
+        } catch (QueryException $e) {
+            if (in_array($e->errorInfo[0] ?? '', ['23503', '23000'])) {
+                Log::info('Customer deletion blocked by foreign key', ['customer_id' => $customer->id]);
+
+                return response()->json(
+                    ['message' => __('app.customer_has_linked_records')],
+                    409,
+                );
+            }
+
+            throw $e;
+        }
 
         return response()->json(null, 204);
     }

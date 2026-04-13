@@ -3,10 +3,12 @@
 namespace App\Domains\Accounting\Models;
 
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Money;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +32,7 @@ use Illuminate\Support\Carbon;
  */
 class JournalEntry extends Model
 {
+    /** @use HasFactory<Factory<static>> */
     use Auditable, BelongsToOrganization, HasFactory, HasUuids;
 
     protected $fillable = [
@@ -65,7 +68,7 @@ class JournalEntry extends Model
     {
         $totals = $this->lines()->selectRaw('SUM(debit) as total_debit, SUM(credit) as total_credit')->first();
 
-        return bccomp($totals->total_debit ?? '0', $totals->total_credit ?? '0', 2) === 0;
+        return Money::compare($totals->total_debit ?? '0', $totals->total_credit ?? '0') === 0;
     }
 
     public function totalDebit(): string

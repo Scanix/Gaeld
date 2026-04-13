@@ -446,10 +446,10 @@ function onDueDateManualEdit() {
             <Button type="button" variant="outline" @click="showPreview = true">
               {{ t('invoice_preview') }}
             </Button>
-            <Button type="button" variant="outline" :disabled="form.processing || isIssueDateClosed" :title="isIssueDateClosed ? t('fiscal_year_closed_action_disabled') : undefined" @click="submitAndFinalize">
+            <Button type="button" variant="outline" :disabled="form.processing || isIssueDateClosed" :loading="form.processing && form.finalize" :title="isIssueDateClosed ? t('fiscal_year_closed_action_disabled') : undefined" @click="submitAndFinalize">
               {{ t('create_and_finalize') }}
             </Button>
-            <Button type="submit" :disabled="form.processing">{{ t('create_invoice') }}</Button>
+            <Button type="submit" :disabled="form.processing" :loading="form.processing && !form.finalize">{{ t('create_invoice') }}</Button>
           </div>
         </form>
       </CardContent>
