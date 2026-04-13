@@ -8,6 +8,7 @@ use App\Domains\Api\Controllers\CustomerApiController;
 use App\Domains\Api\Controllers\ExpenseApiController;
 use App\Domains\Api\Controllers\InvoiceApiController;
 use App\Domains\Api\Controllers\OrgTokenController;
+use App\Domains\Api\Controllers\SupplierApiController;
 use App\Domains\Api\Controllers\WebhookApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -65,6 +66,14 @@ Route::middleware(['auth:sanctum', 'api-org', 'feature:api_access', 'throttle:ap
         'destroy' => 'api.invoices.destroy',
     ]);
 
+    // Invoice lifecycle operations
+    Route::post('/invoices/{invoice}/finalize', [InvoiceApiController::class, 'finalize'])->name('api.invoices.finalize');
+    Route::post('/invoices/{invoice}/cancel', [InvoiceApiController::class, 'cancel'])->name('api.invoices.cancel');
+    Route::post('/invoices/{invoice}/record-payment', [InvoiceApiController::class, 'recordPayment'])->name('api.invoices.record-payment');
+    Route::post('/invoices/{invoice}/send', [InvoiceApiController::class, 'send'])->name('api.invoices.send');
+    Route::post('/invoices/{invoice}/reminder', [InvoiceApiController::class, 'reminder'])->name('api.invoices.reminder');
+    Route::post('/invoices/{invoice}/credit-note', [InvoiceApiController::class, 'creditNote'])->name('api.invoices.credit-note');
+
     // Expenses
     Route::apiResource('expenses', ExpenseApiController::class)->names([
         'index' => 'api.expenses.index',
@@ -72,6 +81,19 @@ Route::middleware(['auth:sanctum', 'api-org', 'feature:api_access', 'throttle:ap
         'store' => 'api.expenses.store',
         'update' => 'api.expenses.update',
         'destroy' => 'api.expenses.destroy',
+    ]);
+
+    // Expense workflow operations
+    Route::post('/expenses/{expense}/approve', [ExpenseApiController::class, 'approve'])->name('api.expenses.approve');
+    Route::post('/expenses/{expense}/post-to-ledger', [ExpenseApiController::class, 'postToLedger'])->name('api.expenses.post-to-ledger');
+
+    // Suppliers
+    Route::apiResource('suppliers', SupplierApiController::class)->names([
+        'index' => 'api.suppliers.index',
+        'show' => 'api.suppliers.show',
+        'store' => 'api.suppliers.store',
+        'update' => 'api.suppliers.update',
+        'destroy' => 'api.suppliers.destroy',
     ]);
 
     // Accounts (read-only)

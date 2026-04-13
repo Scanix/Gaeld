@@ -2,19 +2,26 @@
 
 namespace App\Domains\Api\Controllers;
 
+use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Api\Requests\StoreExpenseApiRequest;
 use App\Domains\Api\Requests\UpdateExpenseApiRequest;
 use App\Domains\Api\Resources\ExpenseResource;
+use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\DeleteExpenseAction;
+use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Actions\UpdateExpenseAction;
 use App\Domains\Expenses\DTOs\CreateExpenseData;
 use App\Domains\Expenses\DTOs\UpdateExpenseData;
+use App\Domains\Expenses\Exceptions\ExpenseLedgerPostingException;
+use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Queries\ExpenseQuery;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Reporting\Services\DashboardService;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -161,5 +168,76 @@ class ExpenseApiController extends Controller
         $action->execute($expense);
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Approve expense
+     *
+     * Approves a pending expense.
+     *
+     * @urlParam expense string required The expense UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     *
+     * @response 200 scenario="Approved" {"data":{"id":"9c8f...","status":"approved"}}
+     * @response 422 scenario="Invalid state" {"message":"Expense cannot be approved in its current state."}
+     */
+    public function approve(
+        Expense $expense,
+        ApproveExpenseAction $action,
+        DashboardService $dashboardService,
+    ): ExpenseResource|JsonResponse {
+        $this->authorize('update', $expense);
+
+        try {
+            $action->execute($expense);
+        } catch (InvalidExpenseStateException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        $dashboardService->flushCache($expense->organization_id);
+
+        return new ExpenseResource($expense->fresh());
+    }
+
+    /**
+     * Post expense to ledger
+     *
+     * Posts an approved expense to the accounting ledger.
+     *
+     * @urlParam expense string required The expense UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     *
+     * @bodyParam expense_account_code string required The expense account code. Example: 6000
+     * @bodyParam bank_account_code string Optional bank account code (defaults to 1020). Example: 1020
+     *
+     * @response 200 scenario="Posted" {"data":{"id":"9c8f...","status":"posted"}}
+     * @response 422 scenario="Invalid state" {"message":"Expense cannot be posted in its current state."}
+     */
+    public function postToLedger(
+        Request $request,
+        Expense $expense,
+        PostExpenseAction $action,
+        DashboardService $dashboardService,
+    ): ExpenseResource|JsonResponse {
+        $this->authorize('update', $expense);
+
+        $validated = $request->validate([
+            'expense_account_code' => 'required|string|max:20',
+            'bank_account_code' => 'nullable|string|max:20',
+        ]);
+
+        try {
+            $action->execute(
+                $expense,
+                $validated['expense_account_code'],
+                $validated['bank_account_code'] ?? AccountCode::BANK_CASH,
+            );
+        } catch (InvalidExpenseStateException|ExpenseLedgerPostingException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (ModelNotFoundException) {
+            return response()->json(['message' => 'Account not found.'], 404);
+        }
+
+        $dashboardService->flushCache($expense->organization_id);
+
+        return new ExpenseResource($expense->fresh());
     }
 }
