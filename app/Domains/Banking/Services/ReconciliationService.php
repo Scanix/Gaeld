@@ -60,6 +60,10 @@ class ReconciliationService
         return $this->contraAccountReconciler->reconcileAsPersonal($transaction);
     }
 
+    /**
+     * @param  Collection<int, BankTransaction>  $transactions
+     * @return array<string, mixed>
+     */
     public function bulkReconcileAsPersonal(Collection $transactions): array
     {
         return $this->contraAccountReconciler->bulkReconcileAsPersonal($transactions);
@@ -105,6 +109,9 @@ class ReconciliationService
         return ['matched' => $matched, 'unmatched' => $unmatched];
     }
 
+    /**
+     * @param  array<string, mixed>  $suggestions
+     */
     private function tryAutoReconcileTransaction(BankTransaction $transaction, array $suggestions): bool
     {
         $exactMatch = $suggestions['matches']->first(fn ($m) => $m->confidence === 100);

@@ -47,7 +47,10 @@ class HandleInertiaRequests extends Middleware
         ]);
     }
 
-    private function resolveAuth($user): array
+    /**
+     * @return array<string, mixed>
+     */
+    private function resolveAuth(User $user): array
     {
         return [
             'user' => [
@@ -80,7 +83,10 @@ class HandleInertiaRequests extends Middleware
         ];
     }
 
-    private function resolveSubscription($user): ?array
+    /**
+     * @return array<string, mixed>
+     */
+    private function resolveSubscription(User $user): ?array
     {
         if (! FeatureFlag::isSaas()) {
             return null;
@@ -88,7 +94,7 @@ class HandleInertiaRequests extends Middleware
 
         $org = $this->currentOrganization->isBound()
             ? $this->currentOrganization->get()
-            : $user?->resolveCurrentOrganization();
+            : $user->resolveCurrentOrganization();
 
         $sub = $org?->activeSubscription;
 
@@ -150,7 +156,7 @@ class HandleInertiaRequests extends Middleware
         return $data;
     }
 
-    private function resolveCurrentRole($user): ?string
+    private function resolveCurrentRole(User $user): ?string
     {
         return $user->getRoleNames()->first();
     }
@@ -158,7 +164,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * @return string[]
      */
-    private function resolvePermissions($user): array
+    private function resolvePermissions(User $user): array
     {
         return $user->getAllPermissions()->pluck('name')->toArray();
     }

@@ -12,6 +12,9 @@ use Illuminate\Support\Collection;
 
 class ExpenseQuery
 {
+    /**
+     * @return LengthAwarePaginator<int, Expense>
+     */
     public static function list(Request $request, int $perPage = 20): LengthAwarePaginator
     {
         return QueryBuilder::for(Expense::query()->with('supplier'), $request)
@@ -50,6 +53,9 @@ class ExpenseQuery
         );
     }
 
+    /**
+     * @return Collection<int, Expense>
+     */
     public static function inYear(string $orgId, int $year): Collection
     {
         return Expense::where('organization_id', $orgId)

@@ -19,6 +19,9 @@ use App\Domains\Organizations\Models\Organization;
  */
 final class TokenPermissionMap
 {
+    /**
+     * @return array<string, string>
+     */
     public static function get(): array
     {
         return [

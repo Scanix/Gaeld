@@ -11,6 +11,9 @@ class RecordTransactionRequest extends FormRequest
         return $this->user()->can('update', $this->route('bankAccount'));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

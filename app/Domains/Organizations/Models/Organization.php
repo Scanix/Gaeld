@@ -9,6 +9,7 @@ use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Organizations\Enums\BusinessType;
 use App\Domains\Users\Models\User;
 use App\Support\Traits\Auditable;
+use Database\Factories\Domains\Organizations\Models\OrganizationFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -47,6 +48,7 @@ use Plugins\GaeldEE\Domains\Billing\Models\Subscription;
  */
 class Organization extends Model
 {
+    /** @use HasFactory<OrganizationFactory> */
     use Auditable, HasFactory, HasUuids;
 
     protected $fillable = [

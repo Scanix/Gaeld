@@ -6,6 +6,7 @@ use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use App\Support\Traits\HasPublicUuid;
+use Database\Factories\Domains\Accounting\Models\VatRateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +31,7 @@ use Illuminate\Support\Carbon;
  */
 class VatRate extends Model
 {
+    /** @use HasFactory<VatRateFactory> */
     use Auditable, BelongsToOrganization, HasFactory, HasPublicUuid;
 
     protected $fillable = [

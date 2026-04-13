@@ -13,6 +13,9 @@ class RecordPaymentRequest extends FormRequest
         return $this->user()->can('view', $this->route('invoice'));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

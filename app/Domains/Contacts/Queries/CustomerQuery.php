@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Cache;
 
 class CustomerQuery
 {
+    /**
+     * @return LengthAwarePaginator<int, Customer>
+     */
     public static function list(Request $request, int $perPage = 20): LengthAwarePaginator
     {
         return QueryBuilder::for(Customer::query(), $request)
@@ -23,6 +26,9 @@ class CustomerQuery
             ->withQueryString();
     }
 
+    /**
+     * @return Collection<int, Customer>
+     */
     public static function forSelect(): Collection
     {
         $orgId = app(CurrentOrganization::class)->id();

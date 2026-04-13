@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Services;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\TransactionLine;
+use App\Support\Money;
 
 /**
  * Computes P&L account balances for a given period, used by
@@ -50,10 +51,10 @@ class ClosingAccountsService
 
             $isDebitNormal = $account->type->isDebitNormal();
             $balance = $isDebitNormal
-                ? bcsub($debits, $credits, 2)
-                : bcsub($credits, $debits, 2);
+                ? Money::subtract($debits, $credits)
+                : Money::subtract($credits, $debits);
 
-            if (bccomp($balance, '0', 2) === 0) {
+            if (Money::isZero($balance)) {
                 continue;
             }
 
@@ -66,10 +67,10 @@ class ClosingAccountsService
 
             if ($account->type === AccountType::Revenue) {
                 $income[] = $row;
-                $net = bcadd($net, $balance, 2);
+                $net = Money::add($net, $balance);
             } else {
                 $expenses[] = $row;
-                $net = bcsub($net, $balance, 2);
+                $net = Money::subtract($net, $balance);
             }
         }
 

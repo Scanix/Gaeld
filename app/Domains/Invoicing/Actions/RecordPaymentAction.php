@@ -9,6 +9,7 @@ use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
+use App\Support\Money;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -29,7 +30,7 @@ class RecordPaymentAction
         $amount = $data->amount;
         $amountDue = $invoice->amountDue();
 
-        if (bccomp($amount, $amountDue, 2) > 0) {
+        if (Money::compare($amount, $amountDue) > 0) {
             throw new InvalidPaymentException("Payment amount ({$amount}) exceeds amount due ({$amountDue}).");
         }
 

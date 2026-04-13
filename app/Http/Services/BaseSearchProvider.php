@@ -12,6 +12,7 @@ abstract class BaseSearchProvider implements SearchProvider
     /**
      * @param  class-string<Model>  $modelClass
      * @param  string[]  $with
+     * @return Collection<int, Model>
      */
     protected function searchModel(string $modelClass, string $query, string $orgId, int $limit, array $with = []): Collection
     {

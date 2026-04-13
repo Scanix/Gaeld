@@ -23,6 +23,9 @@ enum WebhookEvent: string
     case JournalEntryPosted = 'journal_entry.posted';
     case JournalEntryReversed = 'journal_entry.reversed';
 
+    /**
+     * @return array<int, string>
+     */
     public static function all(): array
     {
         return array_column(self::cases(), 'value');

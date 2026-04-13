@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Laravel\Scout\Searchable;
 
@@ -13,29 +14,39 @@ use Laravel\Scout\Searchable;
  *
  * Lives in App\Support (not a Domain) because it is a generic query utility
  * with no domain-specific logic — it is consumed across all domains.
+ *
+ * @template TModel of \Illuminate\Database\Eloquent\Model
  */
 class QueryBuilder
 {
+    /** @var Builder<TModel> */
     private Builder $query;
 
     private Request $request;
 
+    /** @var array<int, string> */
     private array $allowedSorts = [];
 
+    /** @var array<int, string> */
     private array $allowedFilters = [];
 
+    /** @var array<int, string> */
     private array $searchColumns = [];
 
     private string $defaultSort = 'created_at';
 
     private string $defaultDirection = 'desc';
 
+    /** @param Builder<TModel> $query */
     public function __construct(Builder $query, Request $request)
     {
         $this->query = $query;
         $this->request = $request;
     }
 
+    /**
+     * @param  Builder<Model>  $query
+     */
     public static function for(Builder $query, Request $request): static
     {
         return new static($query, $request);
@@ -82,6 +93,9 @@ class QueryBuilder
     /**
      * Apply sorting, filtering, search from request and return the builder.
      */
+    /**
+     * @return Builder<Model>
+     */
     public function apply(): Builder
     {
         $this->applyFilters();
@@ -123,6 +137,9 @@ class QueryBuilder
         $this->applyDatabaseSearch($search);
     }
 
+    /**
+     * @param  class-string<Model>  $model
+     */
     private function applyMeiliSearch(string $search, $model): void
     {
         $scoutQuery = $model::search($search);

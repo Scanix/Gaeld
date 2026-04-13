@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 
 class FixedAssetQuery
 {
+    /**
+     * @return LengthAwarePaginator<int, FixedAsset>
+     */
     public static function list(Request $request, int $perPage = 25): LengthAwarePaginator
     {
         return QueryBuilder::for(

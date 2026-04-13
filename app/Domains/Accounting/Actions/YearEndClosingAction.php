@@ -8,6 +8,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -45,7 +46,7 @@ class YearEndClosingAction
 
             // Revenue accounts (credit-normal): debit the account, credit result
             foreach ($income as $row) {
-                if (bccomp((string) $row['balance'], '0', 2) === 0) {
+                if (Money::isZero((string) $row['balance'])) {
                     continue;
                 }
                 $lines[] = new JournalLineData(
@@ -54,12 +55,12 @@ class YearEndClosingAction
                     credit: '0',
                     description: "Bouclement {$year} — clôture ".$row['code'],
                 );
-                $netCreditOnResult = bcadd($netCreditOnResult, (string) $row['balance'], 2);
+                $netCreditOnResult = Money::add($netCreditOnResult, (string) $row['balance']);
             }
 
             // Expense accounts (debit-normal): credit the account, debit result
             foreach ($expenses as $row) {
-                if (bccomp((string) $row['balance'], '0', 2) === 0) {
+                if (Money::isZero((string) $row['balance'])) {
                     continue;
                 }
                 $lines[] = new JournalLineData(
@@ -68,7 +69,7 @@ class YearEndClosingAction
                     credit: (string) $row['balance'],
                     description: "Bouclement {$year} — clôture ".$row['code'],
                 );
-                $netDebitOnResult = bcadd($netDebitOnResult, (string) $row['balance'], 2);
+                $netDebitOnResult = Money::add($netDebitOnResult, (string) $row['balance']);
             }
 
             $lines[] = new JournalLineData(

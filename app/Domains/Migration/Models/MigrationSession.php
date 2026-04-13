@@ -86,6 +86,9 @@ class MigrationSession extends Model
         $this->update(['imported_counts' => $counts]);
     }
 
+    /**
+     * @param  array<int, string>  $errors
+     */
     public function addErrors(string $dataType, array $errors): void
     {
         $allErrors = $this->errors ?? [];
@@ -93,6 +96,9 @@ class MigrationSession extends Model
         $this->update(['errors' => $allErrors]);
     }
 
+    /**
+     * @param  array<int, mixed>  $ids
+     */
     public function addImportedRecordIds(string $dataType, array $ids): void
     {
         $allIds = $this->imported_record_ids ?? [];

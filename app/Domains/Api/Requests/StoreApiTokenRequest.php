@@ -8,6 +8,9 @@ use Illuminate\Validation\Rule;
 
 class StoreApiTokenRequest extends FormRequest
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

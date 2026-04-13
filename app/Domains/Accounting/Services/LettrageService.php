@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Services;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\LettrageLot;
 use App\Domains\Accounting\Models\TransactionLine;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -51,7 +52,7 @@ class LettrageService
         $totalDebit = $lines->sum(fn ($l) => (float) $l->debit);
         $totalCredit = $lines->sum(fn ($l) => (float) $l->credit);
 
-        if (bccomp((string) round($totalDebit, 2), (string) round($totalCredit, 2), 2) !== 0) {
+        if (Money::compare((string) round($totalDebit, 2), (string) round($totalCredit, 2)) !== 0) {
             throw new \InvalidArgumentException(
                 sprintf('Lines do not balance: debit=%.2f credit=%.2f', $totalDebit, $totalCredit)
             );
@@ -100,6 +101,8 @@ class LettrageService
 
     /**
      * Get all unlettered transaction lines for the given account.
+     *
+     * @return Collection<int, TransactionLine>
      */
     public function getOpenItems(Account $account, ?string $upToDate = null): Collection
     {

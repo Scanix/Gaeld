@@ -4,6 +4,7 @@ namespace App\Domains\Assets\Services;
 
 use App\Domains\Assets\Enums\DepreciationMethod;
 use App\Domains\Assets\Models\FixedAsset;
+use App\Support\Money;
 
 class DepreciationCalculator
 {
@@ -29,7 +30,7 @@ class DepreciationCalculator
     {
         $annual = $this->calculate($asset);
 
-        return bcdiv($annual, '12', 2);
+        return Money::divide($annual, '12');
     }
 
     /**
@@ -37,9 +38,9 @@ class DepreciationCalculator
      */
     private function linear(FixedAsset $asset): string
     {
-        $depreciableBase = bcsub($asset->purchase_amount, $asset->salvage_value, 2);
+        $depreciableBase = Money::subtract($asset->purchase_amount, $asset->salvage_value);
 
-        return bcdiv($depreciableBase, (string) $asset->useful_life_years, 2);
+        return Money::divide($depreciableBase, (string) $asset->useful_life_years);
     }
 
     /**
@@ -50,17 +51,17 @@ class DepreciationCalculator
     {
         $nbv = $asset->netBookValue();
 
-        $rate = bcdiv('2', (string) $asset->useful_life_years, 4);
-        $amount = bcmul($nbv, $rate, 2);
+        $rate = Money::divide4('2', (string) $asset->useful_life_years);
+        $amount = Money::multiply2($nbv, $rate);
 
         // Do not depreciate below salvage value
-        $minNbv = bcsub($nbv, $amount, 2);
-        if (bccomp($minNbv, $asset->salvage_value, 2) < 0) {
-            $amount = bcsub($nbv, $asset->salvage_value, 2);
+        $minNbv = Money::subtract($nbv, $amount);
+        if (Money::compare($minNbv, $asset->salvage_value) < 0) {
+            $amount = Money::subtract($nbv, $asset->salvage_value);
         }
 
         // Floor at zero
-        if (bccomp($amount, '0', 2) < 0) {
+        if (Money::isNegative($amount)) {
             return '0.00';
         }
 

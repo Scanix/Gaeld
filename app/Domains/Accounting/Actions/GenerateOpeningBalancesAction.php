@@ -11,6 +11,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Support\Money;
 
 /**
  * Generates opening balance journal entries for a new fiscal year
@@ -62,13 +63,13 @@ class GenerateOpeningBalancesAction
 
             $balance = $this->computeBalance($account, $asOfDate);
 
-            if (bccomp($balance, '0', 2) === 0) {
+            if (Money::isZero($balance)) {
                 continue;
             }
 
             $isDebitNormal = $account->type->isDebitNormal();
-            $isPositive = bccomp($balance, '0', 2) > 0;
-            $absBalance = $isPositive ? $balance : bcmul($balance, '-1', 2);
+            $isPositive = Money::isPositive($balance);
+            $absBalance = $isPositive ? $balance : Money::negate($balance);
 
             // Debit when positive+debit-normal or negative+credit-normal
             $shouldDebit = $isPositive === $isDebitNormal;
@@ -81,9 +82,9 @@ class GenerateOpeningBalancesAction
             );
 
             if ($shouldDebit) {
-                $totalDebit = bcadd($totalDebit, $absBalance, 2);
+                $totalDebit = Money::add($totalDebit, $absBalance);
             } else {
-                $totalCredit = bcadd($totalCredit, $absBalance, 2);
+                $totalCredit = Money::add($totalCredit, $absBalance);
             }
         }
 
@@ -92,19 +93,19 @@ class GenerateOpeningBalancesAction
         }
 
         // Balance the entry via the opening balance (9000) account
-        $diff = bcsub($totalDebit, $totalCredit, 2);
+        $diff = Money::subtract($totalDebit, $totalCredit);
 
-        if (bccomp($diff, '0', 2) > 0) {
+        if (Money::isPositive($diff)) {
             $lines[] = new JournalLineData(
                 accountId: (string) $openingAccount->id,
                 debit: '0',
                 credit: $diff,
                 description: "Solde d'ouverture {$nextYear} — contrepartie",
             );
-        } elseif (bccomp($diff, '0', 2) < 0) {
+        } elseif (Money::isNegative($diff)) {
             $lines[] = new JournalLineData(
                 accountId: (string) $openingAccount->id,
-                debit: bcmul($diff, '-1', 2),
+                debit: Money::negate($diff),
                 credit: '0',
                 description: "Solde d'ouverture {$nextYear} — contrepartie",
             );
@@ -130,7 +131,7 @@ class GenerateOpeningBalancesAction
         $credits = (string) (clone $query)->sum('credit');
 
         return $account->type->isDebitNormal()
-            ? bcsub($debits, $credits, 2)
-            : bcsub($credits, $debits, 2);
+            ? Money::subtract($debits, $credits)
+            : Money::subtract($credits, $debits);
     }
 }

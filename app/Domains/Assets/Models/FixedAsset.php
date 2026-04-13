@@ -6,6 +6,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Assets\Enums\DepreciationMethod;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Money;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -133,7 +134,7 @@ class FixedAsset extends Model
 
     public function netBookValue(): string
     {
-        return bcsub($this->purchase_amount, $this->totalDepreciated(), 2);
+        return Money::subtract($this->purchase_amount, $this->totalDepreciated());
     }
 
     public function getNetBookValueAttribute(): string
@@ -143,7 +144,7 @@ class FixedAsset extends Model
 
     public function isFullyDepreciated(): bool
     {
-        return bccomp($this->netBookValue(), $this->salvage_value, 2) <= 0;
+        return Money::compare($this->netBookValue(), $this->salvage_value) <= 0;
     }
 
     public function getStatusAttribute(): string
