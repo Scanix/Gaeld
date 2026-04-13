@@ -10,7 +10,7 @@
         "@inertiajs/vue3": "^3.0.3",
         "@tailwindcss/vite": "^4.2.2",
         "@vitejs/plugin-vue": "^6.0.5",
-        "autoprefixer": "^10.4.27",
+        "autoprefixer": "^10.5.0",
         "laravel-vite-plugin": "^3.0.1",
         "postcss": "^8.5.9",
         "tailwindcss": "^4.2.2",
