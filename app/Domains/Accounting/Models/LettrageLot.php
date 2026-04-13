@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string $organization_id
  * @property int $account_id
  * @property string $letter_key
- * @property array $line_ids
+ * @property array<int, mixed> $line_ids
  * @property int|null $lettered_by_user_id
  * @property Carbon $lettered_at
  * @property bool $is_reversed

@@ -7,6 +7,9 @@ use Illuminate\Validation\Rule;
 
 class ReconcileExpenseRequest extends FormRequest
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $bankAccount = $this->route('transaction')->bankAccount;

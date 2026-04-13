@@ -50,7 +50,7 @@ class OrgTokenController extends Controller
             'last_used_at' => $token->last_used_at?->toIso8601String(),
             'expires_at' => $token->expires_at?->toIso8601String(),
             'created_at' => $token->created_at?->toIso8601String(),
-            'created_by' => $token->tokenable?->name,
+            'created_by' => $token->tokenable->name,
         ]);
 
         return response()->json(['data' => $data]);

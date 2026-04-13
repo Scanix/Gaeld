@@ -6,6 +6,9 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ReconcileManualRequest extends FormRequest
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

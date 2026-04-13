@@ -27,6 +27,9 @@ class FeatureFlag
         return ! static::enabled($feature);
     }
 
+    /**
+     * @return array<string, bool>
+     */
     public static function all(): array
     {
         return config('features', []);

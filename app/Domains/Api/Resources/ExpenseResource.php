@@ -9,6 +9,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** @mixin Expense */
 class ExpenseResource extends JsonResource
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [
@@ -17,7 +20,7 @@ class ExpenseResource extends JsonResource
             'description' => $this->description,
             'amount' => $this->amount,
             'vat_amount' => $this->vat_amount,
-            'date' => $this->date?->toDateString(),
+            'date' => $this->date->toDateString(),
             'vendor' => $this->vendor,
             'status' => $this->status->value,
             'currency' => $this->currency,

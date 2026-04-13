@@ -7,6 +7,7 @@ use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use App\Support\Traits\HasPublicUuid;
+use Database\Factories\Domains\Banking\Models\BankAccountFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -41,6 +42,7 @@ use Illuminate\Support\Carbon;
  */
 class BankAccount extends Model
 {
+    /** @use HasFactory<BankAccountFactory> */
     use Auditable, BelongsToOrganization, HasFactory, HasPublicUuid, SoftDeletes;
 
     protected $fillable = [

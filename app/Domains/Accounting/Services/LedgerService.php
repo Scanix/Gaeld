@@ -17,6 +17,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Money;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -245,23 +246,26 @@ class LedgerService
      * @throws UnbalancedEntryException When debits ≠ credits
      * @throws InvalidEntryDataException When all amounts are zero
      */
+    /**
+     * @param  array<string, mixed>  $lines
+     */
     private function validateBalance(array $lines): void
     {
         $totalDebit = '0';
         $totalCredit = '0';
 
         foreach ($lines as $line) {
-            $totalDebit = bcadd($totalDebit, (string) $line->debit, 2);
-            $totalCredit = bcadd($totalCredit, (string) $line->credit, 2);
+            $totalDebit = Money::add($totalDebit, (string) $line->debit);
+            $totalCredit = Money::add($totalCredit, (string) $line->credit);
         }
 
-        if (bccomp($totalDebit, $totalCredit, 2) !== 0) {
+        if (Money::compare($totalDebit, $totalCredit) !== 0) {
             throw new UnbalancedEntryException(
                 "Entry is not balanced: debit={$totalDebit}, credit={$totalCredit}"
             );
         }
 
-        if (bccomp($totalDebit, '0', 2) === 0) {
+        if (Money::isZero($totalDebit)) {
             throw new InvalidEntryDataException('Journal entry must have non-zero amounts.');
         }
     }

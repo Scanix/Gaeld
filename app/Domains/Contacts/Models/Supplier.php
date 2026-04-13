@@ -7,6 +7,7 @@ use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use App\Support\Traits\HasPublicUuid;
+use Database\Factories\Domains\Contacts\Models\SupplierFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -37,7 +38,7 @@ use Laravel\Scout\Searchable;
  * @property string|null $default_expense_category
  * @property string|null $currency
  * @property string|null $iban
- * @property array|null $notes
+ * @property array<string, mixed>|null $notes
  * @property string|null $internal_notes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -48,6 +49,7 @@ use Laravel\Scout\Searchable;
  */
 class Supplier extends Model
 {
+    /** @use HasFactory<SupplierFactory> */
     use Auditable, BelongsToOrganization, HasFactory, HasPublicUuid, Searchable, SoftDeletes;
 
     protected $fillable = [
@@ -98,6 +100,9 @@ class Supplier extends Model
     //  Scout
     // ──────────────────────────────────────────────────────────────
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toSearchableArray(): array
     {
         return [

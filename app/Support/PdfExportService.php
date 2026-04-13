@@ -18,6 +18,9 @@ class PdfExportService
     /**
      * Render a Blade view to a downloadable PDF response.
      */
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function download(string $view, array $data, string $filename): Response
     {
         return Pdf::loadView($view, $data)
@@ -27,6 +30,9 @@ class PdfExportService
 
     /**
      * Render a Blade view to an inline (streamed) PDF response.
+     */
+    /**
+     * @param  array<string, mixed>  $data
      */
     public function stream(string $view, array $data, string $filename): Response
     {

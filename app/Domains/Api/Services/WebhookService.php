@@ -20,6 +20,9 @@ class WebhookService
      * @param  string  $event  The event name (e.g. 'invoice.created')
      * @param  array  $payload  The data to send
      */
+    /**
+     * @param  array<string, mixed>  $payload
+     */
     public function dispatch(string $organizationId, string $event, array $payload): void
     {
         if (FeatureFlag::disabled('api_access')) {

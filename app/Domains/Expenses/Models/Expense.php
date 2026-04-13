@@ -11,6 +11,7 @@ use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
+use Database\Factories\Domains\Expenses\Models\ExpenseFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -54,6 +55,7 @@ use Laravel\Scout\Searchable;
  */
 class Expense extends Model
 {
+    /** @use HasFactory<ExpenseFactory> */
     use Auditable, BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;
 
     protected $fillable = [
@@ -122,6 +124,9 @@ class Expense extends Model
     //  Scout
     // ──────────────────────────────────────────────────────────────
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toSearchableArray(): array
     {
         return [

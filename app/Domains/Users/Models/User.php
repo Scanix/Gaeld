@@ -4,6 +4,7 @@ namespace App\Domains\Users\Models;
 
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
+use Database\Factories\Domains\Users\Models\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,6 +30,7 @@ use Spatie\Permission\Traits\HasRoles;
  */
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, WebAuthnAuthenticatable
 {
+    /** @use HasFactory<UserFactory> */
     use Auditable, HasApiTokens, HasFactory, HasRoles, Notifiable, WebAuthnAuthentication;
 
     protected $fillable = [

@@ -14,6 +14,9 @@ class UpdateInvoiceRequest extends FormRequest
         return $this->user()->can('update', $this->route('invoice'));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return $this->sharedRules($this->route('invoice')->organization_id);

@@ -37,6 +37,7 @@ class SwissDeductionService
     /**
      * Calculate all deductions for a given gross salary.
      *
+     * @param  Collection<int, DeductionRate>|null  $rates
      * @return array{avs_employee: string, avs_employer: string, ac_employee: string, ac_employer: string, aanp_employee: string, lpp_employee: string, lpp_employer: string, total_employee: string, total_employer: string, net_salary: string}
      */
     public function calculateDeductions(string $grossSalary, ?Collection $rates = null): array
@@ -82,6 +83,9 @@ class SwissDeductionService
 
     /**
      * Build the rate map from custom rates or defaults.
+     *
+     * @param  Collection<int, DeductionRate>|null  $rates
+     * @return array<string, array{code: string, name: string, rate: string, type: string}>
      */
     private function buildRateMap(?Collection $rates): array
     {

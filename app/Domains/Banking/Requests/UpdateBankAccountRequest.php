@@ -13,6 +13,9 @@ class UpdateBankAccountRequest extends FormRequest
         return $this->user()->can('update', $this->route('bankAccount'));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $orgId = app(CurrentOrganization::class)->id();

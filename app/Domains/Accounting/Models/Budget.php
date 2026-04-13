@@ -52,6 +52,10 @@ class Budget extends Model
         return $this->belongsTo(Account::class);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeForYear(Builder $query, int $year): Builder
     {
         return $query->where('fiscal_year', $year);

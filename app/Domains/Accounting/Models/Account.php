@@ -7,6 +7,7 @@ use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use App\Support\Traits\HasPublicUuid;
+use Database\Factories\Domains\Accounting\Models\AccountFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -38,6 +39,7 @@ use Illuminate\Support\Carbon;
  */
 class Account extends Model
 {
+    /** @use HasFactory<AccountFactory> */
     use Auditable, BelongsToOrganization, HasFactory, HasPublicUuid;
 
     protected $fillable = [

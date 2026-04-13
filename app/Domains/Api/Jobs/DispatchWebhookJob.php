@@ -17,6 +17,7 @@ class DispatchWebhookJob implements ShouldQueue
 
     public int $tries = 3;
 
+    /** @var array<int, int> */
     public array $backoff = [30, 300, 3600];
 
     public function __construct(

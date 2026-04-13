@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Cache;
 
 class BankAccountQuery
 {
+    /**
+     * @return LengthAwarePaginator<int, BankAccount>
+     */
     public static function list(Request $request, int $perPage = 25): LengthAwarePaginator
     {
         return QueryBuilder::for(

@@ -7,6 +7,8 @@ use JsonSerializable;
 
 /**
  * Immutable value object representing a profit & loss (income) statement.
+ *
+ * @implements Arrayable<string, mixed>
  */
 readonly class ProfitAndLossReport implements Arrayable, JsonSerializable
 {

@@ -8,6 +8,7 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Assets\Models\DepreciationEntry;
 use App\Domains\Assets\Models\FixedAsset;
 use App\Domains\Assets\Services\DepreciationCalculator;
+use App\Support\Money;
 use Carbon\Carbon;
 
 /**
@@ -29,17 +30,17 @@ class DepreciateAssetAction
         $periodDate ??= Carbon::now();
         $monthlyAmount = $this->calculator->monthlyAmount($asset);
 
-        if (bccomp($monthlyAmount, '0', 2) <= 0) {
+        if (Money::compare($monthlyAmount, '0') <= 0) {
             return null;
         }
 
         // Ensure we don't depreciate below salvage value
-        $remainingDepreciable = bcsub($asset->netBookValue(), $asset->salvage_value, 2);
-        if (bccomp($monthlyAmount, $remainingDepreciable, 2) > 0) {
+        $remainingDepreciable = Money::subtract($asset->netBookValue(), $asset->salvage_value);
+        if (Money::compare($monthlyAmount, $remainingDepreciable) > 0) {
             $monthlyAmount = $remainingDepreciable;
         }
 
-        if (bccomp($monthlyAmount, '0', 2) <= 0) {
+        if (Money::compare($monthlyAmount, '0') <= 0) {
             return null;
         }
 

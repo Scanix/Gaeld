@@ -8,6 +8,9 @@ use Illuminate\Validation\Rule;
 
 class UploadMigrationFileRequest extends FormRequest
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

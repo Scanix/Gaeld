@@ -33,7 +33,7 @@ class BankAccountApiController extends Controller
         $bankAccounts = BankAccount::query()
             ->when($request->boolean('active_only'), fn ($q) => $q->where('is_active', true))
             ->orderBy('name')
-            ->paginate($request->input('per_page', 25));
+            ->paginate(min((int) $request->input('per_page', 25), 100));
 
         return BankAccountResource::collection($bankAccounts);
     }

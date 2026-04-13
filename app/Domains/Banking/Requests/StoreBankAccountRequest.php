@@ -14,6 +14,9 @@ class StoreBankAccountRequest extends FormRequest
         return $this->user()->can('create', BankAccount::class);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $orgId = app(CurrentOrganization::class)->id();
