@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { usePage, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -32,6 +33,8 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 const { t } = useTranslations()
 const { formatCurrency, formatDate, intlMonthName, locale } = useFormatters()
 const { isDark } = useTheme()
+const page = usePage()
+const orgCurrency = computed(() => page.props.auth?.currentOrganization?.currency || 'CHF')
 
 const props = defineProps({
   revenue: { type: Number, default: 0 },
@@ -212,7 +215,7 @@ const chartOptions = computed(() => {
         beginAtZero: true,
         ticks: {
           color: tickColor,
-          callback: (value) => 'CHF ' + new Intl.NumberFormat(intlLocale(locale.value), { notation: 'compact', maximumFractionDigits: 1 }).format(value),
+          callback: (value) => orgCurrency.value + ' ' + new Intl.NumberFormat(intlLocale(locale.value), { notation: 'compact', maximumFractionDigits: 1 }).format(value),
         },
         grid: { color: gridColor },
       },
@@ -261,7 +264,7 @@ const transactionColumns = computed(() => [
             {{ pendingOcrScans }} {{ t('ocr_pending_widget_description') }}
           </p>
         </div>
-        <a href="/expenses" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
+        <Link href="/expenses" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</Link>
       </CardContent>
     </Card>
 
@@ -273,7 +276,7 @@ const transactionColumns = computed(() => [
             <p class="text-sm font-medium text-amber-800 dark:text-amber-200">{{ t('unpaid_invoice', { count: unpaidInvoices.count }) }}</p>
             <p class="text-lg font-bold text-amber-900 dark:text-amber-100">{{ formatCurrency(unpaidInvoices.total) }}</p>
           </div>
-          <a href="/invoices" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
+          <Link href="/invoices" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</Link>
         </CardContent>
       </Card>
       <Card v-if="pendingExpenses.count > 0" class="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30">
@@ -282,7 +285,7 @@ const transactionColumns = computed(() => [
             <p class="text-sm font-medium text-blue-800 dark:text-blue-200">{{ t('pending_expense', { count: pendingExpenses.count }) }}</p>
             <p class="text-lg font-bold text-blue-900 dark:text-blue-100">{{ formatCurrency(pendingExpenses.total) }}</p>
           </div>
-          <a href="/expenses" class="text-sm font-medium text-blue-700 hover:underline dark:text-blue-300">{{ t('view') }}</a>
+          <Link href="/expenses" class="text-sm font-medium text-blue-700 hover:underline dark:text-blue-300">{{ t('view') }}</Link>
         </CardContent>
       </Card>
 
@@ -303,7 +306,7 @@ const transactionColumns = computed(() => [
                 <span v-if="parseFloat(receivablesAging.brackets['90_plus']) > 0">90d+: {{ formatCurrency(receivablesAging.brackets['90_plus']) }}</span>
               </div>
             </div>
-            <a href="/reports/aging" class="text-sm font-medium text-red-700 hover:underline dark:text-red-300">{{ t('view') }}</a>
+            <Link href="/reports/aging" class="text-sm font-medium text-red-700 hover:underline dark:text-red-300">{{ t('view') }}</Link>
           </div>
         </CardContent>
       </Card>
@@ -318,7 +321,7 @@ const transactionColumns = computed(() => [
             </div>
             <p class="mt-1 text-lg font-bold text-purple-900 dark:text-purple-100">{{ formatCurrency(vatSummary.vatPayable) }}</p>
           </div>
-          <a href="/reports/vat" class="text-sm font-medium text-purple-700 hover:underline dark:text-purple-300">{{ t('view') }}</a>
+          <Link href="/reports/vat" class="text-sm font-medium text-purple-700 hover:underline dark:text-purple-300">{{ t('view') }}</Link>
         </CardContent>
       </Card>
     </div>
@@ -384,7 +387,7 @@ const transactionColumns = computed(() => [
         <CardDescription>{{ t('monthly_comparison') }} {{ props.displayYear }} — {{ t('click_bar_filter') }}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div class="h-96">
+        <div class="h-64 sm:h-96">
           <Bar :data="chartData" :options="chartOptions" />
         </div>
       </CardContent>

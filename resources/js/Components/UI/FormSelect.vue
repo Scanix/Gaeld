@@ -36,7 +36,7 @@ defineEmits(['update:modelValue'])
       :aria-describedby="error ? id + '-error' : undefined"
       :aria-invalid="error ? true : undefined"
       :class="cn(
-        'flex h-10 w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))] disabled:cursor-not-allowed disabled:opacity-50 sm:h-9',
+        'flex h-11 w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))] disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:text-sm',
         error && 'border-[hsl(var(--destructive))]'
       )"
       @change="$emit('update:modelValue', $event.target.value)"

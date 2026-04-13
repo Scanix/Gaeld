@@ -180,7 +180,7 @@ const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(na
         <div class="fixed inset-0 bg-black/50" @click="closeSearch" />
 
         <!-- Dialog -->
-        <div class="fixed left-1/2 top-[20%] z-50 w-full max-w-lg -translate-x-1/2">
+        <div class="fixed inset-x-4 top-[10%] z-50 sm:left-1/2 sm:inset-x-auto sm:top-[20%] sm:w-full sm:max-w-lg sm:-translate-x-1/2">
           <div class="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] shadow-2xl">
             <!-- Search input -->
             <div class="flex items-center border-b border-[hsl(var(--border))] px-4">

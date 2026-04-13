@@ -139,7 +139,7 @@ function fetchEcb() {
 
     <Modal :open="showForm" :title="t('exchange_rate')" @close="showForm = false">
       <form class="space-y-6" @submit.prevent="submitForm">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormInput
             id="currency_from"
             v-model="form.currency_from"
@@ -178,7 +178,7 @@ function fetchEcb() {
         />
         <div class="flex justify-end gap-2">
           <Button variant="outline" type="button" @click="showForm = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="form.processing">{{ t('save') }}</Button>
+          <Button type="submit" :disabled="form.processing" :loading="form.processing">{{ t('save') }}</Button>
         </div>
       </form>
     </Modal>

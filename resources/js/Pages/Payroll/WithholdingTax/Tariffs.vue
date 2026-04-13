@@ -160,7 +160,7 @@ function performDelete() {
         <FormInput id="valid_from" v-model="form.valid_from" type="date" :label="t('valid_from')" :error="form.errors.valid_from" required />
         <div class="flex justify-end gap-2">
           <Button variant="outline" type="button" @click="showForm = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="form.processing">{{ t('save') }}</Button>
+          <Button type="submit" :disabled="form.processing" :loading="form.processing">{{ t('save') }}</Button>
         </div>
       </form>
     </Modal>

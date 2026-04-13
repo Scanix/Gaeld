@@ -43,7 +43,7 @@ const columns = computed(() => [
   { key: 'useful_life_years', label: t('useful_life'), class: 'text-right' },
   { key: 'net_book_value', label: t('net_book_value'), class: 'text-right' },
   { key: 'status', label: t('status') },
-  { key: 'actions', label: '', class: 'text-right w-20' },
+  { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 </script>
 

@@ -121,10 +121,10 @@ function doDelete() {
           </template>
           <template #cell-actions="{ row }">
             <div class="flex justify-end gap-2">
-              <Button variant="ghost" size="icon" :title="t('edit')" @click="openEdit(row)">
+              <Button variant="ghost" size="icon" :aria-label="t('edit')" :title="t('edit')" @click="openEdit(row)">
                 <Pencil class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" :title="t('delete')" @click="confirmDelete(row)">
+              <Button variant="ghost" size="icon" :aria-label="t('delete')" :title="t('delete')" @click="confirmDelete(row)">
                 <Trash2 class="h-4 w-4 text-[hsl(var(--destructive))]" />
               </Button>
             </div>
@@ -174,7 +174,7 @@ function doDelete() {
         </label>
         <div class="flex justify-end gap-3 pt-2">
           <Button type="button" variant="outline" @click="showForm = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="form.processing">
+          <Button type="submit" :disabled="form.processing" :loading="form.processing">
             {{ editingRate ? t('save_changes') : t('create') }}
           </Button>
         </div>

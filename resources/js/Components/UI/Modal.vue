@@ -53,7 +53,14 @@ watch(isOpen, (val) => {
   if (val) {
     document.addEventListener('keydown', onKeydown)
     document.body.style.overflow = 'hidden'
-    nextTick(() => dialogRef.value?.focus())
+    nextTick(() => {
+      const els = getFocusableEls()
+      if (els.length) {
+        els[0].focus()
+      } else {
+        dialogRef.value?.focus()
+      }
+    })
   } else {
     document.removeEventListener('keydown', onKeydown)
     document.body.style.overflow = ''

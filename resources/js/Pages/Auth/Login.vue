@@ -63,7 +63,7 @@ function submit() {
 
             <div class="flex items-center justify-between">
               <label class="flex items-center gap-2 text-sm">
-                <input v-model="form.remember" type="checkbox" class="h-4 w-4 rounded border-[hsl(var(--input))]">
+                <input id="remember" v-model="form.remember" type="checkbox" class="h-4 w-4 rounded border-[hsl(var(--input))]">
                 {{ t('remember_me') }}
               </label>
               <Link href="/forgot-password" class="text-sm text-[hsl(var(--primary))] hover:underline">
@@ -71,7 +71,7 @@ function submit() {
               </Link>
             </div>
 
-            <Button type="submit" class="w-full" :disabled="form.processing">
+            <Button type="submit" class="w-full" :disabled="form.processing" :loading="form.processing">
               {{ t('sign_in') }}
             </Button>
           </form>

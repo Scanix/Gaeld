@@ -30,7 +30,7 @@ const salaryColumns = computed(() => [
   { key: 'gross_salary', label: t('gross_salary'), class: 'text-right' },
   { key: 'net_salary', label: t('net_salary'), class: 'text-right' },
   { key: 'status', label: t('status') },
-  { key: 'actions', label: '', class: 'text-right w-20' },
+  { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 </script>
 

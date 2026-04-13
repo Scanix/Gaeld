@@ -236,7 +236,7 @@ const historyColumns = computed(() => [
         </div>
         <div class="flex justify-end gap-3 pt-2">
           <Button type="button" variant="outline" @click="showDisposeModal = false">{{ t('cancel') }}</Button>
-          <Button type="submit" variant="destructive" :disabled="disposeForm.processing">{{ t('confirm_disposal') }}</Button>
+          <Button type="submit" variant="destructive" :disabled="disposeForm.processing" :loading="disposeForm.processing">{{ t('confirm_disposal') }}</Button>
         </div>
       </form>
     </Modal>
