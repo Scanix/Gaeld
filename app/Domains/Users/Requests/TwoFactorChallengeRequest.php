@@ -12,8 +12,8 @@ class TwoFactorChallengeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => 'nullable|string',
-            'recovery_code' => 'nullable|string',
+            'code' => 'nullable|string|max:10',
+            'recovery_code' => 'nullable|string|max:50',
         ];
     }
 }

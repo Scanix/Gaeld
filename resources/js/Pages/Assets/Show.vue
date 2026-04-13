@@ -95,7 +95,7 @@ const historyColumns = computed(() => [
           </div>
         </CardHeader>
         <CardContent class="space-y-4">
-          <div class="grid grid-cols-2 gap-4 text-sm">
+          <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('purchase_date') }}</p>
               <p class="font-medium">{{ formatDate(asset.purchase_date) }}</p>

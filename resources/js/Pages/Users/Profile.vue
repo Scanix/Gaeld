@@ -383,7 +383,7 @@ function confirmRevokeOtherSessions() {
             />
             <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('user_locale_hint') }}</p>
             <div class="flex justify-end">
-              <Button type="submit" :disabled="profileForm.processing" :loading="profileForm.processing">{{ t('save') }}</Button>
+              <Button type="submit" :disabled="profileForm.processing">{{ t('save') }}</Button>
             </div>
           </form>
         </CardContent>
@@ -467,7 +467,7 @@ function confirmRevokeOtherSessions() {
                 :error="confirmForm.errors.code"
                 required
               />
-              <Button type="submit" :disabled="confirmForm.processing" :loading="confirmForm.processing">{{ t('confirm_code') }}</Button>
+              <Button type="submit" :disabled="confirmForm.processing">{{ t('confirm_code') }}</Button>
             </form>
           </div>
 
@@ -703,7 +703,7 @@ function confirmRevokeOtherSessions() {
               required
             />
             <div class="flex justify-end">
-              <Button type="submit" :disabled="passwordForm.processing" :loading="passwordForm.processing">{{ t('update_password') }}</Button>
+              <Button type="submit" :disabled="passwordForm.processing">{{ t('update_password') }}</Button>
             </div>
           </form>
         </CardContent>

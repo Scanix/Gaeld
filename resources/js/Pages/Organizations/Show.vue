@@ -317,7 +317,7 @@ function canChangeUserRole(user) {
         />
         <div class="flex justify-end gap-3">
           <Button variant="outline" @click="showInviteModal = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="inviteForm.processing" :loading="inviteForm.processing">{{ t('invite_member') }}</Button>
+          <Button type="submit" :disabled="inviteForm.processing">{{ t('invite_member') }}</Button>
         </div>
       </form>
     </Modal>

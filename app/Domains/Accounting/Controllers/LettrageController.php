@@ -9,6 +9,7 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -79,6 +80,8 @@ class LettrageController extends Controller
         try {
             $this->service->letterLines($account, $validated['line_ids'], $request->user()->id);
         } catch (\InvalidArgumentException $e) {
+            Log::warning('Lettrage failed', ['account_id' => $account->id, 'error' => $e->getMessage()]);
+
             return back()->withErrors(['lettrage' => $e->getMessage()]);
         }
 
@@ -95,6 +98,8 @@ class LettrageController extends Controller
         try {
             $this->service->unletter($lettrageLot);
         } catch (\InvalidArgumentException $e) {
+            Log::warning('Lettrage reversal failed', ['lot_id' => $lettrageLot->id, 'error' => $e->getMessage()]);
+
             return back()->withErrors(['lettrage' => $e->getMessage()]);
         }
 

@@ -106,16 +106,16 @@ const columns = computed(() => [
       </div>
       <div class="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" @click="showEditModal = true">
-          <Pencil class="h-4 w-4 sm:mr-1" />
-          <span class="hidden sm:inline">{{ t('edit') }}</span>
+          <Pencil class="h-4 w-4 mr-1" />
+          {{ t('edit') }}
         </Button>
         <Button size="sm" @click="showTransactionModal = true">
-          <Plus class="h-4 w-4 sm:mr-1" />
-          <span class="hidden sm:inline">{{ t('record_transaction') }}</span>
+          <Plus class="h-4 w-4 mr-1" />
+          {{ t('record_transaction') }}
         </Button>
         <Button size="sm" variant="destructive" @click="showDeleteDialog = true">
-          <Trash2 class="h-4 w-4 sm:mr-1" />
-          <span class="hidden sm:inline">{{ t('delete') }}</span>
+          <Trash2 class="h-4 w-4 mr-1" />
+          {{ t('delete') }}
         </Button>
       </div>
     </div>

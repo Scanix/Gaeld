@@ -38,7 +38,7 @@ class OrgTokenController extends Controller
         $tokens = PersonalAccessToken::query()
             ->organization()
             ->where('organization_id', $this->currentOrg->id())
-            ->get(['id', 'uuid', 'name', 'abilities', 'last_used_at', 'expires_at', 'created_at', 'tokenable_id']);
+            ->get(['id', 'uuid', 'name', 'abilities', 'last_used_at', 'expires_at', 'created_at', 'tokenable_id', 'tokenable_type']);
 
         // Include the creator name for each token
         $tokens->load('tokenable:id,name');

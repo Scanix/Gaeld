@@ -14,7 +14,7 @@ use Laragear\WebAuthn\Http\Requests\AttestedRequest;
  */
 class PasskeyController extends Controller
 {
-    public function registerOptions(AttestationRequest $request): JsonResponse
+    public function registerOptions(AttestationRequest $request)
     {
         return $request->toCreate();
     }
@@ -40,8 +40,8 @@ class PasskeyController extends Controller
             ->map(fn ($cred) => [
                 'id' => $cred->id,
                 'name' => $cred->alias ?? 'Passkey',
-                'created_at' => $cred->created_at->toDateString(),
-                'last_used' => $cred->updated_at->toDateString(),
+                'created_at' => $cred->created_at?->toDateString(),
+                'last_used' => $cred->updated_at?->toDateString(),
             ]);
 
         return response()->json($credentials);

@@ -10,7 +10,7 @@ class RecordPaymentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('view', $this->route('invoice'));
+        return $this->user()->can('recordPayment', $this->route('invoice'));
     }
 
     /**
@@ -19,7 +19,7 @@ class RecordPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:99999999.99',
             'payment_date' => 'required|date',
             'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'reference' => 'nullable|string|max:100',

@@ -172,7 +172,7 @@ const lotColumns = computed(() => [
       <!-- Open Items table -->
       <Card class="mb-6">
         <CardHeader>
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>{{ t('lettrage_open_items') }} — {{ account.code }} {{ account.name }}</CardTitle>
             <Button
               size="sm"
@@ -185,7 +185,7 @@ const lotColumns = computed(() => [
           </div>
         </CardHeader>
         <CardContent>
-          <div v-if="selectedLineIds.length >= 2" class="mb-4 flex items-center gap-4 rounded-md bg-[hsl(var(--muted))] px-4 py-2 text-sm">
+          <div v-if="selectedLineIds.length >= 2" class="mb-4 flex flex-wrap items-center gap-3 rounded-md bg-[hsl(var(--muted))] px-4 py-2 text-sm">
             <span>{{ t('debit') }}: {{ formatMoney(selectedBalance.debit) }}</span>
             <span>{{ t('credit') }}: {{ formatMoney(selectedBalance.credit) }}</span>
             <Badge :variant="isBalanced ? 'success' : 'destructive'">

@@ -78,9 +78,6 @@ class AuthAuditSubscriber
             ->log('login failed');
     }
 
-    /**
-     * @return array<string, string>
-     */
     public function subscribe(Dispatcher $events): array
     {
         return [

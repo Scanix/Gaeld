@@ -309,7 +309,7 @@ function formatColumns(row) {
         />
 
         <!-- Stats -->
-        <div v-if="currentPreview" class="grid grid-cols-3 gap-4">
+        <div v-if="currentPreview" class="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div class="rounded-lg border border-[hsl(var(--border))] p-4 text-center">
             <p class="text-2xl font-bold">{{ currentPreview.count }}</p>
             <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('migration.total_rows') }}</p>

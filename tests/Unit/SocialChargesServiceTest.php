@@ -97,10 +97,10 @@ class SocialChargesServiceTest extends TestCase
     {
         $rates = $this->service->rates();
 
-        $this->assertSame('8.1', $rates['avs']);
-        $this->assertSame('1.4', $rates['ai']);
-        $this->assertSame('0.5', $rates['apg']);
-        $this->assertSame('10.0', $rates['total']);
+        $this->assertSame('8.10', $rates['avs']);
+        $this->assertSame('1.40', $rates['ai']);
+        $this->assertSame('0.50', $rates['apg']);
+        $this->assertSame('10.00', $rates['total']);
         $this->assertSame('10100', $rates['min_income']);
         $this->assertSame('58800', $rates['full_rate_threshold']);
     }
