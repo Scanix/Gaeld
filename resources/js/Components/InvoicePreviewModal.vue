@@ -74,6 +74,7 @@ const total = computed(() => subtotal.value + vatTotal.value)
       </div>
 
       <!-- Line items -->
+      <div class="overflow-x-auto">
       <table class="w-full text-left">
         <thead>
           <tr class="border-b border-[hsl(var(--border))] text-xs text-[hsl(var(--muted-foreground))]">
@@ -100,6 +101,7 @@ const total = computed(() => subtotal.value + vatTotal.value)
           </tr>
         </tbody>
       </table>
+      </div>
 
       <!-- Totals -->
       <div class="space-y-1 border-t border-[hsl(var(--border))] pt-3">

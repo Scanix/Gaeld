@@ -2,6 +2,8 @@
 
 namespace App\Domains\Accounting\Services;
 
+use App\Support\Money;
+
 /**
  * Swiss social charges (AVS/AI/APG) calculator for independent workers.
  *
@@ -61,7 +63,7 @@ final class SocialChargesService
      */
     public function calculate(string $annualIncome): array
     {
-        if (bccomp($annualIncome, self::MIN_INCOME, 2) < 0) {
+        if (Money::compare($annualIncome, self::MIN_INCOME) < 0) {
             return [
                 'avs' => '0.00',
                 'ai' => '0.00',
@@ -74,20 +76,20 @@ final class SocialChargesService
 
         $effectiveRate = $this->effectiveRate($annualIncome);
 
-        if (bccomp($effectiveRate, self::STANDARD_RATE, 5) >= 0) {
+        if (Money::compare($effectiveRate, self::STANDARD_RATE) >= 0) {
             // Full rate — split into AVS/AI/APG components
-            $avs = bcmul($annualIncome, self::AVS_RATE, 2);
-            $ai = bcmul($annualIncome, self::AI_RATE, 2);
-            $apg = bcmul($annualIncome, self::APG_RATE, 2);
-            $total = bcadd(bcadd($avs, $ai, 2), $apg, 2);
+            $avs = Money::multiply2($annualIncome, self::AVS_RATE);
+            $ai = Money::multiply2($annualIncome, self::AI_RATE);
+            $apg = Money::multiply2($annualIncome, self::APG_RATE);
+            $total = Money::add(Money::add($avs, $ai), $apg);
         } else {
             // Degressive rate — single combined rate, split proportionally
-            $total = bcmul($annualIncome, $effectiveRate, 2);
-            $ratioAvs = bcdiv(self::AVS_RATE, self::STANDARD_RATE, 6);
-            $ratioAi = bcdiv(self::AI_RATE, self::STANDARD_RATE, 6);
-            $avs = bcmul($total, $ratioAvs, 2);
-            $ai = bcmul($total, $ratioAi, 2);
-            $apg = bcsub($total, bcadd($avs, $ai, 2), 2);
+            $total = Money::multiply2($annualIncome, $effectiveRate);
+            $ratioAvs = Money::divide4(self::AVS_RATE, self::STANDARD_RATE);
+            $ratioAi = Money::divide4(self::AI_RATE, self::STANDARD_RATE);
+            $avs = Money::multiply2($total, $ratioAvs);
+            $ai = Money::multiply2($total, $ratioAi);
+            $apg = Money::subtract($total, Money::add($avs, $ai));
         }
 
         return [
@@ -95,7 +97,7 @@ final class SocialChargesService
             'ai' => $ai,
             'apg' => $apg,
             'total' => $total,
-            'rate' => bcmul($effectiveRate, '100', 2),
+            'rate' => Money::multiply2($effectiveRate, '100'),
             'income' => $annualIncome,
         ];
     }
@@ -112,10 +114,10 @@ final class SocialChargesService
     public function rates(): array
     {
         return [
-            'avs' => bcmul(self::AVS_RATE, '100', 1),
-            'ai' => bcmul(self::AI_RATE, '100', 1),
-            'apg' => bcmul(self::APG_RATE, '100', 1),
-            'total' => bcmul(self::STANDARD_RATE, '100', 1),
+            'avs' => Money::multiply2(self::AVS_RATE, '100'),
+            'ai' => Money::multiply2(self::AI_RATE, '100'),
+            'apg' => Money::multiply2(self::APG_RATE, '100'),
+            'total' => Money::multiply2(self::STANDARD_RATE, '100'),
             'min_income' => self::MIN_INCOME,
             'full_rate_threshold' => self::FULL_RATE_THRESHOLD,
         ];
@@ -130,7 +132,7 @@ final class SocialChargesService
      */
     private function effectiveRate(string $income): string
     {
-        if (bccomp($income, self::FULL_RATE_THRESHOLD, 2) >= 0) {
+        if (Money::compare($income, self::FULL_RATE_THRESHOLD) >= 0) {
             return self::STANDARD_RATE;
         }
 
@@ -138,7 +140,7 @@ final class SocialChargesService
         $previousRate = self::MIN_RATE;
 
         foreach (self::DEGRESSIVE_BRACKETS as $upperBound => $rate) {
-            if (bccomp($income, (string) $upperBound, 2) <= 0) {
+            if (Money::compare($income, (string) $upperBound) <= 0) {
                 return $previousRate;
             }
             $previousRate = $rate;

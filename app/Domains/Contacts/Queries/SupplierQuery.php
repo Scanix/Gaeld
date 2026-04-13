@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Cache;
 
 class SupplierQuery
 {
+    /**
+     * @return LengthAwarePaginator<int, Supplier>
+     */
     public static function list(Request $request, int $perPage = 20): LengthAwarePaginator
     {
         return QueryBuilder::for(Supplier::query(), $request)
@@ -23,6 +26,9 @@ class SupplierQuery
             ->withQueryString();
     }
 
+    /**
+     * @return Collection<int, Supplier>
+     */
     public static function forSelect(): Collection
     {
         $orgId = app(CurrentOrganization::class)->id();

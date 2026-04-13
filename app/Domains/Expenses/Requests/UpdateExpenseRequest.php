@@ -14,6 +14,9 @@ class UpdateExpenseRequest extends FormRequest
         return $this->user()->can('update', $this->route('expense'));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return $this->sharedRules($this->route('expense')->organization_id);

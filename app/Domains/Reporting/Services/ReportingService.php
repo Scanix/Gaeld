@@ -9,6 +9,7 @@ use App\Domains\Accounting\Models\Budget;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Assets\Models\DepreciationEntry;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Money;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -29,6 +30,9 @@ class ReportingService
      * Results are cached per organization + period (tag: org:{orgId}:reports).
      *
      * @return array{period: array{from: string, to: string}, revenue: array<int, array{code: string, name: string, balance: string}>, expenses: array<int, array{code: string, name: string, balance: string}>, total_revenue: string, total_expenses: string, net_profit: string, comparison: array|null, variance: array|null, budget: array|null}
+     */
+    /**
+     * @return array<string, mixed>
      */
     public function profitAndLoss(
         string $organizationId,
@@ -56,7 +60,7 @@ class ReportingService
                 'expenses' => $expenses->values()->toArray(),
                 'total_revenue' => $totalRevenue,
                 'total_expenses' => $totalExpenses,
-                'net_profit' => bcsub((string) $totalRevenue, (string) $totalExpenses, 2),
+                'net_profit' => Money::subtract((string) $totalRevenue, (string) $totalExpenses),
                 'comparison' => null,
                 'variance' => null,
             ];
@@ -110,18 +114,17 @@ class ReportingService
             $fiscalYearStart = $this->resolveFiscalYearStart($organizationId, $asOfDate);
             $revenue = $this->accountsWithBalances($organizationId, AccountType::Revenue, $fiscalYearStart, $asOfDate);
             $expenses = $this->accountsWithBalances($organizationId, AccountType::Expense, $fiscalYearStart, $asOfDate);
-            $currentYearResult = bcsub((string) $revenue->sum('balance'), (string) $expenses->sum('balance'), 2);
+            $currentYearResult = Money::subtract((string) $revenue->sum('balance'), (string) $expenses->sum('balance'));
 
-            if (bccomp($currentYearResult, '0', 2) !== 0) {
+            if (! Money::isZero($currentYearResult)) {
                 $sections[AccountType::Equity->value]['accounts'][] = [
                     'code' => '2990',
                     'name' => __('app.current_year_result'),
                     'balance' => $currentYearResult,
                 ];
-                $sections[AccountType::Equity->value]['total'] = bcadd(
+                $sections[AccountType::Equity->value]['total'] = Money::add(
                     (string) $sections[AccountType::Equity->value]['total'],
                     $currentYearResult,
-                    2,
                 );
             }
 
@@ -171,7 +174,7 @@ class ReportingService
 
         $compTotalRevenue = $compRevenue->sum('balance');
         $compTotalExpenses = $compExpenses->sum('balance');
-        $compNetProfit = bcsub((string) $compTotalRevenue, (string) $compTotalExpenses, 2);
+        $compNetProfit = Money::subtract((string) $compTotalRevenue, (string) $compTotalExpenses);
 
         $result['comparison'] = [
             'period' => ['from' => $compareFrom, 'to' => $compareTo],
@@ -196,16 +199,19 @@ class ReportingService
      */
     private function computeVariance(string $current, string $previous): array
     {
-        $amount = bcsub($current, $previous, 2);
+        $amount = Money::subtract($current, $previous);
 
         return [
             'amount' => $amount,
-            'percentage' => bccomp($previous, '0', 2) !== 0
-                ? bcmul(bcdiv($amount, $previous, 4), '100', 2)
+            'percentage' => ! Money::isZero($previous)
+                ? Money::multiply2(Money::divide4($amount, $previous), '100')
                 : null,
         ];
     }
 
+    /**
+     * @return Collection<int, mixed>
+     */
     private function accountsWithBalances(string $organizationId, AccountType $type, ?string $fromDate, ?string $toDate): Collection
     {
         return Account::where('organization_id', $organizationId)
@@ -217,11 +223,15 @@ class ReportingService
                 'name' => $account->name,
                 'balance' => $this->ledgerService->accountBalance($account->id, $fromDate, $toDate),
             ])
-            ->filter(fn ($accountRow) => bccomp((string) $accountRow['balance'], '0', 2) !== 0);
+            ->filter(fn ($accountRow) => ! Money::isZero((string) $accountRow['balance']));
     }
 
     /**
      * Enrich P&L result with budget data if budgets exist for the period.
+     */
+    /**
+     * @param  array<string, mixed>  $result
+     * @return array<string, mixed>|null
      */
     private function enrichWithBudget(string $organizationId, string $fromDate, string $toDate, array &$result): ?array
     {
@@ -253,19 +263,19 @@ class ReportingService
 
         foreach ($result['revenue'] as $account) {
             if ($account['budget_amount'] !== null) {
-                $budgetRevenue = bcadd($budgetRevenue, $account['budget_amount'], 2);
+                $budgetRevenue = Money::add($budgetRevenue, $account['budget_amount']);
             }
         }
         foreach ($result['expenses'] as $account) {
             if ($account['budget_amount'] !== null) {
-                $budgetExpenses = bcadd($budgetExpenses, $account['budget_amount'], 2);
+                $budgetExpenses = Money::add($budgetExpenses, $account['budget_amount']);
             }
         }
 
         return [
             'total_revenue' => $budgetRevenue,
             'total_expenses' => $budgetExpenses,
-            'net_profit' => bcsub($budgetRevenue, $budgetExpenses, 2),
+            'net_profit' => Money::subtract($budgetRevenue, $budgetExpenses),
             'months' => $months,
         ];
     }
@@ -288,6 +298,9 @@ class ReportingService
      * Long-term liab = prefix 24xx (2400–2499)
      * Depreciation accounts handled via DepreciationEntry if present.
      */
+    /**
+     * @return array<string, mixed>
+     */
     public function cashFlow(string $organizationId, string $fromDate, string $toDate): array
     {
         $cacheKey = "cashflow:{$organizationId}:{$fromDate}:{$toDate}";
@@ -308,12 +321,12 @@ class ReportingService
                 $depreciationTotal = (string) DepreciationEntry::whereHas('fixedAsset', fn ($q) => $q->where('organization_id', $organizationId))
                     ->whereBetween('period_date', [$fromDate, $toDate])
                     ->sum('amount');
-                $depreciationTotal = bcadd($depreciationTotal, '0', 2); // normalize to 2dp string
+                $depreciationTotal = Money::add($depreciationTotal, '0'); // normalize to 2dp string
             }
 
             // AR change (increase in AR = cash decrease)
             $arDelta = $this->accountBalanceDelta($organizationId, AccountCode::ACCOUNTS_RECEIVABLE, $beginDate, $toDate);
-            $arAdjustment = bcmul($arDelta, '-1', 2); // negate: AR up → less cash
+            $arAdjustment = Money::negate($arDelta); // negate: AR up → less cash
 
             // AP change (increase in AP = cash increase)
             $apDelta = $this->accountBalanceDelta($organizationId, '2000', $beginDate, $toDate);
@@ -321,18 +334,18 @@ class ReportingService
 
             $operatingAdjustments = [];
 
-            if (bccomp($depreciationTotal, '0', 2) !== 0) {
+            if (! Money::isZero($depreciationTotal)) {
                 $operatingAdjustments[] = ['label' => 'Depreciation (add-back)', 'amount' => $depreciationTotal];
             }
-            if (bccomp($arAdjustment, '0', 2) !== 0) {
+            if (! Money::isZero($arAdjustment)) {
                 $operatingAdjustments[] = ['label' => 'Change in Accounts Receivable', 'amount' => $arAdjustment];
             }
-            if (bccomp($apAdjustment, '0', 2) !== 0) {
+            if (! Money::isZero($apAdjustment)) {
                 $operatingAdjustments[] = ['label' => 'Change in Accounts Payable', 'amount' => $apAdjustment];
             }
 
-            $operatingAdjTotal = array_reduce($operatingAdjustments, fn ($c, $a) => bcadd($c, $a['amount'], 2), '0.00');
-            $operatingTotal = bcadd($netIncome, $operatingAdjTotal, 2);
+            $operatingAdjTotal = array_reduce($operatingAdjustments, fn ($c, $a) => Money::add($c, $a['amount']), '0.00');
+            $operatingTotal = Money::add($netIncome, $operatingAdjTotal);
 
             // ── Investing Activities ──────────────────────────────
             // Changes in fixed asset accounts (1500–1599): increase = cash outflow
@@ -345,14 +358,14 @@ class ReportingService
             foreach ($fixedAssetAccounts as $account) {
                 $begin = $this->ledgerService->accountBalance($account->id, null, $beginDate);
                 $end = $this->ledgerService->accountBalance($account->id, null, $toDate);
-                $delta = bcsub($end, $begin, 2);
-                if (bccomp($delta, '0', 2) !== 0) {
+                $delta = Money::subtract($end, $begin);
+                if (! Money::isZero($delta)) {
                     // Asset increase = cash outflow (negate)
-                    $investingItems[] = ['label' => "Change in {$account->name}", 'amount' => bcmul($delta, '-1', 2)];
+                    $investingItems[] = ['label' => "Change in {$account->name}", 'amount' => Money::negate($delta)];
                 }
             }
 
-            $investingTotal = array_reduce($investingItems, fn ($c, $a) => bcadd($c, $a['amount'], 2), '0.00');
+            $investingTotal = array_reduce($investingItems, fn ($c, $a) => Money::add($c, $a['amount']), '0.00');
 
             // ── Financing Activities ──────────────────────────────
             $financingItems = [];
@@ -366,8 +379,8 @@ class ReportingService
             foreach ($equityAccounts as $account) {
                 $begin = $this->ledgerService->accountBalance($account->id, null, $beginDate);
                 $end = $this->ledgerService->accountBalance($account->id, null, $toDate);
-                $delta = bcsub($end, $begin, 2);
-                if (bccomp($delta, '0', 2) !== 0) {
+                $delta = Money::subtract($end, $begin);
+                if (! Money::isZero($delta)) {
                     $financingItems[] = ['label' => "Change in {$account->name}", 'amount' => $delta];
                 }
             }
@@ -381,16 +394,16 @@ class ReportingService
             foreach ($ltLiabAccounts as $account) {
                 $begin = $this->ledgerService->accountBalance($account->id, null, $beginDate);
                 $end = $this->ledgerService->accountBalance($account->id, null, $toDate);
-                $delta = bcsub($end, $begin, 2);
-                if (bccomp($delta, '0', 2) !== 0) {
+                $delta = Money::subtract($end, $begin);
+                if (! Money::isZero($delta)) {
                     $financingItems[] = ['label' => "Change in {$account->name}", 'amount' => $delta];
                 }
             }
 
-            $financingTotal = array_reduce($financingItems, fn ($c, $a) => bcadd($c, $a['amount'], 2), '0.00');
+            $financingTotal = array_reduce($financingItems, fn ($c, $a) => Money::add($c, $a['amount']), '0.00');
 
             // ── Cash Summary ──────────────────────────────────────
-            $netChange = bcadd(bcadd($operatingTotal, $investingTotal, 2), $financingTotal, 2);
+            $netChange = Money::add(Money::add($operatingTotal, $investingTotal), $financingTotal);
 
             $cashAccount = Account::where('organization_id', $organizationId)
                 ->where('code', AccountCode::BANK_CASH)
@@ -407,16 +420,16 @@ class ReportingService
                 ? $this->ledgerService->accountBalance($cashAccount->id, null, $toDate)
                 : '0.00';
 
-            $reconciliationDiff = bcsub($actualEndingCash, bcadd($beginningCash, $netChange, 2), 2);
+            $reconciliationDiff = Money::subtract($actualEndingCash, Money::add($beginningCash, $netChange));
 
-            if (bccomp($reconciliationDiff, '0', 2) !== 0) {
+            if (! Money::isZero($reconciliationDiff)) {
                 $operatingAdjustments[] = ['label' => 'Other operating changes', 'amount' => $reconciliationDiff];
-                $operatingAdjTotal = bcadd($operatingAdjTotal, $reconciliationDiff, 2);
-                $operatingTotal = bcadd($operatingTotal, $reconciliationDiff, 2);
-                $netChange = bcadd($netChange, $reconciliationDiff, 2);
+                $operatingAdjTotal = Money::add($operatingAdjTotal, $reconciliationDiff);
+                $operatingTotal = Money::add($operatingTotal, $reconciliationDiff);
+                $netChange = Money::add($netChange, $reconciliationDiff);
             }
 
-            $endingCash = bcadd($beginningCash, $netChange, 2);
+            $endingCash = Money::add($beginningCash, $netChange);
 
             return [
                 'period' => ['from' => $fromDate, 'to' => $toDate],
@@ -447,7 +460,7 @@ class ReportingService
         $begin = $this->ledgerService->accountBalance($account->id, null, $beginDate);
         $end = $this->ledgerService->accountBalance($account->id, null, $toDate);
 
-        return bcsub($end, $begin, 2);
+        return Money::subtract($end, $begin);
     }
 
     /**
@@ -460,6 +473,12 @@ class ReportingService
     /**
      * @return array<int, array<string, mixed>>
      */
+    /**
+     * @param  array<string, mixed>  $accounts
+     * @param  Collection<int, mixed>  $budgets
+     * @param  array<string, string>  $accountIdsByCode
+     * @return array<string, mixed>
+     */
     private function applyBudgetToAccounts(array $accounts, $budgets, $accountIdsByCode, int $months): array
     {
         return array_map(function (array $account) use ($budgets, $accountIdsByCode, $months): array {
@@ -467,12 +486,12 @@ class ReportingService
             $budget = $accountId ? $budgets->get($accountId) : null;
 
             if ($budget) {
-                $budgetAmount = bcmul((string) $budget->monthly_amount, (string) $months, 2);
-                $variance = bcsub((string) $account['balance'], $budgetAmount, 2);
+                $budgetAmount = Money::multiply2((string) $budget->monthly_amount, (string) $months);
+                $variance = Money::subtract((string) $account['balance'], $budgetAmount);
                 $account['budget_amount'] = $budgetAmount;
                 $account['budget_variance'] = $variance;
-                $account['budget_variance_percentage'] = bccomp($budgetAmount, '0', 2) !== 0
-                    ? bcmul(bcdiv($variance, $budgetAmount, 4), '100', 2)
+                $account['budget_variance_percentage'] = ! Money::isZero($budgetAmount)
+                    ? Money::multiply2(Money::divide4($variance, $budgetAmount), '100')
                     : null;
             } else {
                 $account['budget_amount'] = null;

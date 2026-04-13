@@ -118,8 +118,8 @@ class BankingService
     public function updateBankAccountBalance(BankAccount $bankAccount, string $amount, bool $isDeposit): void
     {
         $newBalance = $isDeposit
-            ? bcadd((string) $bankAccount->balance, $amount, 2)
-            : bcsub((string) $bankAccount->balance, $amount, 2);
+            ? Money::add((string) $bankAccount->balance, $amount)
+            : Money::subtract((string) $bankAccount->balance, $amount);
 
         $bankAccount->update(['balance' => $newBalance]);
     }

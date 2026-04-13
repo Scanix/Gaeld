@@ -36,7 +36,7 @@ class AccountApiController extends Controller
             ->when($request->input('type'), fn ($q, $type) => $q->where('type', $type))
             ->when($request->boolean('active_only'), fn ($q) => $q->where('is_active', true))
             ->orderBy('code')
-            ->paginate($request->input('per_page', 50));
+            ->paginate(min((int) $request->input('per_page', 50), 100));
 
         return AccountResource::collection($accounts);
     }

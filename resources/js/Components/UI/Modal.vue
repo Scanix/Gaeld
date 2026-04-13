@@ -53,7 +53,14 @@ watch(isOpen, (val) => {
   if (val) {
     document.addEventListener('keydown', onKeydown)
     document.body.style.overflow = 'hidden'
-    nextTick(() => dialogRef.value?.focus())
+    nextTick(() => {
+      const els = getFocusableEls()
+      if (els.length) {
+        els[0].focus()
+      } else {
+        dialogRef.value?.focus()
+      }
+    })
   } else {
     document.removeEventListener('keydown', onKeydown)
     document.body.style.overflow = ''
@@ -77,15 +84,17 @@ onBeforeUnmount(() => {
           aria-modal="true"
           aria-labelledby="modal-title"
           tabindex="-1"
-          class="relative z-50 mx-4 w-full max-w-lg rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-4 shadow-lg sm:mx-auto sm:p-6 outline-none"
+          class="relative z-50 mx-4 flex max-h-[90dvh] w-full max-w-lg flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] shadow-lg outline-none sm:mx-auto"
         >
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex shrink-0 items-center justify-between border-b border-[hsl(var(--border))] px-4 py-4 sm:px-6">
             <h2 id="modal-title" class="text-lg font-semibold">{{ title }}</h2>
             <Button variant="ghost" size="icon" :aria-label="t('close')" @click="$emit('close')">
               <X class="h-4 w-4" />
             </Button>
           </div>
-          <slot />
+          <div class="overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+            <slot />
+          </div>
         </div>
       </div>
     </Transition>

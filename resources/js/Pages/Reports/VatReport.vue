@@ -11,6 +11,7 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
+import SharePrintButton from '@/Components/UI/SharePrintButton.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
@@ -129,6 +130,7 @@ const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
       <Button v-if="mode === 'custom'" @click="applyFilter">{{ t('apply') }}</Button>
 
       <div class="ml-auto flex gap-2">
+        <SharePrintButton :title="t('vat_report')" />
         <ExportDropdown base-url="/reports/vat/export" :params="exportParams" />
         <Button
           v-if="report"
@@ -152,6 +154,7 @@ const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
           <CardTitle>{{ t('vat_section_200') }}</CardTitle>
         </CardHeader>
         <CardContent>
+          <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b text-left text-xs font-medium text-[hsl(var(--muted-foreground))]">
@@ -173,6 +176,7 @@ const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
               </tr>
             </tbody>
           </table>
+          </div>
         </CardContent>
       </Card>
 
@@ -182,6 +186,7 @@ const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
           <CardTitle>{{ t('vat_section_300') }}</CardTitle>
         </CardHeader>
         <CardContent>
+          <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b text-left text-xs font-medium text-[hsl(var(--muted-foreground))]">
@@ -209,6 +214,7 @@ const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
               </tr>
             </tbody>
           </table>
+          </div>
         </CardContent>
       </Card>
 

@@ -178,6 +178,9 @@ class BexioParser implements PlatformParserInterface
         return $rows;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapRow(array $row, int $sourceRow, DataType $dataType): ?ImportRowInterface
     {
         return match ($dataType) {
@@ -189,6 +192,9 @@ class BexioParser implements PlatformParserInterface
         };
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapAccount(array $row, int $sourceRow): AccountImportRow
     {
         $code = $this->findValue($row, ['account_no', 'kontonummer', 'no_compte', 'code', 'No.']);
@@ -210,6 +216,9 @@ class BexioParser implements PlatformParserInterface
         return $importRow;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapContact(array $row, int $sourceRow): ContactImportRow
     {
         // Bexio XLSX addresses export columns
@@ -260,6 +269,9 @@ class BexioParser implements PlatformParserInterface
         return $importRow;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapInvoice(array $row, int $sourceRow): InvoiceImportRow
     {
         // Bexio XLSX invoices export columns (English)
@@ -293,6 +305,9 @@ class BexioParser implements PlatformParserInterface
         return $importRow;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapExpense(array $row, int $sourceRow): ExpenseImportRow
     {
         // Handles both Bexio "bills" and "expenses" XLSX exports

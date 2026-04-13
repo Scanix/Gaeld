@@ -100,7 +100,7 @@ class InvoiceReconciler
         $orgId = $bankAccount->organization_id;
 
         $payment = null;
-        if (bccomp($paymentAmount, '0', 2) > 0) {
+        if (Money::isPositive($paymentAmount)) {
             $payment = $this->invoiceAccountingService->recordPayment($invoice, new RecordPaymentData(
                 amount: $paymentAmount,
                 paymentDate: $transaction->date->toDateString(),
@@ -124,7 +124,7 @@ class InvoiceReconciler
         $amount = Money::absoluteAmount((string) $transaction->amount);
         $amountDue = $invoice->amountDue();
 
-        return bccomp($amount, $amountDue, 2) <= 0 ? $amount : $amountDue;
+        return Money::compare($amount, $amountDue) <= 0 ? $amount : $amountDue;
     }
 
     private function isDuplicatePayment(BankTransaction $transaction, Invoice $invoice): bool

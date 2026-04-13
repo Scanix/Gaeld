@@ -8,9 +8,11 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
+import SharePrintButton from '@/Components/UI/SharePrintButton.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
+import { useMediaQuery } from '@/lib/useMediaQuery'
 
 const props = defineProps({
   report: Object,
@@ -18,6 +20,7 @@ const props = defineProps({
 })
 const { t } = useTranslations()
 const { formatCurrency } = useFormatters()
+const isMobile = useMediaQuery('(max-width: 639px)')
 
 const selectedType = ref(props.type)
 
@@ -61,11 +64,11 @@ function grandTotal() {
     </HelpText>
 
     <!-- Type toggle + export -->
-    <div class="mb-6 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-1 rounded-lg border border-[hsl(var(--border))] p-1">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-1 rounded-lg border border-[hsl(var(--border))] p-1 self-start">
         <button
           :class="[
-            'rounded-md px-4 py-1.5 text-sm font-medium transition-colors',
+            'rounded-md px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-1.5',
             selectedType === 'receivables'
               ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
               : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
@@ -76,7 +79,7 @@ function grandTotal() {
         </button>
         <button
           :class="[
-            'rounded-md px-4 py-1.5 text-sm font-medium transition-colors',
+            'rounded-md px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-1.5',
             selectedType === 'payables'
               ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
               : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
@@ -86,11 +89,55 @@ function grandTotal() {
           {{ t('payables') }}
         </button>
       </div>
-      <ExportDropdown base-url="/reports/aging/export" :params="exportParams" />
+      <div class="flex items-center gap-2">
+        <SharePrintButton :title="t('aging_report')" />
+        <ExportDropdown base-url="/reports/aging/export" :params="exportParams" />
+      </div>
     </div>
 
     <Card>
-      <CardContent class="overflow-x-auto p-0">
+      <CardContent class="p-0">
+        <!-- Mobile card view -->
+        <div v-if="isMobile" class="divide-y divide-[hsl(var(--border))]">
+          <template v-if="report?.rows?.length">
+            <div v-for="row in report.rows" :key="row.id" class="px-4 py-3 space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="font-medium text-sm">{{ row.name }}</span>
+                <span class="text-sm font-semibold tabular-nums">{{ formatCurrency(rowTotal(row)) }}</span>
+              </div>
+              <div class="text-xs text-[hsl(var(--muted-foreground))]">
+                {{ row.document_number }} · {{ row.date }} · {{ t('due') }}: {{ row.due_date }}
+              </div>
+              <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                <span v-if="row.current" :class="bracketColors.current">{{ t('aging_current') }}: {{ formatCurrency(row.current) }}</span>
+                <span v-if="row.b1_30" :class="bracketColors.b1_30">1–30: {{ formatCurrency(row.b1_30) }}</span>
+                <span v-if="row.b31_60" :class="bracketColors.b31_60">31–60: {{ formatCurrency(row.b31_60) }}</span>
+                <span v-if="row.b61_90" :class="bracketColors.b61_90">61–90: {{ formatCurrency(row.b61_90) }}</span>
+                <span v-if="row.b90plus" :class="bracketColors.b90plus">90+: {{ formatCurrency(row.b90plus) }}</span>
+              </div>
+            </div>
+          </template>
+          <div v-else class="px-4 py-8 text-center text-[hsl(var(--muted-foreground))]">
+            {{ t('no_aging_entries') }}
+          </div>
+          <!-- Mobile totals -->
+          <div v-if="report?.rows?.length" class="px-4 py-3 bg-[hsl(var(--muted))]/30 space-y-1">
+            <div class="flex justify-between text-xs font-bold">
+              <span>{{ t('totals') }}</span>
+              <span class="tabular-nums">{{ formatCurrency(grandTotal()) }}</span>
+            </div>
+            <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold">
+              <span class="text-green-700 tabular-nums">{{ t('aging_current') }}: {{ formatCurrency(bracketSum('current')) }}</span>
+              <span class="text-yellow-600 tabular-nums">1–30: {{ formatCurrency(bracketSum('b1_30')) }}</span>
+              <span class="text-orange-600 tabular-nums">31–60: {{ formatCurrency(bracketSum('b31_60')) }}</span>
+              <span class="text-red-600 tabular-nums">61–90: {{ formatCurrency(bracketSum('b61_90')) }}</span>
+              <span class="text-red-900 tabular-nums">90+: {{ formatCurrency(bracketSum('b90plus')) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop table view -->
+        <div v-else class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b bg-[hsl(var(--muted))]/50 text-xs font-medium text-[hsl(var(--muted-foreground))]">
@@ -156,6 +203,7 @@ function grandTotal() {
             </tr>
           </tfoot>
         </table>
+        </div>
       </CardContent>
     </Card>
   </AppLayout>

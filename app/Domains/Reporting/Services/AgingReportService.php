@@ -8,6 +8,7 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Support\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -23,6 +24,9 @@ class AgingReportService
      * @param  string  $orgId  Organization UUID
      * @param  string  $type  'receivables' or 'payables'
      * @param  string|null  $asOfDate  Cut-off date (defaults to today)
+     */
+    /**
+     * @return array<string, mixed>
      */
     public function generate(string $orgId, string $type, ?string $asOfDate = null): array
     {
@@ -48,10 +52,10 @@ class AgingReportService
             foreach ($items as $item) {
                 $key = $this->bracket($item['days_overdue']);
                 $brackets[$key]['items'][] = $item;
-                $brackets[$key]['total'] = bcadd($brackets[$key]['total'], (string) $item['amount'], 2);
+                $brackets[$key]['total'] = Money::add($brackets[$key]['total'], (string) $item['amount']);
             }
 
-            $grandTotal = array_reduce($brackets, fn ($carry, $b) => bcadd($carry, $b['total'], 2), '0.00');
+            $grandTotal = array_reduce($brackets, fn ($carry, $b) => Money::add($carry, $b['total']), '0.00');
 
             // Build flat rows for the frontend (one row per item, amount placed in the matching bracket column)
             $bracketKeyMap = [
@@ -97,6 +101,9 @@ class AgingReportService
     //  Data Sources
     // ──────────────────────────────────────────────────────────────
 
+    /**
+     * @return array<int, mixed>
+     */
     private function receivableItems(string $orgId, Carbon $asOf): array
     {
         $invoices = Invoice::withoutGlobalScope('organization')
@@ -136,6 +143,9 @@ class AgingReportService
             ->all();
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     private function payableItems(string $orgId, Carbon $asOf): array
     {
         $expenses = Expense::withoutGlobalScope('organization')

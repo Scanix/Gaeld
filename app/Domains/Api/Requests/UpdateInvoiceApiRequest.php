@@ -8,6 +8,9 @@ use Illuminate\Validation\Rule;
 
 class UpdateInvoiceApiRequest extends FormRequest
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $org = app(CurrentOrganization::class);

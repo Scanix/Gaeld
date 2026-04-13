@@ -13,6 +13,7 @@ use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,9 +42,12 @@ class YearEndClosingController extends Controller
         [$income, $expenses, $netResult] = $this->closingAccounts->compute($orgId, $from, $to);
 
         $org = Organization::findOrFail($orgId);
+        $startYear = $org->created_at ? $org->created_at->year : (now()->year - 5);
+        $availableYears = range($startYear, (int) now()->year);
 
         return Inertia::render('Accounting/YearEndClosing', [
             'year' => $year,
+            'availableYears' => $availableYears,
             'fromDate' => $from,
             'toDate' => $to,
             'income' => $income,
@@ -113,7 +117,7 @@ class YearEndClosingController extends Controller
                 $netCreditOnResult = '0';  // credits to result account (for revenues)
 
                 foreach ($income as $row) {
-                    if (bccomp((string) $row['balance'], '0', 2) === 0) {
+                    if (Money::isZero((string) $row['balance'])) {
                         continue;
                     }
                     $lines[] = new JournalLineData(
@@ -122,11 +126,11 @@ class YearEndClosingController extends Controller
                         credit: '0',
                         description: __('app.closing_line_description', ['year' => $year, 'code' => $row['code']]),
                     );
-                    $netCreditOnResult = bcadd($netCreditOnResult, (string) $row['balance'], 2);
+                    $netCreditOnResult = Money::add($netCreditOnResult, (string) $row['balance']);
                 }
 
                 foreach ($expenses as $row) {
-                    if (bccomp((string) $row['balance'], '0', 2) === 0) {
+                    if (Money::isZero((string) $row['balance'])) {
                         continue;
                     }
                     $lines[] = new JournalLineData(
@@ -135,7 +139,7 @@ class YearEndClosingController extends Controller
                         credit: (string) $row['balance'],
                         description: __('app.closing_line_description', ['year' => $year, 'code' => $row['code']]),
                     );
-                    $netDebitOnResult = bcadd($netDebitOnResult, (string) $row['balance'], 2);
+                    $netDebitOnResult = Money::add($netDebitOnResult, (string) $row['balance']);
                 }
 
                 // Add result account line (net debit or credit)

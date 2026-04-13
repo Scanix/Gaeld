@@ -163,7 +163,7 @@ async function postSlips() {
 
     <!-- Step indicator -->
     <nav class="mb-8">
-      <ol class="flex items-center gap-0">
+      <ol class="flex flex-wrap items-center gap-y-2">
         <li
           v-for="(s, idx) in steps"
           :key="s.n"
@@ -172,7 +172,7 @@ async function postSlips() {
           <div class="flex items-center gap-2">
             <span
               :class="[
-                'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
+                'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold',
                 step > s.n ? 'bg-[hsl(var(--primary))] text-white' :
                 step === s.n ? 'bg-[hsl(var(--primary))] text-white' :
                 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]',
@@ -183,12 +183,12 @@ async function postSlips() {
             </span>
             <span
               :class="[
-                'text-sm font-medium',
+                'text-sm font-medium hidden sm:inline',
                 step === s.n ? 'text-[hsl(var(--foreground))]' : 'text-[hsl(var(--muted-foreground))]',
               ]"
             >{{ s.label }}</span>
           </div>
-          <ChevronRight v-if="idx < steps.length - 1" class="mx-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+          <ChevronRight v-if="idx < steps.length - 1" class="mx-2 h-4 w-4 shrink-0 text-[hsl(var(--muted-foreground))] sm:mx-3" />
         </li>
       </ol>
     </nav>
@@ -199,9 +199,9 @@ async function postSlips() {
         <CardTitle>{{ t('payroll_step_select') }}</CardTitle>
       </CardHeader>
       <CardContent class="space-y-6">
-        <div class="flex gap-4">
-          <FormSelect id="month" v-model="month" :label="t('month')" :options="monthOptions" class="w-40" />
-          <FormSelect id="year" v-model="year" :label="t('year')" :options="yearOptions" class="w-28" />
+        <div class="flex flex-wrap gap-4">
+          <FormSelect id="month" v-model="month" :label="t('month')" :options="monthOptions" class="w-full sm:w-40" />
+          <FormSelect id="year" v-model="year" :label="t('year')" :options="yearOptions" class="w-full sm:w-28" />
         </div>
 
         <div>

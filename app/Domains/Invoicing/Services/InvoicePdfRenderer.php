@@ -6,6 +6,7 @@ use App\Domains\Invoicing\Enums\InvoiceLineType;
 use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Money;
 use Illuminate\Support\Facades\Storage;
 use TCPDF;
 
@@ -138,8 +139,8 @@ class InvoicePdfRenderer
         $tcpdf->SetTextColor(...self::MUTED_RGB);
 
         $metaLines = [];
-        $metaLines[] = $this->t('pdf_date').': '.($invoice->issue_date?->format('d.m.Y') ?? '');
-        $metaLines[] = $this->t('pdf_due_date').': '.($invoice->due_date?->format('d.m.Y') ?? '');
+        $metaLines[] = $this->t('pdf_date').': '.($invoice->issue_date->format('d.m.Y') ?? '');
+        $metaLines[] = $this->t('pdf_due_date').': '.($invoice->due_date->format('d.m.Y') ?? '');
         if ($invoice->payment_terms) {
             $metaLines[] = $this->t('pdf_payment_terms').': '.$invoice->payment_terms;
         }
@@ -183,11 +184,11 @@ class InvoicePdfRenderer
                 $qtyLabel = '—';
                 $priceLabel = $line->unit_price.'%';
             } elseif ($line->type === InvoiceLineType::Discount) {
-                $lineTotal = '-'.bcmul((string) $line->quantity, (string) $line->unit_price, 2);
+                $lineTotal = '-'.Money::multiply2((string) $line->quantity, (string) $line->unit_price);
                 $qtyLabel = number_format((float) $line->quantity, 2);
                 $priceLabel = number_format((float) $line->unit_price, 2);
             } else {
-                $lineTotal = bcmul((string) $line->quantity, (string) $line->unit_price, 2);
+                $lineTotal = Money::multiply2((string) $line->quantity, (string) $line->unit_price);
                 $qtyLabel = number_format((float) $line->quantity, 2);
                 $priceLabel = number_format((float) $line->unit_price, 2);
             }

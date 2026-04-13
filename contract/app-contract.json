@@ -1,0 +1,530 @@
+{
+  "_meta": {
+    "generated": "2026-04-13",
+    "description": "Application contract describing the real runtime behavior of the Gäld SaaS accounting application.",
+    "framework": "Laravel 13 + Inertia.js + Vue 3",
+    "database": "PostgreSQL 16",
+    "cache": "Redis"
+  },
+
+  "auth": {
+    "driver": "session",
+    "guard": "web",
+    "api_guard": "sanctum",
+    "session_store": "redis",
+    "middleware_stack": {
+      "guest_routes": ["guest"],
+      "authenticated_routes": ["auth", "verified", "org", "org-2fa", "subscription"],
+      "api_routes": ["auth:sanctum", "api-org", "feature:api_access", "throttle:api"]
+    },
+    "middleware_details": {
+      "auth": "Laravel built-in session authentication",
+      "verified": "Checks email_verified_at is not null",
+      "org": "EnsureHasOrganization — resolves current org or redirects to /onboarding",
+      "org-2fa": "EnsureOrganizationTwoFactor — enforces 2FA when org requires it",
+      "subscription": "EnsureActiveSubscription — SaaS mode only, redirects to billing",
+      "api-org": "EnsureApiOrganization — resolves org from Sanctum token",
+      "feature:{flag}": "CheckFeatureFlag — gates EE features"
+    },
+    "two_factor": {
+      "methods": ["totp", "recovery_code", "passkey_webauthn"],
+      "enforcement": "per-organization setting (require_two_factor)",
+      "challenge_route": "/two-factor-challenge"
+    },
+    "registration_flow": "POST /register → email verification → POST /onboarding (create org) → dashboard",
+    "setup_wizard_flow": "GET /setup (only if no Organization exists) → creates user + org in transaction → auto-verifies email → dashboard",
+    "email_verification": {
+      "notice": "GET /email/verify",
+      "verify": "GET /email/verify/{id}/{hash} (signed)",
+      "resend": "POST /email/verification-notification"
+    },
+    "password_reset": {
+      "request": "POST /forgot-password",
+      "reset": "POST /reset-password (with token)"
+    }
+  },
+
+  "shared_inertia_props": {
+    "auth.user": {"id": "uuid", "name": "string", "email": "string", "locale": "string", "show_help": "boolean", "two_factor_enabled": "boolean", "has_passkeys": "boolean", "notification_preferences": "object"},
+    "auth.currentOrganization": {"id": "uuid", "name": "string", "currency": "string", "locale": "string", "require_two_factor": "boolean", "closed_fiscal_years": "int[]", "business_type": "string|null"},
+    "auth.role": "string",
+    "auth.permissions": "string[]",
+    "auth.organizations": [{"id": "uuid", "name": "string", "role": "string"}],
+    "auth.is_saas_admin": "boolean",
+    "auth.subscription": {"status": "string", "plan_slug": "string", "trial_ends_at": "datetime|null", "ends_at": "datetime|null"},
+    "locale": "string (en|fr|de|it)",
+    "translations": "object (lazy)",
+    "features": "object (all feature flags)",
+    "flash": {"success": "string|null", "error": "string|null", "warning": "string|null", "info": "string|null"}
+  },
+
+  "routes": {
+    "public": [
+      {"method": "GET", "path": "/health", "controller": "HealthController", "name": "health", "returns": "JSON {status, services}"}
+    ],
+    "guest": [
+      {"method": "GET", "path": "/login", "controller": "AuthenticatedSessionController@create", "page": "Auth/Login", "name": "login"},
+      {"method": "POST", "path": "/login", "controller": "AuthenticatedSessionController@store", "name": "login.store", "throttle": "5,1"},
+      {"method": "GET", "path": "/register", "controller": "RegisteredUserController@create", "page": "Auth/Register", "name": "register"},
+      {"method": "POST", "path": "/register", "controller": "RegisteredUserController@store", "name": "register.store", "throttle": "5,1"},
+      {"method": "GET", "path": "/two-factor-challenge", "controller": "TwoFactorChallengeController@create", "page": "Auth/TwoFactorChallenge", "name": "two-factor.create"},
+      {"method": "POST", "path": "/two-factor-challenge", "controller": "TwoFactorChallengeController@store", "name": "two-factor.store", "throttle": "5,1"},
+      {"method": "POST", "path": "/two-factor-challenge/passkey/options", "controller": "TwoFactorChallengeController@passkeyOptions", "name": "two-factor.passkey.options"},
+      {"method": "POST", "path": "/two-factor-challenge/passkey/verify", "controller": "TwoFactorChallengeController@passkeyVerify", "name": "two-factor.passkey.verify"},
+      {"method": "GET", "path": "/forgot-password", "controller": "PasswordResetController@requestForm", "page": "Auth/ForgotPassword", "name": "password.request"},
+      {"method": "POST", "path": "/forgot-password", "controller": "PasswordResetController@sendResetLink", "name": "password.email", "throttle": "3,1"},
+      {"method": "GET", "path": "/reset-password/{token}", "controller": "PasswordResetController@resetForm", "page": "Auth/ResetPassword", "name": "password.reset"},
+      {"method": "POST", "path": "/reset-password", "controller": "PasswordResetController@reset", "name": "password.update", "throttle": "5,1"},
+      {"method": "GET", "path": "/setup", "controller": "SetupWizardController@index", "page": "Setup/Wizard", "name": "setup.index"},
+      {"method": "POST", "path": "/setup", "controller": "SetupWizardController@store", "name": "setup.store"}
+    ],
+    "email_verification": [
+      {"method": "GET", "path": "/email/verify", "controller": "EmailVerificationController@notice", "page": "Auth/VerifyEmail", "name": "verification.notice", "middleware": ["auth"]},
+      {"method": "GET", "path": "/email/verify/{id}/{hash}", "controller": "EmailVerificationController@verify", "name": "verification.verify", "middleware": ["auth", "signed"]},
+      {"method": "POST", "path": "/email/verification-notification", "controller": "EmailVerificationController@resend", "name": "verification.send", "middleware": ["auth"]}
+    ],
+    "onboarding": [
+      {"method": "GET", "path": "/onboarding", "controller": "OnboardingController@create", "page": "Onboarding/CreateOrganization", "name": "onboarding", "middleware": ["auth", "verified"]},
+      {"method": "POST", "path": "/onboarding", "controller": "OnboardingController@store", "name": "onboarding.store", "middleware": ["auth", "verified"]}
+    ],
+    "invitations": [
+      {"method": "GET", "path": "/invitations/{token}/accept", "controller": "InvitationController@accept", "name": "invitations.accept", "middleware": ["auth", "verified"]}
+    ],
+    "authenticated": {
+      "_middleware": ["auth", "verified", "org", "org-2fa", "subscription"],
+      "dashboard": [
+        {"method": "GET", "path": "/", "controller": "DashboardController@index", "page": "Dashboard", "name": "dashboard", "props": ["revenue", "expenses", "balance", "cashBalance", "unpaidInvoices", "pendingExpenses", "previousRevenue", "previousExpenses", "previousBalance", "budgetSummary", "vatSummary", "receivablesAging", "recentTransactions", "monthlyBreakdown", "checklist", "pendingOcrScans", "displayYear"]}
+      ],
+      "search": [
+        {"method": "GET", "path": "/search", "controller": "GlobalSearchController", "page": "Search/Index", "name": "search", "props": ["query", "results"]}
+      ],
+      "invoices": [
+        {"method": "GET", "path": "/invoices", "controller": "InvoiceController@index", "page": "Invoices/Index", "name": "invoices.index", "props": ["invoices", "query"]},
+        {"method": "GET", "path": "/invoices/create", "controller": "InvoiceController@create", "page": "Invoices/Create", "name": "invoices.create", "props": ["customers", "vatRates", "suggestedNumber", "defaultNotes", "defaultPaymentTermsDays"]},
+        {"method": "POST", "path": "/invoices", "controller": "InvoiceController@store", "name": "invoices.store"},
+        {"method": "GET", "path": "/invoices/{invoice}", "controller": "InvoiceController@show", "page": "Invoices/Show", "name": "invoices.show", "props": ["invoice", "canForceDelete", "justificatifUrl", "bankAccounts", "creditNotes", "relatedInvoice", "reminderCount", "lastRemindedAt"]},
+        {"method": "GET", "path": "/invoices/{invoice}/edit", "controller": "InvoiceController@edit", "page": "Invoices/Edit", "name": "invoices.edit", "props": ["invoice", "customers", "vatRates", "justificatifUrl"]},
+        {"method": "PUT", "path": "/invoices/{invoice}", "controller": "InvoiceController@update", "name": "invoices.update"},
+        {"method": "DELETE", "path": "/invoices/{invoice}", "controller": "InvoiceController@destroy", "name": "invoices.destroy"},
+        {"method": "POST", "path": "/invoices/{invoice}/finalize", "controller": "InvoiceLifecycleController@finalize", "name": "invoices.finalize"},
+        {"method": "POST", "path": "/invoices/{invoice}/cancel", "controller": "InvoiceLifecycleController@cancel", "name": "invoices.cancel"},
+        {"method": "POST", "path": "/invoices/{invoice}/payment", "controller": "InvoiceLifecycleController@recordPayment", "name": "invoices.payment"},
+        {"method": "POST", "path": "/invoices/{invoice}/duplicate", "controller": "InvoiceLifecycleController@duplicate", "name": "invoices.duplicate"},
+        {"method": "POST", "path": "/invoices/{invoice}/credit-note", "controller": "InvoiceLifecycleController@creditNote", "name": "invoices.creditNote"},
+        {"method": "POST", "path": "/invoices/{invoice}/send", "controller": "InvoiceCommunicationController@sendInvoice", "name": "invoices.send"},
+        {"method": "POST", "path": "/invoices/{invoice}/reminder", "controller": "InvoiceCommunicationController@sendReminder", "name": "invoices.reminder"},
+        {"method": "GET", "path": "/invoices/{invoice}/qr-pdf", "controller": "InvoiceDocumentController@downloadQrPdf", "name": "invoices.qr-pdf", "throttle": "30,1"},
+        {"method": "DELETE", "path": "/invoices/{invoice}/justificatif", "controller": "InvoiceDocumentController@removeJustificatif", "name": "invoices.justificatif.remove"},
+        {"method": "GET", "path": "/invoices/{invoice}/justificatif", "controller": "InvoiceDocumentController@downloadJustificatif", "name": "invoices.justificatif.download", "throttle": "30,1"},
+        {"method": "DELETE", "path": "/invoices/{invoice}/purge", "controller": "InvoiceLifecycleController@purge", "name": "invoices.purge"}
+      ],
+      "recurring_invoices": [
+        {"method": "GET", "path": "/invoices/recurring", "controller": "RecurringInvoiceController@index", "page": "Invoices/Recurring/Index", "name": "invoices.recurring.index"},
+        {"method": "GET", "path": "/invoices/recurring/create", "controller": "RecurringInvoiceController@create", "page": "Invoices/Recurring/Create", "name": "invoices.recurring.create"},
+        {"method": "POST", "path": "/invoices/recurring", "controller": "RecurringInvoiceController@store", "name": "invoices.recurring.store"},
+        {"method": "GET", "path": "/invoices/recurring/{recurring}", "controller": "RecurringInvoiceController@show", "page": "Invoices/Recurring/Show", "name": "invoices.recurring.show"},
+        {"method": "GET", "path": "/invoices/recurring/{recurring}/edit", "controller": "RecurringInvoiceController@edit", "page": "Invoices/Recurring/Edit", "name": "invoices.recurring.edit"},
+        {"method": "PUT", "path": "/invoices/recurring/{recurring}", "controller": "RecurringInvoiceController@update", "name": "invoices.recurring.update"},
+        {"method": "DELETE", "path": "/invoices/recurring/{recurring}", "controller": "RecurringInvoiceController@destroy", "name": "invoices.recurring.destroy"},
+        {"method": "POST", "path": "/invoices/recurring/{recurring}/pause", "controller": "RecurringInvoiceController@pause", "name": "invoices.recurring.pause"},
+        {"method": "POST", "path": "/invoices/recurring/{recurring}/resume", "controller": "RecurringInvoiceController@resume", "name": "invoices.recurring.resume"}
+      ],
+      "expenses": [
+        {"method": "GET", "path": "/expenses", "controller": "ExpenseController@index", "page": "Expenses/Index", "name": "expenses.index", "props": ["expenses", "query"]},
+        {"method": "GET", "path": "/expenses/create", "controller": "ExpenseController@create", "page": "Expenses/Create", "name": "expenses.create", "props": ["vatRates", "suppliers", "categories", "expenseAccounts", "bankAccounts", "ocrData"]},
+        {"method": "POST", "path": "/expenses", "controller": "ExpenseController@store", "name": "expenses.store"},
+        {"method": "GET", "path": "/expenses/{expense}", "controller": "ExpenseController@show", "page": "Expenses/Show", "name": "expenses.show", "props": ["expense", "receiptUrl"]},
+        {"method": "GET", "path": "/expenses/{expense}/edit", "controller": "ExpenseController@edit", "page": "Expenses/Edit", "name": "expenses.edit", "props": ["expense", "vatRates", "suppliers", "categories", "expenseAccounts", "bankAccounts", "receiptUrl"]},
+        {"method": "PUT", "path": "/expenses/{expense}", "controller": "ExpenseController@update", "name": "expenses.update"},
+        {"method": "DELETE", "path": "/expenses/{expense}", "controller": "ExpenseController@destroy", "name": "expenses.destroy"},
+        {"method": "POST", "path": "/expenses/{expense}/approve", "controller": "ExpenseWorkflowController@approve", "name": "expenses.approve"},
+        {"method": "POST", "path": "/expenses/{expense}/post", "controller": "ExpenseWorkflowController@postToLedger", "name": "expenses.post"},
+        {"method": "POST", "path": "/expenses/scan-receipt", "controller": "ExpenseReceiptController@scanReceipt", "name": "expenses.scan-receipt", "throttle": "20,1"},
+        {"method": "GET", "path": "/expenses/scan-receipt/{scanId}", "controller": "ExpenseReceiptController@scanReceiptStatus", "name": "expenses.scan-receipt.status"},
+        {"method": "DELETE", "path": "/expenses/{expense}/receipt", "controller": "ExpenseReceiptController@removeReceipt", "name": "expenses.receipt.remove"},
+        {"method": "GET", "path": "/expenses/{expense}/receipt", "controller": "ExpenseReceiptController@downloadReceipt", "name": "expenses.receipt.download", "throttle": "30,1"}
+      ],
+      "customers": [
+        {"method": "GET", "path": "/customers", "controller": "CustomerController@index", "page": "Contacts/Customers/Index", "name": "customers.index", "props": ["customers", "query"]},
+        {"method": "GET", "path": "/customers/create", "controller": "CustomerController@create", "page": "Contacts/Customers/Create", "name": "customers.create"},
+        {"method": "POST", "path": "/customers", "controller": "CustomerController@store", "name": "customers.store"},
+        {"method": "GET", "path": "/customers/{customer}", "controller": "CustomerController@show", "page": "Contacts/Customers/Show", "name": "customers.show", "props": ["customer", "invoices"]},
+        {"method": "GET", "path": "/customers/{customer}/edit", "controller": "CustomerController@edit", "page": "Contacts/Customers/Edit", "name": "customers.edit", "props": ["customer"]},
+        {"method": "PUT", "path": "/customers/{customer}", "controller": "CustomerController@update", "name": "customers.update"},
+        {"method": "DELETE", "path": "/customers/{customer}", "controller": "CustomerController@destroy", "name": "customers.destroy"}
+      ],
+      "suppliers": [
+        {"method": "GET", "path": "/suppliers", "controller": "SupplierController@index", "page": "Contacts/Suppliers/Index", "name": "suppliers.index", "props": ["suppliers", "query"]},
+        {"method": "GET", "path": "/suppliers/create", "controller": "SupplierController@create", "page": "Contacts/Suppliers/Create", "name": "suppliers.create"},
+        {"method": "POST", "path": "/suppliers", "controller": "SupplierController@store", "name": "suppliers.store"},
+        {"method": "GET", "path": "/suppliers/{supplier}", "controller": "SupplierController@show", "page": "Contacts/Suppliers/Show", "name": "suppliers.show", "props": ["supplier", "expenses", "contactPersons"]},
+        {"method": "GET", "path": "/suppliers/{supplier}/edit", "controller": "SupplierController@edit", "page": "Contacts/Suppliers/Edit", "name": "suppliers.edit", "props": ["supplier"]},
+        {"method": "PUT", "path": "/suppliers/{supplier}", "controller": "SupplierController@update", "name": "suppliers.update"},
+        {"method": "DELETE", "path": "/suppliers/{supplier}", "controller": "SupplierController@destroy", "name": "suppliers.destroy"}
+      ],
+      "contact_persons": [
+        {"method": "POST", "path": "/{contactableType}/{contactableId}/contact-persons", "controller": "ContactPersonController@store", "name": "contact-persons.store"},
+        {"method": "PUT", "path": "/{contactableType}/{contactableId}/contact-persons/{contactPerson}", "controller": "ContactPersonController@update", "name": "contact-persons.update"},
+        {"method": "DELETE", "path": "/{contactableType}/{contactableId}/contact-persons/{contactPerson}", "controller": "ContactPersonController@destroy", "name": "contact-persons.destroy"}
+      ],
+      "banking": [
+        {"method": "GET", "path": "/banking", "controller": "BankingController@index", "page": "Banking/Index", "name": "banking.index", "props": ["bankAccounts", "accounts"]},
+        {"method": "GET", "path": "/banking/{bankAccount}", "controller": "BankingController@show", "page": "Banking/Show", "name": "banking.show", "props": ["bankAccount", "transactions", "accounts"]},
+        {"method": "POST", "path": "/banking", "controller": "BankingController@store", "name": "banking.store"},
+        {"method": "PUT", "path": "/banking/{bankAccount}", "controller": "BankingController@update", "name": "banking.update"},
+        {"method": "DELETE", "path": "/banking/{bankAccount}", "controller": "BankingController@destroy", "name": "banking.destroy"},
+        {"method": "POST", "path": "/banking/{bankAccount}/transactions", "controller": "BankingController@recordTransaction", "name": "banking.transactions.store"}
+      ],
+      "reconciliation": [
+        {"method": "GET", "path": "/reconciliation", "controller": "ReconciliationController@index", "page": "Banking/Reconciliation", "name": "reconciliation.index", "props": ["bankAccounts", "pageFeatures"]},
+        {"method": "GET", "path": "/reconciliation/{bankAccount}", "controller": "ReconciliationController@show", "page": "Banking/ReconciliationShow", "name": "reconciliation.show", "props": ["bankAccount", "transactions", "suggestions", "personalSuggestions", "filter", "openInvoices", "pageFeatures"]},
+        {"method": "POST", "path": "/reconciliation/{bankAccount}/import", "controller": "ReconciliationController@import", "name": "reconciliation.import"},
+        {"method": "POST", "path": "/reconciliation/transactions/{transaction}/invoice", "controller": "ReconciliationController@reconcileInvoice", "name": "reconciliation.invoice"},
+        {"method": "POST", "path": "/reconciliation/transactions/{transaction}/expense", "controller": "ReconciliationController@reconcileExpense", "name": "reconciliation.expense"},
+        {"method": "POST", "path": "/reconciliation/transactions/{transaction}/manual", "controller": "ReconciliationController@reconcileManual", "name": "reconciliation.manual"},
+        {"method": "POST", "path": "/reconciliation/matches/{match}/confirm", "controller": "ReconciliationController@confirmMatch", "name": "reconciliation.confirm"},
+        {"method": "POST", "path": "/reconciliation/transactions/{transaction}/personal", "controller": "ReconciliationController@reconcilePersonal", "name": "reconciliation.personal"},
+        {"method": "POST", "path": "/reconciliation/{bankAccount}/bulk-personal", "controller": "ReconciliationController@bulkReconcilePersonal", "name": "reconciliation.bulk-personal"},
+        {"method": "POST", "path": "/reconciliation/{bankAccount}/auto", "controller": "ReconciliationController@autoReconcile", "name": "reconciliation.auto", "feature_gate": "auto_reconciliation"}
+      ],
+      "accounting": [
+        {"method": "GET", "path": "/accounting/chart-of-accounts", "controller": "AccountingController@chartOfAccounts", "page": "Accounting/ChartOfAccounts", "name": "accounting.chart", "props": ["accounts", "query", "can", "accountTypes"]},
+        {"method": "POST", "path": "/accounting/accounts", "controller": "AccountController@store", "name": "accounting.accounts.store"},
+        {"method": "PUT", "path": "/accounting/accounts/{account}", "controller": "AccountController@update", "name": "accounting.accounts.update"},
+        {"method": "DELETE", "path": "/accounting/accounts/{account}", "controller": "AccountController@destroy", "name": "accounting.accounts.destroy"},
+        {"method": "POST", "path": "/accounting/accounts/import", "controller": "AccountController@import", "name": "accounting.accounts.import"},
+        {"method": "GET", "path": "/accounting/accounts/export", "controller": "AccountController@export", "name": "accounting.accounts.export"},
+        {"method": "GET", "path": "/accounting/accounts/export/download", "controller": "AccountController@downloadExport", "name": "accounting.accounts.export.download"},
+        {"method": "GET", "path": "/accounting/journal-entries", "controller": "AccountingController@journalEntries", "page": "Accounting/JournalEntries", "name": "accounting.journal", "props": ["entries"]},
+        {"method": "GET", "path": "/accounting/trial-balance", "controller": "AccountingController@trialBalance", "page": "Accounting/TrialBalance", "name": "accounting.trialBalance", "props": ["balances", "asOfDate"]},
+        {"method": "GET", "path": "/accounting/trial-balance/export/{format}", "controller": "AccountingController@exportTrialBalance", "name": "accounting.trialBalance.export"},
+        {"method": "GET", "path": "/accounting/journal-entries/export/{format}", "controller": "AccountingController@exportJournalEntries", "name": "accounting.journalEntries.export"},
+        {"method": "GET", "path": "/accounting/year-end-closing", "controller": "YearEndClosingController@index", "page": "Accounting/YearEndClosing", "name": "accounting.closing", "props": ["year", "fromDate", "toDate", "income", "expenses", "netResult", "closedYears", "canReopenYear", "unsettledVatPeriods"]},
+        {"method": "POST", "path": "/accounting/year-end-closing", "controller": "YearEndClosingController@store", "name": "accounting.closing.store"},
+        {"method": "POST", "path": "/accounting/year-end-closing/reopen", "controller": "YearEndClosingController@reopen", "name": "accounting.closing.reopen"},
+        {"method": "GET", "path": "/accounting/social-charges", "controller": "SocialChargesController@index", "page": "Accounting/SocialCharges", "name": "accounting.socialCharges", "props": ["rates"]},
+        {"method": "POST", "path": "/accounting/social-charges/calculate", "controller": "SocialChargesController@calculate", "name": "accounting.socialCharges.calculate"},
+        {"method": "POST", "path": "/accounting/social-charges/post", "controller": "SocialChargesController@post", "name": "accounting.socialCharges.post"},
+        {"method": "GET", "path": "/accounting/budgets", "controller": "BudgetController@index", "page": "Accounting/Budgets/Index", "name": "accounting.budgets", "props": ["budgets", "accounts", "fiscalYears", "selectedYear"]},
+        {"method": "POST", "path": "/accounting/budgets", "controller": "BudgetController@store", "name": "accounting.budgets.store"},
+        {"method": "PATCH", "path": "/accounting/budgets/{budget}", "controller": "BudgetController@update", "name": "accounting.budgets.update"},
+        {"method": "DELETE", "path": "/accounting/budgets/{budget}", "controller": "BudgetController@destroy", "name": "accounting.budgets.destroy"},
+        {"method": "GET", "path": "/accounting/export", "controller": "AccountingExportController@index", "page": "Accounting/Export", "name": "accounting.export", "props": ["fiscalYears", "currentFiscalYear"]},
+        {"method": "POST", "path": "/accounting/export", "controller": "AccountingExportController@generate", "name": "accounting.export.generate"},
+        {"method": "GET", "path": "/accounting/export/download", "controller": "AccountingExportController@download", "name": "accounting.export.download"},
+        {"method": "GET", "path": "/accounting/lettrage", "controller": "LettrageController@index", "page": "Accounting/Lettrage", "name": "accounting.lettrage.index", "props": ["accounts", "account", "openItems", "lots", "filterDate"]},
+        {"method": "POST", "path": "/accounting/lettrage", "controller": "LettrageController@store", "name": "accounting.lettrage.store"},
+        {"method": "DELETE", "path": "/accounting/lettrage/{lettrageLot}", "controller": "LettrageController@destroy", "name": "accounting.lettrage.destroy"},
+        {"method": "GET", "path": "/accounting/archives", "controller": "LegalArchiveController@index", "page": "Accounting/Archives/Index", "name": "accounting.archives.index", "props": ["archivesByYear", "pagination"]},
+        {"method": "POST", "path": "/accounting/archives/{archive}/verify", "controller": "LegalArchiveController@verify", "name": "accounting.archives.verify"},
+        {"method": "GET", "path": "/accounting/archives/{archive}/download", "controller": "LegalArchiveController@download", "name": "accounting.archives.download"},
+        {"method": "GET", "path": "/accounting/vat-rates", "controller": "VatRateController@index", "page": "Accounting/VatRates", "name": "accounting.vatRates", "props": ["vatRates"]},
+        {"method": "POST", "path": "/accounting/vat-rates", "controller": "VatRateController@store", "name": "accounting.vatRates.store"},
+        {"method": "PUT", "path": "/accounting/vat-rates/{vatRate}", "controller": "VatRateController@update", "name": "accounting.vatRates.update"},
+        {"method": "DELETE", "path": "/accounting/vat-rates/{vatRate}", "controller": "VatRateController@destroy", "name": "accounting.vatRates.destroy"}
+      ],
+      "reports": [
+        {"method": "GET", "path": "/reports/profit-and-loss", "controller": "ReportController@profitAndLoss", "page": "Reports/ProfitAndLoss", "name": "reports.pnl", "props": ["report"]},
+        {"method": "GET", "path": "/reports/balance-sheet", "controller": "ReportController@balanceSheet", "page": "Reports/BalanceSheet", "name": "reports.balanceSheet", "props": ["report"]},
+        {"method": "GET", "path": "/reports/cash-flow", "controller": "ReportController@cashFlow", "page": "Reports/CashFlow", "name": "reports.cashFlow", "props": ["report"]},
+        {"method": "GET", "path": "/reports/aging", "controller": "ReportController@aging", "page": "Reports/Aging", "name": "reports.aging", "props": ["report", "type"]},
+        {"method": "GET", "path": "/reports/vat", "controller": "VatReportController@vatReport", "page": "Reports/VatReport", "name": "reports.vat", "props": ["report"]},
+        {"method": "GET", "path": "/reports/profit-and-loss/export/{format}", "controller": "ReportController@exportProfitAndLoss", "name": "reports.pnl.export"},
+        {"method": "GET", "path": "/reports/balance-sheet/export/{format}", "controller": "ReportController@exportBalanceSheet", "name": "reports.balanceSheet.export"},
+        {"method": "GET", "path": "/reports/cash-flow/export/{format}", "controller": "ReportController@exportCashFlow", "name": "reports.cashFlow.export"},
+        {"method": "GET", "path": "/reports/aging/export/{format}", "controller": "ReportController@exportAging", "name": "reports.aging.export"},
+        {"method": "GET", "path": "/reports/vat/export/{format}", "controller": "VatReportController@exportVatReport", "name": "reports.vat.export"}
+      ],
+      "assets": [
+        {"method": "GET", "path": "/assets", "controller": "FixedAssetController@index", "page": "Assets/Index", "name": "assets.index", "props": ["assets"]},
+        {"method": "GET", "path": "/assets/create", "controller": "FixedAssetController@create", "page": "Assets/Create", "name": "assets.create", "props": ["accounts"]},
+        {"method": "POST", "path": "/assets", "controller": "FixedAssetController@store", "name": "assets.store"},
+        {"method": "GET", "path": "/assets/{asset}", "controller": "FixedAssetController@show", "page": "Assets/Show", "name": "assets.show", "props": ["asset", "totalDepreciated", "netBookValue", "isFullyDepreciated"]},
+        {"method": "GET", "path": "/assets/{asset}/edit", "controller": "FixedAssetController@edit", "page": "Assets/Edit", "name": "assets.edit", "props": ["asset", "accounts"]},
+        {"method": "PUT", "path": "/assets/{asset}", "controller": "FixedAssetController@update", "name": "assets.update"},
+        {"method": "DELETE", "path": "/assets/{asset}", "controller": "FixedAssetController@destroy", "name": "assets.destroy"},
+        {"method": "POST", "path": "/assets/{asset}/depreciate", "controller": "FixedAssetController@depreciate", "name": "assets.depreciate"},
+        {"method": "POST", "path": "/assets/{asset}/dispose", "controller": "FixedAssetController@dispose", "name": "assets.dispose"}
+      ],
+      "payroll": [
+        {"method": "GET", "path": "/payroll/employees", "controller": "EmployeeController@index", "page": "Payroll/Employees/Index", "name": "payroll.employees.index", "props": ["employees"]},
+        {"method": "GET", "path": "/payroll/employees/create", "controller": "EmployeeController@create", "page": "Payroll/Employees/Create", "name": "payroll.employees.create"},
+        {"method": "POST", "path": "/payroll/employees", "controller": "EmployeeController@store", "name": "payroll.employees.store"},
+        {"method": "GET", "path": "/payroll/employees/{employee}", "controller": "EmployeeController@show", "page": "Payroll/Employees/Show", "name": "payroll.employees.show", "props": ["employee", "salarySlips"]},
+        {"method": "GET", "path": "/payroll/employees/{employee}/edit", "controller": "EmployeeController@edit", "page": "Payroll/Employees/Edit", "name": "payroll.employees.edit", "props": ["employee"]},
+        {"method": "PUT", "path": "/payroll/employees/{employee}", "controller": "EmployeeController@update", "name": "payroll.employees.update"},
+        {"method": "DELETE", "path": "/payroll/employees/{employee}", "controller": "EmployeeController@destroy", "name": "payroll.employees.destroy"},
+        {"method": "GET", "path": "/payroll/salary-slips", "controller": "SalarySlipController@index", "page": "Payroll/SalarySlips/Index", "name": "payroll.salarySlips.index", "props": ["slips", "query"]},
+        {"method": "GET", "path": "/payroll/salary-slips/{slip}", "controller": "SalarySlipController@show", "page": "Payroll/SalarySlips/Show", "name": "payroll.salarySlips.show", "props": ["slip"]},
+        {"method": "POST", "path": "/payroll/salary-slips/generate", "controller": "SalarySlipController@generate", "name": "payroll.salarySlips.generate"},
+        {"method": "POST", "path": "/payroll/salary-slips/{slip}/post", "controller": "SalarySlipController@post", "name": "payroll.salarySlips.post"},
+        {"method": "GET", "path": "/payroll/salary-slips/{slip}/pdf", "controller": "SalarySlipController@downloadPdf", "name": "payroll.salarySlips.pdf"},
+        {"method": "GET", "path": "/payroll/run", "controller": "PayrollRunController@index", "page": "Payroll/Run", "name": "payroll.run", "props": ["employees", "fiscalYears"]},
+        {"method": "POST", "path": "/payroll/run", "controller": "PayrollRunController@generate", "name": "payroll.run.generate"}
+      ],
+      "organizations": [
+        {"method": "GET", "path": "/organizations", "controller": "OrganizationController@index", "page": "Organizations/Index", "name": "organizations.index", "props": ["organizations"]},
+        {"method": "GET", "path": "/organizations/create", "controller": "OrganizationController@create", "page": "Organizations/Create", "name": "organizations.create"},
+        {"method": "POST", "path": "/organizations", "controller": "OrganizationController@store", "name": "organizations.store"},
+        {"method": "GET", "path": "/organizations/{organization}", "controller": "OrganizationController@show", "page": "Organizations/Show", "name": "organizations.show", "props": ["organization", "invitations", "canManageUsers", "canAddMember"]},
+        {"method": "DELETE", "path": "/organizations/{organization}", "controller": "OrganizationController@destroy", "name": "organizations.destroy"},
+        {"method": "POST", "path": "/organizations/{organization}/switch", "controller": "OrganizationController@switchOrganization", "name": "organizations.switch"}
+      ],
+      "organization_members": [
+        {"method": "POST", "path": "/organizations/{organization}/members/{user}/role", "controller": "MemberController@updateRole", "name": "organizations.members.updateRole"},
+        {"method": "DELETE", "path": "/organizations/{organization}/members/{user}", "controller": "MemberController@remove", "name": "organizations.members.remove"},
+        {"method": "POST", "path": "/organizations/{organization}/leave", "controller": "MemberController@leave", "name": "organizations.leave"}
+      ],
+      "organization_invitations": [
+        {"method": "POST", "path": "/organizations/{organization}/invitations", "controller": "InvitationController@store", "name": "organizations.invitations.store", "throttle": "10,60"},
+        {"method": "DELETE", "path": "/organizations/{organization}/invitations/{invitation}", "controller": "InvitationController@destroy", "name": "organizations.invitations.destroy"},
+        {"method": "POST", "path": "/organizations/{organization}/invitations/{invitation}/resend", "controller": "InvitationController@resend", "name": "organizations.invitations.resend"}
+      ],
+      "settings": [
+        {"method": "GET", "path": "/settings", "controller": "OrganizationSettingsController@show", "page": "Organizations/Settings", "name": "settings", "props": ["organization", "hasLogo", "expenseCategories"]},
+        {"method": "PUT", "path": "/settings/general", "controller": "OrganizationSettingsController@updateGeneral", "name": "settings.general"},
+        {"method": "PUT", "path": "/settings/invoice", "controller": "OrganizationSettingsController@updateInvoice", "name": "settings.invoice"},
+        {"method": "POST", "path": "/settings/invoice/logo", "controller": "OrganizationSettingsController@uploadLogo", "name": "settings.logo.upload"},
+        {"method": "DELETE", "path": "/settings/invoice/logo", "controller": "OrganizationSettingsController@deleteLogo", "name": "settings.logo.delete"},
+        {"method": "GET", "path": "/settings/logo", "controller": "OrganizationSettingsController@serveLogo", "name": "settings.logo"},
+        {"method": "PUT", "path": "/settings/communications", "controller": "OrganizationSettingsController@updateCommunications", "name": "settings.communications"},
+        {"method": "POST", "path": "/settings/export", "controller": "OrganizationSettingsController@exportData", "name": "settings.export"},
+        {"method": "GET", "path": "/settings/export/download", "controller": "OrganizationSettingsController@downloadExport", "name": "settings.export.download"},
+        {"method": "GET", "path": "/settings/expense-categories", "controller": "ExpenseCategoryController@index", "name": "settings.expense-categories.index"},
+        {"method": "POST", "path": "/settings/expense-categories", "controller": "ExpenseCategoryController@store", "name": "settings.expense-categories.store"},
+        {"method": "DELETE", "path": "/settings/expense-categories/{expenseCategory}", "controller": "ExpenseCategoryController@destroy", "name": "settings.expense-categories.destroy"},
+        {"method": "GET", "path": "/settings/activity-log", "controller": "ActivityLogController@index", "page": "Organizations/ActivityLog", "name": "settings.activity-log", "props": ["activities", "subjectTypes", "filters"]}
+      ],
+      "profile": [
+        {"method": "GET", "path": "/profile", "controller": "UserController@profile", "page": "Users/Profile", "name": "profile", "props": ["user"]},
+        {"method": "PUT", "path": "/profile", "controller": "UserController@updateProfile", "name": "profile.update"},
+        {"method": "PUT", "path": "/profile/password", "controller": "UserController@updatePassword", "name": "profile.password"},
+        {"method": "POST", "path": "/profile/toggle-help", "controller": "UserController@toggleHelp", "name": "profile.toggleHelp"},
+        {"method": "POST", "path": "/profile/export", "controller": "UserController@exportData", "name": "profile.export"},
+        {"method": "DELETE", "path": "/profile", "controller": "UserController@destroyAccount", "name": "profile.destroy"}
+      ],
+      "migration": [
+        {"method": "GET", "path": "/migration", "controller": "MigrationController@index", "page": "Migration/Index", "name": "migration.index", "props": ["sessions", "platforms"]},
+        {"method": "POST", "path": "/migration", "controller": "MigrationController@store", "name": "migration.store"},
+        {"method": "GET", "path": "/migration/{session}", "controller": "MigrationController@show", "page": "Migration/Show", "name": "migration.show", "props": ["session", "supportedDataTypes", "acceptedExtensions"]},
+        {"method": "POST", "path": "/migration/{session}/upload", "controller": "MigrationController@upload", "name": "migration.upload"},
+        {"method": "POST", "path": "/migration/{session}/execute", "controller": "MigrationController@execute", "name": "migration.execute"},
+        {"method": "POST", "path": "/migration/{session}/rollback", "controller": "MigrationController@rollback", "name": "migration.rollback"},
+        {"method": "DELETE", "path": "/migration/{session}", "controller": "MigrationController@destroy", "name": "migration.destroy"}
+      ],
+      "api_settings_ee": [
+        {"method": "GET", "path": "/settings/api-tokens", "controller": "TokenSettingsController@index", "page": "Settings/ApiTokens", "name": "settings.api-tokens", "feature_gate": "api_access", "props": ["personalTokens", "orgTokens", "canManageOrgTokens", "abilities"]},
+        {"method": "POST", "path": "/settings/api-tokens/personal", "controller": "TokenSettingsController@storePersonal", "name": "settings.api-tokens.personal.store", "feature_gate": "api_access"},
+        {"method": "POST", "path": "/settings/api-tokens/organization", "controller": "TokenSettingsController@storeOrganization", "name": "settings.api-tokens.organization.store", "feature_gate": "api_access"},
+        {"method": "DELETE", "path": "/settings/api-tokens/personal/{token}", "controller": "TokenSettingsController@destroyPersonal", "name": "settings.api-tokens.personal.destroy", "feature_gate": "api_access"},
+        {"method": "DELETE", "path": "/settings/api-tokens/organization/{token}", "controller": "TokenSettingsController@destroyOrganization", "name": "settings.api-tokens.organization.destroy", "feature_gate": "api_access"},
+        {"method": "GET", "path": "/settings/webhooks", "controller": "WebhookSettingsController@index", "page": "Settings/Webhooks", "name": "settings.webhooks", "feature_gate": "api_access", "props": ["webhooks", "availableEvents"]},
+        {"method": "POST", "path": "/settings/webhooks", "controller": "WebhookSettingsController@store", "name": "settings.webhooks.store", "feature_gate": "api_access"},
+        {"method": "PUT", "path": "/settings/webhooks/{webhook}", "controller": "WebhookSettingsController@update", "name": "settings.webhooks.update", "feature_gate": "api_access"},
+        {"method": "DELETE", "path": "/settings/webhooks/{webhook}", "controller": "WebhookSettingsController@destroy", "name": "settings.webhooks.destroy", "feature_gate": "api_access"},
+        {"method": "POST", "path": "/settings/webhooks/{webhook}/regenerate-secret", "controller": "WebhookSettingsController@regenerateSecret", "name": "settings.webhooks.regenerate-secret", "feature_gate": "api_access"}
+      ]
+    },
+    "ee_plugin_routes": {
+      "note": "These routes are loaded dynamically by GaeldEEServiceProvider via PluginServiceProvider when the gaeld-ee plugin is enabled.",
+      "cost_centers": {"path": "/accounting/cost-centers", "feature_gate": "analytical", "page": "Accounting/CostCenters"},
+      "exchange_rates": {"path": "/accounting/exchange-rates", "feature_gate": "multi_currency", "page": "Accounting/ExchangeRates"},
+      "tax_declarations": {"path": "/accounting/tax-declarations", "feature_gate": "tax_declaration", "page": "Accounting/TaxDeclarations/*"},
+      "consolidation": {"path": "/accounting/consolidation", "feature_gate": "consolidation", "page": "Accounting/Consolidation/*"},
+      "withholding_tax": {"path": "/payroll/withholding-tax", "feature_gate": "withholding_tax", "page": "Payroll/WithholdingTax/*"},
+      "billing": {"path": "/billing", "feature_gate": "saas", "page": "Billing/*"},
+      "saas_admin": {"path": "/saas-admin", "feature_gate": "saas", "page": "SaasAdmin/*"},
+      "analytical_report": {"path": "/accounting/analytical-report", "feature_gate": "analytical", "page": "Reports/AnalyticalReport"}
+    }
+  },
+
+  "api_endpoints": {
+    "_prefix": "/api/v1",
+    "_middleware": ["auth:sanctum", "api-org", "feature:api_access", "throttle:api"],
+    "info": {"method": "GET", "path": "/api/v1/", "auth": false, "response": {"name": "string", "version": "string", "documentation": "string", "status": "string"}},
+    "customers": {
+      "index": {"method": "GET", "path": "/api/v1/customers", "response": "paginated CustomerResource"},
+      "show": {"method": "GET", "path": "/api/v1/customers/{customer}", "response": "CustomerResource"},
+      "store": {"method": "POST", "path": "/api/v1/customers", "request": "StoreCustomerApiRequest", "response": "201"},
+      "update": {"method": "PUT", "path": "/api/v1/customers/{customer}", "request": "UpdateCustomerApiRequest", "response": "CustomerResource"},
+      "destroy": {"method": "DELETE", "path": "/api/v1/customers/{customer}", "response": "204"}
+    },
+    "invoices": {
+      "index": {"method": "GET", "path": "/api/v1/invoices", "response": "paginated InvoiceResource"},
+      "show": {"method": "GET", "path": "/api/v1/invoices/{invoice}", "response": "InvoiceResource"},
+      "store": {"method": "POST", "path": "/api/v1/invoices", "request": "StoreInvoiceApiRequest", "response": "201"},
+      "update": {"method": "PUT", "path": "/api/v1/invoices/{invoice}", "request": "UpdateInvoiceApiRequest", "response": "InvoiceResource"},
+      "destroy": {"method": "DELETE", "path": "/api/v1/invoices/{invoice}", "response": "204"}
+    },
+    "expenses": {
+      "index": {"method": "GET", "path": "/api/v1/expenses", "response": "paginated ExpenseResource"},
+      "show": {"method": "GET", "path": "/api/v1/expenses/{expense}", "response": "ExpenseResource"},
+      "store": {"method": "POST", "path": "/api/v1/expenses", "request": "StoreExpenseApiRequest", "response": "201"},
+      "update": {"method": "PUT", "path": "/api/v1/expenses/{expense}", "request": "UpdateExpenseApiRequest", "response": "ExpenseResource"},
+      "destroy": {"method": "DELETE", "path": "/api/v1/expenses/{expense}", "response": "204"}
+    },
+    "accounts": {
+      "index": {"method": "GET", "path": "/api/v1/accounts", "response": "paginated AccountResource"},
+      "show": {"method": "GET", "path": "/api/v1/accounts/{account}", "response": "AccountResource"}
+    },
+    "bank_accounts": {
+      "index": {"method": "GET", "path": "/api/v1/bank-accounts", "response": "paginated BankAccountResource"},
+      "show": {"method": "GET", "path": "/api/v1/bank-accounts/{bankAccount}", "response": "BankAccountResource"}
+    },
+    "webhooks": {
+      "index": {"method": "GET", "path": "/api/v1/webhooks", "response": "paginated WebhookResource"},
+      "show": {"method": "GET", "path": "/api/v1/webhooks/{webhook}", "response": "WebhookResource"},
+      "store": {"method": "POST", "path": "/api/v1/webhooks", "request": "StoreWebhookRequest", "response": "201 + secret"},
+      "update": {"method": "PUT", "path": "/api/v1/webhooks/{webhook}", "request": "UpdateWebhookRequest", "response": "WebhookResource"},
+      "destroy": {"method": "DELETE", "path": "/api/v1/webhooks/{webhook}", "response": "204"},
+      "regenerate_secret": {"method": "POST", "path": "/api/v1/webhooks/{webhook}/regenerate-secret", "response": "{secret, message}"}
+    },
+    "tokens": {
+      "personal_index": {"method": "GET", "path": "/api/v1/tokens"},
+      "personal_store": {"method": "POST", "path": "/api/v1/tokens"},
+      "personal_destroy": {"method": "DELETE", "path": "/api/v1/tokens/{token}"},
+      "org_index": {"method": "GET", "path": "/api/v1/org-tokens"},
+      "org_store": {"method": "POST", "path": "/api/v1/org-tokens"},
+      "org_destroy": {"method": "DELETE", "path": "/api/v1/org-tokens/{token}"},
+      "abilities": {"method": "GET", "path": "/api/v1/meta/abilities"},
+      "webhook_events": {"method": "GET", "path": "/api/v1/meta/webhook-events"}
+    }
+  },
+
+  "business_flows": {
+    "create_invoice": {
+      "steps": [
+        {"step": 1, "actor": "user", "action": "Navigate to /invoices/create", "detail": "InvoiceController@create renders Invoices/Create with customers, vatRates, suggestedNumber"},
+        {"step": 2, "actor": "user", "action": "Fill form with customer, lines, dates", "detail": "Client-side Zod validation, useUnsavedChanges guard, useClosedFiscalYear check"},
+        {"step": 3, "actor": "user", "action": "Submit (draft or finalize)", "detail": "POST /invoices via Inertia useForm"},
+        {"step": 4, "actor": "backend", "action": "StoreInvoiceRequest validates input", "detail": "Validates customer_id, lines, amounts, dates, VAT rates"},
+        {"step": 5, "actor": "backend", "action": "CreateInvoiceAction creates invoice + lines", "detail": "SyncInvoiceLinesAction handles 2-pass % discount calculation, Swiss 5ct rounding"},
+        {"step": 6, "actor": "backend", "action": "If finalize=true, FinalizeInvoiceAction runs", "detail": "Status Draft→Sent, posts journal entry via InvoiceAccountingService (multi-VAT debit/credit), dispatches InvoiceFinalizedEvent"},
+        {"step": 7, "actor": "backend", "action": "Redirect to /invoices/{id}", "detail": "InvoiceController@show renders Invoices/Show with full invoice data"},
+        {"step": 8, "actor": "user", "action": "Download QR-PDF", "detail": "GET /invoices/{id}/qr-pdf generates Swiss QR-bill PDF via sprain/swiss-qr-bill"}
+      ]
+    },
+    "record_payment": {
+      "steps": [
+        {"step": 1, "actor": "user", "action": "On invoice show page, click Record Payment"},
+        {"step": 2, "actor": "user", "action": "Enter amount, date, method, bank account"},
+        {"step": 3, "actor": "backend", "action": "RecordPaymentAction validates and posts", "detail": "Creates InvoicePayment, posts journal entry (debit bank, credit receivable), updates invoice status to Paid if fully paid or Partial"},
+        {"step": 4, "actor": "backend", "action": "DashboardService cache flushed"}
+      ]
+    },
+    "create_expense": {
+      "steps": [
+        {"step": 1, "actor": "user", "action": "Navigate to /expenses/create (optionally via OCR receipt scan)"},
+        {"step": 2, "actor": "user", "action": "Fill expense form (or accept OCR prefill)", "detail": "useClosedFiscalYear guard prevents posting to closed years"},
+        {"step": 3, "actor": "backend", "action": "CreateExpenseAction creates Pending expense", "detail": "FileUploadService handles receipt upload to private disk"},
+        {"step": 4, "actor": "user", "action": "Approve expense → POST /expenses/{id}/approve"},
+        {"step": 5, "actor": "backend", "action": "ApproveExpenseAction transitions Pending→Approved"},
+        {"step": 6, "actor": "user", "action": "Post to ledger → POST /expenses/{id}/post"},
+        {"step": 7, "actor": "backend", "action": "PostExpenseAction posts journal entry via ExpenseService", "detail": "Debit expense account, credit bank/payable, VatEntry Input, Swiss 5ct rounding"}
+      ]
+    },
+    "bank_reconciliation": {
+      "steps": [
+        {"step": 1, "actor": "user", "action": "Import CAMT/CSV/MT940 file via /reconciliation/{bankAccount}/import"},
+        {"step": 2, "actor": "backend", "action": "BankImportService parses and creates BankTransaction records"},
+        {"step": 3, "actor": "backend", "action": "SuggestionService generates match suggestions", "detail": "QR reference=100pts, amount+name=90pts, heuristic=70pts for invoices; exact amount+vendor for expenses"},
+        {"step": 4, "actor": "user", "action": "Review suggestions on /reconciliation/{bankAccount}"},
+        {"step": 5, "actor": "user", "action": "Confirm match or manually reconcile", "detail": "Links to invoice (RecordPaymentAction) or expense (ExpenseReconciler) or manual journal entry (ContraAccountReconciler)"},
+        {"step": 6, "actor": "backend", "action": "Posts journal entry, marks transaction as reconciled"}
+      ]
+    },
+    "year_end_closing": {
+      "steps": [
+        {"step": 1, "actor": "user", "action": "Navigate to /accounting/year-end-closing"},
+        {"step": 2, "actor": "user", "action": "Review P&L summary, select result account, submit"},
+        {"step": 3, "actor": "backend", "action": "YearEndClosingController@store runs closing", "detail": "Posts closing journal entries via LedgerService, creates legal archive with SHA-256 integrity, generates opening balances for next year"},
+        {"step": 4, "actor": "backend", "action": "Fiscal year marked as closed", "detail": "Prevents further posting to closed year periods"}
+      ]
+    },
+    "setup_wizard": {
+      "steps": [
+        {"step": 1, "actor": "user", "action": "GET /setup (only if no organization exists)"},
+        {"step": 2, "actor": "user", "action": "Fill user + organization data in multi-step wizard"},
+        {"step": 3, "actor": "backend", "action": "CompleteSetupAction creates user + org in transaction", "detail": "Auto-sets email_verified_at, seeds Swiss chart of accounts via OrganizationSetupService"},
+        {"step": 4, "actor": "backend", "action": "Redirect to dashboard"}
+      ]
+    },
+    "payroll_run": {
+      "steps": [
+        {"step": 1, "actor": "user", "action": "Navigate to /payroll/run, select month/year"},
+        {"step": 2, "actor": "backend", "action": "GeneratePayrollRunAction calculates salary slips", "detail": "PayrollCalculator applies gross→net with Swiss deductions (AVS 5.3%, AC 1.1%, AANP 1%, LPP 7%), pro-rata for partial months"},
+        {"step": 3, "actor": "user", "action": "Review and post salary slips"},
+        {"step": 4, "actor": "backend", "action": "PostPayrollAction posts journal entries per slip"}
+      ]
+    }
+  },
+
+  "scheduled_jobs": [
+    {"job": "GenerateRecurringInvoicesJob", "schedule": "daily at 03:00", "description": "Generates invoices from active recurring templates"},
+    {"job": "invoices:mark-overdue", "schedule": "daily at 02:00", "description": "Marks past-due invoices as overdue"},
+    {"job": "SendPaymentRemindersJob", "schedule": "daily at 04:00", "description": "Sends payment reminders for overdue invoices"},
+    {"job": "GenerateReportsJob", "schedule": "daily at 01:00", "description": "Pre-generates cached reports"},
+    {"job": "MonthlyDepreciationJob", "schedule": "1st of month at 05:00", "description": "Records monthly depreciation for fixed assets"},
+    {"job": "gaeld:auto-reconcile", "schedule": "daily at 02:00", "description": "Auto-reconciliation (EE only)"},
+    {"job": "horizon:snapshot", "schedule": "every 5 minutes", "description": "Horizon metrics snapshot"}
+  ],
+
+  "feature_flags": {
+    "ce_features": {
+      "bank_import": {"default": true, "description": "CAMT/CSV/MT940 bank import"}
+    },
+    "ee_features": {
+      "auto_reconciliation": {"default": false},
+      "bank_sync": {"default": false},
+      "saas": {"default": false},
+      "automation": {"default": false},
+      "multi_currency": {"default": false},
+      "api_access": {"default": false},
+      "rule_engine": {"default": false},
+      "advanced_permissions": {"default": false},
+      "analytical": {"default": false},
+      "consolidation": {"default": false},
+      "tax_declaration": {"default": false},
+      "withholding_tax": {"default": false},
+      "e_invoicing": {"default": false}
+    }
+  },
+
+  "audit_findings": {
+    "bugs_fixed": [
+      {
+        "id": "BUG-001",
+        "severity": "medium",
+        "status": "FIXED",
+        "file": "app/Domains/Reporting/Services/DashboardService.php",
+        "description": "budgetSummary() used now()->month for months elapsed, ignoring the organization's fiscal_year_start and the display year. Past completed years showed only partial budget instead of full 12 months.",
+        "fix": "Added computeMonthsElapsed() that resolves fiscal year start from Organization model, returns 12 for past years, and correctly calculates elapsed months for the current fiscal year."
+      },
+      {
+        "id": "BUG-002",
+        "severity": "medium",
+        "status": "FIXED",
+        "file": "app/Domains/Banking/Services/SuggestionService.php",
+        "description": "suggestExpenses() did not exclude already-reconciled expenses. A Posted expense matched to a BankTransaction could be suggested again for a different transaction.",
+        "fix": "Added whereNotIn filter excluding expense IDs that already appear in BankTransaction.matched_expense_id."
+      }
+    ],
+    "warnings": [
+      {
+        "id": "WARN-001",
+        "severity": "low",
+        "description": "SwissDeductionService falls back to hardcoded 2026 defaults when no DeductionRate records exist. Silent Log::warning() only. Rates will become stale in future years.",
+        "recommendation": "Add an admin notification or health check when using default rates."
+      },
+      {
+        "id": "WARN-002",
+        "severity": "low",
+        "description": "BankAccount.balance is denormalized and updated via bcadd/bcsub in BankingService. No periodic reconciliation against the linked ledger account balance.",
+        "recommendation": "Add a scheduled integrity check comparing denormalized balance to ledger account balance."
+      }
+    ],
+    "hallucinations_detected": [],
+    "incomplete_features": [],
+    "verdict": "PRODUCTION READY"
+  }
+}

@@ -13,6 +13,9 @@ import CsvColumnMappingModal from '@/Components/CsvColumnMappingModal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Combobox from '@/Components/UI/Combobox.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
+import EmptyState from '@/Components/UI/EmptyState.vue'
+import PageHeader from '@/Components/UI/PageHeader.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed, nextTick } from 'vue'
@@ -45,8 +48,7 @@ function submitUpload() {
   })
 }
 
-function onFileChange(e) {
-  const file = e.target.files[0]
+function onFileChange(file) {
   if (!file) return
 
   const ext = file.name.split('.').pop().toLowerCase()
@@ -239,13 +241,15 @@ const currentSuggestions = computed(() => {
 
 <template>
   <AppLayout :title="`${t('reconciliation')} — ${bankAccount.name}`">
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3">
-        <Button as="a" href="/reconciliation" variant="outline" size="sm">← {{ t('back') }}</Button>
-        <h2 class="text-xl font-semibold">{{ bankAccount.name }}</h2>
-        <Badge v-if="bankAccount.is_mixed_use" variant="outline">{{ t('mixed') }}</Badge>
-        <Badge variant="secondary">{{ formatCurrency(bankAccount.balance, bankAccount.currency) }}</Badge>
-      </div>
+    <PageHeader>
+      <template #start>
+        <div class="flex items-center gap-3">
+          <Button as="a" href="/reconciliation" variant="outline" size="sm">← {{ t('back') }}</Button>
+          <h2 class="text-xl font-semibold">{{ bankAccount.name }}</h2>
+          <Badge v-if="bankAccount.is_mixed_use" variant="outline">{{ t('mixed') }}</Badge>
+          <Badge variant="secondary">{{ formatCurrency(bankAccount.balance, bankAccount.currency) }}</Badge>
+        </div>
+      </template>
       <div class="flex items-center gap-2">
         <Button v-if="pageFeatures.auto_reconciliation" @click="autoReconcile" variant="outline" :disabled="autoReconciling">
           <Loader2 v-if="autoReconciling" class="mr-2 h-4 w-4 animate-spin" />
@@ -256,7 +260,7 @@ const currentSuggestions = computed(() => {
           <Upload class="mr-2 h-4 w-4" /> {{ t('import_bank_statement') }}
         </Button>
       </div>
-    </div>
+    </PageHeader>
 
     <!-- Filter tabs -->
     <div class="flex gap-2 mb-4">
@@ -272,7 +276,7 @@ const currentSuggestions = computed(() => {
     </div>
 
     <!-- Triage summary for mixed-use accounts -->
-    <div v-if="triageSummary" class="mb-4 flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-2 text-sm">
+    <div v-if="triageSummary" class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-muted/30 px-4 py-2 text-sm">
       <span>{{ triageSummary.unclassified }} {{ t('unclassified') }}</span>
       <span class="text-muted-foreground">|</span>
       <span class="text-purple-600 dark:text-purple-400">{{ triageSummary.personal }} {{ t('personal') }}</span>
@@ -295,9 +299,7 @@ const currentSuggestions = computed(() => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div v-if="!transactions?.data?.length" class="py-8 text-center text-muted-foreground">
-          {{ t('no_transactions') }}
-        </div>
+        <EmptyState v-if="!transactions?.data?.length" :title="t('no_transactions')" />
 
         <div v-else class="space-y-3">
           <div
@@ -431,16 +433,12 @@ const currentSuggestions = computed(() => {
         <p class="text-sm text-muted-foreground">
           {{ t('import_bank_desc') }}
         </p>
-        <div class="space-y-2">
-          <label class="text-sm font-medium">{{ t('file') }} <span class="text-[hsl(var(--destructive))]">*</span></label>
-          <input
-            type="file"
-            accept=".xml,.XML,.csv,.CSV,.sta,.mt940,.mt9"
-            class="flex h-9 w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium"
-            @change="onFileChange"
-          />
-          <p v-if="uploadForm.errors.camt_file" class="text-xs text-[hsl(var(--destructive))]">{{ uploadForm.errors.camt_file }}</p>
-        </div>
+        <FileUpload
+          accept=".xml,.XML,.csv,.CSV,.sta,.mt940,.mt9"
+          :label="t('file')"
+          :error="uploadForm.errors.camt_file"
+          @change="onFileChange"
+        />
         <div class="flex justify-end gap-3">
           <Button variant="outline" type="button" @click="showUploadModal = false">{{ t('cancel') }}</Button>
           <Button type="submit" :disabled="uploadForm.processing || !uploadForm.camt_file">

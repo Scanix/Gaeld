@@ -88,6 +88,9 @@ class BananaParser implements PlatformParserInterface
         return null;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapRow(array $row, int $sourceRow, DataType $dataType): ?ImportRowInterface
     {
         return match ($dataType) {
@@ -98,6 +101,9 @@ class BananaParser implements PlatformParserInterface
         };
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapAccount(array $row, int $sourceRow): AccountImportRow
     {
         $code = $this->findValue($row, ['account', 'konto', 'compte', 'conto']);
@@ -127,6 +133,9 @@ class BananaParser implements PlatformParserInterface
         return $importRow;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapJournalEntry(array $row, int $sourceRow): JournalEntryImportRow
     {
         $date = $this->findValue($row, ['date', 'datum', 'data']);
@@ -170,6 +179,9 @@ class BananaParser implements PlatformParserInterface
         return $importRow;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     */
     private function mapOpeningBalance(array $row, int $sourceRow): OpeningBalanceRow
     {
         $code = $this->findValue($row, ['account', 'konto', 'compte', 'conto']);

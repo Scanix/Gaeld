@@ -145,8 +145,17 @@ class OrganizationSettingsController extends Controller
         abort_unless($request->hasValidSignature(), 403);
 
         $path = $request->query('path', '');
+        $filename = basename($path);
 
-        $absolutePath = Storage::disk('local')->path('exports/'.basename($path));
+        // Defense-in-depth: ensure org-scoped exports match the current organization.
+        // The signed URL is the primary security mechanism; this prevents misuse if
+        // a signed URL leaks to a user in a different organization.
+        $currentOrg = app(CurrentOrganization::class);
+        if (str_starts_with($filename, 'org-export-') && ! str_contains($filename, $currentOrg->id())) {
+            abort(403, 'Export does not belong to this organization.');
+        }
+
+        $absolutePath = Storage::disk('local')->path('exports/'.$filename);
 
         abort_unless(file_exists($absolutePath), 404);
 

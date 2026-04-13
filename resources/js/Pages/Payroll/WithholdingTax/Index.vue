@@ -143,7 +143,7 @@ function submitDeclaration(declaration) {
         />
         <div class="flex justify-end gap-2">
           <Button variant="outline" type="button" @click="showForm = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="form.processing">{{ t('save') }}</Button>
+          <Button type="submit" :disabled="form.processing" :loading="form.processing">{{ t('save') }}</Button>
         </div>
       </form>
     </Modal>

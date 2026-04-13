@@ -14,6 +14,7 @@ import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { computed, ref } from 'vue'
 import { ArrowLeft, History, Search } from 'lucide-vue-next'
+import PageHeader from '@/Components/UI/PageHeader.vue'
 
 const props = defineProps({
   activities: Object,
@@ -103,23 +104,25 @@ const eventOptions = [
 
 <template>
   <AppLayout :title="t('activity_log')">
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3">
-        <Button as="a" href="/settings" variant="outline" size="sm">
-          <ArrowLeft class="mr-2 h-4 w-4" /> {{ t('settings') }}
-        </Button>
-        <h2 class="text-xl font-semibold">
-          <History class="inline mr-2 h-5 w-5" />
-          {{ t('activity_log') }}
-        </h2>
-      </div>
-    </div>
+    <PageHeader>
+      <template #start>
+        <div class="flex items-center gap-3">
+          <Button as="a" href="/settings" variant="outline" size="sm">
+            <ArrowLeft class="mr-2 h-4 w-4" /> {{ t('settings') }}
+          </Button>
+          <h2 class="text-xl font-semibold">
+            <History class="inline mr-2 h-5 w-5" />
+            {{ t('activity_log') }}
+          </h2>
+        </div>
+      </template>
+    </PageHeader>
 
     <!-- Filters -->
     <Card class="mb-4">
       <CardContent class="pt-4">
         <div class="flex flex-wrap items-end gap-3">
-          <div class="w-48">
+          <div class="w-full sm:w-48">
             <FormSelect
               :modelValue="selectedType"
               @update:modelValue="v => { selectedType = v; applyFilters() }"
@@ -127,7 +130,7 @@ const eventOptions = [
               :label="t('entity_type')"
             />
           </div>
-          <div class="w-40">
+          <div class="w-full sm:w-40">
             <FormSelect
               :modelValue="selectedEvent"
               @update:modelValue="v => { selectedEvent = v; applyFilters() }"

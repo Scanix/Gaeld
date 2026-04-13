@@ -138,11 +138,11 @@ function performDelete() {
 
     <Modal :open="showForm" :title="t('withholding_tax_tariffs')" @close="showForm = false">
       <form class="space-y-6" @submit.prevent="submitForm">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormSelect id="canton" v-model="form.canton" :label="t('source_tax_canton')" :options="cantonOptions" :error="form.errors.canton" required />
           <FormSelect id="tariff_code" v-model="form.tariff_code" :label="t('source_tax_tariff')" :options="tariffCodeOptions" :error="form.errors.tariff_code" required />
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormInput id="income_from" v-model="form.income_from" type="number" step="0.01" :label="t('income_from')" :error="form.errors.income_from" required />
           <FormInput id="income_to" v-model="form.income_to" type="number" step="0.01" :label="t('income_to')" :error="form.errors.income_to" />
         </div>
@@ -160,7 +160,7 @@ function performDelete() {
         <FormInput id="valid_from" v-model="form.valid_from" type="date" :label="t('valid_from')" :error="form.errors.valid_from" required />
         <div class="flex justify-end gap-2">
           <Button variant="outline" type="button" @click="showForm = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="form.processing">{{ t('save') }}</Button>
+          <Button type="submit" :disabled="form.processing" :loading="form.processing">{{ t('save') }}</Button>
         </div>
       </form>
     </Modal>

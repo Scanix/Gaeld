@@ -23,10 +23,19 @@ class OrganizationSetupService
     public function seedChartOfAccounts(Organization $organization, string $templateKey): void
     {
         $this->chartTemplateService->seedTemplate($organization, $templateKey);
+        $this->chartTemplateService->ensureSystemAccounts($organization);
 
         if ($this->chartTemplateService->templateSeedsVatRates($templateKey)) {
             $this->vatRatesSeeder->run($organization);
         }
+    }
+
+    /**
+     * Ensure system accounts exist even when no chart template is selected.
+     */
+    public function ensureSystemAccounts(Organization $organization): void
+    {
+        $this->chartTemplateService->ensureSystemAccounts($organization);
     }
 
     /**

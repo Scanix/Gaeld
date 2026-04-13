@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string $id
  * @property string $webhook_id
  * @property string $event
- * @property array $payload
+ * @property array<int, mixed> $payload
  * @property int|null $response_status
  * @property string|null $response_body
  * @property string $status

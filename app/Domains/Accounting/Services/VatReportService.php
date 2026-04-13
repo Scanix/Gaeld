@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Services;
 use App\Domains\Accounting\Enums\VatEntryType;
 use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Models\VatRate;
+use App\Support\Money;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -31,6 +32,9 @@ class VatReportService
      *   net_vat: string,
      *   vat_payable: string,
      * }
+     */
+    /**
+     * @return array<string, mixed>
      */
     public function generate(string $orgId, string $fromDate, string $toDate): array
     {
@@ -67,8 +71,8 @@ class VatReportService
                 $baseAmount = '0.00';
                 $vatAmount = '0.00';
                 foreach ($rateEntries as $entry) {
-                    $baseAmount = bcadd($baseAmount, (string) $entry->base_amount, 2);
-                    $vatAmount = bcadd($vatAmount, (string) $entry->vat_amount, 2);
+                    $baseAmount = Money::add($baseAmount, (string) $entry->base_amount);
+                    $vatAmount = Money::add($vatAmount, (string) $entry->vat_amount);
                 }
 
                 $revenueByRate[] = [
@@ -90,13 +94,13 @@ class VatReportService
             // Aggregate Input by rate → chiffre 400
             $totalInputVat = '0.00';
             foreach ($inputEntries as $entry) {
-                $totalInputVat = bcadd($totalInputVat, (string) $entry->vat_amount, 2);
+                $totalInputVat = Money::add($totalInputVat, (string) $entry->vat_amount);
             }
 
             // Totals
-            $totalRevenue = array_reduce($revenueByRate, fn ($carry, $row) => bcadd($carry, $row['base_amount'], 2), '0.00');
-            $totalOutputVat = array_reduce($outputVatByRate, fn ($carry, $row) => bcadd($carry, $row['amount'], 2), '0.00');
-            $netVat = bcsub($totalOutputVat, $totalInputVat, 2);
+            $totalRevenue = array_reduce($revenueByRate, fn ($carry, $row) => Money::add($carry, $row['base_amount']), '0.00');
+            $totalOutputVat = array_reduce($outputVatByRate, fn ($carry, $row) => Money::add($carry, $row['amount']), '0.00');
+            $netVat = Money::subtract($totalOutputVat, $totalInputVat);
 
             return [
                 'period' => ['from' => $fromDate, 'to' => $toDate],

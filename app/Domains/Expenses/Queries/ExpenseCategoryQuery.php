@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Cache;
 
 class ExpenseCategoryQuery
 {
+    /**
+     * @return Collection<int, ExpenseCategory>
+     */
     public static function forSelect(): Collection
     {
         $orgId = app(CurrentOrganization::class)->id();
@@ -22,6 +25,9 @@ class ExpenseCategoryQuery
         );
     }
 
+    /**
+     * @return Collection<int, ExpenseCategory>
+     */
     public static function all(): Collection
     {
         $orgId = app(CurrentOrganization::class)->id();

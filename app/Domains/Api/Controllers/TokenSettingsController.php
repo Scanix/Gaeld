@@ -43,7 +43,7 @@ class TokenSettingsController extends Controller
                 'last_used_at' => $token->last_used_at,
                 'expires_at' => $token->expires_at,
                 'created_at' => $token->created_at,
-                'created_by' => $token->tokenable?->name,
+                'created_by' => $token->tokenable->name,
             ]);
 
         $canManageOrgTokens = $request->user()->can('manageUsers', $organization);

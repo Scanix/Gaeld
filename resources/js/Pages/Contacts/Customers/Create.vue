@@ -182,7 +182,7 @@ const typeOptions = [
             <Button as="a" href="/customers" variant="outline">
               {{ t('cancel') }}
             </Button>
-            <Button type="submit" :disabled="form.processing">
+            <Button type="submit" :disabled="form.processing" :loading="form.processing">
               {{ t('create_customer') }}
             </Button>
           </div>

@@ -11,6 +11,7 @@ import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Badge from '@/Components/UI/Badge.vue'
+import PageHeader from '@/Components/UI/PageHeader.vue'
 import { Plus, Landmark } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import IbanHint from '@/Components/IbanHint.vue'
@@ -60,10 +61,9 @@ const columns = computed(() => [
       <p>{{ t('help_banking_text') }}</p>
     </HelpText>
 
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-semibold">{{ t('bank_accounts') }}</h2>
+    <PageHeader :title="t('bank_accounts')">
       <Button @click="showModal = true"><Plus class="mr-2 h-4 w-4" /> {{ t('add_account') }}</Button>
-    </div>
+    </PageHeader>
 
     <Card v-if="(bankAccounts?.data ?? []).length">
       <CardContent class="pt-6">
@@ -119,7 +119,7 @@ const columns = computed(() => [
         </div>
         <div class="flex justify-end gap-3">
           <Button variant="outline" @click="showModal = false">{{ t('cancel') }}</Button>
-          <Button type="submit" :disabled="form.processing">{{ t('create') }}</Button>
+          <Button type="submit" :disabled="form.processing" :loading="form.processing">{{ t('create') }}</Button>
         </div>
       </form>
     </Modal>

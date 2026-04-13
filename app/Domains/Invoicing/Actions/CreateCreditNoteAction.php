@@ -8,6 +8,7 @@ use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -50,7 +51,7 @@ class CreateCreditNoteAction
                 fn ($line) => new InvoiceLineData(
                     description: 'Avoir: '.$line->description,
                     quantity: $line->quantity,
-                    unitPrice: bcmul((string) $line->unit_price, '-1', 2),
+                    unitPrice: Money::negate((string) $line->unit_price),
                     vatRateId: $line->vat_rate_id,
                     sortOrder: $line->sort_order,
                 )

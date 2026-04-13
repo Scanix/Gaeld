@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Cache;
 
 class VatRateQuery
 {
+    /**
+     * @return Collection<int, VatRate>
+     */
     public static function active(): Collection
     {
         $orgId = app(CurrentOrganization::class)->id();

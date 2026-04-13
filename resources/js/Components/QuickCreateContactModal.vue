@@ -173,7 +173,7 @@ async function submit() {
         :error="errors.name?.[0]"
         required
       />
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <FormInput
           id="qc-email"
           v-model="email"
@@ -195,7 +195,7 @@ async function submit() {
         :label="t('address')"
         :error="errors.address?.[0]"
       />
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <FormInput
           id="qc-city"
           v-model="city"
@@ -210,7 +210,7 @@ async function submit() {
           :error="errors.postal_code?.[0]"
         />
       </div>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <FormSelect
           id="qc-country"
           v-model="country"
@@ -227,7 +227,7 @@ async function submit() {
         />
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <FormInput
           id="qc-vat-number"
           v-model="vatNumber"
@@ -244,7 +244,7 @@ async function submit() {
         />
       </div>
 
-      <div v-if="contactType === 'supplier'" class="grid grid-cols-2 gap-3">
+      <div v-if="contactType === 'supplier'" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <FormInput
           id="qc-iban"
           v-model="iban"

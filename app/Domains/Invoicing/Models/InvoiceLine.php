@@ -4,6 +4,8 @@ namespace App\Domains\Invoicing\Models;
 
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Invoicing\Enums\InvoiceLineType;
+use App\Support\Money;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class InvoiceLine extends Model
 {
+    /** @use HasFactory<Factory<static>> */
     use HasFactory;
 
     protected $fillable = [
@@ -79,10 +82,10 @@ class InvoiceLine extends Model
             return;
         }
 
-        $this->amount = bcmul($this->quantity, $this->unit_price, 2);
+        $this->amount = Money::multiply2($this->quantity, $this->unit_price);
 
         if ($this->vatRate) {
-            $this->vat_amount = bcmul($this->amount, bcdiv($this->vatRate->rate, '100', 4), 2);
+            $this->vat_amount = Money::percentage($this->amount, (string) $this->vatRate->rate);
         }
 
         $this->save();

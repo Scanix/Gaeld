@@ -22,6 +22,7 @@ trait CsvRowLookup
     }
 
     /**
+     * @param  array<string, mixed>  $row
      * @param  string[]  $keys
      */
     private function findValue(array $row, array $keys): ?string

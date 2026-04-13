@@ -40,7 +40,7 @@ class SuggestionService
      * Get reconciliation suggestions for a paginated collection of transactions.
      *
      * @param  iterable<BankTransaction>  $transactions
-     * @return array<string, array{invoices: Collection, expenses: Collection, matches: Collection}>
+     * @return array<string, array{invoices: Collection<int, InvoiceSuggestion>, expenses: Collection<int, ExpenseSuggestion>, matches: Collection<int, BankMatch>}>
      */
     public function generateSuggestionsForTransactions(iterable $transactions): array
     {
@@ -68,7 +68,8 @@ class SuggestionService
     /**
      * Generate suggestions using pre-loaded match cache to minimize queries.
      *
-     * @return array{invoices: Collection, expenses: Collection, matches: Collection}
+     * @param  Collection<int, BankMatch>  $cachedMatches
+     * @return array{invoices: Collection<int, InvoiceSuggestion>, expenses: Collection<int, ExpenseSuggestion>, matches: Collection<int, BankMatch>}
      */
     private function generateSuggestionsWithCache(BankTransaction $transaction, Collection $cachedMatches): array
     {
@@ -99,7 +100,7 @@ class SuggestionService
      *
      * Uses MatchingService for invoice candidates and expense scoring for debit transactions.
      *
-     * @return array{invoices: Collection, expenses: Collection, matches: Collection}
+     * @return array{invoices: Collection<int, InvoiceSuggestion>, expenses: Collection<int, ExpenseSuggestion>, matches: Collection<int, BankMatch>}
      */
     public function generateSuggestions(BankTransaction $transaction): array
     {
@@ -128,7 +129,7 @@ class SuggestionService
     private function mapMatchesToSuggestions(Collection $matches): Collection
     {
         return $matches->map(function ($match) {
-            $invoice = $match->invoice?->load(['customer']);
+            $invoice = $match->invoice->load(['customer']);
             if (! $invoice) {
                 return null;
             }
@@ -160,12 +161,20 @@ class SuggestionService
             return collect();
         }
 
+        $reconciledExpenseIds = BankTransaction::whereHas(
+            'bankAccount',
+            fn ($q) => $q->where('organization_id', $orgId)
+        )
+            ->whereNotNull('matched_expense_id')
+            ->pluck('matched_expense_id');
+
         $candidateExpenses = Expense::where('organization_id', $orgId)
             ->where('status', ExpenseStatus::Posted)
+            ->whereNotIn('id', $reconciledExpenseIds)
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('amount', [
-                    bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
-                    bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
+                    Money::subtract($amount, MatchConfidence::AMOUNT_TOLERANCE),
+                    Money::add($amount, MatchConfidence::AMOUNT_TOLERANCE),
                 ]);
 
                 if ($transaction->creditor_name) {
@@ -178,7 +187,7 @@ class SuggestionService
         return $candidateExpenses->map(function ($expense) use ($amount, $transaction) {
             $score = 0;
 
-            if (bccomp((string) $expense->amount, $amount, 2) === 0) {
+            if (Money::compare((string) $expense->amount, $amount) === 0) {
                 $score += self::EXPENSE_SCORE_EXACT_AMOUNT;
             }
 

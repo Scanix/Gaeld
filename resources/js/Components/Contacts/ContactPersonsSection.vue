@@ -83,7 +83,7 @@ const emit = defineEmits([
   <!-- Contact Person Modal -->
   <Modal :open="showContactModal" :title="editingContact ? t('edit_contact_person') : t('add_contact_person')" @close="emit('close-modal')">
     <form class="space-y-6" @submit.prevent="emit('submit')">
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormInput
           id="cp-first-name"
           v-model="contactForm.first_name"

@@ -21,7 +21,7 @@ import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import UnsavedChangesDialog from '@/Components/UI/UnsavedChangesDialog.vue'
 import { useFormValidation, z } from '@/lib/useFormValidation'
-import FormFileInput from '@/Components/UI/FormFileInput.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
 import { Plus, Trash2, HelpCircle } from 'lucide-vue-next'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 
@@ -156,8 +156,8 @@ const vatTotal = computed(() =>
 
 const total = computed(() => subtotal.value + vatTotal.value)
 
-function onJustificatifChange(e) {
-  form.justificatif = e.target.files[0] ?? null
+function onJustificatifChange(file) {
+  form.justificatif = file ?? null
 }
 
 const customerList = reactive([...props.customers])
@@ -434,8 +434,8 @@ function onDueDateManualEdit() {
             </div>
           </div>
 
-          <FormFileInput
-            id="justificatif"
+          <FileUpload
+            size="compact"
             :label="t('justificatif')"
             :error="form.errors.justificatif"
             @change="onJustificatifChange"
@@ -446,10 +446,10 @@ function onDueDateManualEdit() {
             <Button type="button" variant="outline" @click="showPreview = true">
               {{ t('invoice_preview') }}
             </Button>
-            <Button type="button" variant="outline" :disabled="form.processing || isIssueDateClosed" :title="isIssueDateClosed ? t('fiscal_year_closed_action_disabled') : undefined" @click="submitAndFinalize">
+            <Button type="button" variant="outline" :disabled="form.processing || isIssueDateClosed" :loading="form.processing && form.finalize" :title="isIssueDateClosed ? t('fiscal_year_closed_action_disabled') : undefined" @click="submitAndFinalize">
               {{ t('create_and_finalize') }}
             </Button>
-            <Button type="submit" :disabled="form.processing">{{ t('create_invoice') }}</Button>
+            <Button type="submit" :disabled="form.processing" :loading="form.processing && !form.finalize">{{ t('create_invoice') }}</Button>
           </div>
         </form>
       </CardContent>

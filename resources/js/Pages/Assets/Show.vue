@@ -19,6 +19,7 @@ import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
 import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
+import EmptyState from '@/Components/UI/EmptyState.vue'
 import { computed } from 'vue'
 
 const { t } = useTranslations()
@@ -94,7 +95,7 @@ const historyColumns = computed(() => [
           </div>
         </CardHeader>
         <CardContent class="space-y-4">
-          <div class="grid grid-cols-2 gap-4 text-sm">
+          <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('purchase_date') }}</p>
               <p class="font-medium">{{ formatDate(asset.purchase_date) }}</p>
@@ -200,9 +201,7 @@ const historyColumns = computed(() => [
             <span v-else class="text-[hsl(var(--muted-foreground))]">—</span>
           </template>
         </DataTable>
-        <p v-if="!depreciationHistory.length" class="py-8 text-center text-sm text-[hsl(var(--muted-foreground))]">
-          {{ t('no_depreciation_history') }}
-        </p>
+        <EmptyState v-if="!depreciationHistory.length" :title="t('no_depreciation_history')" />
       </CardContent>
     </Card>
 
@@ -237,7 +236,7 @@ const historyColumns = computed(() => [
         </div>
         <div class="flex justify-end gap-3 pt-2">
           <Button type="button" variant="outline" @click="showDisposeModal = false">{{ t('cancel') }}</Button>
-          <Button type="submit" variant="destructive" :disabled="disposeForm.processing">{{ t('confirm_disposal') }}</Button>
+          <Button type="submit" variant="destructive" :disabled="disposeForm.processing" :loading="disposeForm.processing">{{ t('confirm_disposal') }}</Button>
         </div>
       </form>
     </Modal>

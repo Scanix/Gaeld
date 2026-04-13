@@ -10,7 +10,7 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
-import FileUploadDropzone from '@/Components/FileUploadDropzone.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import {
@@ -265,11 +265,11 @@ function formatColumns(row) {
             :options="dataTypeOptions"
           />
 
-          <FileUploadDropzone
+          <FileUpload
             :accept="acceptString"
             :label="t('migration.upload_file')"
             :error="uploadError"
-            @file-selected="onFileSelected"
+            @change="onFileSelected"
           />
 
           <div class="flex justify-end">
@@ -309,7 +309,7 @@ function formatColumns(row) {
         />
 
         <!-- Stats -->
-        <div v-if="currentPreview" class="grid grid-cols-3 gap-4">
+        <div v-if="currentPreview" class="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div class="rounded-lg border border-[hsl(var(--border))] p-4 text-center">
             <p class="text-2xl font-bold">{{ currentPreview.count }}</p>
             <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('migration.total_rows') }}</p>

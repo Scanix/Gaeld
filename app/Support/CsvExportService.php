@@ -16,6 +16,10 @@ class CsvExportService
      * @param  array<int, array>  $rows  Row data (each row is an array of values).
      * @param  string  $filename  The download filename.
      */
+    /**
+     * @param  array<int, mixed>  $headers
+     * @param  array<int, mixed>  $rows
+     */
     public function export(array $headers, array $rows, string $filename): StreamedResponse
     {
         return new StreamedResponse(function () use ($headers, $rows) {

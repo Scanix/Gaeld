@@ -13,6 +13,9 @@ class InvitationNotification extends Notification
         private readonly string $plainToken = '',
     ) {}
 
+    /**
+     * @return array<int, string>
+     */
     public function via(object $notifiable): array
     {
         return ['mail'];

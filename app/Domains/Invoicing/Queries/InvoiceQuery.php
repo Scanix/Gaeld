@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 
 class InvoiceQuery
 {
+    /**
+     * @return LengthAwarePaginator<int, Invoice>
+     */
     public static function list(Request $request, int $perPage = 20): LengthAwarePaginator
     {
         return QueryBuilder::for(Invoice::with(['customer'])->withSum('payments', 'amount'), $request)

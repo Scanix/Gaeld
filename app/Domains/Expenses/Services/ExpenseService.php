@@ -74,7 +74,7 @@ class ExpenseService
 
             // Apply Swiss 5-centime rounding for CHF expenses (regular invoices only)
             if (! $isCreditNote && strtoupper($expense->currency) === 'CHF') {
-                $adj = SwissRounding::adjustment($amount);
+                $adj = SwissRounding::adjustment(Money::of($amount));
 
                 if ($adj) {
                     $roundingAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ROUNDING_DIFFERENCE);
@@ -88,8 +88,8 @@ class ExpenseService
                     $absDiff = Money::absoluteAmount($adj['diff']);
                     $lines[] = new JournalLineData(
                         accountId: (string) $roundingAccount->id,
-                        debit: bccomp($adj['diff'], '0', 2) > 0 ? $absDiff : '0',
-                        credit: bccomp($adj['diff'], '0', 2) < 0 ? $absDiff : '0',
+                        debit: Money::isPositive($adj['diff']) ? $absDiff : '0',
+                        credit: Money::isNegative($adj['diff']) ? $absDiff : '0',
                         description: 'Rounding difference (5ct)',
                     );
                 }
@@ -103,11 +103,11 @@ class ExpenseService
             ));
 
             // Create VatEntry record for the VAT report (Input VAT)
-            if ($expense->vat_rate_id && bccomp((string) $expense->vat_amount, '0', 2) > 0) {
+            if ($expense->vat_rate_id && Money::isPositive((string) $expense->vat_amount)) {
                 VatEntry::create([
                     'journal_entry_id' => $journalEntry->id,
                     'vat_rate_id' => $expense->vat_rate_id,
-                    'base_amount' => bcsub((string) $expense->amount, (string) $expense->vat_amount, 2),
+                    'base_amount' => Money::subtract((string) $expense->amount, (string) $expense->vat_amount),
                     'vat_amount' => (string) $expense->vat_amount,
                     'type' => VatEntryType::Input,
                 ]);
@@ -148,6 +148,9 @@ class ExpenseService
         );
     }
 
+    /**
+     * @return Collection<int, Expense>
+     */
     public function inYear(string $orgId, int $year): Collection
     {
         return Expense::where('organization_id', $orgId)

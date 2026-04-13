@@ -5,8 +5,10 @@ namespace App\Domains\Accounting\Services;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\LettrageLot;
 use App\Domains\Accounting\Models\TransactionLine;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Open-item lettrage (clearing) service for accounts receivable/payable.
@@ -47,13 +49,13 @@ class LettrageService
             throw new \InvalidArgumentException('One or more lines are already lettered.');
         }
 
-        // Validate zero-sum: sum(debit) must equal sum(credit)
-        $totalDebit = $lines->sum(fn ($l) => (float) $l->debit);
-        $totalCredit = $lines->sum(fn ($l) => (float) $l->credit);
+        // Validate zero-sum: sum(debit) must equal sum(credit) using arbitrary-precision arithmetic
+        $totalDebit = $lines->reduce(fn (string $carry, $l) => Money::add($carry, (string) ($l->debit ?? '0')), '0.00');
+        $totalCredit = $lines->reduce(fn (string $carry, $l) => Money::add($carry, (string) ($l->credit ?? '0')), '0.00');
 
-        if (bccomp((string) round($totalDebit, 2), (string) round($totalCredit, 2), 2) !== 0) {
+        if (Money::compare($totalDebit, $totalCredit) !== 0) {
             throw new \InvalidArgumentException(
-                sprintf('Lines do not balance: debit=%.2f credit=%.2f', $totalDebit, $totalCredit)
+                sprintf('Lines do not balance: debit=%s credit=%s', $totalDebit, $totalCredit)
             );
         }
 
@@ -73,6 +75,13 @@ class LettrageService
             TransactionLine::whereIn('id', $lineIds)
                 ->update(['lettrage_key' => $key]);
 
+            Log::info('Lettrage applied', [
+                'account_id' => $account->id,
+                'letter_key' => $key,
+                'line_count' => count($lineIds),
+                'user_id' => $userId,
+            ]);
+
             return $lot;
         });
     }
@@ -91,6 +100,12 @@ class LettrageService
                 ->update(['lettrage_key' => null]);
 
             $lot->update(['is_reversed' => true]);
+
+            Log::info('Lettrage reversed', [
+                'lot_id' => $lot->id,
+                'account_id' => $lot->account_id,
+                'letter_key' => $lot->letter_key,
+            ]);
         });
     }
 
@@ -100,6 +115,8 @@ class LettrageService
 
     /**
      * Get all unlettered transaction lines for the given account.
+     *
+     * @return Collection<int, TransactionLine>
      */
     public function getOpenItems(Account $account, ?string $upToDate = null): Collection
     {

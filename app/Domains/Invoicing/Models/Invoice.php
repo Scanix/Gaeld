@@ -7,8 +7,10 @@ use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Money;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
+use Database\Factories\Domains\Invoicing\Models\InvoiceFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -55,6 +57,7 @@ use Laravel\Scout\Searchable;
  */
 class Invoice extends Model
 {
+    /** @use HasFactory<InvoiceFactory> */
     use Auditable, BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;
 
     protected $fillable = [
@@ -140,24 +143,40 @@ class Invoice extends Model
         return $this->hasMany(self::class, 'related_invoice_id');
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeOfType(Builder $query, InvoiceType $type): Builder
     {
         return $query->where('type', $type->value);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeOpen(Builder $query): Builder
     {
         return $query->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue]);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeByAmountRange(Builder $query, string $amount, string $tolerance): Builder
     {
         return $query->whereBetween('total', [
-            bcsub($amount, $tolerance, 2),
-            bcadd($amount, $tolerance, 2),
+            Money::subtract($amount, $tolerance),
+            Money::add($amount, $tolerance),
         ]);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeOverdue(Builder $query): Builder
     {
         return $query->where('status', InvoiceStatus::Sent)
@@ -181,18 +200,21 @@ class Invoice extends Model
 
     public function amountDue(): string
     {
-        return bcsub((string) $this->total, $this->amountPaid(), 2);
+        return Money::subtract((string) $this->total, $this->amountPaid());
     }
 
     public function isFullyPaid(): bool
     {
-        return bccomp($this->amountDue(), '0', 2) <= 0;
+        return Money::compare($this->amountDue(), '0') <= 0;
     }
 
     // ──────────────────────────────────────────────────────────────
     //  Scout
     // ──────────────────────────────────────────────────────────────
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toSearchableArray(): array
     {
         return [
@@ -200,7 +222,7 @@ class Invoice extends Model
             'organization_id' => $this->organization_id,
             'number' => $this->number ?? '',
             'status' => $this->status->value,
-            'customer_name' => $this->customer->name ?? '',
+            'customer_name' => $this->customer?->name ?? '',
             'total' => (float) $this->total,
             'currency' => $this->currency,
         ];
@@ -220,7 +242,7 @@ class Invoice extends Model
 
         $this->subtotal = $totals->total_amount ?? '0';
         $this->vat_amount = $totals->total_vat ?? '0';
-        $this->total = bcadd($this->subtotal, $this->vat_amount, 2);
+        $this->total = Money::add($this->subtotal, $this->vat_amount);
         $this->save();
     }
 }

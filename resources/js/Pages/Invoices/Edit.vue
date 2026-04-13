@@ -20,7 +20,7 @@ import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import UnsavedChangesDialog from '@/Components/UI/UnsavedChangesDialog.vue'
 import { useFormValidation, z } from '@/lib/useFormValidation'
-import FormFileInput from '@/Components/UI/FormFileInput.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
 import { Plus, Trash2, HelpCircle } from 'lucide-vue-next'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 
@@ -103,8 +103,8 @@ function submit() {
   })
 }
 
-function onJustificatifChange(e) {
-  form.justificatif = e.target.files[0] ?? null
+function onJustificatifChange(file) {
+  form.justificatif = file ?? null
 }
 
 const customerList = reactive([...props.customers])
@@ -387,8 +387,8 @@ const total = computed(() => subtotal.value + vatTotal.value)
             />
           </div>
 
-          <FormFileInput
-            id="justificatif"
+          <FileUpload
+            size="compact"
             :label="t('justificatif')"
             :error="form.errors.justificatif"
             @change="onJustificatifChange"
@@ -396,11 +396,11 @@ const total = computed(() => subtotal.value + vatTotal.value)
             <p v-if="justificatifUrl && !form.justificatif" class="text-xs text-[hsl(var(--muted-foreground))]">
               {{ t('justificatif_attached') }}
             </p>
-          </FormFileInput>
+          </FileUpload>
 
           <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" :href="`/invoices/${invoice.id}`" variant="outline">{{ t('cancel') }}</Button>
-            <Button type="submit" :disabled="form.processing">{{ t('save_changes') }}</Button>
+            <Button type="submit" :disabled="form.processing" :loading="form.processing">{{ t('save_changes') }}</Button>
           </div>
         </form>
       </CardContent>

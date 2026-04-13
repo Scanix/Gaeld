@@ -34,7 +34,7 @@ class MatchingService
      *
      * Only credit transactions can match invoices.
      *
-     * @return Collection<BankMatch>
+     * @return Collection<int, BankMatch>
      */
     public function findAndStoreMatches(BankTransaction $transaction): Collection
     {
@@ -104,6 +104,9 @@ class MatchingService
      * Match by exact amount AND customer name.
      * Confidence: 90
      */
+    /**
+     * @return Collection<int, mixed>
+     */
     private function matchByAmountAndCustomer(string $orgId, BankTransaction $transaction, string $amount): Collection
     {
         if (! $transaction->debtor_name) {
@@ -135,14 +138,17 @@ class MatchingService
      * Match by amount OR reference (fallback).
      * Confidence: 70
      */
+    /**
+     * @return Collection<int, mixed>
+     */
     private function matchByHeuristics(string $orgId, BankTransaction $transaction, string $amount): Collection
     {
         $query = Invoice::where('organization_id', $orgId)
             ->open()
             ->where(function ($q) use ($amount, $transaction) {
                 $q->whereBetween('total', [
-                    bcsub($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
-                    bcadd($amount, MatchConfidence::AMOUNT_TOLERANCE, 2),
+                    Money::subtract($amount, MatchConfidence::AMOUNT_TOLERANCE),
+                    Money::add($amount, MatchConfidence::AMOUNT_TOLERANCE),
                 ]);
 
                 if ($transaction->reference) {
@@ -170,7 +176,8 @@ class MatchingService
     /**
      * Persist match candidates to bank_matches table, replacing any unconfirmed existing matches.
      *
-     * @return Collection<BankMatch>
+     * @param  Collection<int, mixed>  $matches
+     * @return Collection<int, BankMatch>
      */
     private function storeMatches(BankTransaction $transaction, Collection $matches): Collection
     {

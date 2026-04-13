@@ -41,7 +41,7 @@ const columns = computed(() => [
     <Card>
       <CardHeader><CardTitle>{{ t('journal_entries') }}</CardTitle></CardHeader>
       <CardContent>
-        <DataTable :columns="columns" :rows="entries?.data ?? []" :pagination="entries">
+        <DataTable :columns="columns" :rows="entries?.data ?? []" :pagination="entries" expandable>
           <template #empty>
             <EmptyState
               :icon="BookText"
@@ -54,37 +54,35 @@ const columns = computed(() => [
           <template #cell-is_posted="{ value }">
             <Badge :variant="value ? 'success' : 'warning'">{{ value ? t('posted') : t('draft') }}</Badge>
           </template>
+          <template #expand-row="{ row }">
+            <div v-if="row.lines?.length" class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b text-left text-[hsl(var(--muted-foreground))]">
+                    <th class="pb-1">{{ t('account') }}</th>
+                    <th class="pb-1 text-right">
+                      <span class="inline-flex items-center gap-1">
+                        {{ t('debit') }}
+                        <Tooltip :content="t('tooltip_journal_balance')" side="top">
+                          <HelpCircle class="h-3 w-3 text-[hsl(var(--muted-foreground))]" />
+                        </Tooltip>
+                      </span>
+                    </th>
+                    <th class="pb-1 text-right">{{ t('credit') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="line in row.lines" :key="line.id">
+                    <td>{{ line.account?.code }} — {{ line.account?.name }}</td>
+                    <td class="text-right">{{ formatCurrency(line.debit) }}</td>
+                    <td class="text-right">{{ formatCurrency(line.credit) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p v-else class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('no_journal_lines') }}</p>
+          </template>
         </DataTable>
-
-        <!-- Expanded lines for each entry -->
-        <template v-for="entry in (entries?.data ?? [])" :key="entry.id">
-        <div v-if="entry.lines?.length" class="mt-4 border rounded-md p-3">
-          <p class="mb-2 text-sm font-medium">{{ entry.reference }} — {{ entry.description }}</p>
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b text-left text-muted-foreground">
-                <th class="pb-1">{{ t('account') }}</th>
-                <th class="pb-1 text-right">
-                  <span class="inline-flex items-center gap-1">
-                    {{ t('debit') }}
-                    <Tooltip :content="t('tooltip_journal_balance')" side="top">
-                      <HelpCircle class="h-3 w-3 text-[hsl(var(--muted-foreground))]" />
-                    </Tooltip>
-                  </span>
-                </th>
-                <th class="pb-1 text-right">{{ t('credit') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="line in entry.lines" :key="line.id">
-                <td>{{ line.account?.code }} — {{ line.account?.name }}</td>
-                <td class="text-right">{{ formatCurrency(line.debit) }}</td>
-                <td class="text-right">{{ formatCurrency(line.credit) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        </template>
       </CardContent>
     </Card>
   </AppLayout>

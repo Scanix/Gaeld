@@ -37,6 +37,7 @@ class SwissDeductionService
     /**
      * Calculate all deductions for a given gross salary.
      *
+     * @param  Collection<int, DeductionRate>|null  $rates
      * @return array{avs_employee: string, avs_employer: string, ac_employee: string, ac_employer: string, aanp_employee: string, lpp_employee: string, lpp_employer: string, total_employee: string, total_employer: string, net_salary: string}
      */
     public function calculateDeductions(string $grossSalary, ?Collection $rates = null): array
@@ -48,7 +49,8 @@ class SwissDeductionService
                     .'Verify your organisation\'s deduction rates are up to date for the current fiscal year.',
                 );
             } catch (\Throwable) {
-                // Logger not available in pure unit-test context — silently skip.
+                // Logger not available in pure unit-test context — skip gracefully.
+                // In production the warning above will be logged normally.
             }
         }
 
@@ -82,6 +84,9 @@ class SwissDeductionService
 
     /**
      * Build the rate map from custom rates or defaults.
+     *
+     * @param  Collection<int, DeductionRate>|null  $rates
+     * @return array<string, array{code: string, name: string, rate: string, type: string}>
      */
     private function buildRateMap(?Collection $rates): array
     {

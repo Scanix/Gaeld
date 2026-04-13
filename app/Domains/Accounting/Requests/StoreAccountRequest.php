@@ -10,6 +10,9 @@ use Illuminate\Validation\Rules\Enum;
 
 class StoreAccountRequest extends FormRequest
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $orgId = app(CurrentOrganization::class)->id();

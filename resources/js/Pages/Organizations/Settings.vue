@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -11,6 +11,8 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import FileUpload from '@/Components/UI/FileUpload.vue'
+import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { currencyOptions } from '@/lib/contactOptions'
 import IbanHint from '@/Components/IbanHint.vue'
@@ -24,7 +26,6 @@ const props = defineProps({
 
 const { t } = useTranslations()
 const page = usePage()
-const flash = computed(() => page.props.flash || {})
 
 // --- Tabs ---
 const activeTab = ref('general')
@@ -80,8 +81,7 @@ const logoFile = ref(null)
 const logoPreview = ref(null)
 const logoUploading = ref(false)
 
-function onLogoSelect(event) {
-  const file = event.target.files[0]
+function onLogoSelect(file) {
   if (!file) return
   logoFile.value = file
   logoPreview.value = URL.createObjectURL(file)
@@ -120,6 +120,7 @@ function submitCommunications() {
 // --- Expense categories ---
 const newCategoryName = ref('')
 const addingCategory = ref(false)
+const categoryToDelete = ref(null)
 
 function addCategory() {
   if (!newCategoryName.value.trim()) return
@@ -133,8 +134,16 @@ function addCategory() {
   })
 }
 
-function removeCategory(id) {
-  router.delete(`/settings/expense-categories/${id}`, { preserveScroll: true })
+function confirmRemoveCategory(cat) {
+  categoryToDelete.value = cat
+}
+
+function removeCategory() {
+  if (!categoryToDelete.value) return
+  router.delete(`/settings/expense-categories/${categoryToDelete.value.id}`, {
+    preserveScroll: true,
+    onFinish: () => { categoryToDelete.value = null },
+  })
 }
 
 const localeOptions = [
@@ -165,16 +174,16 @@ const cantonOptions = [
 <template>
   <AppLayout :title="t('organization_settings')" helpPage="settings">
     <div class="max-w-3xl space-y-6">
-      <!-- Flash message -->
-      <div v-if="flash.success" class="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
-        {{ flash.success }}
-      </div>
-
       <!-- Tabs -->
-      <div class="flex gap-1 rounded-lg bg-[hsl(var(--muted))] p-1">
+      <div role="tablist" aria-label="Settings" class="flex gap-1 rounded-lg bg-[hsl(var(--muted))] p-1">
         <button
           v-for="tab in tabs"
           :key="tab.key"
+          role="tab"
+          :id="`tab-${tab.key}`"
+          :aria-selected="activeTab === tab.key"
+          :aria-controls="`tabpanel-${tab.key}`"
+          :tabindex="activeTab === tab.key ? 0 : -1"
           :class="[
             'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors',
             activeTab === tab.key
@@ -188,7 +197,7 @@ const cantonOptions = [
       </div>
 
       <!-- General Tab -->
-      <div v-show="activeTab === 'general'">
+      <div v-show="activeTab === 'general'" id="tabpanel-general" role="tabpanel" aria-labelledby="tab-general">
         <Card>
           <CardHeader>
             <CardTitle>{{ t('settings_general_title') }}</CardTitle>
@@ -292,7 +301,7 @@ const cantonOptions = [
               </div>
 
               <div class="flex justify-end">
-                <Button type="submit" :disabled="generalForm.processing">
+                <Button type="submit" :disabled="generalForm.processing" :loading="generalForm.processing">
                   {{ t('save_changes') }}
                 </Button>
               </div>
@@ -302,7 +311,7 @@ const cantonOptions = [
       </div>
 
       <!-- Invoice Tab -->
-      <div v-show="activeTab === 'invoice'">
+      <div v-show="activeTab === 'invoice'" id="tabpanel-invoice" role="tabpanel" aria-labelledby="tab-invoice">
         <!-- Logo -->
         <Card class="mb-6">
           <CardHeader>
@@ -338,21 +347,11 @@ const cantonOptions = [
               </div>
 
               <!-- Upload input -->
-              <div>
-                <label
-                  class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[hsl(var(--border))] px-6 py-4 text-sm text-[hsl(var(--muted-foreground))] transition-colors hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--foreground))]"
-                >
-                  <Upload class="h-5 w-5" />
-                  {{ t('settings_logo_upload') }}
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg"
-                    class="hidden"
-                    @change="onLogoSelect"
-                  >
-                </label>
-                <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('settings_logo_hint') }}</p>
-              </div>
+              <FileUpload
+                accept="image/png,image/jpeg"
+                :help-text="t('settings_logo_hint')"
+                @change="onLogoSelect"
+              />
             </div>
           </CardContent>
         </Card>
@@ -399,7 +398,7 @@ const cantonOptions = [
               <IbanHint :iban="invoiceForm.qr_iban" mode="qr" />
 
               <div class="flex justify-end">
-                <Button type="submit" :disabled="invoiceForm.processing">
+                <Button type="submit" :disabled="invoiceForm.processing" :loading="invoiceForm.processing">
                   {{ t('save_changes') }}
                 </Button>
               </div>
@@ -409,7 +408,7 @@ const cantonOptions = [
       </div>
 
       <!-- Communications Tab -->
-      <div v-show="activeTab === 'communications'">
+      <div v-show="activeTab === 'communications'" id="tabpanel-communications" role="tabpanel" aria-labelledby="tab-communications">
         <Card>
           <CardHeader>
             <CardTitle>{{ t('settings_comms_title') }}</CardTitle>
@@ -446,7 +445,7 @@ const cantonOptions = [
               </div>
 
               <div class="flex justify-end">
-                <Button type="submit" :disabled="commsForm.processing">
+                <Button type="submit" :disabled="commsForm.processing" :loading="commsForm.processing">
                   {{ t('save_changes') }}
                 </Button>
               </div>
@@ -456,7 +455,7 @@ const cantonOptions = [
       </div>
 
       <!-- Expenses Tab -->
-      <div v-show="activeTab === 'expenses'">
+      <div v-show="activeTab === 'expenses'" id="tabpanel-expenses" role="tabpanel" aria-labelledby="tab-expenses">
         <Card>
           <CardHeader>
             <CardTitle>{{ t('settings_expense_categories_title') }}</CardTitle>
@@ -473,8 +472,9 @@ const cantonOptions = [
                 <Button
                   variant="ghost"
                   size="icon"
+                  :aria-label="t('delete') + ' ' + cat.name"
                   class="h-8 w-8 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))]"
-                  @click="removeCategory(cat.id)"
+                  @click="confirmRemoveCategory(cat)"
                 >
                   <Trash2 class="h-4 w-4" />
                 </Button>
@@ -497,5 +497,14 @@ const cantonOptions = [
         </Card>
       </div>
     </div>
+
+    <ConfirmDialog
+      :open="!!categoryToDelete"
+      :title="t('delete')"
+      :message="t('are_you_sure')"
+      :confirm-label="t('delete')"
+      @confirm="removeCategory"
+      @cancel="categoryToDelete = null"
+    />
   </AppLayout>
 </template>

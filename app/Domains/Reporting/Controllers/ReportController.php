@@ -10,6 +10,7 @@ use App\Domains\Reporting\Services\AgingReportService;
 use App\Domains\Reporting\Services\ExportReportService;
 use App\Domains\Reporting\Services\ReportingService;
 use App\Http\Controllers\Controller;
+use App\Support\Money;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -163,7 +164,7 @@ class ReportController extends Controller
 
         // Transform to the shape the Vue component expects
         $operating = $report['operating']['adjustments'] ?? [];
-        if (isset($report['net_income']) && bccomp($report['net_income'], '0', 2) !== 0) {
+        if (isset($report['net_income']) && ! Money::isZero($report['net_income'])) {
             array_unshift($operating, ['label' => 'Net Income', 'amount' => $report['net_income']]);
         }
 

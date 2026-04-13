@@ -15,6 +15,9 @@ class SwissRounding
      *
      * Algorithm: round(amount * 20) / 20
      * Uses bcmath for arbitrary-precision arithmetic.
+     *
+     * @param  numeric-string  $amount
+     * @return numeric-string
      */
     public static function roundToFiveCents(string $amount): string
     {
@@ -29,6 +32,10 @@ class SwissRounding
      * Calculate the rounding difference (rounded - original).
      *
      * Positive = rounded up, negative = rounded down.
+     *
+     * @param  numeric-string  $original
+     * @param  numeric-string  $rounded
+     * @return numeric-string
      */
     public static function difference(string $original, string $rounded): string
     {
@@ -40,14 +47,15 @@ class SwissRounding
      *
      * Returns null if no rounding is needed, or an array with 'rounded' and 'diff'.
      *
-     * @return array{rounded: string, diff: string}|null
+     * @param  numeric-string  $amount
+     * @return array{rounded: numeric-string, diff: numeric-string}|null
      */
     public static function adjustment(string $amount): ?array
     {
         $rounded = self::roundToFiveCents($amount);
         $diff = self::difference($amount, $rounded);
 
-        if (bccomp($diff, '0', 2) === 0) { // @phpstan-ignore argument.type
+        if (bccomp($diff, '0', 2) === 0) {
             return null;
         }
 

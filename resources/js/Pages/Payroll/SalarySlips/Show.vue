@@ -44,7 +44,7 @@ function deductionRow(label, employee, employer) {
       <!-- Header card -->
       <Card>
         <CardHeader>
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>{{ t('salary_slip') }} — {{ slip.month_label }}</CardTitle>
               <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
@@ -66,6 +66,7 @@ function deductionRow(label, employee, employer) {
           <CardTitle>{{ t('salary_breakdown') }}</CardTitle>
         </CardHeader>
         <CardContent>
+          <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]">
@@ -107,11 +108,12 @@ function deductionRow(label, employee, employer) {
               </tr>
             </tfoot>
           </table>
+          </div>
         </CardContent>
       </Card>
 
       <!-- Actions -->
-      <div class="flex gap-3">
+      <div class="flex flex-wrap gap-3">
         <Button
           v-if="slip.status !== 'posted'"
           size="sm"

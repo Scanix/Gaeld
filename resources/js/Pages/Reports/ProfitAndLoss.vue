@@ -9,6 +9,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Button from '@/Components/UI/Button.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
+import SharePrintButton from '@/Components/UI/SharePrintButton.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed, watch } from 'vue'
@@ -115,7 +116,10 @@ function mergeComparison(rows, compRows, isExpense = false) {
         <FormInput id="to" v-model="to" type="date" :label="t('to')" />
         <Button @click="applyFilter">{{ t('apply') }}</Button>
       </div>
-      <ExportDropdown base-url="/reports/profit-and-loss/export" :params="{ from, to }" />
+      <div class="flex items-center gap-2">
+        <SharePrintButton :title="t('profit_and_loss')" />
+        <ExportDropdown base-url="/reports/profit-and-loss/export" :params="{ from, to }" />
+      </div>
     </div>
 
     <!-- Comparison toggle -->
@@ -140,9 +144,9 @@ function mergeComparison(rows, compRows, isExpense = false) {
             :rows="mergeComparison(report.revenue, report.comparison?.revenue, false)"
           />
           <p v-else class="text-sm text-muted-foreground">{{ t('no_revenue_entries') }}</p>
-          <div class="mt-4 flex justify-between border-t pt-3 text-sm font-semibold">
+          <div class="mt-4 flex flex-col gap-1 border-t pt-3 text-sm font-semibold sm:flex-row sm:justify-between">
             <span>{{ t('total_revenue') }}</span>
-            <div class="flex gap-8">
+            <div class="flex gap-4 sm:gap-8">
               <span>{{ formatCurrency(report.total_revenue) }}</span>
               <span v-if="compareEnabled && report.comparison" class="text-[hsl(var(--muted-foreground))]">
                 {{ formatCurrency(report.comparison.total_revenue ?? 0) }}
@@ -161,9 +165,9 @@ function mergeComparison(rows, compRows, isExpense = false) {
             :rows="mergeComparison(report.expenses, report.comparison?.expenses, true)"
           />
           <p v-else class="text-sm text-muted-foreground">{{ t('no_expense_entries') }}</p>
-          <div class="mt-4 flex justify-between border-t pt-3 text-sm font-semibold">
+          <div class="mt-4 flex flex-col gap-1 border-t pt-3 text-sm font-semibold sm:flex-row sm:justify-between">
             <span>{{ t('total_expenses') }}</span>
-            <div class="flex gap-8">
+            <div class="flex gap-4 sm:gap-8">
               <span>{{ formatCurrency(report.total_expenses) }}</span>
               <span v-if="compareEnabled && report.comparison" class="text-[hsl(var(--muted-foreground))]">
                 {{ formatCurrency(report.comparison.total_expenses ?? 0) }}
@@ -175,9 +179,9 @@ function mergeComparison(rows, compRows, isExpense = false) {
 
       <Card>
         <CardContent>
-          <div class="flex justify-between text-lg font-bold">
+          <div class="flex flex-col gap-1 text-lg font-bold sm:flex-row sm:justify-between">
             <span>{{ t('net_profit') }}</span>
-            <div class="flex gap-8">
+            <div class="flex gap-4 sm:gap-8">
               <span :class="report.net_profit >= 0 ? 'text-green-600' : 'text-red-600'">
                 {{ formatCurrency(report.net_profit) }}
               </span>
