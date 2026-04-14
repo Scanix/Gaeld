@@ -76,7 +76,6 @@ class HandleInertiaRequests extends Middleware
                     'role' => $org->pivot->role,
                 ]),
             'is_saas_admin' => fn () => FeatureFlag::isSaas()
-                && $request->is('saas-admin*')
                 && config('ee.saas_admin_email')
                 && $user->email === config('ee.saas_admin_email'),
             'ocr_quota' => fn () => $this->resolveOcrQuota($user),
