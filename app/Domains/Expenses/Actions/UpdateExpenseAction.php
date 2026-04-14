@@ -21,11 +21,18 @@ class UpdateExpenseAction
             throw new InvalidExpenseStateException('Posted expenses cannot be modified.');
         }
 
+        // Resolve the effective vat_rate_id before updating so VAT is computed correctly.
+        $vatRateId = $data->vatRateId ?? $expense->vat_rate_id;
+
+        // Compute VAT server-side before the update; never trust $data->vatAmount.
+        $vatAmount = $this->computeVatAmount($vatRateId, $data->amount);
+
         $expense->update([
             'category' => $data->category,
             'description' => $data->description ?? $expense->description,
             'amount' => $data->amount,
-            'vat_rate_id' => $data->vatRateId ?? $expense->vat_rate_id,
+            'vat_rate_id' => $vatRateId,
+            'vat_amount' => $vatAmount,
             'date' => $data->date,
             'vendor' => $data->vendor ?? $expense->vendor,
             'supplier_id' => $data->supplierId ?? $expense->supplier_id,
@@ -35,11 +42,6 @@ class UpdateExpenseAction
             'expense_account_code' => $data->expenseAccountCode ?? $expense->expense_account_code,
             'bank_account_code' => $data->bankAccountCode ?? $expense->bank_account_code,
         ]);
-
-        // Recompute VAT server-side after main update (vat_rate_id may have changed).
-        // Never trust $data->vatAmount — always derive from the rate record.
-        $expense->vat_amount = $this->computeVatAmount($expense->vat_rate_id, $data->amount);
-        $expense->save();
 
         return $expense->fresh();
     }
