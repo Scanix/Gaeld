@@ -28,11 +28,13 @@ use App\Domains\Invoicing\Queries\InvoiceQuery;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use App\Support\FeatureFlag;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @group Invoices
@@ -111,8 +113,16 @@ class InvoiceApiController extends Controller
     ): JsonResponse {
         $this->authorize('create', Invoice::class);
 
+        $orgId = $currentOrg->id();
+        $monthlyKey = 'invoices_monthly:'.$orgId.':'.now()->format('Y-m');
+        $limit = $this->resolveInvoiceMonthlyLimit($currentOrg);
+
+        if ($limit !== -1 && (int) Cache::get($monthlyKey, 0) >= $limit) {
+            return response()->json(['message' => __('app.invoice_monthly_limit_reached')], 429);
+        }
+
         $validated = $request->validated();
-        $validated['organization_id'] = $currentOrg->id();
+        $validated['organization_id'] = $orgId;
 
         $shouldAutoGenerateNumber = empty($validated['number']);
         $maxAttempts = $shouldAutoGenerateNumber ? 3 : 1;
@@ -139,6 +149,9 @@ class InvoiceApiController extends Controller
             try {
                 $dto = CreateInvoiceData::fromArray($payload);
                 $invoice = $action->execute($dto);
+
+                Cache::add($monthlyKey, 0, now()->startOfMonth()->addMonth());
+                Cache::increment($monthlyKey);
 
                 return (new InvoiceResource($invoice->load(['customer', 'lines.vatRate'])))
                     ->response()
@@ -448,5 +461,17 @@ class InvoiceApiController extends Controller
 
         return $sqlState === '23505'
             && str_contains($exception->getMessage(), 'invoices_organization_id_number_unique');
+    }
+
+    private function resolveInvoiceMonthlyLimit(CurrentOrganization $currentOrg): int
+    {
+        if (FeatureFlag::isSaas()) {
+            $plan = $currentOrg->get()->activeSubscription?->plan;
+            if ($plan && isset($plan->max_invoices_per_month)) {
+                return (int) $plan->max_invoices_per_month;
+            }
+        }
+
+        return -1;
     }
 }

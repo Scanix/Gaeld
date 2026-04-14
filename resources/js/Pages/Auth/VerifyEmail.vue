@@ -5,6 +5,7 @@ import Button from '@/Components/UI/Button.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import GuestBar from '@/Components/GuestBar.vue'
 
 const { t } = useTranslations()
 
@@ -22,6 +23,7 @@ function resend() {
 <template>
   <Head :title="t('verify_email_title')" />
 
+  <GuestBar />
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
