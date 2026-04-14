@@ -120,6 +120,7 @@ class RuleEngineService
             'bankAccount',
             fn ($q) => $q->where('organization_id', $organizationId)
         )
+            ->with('bankAccount')
             ->where('is_reconciled', false)
             ->get();
 
