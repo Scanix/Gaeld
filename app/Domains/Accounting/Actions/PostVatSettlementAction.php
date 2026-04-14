@@ -10,6 +10,7 @@ use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\VatReportService;
 use App\Support\Money;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -79,25 +80,27 @@ final class PostVatSettlementAction
 
         $reference = "VAT-SETTLEMENT-{$fromDate}-{$toDate}";
 
-        $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
-            date: $toDate,
-            reference: $reference,
-            description: "VAT settlement for period {$fromDate} to {$toDate}",
-            lines: $lines,
-        ));
+        return DB::transaction(function () use ($orgId, $reference, $toDate, $fromDate, $lines, $totalOutputVat, $totalInputVat, $netVat): JournalEntry {
+            $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
+                date: $toDate,
+                reference: $reference,
+                description: "VAT settlement for period {$fromDate} to {$toDate}",
+                lines: $lines,
+            ));
 
-        $journalEntry->update(['type' => 'vat_settlement']);
+            $journalEntry->update(['type' => 'vat_settlement']);
 
-        Log::info('VAT settlement posted', [
-            'organization_id' => $orgId,
-            'period' => "{$fromDate} to {$toDate}",
-            'reference' => $reference,
-            'output_vat' => $totalOutputVat,
-            'input_vat' => $totalInputVat,
-            'net_vat' => $netVat,
-            'journal_entry_id' => $journalEntry->id,
-        ]);
+            Log::info('VAT settlement posted', [
+                'organization_id' => $orgId,
+                'period' => "{$fromDate} to {$toDate}",
+                'reference' => $reference,
+                'output_vat' => $totalOutputVat,
+                'input_vat' => $totalInputVat,
+                'net_vat' => $netVat,
+                'journal_entry_id' => $journalEntry->id,
+            ]);
 
-        return $journalEntry;
+            return $journalEntry;
+        });
     }
 }

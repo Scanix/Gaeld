@@ -17,18 +17,14 @@ class CreateExpenseAction
 {
     public function execute(CreateExpenseData $data): Expense
     {
-        // Create the expense without vat_amount — it is set below via direct assignment.
-        $expense = Expense::create([
+        // Compute VAT server-side before creating; never trust $data->vatAmount.
+        $vatAmount = $this->computeVatAmount($data->vatRateId, $data->amount);
+
+        return Expense::create([
             ...$data->toArray(),
             'status' => ExpenseStatus::Pending,
-            'vat_amount' => 0,
+            'vat_amount' => $vatAmount,
         ]);
-
-        // Compute VAT server-side; never trust $data->vatAmount.
-        $expense->vat_amount = $this->computeVatAmount($data->vatRateId, $data->amount);
-        $expense->save();
-
-        return $expense;
     }
 
     /**

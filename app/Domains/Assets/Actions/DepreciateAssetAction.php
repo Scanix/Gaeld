@@ -10,6 +10,7 @@ use App\Domains\Assets\Models\FixedAsset;
 use App\Domains\Assets\Services\DepreciationCalculator;
 use App\Support\Money;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Records a monthly depreciation entry for a fixed asset and posts the journal entry.
@@ -64,14 +65,16 @@ class DepreciateAssetAction
             ],
         );
 
-        $journalEntry = $this->ledger->postEntry($asset->organization_id, $entry);
+        return DB::transaction(function () use ($asset, $entry, $monthlyAmount, $periodDate): DepreciationEntry {
+            $journalEntry = $this->ledger->postEntry($asset->organization_id, $entry);
 
-        return DepreciationEntry::create([
-            'fixed_asset_id' => $asset->id,
-            'journal_entry_id' => $journalEntry->id,
-            'amount' => $monthlyAmount,
-            'period_date' => $periodDate->toDateString(),
-            'created_at' => now(),
-        ]);
+            return DepreciationEntry::create([
+                'fixed_asset_id' => $asset->id,
+                'journal_entry_id' => $journalEntry->id,
+                'amount' => $monthlyAmount,
+                'period_date' => $periodDate->toDateString(),
+                'created_at' => now(),
+            ]);
+        });
     }
 }

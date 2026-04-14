@@ -8,6 +8,7 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Posts a journal entry for Swiss social charges (AVS/AI/APG) on independent income.
@@ -44,10 +45,12 @@ final class PostSocialChargesAction
             ],
         );
 
-        $journalEntry = $this->ledgerService->postEntry($organizationId, $entry);
+        return DB::transaction(function () use ($organizationId, $entry): JournalEntry {
+            $journalEntry = $this->ledgerService->postEntry($organizationId, $entry);
 
-        $journalEntry->update(['type' => 'social_charges']);
+            $journalEntry->update(['type' => 'social_charges']);
 
-        return $journalEntry;
+            return $journalEntry;
+        });
     }
 }
