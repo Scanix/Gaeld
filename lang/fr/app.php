@@ -297,6 +297,7 @@ return [
     'manage_customers' => 'Gérez et consultez vos clients.',
     'edit_customer' => 'Modifier le client',
     'delete_customer' => 'Supprimer le client',
+    'customer_has_linked_records' => 'Ce client ne peut pas être supprimé car il possède des enregistrements liés (factures, paiements, etc.).',
     'phone' => 'Téléphone',
     'internal_notes' => 'Notes internes',
     'default_category' => 'Catégorie par défaut',
@@ -310,6 +311,7 @@ return [
     'manage_suppliers' => 'Gérez et consultez vos fournisseurs.',
     'edit_supplier' => 'Modifier le fournisseur',
     'delete_supplier' => 'Supprimer le fournisseur',
+    'supplier_has_linked_records' => 'Ce fournisseur ne peut pas être supprimé car il possède des enregistrements liés (dépenses, paiements, etc.).',
     'no_suppliers_yet' => 'Aucun fournisseur pour le moment',
     'no_suppliers_yet_desc' => 'Ajoutez votre premier fournisseur pour commencer.',
 
@@ -757,6 +759,7 @@ return [
     'invitation_cancelled' => 'Invitation annulée.',
     'invitation_resent' => 'Invitation renvoyée.',
     'invitation_expired' => 'Cette invitation a expiré.',
+    'invitation_wrong_account' => 'Cette invitation a été envoyée à une adresse e-mail différente. Veuillez vous connecter avec le bon compte.',
     'invitation_no_account' => 'Vous devez d\'abord créer un compte pour accepter cette invitation.',
     'invitation_email_subject' => 'Vous avez été invité à rejoindre :organization sur Gäld',
     'invitation_email_greeting' => 'Bonjour !',

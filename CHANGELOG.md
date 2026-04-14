@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.18.0] — 2026-04-14
+
+### Added
+- **Security: invitation email guard** — `InvitationController::accept` and `InvitationService::accept` now verify the authenticated user's email matches the invitation before proceeding (defense-in-depth against cross-account invitation acceptance).
+- **Security: invoice lifecycle policies** — `InvoicePolicy` now has dedicated `duplicate` and `creditNote` gates (previously used the generic `view` gate), and `recordPayment` is restricted to `Sent`/`Overdue` invoices only.
+- **Security: cross-org IDOR prevention** — `BasePolicy::belongsToOrganization` now validates against the bound `CurrentOrganization` when available, preventing access to resources from non-active organizations.
+- **Security: VAT server-side enforcement** — `CreateExpenseAction` and `UpdateExpenseAction` now compute VAT amount server-side from the VAT rate record; client-supplied VAT values are ignored to prevent financial manipulation.
+- **Security: expense account type validation** — `expense_account_code` validation now restricts to accounts of type `Expense` only.
+- **Security: invoice duplicate/creditNote authorization** — `InvoiceLifecycleController` now uses `duplicate` and `creditNote` policy gates instead of the generic `view` gate.
+- **Sentry Vite plugin** — source maps are uploaded to Sentry on EE production builds; `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` added to `.env.production.example`.
+- **CSP nonce** — `AddSecurityHeaders` generates a per-request CSP nonce and replaces `unsafe-inline` with `nonce-{nonce}` in the `Content-Security-Policy` header.
+- **GDPR retention** — `UserService::deleteAccount` preserves organizations with posted journal entries (Swiss OR Art. 958f), anonymizing user PII instead of hard-deleting.
+- **AHV encryption migration** — new migration to encrypt employee AHV numbers at rest.
+- **i18n** — `invitation_wrong_account` key added across DE, EN, FR, IT.
+
+### Changed
+- **Throttle in dev/test** — rate limiting is now disabled only when `DISABLE_THROTTLE=true` is set (opt-in), not unconditionally in `testing` environment.
+- **`is_saas_admin` lazy evaluation** — Inertia shared `is_saas_admin` prop is now a closure evaluated only on `saas-admin/*` routes.
+- **CAMT XML parsing** — hardened with additional validation.
+
+### Moved (EE)
+- **Sentry Laravel** — `sentry/sentry-laravel` moved from core `composer.json` to the `gaeld-ee` plugin; Sentry service provider is booted conditionally by `GaeldEEServiceProvider` when `SENTRY_LARAVEL_DSN` is set.
+
+### Chore
+- **Dependencies** — all Composer and pnpm packages updated to latest minor/patch versions across `api`, `web`, `docs`, `dl-stockaj`.
+- **CE isolation** — removed `gaeld-ee` namespace references from `Organization.php`, `phpstan.neon`, `contract/app-contract.json`, and route comments; `WithActiveSubscription` test trait uses dynamic class resolution.
+
+---
+
 ## [2.12.0] — 2026-04-12
 
 ### Added
@@ -72,7 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Invoicing** — harden recurring-invoice generation job and invoice number sequencing edge cases.
-- **Multi-currency** — correct exchange-rate cache key collision (gaeld-ee).
+- **Multi-currency** — correct exchange-rate cache key collision.
 
 ### Improved
 - **i18n** — notification-related keys added across DE, EN, FR, IT.

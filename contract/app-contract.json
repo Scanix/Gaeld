@@ -326,7 +326,7 @@
       ]
     },
     "ee_plugin_routes": {
-      "note": "These routes are loaded dynamically by GaeldEEServiceProvider via PluginServiceProvider when the gaeld-ee plugin is enabled.",
+      "note": "These routes are loaded dynamically by a private plugin via PluginServiceProvider when the plugin is enabled.",
       "cost_centers": {"path": "/accounting/cost-centers", "feature_gate": "analytical", "page": "Accounting/CostCenters"},
       "exchange_rates": {"path": "/accounting/exchange-rates", "feature_gate": "multi_currency", "page": "Accounting/ExchangeRates"},
       "tax_declarations": {"path": "/accounting/tax-declarations", "feature_gate": "tax_declaration", "page": "Accounting/TaxDeclarations/*"},

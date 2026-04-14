@@ -28,12 +28,12 @@ class CreateInvoiceAction
                 'type' => InvoiceType::Invoice,
                 'issue_date' => $data->issueDate,
                 'due_date' => $data->dueDate,
-                'currency' => $data->currency,
-                'notes' => $data->notes,
-                'payment_terms' => $data->paymentTerms,
                 'subtotal' => 0,
                 'vat_amount' => 0,
                 'total' => 0,
+                'currency' => $data->currency,
+                'notes' => $data->notes,
+                'payment_terms' => $data->paymentTerms,
             ]);
 
             $this->syncInvoiceLines->create($invoice, $data->lines);

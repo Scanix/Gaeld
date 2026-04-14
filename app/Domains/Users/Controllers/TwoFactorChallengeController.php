@@ -197,7 +197,7 @@ class TwoFactorChallengeController extends Controller
             '/',
             $domain,
             config('session.secure', true),
-            false,
+            true,  // httpOnly — Next.js middleware reads cookies server-side, not via JS
             false,
             config('session.same_site', 'lax'),
         );

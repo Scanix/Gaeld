@@ -297,6 +297,7 @@ return [
     'manage_customers' => 'Gestisci e visualizza i tuoi clienti.',
     'edit_customer' => 'Modifica cliente',
     'delete_customer' => 'Elimina cliente',
+    'customer_has_linked_records' => 'Questo cliente non può essere eliminato perché ha record collegati (fatture, pagamenti, ecc.).',
     'phone' => 'Telefono',
     'internal_notes' => 'Note interne',
     'default_category' => 'Categoria predefinita',
@@ -310,6 +311,7 @@ return [
     'manage_suppliers' => 'Gestisci e visualizza i tuoi fornitori.',
     'edit_supplier' => 'Modifica fornitore',
     'delete_supplier' => 'Elimina fornitore',
+    'supplier_has_linked_records' => 'Questo fornitore non può essere eliminato perché ha record collegati (spese, pagamenti, ecc.).',
     'no_suppliers_yet' => 'Nessun fornitore presente',
     'no_suppliers_yet_desc' => 'Aggiungi il tuo primo fornitore per iniziare.',
 
@@ -751,6 +753,7 @@ return [
     'invitation_cancelled' => 'Invito annullato.',
     'invitation_resent' => 'Invito reinviato.',
     'invitation_expired' => 'Questo invito è scaduto.',
+    'invitation_wrong_account' => 'Questo invito è stato inviato a un indirizzo e-mail diverso. Accedi con l\'account corretto.',
     'invitation_no_account' => 'Devi prima creare un account per accettare questo invito.',
     'invitation_email_subject' => 'Sei stato invitato a unirti a :organization su Gäld',
     'invitation_email_greeting' => 'Ciao!',

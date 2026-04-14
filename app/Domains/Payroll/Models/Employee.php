@@ -40,6 +40,9 @@ class Employee extends Model
 
     protected $appends = ['status'];
 
+    // ahv_number is hidden from array/JSON serialization; access explicitly only.
+    protected $hidden = ['ahv_number'];
+
     protected $fillable = [
         'organization_id',
         'first_name',
@@ -61,6 +64,9 @@ class Employee extends Model
             'gross_salary' => 'decimal:2',
             'is_active' => 'boolean',
             'is_source_tax_subject' => 'boolean',
+            // ahv_number is encrypted at rest using Laravel's Encrypter (APP_KEY).
+            // Stored ciphertext is never interpretable without the application key.
+            'ahv_number' => 'encrypted',
         ];
     }
 
