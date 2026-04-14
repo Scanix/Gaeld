@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/Scanix/Gaeld/actions/workflows/ci.yml"><img src="https://github.com/Scanix/Gaeld/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="License: AGPL v3"></a>
-  <a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-8.3%2B-777BB4.svg" alt="PHP 8.3+"></a>
+  <a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-8.4%2B-777BB4.svg" alt="PHP 8.4+"></a>
   <a href="https://laravel.com/"><img src="https://img.shields.io/badge/Laravel-13-FF2D20.svg" alt="Laravel 13"></a>
 </p>
 
@@ -59,7 +59,7 @@ docker compose exec laravel.test php artisan gaeld:install --demo
 
 ```bash
 composer install
-npm install && npm run build
+pnpm install && pnpm run build
 cp .env.example .env
 php artisan key:generate
 php artisan gaeld:install
@@ -143,8 +143,8 @@ Plugins are auto-discovered on boot. See `plugins/example-plugin/` for a minimal
 Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a PR.
 
 ```bash
-php artisan test          # run the test suite
-./vendor/bin/pint         # fix code style
+docker compose exec laravel.test php artisan test   # run the test suite
+./vendor/bin/pint                                   # fix code style
 ```
 
 Please keep pull requests focused and include tests for new behaviour.
