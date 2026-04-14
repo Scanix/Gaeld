@@ -117,8 +117,14 @@ class InvoiceApiController extends Controller
         $monthlyKey = 'invoices_monthly:'.$orgId.':'.now()->format('Y-m');
         $limit = $this->resolveInvoiceMonthlyLimit($currentOrg);
 
-        if ($limit !== -1 && (int) Cache::get($monthlyKey, 0) >= $limit) {
-            return response()->json(['message' => __('app.invoice_monthly_limit_reached')], 429);
+        if ($limit !== -1) {
+            Cache::add($monthlyKey, 0, now()->startOfMonth()->addMonth());
+            $newCount = Cache::increment($monthlyKey);
+            if ($newCount > $limit) {
+                Cache::decrement($monthlyKey);
+
+                return response()->json(['message' => __('app.invoice_monthly_limit_reached')], 429);
+            }
         }
 
         $validated = $request->validated();
@@ -150,17 +156,21 @@ class InvoiceApiController extends Controller
                 $dto = CreateInvoiceData::fromArray($payload);
                 $invoice = $action->execute($dto);
 
-                Cache::add($monthlyKey, 0, now()->startOfMonth()->addMonth());
-                Cache::increment($monthlyKey);
-
                 return (new InvoiceResource($invoice->load(['customer', 'lines.vatRate'])))
                     ->response()
                     ->setStatusCode(201);
             } catch (QueryException $exception) {
                 if (! $shouldAutoGenerateNumber || ! $this->isInvoiceNumberConflict($exception) || $attempt === $maxAttempts) {
+                    if ($limit !== -1) {
+                        Cache::decrement($monthlyKey);
+                    }
                     throw $exception;
                 }
             }
+        }
+
+        if ($limit !== -1) {
+            Cache::decrement($monthlyKey);
         }
 
         throw new \RuntimeException('Unable to create invoice after retrying invoice number generation.');

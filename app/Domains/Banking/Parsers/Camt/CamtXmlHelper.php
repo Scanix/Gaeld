@@ -156,6 +156,9 @@ trait CamtXmlHelper
 
     private function loadXml(string $xml): \DOMDocument
     {
+        // Strip any DOCTYPE declaration to prevent XXE even with LIBXML_NONET
+        $xml = (string) preg_replace('/<!DOCTYPE[^>]*>/i', '', $xml);
+
         $previousUseErrors = libxml_use_internal_errors(true);
         $doc = new \DOMDocument;
 

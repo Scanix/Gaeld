@@ -86,6 +86,7 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Create a cross-domain cookie to signal login state to the landing site.
+     * Read server-side by the Next.js edge middleware — httpOnly is safe.
      */
     private function authCookie(bool $authenticated): Cookie
     {
@@ -98,7 +99,7 @@ class AuthenticatedSessionController extends Controller
             '/',
             $domain,
             config('session.secure', true),
-            false, // httpOnly=false so JS on landing site can read it
+            true,  // httpOnly — Next.js middleware reads cookies server-side, not via JS
             false,
             config('session.same_site', 'lax'),
         );

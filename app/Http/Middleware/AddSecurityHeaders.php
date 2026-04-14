@@ -10,6 +10,11 @@ class AddSecurityHeaders
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Generate a per-request CSP nonce before the response is built so that
+        // Blade templates can embed it via app('csp-nonce').
+        $nonce = base64_encode(random_bytes(16));
+        app()->instance('csp-nonce', $nonce);
+
         $response = $next($request);
 
         $response->headers->remove('X-Powered-By');
@@ -41,7 +46,7 @@ class AddSecurityHeaders
             $isHorizon = $request->is('horizon') || $request->is('horizon/*');
             $scriptSrc = $isHorizon
                 ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com"
-                : "script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com";
+                : "script-src 'self' 'nonce-{$nonce}' https://js.stripe.com https://www.googletagmanager.com";
 
             $response->headers->set(
                 'Content-Security-Policy',

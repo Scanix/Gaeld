@@ -20,7 +20,7 @@
         <meta name="apple-mobile-web-app-title" content="Gäld">
 
         {{-- Prevent flash of wrong theme --}}
-        <script>
+        <script nonce="{{ app('csp-nonce') }}">
           (function(){
             var t=localStorage.getItem('gaeld-theme')||'system';
             var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches);
@@ -34,7 +34,7 @@
         @inertiaHead
 
         {{-- Register PWA service worker --}}
-        <script>
+        <script nonce="{{ app('csp-nonce') }}">
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
               navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});

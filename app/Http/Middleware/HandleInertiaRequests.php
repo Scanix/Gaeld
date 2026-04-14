@@ -29,7 +29,7 @@ class HandleInertiaRequests extends Middleware
         }
 
         return array_merge(parent::share($request), [
-            'auth' => $user ? $this->resolveAuth($user) : null,
+            'auth' => $user ? $this->resolveAuth($user, $request) : null,
             'locale' => App::getLocale(),
             'translations' => fn () => trans('app'),
             'features' => FeatureFlag::all(),
@@ -50,7 +50,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * @return array<string, mixed>
      */
-    private function resolveAuth(User $user): array
+    private function resolveAuth(User $user, Request $request): array
     {
         return [
             'user' => [
@@ -75,7 +75,8 @@ class HandleInertiaRequests extends Middleware
                     'name' => $org->name,
                     'role' => $org->pivot->role,
                 ]),
-            'is_saas_admin' => FeatureFlag::isSaas()
+            'is_saas_admin' => fn () => FeatureFlag::isSaas()
+                && $request->is('saas-admin*')
                 && config('ee.saas_admin_email')
                 && $user->email === config('ee.saas_admin_email'),
             'ocr_quota' => fn () => $this->resolveOcrQuota($user),

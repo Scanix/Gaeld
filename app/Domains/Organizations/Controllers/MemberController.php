@@ -24,6 +24,11 @@ class MemberController extends Controller
     {
         $this->authorize('manageUsers', $organization);
 
+        abort_unless(
+            $organization->users()->where('users.id', $user->id)->exists(),
+            404,
+        );
+
         $validated = $request->validate([
             'role' => ['required', new Enum(Role::class)],
         ]);
@@ -50,6 +55,11 @@ class MemberController extends Controller
     public function remove(Request $request, Organization $organization, User $user): RedirectResponse
     {
         $this->authorize('manageUsers', $organization);
+
+        abort_unless(
+            $organization->users()->where('users.id', $user->id)->exists(),
+            404,
+        );
 
         // Prevent removing self via this endpoint (use leave instead)
         if ($request->user()->id === $user->id) {

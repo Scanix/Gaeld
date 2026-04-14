@@ -301,6 +301,7 @@ return [
     'no_customers_yet_desc' => 'Add customers to start sending invoices.',
     'edit_customer' => 'Edit Customer',
     'delete_customer' => 'Delete Customer',
+    'customer_has_linked_records' => 'This customer cannot be deleted because it has linked records (invoices, payments, etc.).',
     'phone' => 'Phone',
     'internal_notes' => 'Internal Notes',
     'default_category' => 'Default Category',
@@ -314,6 +315,7 @@ return [
     'no_suppliers_yet_desc' => 'Add suppliers to track your business purchases.',
     'edit_supplier' => 'Edit Supplier',
     'delete_supplier' => 'Delete Supplier',
+    'supplier_has_linked_records' => 'This supplier cannot be deleted because it has linked records (expenses, payments, etc.).',
 
     // Accounting
     'posted' => 'Posted',
@@ -770,6 +772,7 @@ return [
     'invitation_cancelled' => 'Invitation cancelled.',
     'invitation_resent' => 'Invitation resent.',
     'invitation_expired' => 'This invitation has expired.',
+    'invitation_wrong_account' => 'This invitation was sent to a different email address. Please sign in with the correct account.',
     'invitation_no_account' => 'You need to create an account first to accept this invitation.',
     'invitation_email_subject' => 'You\'ve been invited to join :organization on Gäld',
     'invitation_email_greeting' => 'Hello!',

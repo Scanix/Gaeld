@@ -43,8 +43,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'subscription' => EnsureActiveSubscription::class,
         ]);
 
-        // Disable rate limiting in testing environment (Docker test stack)
-        if (env('APP_ENV') === 'testing') {
+        // Disable rate limiting only when explicitly opted-in during testing/local dev
+        if (in_array(env('APP_ENV'), ['testing', 'local'], true) && (bool) env('DISABLE_THROTTLE', false)) {
             $middleware->alias([
                 'org' => EnsureHasOrganization::class,
                 'org-2fa' => EnsureOrganizationTwoFactor::class,
