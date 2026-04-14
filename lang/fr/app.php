@@ -1934,4 +1934,10 @@ return [
     'expense_submitted_notification' => 'La dépense soumise par :name est en attente d\'approbation.',
     'expense_approved_notification' => 'Votre dépense a été approuvée.',
     'invoice_payment_recorded_notification' => 'Paiement enregistré pour la facture :number.',
+
+    // Form validation (client-side)
+    'field_required' => 'Ce champ est obligatoire.',
+    'password_min_length' => 'Le mot de passe doit comporter au moins 8 caractères.',
+    'passwords_do_not_match' => 'Les mots de passe ne correspondent pas.',
+    'no_journal_lines' => 'Aucune ligne d\'écriture comptable trouvée.',
 ];

@@ -1926,4 +1926,10 @@ return [
     'expense_submitted_notification' => 'Expense submitted by :name is awaiting approval.',
     'expense_approved_notification' => 'Your expense has been approved.',
     'invoice_payment_recorded_notification' => 'Payment recorded for invoice :number.',
+
+    // Form validation (client-side)
+    'field_required' => 'This field is required.',
+    'password_min_length' => 'Password must be at least 8 characters.',
+    'passwords_do_not_match' => 'Passwords do not match.',
+    'no_journal_lines' => 'No journal entry lines found.',
 ];
