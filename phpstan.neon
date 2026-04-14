@@ -9,6 +9,12 @@ parameters:
     level: 7
 
     ignoreErrors:
+        # The EE plugin is a private repo cloned only on deploy / local dev.
+        # On open-source CI (GitHub) these classes are absent — suppress class.notFound.
+        -
+            identifier: class.notFound
+            message: '#Plugins\\GaeldEE\\#'
+            reportUnmatched: false
 
     excludePaths:
         - app/Console/
