@@ -84,7 +84,7 @@ class InvoiceLifecycleController extends Controller
 
     public function duplicate(Invoice $invoice, DuplicateInvoiceAction $action): RedirectResponse
     {
-        $this->authorize('view', $invoice);
+        $this->authorize('duplicate', $invoice);
 
         $newInvoice = $action->execute($invoice);
 
@@ -94,7 +94,7 @@ class InvoiceLifecycleController extends Controller
 
     public function creditNote(Invoice $invoice, CreateCreditNoteAction $action): RedirectResponse
     {
-        $this->authorize('view', $invoice);
+        $this->authorize('creditNote', $invoice);
 
         try {
             $creditNote = $action->execute($invoice);

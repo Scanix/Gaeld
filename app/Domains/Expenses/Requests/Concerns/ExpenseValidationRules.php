@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Requests\Concerns;
 
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Expenses\Enums\ExpenseType;
 use Illuminate\Validation\Rule;
 
@@ -34,7 +35,9 @@ trait ExpenseValidationRules
             'expense_account_code' => [
                 'nullable',
                 'string',
-                Rule::exists('accounts', 'code')->where('organization_id', $orgId),
+                Rule::exists('accounts', 'code')
+                    ->where('organization_id', $orgId)
+                    ->where('type', AccountType::Expense->value),
             ],
             'bank_account_code' => [
                 'nullable',

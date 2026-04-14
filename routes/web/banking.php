@@ -32,5 +32,5 @@ Route::middleware('feature:auto_reconciliation')->group(function () {
 
 // Bank sync (EE only — feature:bank_sync, routes defined in EE plugin routes/web.php)
 Route::middleware('feature:bank_sync')->group(function () {
-    // EE routes loaded from gaeld-ee plugin
+    // Routes loaded via PluginServiceProvider when a compatible plugin is enabled
 });

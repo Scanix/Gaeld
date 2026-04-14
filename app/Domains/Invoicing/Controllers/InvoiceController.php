@@ -70,8 +70,14 @@ class InvoiceController extends Controller
         $monthlyKey = 'invoices_monthly:'.$orgId.':'.now()->format('Y-m');
         $limit = $this->resolveInvoiceMonthlyLimit($currentOrg);
 
-        if ($limit !== -1 && (int) Cache::get($monthlyKey, 0) >= $limit) {
-            return redirect()->back()->with('error', __('app.invoice_monthly_limit_reached'));
+        if ($limit !== -1) {
+            Cache::add($monthlyKey, 0, now()->startOfMonth()->addMonth());
+            $newCount = Cache::increment($monthlyKey);
+            if ($newCount > $limit) {
+                Cache::decrement($monthlyKey);
+
+                return redirect()->back()->with('error', __('app.invoice_monthly_limit_reached'));
+            }
         }
 
         $validated = $request->validated();
@@ -87,9 +93,6 @@ class InvoiceController extends Controller
         $dto = CreateInvoiceData::fromArray($validated);
 
         $invoice = $action->execute($dto);
-
-        Cache::add($monthlyKey, 0, now()->startOfMonth()->addMonth());
-        Cache::increment($monthlyKey);
 
         if ($request->boolean('finalize')) {
             $finalizeAction->execute($invoice);

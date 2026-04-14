@@ -74,6 +74,11 @@ class InvitationService
             ->whereNull('accepted_at')
             ->firstOrFail();
 
+        // Defense-in-depth: verify the authenticated user's email matches the invitation
+        if (auth()->check() && auth()->user()->email !== $invitation->email) {
+            abort(403, __('app.invitation_wrong_account'));
+        }
+
         if ($invitation->isExpired()) {
             throw ValidationException::withMessages([
                 'token' => [__('app.invitation_expired')],
