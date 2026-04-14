@@ -39,6 +39,9 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
                 'warning' => $request->session()->get('warning'),
                 'info' => $request->session()->get('info'),
+                'preview' => $request->session()->get('preview'),
+                'newToken' => $request->session()->get('newToken'),
+                'webhookSecret' => $request->session()->get('webhookSecret'),
             ],
             'twoFactor' => fn () => $request->session()->get('twoFactor'),
             'systemMessage' => FeatureFlag::isSaas()
