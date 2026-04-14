@@ -72,7 +72,7 @@ class ReconciliationController extends Controller
         $filter = $request->input('filter', 'unreconciled');
 
         $transactionsQuery = $bankAccount->transactions()
-            ->with(['matchedInvoice.customer', 'matchedExpense', 'journalEntry'])
+            ->with(['bankAccount', 'matchedInvoice.customer', 'matchedExpense', 'journalEntry'])
             ->orderByDesc('date');
 
         if ($filter === 'unreconciled') {
