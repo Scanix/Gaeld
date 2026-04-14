@@ -19,9 +19,11 @@ use App\Domains\Invoicing\Requests\UpdateInvoiceRequest;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use App\Support\FeatureFlag;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -64,8 +66,16 @@ class InvoiceController extends Controller
 
     public function store(StoreInvoiceRequest $request, CreateInvoiceAction $action, CurrentOrganization $currentOrg, FinalizeInvoiceAction $finalizeAction): RedirectResponse
     {
+        $orgId = $currentOrg->id();
+        $monthlyKey = 'invoices_monthly:'.$orgId.':'.now()->format('Y-m');
+        $limit = $this->resolveInvoiceMonthlyLimit($currentOrg);
+
+        if ($limit !== -1 && (int) Cache::get($monthlyKey, 0) >= $limit) {
+            return redirect()->back()->with('error', __('app.invoice_monthly_limit_reached'));
+        }
+
         $validated = $request->validated();
-        $validated['organization_id'] = $currentOrg->id();
+        $validated['organization_id'] = $orgId;
 
         if ($request->hasFile('justificatif')) {
             $validated['justificatif_path'] = $this->uploadService->store(
@@ -77,6 +87,9 @@ class InvoiceController extends Controller
         $dto = CreateInvoiceData::fromArray($validated);
 
         $invoice = $action->execute($dto);
+
+        Cache::add($monthlyKey, 0, now()->startOfMonth()->addMonth());
+        Cache::increment($monthlyKey);
 
         if ($request->boolean('finalize')) {
             $finalizeAction->execute($invoice);
@@ -164,5 +177,17 @@ class InvoiceController extends Controller
 
         return redirect()->route('invoices.index')
             ->with('success', __('app.invoice_deleted'));
+    }
+
+    private function resolveInvoiceMonthlyLimit(CurrentOrganization $currentOrg): int
+    {
+        if (FeatureFlag::isSaas()) {
+            $plan = $currentOrg->get()->activeSubscription?->plan;
+            if ($plan && isset($plan->max_invoices_per_month)) {
+                return (int) $plan->max_invoices_per_month;
+            }
+        }
+
+        return -1;
     }
 }

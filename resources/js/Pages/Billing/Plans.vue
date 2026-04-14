@@ -35,6 +35,13 @@ const isTrialingWithoutStripe = computed(() =>
   props.currentSubscription?.status === 'trialing' && !props.currentSubscription?.has_stripe
 )
 
+const invoiceQuota = computed(() => page.props.auth?.invoice_quota ?? { invoices_this_month: 0, invoice_monthly_limit: -1 })
+const invoiceQuotaPercent = computed(() => {
+  const { invoices_this_month, invoice_monthly_limit } = invoiceQuota.value
+  if (invoice_monthly_limit === -1) return null
+  return Math.min(100, Math.round((invoices_this_month / invoice_monthly_limit) * 100))
+})
+
 const statusBadgeClass = {
   active: 'text-[hsl(var(--primary))] bg-[hsl(var(--accent))]',
   trialing: 'text-blue-700 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/50',
@@ -133,6 +140,21 @@ function openPortal() {
             <div v-if="currentSubscription.ends_at">
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('subscription_ends') }}</p>
               <p class="font-semibold mt-0.5">{{ currentSubscription.ends_at }}</p>
+            </div>
+          </div>
+
+          <!-- Invoice monthly usage (only shown when plan has a limit) -->
+          <div v-if="invoiceQuotaPercent !== null" class="border-t border-[hsl(var(--border))] pt-4">
+            <div class="flex items-center justify-between text-sm mb-1.5">
+              <span class="text-[hsl(var(--muted-foreground))]">{{ t('invoices_this_month') }}</span>
+              <span class="font-medium">{{ invoiceQuota.invoices_this_month }} / {{ invoiceQuota.invoice_monthly_limit }}</span>
+            </div>
+            <div class="h-2 rounded-full bg-[hsl(var(--muted))] overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all"
+                :class="invoiceQuotaPercent >= 90 ? 'bg-[hsl(var(--destructive))]' : 'bg-[hsl(var(--primary))]'"
+                :style="{ width: `${invoiceQuotaPercent}%` }"
+              />
             </div>
           </div>
 
@@ -267,6 +289,10 @@ function openPortal() {
                 <li class="flex items-center gap-2">
                   <CheckCircle2 class="h-4 w-4 text-[hsl(var(--primary))] shrink-0" />
                   {{ plan.max_invoices_per_month === -1 ? t('unlimited_invoices') : `${plan.max_invoices_per_month} ${t('invoices_per_month')}` }}
+                </li>
+                <li class="flex items-center gap-2">
+                  <CheckCircle2 class="h-4 w-4 text-[hsl(var(--primary))] shrink-0" />
+                  {{ plan.max_ocr_scans_per_day === -1 ? t('unlimited_ocr_per_day') : `${plan.max_ocr_scans_per_day} ${t('ocr_scans_per_day')}` }}
                 </li>
                 <li v-for="feature in plan.features" :key="feature" class="flex items-center gap-2">
                   <CheckCircle2 class="h-4 w-4 text-[hsl(var(--primary))] shrink-0" />

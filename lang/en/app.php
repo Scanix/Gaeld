@@ -46,8 +46,11 @@ return [
     'month' => 'Month',
     'unlimited_users' => 'Unlimited users',
     'unlimited_invoices' => 'Unlimited invoices',
+    'unlimited_ocr_per_day' => 'Unlimited receipt scans/day',
     'users' => 'users',
     'invoices_per_month' => 'invoices / month',
+    'ocr_scans_per_day' => 'receipt scans / day',
+    'invoices_this_month' => 'Invoices this month',
     'payment_failed_warning' => 'Your last payment failed. Please update your payment method to keep access.',
     'update_payment_method' => 'Update payment method',
     'subscription_grace_period' => 'Your subscription is canceled and will end on :date. Resubscribe to keep access.',
@@ -1899,6 +1902,9 @@ return [
 
     // OCR rate limiting
     'ocr_daily_limit_reached' => 'Daily scan limit reached. You can scan :limit receipts per day.',
+
+    // Invoice monthly limit
+    'invoice_monthly_limit_reached' => 'Monthly invoice limit reached. Upgrade your plan to create more invoices.',
 
     // Notifications
     'notifications_title' => 'Notifications',

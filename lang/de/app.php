@@ -54,8 +54,11 @@ return [
     'month' => 'Monat',
     'unlimited_users' => 'Unbegrenzte Benutzer',
     'unlimited_invoices' => 'Unbegrenzte Rechnungen',
+    'unlimited_ocr_per_day' => 'Unbegrenzte Belegscans/Tag',
     'users' => 'Benutzer',
     'invoices_per_month' => 'Rechnungen / Monat',
+    'ocr_scans_per_day' => 'Belegscans / Tag',
+    'invoices_this_month' => 'Rechnungen diesen Monat',
     'payment_failed_warning' => 'Ihre letzte Zahlung ist fehlgeschlagen. Bitte aktualisieren Sie Ihre Zahlungsmethode, um den Zugang zu behalten.',
     'update_payment_method' => 'Zahlungsmethode aktualisieren',
     'subscription_grace_period' => 'Ihr Abonnement ist gekündigt und endet am :date. Erneuern Sie es, um den Zugang zu behalten.',
@@ -1883,6 +1886,9 @@ return [
 
     // OCR rate limiting
     'ocr_daily_limit_reached' => 'Tägliches Scanlimit erreicht. Sie können :limit Belege pro Tag scannen.',
+
+    // Invoice monthly limit
+    'invoice_monthly_limit_reached' => 'Monatliches Rechnungslimit erreicht. Upgraden Sie Ihren Plan, um mehr Rechnungen zu erstellen.',
 
     // Notifications
     'notifications_title' => 'Benachrichtigungen',

@@ -6,6 +6,7 @@ import Card from '@/Components/UI/Card.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
+import GuestBar from '@/Components/GuestBar.vue'
 import { startAuthentication, browserSupportsWebAuthn } from '@simplewebauthn/browser'
 
 const { t } = useTranslations()
@@ -99,6 +100,7 @@ async function verifyWithPasskey() {
 <template>
   <Head :title="t('two_factor_challenge_title')" />
 
+  <GuestBar />
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">

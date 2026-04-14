@@ -72,6 +72,18 @@ function submit() {
           </p>
           <p class="text-xs text-[hsl(var(--muted-foreground))] mt-1">{{ plan.description }}</p>
           <ul class="mt-3 space-y-1">
+            <li class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
+              <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
+              {{ plan.max_users === -1 ? t('unlimited_users') : `${plan.max_users} ${t('users')}` }}
+            </li>
+            <li class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
+              <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
+              {{ plan.max_invoices_per_month === -1 ? t('unlimited_invoices') : `${plan.max_invoices_per_month} ${t('invoices_per_month')}` }}
+            </li>
+            <li class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
+              <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
+              {{ plan.max_ocr_scans_per_day === -1 ? t('unlimited_ocr_per_day') : `${plan.max_ocr_scans_per_day} ${t('ocr_scans_per_day')}` }}
+            </li>
             <li v-for="feature in plan.features" :key="feature" class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
               <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
               {{ t(`feature_${feature}`) }}
