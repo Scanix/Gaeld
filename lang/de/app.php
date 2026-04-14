@@ -1910,4 +1910,10 @@ return [
     'expense_submitted_notification' => 'Ausgabe von :name wartet auf Genehmigung.',
     'expense_approved_notification' => 'Ihre Ausgabe wurde genehmigt.',
     'invoice_payment_recorded_notification' => 'Zahlung für Rechnung :number erfasst.',
+
+    // Form validation (client-side)
+    'field_required' => 'Dieses Feld ist erforderlich.',
+    'password_min_length' => 'Das Passwort muss mindestens 8 Zeichen lang sein.',
+    'passwords_do_not_match' => 'Die Passwörter stimmen nicht überein.',
+    'no_journal_lines' => 'Keine Buchungszeilen gefunden.',
 ];

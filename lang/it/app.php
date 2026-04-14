@@ -1914,4 +1914,10 @@ return [
     'expense_submitted_notification' => 'La spesa inviata da :name attende approvazione.',
     'expense_approved_notification' => 'La tua spesa è stata approvata.',
     'invoice_payment_recorded_notification' => 'Pagamento registrato per la fattura :number.',
+
+    // Form validation (client-side)
+    'field_required' => 'Questo campo è obbligatorio.',
+    'password_min_length' => 'La password deve contenere almeno 8 caratteri.',
+    'passwords_do_not_match' => 'Le password non corrispondono.',
+    'no_journal_lines' => 'Nessuna riga di scrittura contabile trovata.',
 ];
