@@ -62,6 +62,16 @@ class InvitationController extends Controller
             return redirect()->route('login');
         }
 
+        $invitation = OrganizationInvitation::where('token', hash('sha256', $token))
+            ->whereNull('accepted_at')
+            ->firstOrFail();
+
+        abort_if(
+            $request->user()->email !== $invitation->email,
+            403,
+            __('app.invitation_wrong_account'),
+        );
+
         $organization = $this->invitationService->accept($token);
 
         $request->user()->switchOrganization($organization);

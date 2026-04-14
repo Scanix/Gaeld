@@ -8,17 +8,18 @@
     },
     "devDependencies": {
         "@inertiajs/vue3": "^3.0.3",
+        "@sentry/vite-plugin": "^5.2.0",
         "@tailwindcss/vite": "^4.2.2",
-        "@vitejs/plugin-vue": "^6.0.5",
-        "autoprefixer": "^10.4.27",
+        "@vitejs/plugin-vue": "^6.0.6",
+        "autoprefixer": "^10.5.0",
         "laravel-vite-plugin": "^3.0.1",
         "postcss": "^8.5.9",
         "tailwindcss": "^4.2.2",
-        "vite": "^8.0.7"
+        "vite": "^8.0.8"
     },
     "dependencies": {
         "@simplewebauthn/browser": "^13.3.0",
-        "axios": "^1.14.0",
+        "axios": "^1.15.0",
         "chart.js": "^4.5.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -32,6 +33,7 @@
     },
     "pnpm": {
         "onlyBuiltDependencies": [
+            "@sentry/cli",
             "esbuild"
         ]
     }

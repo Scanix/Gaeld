@@ -55,6 +55,11 @@ class EnsureApiOrganization
             return Organization::find($token->organization_id);
         }
 
+        // NOTE (M-10): Personal tokens scoped to an organization are NOT automatically
+        // revoked when a user is removed from that organization. The membership check
+        // below prevents access after removal, but existing tokens remain in the DB
+        // until they expire or are manually deleted. A background job or observer on
+        // the org_user pivot detach event should purge orphaned tokens in a future release.
         return $request->user()
             ->organizations()
             ->where('organizations.id', $token->organization_id)

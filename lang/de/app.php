@@ -297,6 +297,7 @@ return [
     'manage_customers' => 'Verwalten und anzeigen Ihrer Kunden.',
     'edit_customer' => 'Kunde bearbeiten',
     'delete_customer' => 'Kunde löschen',
+    'customer_has_linked_records' => 'Dieser Kunde kann nicht gelöscht werden, da er verknüpfte Datensätze hat (Rechnungen, Zahlungen usw.).',
     'phone' => 'Telefon',
     'internal_notes' => 'Interne Notizen',
     'default_category' => 'Standardkategorie',
@@ -310,6 +311,7 @@ return [
     'manage_suppliers' => 'Verwalten und anzeigen Ihrer Lieferanten.',
     'edit_supplier' => 'Lieferant bearbeiten',
     'delete_supplier' => 'Lieferant löschen',
+    'supplier_has_linked_records' => 'Dieser Lieferant kann nicht gelöscht werden, da er verknüpfte Datensätze hat (Ausgaben, Zahlungen usw.).',
     'no_suppliers_yet' => 'Noch keine Lieferanten vorhanden',
     'no_suppliers_yet_desc' => 'Fügen Sie Ihren ersten Lieferanten hinzu, um loszulegen.',
 
@@ -758,6 +760,7 @@ return [
     'invitation_cancelled' => 'Einladung abgebrochen.',
     'invitation_resent' => 'Einladung erneut gesendet.',
     'invitation_expired' => 'Diese Einladung ist abgelaufen.',
+    'invitation_wrong_account' => 'Diese Einladung wurde an eine andere E-Mail-Adresse gesendet. Bitte melden Sie sich mit dem richtigen Konto an.',
     'invitation_no_account' => 'Sie müssen zuerst ein Konto erstellen, um diese Einladung anzunehmen.',
     'invitation_email_subject' => 'Sie wurden eingeladen, :organization auf Gäld beizutreten',
     'invitation_email_greeting' => 'Hallo!',

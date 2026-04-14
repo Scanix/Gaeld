@@ -99,6 +99,9 @@ class OrganizationController extends Controller
 
         $request->user()->switchOrganization($organization);
 
+        // Regenerate session ID when privilege context changes (different org scope)
+        $request->session()->regenerate();
+
         return redirect()->route('dashboard')
             ->with('success', __('app.organization_switched', ['name' => $organization->name]));
     }

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Users\Services;
 
+use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Users\DTOs\CreateUserData;
 use App\Domains\Users\DTOs\UpdateUserProfileData;
 use App\Domains\Users\Models\User;
@@ -64,6 +65,12 @@ class UserService
 
     /**
      * Permanently delete a user account and all associated data (GDPR Art. 17).
+     *
+     * Exception: when the user is the sole owner of an organization that has
+     * posted journal entries, Swiss OR Art. 958f requires those financial
+     * records to be retained for 10 years. In that case the user's PII is
+     * anonymised and all access credentials are revoked, but the org and its
+     * ledger entries are preserved.
      */
     public function deleteAccount(User $user): void
     {
@@ -73,26 +80,58 @@ class UserService
                 ->where('causer_id', $user->id)
                 ->delete();
 
+            // Track whether the user record itself should be hard-deleted.
+            // Set to false when financial retention rules prevent full deletion.
+            $shouldDeleteUser = true;
+
             // Delete organizations where the user is the sole member
             foreach ($user->organizations as $org) {
                 $memberCount = $org->users()->count();
                 if ($memberCount <= 1) {
-                    // Sole owner: cascade delete the entire organization
-                    $org->delete();
+                    // Sole owner: check for posted accounting records before hard-deleting.
+                    // Swiss OR Art. 958f mandates 10-year retention of posted ledger entries.
+                    $hasPostedEntries = JournalEntry::withoutGlobalScopes()
+                        ->where('organization_id', $org->id)
+                        ->where('is_posted', true)
+                        ->exists();
+
+                    if ($hasPostedEntries) {
+                        // Anonymize the user's PII so they cannot be identified.
+                        // Financial records in the org are preserved for audit purposes.
+                        $user->name = 'Compte supprimé';
+                        $user->email = 'deleted-'.$user->id.'@deleted.invalid';
+                        $user->password = '';
+                        $user->two_factor_secret = null;
+                        $user->two_factor_recovery_codes = null;
+                        $user->two_factor_confirmed_at = null;
+                        $user->save();
+
+                        // Revoke all API tokens so the account is fully inaccessible
+                        $user->tokens()->delete();
+
+                        // Detach from org rather than cascade-deleting it
+                        $org->users()->detach($user->id);
+
+                        $shouldDeleteUser = false;
+                    } else {
+                        // No posted entries: safe to cascade-delete the entire organization
+                        $org->delete();
+                    }
                 } else {
                     // Other members remain: just detach this user
                     $org->users()->detach($user->id);
                 }
             }
 
-            // Delete WebAuthn credentials (passkeys)
+            // Delete WebAuthn credentials (passkeys) — always, even on anonymization
             $user->webAuthnCredentials()->delete();
 
-            // Delete sessions
+            // Delete sessions — always
             DB::table('sessions')->where('user_id', $user->id)->delete();
 
-            // Delete the user
-            $user->delete();
+            if ($shouldDeleteUser) {
+                $user->delete();
+            }
         });
     }
 }

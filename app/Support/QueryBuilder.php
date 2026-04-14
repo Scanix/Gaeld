@@ -92,9 +92,8 @@ class QueryBuilder
 
     /**
      * Apply sorting, filtering, search from request and return the builder.
-     */
-    /**
-     * @return Builder<Model>
+     *
+     * @return Builder<TModel>
      */
     public function apply(): Builder
     {

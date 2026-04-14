@@ -51,10 +51,23 @@ class InvoicePolicy extends BasePolicy
             && $user->hasPermissionTo(Permission::InvoicingFinalize);
     }
 
+    public function duplicate(User $user, Invoice $invoice): bool
+    {
+        return $this->belongsToOrganization($user, $invoice)
+            && $user->hasPermissionTo(Permission::InvoicingCreate);
+    }
+
+    public function creditNote(User $user, Invoice $invoice): bool
+    {
+        return $this->belongsToOrganization($user, $invoice)
+            && $user->hasPermissionTo(Permission::InvoicingCreate);
+    }
+
     public function recordPayment(User $user, Invoice $invoice): bool
     {
         return $this->belongsToOrganization($user, $invoice)
-            && $user->hasPermissionTo(Permission::InvoicingRecordPayment);
+            && $user->hasPermissionTo(Permission::InvoicingRecordPayment)
+            && in_array($invoice->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue], true);
     }
 
     public function send(User $user, Invoice $invoice): bool
