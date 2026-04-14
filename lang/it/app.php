@@ -54,8 +54,11 @@ return [
     'month' => 'Mese',
     'unlimited_users' => 'Utenti illimitati',
     'unlimited_invoices' => 'Fatture illimitate',
+    'unlimited_ocr_per_day' => 'Scansioni ricevute illimitate/giorno',
     'users' => 'utenti',
     'invoices_per_month' => 'fatture / mese',
+    'ocr_scans_per_day' => 'scansioni ricevute / giorno',
+    'invoices_this_month' => 'Fatture questo mese',
     'payment_failed_warning' => 'Il tuo ultimo pagamento è fallito. Aggiorna il tuo metodo di pagamento per mantenere l\'accesso.',
     'update_payment_method' => 'Aggiorna metodo di pagamento',
     'subscription_grace_period' => 'Il tuo abbonamento è stato annullato e terminerà il :date. Riabbonati per mantenere l\'accesso.',
@@ -1887,6 +1890,9 @@ return [
 
     // OCR rate limiting
     'ocr_daily_limit_reached' => 'Limite giornaliero raggiunto. Puoi scansionare :limit scontrini al giorno.',
+
+    // Invoice monthly limit
+    'invoice_monthly_limit_reached' => 'Limite mensile di fatture raggiunto. Aggiorna il tuo piano per creare altre fatture.',
 
     // Notifications
     'notifications_title' => 'Notifiche',
