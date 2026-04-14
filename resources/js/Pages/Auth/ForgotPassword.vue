@@ -1,10 +1,12 @@
 <script setup>
 import { Head, useForm, Link } from '@inertiajs/vue3'
+import Alert from '@/Components/UI/Alert.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import GuestBar from '@/Components/GuestBar.vue'
 
 const { t } = useTranslations()
 
@@ -24,6 +26,7 @@ function submit() {
 <template>
   <Head :title="t('forgot_password')" />
 
+  <GuestBar />
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
@@ -35,9 +38,7 @@ function submit() {
 
       <Card>
         <CardContent class="pt-6">
-          <div v-if="status" class="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
-            {{ status }}
-          </div>
+          <Alert v-if="status" variant="success" class="mb-4">{{ status }}</Alert>
 
           <form class="space-y-4" @submit.prevent="submit">
             <FormInput

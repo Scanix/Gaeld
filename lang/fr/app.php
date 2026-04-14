@@ -46,8 +46,11 @@ return [
     'month' => 'Mois',
     'unlimited_users' => 'Utilisateurs illimités',
     'unlimited_invoices' => 'Factures illimitées',
+    'unlimited_ocr_per_day' => 'Scans de reçus illimités/jour',
     'users' => 'utilisateurs',
     'invoices_per_month' => 'factures / mois',
+    'ocr_scans_per_day' => 'scans de reçus / jour',
+    'invoices_this_month' => 'Factures ce mois',
     'payment_failed_warning' => 'Votre dernier paiement a échoué. Veuillez mettre à jour votre moyen de paiement pour conserver l\'accès.',
     'update_payment_method' => 'Mettre à jour le moyen de paiement',
     'subscription_grace_period' => 'Votre abonnement est annulé et prendra fin le :date. Réabonnez-vous pour conserver l\'accès.',
@@ -1907,6 +1910,9 @@ return [
 
     // OCR rate limiting
     'ocr_daily_limit_reached' => 'Limite quotidienne atteinte. Vous pouvez analyser :limit reçus par jour.',
+
+    // Invoice monthly limit
+    'invoice_monthly_limit_reached' => 'Limite mensuelle de factures atteinte. Upgradez votre plan pour créer davantage de factures.',
 
     // Notifications
     'notifications_title' => 'Notifications',

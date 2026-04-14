@@ -79,6 +79,7 @@ class HandleInertiaRequests extends Middleware
                 && config('ee.saas_admin_email')
                 && $user->email === config('ee.saas_admin_email'),
             'ocr_quota' => fn () => $this->resolveOcrQuota($user),
+            'invoice_quota' => fn () => $this->resolveInvoiceMonthlyQuota($user),
             'notifications_unread_count' => fn () => $user->unreadNotifications()->count(),
         ];
     }
@@ -134,6 +135,32 @@ class HandleInertiaRequests extends Middleware
         }
 
         return ['ocr_scans_today' => $scansToday, 'ocr_daily_limit' => $limit];
+    }
+
+    /** @return array{invoices_this_month: int, invoice_monthly_limit: int} */
+    private function resolveInvoiceMonthlyQuota(User $user): array
+    {
+        $org = $this->currentOrganization->isBound()
+            ? $this->currentOrganization->get()
+            : $user->resolveCurrentOrganization();
+
+        if (! $org) {
+            return ['invoices_this_month' => 0, 'invoice_monthly_limit' => -1];
+        }
+
+        $orgId = $org->id;
+        $monthlyKey = 'invoices_monthly:'.$orgId.':'.now()->format('Y-m');
+        $invoicesThisMonth = (int) Cache::get($monthlyKey, 0);
+
+        $limit = -1;
+        if (FeatureFlag::isSaas()) {
+            $plan = $org->activeSubscription?->plan;
+            if ($plan && isset($plan->max_invoices_per_month)) {
+                $limit = (int) $plan->max_invoices_per_month;
+            }
+        }
+
+        return ['invoices_this_month' => $invoicesThisMonth, 'invoice_monthly_limit' => $limit];
     }
 
     /**

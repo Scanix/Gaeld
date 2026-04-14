@@ -1,9 +1,11 @@
 <script setup>
 import { Head, useForm, Link } from '@inertiajs/vue3'
+import Alert from '@/Components/UI/Alert.vue'
 import Button from '@/Components/UI/Button.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import GuestBar from '@/Components/GuestBar.vue'
 
 const { t } = useTranslations()
 
@@ -21,6 +23,7 @@ function resend() {
 <template>
   <Head :title="t('verify_email_title')" />
 
+  <GuestBar />
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
@@ -35,12 +38,7 @@ function resend() {
 
       <Card>
         <CardContent class="pt-6">
-          <div
-            v-if="status === 'verification-link-sent'"
-            class="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400"
-          >
-            {{ t('verify_email_resent') }}
-          </div>
+          <Alert v-if="status === 'verification-link-sent'" variant="success" class="mb-4">{{ t('verify_email_resent') }}</Alert>
 
           <p class="mb-4 text-sm text-[hsl(var(--muted-foreground))]">
             {{ t('verify_email_check_inbox') }}
