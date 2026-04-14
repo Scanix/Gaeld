@@ -14,7 +14,7 @@ Route::put('/profile/password', [UserController::class, 'updatePassword'])->name
 Route::post('/profile/toggle-help', [UserController::class, 'toggleHelp'])->name('profile.toggle-help');
 Route::post('/profile/onboarding/dismiss', [UserController::class, 'dismissOnboarding'])->name('profile.onboarding.dismiss');
 Route::post('/profile/onboarding/reset', [UserController::class, 'resetOnboarding'])->name('profile.onboarding.reset');
-Route::post('/profile/export', [UserController::class, 'exportData'])->name('profile.export');
+Route::post('/profile/export', [UserController::class, 'exportData'])->middleware('throttle:3,5')->name('profile.export');
 Route::get('/profile/export/download/{filename}', [UserController::class, 'downloadExport'])->name('profile.export.download')->middleware('signed');
 Route::delete('/profile', [UserController::class, 'destroyAccount'])->name('profile.destroy');
 

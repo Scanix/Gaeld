@@ -21,7 +21,7 @@ Route::get('/settings/logo', [OrganizationSettingsController::class, 'serveLogo'
 Route::put('/settings/communications', [OrganizationSettingsController::class, 'updateCommunications'])->name('settings.communications');
 
 // Organization data export (GDPR portability)
-Route::post('/settings/export', [OrganizationSettingsController::class, 'exportData'])->name('settings.export');
+Route::post('/settings/export', [OrganizationSettingsController::class, 'exportData'])->middleware('throttle:3,5')->name('settings.export');
 Route::get('/settings/export/download', [OrganizationSettingsController::class, 'downloadExport'])->name('settings.export.download');
 
 // Expense categories
