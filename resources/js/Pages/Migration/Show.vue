@@ -94,6 +94,8 @@ function submitUpload() {
           accountMappings: preview.accountMappings,
           sampleRows: preview.sampleRows,
         }
+      } else if (flash?.error) {
+        uploadError.value = flash.error
       }
       uploadForm.reset()
     },
