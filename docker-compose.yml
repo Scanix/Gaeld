@@ -93,6 +93,21 @@ services:
                 - 'http://127.0.0.1:7700/health'
             retries: 3
             timeout: 5s
+    worker:
+        image: gaeld-sail/app
+        environment:
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        entrypoint: ["/var/www/html/docker/php/entrypoint.sh"]
+        networks:
+            - sail
+        depends_on:
+            laravel.test:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        command: 'php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600 --queue=default'
 networks:
     sail:
         driver: bridge
