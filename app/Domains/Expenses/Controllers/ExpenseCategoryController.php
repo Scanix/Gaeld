@@ -19,6 +19,8 @@ class ExpenseCategoryController extends Controller
 
     public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
+        $this->authorize('update', $currentOrg->get());
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
         ]);
@@ -35,8 +37,10 @@ class ExpenseCategoryController extends Controller
             ->with('success', __('app.expense_category_created'));
     }
 
-    public function destroy(ExpenseCategory $expenseCategory): RedirectResponse
+    public function destroy(ExpenseCategory $expenseCategory, CurrentOrganization $currentOrg): RedirectResponse
     {
+        $this->authorize('update', $currentOrg->get());
+
         $expenseCategory->delete();
 
         return redirect()->route('settings', ['tab' => 'expenses'])

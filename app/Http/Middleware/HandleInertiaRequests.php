@@ -39,6 +39,9 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
                 'warning' => $request->session()->get('warning'),
                 'info' => $request->session()->get('info'),
+                'preview' => $request->session()->get('preview'),
+                'newToken' => $request->session()->get('newToken'),
+                'webhookSecret' => $request->session()->get('webhookSecret'),
             ],
             'twoFactor' => fn () => $request->session()->get('twoFactor'),
             'systemMessage' => FeatureFlag::isSaas()
@@ -76,7 +79,6 @@ class HandleInertiaRequests extends Middleware
                     'role' => $org->pivot->role,
                 ]),
             'is_saas_admin' => fn () => FeatureFlag::isSaas()
-                && $request->is('saas-admin*')
                 && config('ee.saas_admin_email')
                 && $user->email === config('ee.saas_admin_email'),
             'ocr_quota' => fn () => $this->resolveOcrQuota($user),

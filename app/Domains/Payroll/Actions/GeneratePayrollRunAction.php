@@ -6,6 +6,7 @@ use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Payroll\Services\PayrollCalculator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Generates salary slips for all active employees in a given payroll period.
@@ -38,12 +39,16 @@ class GeneratePayrollRunAction
                 continue;
             }
 
-            $slip = $this->calculator->calculate($employee, $month, $year);
-            $slip->save();
+            $slip = DB::transaction(function () use ($employee, $month, $year, $shouldPost): SalarySlip {
+                $slip = $this->calculator->calculate($employee, $month, $year);
+                $slip->save();
 
-            if ($shouldPost) {
-                $this->postAction->execute($slip);
-            }
+                if ($shouldPost) {
+                    $this->postAction->execute($slip);
+                }
+
+                return $slip;
+            });
 
             $slips->push($slip);
         }

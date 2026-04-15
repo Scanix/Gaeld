@@ -49,9 +49,9 @@ After seeding:
 
 ### Prerequisites
 
-- PHP 8.2+
+- PHP 8.4+
 - Composer
-- Node.js 18+ and npm
+- Node.js 20+ and pnpm
 - PostgreSQL 15+
 - Redis 7+
 
@@ -60,14 +60,14 @@ After seeding:
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Scanix/Gaeld.git
-cd Gaeld
+cd Gaeld/api
 
 # 2. Install PHP dependencies
 composer install
 
 # 3. Install and build frontend
-npm install
-npm run build
+pnpm install
+pnpm run build
 
 # 4. Configure environment
 cp .env.example .env
