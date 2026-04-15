@@ -1,0 +1,268 @@
+#!/usr/bin/env bash
+# ─────────────────────────────────────────────────────────────
+# gaeld — CLI wrapper for Gäld development environment
+# Usage: ./gaeld setup [--demo]   Full first-time setup
+#        ./gaeld up               Start containers
+#        ./gaeld down             Stop containers
+#        ./gaeld artisan ...      Run artisan inside the container
+#        ./gaeld logs [service]   Tail container logs
+#        ./gaeld worker           Tail queue worker logs
+#        ./gaeld status           Show container status
+# ─────────────────────────────────────────────────────────────
+set -euo pipefail
+
+# ── Colors ──────────────────────────────────────────────────
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+# ── Helpers ─────────────────────────────────────────────────
+step() {
+    printf "\n${BLUE}▸${RESET} ${BOLD}%s${RESET}\n" "$1"
+}
+
+ok() {
+    printf "  ${GREEN}✔${RESET} %s\n" "$1"
+}
+
+warn() {
+    printf "  ${YELLOW}⚠${RESET} %s\n" "$1"
+}
+
+fail() {
+    printf "  ${RED}✖${RESET} %s\n" "$1"
+    exit 1
+}
+
+spin() {
+    local pid=$1 label=$2
+    local frames='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    local i=0
+    while kill -0 "$pid" 2>/dev/null; do
+        printf "\r  ${DIM}%s${RESET} %s" "${frames:i%10:1}" "$label"
+        i=$((i + 1))
+        sleep 0.1
+    done
+    wait "$pid"
+    return $?
+}
+
+run_with_spinner() {
+    local label=$1
+    shift
+    local logfile
+    logfile=$(mktemp)
+
+    "$@" > "$logfile" 2>&1 &
+    local pid=$!
+
+    spin "$pid" "$label"
+    local rc=$?
+
+    if [ $rc -eq 0 ]; then
+        printf "\r  ${GREEN}✔${RESET} %s\n" "$label"
+    else
+        printf "\r  ${RED}✖${RESET} %s\n" "$label"
+        echo ""
+        cat "$logfile"
+        rm -f "$logfile"
+        exit $rc
+    fi
+    rm -f "$logfile"
+}
+
+elapsed() {
+    local start=$1
+    local end
+    end=$(date +%s)
+    local diff=$((end - start))
+    local min=$((diff / 60))
+    local sec=$((diff % 60))
+    if [ $min -gt 0 ]; then
+        printf "%dm%ds" $min $sec
+    else
+        printf "%ds" $sec
+    fi
+}
+
+# ── Commands ────────────────────────────────────────────────
+
+cmd_setup() {
+    local demo_flag=""
+    local start_time
+    start_time=$(date +%s)
+
+    for arg in "$@"; do
+        case "$arg" in
+            --demo) demo_flag="--demo" ;;
+        esac
+    done
+
+    printf "\n${BOLD}🏔  Gäld — Swiss Accounting Platform${RESET}\n"
+    printf "${DIM}   Setting up development environment...${RESET}\n"
+
+    # 1. Environment file
+    step "Environment"
+    if [ -f .env ]; then
+        ok ".env already exists"
+    else
+        cp .env.example .env
+        ok "Created .env from .env.example"
+    fi
+
+    # 2. Build image if needed
+    step "Docker image"
+    if docker image inspect gaeld-sail/app > /dev/null 2>&1; then
+        ok "Image gaeld-sail/app already built"
+    else
+        run_with_spinner "Building gaeld-sail/app (first time — takes a few minutes)" \
+            docker compose build laravel.test
+    fi
+
+    # 3. Start containers
+    step "Starting services"
+    run_with_spinner "PostgreSQL, Redis, Meilisearch, Mailpit" \
+        docker compose up -d pgsql redis meilisearch mailpit
+
+    # Wait for DB + Redis health
+    run_with_spinner "Waiting for PostgreSQL to accept connections" \
+        docker compose exec -T pgsql pg_isready -q -d gaeld -U sail
+
+    run_with_spinner "Waiting for Redis to respond" \
+        docker compose exec -T redis redis-cli ping
+
+    # Start app + worker (depend on healthy services)
+    run_with_spinner "Starting web server and queue worker" \
+        docker compose up -d laravel.test worker
+
+    # Wait for app health
+    local retries=0
+    local max_retries=60
+    printf "  ${DIM}⠋${RESET} Waiting for application to be ready"
+    while [ $retries -lt $max_retries ]; do
+        if docker compose exec -T laravel.test curl -sf http://localhost:80/up > /dev/null 2>&1; then
+            printf "\r  ${GREEN}✔${RESET} Application is ready                     \n"
+            break
+        fi
+        local frames='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+        printf "\r  ${DIM}%s${RESET} Waiting for application to be ready" "${frames:retries%10:1}"
+        retries=$((retries + 1))
+        sleep 1
+    done
+
+    if [ $retries -eq $max_retries ]; then
+        fail "Application failed to become healthy after ${max_retries}s"
+    fi
+
+    # 4. Install
+    step "Installing Gäld"
+    if [ -n "$demo_flag" ]; then
+        docker compose exec -T laravel.test php artisan gaeld:install --demo --no-interaction
+    else
+        docker compose exec laravel.test php artisan gaeld:install
+    fi
+
+    # 5. Summary
+    local duration
+    duration=$(elapsed "$start_time")
+
+    printf "\n${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
+    printf "${GREEN}${BOLD}  ✔ Gäld is ready!${RESET}  ${DIM}(${duration})${RESET}\n"
+    printf "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n\n"
+    printf "  ${BOLD}App${RESET}       http://localhost:${APP_PORT:-8080}\n"
+    printf "  ${BOLD}Mailpit${RESET}   http://localhost:${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}\n"
+    printf "  ${BOLD}Search${RESET}    http://localhost:${FORWARD_MEILISEARCH_PORT:-7700}\n\n"
+    printf "  ${DIM}Run ${RESET}${BOLD}./gaeld artisan${RESET}${DIM} to execute commands inside the container${RESET}\n"
+    printf "  ${DIM}Run ${RESET}${BOLD}./gaeld logs${RESET}${DIM} to tail application logs${RESET}\n"
+    printf "  ${DIM}Run ${RESET}${BOLD}./gaeld down${RESET}${DIM} to stop all services${RESET}\n\n"
+}
+
+cmd_up() {
+    step "Starting all services"
+    docker compose up -d "$@"
+    ok "All services started"
+    cmd_status
+}
+
+cmd_down() {
+    step "Stopping all services"
+    docker compose down "$@"
+    ok "All services stopped"
+}
+
+cmd_artisan() {
+    docker compose exec laravel.test php artisan "$@"
+}
+
+cmd_logs() {
+    docker compose logs -f "${1:-laravel.test}"
+}
+
+cmd_worker() {
+    docker compose logs -f worker
+}
+
+cmd_status() {
+    printf "\n${BOLD}Service Status${RESET}\n\n"
+    docker compose ps --format "table {{.Service}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null \
+        || docker compose ps
+    echo ""
+}
+
+cmd_help() {
+    cat <<'EOF'
+
+🏔  Gäld CLI
+
+Usage: ./gaeld <command> [options]
+
+Commands:
+  setup [--demo]     Full first-time setup (build, start, install)
+  up                 Start all containers
+  down               Stop all containers
+  artisan <cmd>      Run artisan command in the app container
+  logs [service]     Tail logs (default: laravel.test)
+  worker             Tail queue worker logs
+  status             Show container status
+  help               Show this help message
+
+Examples:
+  ./gaeld setup              Interactive first-time setup
+  ./gaeld setup --demo       Non-interactive setup with demo data
+  ./gaeld artisan migrate    Run database migrations
+  ./gaeld logs worker        Tail worker logs
+
+EOF
+}
+
+# ── Main ────────────────────────────────────────────────────
+# Load .env for port variables if available
+if [ -f .env ]; then
+    set -a
+    # shellcheck disable=SC1091
+    source .env 2>/dev/null || true
+    set +a
+fi
+
+command="${1:-help}"
+shift 2>/dev/null || true
+
+case "$command" in
+    setup)    cmd_setup "$@" ;;
+    up)       cmd_up "$@" ;;
+    down)     cmd_down "$@" ;;
+    artisan)  cmd_artisan "$@" ;;
+    logs)     cmd_logs "$@" ;;
+    worker)   cmd_worker "$@" ;;
+    status)   cmd_status ;;
+    help|--help|-h) cmd_help ;;
+    *)
+        printf "${RED}Unknown command: %s${RESET}\n" "$command"
+        cmd_help
+        exit 1
+        ;;
+esac
