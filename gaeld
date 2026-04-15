@@ -75,6 +75,27 @@ run_with_spinner() {
     rm -f "$logfile"
 }
 
+wait_for() {
+    local label=$1
+    local max_retries=$2
+    shift 2
+
+    local retries=0
+    local frames='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    printf "  ${DIM}%s${RESET} %s" "${frames:0:1}" "$label"
+    while [ $retries -lt $max_retries ]; do
+        if "$@" > /dev/null 2>&1; then
+            printf "\r  ${GREEN}✔${RESET} %s                     \n" "$label"
+            return 0
+        fi
+        printf "\r  ${DIM}%s${RESET} %s" "${frames:retries%10:1}" "$label"
+        retries=$((retries + 1))
+        sleep 1
+    done
+    printf "\r  ${RED}✖${RESET} %s\n" "$label"
+    fail "Timed out after ${max_retries}s"
+}
+
 elapsed() {
     local start=$1
     local end
@@ -128,11 +149,11 @@ cmd_setup() {
     run_with_spinner "PostgreSQL, Redis, Meilisearch, Mailpit" \
         docker compose up -d pgsql redis meilisearch mailpit
 
-    # Wait for DB + Redis health
-    run_with_spinner "Waiting for PostgreSQL to accept connections" \
-        docker compose exec -T pgsql pg_isready -q -d gaeld -U sail
+    # Wait for DB + Redis health (retry loops — containers need time to initialize)
+    wait_for "Waiting for PostgreSQL to accept connections" 30 \
+        docker compose exec -T pgsql pg_isready -q -d "${DB_DATABASE:-gaeld}" -U "${DB_USERNAME:-gaeld}"
 
-    run_with_spinner "Waiting for Redis to respond" \
+    wait_for "Waiting for Redis to respond" 15 \
         docker compose exec -T redis redis-cli ping
 
     # Start app + worker (depend on healthy services)
@@ -140,23 +161,8 @@ cmd_setup() {
         docker compose up -d laravel.test worker
 
     # Wait for app health
-    local retries=0
-    local max_retries=60
-    printf "  ${DIM}⠋${RESET} Waiting for application to be ready"
-    while [ $retries -lt $max_retries ]; do
-        if docker compose exec -T laravel.test curl -sf http://localhost:80/up > /dev/null 2>&1; then
-            printf "\r  ${GREEN}✔${RESET} Application is ready                     \n"
-            break
-        fi
-        local frames='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
-        printf "\r  ${DIM}%s${RESET} Waiting for application to be ready" "${frames:retries%10:1}"
-        retries=$((retries + 1))
-        sleep 1
-    done
-
-    if [ $retries -eq $max_retries ]; then
-        fail "Application failed to become healthy after ${max_retries}s"
-    fi
+    wait_for "Waiting for application to be ready" 60 \
+        docker compose exec -T laravel.test curl -sf http://localhost:80/up
 
     # 4. Install
     step "Installing Gäld"
