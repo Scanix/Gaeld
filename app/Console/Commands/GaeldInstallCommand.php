@@ -32,6 +32,13 @@ class GaeldInstallCommand extends Command
         $this->components->info('Installing Gäld — Swiss Accounting Platform');
         $this->newLine();
 
+        // Step 0: Generate APP_KEY if missing
+        if (empty(config('app.key'))) {
+            $this->components->task('Generating application key', function () {
+                $this->callSilently('key:generate', ['--force' => true]);
+            });
+        }
+
         // Step 1: Migrations
         $this->components->task('Running database migrations', function () {
             $this->callSilently('migrate', ['--force' => true]);
@@ -50,15 +57,21 @@ class GaeldInstallCommand extends Command
             $adminEmail = 'admin@gaeld.local';
             $adminPassword = Str::random(16);
             $orgName = 'My Company';
-            $currency = 'CHF';
+            $currency = config('accounting.default_currency');
             $locale = 'en';
         } else {
             $adminName = $this->ask('Admin name', 'Admin');
             $adminEmail = $this->ask('Admin email', 'admin@gaeld.local');
             $adminPassword = $this->secret('Admin password (min 8 chars)') ?? Str::random(16);
             $orgName = $this->ask('Organization name', 'My Company');
-            $currency = $this->choice('Default currency', ['CHF', 'EUR', 'USD', 'GBP'], 0);
-            $locale = $this->choice('Default language', ['en', 'fr', 'de', 'it'], 0);
+
+            if (config('features.multi_currency')) {
+                $currency = $this->choice('Default currency', config('accounting.supported_currencies'), 0);
+            } else {
+                $currency = 'CHF';
+            }
+
+            $locale = $this->choice('Default language', config('accounting.supported_locales'), 0);
         }
 
         // Step 4: Create admin + organization
