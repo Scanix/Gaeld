@@ -41,11 +41,11 @@ Gäld covers the full accounting workflow for a small Swiss business:
 
 ```bash
 cp .env.example .env
-docker compose up -d
+docker compose up -d --wait
 docker compose exec laravel.test php artisan gaeld:install
 ```
 
-Dependencies and the app key are installed automatically on first start.
+Composer dependencies and the app key are installed automatically on first start. The `--wait` flag ensures everything is ready before you run the installer.
 
 Visit `http://localhost:8080`. The install wizard walks you through creating your organisation and admin account.
 
