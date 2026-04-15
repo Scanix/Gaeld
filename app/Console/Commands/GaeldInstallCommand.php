@@ -10,7 +10,9 @@ use App\Domains\Users\DTOs\CreateUserData;
 use App\Domains\Users\Services\UserService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class GaeldInstallCommand extends Command
 {
@@ -60,10 +62,21 @@ class GaeldInstallCommand extends Command
             $currency = config('accounting.default_currency');
             $locale = 'en';
         } else {
-            $adminName = $this->ask('Admin name', 'Admin');
-            $adminEmail = $this->ask('Admin email', 'admin@gaeld.local');
-            $adminPassword = $this->secret('Admin password (min 8 chars)') ?? Str::random(16);
-            $orgName = $this->ask('Organization name', 'My Company');
+            $adminName = $this->askValid('Admin name', 'Admin', [
+                'required', 'string', 'max:255',
+            ]);
+
+            $adminEmail = $this->askValid('Admin email', 'admin@gaeld.local', [
+                'required', 'string', 'email', 'max:255', 'unique:users,email',
+            ]);
+
+            $adminPassword = $this->secretValid('Admin password (min 8 chars)', [
+                'required', 'string', Password::min(8),
+            ]);
+
+            $orgName = $this->askValid('Organization name', 'My Company', [
+                'required', 'string', 'max:255',
+            ]);
 
             if (config('features.multi_currency')) {
                 $currency = $this->choice('Default currency', config('accounting.supported_currencies'), 0);
@@ -135,5 +148,44 @@ class GaeldInstallCommand extends Command
         $this->components->info('Run `php artisan gaeld:install --demo` to add sample data.');
 
         return self::SUCCESS;
+    }
+
+    private function askValid(string $question, ?string $default, array $rules): string
+    {
+        while (true) {
+            $value = $this->ask($question, $default);
+            $validator = Validator::make(['input' => $value], ['input' => $rules]);
+
+            if ($validator->passes()) {
+                return $value;
+            }
+
+            foreach ($validator->errors()->all() as $error) {
+                $this->components->error($error);
+            }
+        }
+    }
+
+    private function secretValid(string $question, array $rules): string
+    {
+        while (true) {
+            $value = $this->secret($question);
+
+            if ($value === null || $value === '') {
+                $this->components->error('A password is required.');
+
+                continue;
+            }
+
+            $validator = Validator::make(['input' => $value], ['input' => $rules]);
+
+            if ($validator->passes()) {
+                return $value;
+            }
+
+            foreach ($validator->errors()->all() as $error) {
+                $this->components->error($error);
+            }
+        }
     }
 }
