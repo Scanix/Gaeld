@@ -94,6 +94,9 @@ services:
             retries: 3
             timeout: 5s
     worker:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
         image: gaeld-sail/app
         environment:
             LARAVEL_SAIL: 1
@@ -108,6 +111,8 @@ services:
             redis:
                 condition: service_healthy
         command: 'php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600 --queue=default'
+        healthcheck:
+            disable: true
 networks:
     sail:
         driver: bridge
