@@ -194,6 +194,18 @@ cmd_down() {
     ok "All services stopped"
 }
 
+cmd_restart() {
+    step "Restarting services"
+    if [ $# -gt 0 ]; then
+        docker compose restart "$@"
+        ok "Restarted: $*"
+    else
+        docker compose restart
+        ok "All services restarted"
+    fi
+    cmd_status
+}
+
 cmd_artisan() {
     docker compose exec laravel.test php artisan "$@"
 }
@@ -224,6 +236,7 @@ Commands:
   setup [--demo]     Full first-time setup (build, start, install)
   up                 Start all containers
   down               Stop all containers
+  restart [service]   Restart all or specific service
   artisan <cmd>      Run artisan command in the app container
   logs [service]     Tail logs (default: laravel.test)
   worker             Tail queue worker logs
@@ -234,6 +247,7 @@ Examples:
   ./gaeld setup              Interactive first-time setup
   ./gaeld setup --demo       Non-interactive setup with demo data
   ./gaeld artisan migrate    Run database migrations
+  ./gaeld restart worker     Restart queue worker
   ./gaeld logs worker        Tail worker logs
 
 EOF
@@ -255,6 +269,7 @@ case "$command" in
     setup)    cmd_setup "$@" ;;
     up)       cmd_up "$@" ;;
     down)     cmd_down "$@" ;;
+    restart)  cmd_restart "$@" ;;
     artisan)  cmd_artisan "$@" ;;
     logs)     cmd_logs "$@" ;;
     worker)   cmd_worker "$@" ;;
