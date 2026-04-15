@@ -10,6 +10,7 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Assets\Models\FixedAsset;
 use App\Support\Money;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Disposes of a fixed asset: records the disposal journal entry and deactivates the asset.
@@ -93,14 +94,16 @@ class DisposeAssetAction
             lines: $lines,
         );
 
-        $this->ledger->postEntry($asset->organization_id, $entry);
+        return DB::transaction(function () use ($asset, $entry, $disposalDate, $disposalAmount): FixedAsset {
+            $this->ledger->postEntry($asset->organization_id, $entry);
 
-        $asset->update([
-            'disposed_at' => $disposalDate,
-            'disposal_amount' => $disposalAmount,
-            'is_active' => false,
-        ]);
+            $asset->update([
+                'disposed_at' => $disposalDate,
+                'disposal_amount' => $disposalAmount,
+                'is_active' => false,
+            ]);
 
-        return $asset->fresh();
+            return $asset->fresh();
+        });
     }
 }

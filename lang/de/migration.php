@@ -113,6 +113,7 @@ return [
     'no_sessions' => 'Keine vorherigen Importe.',
     'created_on' => 'Erstellt am',
     'expired_upload' => 'Die analysierten Daten für :type sind abgelaufen. Bitte laden Sie die Datei erneut hoch.',
+    'no_rows_found' => 'In der Datei wurden keine Datenzeilen gefunden. Bitte prüfen Sie, ob das Dateiformat und die Spaltenüberschriften korrekt sind.',
 
     // Errors
     'no_data_uploaded' => 'Bitte laden Sie mindestens eine Datei hoch, bevor Sie importieren.',

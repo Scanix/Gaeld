@@ -74,7 +74,7 @@ Route::middleware(['auth', 'verified', 'org', 'org-2fa', 'subscription'])->group
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Global search
-    Route::get('/search', GlobalSearchController::class)->name('search');
+    Route::get('/search', GlobalSearchController::class)->middleware('throttle:60,1')->name('search');
 
     // API tokens & webhooks settings (EE only)
     Route::middleware('feature:api_access')->group(function () {

@@ -102,8 +102,12 @@ class MigrationController extends Controller
         $parseResult = $this->orchestrator->parseFile($session, $file, $dataType);
 
         if (! $parseResult->isSuccessful()) {
+            $errorMessage = ! empty($parseResult->errors)
+                ? implode(', ', $parseResult->errors)
+                : __('migration.no_rows_found');
+
             return redirect()->back()
-                ->with('error', implode(', ', $parseResult->errors));
+                ->with('error', $errorMessage);
         }
 
         // Store parsed rows in session storage for preview/execution
