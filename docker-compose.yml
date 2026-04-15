@@ -21,11 +21,11 @@ services:
             - meilisearch
         command: 'php artisan serve --host=0.0.0.0 --port=80'
         healthcheck:
-            test: ["CMD", "curl", "-sf", "http://localhost:80"]
-            interval: 10s
-            timeout: 5s
-            retries: 20
-            start_period: 120s
+            test: ["CMD", "curl", "-sf", "http://localhost:80/up"]
+            interval: 5s
+            timeout: 3s
+            retries: 30
+            start_period: 10s
     pgsql:
         image: 'postgres:16-alpine'
         ports:
