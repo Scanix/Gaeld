@@ -76,7 +76,7 @@ class ContactImporter implements DataTypeImporterInterface
                     'address' => $row->address,
                     'postal_code' => $row->zip,
                     'city' => $row->city,
-                    'country' => $row->country ?? 'CH',
+                    'country' => self::normalizeCountry($row->country) ?? 'CH',
                 ];
 
                 $model = $row->type === 'supplier' ? Supplier::class : Customer::class;
@@ -100,5 +100,45 @@ class ContactImporter implements DataTypeImporterInterface
         });
 
         return ImportResult::success($this->dataType(), $imported, $skipped, createdIds: $createdIds);
+    }
+
+    private static function normalizeCountry(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = trim($value);
+
+        // Already a 2-letter ISO code
+        if (preg_match('/^[A-Z]{2}$/i', $value)) {
+            return strtoupper($value);
+        }
+
+        // Common full names and alpha-3 codes from Swiss accounting exports
+        $map = [
+            // Alpha-3 → Alpha-2
+            'che' => 'CH', 'deu' => 'DE', 'aut' => 'AT', 'fra' => 'FR',
+            'ita' => 'IT', 'gbr' => 'GB', 'usa' => 'US', 'lie' => 'LI',
+
+            // German
+            'schweiz' => 'CH', 'deutschland' => 'DE', 'österreich' => 'AT',
+            'frankreich' => 'FR', 'italien' => 'IT',
+
+            // French
+            'suisse' => 'CH', 'allemagne' => 'DE', 'autriche' => 'AT',
+            'italie' => 'IT',
+
+            // Italian
+            'svizzera' => 'CH', 'germania' => 'DE', 'francia' => 'FR',
+            'italia' => 'IT',
+
+            // English (and shared names: france, austria, liechtenstein)
+            'switzerland' => 'CH', 'germany' => 'DE', 'austria' => 'AT',
+            'france' => 'FR', 'italy' => 'IT', 'liechtenstein' => 'LI',
+            'united kingdom' => 'GB', 'united states' => 'US',
+        ];
+
+        return $map[mb_strtolower($value)] ?? mb_substr(strtoupper($value), 0, 2);
     }
 }
