@@ -12,6 +12,7 @@ services:
             LARAVEL_SAIL: 1
         volumes:
             - '.:/var/www/html'
+        entrypoint: ["/var/www/html/docker/php/entrypoint.sh"]
         networks:
             - sail
         depends_on:
@@ -20,6 +21,12 @@ services:
             - mailpit
             - meilisearch
         command: 'php artisan serve --host=0.0.0.0 --port=80'
+        healthcheck:
+            test: ["CMD", "curl", "-sf", "http://localhost:80/up"]
+            interval: 5s
+            timeout: 3s
+            retries: 30
+            start_period: 10s
     pgsql:
         image: 'postgres:16-alpine'
         ports:
@@ -31,7 +38,7 @@ services:
             POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
         volumes:
             - 'sail-pgsql:/var/lib/postgresql/data'
-            - './vendor/laravel/sail/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
+            - './docker/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
         networks:
             - sail
         healthcheck:
@@ -86,6 +93,26 @@ services:
                 - 'http://127.0.0.1:7700/health'
             retries: 3
             timeout: 5s
+    worker:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        image: gaeld-sail/app
+        environment:
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        entrypoint: ["/var/www/html/docker/php/entrypoint.sh"]
+        networks:
+            - sail
+        depends_on:
+            laravel.test:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        command: 'php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600 --queue=default'
+        healthcheck:
+            disable: true
 networks:
     sail:
         driver: bridge

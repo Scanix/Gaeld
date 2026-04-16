@@ -12,6 +12,7 @@ use App\Domains\Migration\Enums\DataType;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ExpenseImporter implements DataTypeImporterInterface
 {
@@ -54,48 +55,65 @@ class ExpenseImporter implements DataTypeImporterInterface
     {
         $imported = 0;
         $skipped = 0;
+        $failed = 0;
+        $errors = [];
 
-        DB::transaction(function () use ($rows, $organization, &$imported, &$skipped): void {
-            foreach ($rows as $row) {
-                if (! $row instanceof ExpenseImportRow || ! $row->isValid()) {
-                    $skipped++;
+        foreach ($rows as $row) {
+            if (! $row instanceof ExpenseImportRow || ! $row->isValid()) {
+                $skipped++;
 
-                    continue;
-                }
-
-                // Link or create supplier
-                $supplier = null;
-                if ($row->supplierName) {
-                    $supplier = Supplier::where('organization_id', $organization->id)
-                        ->where('name', $row->supplierName)
-                        ->first();
-
-                    if (! $supplier) {
-                        $supplier = Supplier::create([
-                            'organization_id' => $organization->id,
-                            'name' => $row->supplierName,
-                            'email' => $row->supplierEmail,
-                            'country' => 'CH',
-                        ]);
-                    }
-                }
-
-                Expense::create([
-                    'organization_id' => $organization->id,
-                    'supplier_id' => $supplier?->id,
-                    'date' => $row->date,
-                    'amount' => $row->amount,
-                    'currency' => $row->currency,
-                    'description' => $row->description,
-                    'category' => $row->category,
-                    'reference' => $row->reference,
-                    'is_paid' => $row->isPaid,
-                ]);
-
-                $imported++;
+                continue;
             }
-        });
 
-        return ImportResult::success($this->dataType(), $imported, $skipped);
+            try {
+                DB::transaction(function () use ($row, $organization, &$imported): void {
+                    // Link or create supplier
+                    $supplier = null;
+                    if ($row->supplierName) {
+                        $supplier = Supplier::where('organization_id', $organization->id)
+                            ->where('name', $row->supplierName)
+                            ->first();
+
+                        if (! $supplier) {
+                            $supplier = Supplier::create([
+                                'organization_id' => $organization->id,
+                                'name' => $row->supplierName,
+                                'email' => $row->supplierEmail,
+                                'country' => 'CH',
+                            ]);
+                        }
+                    }
+
+                    Expense::create([
+                        'organization_id' => $organization->id,
+                        'supplier_id' => $supplier?->id,
+                        'date' => $row->date,
+                        'amount' => $row->amount,
+                        'currency' => $row->currency,
+                        'description' => $row->description,
+                        'category' => $row->category,
+                        'reference' => $row->reference,
+                        'is_paid' => $row->isPaid,
+                    ]);
+
+                    $imported++;
+                });
+            } catch (\Throwable $e) {
+                $failed++;
+                $rowNum = $row->sourceRow();
+                $errors[] = "Row {$rowNum}: {$e->getMessage()}";
+                Log::warning('Migration import: expense row failed', [
+                    'row' => $rowNum,
+                    'error' => $e->getMessage(),
+                    'organization_id' => $organization->id,
+                ]);
+            }
+        }
+
+        if ($imported === 0 && $failed > 0) {
+            return ImportResult::failure($this->dataType(), $errors, failed: $failed);
+        }
+
+        return ImportResult::success($this->dataType(), $imported, $skipped, warnings: $errors, failed: $failed);
     }
 }

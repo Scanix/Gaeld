@@ -268,4 +268,74 @@ class ImporterTest extends TestCase
         $this->assertSame(1, $result->importedCount);
         $this->assertSame(1, $result->skippedCount);
     }
+
+    public function test_contact_importer_normalizes_country_names(): void
+    {
+        $importer = new ContactImporter;
+
+        $rows = collect([
+            new ContactImportRow(1, 'customer', 'German Name', country: 'Schweiz'),
+            new ContactImportRow(2, 'customer', 'French Name', country: 'Allemagne'),
+            new ContactImportRow(3, 'customer', 'Alpha3 Code', country: 'CHE'),
+            new ContactImportRow(4, 'customer', 'English Name', country: 'Switzerland'),
+        ]);
+
+        $result = $importer->import($rows, $this->organization);
+
+        $this->assertTrue($result->success);
+        $this->assertSame(4, $result->importedCount);
+        $this->assertDatabaseHas('customers', ['name' => 'German Name', 'country' => 'CH']);
+        $this->assertDatabaseHas('customers', ['name' => 'French Name', 'country' => 'DE']);
+        $this->assertDatabaseHas('customers', ['name' => 'Alpha3 Code', 'country' => 'CH']);
+        $this->assertDatabaseHas('customers', ['name' => 'English Name', 'country' => 'CH']);
+    }
+
+    public function test_contact_importer_continues_after_row_failure(): void
+    {
+        $importer = new ContactImporter;
+
+        Customer::creating(function ($customer) {
+            if ($customer->name === 'Fail Corp') {
+                throw new \RuntimeException('Simulated database error');
+            }
+        });
+
+        $rows = collect([
+            new ContactImportRow(1, 'customer', 'Good Corp'),
+            new ContactImportRow(2, 'customer', 'Fail Corp'),
+            new ContactImportRow(3, 'customer', 'Also Good Corp'),
+        ]);
+
+        $result = $importer->import($rows, $this->organization);
+
+        $this->assertTrue($result->success);
+        $this->assertSame(2, $result->importedCount);
+        $this->assertSame(1, $result->failedCount);
+        $this->assertNotEmpty($result->warnings);
+        $this->assertStringContainsString('Row 2', $result->warnings[0]);
+        $this->assertDatabaseHas('customers', ['name' => 'Good Corp']);
+        $this->assertDatabaseHas('customers', ['name' => 'Also Good Corp']);
+        $this->assertDatabaseMissing('customers', ['name' => 'Fail Corp']);
+    }
+
+    public function test_contact_importer_returns_failure_when_all_rows_fail(): void
+    {
+        $importer = new ContactImporter;
+
+        Customer::creating(function () {
+            throw new \RuntimeException('All rows fail');
+        });
+
+        $rows = collect([
+            new ContactImportRow(1, 'customer', 'Corp A'),
+            new ContactImportRow(2, 'customer', 'Corp B'),
+        ]);
+
+        $result = $importer->import($rows, $this->organization);
+
+        $this->assertFalse($result->success);
+        $this->assertSame(0, $result->importedCount);
+        $this->assertSame(2, $result->failedCount);
+        $this->assertNotEmpty($result->errors);
+    }
 }

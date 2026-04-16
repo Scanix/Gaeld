@@ -2,6 +2,7 @@
 
 namespace App\Domains\Migration\Jobs;
 
+use App\Domains\Migration\Enums\ImportStatus;
 use App\Domains\Migration\Models\MigrationSession;
 use App\Domains\Migration\Services\MigrationOrchestrator;
 use App\Domains\Organizations\Models\Organization;
@@ -11,12 +12,13 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class ProcessMigrationImport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 1;
+    public int $tries = 3;
 
     public int $timeout = 600;
 
@@ -37,5 +39,18 @@ class ProcessMigrationImport implements ShouldQueue
             $this->rowsByType,
             $organization,
         );
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        Log::error('Migration import job failed', [
+            'session_id' => $this->session->id,
+            'error' => $e->getMessage(),
+        ]);
+
+        $this->session->update([
+            'status' => ImportStatus::Failed,
+            'completed_at' => now(),
+        ]);
     }
 }

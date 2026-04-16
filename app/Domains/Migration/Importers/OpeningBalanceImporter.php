@@ -12,7 +12,7 @@ use App\Domains\Migration\DTOs\ValidationResult;
 use App\Domains\Migration\Enums\DataType;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OpeningBalanceImporter implements DataTypeImporterInterface
 {
@@ -64,42 +64,44 @@ class OpeningBalanceImporter implements DataTypeImporterInterface
     {
         $imported = 0;
         $skipped = 0;
+        $failed = 0;
+        $errors = [];
 
         $accounts = Account::where('organization_id', $organization->id)
             ->pluck('id', 'code');
 
-        DB::transaction(function () use ($rows, $organization, $accounts, &$imported, &$skipped): void {
-            $journalEntry = JournalEntry::create([
-                'organization_id' => $organization->id,
-                'date' => now()->startOfYear(),
-                'reference' => 'OPENING',
-                'description' => __('migration.opening_balances_entry'),
-                'is_opening' => true,
-            ]);
+        $journalEntry = JournalEntry::create([
+            'organization_id' => $organization->id,
+            'date' => now()->startOfYear(),
+            'reference' => 'OPENING',
+            'description' => __('migration.opening_balances_entry'),
+            'is_opening' => true,
+        ]);
 
-            foreach ($rows as $row) {
-                if (! $row instanceof OpeningBalanceRow || ! $row->isValid()) {
-                    $skipped++;
+        foreach ($rows as $row) {
+            if (! $row instanceof OpeningBalanceRow || ! $row->isValid()) {
+                $skipped++;
 
-                    continue;
-                }
+                continue;
+            }
 
-                $accountId = $accounts->get($row->accountCode);
-                if (! $accountId) {
-                    $skipped++;
+            $accountId = $accounts->get($row->accountCode);
+            if (! $accountId) {
+                $skipped++;
 
-                    continue;
-                }
+                continue;
+            }
 
-                $debit = (float) ($row->debit ?? 0);
-                $credit = (float) ($row->credit ?? 0);
+            $debit = (float) ($row->debit ?? 0);
+            $credit = (float) ($row->credit ?? 0);
 
-                if ($debit == 0 && $credit == 0) {
-                    $skipped++;
+            if ($debit == 0 && $credit == 0) {
+                $skipped++;
 
-                    continue;
-                }
+                continue;
+            }
 
+            try {
                 TransactionLine::create([
                     'journal_entry_id' => $journalEntry->id,
                     'account_id' => $accountId,
@@ -109,9 +111,23 @@ class OpeningBalanceImporter implements DataTypeImporterInterface
                 ]);
 
                 $imported++;
+            } catch (\Throwable $e) {
+                $failed++;
+                $rowNum = $row->sourceRow();
+                $errors[] = "Row {$rowNum}: {$e->getMessage()}";
+                Log::warning('Migration import: opening balance line failed', [
+                    'row' => $rowNum,
+                    'account_code' => $row->accountCode,
+                    'error' => $e->getMessage(),
+                    'organization_id' => $organization->id,
+                ]);
             }
-        });
+        }
 
-        return ImportResult::success($this->dataType(), $imported, $skipped);
+        if ($imported === 0 && $failed > 0) {
+            return ImportResult::failure($this->dataType(), $errors, failed: $failed);
+        }
+
+        return ImportResult::success($this->dataType(), $imported, $skipped, warnings: $errors, failed: $failed);
     }
 }

@@ -12,6 +12,7 @@ use App\Domains\Migration\Enums\DataType;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ContactImporter implements DataTypeImporterInterface
 {
@@ -58,47 +59,104 @@ class ContactImporter implements DataTypeImporterInterface
     {
         $imported = 0;
         $skipped = 0;
+        $failed = 0;
+        $errors = [];
         $createdIds = [];
 
-        DB::transaction(function () use ($rows, $organization, &$imported, &$skipped, &$createdIds): void {
-            foreach ($rows as $row) {
-                if (! $row instanceof ContactImportRow || ! $row->isValid()) {
-                    $skipped++;
+        foreach ($rows as $row) {
+            if (! $row instanceof ContactImportRow || ! $row->isValid()) {
+                $skipped++;
 
-                    continue;
-                }
-
-                $data = [
-                    'organization_id' => $organization->id,
-                    'name' => $row->name,
-                    'email' => $row->email,
-                    'phone' => $row->phone,
-                    'address' => $row->address,
-                    'postal_code' => $row->zip,
-                    'city' => $row->city,
-                    'country' => $row->country ?? 'CH',
-                ];
-
-                $model = $row->type === 'supplier' ? Supplier::class : Customer::class;
-
-                // Deduplicate by name + email within same org
-                $existing = $model::where('organization_id', $organization->id)
-                    ->where('name', $row->name)
-                    ->when($row->email, fn ($q) => $q->where('email', $row->email))
-                    ->first();
-
-                if ($existing) {
-                    $skipped++;
-
-                    continue;
-                }
-
-                $record = $model::create($data);
-                $createdIds[] = $record->id;
-                $imported++;
+                continue;
             }
-        });
 
-        return ImportResult::success($this->dataType(), $imported, $skipped, createdIds: $createdIds);
+            try {
+                DB::transaction(function () use ($row, $organization, &$imported, &$skipped, &$createdIds): void {
+                    $data = [
+                        'organization_id' => $organization->id,
+                        'name' => $row->name,
+                        'email' => $row->email,
+                        'phone' => $row->phone,
+                        'address' => $row->address,
+                        'postal_code' => $row->zip,
+                        'city' => $row->city,
+                        'country' => self::normalizeCountry($row->country) ?? 'CH',
+                    ];
+
+                    $model = $row->type === 'supplier' ? Supplier::class : Customer::class;
+
+                    // Deduplicate by name + email within same org
+                    $existing = $model::where('organization_id', $organization->id)
+                        ->where('name', $row->name)
+                        ->when($row->email, fn ($q) => $q->where('email', $row->email))
+                        ->first();
+
+                    if ($existing) {
+                        $skipped++;
+
+                        return;
+                    }
+
+                    $record = $model::create($data);
+                    $createdIds[] = $record->id;
+                    $imported++;
+                });
+            } catch (\Throwable $e) {
+                $failed++;
+                $rowNum = $row->sourceRow();
+                $errors[] = "Row {$rowNum}: {$e->getMessage()}";
+                Log::warning('Migration import: contact row failed', [
+                    'row' => $rowNum,
+                    'error' => $e->getMessage(),
+                    'organization_id' => $organization->id,
+                ]);
+            }
+        }
+
+        if ($imported === 0 && $failed > 0) {
+            return ImportResult::failure($this->dataType(), $errors, failed: $failed);
+        }
+
+        return ImportResult::success($this->dataType(), $imported, $skipped, warnings: $errors, createdIds: $createdIds, failed: $failed);
+    }
+
+    private static function normalizeCountry(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = trim($value);
+
+        // Already a 2-letter ISO code
+        if (preg_match('/^[A-Z]{2}$/i', $value)) {
+            return strtoupper($value);
+        }
+
+        // Common full names and alpha-3 codes from Swiss accounting exports
+        $map = [
+            // Alpha-3 → Alpha-2
+            'che' => 'CH', 'deu' => 'DE', 'aut' => 'AT', 'fra' => 'FR',
+            'ita' => 'IT', 'gbr' => 'GB', 'usa' => 'US', 'lie' => 'LI',
+
+            // German
+            'schweiz' => 'CH', 'deutschland' => 'DE', 'österreich' => 'AT',
+            'frankreich' => 'FR', 'italien' => 'IT',
+
+            // French
+            'suisse' => 'CH', 'allemagne' => 'DE', 'autriche' => 'AT',
+            'italie' => 'IT',
+
+            // Italian
+            'svizzera' => 'CH', 'germania' => 'DE', 'francia' => 'FR',
+            'italia' => 'IT',
+
+            // English (and shared names: france, austria, liechtenstein)
+            'switzerland' => 'CH', 'germany' => 'DE', 'austria' => 'AT',
+            'france' => 'FR', 'italy' => 'IT', 'liechtenstein' => 'LI',
+            'united kingdom' => 'GB', 'united states' => 'US',
+        ];
+
+        return $map[mb_strtolower($value)] ?? mb_substr(strtoupper($value), 0, 2);
     }
 }

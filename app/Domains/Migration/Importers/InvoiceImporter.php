@@ -12,6 +12,7 @@ use App\Domains\Migration\Enums\DataType;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class InvoiceImporter implements DataTypeImporterInterface
 {
@@ -54,60 +55,77 @@ class InvoiceImporter implements DataTypeImporterInterface
     {
         $imported = 0;
         $skipped = 0;
+        $failed = 0;
+        $errors = [];
 
-        DB::transaction(function () use ($rows, $organization, &$imported, &$skipped): void {
-            foreach ($rows as $row) {
-                if (! $row instanceof InvoiceImportRow || ! $row->isValid()) {
-                    $skipped++;
+        foreach ($rows as $row) {
+            if (! $row instanceof InvoiceImportRow || ! $row->isValid()) {
+                $skipped++;
 
-                    continue;
-                }
-
-                // Deduplicate by number within same org
-                $existing = Invoice::where('organization_id', $organization->id)
-                    ->where('number', $row->number)
-                    ->exists();
-
-                if ($existing) {
-                    $skipped++;
-
-                    continue;
-                }
-
-                // Find or create customer
-                $customer = null;
-                if ($row->customerName) {
-                    $customer = Customer::where('organization_id', $organization->id)
-                        ->where('name', $row->customerName)
-                        ->first();
-
-                    if (! $customer) {
-                        $customer = Customer::create([
-                            'organization_id' => $organization->id,
-                            'name' => $row->customerName,
-                            'email' => $row->customerEmail,
-                            'country' => 'CH',
-                        ]);
-                    }
-                }
-
-                Invoice::create([
-                    'organization_id' => $organization->id,
-                    'customer_id' => $customer?->id,
-                    'number' => $row->number,
-                    'date' => $row->date,
-                    'due_date' => $row->dueDate ?? now()->addDays(30)->toDateString(),
-                    'status' => $row->status,
-                    'currency' => $row->currency,
-                    'description' => $row->description,
-                    'total_amount' => $row->totalAmount ?? '0.00',
-                    'reference' => $row->reference,
-                ]);
-
-                $imported++;
+                continue;
             }
-        });
 
-        return ImportResult::success($this->dataType(), $imported, $skipped);
+            try {
+                DB::transaction(function () use ($row, $organization, &$imported, &$skipped): void {
+                    // Deduplicate by number within same org
+                    $existing = Invoice::where('organization_id', $organization->id)
+                        ->where('number', $row->number)
+                        ->exists();
+
+                    if ($existing) {
+                        $skipped++;
+
+                        return;
+                    }
+
+                    // Find or create customer
+                    $customer = null;
+                    if ($row->customerName) {
+                        $customer = Customer::where('organization_id', $organization->id)
+                            ->where('name', $row->customerName)
+                            ->first();
+
+                        if (! $customer) {
+                            $customer = Customer::create([
+                                'organization_id' => $organization->id,
+                                'name' => $row->customerName,
+                                'email' => $row->customerEmail,
+                                'country' => 'CH',
+                            ]);
+                        }
+                    }
+
+                    Invoice::create([
+                        'organization_id' => $organization->id,
+                        'customer_id' => $customer?->id,
+                        'number' => $row->number,
+                        'date' => $row->date,
+                        'due_date' => $row->dueDate ?? now()->addDays(30)->toDateString(),
+                        'status' => $row->status,
+                        'currency' => $row->currency,
+                        'description' => $row->description,
+                        'total_amount' => $row->totalAmount ?? '0.00',
+                        'reference' => $row->reference,
+                    ]);
+
+                    $imported++;
+                });
+            } catch (\Throwable $e) {
+                $failed++;
+                $rowNum = $row->sourceRow();
+                $errors[] = "Row {$rowNum}: {$e->getMessage()}";
+                Log::warning('Migration import: invoice row failed', [
+                    'row' => $rowNum,
+                    'error' => $e->getMessage(),
+                    'organization_id' => $organization->id,
+                ]);
+            }
+        }
+
+        if ($imported === 0 && $failed > 0) {
+            return ImportResult::failure($this->dataType(), $errors, failed: $failed);
+        }
+
+        return ImportResult::success($this->dataType(), $imported, $skipped, warnings: $errors, failed: $failed);
     }
 }

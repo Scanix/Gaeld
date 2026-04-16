@@ -10,6 +10,7 @@ use App\Domains\Migration\DTOs\ValidationResult;
 use App\Domains\Migration\Enums\DataType;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class AccountImporter implements DataTypeImporterInterface
 {
@@ -54,7 +55,16 @@ class AccountImporter implements DataTypeImporterInterface
             return ImportResult::failure($this->dataType(), ['No valid rows to import']);
         }
 
-        $this->importAction->execute($organization->id, $arrayRows, 'merge');
+        try {
+            $this->importAction->execute($organization->id, $arrayRows, 'merge');
+        } catch (\Throwable $e) {
+            Log::error('Migration import: account import failed', [
+                'error' => $e->getMessage(),
+                'organization_id' => $organization->id,
+            ]);
+
+            return ImportResult::failure($this->dataType(), [$e->getMessage()]);
+        }
 
         return ImportResult::success(
             $this->dataType(),

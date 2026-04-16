@@ -17,6 +17,7 @@ use App\Domains\Organizations\Models\Organization;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Orchestrates the migration import pipeline.
@@ -136,9 +137,26 @@ class MigrationOrchestrator
 
         $session->updateDataTypeStatus($dataType->value, ImportStatus::Importing);
 
-        $result = $importer->import($rows, $organization);
+        try {
+            $result = $importer->import($rows, $organization);
+        } catch (\Throwable $e) {
+            Log::error("Migration import: {$dataType->value} import failed unexpectedly", [
+                'error' => $e->getMessage(),
+                'session_id' => $session->id,
+                'organization_id' => $organization->id,
+            ]);
 
-        $status = $result->success ? ImportStatus::Completed : ImportStatus::Failed;
+            $session->updateDataTypeStatus($dataType->value, ImportStatus::Failed);
+            $session->addErrors($dataType->value, [$e->getMessage()]);
+
+            return ImportResult::failure($dataType, ['Import failed unexpectedly. Please try again or contact support.']);
+        }
+
+        $status = match (true) {
+            ! $result->success => ImportStatus::Failed,
+            $result->failedCount > 0 => ImportStatus::PartiallyCompleted,
+            default => ImportStatus::Completed,
+        };
         $session->updateDataTypeStatus($dataType->value, $status);
         $session->incrementImportedCount($dataType->value, $result->importedCount);
 
