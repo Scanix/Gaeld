@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Controllers;
 
+use App\Domains\Invoicing\Actions\GeneratePlainInvoicePdfAction;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
@@ -72,6 +73,22 @@ class InvoiceDocumentController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         }
 
+        $filename = 'invoice-'.($invoice->number ?? $invoice->id).'.pdf';
+
+        return new HttpResponse($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
+    }
+
+    public function downloadPdf(Invoice $invoice, GeneratePlainInvoicePdfAction $action, CurrentOrganization $currentOrg): HttpResponse
+    {
+        $this->authorize('view', $invoice);
+
+        $organization = $currentOrg->get();
+        $locale = $organization->locale ?? app()->getLocale();
+
+        $pdf = $action->execute($invoice, $organization, $locale);
         $filename = 'invoice-'.($invoice->number ?? $invoice->id).'.pdf';
 
         return new HttpResponse($pdf, 200, [

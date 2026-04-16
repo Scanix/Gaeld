@@ -9,6 +9,9 @@ class QrBillValidationException extends DomainException
     /** @param array<string> $violations */
     public function __construct(public readonly array $violations)
     {
-        parent::__construct('QR bill data is invalid: '.implode(', ', $violations));
+        $detail = implode('; ', $violations);
+        parent::__construct(
+            __('app.qr_bill_invalid_message', ['detail' => $detail])
+        );
     }
 }

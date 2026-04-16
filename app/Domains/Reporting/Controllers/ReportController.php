@@ -165,7 +165,7 @@ class ReportController extends Controller
         // Transform to the shape the Vue component expects
         $operating = $report['operating']['adjustments'] ?? [];
         if (isset($report['net_income']) && ! Money::isZero($report['net_income'])) {
-            array_unshift($operating, ['label' => 'Net Income', 'amount' => $report['net_income']]);
+            array_unshift($operating, ['label' => __('app.cf_net_income'), 'amount' => $report['net_income']]);
         }
 
         return Inertia::render('Reports/CashFlow', [
@@ -199,25 +199,25 @@ class ReportController extends Controller
         return $exporter->export(
             $format,
             csvBuilder: function () use ($exporter, $report, $from, $to) {
-                $headers = ['Section', 'Item', 'Amount'];
+                $headers = [__('app.cf_section'), 'Item', 'Amount'];
                 $rows = [];
-                $rows[] = ['', 'Net Income', $report['net_income']];
-                $rows[] = ['Operating', '--- Adjustments ---', ''];
+                $rows[] = ['', __('app.cf_net_income'), $report['net_income']];
+                $rows[] = [__('app.cf_operating'), '---', ''];
                 foreach ($report['operating']['adjustments'] as $adj) {
-                    $rows[] = ['Operating', $adj['label'], $adj['amount']];
+                    $rows[] = [__('app.cf_operating'), $adj['label'], $adj['amount']];
                 }
-                $rows[] = ['Operating', 'Total Operating', $report['operating']['total']];
+                $rows[] = [__('app.cf_operating'), __('app.cf_subtotal_operating'), $report['operating']['total']];
                 foreach ($report['investing']['items'] as $item) {
-                    $rows[] = ['Investing', $item['label'], $item['amount']];
+                    $rows[] = [__('app.cf_investing'), $item['label'], $item['amount']];
                 }
-                $rows[] = ['Investing', 'Total Investing', $report['investing']['total']];
+                $rows[] = [__('app.cf_investing'), __('app.cf_subtotal_investing'), $report['investing']['total']];
                 foreach ($report['financing']['items'] as $item) {
-                    $rows[] = ['Financing', $item['label'], $item['amount']];
+                    $rows[] = [__('app.cf_financing'), $item['label'], $item['amount']];
                 }
-                $rows[] = ['Financing', 'Total Financing', $report['financing']['total']];
-                $rows[] = ['', 'Net Change', $report['net_change']];
-                $rows[] = ['', 'Beginning Cash', $report['beginning_cash']];
-                $rows[] = ['', 'Ending Cash', $report['ending_cash']];
+                $rows[] = [__('app.cf_financing'), __('app.cf_subtotal_financing'), $report['financing']['total']];
+                $rows[] = ['', __('app.cf_net_change'), $report['net_change']];
+                $rows[] = ['', __('app.cf_beginning_balance'), $report['beginning_cash']];
+                $rows[] = ['', __('app.cf_ending_balance'), $report['ending_cash']];
 
                 return $exporter->csv()->export($headers, $rows, "cash-flow-{$from}-{$to}.csv");
             },

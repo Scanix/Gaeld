@@ -201,6 +201,20 @@ function isGroupActive(item) {
   }
   return isActive(item.href)
 }
+
+/**
+ * For child links inside a collapsible group, only the most-specific matching
+ * sibling should be highlighted. For example, when at /invoices/recurring the
+ * child link /invoices must NOT be active even though it is a prefix of the
+ * current URL.
+ */
+function isChildLinkActive(child, siblings) {
+  if (!isActive(child.href)) return false
+  // If a sibling with a longer (more specific) href also matches, defer to it
+  return !siblings.some(
+    s => s !== child && s.href && s.href.length > child.href.length && isActive(s.href),
+  )
+}
 </script>
 
 <template>
@@ -334,7 +348,7 @@ function isGroupActive(item) {
                 :href="child.href"
                 :class="[
                   'block rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                  isActive(child.href)
+                  isChildLinkActive(child, item.children)
                     ? 'text-[hsl(var(--primary))]'
                     : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--sidebar-foreground))]',
                 ]"

@@ -53,7 +53,7 @@ class AccountingController extends Controller
                 'edit' => $user->hasPermissionTo(Permission::AccountingEdit),
                 'delete' => $user->hasPermissionTo(Permission::AccountingDelete),
             ],
-            'accountTypes' => array_map(fn ($t) => ['value' => $t->value, 'label' => $t->value], AccountType::cases()),
+            'accountTypes' => array_map(fn ($t) => ['value' => $t->value, 'label' => __("app.account_type_{$t->value}")], AccountType::cases()),
         ]);
     }
 

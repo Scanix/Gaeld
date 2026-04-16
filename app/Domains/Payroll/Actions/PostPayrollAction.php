@@ -5,6 +5,7 @@ namespace App\Domains\Payroll\Actions;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Payroll\Models\SalarySlip;
@@ -29,13 +30,13 @@ class PostPayrollAction
         $employee = $slip->employee;
         $description = "Salary {$employee->fullName()} — {$slip->period_month}/{$slip->period_year}";
 
-        // Resolve accounts
+        // Resolve accounts — some may not exist in all chart templates (e.g. simplified freelancer chart)
         $salaryAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::SALARIES);
         $socialChargesAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::SOCIAL_CHARGES_EMPLOYER);
         $bankAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::BANK_CASH);
         $avsAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::AVS_PAYABLE);
-        $acAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::AC_PAYABLE);
-        $lppAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::LPP_PAYABLE);
+        $acAccount = $this->findAccount($orgId, AccountCode::AC_PAYABLE);
+        $lppAccount = $this->findAccount($orgId, AccountCode::LPP_PAYABLE);
 
         // Calculate aggregated amounts for liability accounts
         $avsTotal = Money::add(
@@ -85,17 +86,27 @@ class PostPayrollAction
         );
 
         // Credit: AVS/AI/APG payable
-        if (Money::isPositive($avsTotal)) {
+        // If AC or LPP liability accounts are missing (e.g. simplified chart templates),
+        // fold those contributions into the AVS payable account so the entry stays balanced.
+        $avsTotalWithFallback = $avsTotal;
+        if (Money::isPositive($acTotal) && $acAccount === null) {
+            $avsTotalWithFallback = Money::add($avsTotalWithFallback, $acTotal);
+        }
+        if (Money::isPositive($lppTotal) && $lppAccount === null) {
+            $avsTotalWithFallback = Money::add($avsTotalWithFallback, $lppTotal);
+        }
+
+        if (Money::isPositive($avsTotalWithFallback)) {
             $lines[] = new JournalLineData(
                 accountId: (string) $avsAccount->id,
                 debit: '0',
-                credit: $avsTotal,
+                credit: $avsTotalWithFallback,
                 description: 'AVS/AI/APG contributions',
             );
         }
 
         // Credit: AC payable
-        if (Money::isPositive($acTotal)) {
+        if (Money::isPositive($acTotal) && $acAccount !== null) {
             $lines[] = new JournalLineData(
                 accountId: (string) $acAccount->id,
                 debit: '0',
@@ -105,7 +116,7 @@ class PostPayrollAction
         }
 
         // Credit: LPP payable
-        if (Money::isPositive($lppTotal)) {
+        if (Money::isPositive($lppTotal) && $lppAccount !== null) {
             $lines[] = new JournalLineData(
                 accountId: (string) $lppAccount->id,
                 debit: '0',
@@ -129,5 +140,17 @@ class PostPayrollAction
         ]);
 
         return $slip->fresh();
+    }
+
+    /**
+     * Look up an account by code without throwing if it does not exist.
+     * Some chart templates (e.g. simplified freelancer) omit optional payroll
+     * liability accounts; this allows posting to proceed without them.
+     */
+    private function findAccount(string $orgId, string $code): ?Account
+    {
+        return Account::where('organization_id', $orgId)
+            ->where('code', $code)
+            ->first();
     }
 }

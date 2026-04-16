@@ -221,6 +221,16 @@ const bankAccountOptions = computed(() =>
           <Button
             v-if="invoice?.status !== 'draft' && invoice?.status !== 'cancelled'"
             as="a"
+            :href="`/invoices/${invoice.id}/pdf`"
+            variant="outline"
+            size="sm"
+          >
+            <Download class="h-4 w-4 sm:mr-1" />
+            <span class="hidden sm:inline">{{ t('download_pdf') }}</span>
+          </Button>
+          <Button
+            v-if="invoice?.status !== 'draft' && invoice?.status !== 'cancelled'"
+            as="a"
             :href="`/invoices/${invoice.id}/qr-pdf`"
             variant="outline"
             size="sm"

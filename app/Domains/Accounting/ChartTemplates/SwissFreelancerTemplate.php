@@ -66,6 +66,12 @@ class SwissFreelancerTemplate implements ChartTemplateInterface
             ['code' => '2270', 'type' => AccountType::Liability->value, 'name' => [
                 'en' => 'Social Security Payable', 'fr' => 'Assurances sociales à payer', 'de' => 'Sozialversicherungen', 'it' => 'Assicurazioni sociali da pagare', 'rm' => 'Assicuranzas socialas da pajar',
             ]],
+            ['code' => '2271', 'type' => AccountType::Liability->value, 'name' => [
+                'en' => 'Unemployment Insurance Payable', 'fr' => 'AC à payer', 'de' => 'ALV-Beiträge', 'it' => 'AD da pagare', 'rm' => 'AD da pajar',
+            ]],
+            ['code' => '2272', 'type' => AccountType::Liability->value, 'name' => [
+                'en' => 'Pension Fund Payable', 'fr' => 'LPP à payer', 'de' => 'BVG-Beiträge', 'it' => 'LPP da pagare', 'rm' => 'LPP da pajar',
+            ]],
             ['code' => '2300', 'type' => AccountType::Liability->value, 'name' => [
                 'en' => 'Accrued Liabilities', 'fr' => 'Charges à payer', 'de' => 'Passive Rechnungsabgrenzung', 'it' => 'Risconti passivi', 'rm' => 'Delimitaziun passiva',
             ]],
