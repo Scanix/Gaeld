@@ -1056,6 +1056,8 @@ return [
     'cf_other_operating' => 'Sonstige betriebliche Veränderungen',
     'cf_change_in' => 'Veränderung :account',
     'cf_section' => 'Abschnitt',
+    'cf_item' => 'Position',
+    'cf_amount' => 'Betrag',
     'help_cash_flow_title' => 'Geldflussrechnung verstehen',
     'help_cash_flow_text' => 'Die Geldflussrechnung zeigt, wie Geld in Ihrer Unternehmung geflossen ist. Betriebliche Tätigkeiten umfassen das Tagesgeschäft, Investitionstätigkeiten Anlagevermögen, Finanzierungstätigkeiten Darlehen und Eigenkapital.',
 

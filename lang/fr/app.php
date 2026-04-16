@@ -1054,6 +1054,8 @@ return [
     'cf_other_operating' => 'Autres variations opérationnelles',
     'cf_change_in' => 'Variation de :account',
     'cf_section' => 'Section',
+    'cf_item' => 'Élément',
+    'cf_amount' => 'Montant',
     'help_cash_flow_title' => 'Comprendre les flux de trésorerie',
     'help_cash_flow_text' => 'Le tableau des flux de trésorerie montre comment l\'argent a circulé dans votre entreprise. Les activités opérationnelles couvrent le fonctionnement quotidien, les activités d\'investissement couvrent les achats/ventes d\'actifs, et les activités de financement couvrent les emprunts et les capitaux propres.',
 

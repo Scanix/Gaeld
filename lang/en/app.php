@@ -1071,6 +1071,8 @@ return [
     'cf_other_operating' => 'Other operating changes',
     'cf_change_in' => 'Change in :account',
     'cf_section' => 'Section',
+    'cf_item' => 'Item',
+    'cf_amount' => 'Amount',
     'help_cash_flow_title' => 'Understanding Cash Flow',
     'help_cash_flow_text' => 'The cash flow statement shows how money moved in and out of your business during a period. Operating activities include day-to-day business. Investing activities include asset purchases/sales. Financing activities include loans and equity changes.',
 

@@ -1049,6 +1049,8 @@ return [
     'cf_other_operating' => 'Altre variazioni operative',
     'cf_change_in' => 'Variazione :account',
     'cf_section' => 'Sezione',
+    'cf_item' => 'Voce',
+    'cf_amount' => 'Importo',
     'help_cash_flow_title' => 'Comprendere il rendiconto finanziario',
     'help_cash_flow_text' => 'Il rendiconto finanziario mostra come il denaro si è mosso nella tua impresa. Le attività operative riguardano il business quotidiano, le attività di investimento riguardano beni, le attività di finanziamento riguardano prestiti e capitale.',
 

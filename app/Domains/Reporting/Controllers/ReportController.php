@@ -199,7 +199,7 @@ class ReportController extends Controller
         return $exporter->export(
             $format,
             csvBuilder: function () use ($exporter, $report, $from, $to) {
-                $headers = [__('app.cf_section'), 'Item', 'Amount'];
+                $headers = [__('app.cf_section'), __('app.cf_item'), __('app.cf_amount')];
                 $rows = [];
                 $rows[] = ['', __('app.cf_net_income'), $report['net_income']];
                 $rows[] = [__('app.cf_operating'), '---', ''];
