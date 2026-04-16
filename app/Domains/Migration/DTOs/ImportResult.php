@@ -27,13 +27,14 @@ class ImportResult
      * @param  string[]  $warnings
      * @param  array<int|string>  $createdIds
      */
-    public static function success(DataType $dataType, int $imported, int $skipped = 0, array $warnings = [], array $createdIds = []): self
+    public static function success(DataType $dataType, int $imported, int $skipped = 0, array $warnings = [], array $createdIds = [], int $failed = 0): self
     {
         return new self(
             dataType: $dataType,
             success: true,
             importedCount: $imported,
             skippedCount: $skipped,
+            failedCount: $failed,
             warnings: $warnings,
             createdIds: $createdIds,
         );

@@ -17,8 +17,8 @@ cd Gaeld/api
 # 2. Copy environment file
 cp .env.example .env
 
-# 3. Start the containers (dependencies and app key are set up automatically)
-docker compose up -d
+# 3. Start the containers and wait until ready (composer install runs on first start)
+docker compose up -d --wait
 
 # 4. Run the installer
 docker compose exec laravel.test php artisan gaeld:install

@@ -40,19 +40,38 @@ Gäld covers the full accounting workflow for a small Swiss business:
 ### Docker (recommended)
 
 ```bash
+./gaeld setup
+```
+
+The setup script builds the Docker image, starts all services (PostgreSQL, Redis, Meilisearch, Mailpit), waits for health checks, and runs the interactive installer — with progress indicators at each step.
+
+Add `--demo` for a non-interactive setup with sample data:
+
+```bash
+./gaeld setup --demo
+```
+
+<details>
+<summary>Manual Docker commands (equivalent)</summary>
+
+```bash
 cp .env.example .env
-docker compose up -d
+docker compose up -d --wait
 docker compose exec laravel.test php artisan gaeld:install
 ```
 
-Dependencies and the app key are installed automatically on first start.
+</details>
 
 Visit `http://localhost:8080`. The install wizard walks you through creating your organisation and admin account.
 
-Add `--demo` to seed the database with sample invoices, expenses, and contacts:
+Other useful commands:
 
 ```bash
-docker compose exec laravel.test php artisan gaeld:install --demo
+./gaeld artisan migrate    # Run migrations
+./gaeld logs               # Tail application logs
+./gaeld worker             # Tail queue worker logs
+./gaeld status             # Show container status
+./gaeld down               # Stop everything
 ```
 
 ### Manual
