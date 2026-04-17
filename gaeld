@@ -212,6 +212,14 @@ cmd_restart() {
     cmd_status
 }
 
+cmd_pnpm() {
+    docker compose exec laravel.test pnpm "$@"
+}
+
+cmd_composer() {
+    docker compose exec laravel.test composer "$@"
+}
+
 cmd_artisan() {
     docker compose exec laravel.test php artisan "$@"
 }
@@ -242,8 +250,9 @@ Commands:
   setup [--demo]     Full first-time setup (build, start, install)
   up                 Start all containers
   down               Stop all containers
-  restart [service]   Restart all or specific service
+  restart [service]  Restart all or specific service
   artisan <cmd>      Run artisan command in the app container
+  pnpm <cmd>         Run pnpm command in the app container
   logs [service]     Tail logs (default: laravel.test)
   worker             Tail queue worker logs
   status             Show container status
@@ -255,6 +264,7 @@ Examples:
   ./gaeld artisan migrate    Run database migrations
   ./gaeld restart worker     Restart queue worker
   ./gaeld logs worker        Tail worker logs
+  ./gaeld pnpm build         Run pnpm build inside the container
 
 EOF
 }
@@ -277,6 +287,8 @@ case "$command" in
     down)     cmd_down "$@" ;;
     restart)  cmd_restart "$@" ;;
     artisan)  cmd_artisan "$@" ;;
+    composer) cmd_composer "$@" ;;
+    pnpm)     cmd_pnpm "$@" ;;
     logs)     cmd_logs "$@" ;;
     worker)   cmd_worker "$@" ;;
     status)   cmd_status ;;
