@@ -8,6 +8,7 @@ use App\Support\FeatureFlag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
 
 /**
@@ -33,6 +34,7 @@ class HandleInertiaRequests extends Middleware
             'locale' => App::getLocale(),
             'translations' => fn () => trans('app'),
             'features' => FeatureFlag::all(),
+            'routeCapabilities' => fn () => $this->resolveRouteCapabilities(),
             'docsBaseUrl' => config('docs.base_url'),
             'flash' => [
                 'success' => $request->session()->get('success'),
@@ -48,6 +50,22 @@ class HandleInertiaRequests extends Middleware
                 ? Cache::get('saas:system_message')
                 : null,
         ]);
+    }
+
+    /**
+     * @return array<string, array<string, bool>>
+     */
+    private function resolveRouteCapabilities(): array
+    {
+        return [
+            'accounting' => [
+                'taxDeclarations' => Route::has('accounting.tax-declarations.index'),
+                'costCenters' => Route::has('accounting.cost-centers.index'),
+                'analyticalReport' => Route::has('accounting.analytical-report.index'),
+                'consolidation' => Route::has('accounting.consolidation.index'),
+                'exchangeRates' => Route::has('accounting.exchange-rates.index'),
+            ],
+        ];
     }
 
     /**

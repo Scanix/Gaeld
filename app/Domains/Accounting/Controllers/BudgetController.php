@@ -8,6 +8,7 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,7 +19,7 @@ class BudgetController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
-        $this->authorize('viewAny', Account::class);
+        $this->authorize('viewAny', Budget::class);
 
         $year = (int) $request->input('year', now()->year);
 
@@ -48,10 +49,17 @@ class BudgetController extends Controller
 
     public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
-        $this->authorize('create', Account::class);
+        $this->authorize('create', Budget::class);
 
         $validated = $request->validate([
-            'account_id' => ['required', 'exists:accounts,id'],
+            'account_id' => [
+                'required',
+                'integer',
+                Rule::exists('accounts', 'id')->where(fn ($query) => $query
+                    ->where('organization_id', $currentOrg->id())
+                    ->where('is_active', true)
+                ),
+            ],
             'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2099'],
             'monthly_amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
         ]);
@@ -73,7 +81,7 @@ class BudgetController extends Controller
 
     public function destroy(Budget $budget): RedirectResponse
     {
-        $this->authorize('viewAny', Account::class);
+        $this->authorize('delete', $budget);
 
         $year = $budget->fiscal_year;
         $budget->delete();
@@ -84,7 +92,7 @@ class BudgetController extends Controller
 
     public function update(Request $request, Budget $budget): RedirectResponse
     {
-        $this->authorize('update', Account::findOrFail($budget->account_id));
+        $this->authorize('update', $budget);
 
         $validated = $request->validate([
             'monthly_amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],

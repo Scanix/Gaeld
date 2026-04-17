@@ -57,7 +57,7 @@ class SocialChargesController extends Controller
             $validated['date'] ?? null,
         );
 
-        return redirect()->route('accounting.socialCharges')
+        return redirect()->route('accounting.social-charges')
             ->with('success', __('app.social_charges_posted'));
     }
 }

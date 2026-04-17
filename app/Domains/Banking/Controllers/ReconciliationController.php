@@ -56,9 +56,6 @@ class ReconciliationController extends Controller
 
         return Inertia::render('Banking/Reconciliation', [
             'bankAccounts' => $bankAccounts,
-            'pageFeatures' => [
-                'auto_reconciliation' => FeatureFlag::enabled('auto_reconciliation'),
-            ],
         ]);
     }
 
@@ -81,7 +78,9 @@ class ReconciliationController extends Controller
             $transactionsQuery->where('is_reconciled', true);
         }
 
-        $transactions = $transactionsQuery->paginate(config('accounting.pagination.reconciliation'));
+        $transactions = $transactionsQuery
+            ->paginate(config('accounting.pagination.reconciliation'))
+            ->withQueryString();
 
         // Only generate suggestions for unreconciled transactions on the current page
         // to avoid N+1 query storms across already-reconciled items
