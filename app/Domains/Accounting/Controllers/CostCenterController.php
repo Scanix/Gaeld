@@ -139,6 +139,7 @@ class CostCenterController extends Controller
             ])
             ->groupBy('accounts.code', 'accounts.name', 'accounts.type')
             ->orderBy('accounts.code')
+            ->toBase()
             ->get();
 
         $revenue = [];
@@ -147,6 +148,7 @@ class CostCenterController extends Controller
         $totalExpenses = 0.0;
 
         foreach ($rows as $row) {
+            /** @var object{code:string,name:string,type:string,debit_total:float|int|string,credit_total:float|int|string} $row */
             if ((string) $row->type === 'revenue') {
                 $balance = (float) $row->credit_total - (float) $row->debit_total;
                 $revenue[] = ['code' => $row->code, 'name' => $row->name, 'balance' => $balance];

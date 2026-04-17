@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Requests;
 
+use App\Domains\Accounting\Models\CostCenter;
 use App\Domains\Accounting\Rules\ValidCostCenterParent;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,11 +15,14 @@ class UpdateCostCenterRequest extends FormRequest
     }
 
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
         $costCenter = $this->route('costCenter');
+        if (! $costCenter instanceof CostCenter) {
+            abort(404);
+        }
 
         return [
             'code' => [

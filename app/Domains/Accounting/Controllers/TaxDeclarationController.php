@@ -110,6 +110,7 @@ class TaxDeclarationController extends Controller
             ->where('journal_entries.is_posted', true)
             ->whereYear('journal_entries.date', $fiscalYear)
             ->groupBy('accounts.type')
+            ->toBase()
             ->get();
 
         $totals = [
@@ -124,6 +125,7 @@ class TaxDeclarationController extends Controller
         ];
 
         foreach ($lines as $line) {
+            /** @var object{account_type:string,total_credit:float|int|string,total_debit:float|int|string} $line */
             if ((string) $line->account_type === 'revenue') {
                 $totals['revenue'] += (float) $line->total_credit - (float) $line->total_debit;
             }
