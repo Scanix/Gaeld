@@ -16,7 +16,6 @@ import HelpText from '@/Components/HelpText.vue'
 
 const props = defineProps({
   bankAccounts: { type: Object, default: () => ({}) },
-  pageFeatures: { type: Object, default: () => ({}) },
 })
 
 const { t } = useTranslations()

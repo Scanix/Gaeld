@@ -37,7 +37,7 @@ function switchYear(val) {
 
 // Account options for combobox
 const accountOptions = computed(() =>
-  props.accounts.map(a => ({ value: a.code, label: `${a.code} — ${a.name}` }))
+  props.accounts.map(a => ({ value: a.id, label: `${a.code} — ${a.name}` }))
 )
 
 // Inline editing: track dirty rows
@@ -83,13 +83,13 @@ function performDelete() {
 // Add new row
 const showAddForm = ref(false)
 const addForm = useForm({
-  account_code: null,
+  account_id: null,
   monthly_amount: '',
-  year: year.value,
+  fiscal_year: year.value,
 })
 
 function submitAdd() {
-  addForm.year = year.value
+  addForm.fiscal_year = year.value
   addForm.post('/accounting/budgets', {
     preserveScroll: true,
     onSuccess: () => {
@@ -136,14 +136,14 @@ function annualTotal(monthly) {
           <div class="flex-1 min-w-48">
             <label class="mb-1.5 block text-sm font-medium">{{ t('account') }}</label>
             <Combobox
-              v-model="addForm.account_code"
+              v-model="addForm.account_id"
               :options="accountOptions"
               value-key="value"
               label-key="label"
               :placeholder="t('select_account')"
             />
-            <p v-if="addForm.errors.account_code" class="mt-1 text-xs text-[hsl(var(--destructive))]">
-              {{ addForm.errors.account_code }}
+            <p v-if="addForm.errors.account_id" class="mt-1 text-xs text-[hsl(var(--destructive))]">
+              {{ addForm.errors.account_id }}
             </p>
           </div>
           <FormInput
@@ -184,9 +184,9 @@ function annualTotal(monthly) {
                 class="border-b last:border-0 hover:bg-[hsl(var(--accent))]/40"
               >
                 <td class="px-4 py-2.5 font-mono text-xs text-[hsl(var(--muted-foreground))]">
-                  {{ budget.account_code }}
+                  {{ budget.account?.code }}
                 </td>
-                <td class="px-4 py-2.5 font-medium">{{ budget.account_name }}</td>
+                <td class="px-4 py-2.5 font-medium">{{ budget.account?.name }}</td>
 
                 <!-- Editable monthly amount -->
                 <td class="px-4 py-2.5 text-right">
