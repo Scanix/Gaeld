@@ -27,6 +27,7 @@ import {
 import { useTranslations } from '@/lib/useTranslations'
 import { usePermissions } from '@/lib/usePermissions'
 import { useTheme } from '@/lib/useTheme'
+import { normalizeSidebarSharedProps } from '@/lib/inertiaContracts'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 
 const { t } = useTranslations()
@@ -43,7 +44,10 @@ const props = defineProps({
 const emit = defineEmits(['update:collapsed', 'closeMobile', 'toggleHelp', 'toggleDocs'])
 
 const page = usePage()
-const features = computed(() => page.props.features ?? {})
+const sharedProps = computed(() => normalizeSidebarSharedProps(page.props))
+const features = computed(() => sharedProps.value.features)
+const routeCapabilities = computed(() => sharedProps.value.routeCapabilities)
+const accountingRoutes = computed(() => routeCapabilities.value.accounting ?? {})
 
 const showOrgMenu = ref(false)
 const currentOrg = computed(() => page.props.auth?.currentOrganization)
@@ -117,7 +121,7 @@ const navigation = computed(() => {
       { key: 'journal_entries', href: '/accounting/journal-entries' },
       { key: 'vat_rates', href: '/accounting/vat-rates' },
       { key: 'social_charges', href: '/accounting/social-charges' },
-      ...(features.value.tax_declaration ? [
+      ...(features.value.tax_declaration && accountingRoutes.value.taxDeclarations ? [
         { key: 'tax_declarations', href: '/accounting/tax-declarations' },
       ] : []),
       { key: 'trial_balance', href: '/accounting/trial-balance' },
@@ -125,20 +129,22 @@ const navigation = computed(() => {
       ...(can('accounting.close-year') ? [
         { key: 'year_end_closing', href: '/accounting/year-end-closing' },
       ] : []),
-      { key: 'lettrage', href: '/accounting/lettrage' },
+      { key: 'lettrage', href: '/accounting/account-matching' },
       { key: 'fiduciary_export', href: '/accounting/export' },
       ...(can('accounting.view') ? [
         { key: 'legal_archives', href: '/accounting/archives' },
       ] : []),
       // Advanced (feature-gated)
-      ...(features.value.analytical ? [
+      ...(features.value.analytical && accountingRoutes.value.costCenters ? [
         { key: 'cost_centers', href: '/accounting/cost-centers' },
+      ] : []),
+      ...(features.value.analytical && accountingRoutes.value.analyticalReport ? [
         { key: 'analytical_report', href: '/accounting/analytical-report' },
       ] : []),
-      ...(features.value.consolidation ? [
+      ...(features.value.consolidation && accountingRoutes.value.consolidation ? [
         { key: 'consolidation', href: '/accounting/consolidation' },
       ] : []),
-      ...(features.value.multi_currency ? [
+      ...(features.value.multi_currency && accountingRoutes.value.exchangeRates ? [
         { key: 'exchange_rates', href: '/accounting/exchange-rates' },
       ] : []),
     ]},
