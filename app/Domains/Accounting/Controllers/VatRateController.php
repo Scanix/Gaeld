@@ -47,7 +47,7 @@ class VatRateController extends Controller
 
         VatRate::create($validated);
 
-        return redirect()->route('accounting.vatRates')
+        return redirect()->route('accounting.vat-rates')
             ->with('success', __('app.vat_rate_created'));
     }
 
@@ -66,7 +66,7 @@ class VatRateController extends Controller
 
         $vatRate->update($validated);
 
-        return redirect()->route('accounting.vatRates')
+        return redirect()->route('accounting.vat-rates')
             ->with('success', __('app.vat_rate_updated'));
     }
 
@@ -76,7 +76,7 @@ class VatRateController extends Controller
 
         $vatRate->delete();
 
-        return redirect()->route('accounting.vatRates')
+        return redirect()->route('accounting.vat-rates')
             ->with('success', __('app.vat_rate_deleted'));
     }
 }

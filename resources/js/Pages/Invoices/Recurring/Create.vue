@@ -114,7 +114,7 @@ const vatOptions = computed(() => [
               v-model="form.start_date"
               type="date"
               :label="t('start_date')"
-              :error="form.errors.start_date"
+              :error="form.errors.next_issue_date"
               required
             />
             <FormInput

@@ -5,6 +5,7 @@ namespace App\Domains\Invoicing\Controllers;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Support\QrBillValidationMessageFormatter;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use App\Support\Services\FileUploadService;
@@ -59,8 +60,12 @@ class InvoiceDocumentController extends Controller
         );
     }
 
-    public function downloadQrPdf(Invoice $invoice, GenerateQrInvoicePdfAction $action, CurrentOrganization $currentOrg): HttpResponse|RedirectResponse
-    {
+    public function downloadQrPdf(
+        Invoice $invoice,
+        GenerateQrInvoicePdfAction $action,
+        CurrentOrganization $currentOrg,
+        QrBillValidationMessageFormatter $messageFormatter,
+    ): HttpResponse|RedirectResponse {
         $this->authorize('view', $invoice);
 
         $organization = $currentOrg->get();
@@ -69,7 +74,7 @@ class InvoiceDocumentController extends Controller
         try {
             $pdf = $action->execute($invoice, $organization, $locale);
         } catch (QrBillValidationException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->back()->with('error', $messageFormatter->format($e->violations));
         }
 
         $filename = 'invoice-'.($invoice->number ?? $invoice->id).'.pdf';

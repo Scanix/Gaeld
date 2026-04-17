@@ -2,15 +2,22 @@
 
 namespace App\Domains\Invoicing\Requests;
 
+use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RecurringInvoiceRequest extends FormRequest
 {
     /** @return array<string, array<int, string>> */
     public function rules(): array
     {
+        $orgId = app(CurrentOrganization::class)->id();
+
         $rules = [
-            'customer_id' => ['required', 'exists:customers,id'],
+            'customer_id' => [
+                'required',
+                Rule::exists('customers', 'id')->where('organization_id', $orgId),
+            ],
             'frequency' => ['required', 'string', 'in:weekly,monthly,quarterly,yearly'],
             'next_issue_date' => ['required', 'date'],
             'end_date' => ['nullable', 'date', 'after:next_issue_date'],

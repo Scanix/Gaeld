@@ -121,13 +121,35 @@ class CustomerApiController extends Controller
     {
         $this->authorize('update', $customer);
 
-        $validated = $request->validated();
+        $validated = $this->completeUpdatePayload($customer, $request->validated());
 
         $customer->update(
             UpdateCustomerData::fromArray($validated)->toArray()
         );
 
         return new CustomerResource($customer->fresh());
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function completeUpdatePayload(Customer $customer, array $validated): array
+    {
+        return [
+            'name' => $validated['name'] ?? $customer->name,
+            'type' => $validated['type'] ?? $customer->type?->value,
+            'email' => array_key_exists('email', $validated) ? $validated['email'] : $customer->email,
+            'phone' => array_key_exists('phone', $validated) ? $validated['phone'] : $customer->phone,
+            'address' => array_key_exists('address', $validated) ? $validated['address'] : $customer->address,
+            'city' => array_key_exists('city', $validated) ? $validated['city'] : $customer->city,
+            'postal_code' => array_key_exists('postal_code', $validated) ? $validated['postal_code'] : $customer->postal_code,
+            'country' => array_key_exists('country', $validated) ? $validated['country'] : $customer->country,
+            'vat_number' => array_key_exists('vat_number', $validated) ? $validated['vat_number'] : $customer->vat_number,
+            'currency' => array_key_exists('currency', $validated) ? $validated['currency'] : $customer->currency,
+            'payment_terms' => array_key_exists('payment_terms', $validated) ? $validated['payment_terms'] : $customer->payment_terms,
+            'internal_notes' => array_key_exists('internal_notes', $validated) ? $validated['internal_notes'] : $customer->internal_notes,
+        ];
     }
 
     /**

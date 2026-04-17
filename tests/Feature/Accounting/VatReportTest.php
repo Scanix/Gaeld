@@ -275,4 +275,25 @@ class VatReportTest extends TestCase
 
         $response->assertSessionHasErrors(['from_date', 'to_date']);
     }
+
+    public function test_post_settlement_route_accepts_from_to_aliases(): void
+    {
+        $je1 = $this->createPostedJournalEntry('2026-01-15');
+        $je2 = $this->createPostedJournalEntry('2026-01-20');
+
+        $this->createVatEntry($je1, VatEntryType::Output, 1000.00, 81.00);
+        $this->createVatEntry($je2, VatEntryType::Input, 500.00, 40.50);
+
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->post(route('reports.vat.settlement'), [
+                'from' => '2026-01-01',
+                'to' => '2026-03-31',
+            ]);
+
+        $response->assertRedirect(route('reports.vat', [
+            'from_date' => '2026-01-01',
+            'to_date' => '2026-03-31',
+        ]));
+    }
 }

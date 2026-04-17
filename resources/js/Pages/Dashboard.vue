@@ -15,6 +15,7 @@ import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X, AlertTriangle, Rec
 import HelpText from '@/Components/HelpText.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import AccountingChecklist from '@/Components/AccountingChecklist.vue'
+import { normalizeDashboardContract } from '@/lib/inertiaContracts'
 import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -34,15 +35,15 @@ const { formatCurrency, formatDate, intlMonthName, locale } = useFormatters()
 const { isDark } = useTheme()
 
 const props = defineProps({
-  revenue: { type: Number, default: 0 },
-  expenses: { type: Number, default: 0 },
-  balance: { type: Number, default: 0 },
-  cashBalance: { type: Number, default: 0 },
+  revenue: { type: [Number, String], default: 0 },
+  expenses: { type: [Number, String], default: 0 },
+  balance: { type: [Number, String], default: 0 },
+  cashBalance: { type: [Number, String], default: 0 },
   unpaidInvoices: { type: Object, default: () => ({ count: 0, total: 0 }) },
   pendingExpenses: { type: Object, default: () => ({ count: 0, total: 0 }) },
-  previousRevenue: { type: Number, default: 0 },
-  previousExpenses: { type: Number, default: 0 },
-  previousBalance: { type: Number, default: 0 },
+  previousRevenue: { type: [Number, String], default: 0 },
+  previousExpenses: { type: [Number, String], default: 0 },
+  previousBalance: { type: [Number, String], default: 0 },
   budgetSummary: { type: Object, default: null },
   vatSummary: { type: Object, default: null },
   receivablesAging: { type: Object, default: null },
@@ -53,8 +54,15 @@ const props = defineProps({
   displayYear: { type: Number, default: () => new Date().getFullYear() },
 })
 
-const profit = computed(() => props.revenue - props.expenses)
-const previousProfit = computed(() => props.previousRevenue - props.previousExpenses)
+const contract = computed(() => normalizeDashboardContract(props))
+
+function asNumber(value) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+const profit = computed(() => asNumber(contract.value.revenue) - asNumber(contract.value.expenses))
+const previousProfit = computed(() => asNumber(contract.value.previousRevenue) - asNumber(contract.value.previousExpenses))
 
 function yoyChange(current, previous) {
   const prev = Number(previous)
@@ -70,16 +78,16 @@ function safePercent(val) {
 }
 
 const summaryCards = computed(() => [
-  { title: t('cash_balance'), value: formatCurrency(props.cashBalance), icon: Wallet, color: props.cashBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400', trend: null },
-  { title: t('revenue'), value: formatCurrency(props.revenue), icon: TrendingUp, color: 'text-green-600 dark:text-green-400', trend: yoyChange(props.revenue, props.previousRevenue) },
-  { title: t('expenses'), value: formatCurrency(props.expenses), icon: TrendingDown, color: 'text-red-600 dark:text-red-400', trend: yoyChange(props.expenses, props.previousExpenses) },
+  { title: t('cash_balance'), value: formatCurrency(contract.value.cashBalance), icon: Wallet, color: asNumber(contract.value.cashBalance) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400', trend: null },
+  { title: t('revenue'), value: formatCurrency(contract.value.revenue), icon: TrendingUp, color: 'text-green-600 dark:text-green-400', trend: yoyChange(contract.value.revenue, contract.value.previousRevenue) },
+  { title: t('expenses'), value: formatCurrency(contract.value.expenses), icon: TrendingDown, color: 'text-red-600 dark:text-red-400', trend: yoyChange(contract.value.expenses, contract.value.previousExpenses) },
   { title: t('profit'), value: formatCurrency(profit.value), icon: ArrowRightLeft, color: profit.value >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400', trend: yoyChange(profit.value, previousProfit.value) },
 ])
 
 // ── Chart ──────────────────────────────────────────────────────────────
 
 const chartLabels = computed(() => {
-  const indices = props.monthlyBreakdown.monthIndices
+  const indices = contract.value.monthlyBreakdown.monthIndices
   if (!indices?.length) {
     return Array.from({ length: 12 }, (_, i) =>
       new Intl.DateTimeFormat(intlLocale(locale.value), { month: 'short' }).format(new Date(2000, i, 1))
@@ -95,19 +103,19 @@ const chartData = computed(() => ({
   datasets: [
     {
       label: t('revenue'),
-      data: props.monthlyBreakdown.revenue?.length ? props.monthlyBreakdown.revenue : Array(12).fill(0),
+      data: contract.value.monthlyBreakdown.revenue?.length ? contract.value.monthlyBreakdown.revenue : Array(12).fill(0),
       backgroundColor: 'hsl(142 71% 45% / 0.8)',
       borderRadius: 4,
     },
     {
       label: t('expenses'),
-      data: props.monthlyBreakdown.expenses?.length ? props.monthlyBreakdown.expenses : Array(12).fill(0),
+      data: contract.value.monthlyBreakdown.expenses?.length ? contract.value.monthlyBreakdown.expenses : Array(12).fill(0),
       backgroundColor: 'hsl(0 84% 60% / 0.8)',
       borderRadius: 4,
     },
     {
       label: t('forecast'),
-      data: props.monthlyBreakdown.forecast?.length ? props.monthlyBreakdown.forecast : Array(12).fill(0),
+      data: contract.value.monthlyBreakdown.forecast?.length ? contract.value.monthlyBreakdown.forecast : Array(12).fill(0),
       backgroundColor: 'hsl(45 93% 58% / 0.3)',
       borderColor: 'hsl(45 93% 47% / 1)',
       borderWidth: 2,
@@ -121,7 +129,7 @@ const selectedMonth = ref(null)
 function onChartClick(_event, elements) {
   if (!elements.length) return
   const index = elements[0].index
-  const monthIndex = props.monthlyBreakdown.monthIndices?.[index] ?? (index + 1)
+  const monthIndex = contract.value.monthlyBreakdown.monthIndices?.[index] ?? (index + 1)
   selectedMonth.value = selectedMonth.value === monthIndex ? null : monthIndex
 }
 
@@ -130,16 +138,16 @@ function clearMonthFilter() {
 }
 
 const filteredTransactions = computed(() => {
-  if (!selectedMonth.value) return props.recentTransactions
-  return props.recentTransactions.filter((transaction) => {
+  if (!selectedMonth.value) return contract.value.recentTransactions
+  return contract.value.recentTransactions.filter((transaction) => {
     const d = new Date(transaction.date)
-    return d.getFullYear() === props.displayYear && d.getMonth() === selectedMonth.value - 1
+    return d.getFullYear() === contract.value.displayYear && d.getMonth() === selectedMonth.value - 1
   })
 })
 
 const transactionsTitle = computed(() => {
   if (selectedMonth.value) {
-    return t('transactions_month', { month: intlMonthName(selectedMonth.value - 1), year: props.displayYear })
+    return t('transactions_month', { month: intlMonthName(selectedMonth.value - 1), year: contract.value.displayYear })
   }
   return t('recent_transactions')
 })
@@ -162,21 +170,21 @@ const chartOptions = computed(() => {
         callbacks: {
           title: (items) => {
             if (!items.length) return ''
-            return `${items[0].label} ${props.displayYear}`
+            return `${items[0].label} ${contract.value.displayYear}`
           },
           label: (item) => ` ${item.dataset.label}: ${formatCurrency(item.raw)}`,
           afterBody: (items) => {
             if (!items.length) return ''
             const index = items[0].dataIndex
-            const rev = props.monthlyBreakdown.revenue?.[index] ?? 0
-            const exp = props.monthlyBreakdown.expenses?.[index] ?? 0
-            const fc = props.monthlyBreakdown.forecast?.[index] ?? 0
+            const rev = contract.value.monthlyBreakdown.revenue?.[index] ?? 0
+            const exp = contract.value.monthlyBreakdown.expenses?.[index] ?? 0
+            const fc = contract.value.monthlyBreakdown.forecast?.[index] ?? 0
             const net = rev - exp
             const lines = []
 
-            const revItems = props.monthlyBreakdown.revenueItems?.[index] ?? []
-            const expItems = props.monthlyBreakdown.expenseItems?.[index] ?? []
-            const fcItems = props.monthlyBreakdown.forecastItems?.[index] ?? []
+            const revItems = contract.value.monthlyBreakdown.revenueItems?.[index] ?? []
+            const expItems = contract.value.monthlyBreakdown.expenseItems?.[index] ?? []
+            const fcItems = contract.value.monthlyBreakdown.forecastItems?.[index] ?? []
 
             if (revItems.length) {
               lines.push('', `── ${t('revenue')} ──`)
@@ -381,7 +389,7 @@ const transactionColumns = computed(() => [
     <Card class="mt-6">
       <CardHeader>
         <CardTitle>{{ t('revenue_vs_expenses') }}</CardTitle>
-        <CardDescription>{{ t('monthly_comparison') }} {{ props.displayYear }} — {{ t('click_bar_filter') }}</CardDescription>
+        <CardDescription>{{ t('monthly_comparison') }} {{ contract.displayYear }} — {{ t('click_bar_filter') }}</CardDescription>
       </CardHeader>
       <CardContent>
         <div class="h-96">

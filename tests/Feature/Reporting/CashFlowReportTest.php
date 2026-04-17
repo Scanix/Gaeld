@@ -105,7 +105,7 @@ class CashFlowReportTest extends TestCase
     {
         $response = $this->actingAs($this->user)
             ->withSession(['current_organization_id' => $this->organization->id])
-            ->get(route('reports.cashFlow', ['from' => '2026-01-01', 'to' => '2026-03-31']));
+            ->get(route('reports.cash-flow', ['from' => '2026-01-01', 'to' => '2026-03-31']));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page->component('Reports/CashFlow'));
@@ -115,7 +115,7 @@ class CashFlowReportTest extends TestCase
     {
         $response = $this->actingAs($this->user)
             ->withSession(['current_organization_id' => $this->organization->id])
-            ->get(route('reports.cashFlow.export', ['format' => 'pdf', 'from' => '2026-01-01', 'to' => '2026-03-31']));
+            ->get(route('reports.cash-flow.export', ['format' => 'pdf', 'from' => '2026-01-01', 'to' => '2026-03-31']));
 
         $response->assertStatus(200);
         $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
@@ -125,7 +125,7 @@ class CashFlowReportTest extends TestCase
     {
         $response = $this->actingAs($this->user)
             ->withSession(['current_organization_id' => $this->organization->id])
-            ->get(route('reports.cashFlow.export', ['format' => 'csv', 'from' => '2026-01-01', 'to' => '2026-03-31']));
+            ->get(route('reports.cash-flow.export', ['format' => 'csv', 'from' => '2026-01-01', 'to' => '2026-03-31']));
 
         $response->assertStatus(200);
         $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));

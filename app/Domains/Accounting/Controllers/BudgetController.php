@@ -4,6 +4,8 @@ namespace App\Domains\Accounting\Controllers;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\Budget;
+use App\Domains\Accounting\Requests\StoreBudgetRequest;
+use App\Domains\Accounting\Requests\UpdateBudgetRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +20,7 @@ class BudgetController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
-        $this->authorize('viewAny', Account::class);
+        $this->authorize('viewAny', Budget::class);
 
         $year = (int) $request->input('year', now()->year);
 
@@ -46,15 +48,11 @@ class BudgetController extends Controller
         ]);
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(StoreBudgetRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
-        $this->authorize('create', Account::class);
+        $this->authorize('create', Budget::class);
 
-        $validated = $request->validate([
-            'account_id' => ['required', 'exists:accounts,id'],
-            'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2099'],
-            'monthly_amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
-        ]);
+        $validated = $request->validated();
 
         Budget::updateOrCreate(
             [
@@ -73,7 +71,7 @@ class BudgetController extends Controller
 
     public function destroy(Budget $budget): RedirectResponse
     {
-        $this->authorize('viewAny', Account::class);
+        $this->authorize('delete', $budget);
 
         $year = $budget->fiscal_year;
         $budget->delete();
@@ -82,13 +80,11 @@ class BudgetController extends Controller
             ->with('success', __('app.budget_deleted'));
     }
 
-    public function update(Request $request, Budget $budget): RedirectResponse
+    public function update(UpdateBudgetRequest $request, Budget $budget): RedirectResponse
     {
-        $this->authorize('update', Account::findOrFail($budget->account_id));
+        $this->authorize('update', $budget);
 
-        $validated = $request->validate([
-            'monthly_amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
-        ]);
+        $validated = $request->validated();
 
         $budget->update($validated);
 

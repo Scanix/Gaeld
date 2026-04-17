@@ -55,7 +55,7 @@ class LettrageTest extends TestCase
 
     public function test_lettrage_index_shows_account_picker_when_no_account_selected(): void
     {
-        $response = $this->actAsOrg()->get('/accounting/lettrage');
+        $response = $this->actAsOrg()->get('/accounting/account-matching');
 
         $response->assertStatus(200);
         $response->assertInertia(fn (AssertableInertia $page) => $page
@@ -78,7 +78,7 @@ class LettrageTest extends TestCase
             $this->journalLine($this->bankAccount, '0.00', '500.00', 'Bank withdrawal'),
         ], 'EXP-042', 'Expense payment');
 
-        $response = $this->actAsOrg()->get('/accounting/lettrage?account='.$this->bankAccount->id);
+        $response = $this->actAsOrg()->get('/accounting/account-matching?account='.$this->bankAccount->id);
 
         $response->assertStatus(200);
         $response->assertInertia(fn (AssertableInertia $page) => $page
@@ -111,7 +111,7 @@ class LettrageTest extends TestCase
         ], 'MAR-1');
 
         // Filter up to end of February — only Jan entry should appear
-        $response = $this->actAsOrg()->get('/accounting/lettrage?account='.$this->bankAccount->id.'&date=2026-02-28');
+        $response = $this->actAsOrg()->get('/accounting/account-matching?account='.$this->bankAccount->id.'&date=2026-02-28');
 
         $response->assertStatus(200);
         $response->assertInertia(fn (AssertableInertia $page) => $page
@@ -135,13 +135,13 @@ class LettrageTest extends TestCase
 
         // Letter the two bank lines
         $bankLines = TransactionLine::where('account_id', $this->bankAccount->id)->pluck('id')->toArray();
-        $this->actAsOrg()->post('/accounting/lettrage', [
+        $this->actAsOrg()->post('/accounting/account-matching', [
             'account_id' => $this->bankAccount->id,
             'line_ids' => $bankLines,
         ]);
 
         // Now open items should be empty for this account
-        $response = $this->actAsOrg()->get('/accounting/lettrage?account='.$this->bankAccount->id);
+        $response = $this->actAsOrg()->get('/accounting/account-matching?account='.$this->bankAccount->id);
 
         $response->assertStatus(200);
         $response->assertInertia(fn (AssertableInertia $page) => $page
@@ -167,7 +167,7 @@ class LettrageTest extends TestCase
 
         $bankLines = TransactionLine::where('account_id', $this->bankAccount->id)->pluck('id')->toArray();
 
-        $response = $this->actAsOrg()->post('/accounting/lettrage', [
+        $response = $this->actAsOrg()->post('/accounting/account-matching', [
             'account_id' => $this->bankAccount->id,
             'line_ids' => $bankLines,
         ]);
@@ -202,7 +202,7 @@ class LettrageTest extends TestCase
 
         $bankLines = TransactionLine::where('account_id', $this->bankAccount->id)->pluck('id')->toArray();
 
-        $response = $this->actAsOrg()->post('/accounting/lettrage', [
+        $response = $this->actAsOrg()->post('/accounting/account-matching', [
             'account_id' => $this->bankAccount->id,
             'line_ids' => $bankLines,
         ]);
@@ -216,7 +216,7 @@ class LettrageTest extends TestCase
 
     public function test_letter_requires_at_least_two_lines(): void
     {
-        $response = $this->actAsOrg()->post('/accounting/lettrage', [
+        $response = $this->actAsOrg()->post('/accounting/account-matching', [
             'account_id' => $this->bankAccount->id,
             'line_ids' => [999],
         ]);
@@ -242,14 +242,14 @@ class LettrageTest extends TestCase
 
         $bankLines = TransactionLine::where('account_id', $this->bankAccount->id)->pluck('id')->toArray();
 
-        $this->actAsOrg()->post('/accounting/lettrage', [
+        $this->actAsOrg()->post('/accounting/account-matching', [
             'account_id' => $this->bankAccount->id,
             'line_ids' => $bankLines,
         ]);
 
         $lot = LettrageLot::where('account_id', $this->bankAccount->id)->first();
 
-        $response = $this->actAsOrg()->delete('/accounting/lettrage/'.$lot->id);
+        $response = $this->actAsOrg()->delete('/accounting/account-matching/'.$lot->id);
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
@@ -277,16 +277,16 @@ class LettrageTest extends TestCase
 
         $bankLines = TransactionLine::where('account_id', $this->bankAccount->id)->pluck('id')->toArray();
 
-        $this->actAsOrg()->post('/accounting/lettrage', [
+        $this->actAsOrg()->post('/accounting/account-matching', [
             'account_id' => $this->bankAccount->id,
             'line_ids' => $bankLines,
         ]);
 
         $lot = LettrageLot::where('account_id', $this->bankAccount->id)->first();
-        $this->actAsOrg()->delete('/accounting/lettrage/'.$lot->id);
+        $this->actAsOrg()->delete('/accounting/account-matching/'.$lot->id);
 
         // Open items should show 2 lines again with their journal entry data
-        $response = $this->actAsOrg()->get('/accounting/lettrage?account='.$this->bankAccount->id);
+        $response = $this->actAsOrg()->get('/accounting/account-matching?account='.$this->bankAccount->id);
 
         $response->assertInertia(fn (AssertableInertia $page) => $page
             ->has('openItems', 2)
@@ -313,7 +313,7 @@ class LettrageTest extends TestCase
 
         $lines1 = TransactionLine::where('account_id', $this->bankAccount->id)
             ->whereNull('lettrage_key')->pluck('id')->toArray();
-        $this->actAsOrg()->post('/accounting/lettrage', [
+        $this->actAsOrg()->post('/accounting/account-matching', [
             'account_id' => $this->bankAccount->id,
             'line_ids' => $lines1,
         ]);
@@ -330,7 +330,7 @@ class LettrageTest extends TestCase
 
         $lines2 = TransactionLine::where('account_id', $this->bankAccount->id)
             ->whereNull('lettrage_key')->pluck('id')->toArray();
-        $this->actAsOrg()->post('/accounting/lettrage', [
+        $this->actAsOrg()->post('/accounting/account-matching', [
             'account_id' => $this->bankAccount->id,
             'line_ids' => $lines2,
         ]);

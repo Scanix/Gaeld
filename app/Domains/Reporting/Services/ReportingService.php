@@ -335,13 +335,22 @@ class ReportingService
             $operatingAdjustments = [];
 
             if (! Money::isZero($depreciationTotal)) {
-                $operatingAdjustments[] = ['label' => 'Depreciation (add-back)', 'amount' => $depreciationTotal];
+                $operatingAdjustments[] = [
+                    'label' => __('app.cf_adjustment_depreciation_add_back'),
+                    'amount' => $depreciationTotal,
+                ];
             }
             if (! Money::isZero($arAdjustment)) {
-                $operatingAdjustments[] = ['label' => 'Change in Accounts Receivable', 'amount' => $arAdjustment];
+                $operatingAdjustments[] = [
+                    'label' => __('app.cf_adjustment_change_accounts_receivable'),
+                    'amount' => $arAdjustment,
+                ];
             }
             if (! Money::isZero($apAdjustment)) {
-                $operatingAdjustments[] = ['label' => 'Change in Accounts Payable', 'amount' => $apAdjustment];
+                $operatingAdjustments[] = [
+                    'label' => __('app.cf_adjustment_change_accounts_payable'),
+                    'amount' => $apAdjustment,
+                ];
             }
 
             $operatingAdjTotal = array_reduce($operatingAdjustments, fn ($c, $a) => Money::add($c, $a['amount']), '0.00');
@@ -361,7 +370,10 @@ class ReportingService
                 $delta = Money::subtract($end, $begin);
                 if (! Money::isZero($delta)) {
                     // Asset increase = cash outflow (negate)
-                    $investingItems[] = ['label' => "Change in {$account->name}", 'amount' => Money::negate($delta)];
+                    $investingItems[] = [
+                        'label' => __('app.cf_change_in_account', ['name' => $account->name]),
+                        'amount' => Money::negate($delta),
+                    ];
                 }
             }
 
@@ -381,7 +393,10 @@ class ReportingService
                 $end = $this->ledgerService->accountBalance($account->id, null, $toDate);
                 $delta = Money::subtract($end, $begin);
                 if (! Money::isZero($delta)) {
-                    $financingItems[] = ['label' => "Change in {$account->name}", 'amount' => $delta];
+                    $financingItems[] = [
+                        'label' => __('app.cf_change_in_account', ['name' => $account->name]),
+                        'amount' => $delta,
+                    ];
                 }
             }
 
@@ -396,7 +411,10 @@ class ReportingService
                 $end = $this->ledgerService->accountBalance($account->id, null, $toDate);
                 $delta = Money::subtract($end, $begin);
                 if (! Money::isZero($delta)) {
-                    $financingItems[] = ['label' => "Change in {$account->name}", 'amount' => $delta];
+                    $financingItems[] = [
+                        'label' => __('app.cf_change_in_account', ['name' => $account->name]),
+                        'amount' => $delta,
+                    ];
                 }
             }
 
@@ -423,7 +441,10 @@ class ReportingService
             $reconciliationDiff = Money::subtract($actualEndingCash, Money::add($beginningCash, $netChange));
 
             if (! Money::isZero($reconciliationDiff)) {
-                $operatingAdjustments[] = ['label' => 'Other operating changes', 'amount' => $reconciliationDiff];
+                $operatingAdjustments[] = [
+                    'label' => __('app.cf_adjustment_other_operating_changes'),
+                    'amount' => $reconciliationDiff,
+                ];
                 $operatingAdjTotal = Money::add($operatingAdjTotal, $reconciliationDiff);
                 $operatingTotal = Money::add($operatingTotal, $reconciliationDiff);
                 $netChange = Money::add($netChange, $reconciliationDiff);

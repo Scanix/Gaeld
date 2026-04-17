@@ -4,6 +4,8 @@ namespace App\Domains\Api\Controllers;
 
 use App\Domains\Api\Enums\TokenType;
 use App\Domains\Api\Models\PersonalAccessToken;
+use App\Domains\Api\Requests\StoreOrganizationTokenSettingsRequest;
+use App\Domains\Api\Requests\StorePersonalTokenSettingsRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -63,17 +65,12 @@ class TokenSettingsController extends Controller
         ]);
     }
 
-    public function storePersonal(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function storePersonal(StorePersonalTokenSettingsRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $organization = $currentOrg->get();
         $this->authorize('update', $organization);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'abilities' => 'array',
-            'abilities.*' => 'string',
-            'expires_in_days' => 'nullable|integer|min:1|max:365',
-        ]);
+        $validated = $request->validated();
 
         $abilities = $validated['abilities'] ?? ['*'];
         $expiresAt = isset($validated['expires_in_days'])
@@ -91,17 +88,12 @@ class TokenSettingsController extends Controller
             ->with('newToken', $token->plainTextToken);
     }
 
-    public function storeOrganization(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function storeOrganization(StoreOrganizationTokenSettingsRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $organization = $currentOrg->get();
         $this->authorize('manageUsers', $organization);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'abilities' => 'array',
-            'abilities.*' => 'string',
-            'expires_in_days' => 'nullable|integer|min:1|max:365',
-        ]);
+        $validated = $request->validated();
 
         $abilities = $validated['abilities'] ?? ['*'];
         $expiresAt = isset($validated['expires_in_days'])

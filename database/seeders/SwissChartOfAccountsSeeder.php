@@ -45,6 +45,8 @@ class SwissChartOfAccountsSeeder extends Seeder
             ['code' => '2200', 'name' => 'VAT Output Tax (Umsatzsteuer)', 'type' => AccountType::Liability->value],
             ['code' => '2201', 'name' => 'VAT Payable', 'type' => AccountType::Liability->value],
             ['code' => '2270', 'name' => 'Social Security Payable', 'type' => AccountType::Liability->value],
+            ['code' => '2271', 'name' => 'Unemployment Insurance (AC) Payable', 'type' => AccountType::Liability->value],
+            ['code' => '2272', 'name' => 'Pension Fund (LPP) Payable', 'type' => AccountType::Liability->value],
             ['code' => '2300', 'name' => 'Accrued Liabilities', 'type' => AccountType::Liability->value],
             ['code' => '2400', 'name' => 'Bank Loan Long-term', 'type' => AccountType::Liability->value],
 

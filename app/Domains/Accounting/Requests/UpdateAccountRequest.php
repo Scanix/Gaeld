@@ -33,7 +33,7 @@ class UpdateAccountRequest extends FormRequest
             $rules['code'] = [
                 'required',
                 'string',
-                'max:20',
+                'max:10',
                 Rule::unique('accounts', 'code')
                     ->where('organization_id', $account->organization_id)
                     ->ignore($account->id),
