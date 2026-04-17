@@ -123,13 +123,38 @@ class SupplierApiController extends Controller
     {
         $this->authorize('update', $supplier);
 
-        $validated = $request->validated();
+        $validated = $this->completeUpdatePayload($supplier, $request->validated());
 
         $supplier->update(
             UpdateSupplierData::fromArray($validated)->toArray()
         );
 
         return new SupplierResource($supplier->fresh());
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function completeUpdatePayload(Supplier $supplier, array $validated): array
+    {
+        return [
+            'name' => $validated['name'] ?? $supplier->name,
+            'type' => $validated['type'] ?? null,
+            'email' => array_key_exists('email', $validated) ? $validated['email'] : $supplier->email,
+            'phone' => array_key_exists('phone', $validated) ? $validated['phone'] : $supplier->phone,
+            'address' => array_key_exists('address', $validated) ? $validated['address'] : $supplier->address,
+            'city' => array_key_exists('city', $validated) ? $validated['city'] : $supplier->city,
+            'postal_code' => array_key_exists('postal_code', $validated) ? $validated['postal_code'] : $supplier->postal_code,
+            'country' => array_key_exists('country', $validated) ? $validated['country'] : $supplier->country,
+            'vat_number' => array_key_exists('vat_number', $validated) ? $validated['vat_number'] : $supplier->vat_number,
+            'default_expense_category' => array_key_exists('default_expense_category', $validated)
+                ? $validated['default_expense_category']
+                : $supplier->default_expense_category,
+            'currency' => array_key_exists('currency', $validated) ? $validated['currency'] : $supplier->currency,
+            'iban' => array_key_exists('iban', $validated) ? $validated['iban'] : $supplier->iban,
+            'internal_notes' => array_key_exists('internal_notes', $validated) ? $validated['internal_notes'] : $supplier->internal_notes,
+        ];
     }
 
     /**

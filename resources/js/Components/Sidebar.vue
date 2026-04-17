@@ -196,9 +196,10 @@ const billingNav = computed(() =>
 )
 
 function isActive(href) {
-  const url = page.url
-  if (href === '/') return url === '/'
-  return url.startsWith(href)
+  const currentPath = (page.url || '/').split('?')[0]
+  if (href === '/') return currentPath === '/'
+
+  return currentPath === href || currentPath.startsWith(`${href}/`)
 }
 
 function isGroupActive(item) {

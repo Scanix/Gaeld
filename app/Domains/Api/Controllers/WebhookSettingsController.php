@@ -4,12 +4,11 @@ namespace App\Domains\Api\Controllers;
 
 use App\Domains\Api\Enums\WebhookEvent;
 use App\Domains\Api\Models\Webhook;
+use App\Domains\Api\Requests\StoreWebhookRequest;
+use App\Domains\Api\Requests\UpdateWebhookRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
-use App\Support\Rules\ValidWebhookUrl;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -35,17 +34,12 @@ class WebhookSettingsController extends Controller
         ]);
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(StoreWebhookRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $organization = $currentOrg->get();
         $this->authorize('update', $organization);
 
-        $validated = $request->validate([
-            'url' => ['required', 'url', 'max:2048', new ValidWebhookUrl],
-            'events' => ['required', 'array', 'min:1'],
-            'events.*' => ['string', Rule::in(WebhookEvent::all())],
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $webhook = Webhook::create([
             'organization_id' => $currentOrg->id(),
@@ -60,16 +54,11 @@ class WebhookSettingsController extends Controller
             ->with('webhookSecret', $webhook->secret);
     }
 
-    public function update(Request $request, Webhook $webhook): RedirectResponse
+    public function update(UpdateWebhookRequest $request, Webhook $webhook): RedirectResponse
     {
         $this->authorize('update', $webhook);
 
-        $validated = $request->validate([
-            'url' => ['sometimes', 'url', 'max:2048', new ValidWebhookUrl],
-            'events' => ['sometimes', 'array', 'min:1'],
-            'events.*' => ['string', Rule::in(WebhookEvent::all())],
-            'is_active' => 'sometimes|boolean',
-        ]);
+        $validated = $request->validated();
 
         $webhook->update($validated);
 

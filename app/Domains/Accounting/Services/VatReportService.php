@@ -87,6 +87,8 @@ class VatReportService
                     'rate_id' => $rateId,
                     'rate_name' => $rateName,
                     'rate' => $rateValue,
+                    'base_amount' => $baseAmount,
+                    'vat_amount' => $vatAmount,
                     'amount' => $vatAmount,
                 ];
             }
@@ -99,16 +101,37 @@ class VatReportService
 
             // Totals
             $totalRevenue = array_reduce($revenueByRate, fn ($carry, $row) => Money::add($carry, $row['base_amount']), '0.00');
+            $totalTaxable = array_reduce($outputVatByRate, fn ($carry, $row) => Money::add($carry, $row['base_amount']), '0.00');
             $totalOutputVat = array_reduce($outputVatByRate, fn ($carry, $row) => Money::add($carry, $row['amount']), '0.00');
             $netVat = Money::subtract($totalOutputVat, $totalInputVat);
+
+            $revenueRows = array_map(fn ($row) => [
+                'line' => '200',
+                'label' => $row['rate_name'],
+                'amount' => $row['base_amount'],
+                'rate' => $row['rate'],
+                'vat' => $row['vat_amount'],
+            ], $revenueByRate);
+
+            $outputVatRows = array_map(fn ($row) => [
+                'line' => '300',
+                'label' => $row['rate_name'],
+                'taxable' => $row['base_amount'],
+                'rate' => $row['rate'],
+                'vat' => $row['vat_amount'],
+            ], $outputVatByRate);
 
             return [
                 'period' => ['from' => $fromDate, 'to' => $toDate],
                 'revenue_by_rate' => $revenueByRate,      // chiffre 200
+                'revenue_rows' => $revenueRows,
                 'total_revenue' => $totalRevenue,        // chiffre 299
                 'output_vat_by_rate' => $outputVatByRate,  // chiffre 300
+                'output_vat_rows' => $outputVatRows,
+                'total_taxable' => $totalTaxable,
                 'total_output_vat' => $totalOutputVat,      // chiffre 399
                 'input_vat' => $totalInputVat,       // chiffre 400
+                'total_input_vat' => $totalInputVat,
                 'net_vat' => $netVat,              // chiffre 500
                 'vat_payable' => $netVat,              // chiffre 510 (same as net for standard method)
             ];

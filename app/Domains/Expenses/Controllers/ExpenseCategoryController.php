@@ -4,11 +4,11 @@ namespace App\Domains\Expenses\Controllers;
 
 use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
+use App\Domains\Expenses\Requests\StoreExpenseCategoryRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 class ExpenseCategoryController extends Controller
 {
@@ -17,13 +17,11 @@ class ExpenseCategoryController extends Controller
         return response()->json(ExpenseCategoryQuery::all());
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(StoreExpenseCategoryRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('update', $currentOrg->get());
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-        ]);
+        $validated = $request->validated();
 
         $maxSort = ExpenseCategory::where('organization_id', $currentOrg->id())->max('sort_order') ?? 0;
 

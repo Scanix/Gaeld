@@ -4,6 +4,7 @@ namespace App\Domains\Accounting\Controllers;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\CostCenter;
+use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Requests\StoreCostCenterRequest;
 use App\Domains\Accounting\Requests\UpdateCostCenterRequest;
 use App\Domains\Organizations\Enums\Permission;
@@ -42,14 +43,6 @@ class CostCenterController extends Controller
         $validated = $request->validated();
         $validated['code'] = strtoupper($validated['code']);
 
-        if (! empty($validated['parent_id'])) {
-            $parentExists = CostCenter::query()
-                ->where('organization_id', $currentOrg->id())
-                ->whereKey((int) $validated['parent_id'])
-                ->exists();
-            abort_unless($parentExists, 422);
-        }
-
         CostCenter::create([
             'organization_id' => $currentOrg->id(),
             'code' => $validated['code'],
@@ -71,11 +64,17 @@ class CostCenterController extends Controller
 
         $validated = $request->validated();
 
-        $costCenter->update([
+        $updateData = [
             'code' => strtoupper($validated['code']),
             'name' => $validated['name'],
             'is_active' => (bool) $validated['is_active'],
-        ]);
+        ];
+
+        if (array_key_exists('parent_id', $validated)) {
+            $updateData['parent_id'] = $validated['parent_id'];
+        }
+
+        $costCenter->update($updateData);
 
         return back()->with('success', __('app.saved'));
     }
@@ -92,7 +91,7 @@ class CostCenterController extends Controller
             return back()->withErrors(['cost_center' => __('app.cannot_delete_with_children')]);
         }
 
-        $used = DB::table('transaction_lines')
+        $used = TransactionLine::query()
             ->where('cost_center_id', (string) $costCenter->id)
             ->exists();
 
@@ -113,7 +112,7 @@ class CostCenterController extends Controller
         $to = $request->input('to', now()->toDateString());
         $costCenterId = $request->input('cost_center_id');
 
-        $baseQuery = DB::table('transaction_lines')
+        $baseQuery = TransactionLine::query()
             ->join('accounts', 'accounts.id', '=', 'transaction_lines.account_id')
             ->join('journal_entries', 'journal_entries.id', '=', 'transaction_lines.journal_entry_id')
             ->where('journal_entries.organization_id', $currentOrg->id())

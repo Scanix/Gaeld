@@ -35,6 +35,16 @@ class SwissChartOfAccountsSeederTest extends TestCase
             'code' => '3000',
             'name' => 'Revenue from Services',
         ]);
+        $this->assertDatabaseHas('accounts', [
+            'organization_id' => $organization->id,
+            'code' => '2271',
+            'name' => 'Unemployment Insurance (AC) Payable',
+        ]);
+        $this->assertDatabaseHas('accounts', [
+            'organization_id' => $organization->id,
+            'code' => '2272',
+            'name' => 'Pension Fund (LPP) Payable',
+        ]);
     }
 
     public function test_it_does_nothing_when_no_organization_exists(): void

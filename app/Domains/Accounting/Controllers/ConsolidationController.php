@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Controllers;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\ConsolidationElimination;
 use App\Domains\Accounting\Models\ConsolidationGroup;
+use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Requests\StoreConsolidationEliminationRequest;
 use App\Domains\Accounting\Requests\StoreConsolidationGroupRequest;
 use App\Domains\Organizations\Enums\Permission;
@@ -39,7 +40,7 @@ class ConsolidationController extends Controller
 
         $validated = $request->validated();
 
-        $members = array_values(array_unique((array) $validated['member_organization_ids']));
+        $members = array_values(array_unique($validated['member_organization_ids']));
         if (! in_array($currentOrg->id(), $members, true)) {
             $members[] = $currentOrg->id();
         }
@@ -63,13 +64,12 @@ class ConsolidationController extends Controller
         }
 
         $fiscalYear = (int) $request->input('fiscal_year', now()->year);
-        $groupMemberIds = (array) $group->member_organization_ids;
         $memberIds = array_values(array_unique([
             $group->organization_id,
-            ...$groupMemberIds,
+            ...($group->member_organization_ids ?? []),
         ]));
 
-        $rows = DB::table('transaction_lines')
+        $rows = TransactionLine::query()
             ->join('accounts', 'accounts.id', '=', 'transaction_lines.account_id')
             ->join('journal_entries', 'journal_entries.id', '=', 'transaction_lines.journal_entry_id')
             ->whereIn('journal_entries.organization_id', $memberIds)
@@ -173,10 +173,9 @@ class ConsolidationController extends Controller
 
         $validated = $request->validated();
 
-        $groupMemberIds = (array) $group->member_organization_ids;
         $memberIds = array_values(array_unique([
             $group->organization_id,
-            ...$groupMemberIds,
+            ...($group->member_organization_ids ?? []),
         ]));
 
         foreach (['account_debit_id', 'account_credit_id'] as $key) {

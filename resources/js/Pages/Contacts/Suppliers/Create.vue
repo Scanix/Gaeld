@@ -12,12 +12,10 @@ import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
-import Tooltip from '@/Components/UI/Tooltip.vue'
 import IbanHint from '@/Components/IbanHint.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { countryOptions, currencyOptions, supplierCategoryOptions } from '@/lib/contactOptions'
-import { HelpCircle } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 
@@ -168,9 +166,6 @@ const typeOptions = [
                 :placeholder="t('qr_iban_placeholder')"
                 :error="form.errors.iban"
               />
-              <Tooltip :content="t('tooltip_qr_iban')" side="top" class="absolute right-0 top-0">
-                <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
-              </Tooltip>
               <IbanHint :iban="form.iban" mode="any" />
             </div>
             <FormSelect

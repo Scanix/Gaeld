@@ -1,0 +1,75 @@
+<?php
+
+namespace Tests\Feature\Invoicing;
+
+use App\Domains\Contacts\Models\Customer;
+use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
+use App\Domains\Invoicing\Actions\SendInvoiceAction;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Exceptions\QrBillValidationException;
+use App\Domains\Invoicing\Models\Invoice;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery\MockInterface;
+use Tests\TestCase;
+use Tests\Traits\WithAuthenticatedOrganization;
+
+class QrInvoiceValidationFlashTest extends TestCase
+{
+    use RefreshDatabase, WithAuthenticatedOrganization;
+
+    public function test_qr_pdf_download_flashes_actionable_message_for_qr_iban_validation_error(): void
+    {
+        $this->setUpOrganization();
+
+        $customer = Customer::factory()->for($this->org, 'organization')->create();
+        $invoice = Invoice::factory()
+            ->for($this->org, 'organization')
+            ->for($customer, 'customer')
+            ->create(['status' => InvoiceStatus::Sent]);
+
+        $this->mock(GenerateQrInvoicePdfAction::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('execute')
+                ->once()
+                ->andThrow(new QrBillValidationException(['QR-IBAN is invalid.']));
+        });
+
+        $response = $this->actAsOrg()
+            ->from(route('invoices.show', $invoice))
+            ->get(route('invoices.qr-pdf', $invoice));
+
+        $expected = __('app.qr_invoice_error_summary', [
+            'details' => __('app.qr_invoice_error_detail_qr_iban'),
+        ]).' '.__('app.qr_iban_help_where_to_find');
+
+        $response->assertRedirect(route('invoices.show', $invoice));
+        $response->assertSessionHas('error', $expected);
+    }
+
+    public function test_invoice_send_flashes_actionable_message_for_qr_validation_error(): void
+    {
+        $this->setUpOrganization();
+
+        $customer = Customer::factory()->for($this->org, 'organization')->create();
+        $invoice = Invoice::factory()
+            ->for($this->org, 'organization')
+            ->for($customer, 'customer')
+            ->create(['status' => InvoiceStatus::Sent]);
+
+        $this->mock(SendInvoiceAction::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('execute')
+                ->once()
+                ->andThrow(new QrBillValidationException(['Creditor account is invalid.']));
+        });
+
+        $response = $this->actAsOrg()
+            ->from(route('invoices.show', $invoice))
+            ->post(route('invoices.send', $invoice));
+
+        $expected = __('app.qr_invoice_error_summary', [
+            'details' => __('app.qr_invoice_error_detail_creditor'),
+        ]);
+
+        $response->assertRedirect(route('invoices.show', $invoice));
+        $response->assertSessionHas('error', $expected);
+    }
+}
