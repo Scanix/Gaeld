@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateVatRateRequest extends FormRequest
 {
@@ -11,10 +12,19 @@ class UpdateVatRateRequest extends FormRequest
      */
     public function rules(): array
     {
+        $vatRate = $this->route('vatRate');
+
         return [
             'name' => ['required', 'string', 'max:100'],
             'rate' => ['required', 'numeric', 'min:0', 'max:100'],
-            'code' => ['nullable', 'string', 'max:20'],
+            'code' => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('vat_rates', 'code')
+                    ->where('organization_id', $vatRate->organization_id)
+                    ->ignore($vatRate->id),
+            ],
             'is_default' => ['boolean'],
             'is_active' => ['boolean'],
         ];

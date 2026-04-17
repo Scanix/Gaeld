@@ -8,6 +8,9 @@ use App\Domains\Assets\Actions\DisposeAssetAction;
 use App\Domains\Assets\DTOs\CreateFixedAssetData;
 use App\Domains\Assets\Models\FixedAsset;
 use App\Domains\Assets\Queries\FixedAssetQuery;
+use App\Domains\Assets\Requests\DisposeFixedAssetRequest;
+use App\Domains\Assets\Requests\StoreFixedAssetRequest;
+use App\Domains\Assets\Requests\UpdateFixedAssetRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
@@ -43,22 +46,11 @@ class FixedAssetController extends Controller
         ]);
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(StoreFixedAssetRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', FixedAsset::class);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'purchase_date' => ['required', 'date'],
-            'purchase_amount' => ['required', 'numeric', 'min:0.01'],
-            'useful_life_years' => ['required', 'integer', 'min:1'],
-            'salvage_value' => ['nullable', 'numeric', 'min:0'],
-            'depreciation_method' => ['required', 'in:linear,declining_balance'],
-            'asset_account_id' => ['required', 'exists:accounts,id'],
-            'depreciation_expense_account_id' => ['required', 'exists:accounts,id'],
-            'accumulated_depreciation_account_id' => ['required', 'exists:accounts,id'],
-        ]);
+        $validated = $request->validated();
 
         $validated['organization_id'] = $currentOrg->id();
         $validated['salvage_value'] = $validated['salvage_value'] ?? '0.00';
@@ -114,22 +106,11 @@ class FixedAssetController extends Controller
         ]);
     }
 
-    public function update(Request $request, FixedAsset $asset): RedirectResponse
+    public function update(UpdateFixedAssetRequest $request, FixedAsset $asset): RedirectResponse
     {
         $this->authorize('update', $asset);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'purchase_date' => ['required', 'date'],
-            'purchase_amount' => ['required', 'numeric', 'min:0.01'],
-            'useful_life_years' => ['required', 'integer', 'min:1'],
-            'salvage_value' => ['nullable', 'numeric', 'min:0'],
-            'depreciation_method' => ['required', 'in:linear,declining_balance'],
-            'asset_account_id' => ['required', 'exists:accounts,id'],
-            'depreciation_expense_account_id' => ['required', 'exists:accounts,id'],
-            'accumulated_depreciation_account_id' => ['required', 'exists:accounts,id'],
-        ]);
+        $validated = $request->validated();
 
         $asset->update($validated);
 
@@ -162,14 +143,11 @@ class FixedAssetController extends Controller
             ->with('success', __('app.depreciation_recorded'));
     }
 
-    public function dispose(Request $request, FixedAsset $asset, DisposeAssetAction $action): RedirectResponse
+    public function dispose(DisposeFixedAssetRequest $request, FixedAsset $asset, DisposeAssetAction $action): RedirectResponse
     {
         $this->authorize('update', $asset);
 
-        $validated = $request->validate([
-            'disposal_amount' => ['required', 'numeric', 'min:0'],
-            'disposal_date' => ['required', 'date'],
-        ]);
+        $validated = $request->validated();
 
         $action->execute(
             $asset,

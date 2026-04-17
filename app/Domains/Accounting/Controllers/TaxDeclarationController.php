@@ -4,6 +4,7 @@ namespace App\Domains\Accounting\Controllers;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\TaxDeclaration;
+use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Requests\StoreTaxDeclarationRequest;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
@@ -97,7 +98,7 @@ class TaxDeclarationController extends Controller
      */
     private function buildSummaryData(string $organizationId, int $fiscalYear): array
     {
-        $lines = DB::table('transaction_lines')
+        $lines = TransactionLine::query()
             ->select([
                 'accounts.type as account_type',
                 DB::raw('SUM(transaction_lines.debit) as total_debit'),

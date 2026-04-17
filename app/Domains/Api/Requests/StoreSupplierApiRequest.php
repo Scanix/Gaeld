@@ -2,6 +2,7 @@
 
 namespace App\Domains\Api\Requests;
 
+use App\Domains\Contacts\Validation\SupplierValidationRules;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSupplierApiRequest extends FormRequest
@@ -9,19 +10,6 @@ class StoreSupplierApiRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        return [
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:500',
-            'city' => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:10',
-            'country' => 'nullable|string|size:2',
-            'vat_number' => 'nullable|string|max:50',
-            'default_expense_category' => 'nullable|string|max:100',
-            'currency' => 'nullable|string|size:3',
-            'iban' => 'nullable|string|max:34',
-            'internal_notes' => 'nullable|string',
-        ];
+        return SupplierValidationRules::store();
     }
 }

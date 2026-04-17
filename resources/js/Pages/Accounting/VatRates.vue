@@ -22,6 +22,18 @@ const props = defineProps({
 
 const { t } = useTranslations()
 
+const vatRateNameByCode = {
+  NORMAL: 'vat_rate_name_standard',
+  REDUCED: 'vat_rate_name_reduced',
+  ACCOMMODATION: 'vat_rate_name_accommodation',
+  EXEMPT: 'vat_rate_name_exempt',
+}
+
+function localizedVatRateName(rate) {
+  const key = vatRateNameByCode[rate.code]
+  return key ? t(key) : rate.name
+}
+
 const columns = [
   { key: 'code', label: t('code') },
   { key: 'name', label: t('name') },
@@ -109,6 +121,9 @@ function doDelete() {
           </template>
           <template #cell-rate="{ row }">
             {{ row.rate }}%
+          </template>
+          <template #cell-name="{ row }">
+            {{ localizedVatRateName(row) }}
           </template>
           <template #cell-is_default="{ row }">
             <Badge v-if="row.is_default" variant="info">{{ t('yes') }}</Badge>

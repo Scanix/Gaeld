@@ -7,32 +7,23 @@ use App\Domains\Contacts\DTOs\UpdateContactPersonData;
 use App\Domains\Contacts\Models\ContactPerson;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Requests\StoreContactPersonRequest;
+use App\Domains\Contacts\Requests\UpdateContactPersonRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
  * CRUD for contact persons attached to customers or suppliers.
  */
 class ContactPersonController extends Controller
 {
-    private const VALIDATION_RULES = [
-        'first_name' => 'required|string|max:255',
-        'last_name' => 'required|string|max:255',
-        'email' => 'nullable|email|max:255',
-        'phone' => 'nullable|string|max:50',
-        'position' => 'nullable|string|max:255',
-        'is_primary' => 'boolean',
-        'notes' => 'nullable|string|max:1000',
-    ];
-
-    public function store(Request $request, string $contactableType, string $contactableId): JsonResponse
+    public function store(StoreContactPersonRequest $request, string $contactableType, string $contactableId): JsonResponse
     {
         $parent = $this->resolveParent($contactableType, $contactableId);
         $this->authorizeParent('update', $parent);
 
-        $validated = $request->validate(self::VALIDATION_RULES);
+        $validated = $request->validated();
 
         // If marking as primary, unset other primary contacts
         if ($validated['is_primary'] ?? false) {
@@ -49,14 +40,14 @@ class ContactPersonController extends Controller
         return response()->json(['contact_person' => $contactPerson], 201);
     }
 
-    public function update(Request $request, string $contactableType, string $contactableId, ContactPerson $contactPerson): JsonResponse
+    public function update(UpdateContactPersonRequest $request, string $contactableType, string $contactableId, ContactPerson $contactPerson): JsonResponse
     {
         $parent = $this->resolveParent($contactableType, $contactableId);
         $this->authorizeParent('update', $parent);
 
         abort_unless($contactPerson->contactable_id === $parent->id, 404);
 
-        $validated = $request->validate(self::VALIDATION_RULES);
+        $validated = $request->validated();
 
         // If marking as primary, unset other primary contacts
         if ($validated['is_primary'] ?? false) {
