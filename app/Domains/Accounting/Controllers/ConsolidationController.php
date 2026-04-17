@@ -64,9 +64,11 @@ class ConsolidationController extends Controller
         }
 
         $fiscalYear = (int) $request->input('fiscal_year', now()->year);
+        /** @var array<int, string> $memberOrganizationIds */
+        $memberOrganizationIds = (array) $group->member_organization_ids;
         $memberIds = array_values(array_unique([
             $group->organization_id,
-            ...($group->member_organization_ids ?? []),
+            ...$memberOrganizationIds,
         ]));
 
         $rows = TransactionLine::query()
@@ -85,10 +87,12 @@ class ConsolidationController extends Controller
             ])
             ->groupBy('accounts.id', 'accounts.code', 'accounts.name', 'accounts.type')
             ->orderBy('accounts.code')
+            ->toBase()
             ->get();
 
         $balances = [];
         foreach ($rows as $row) {
+            /** @var object{account_id:int,code:string,name:string,type:string,debit_total:float|int|string,credit_total:float|int|string} $row */
             $balances[(int) $row->account_id] = [
                 'code' => $row->code,
                 'name' => $row->name,
@@ -125,7 +129,7 @@ class ConsolidationController extends Controller
         ];
 
         foreach ($balances as $balance) {
-            $type = (string) ($balance['type'] ?? '');
+            $type = $balance['type'];
             $amount = abs((float) $balance['balance']);
 
             if ($type === 'asset') {
@@ -173,9 +177,11 @@ class ConsolidationController extends Controller
 
         $validated = $request->validated();
 
+        /** @var array<int, string> $memberOrganizationIds */
+        $memberOrganizationIds = (array) $group->member_organization_ids;
         $memberIds = array_values(array_unique([
             $group->organization_id,
-            ...($group->member_organization_ids ?? []),
+            ...$memberOrganizationIds,
         ]));
 
         foreach (['account_debit_id', 'account_credit_id'] as $key) {
