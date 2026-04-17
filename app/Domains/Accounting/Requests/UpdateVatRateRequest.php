@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Requests;
 
+use App\Domains\Accounting\Models\VatRate;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -13,6 +14,9 @@ class UpdateVatRateRequest extends FormRequest
     public function rules(): array
     {
         $vatRate = $this->route('vatRate');
+        if (! $vatRate instanceof VatRate) {
+            abort(404);
+        }
 
         return [
             'name' => ['required', 'string', 'max:100'],
