@@ -71,7 +71,7 @@ class ReportExportTest extends TestCase
     public function test_export_balance_sheet_csv(): void
     {
         $response = $this->actingAs($this->user)
-            ->get(route('reports.balanceSheet.export', [
+            ->get(route('reports.balance-sheet.export', [
                 'format' => 'csv',
                 'as_of_date' => '2026-12-31',
             ]));
@@ -83,7 +83,7 @@ class ReportExportTest extends TestCase
     public function test_export_trial_balance_csv(): void
     {
         $response = $this->actingAs($this->user)
-            ->get(route('accounting.trialBalance.export', [
+            ->get(route('accounting.trial-balance.export', [
                 'format' => 'csv',
                 'as_of_date' => '2026-12-31',
             ]));
@@ -95,7 +95,7 @@ class ReportExportTest extends TestCase
     public function test_export_journal_entries_csv(): void
     {
         $response = $this->actingAs($this->user)
-            ->get(route('accounting.journalEntries.export', [
+            ->get(route('accounting.journal-entries.export', [
                 'format' => 'csv',
                 'from' => '2026-01-01',
                 'to' => '2026-12-31',

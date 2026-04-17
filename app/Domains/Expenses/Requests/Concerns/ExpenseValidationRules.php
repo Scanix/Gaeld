@@ -4,6 +4,7 @@ namespace App\Domains\Expenses\Requests\Concerns;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Expenses\Enums\ExpenseType;
+use App\Domains\Expenses\Validation\ExpenseSharedValidationRules;
 use Illuminate\Validation\Rule;
 
 trait ExpenseValidationRules
@@ -11,11 +12,7 @@ trait ExpenseValidationRules
     /** @return array<string, mixed> */
     protected function sharedRules(string $orgId): array
     {
-        return [
-            'category' => 'required|string|max:100',
-            'description' => 'nullable|string',
-            'amount' => 'required|numeric|min:0.01',
-            'vat_amount' => 'nullable|numeric|min:0',
+        return array_merge(ExpenseSharedValidationRules::store(), [
             'vat_rate_id' => [
                 'nullable',
                 Rule::exists('vat_rates', 'id')->where('organization_id', $orgId),
@@ -24,9 +21,6 @@ trait ExpenseValidationRules
                 'nullable',
                 Rule::exists('suppliers', 'id')->where('organization_id', $orgId),
             ],
-            'date' => 'required|date',
-            'vendor' => 'nullable|string|max:255',
-            'currency' => 'string|size:3',
             'type' => ['sometimes', Rule::enum(ExpenseType::class)],
             'payment_method' => ['nullable', Rule::in(['cash', 'card', 'bank_transfer', 'other'])],
             'receipt' => 'nullable|file|mimes:'.config('uploads.allowed_mimes.receipt').'|max:'.config('uploads.max_size.receipt'),
@@ -44,6 +38,6 @@ trait ExpenseValidationRules
                 'string',
                 Rule::exists('accounts', 'code')->where('organization_id', $orgId),
             ],
-        ];
+        ]);
     }
 }

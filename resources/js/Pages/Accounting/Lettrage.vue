@@ -39,7 +39,7 @@ function navigateToAccount() {
   if (!selectedAccountId.value) return
   const params = { account: selectedAccountId.value }
   if (dateFilter.value) params.date = dateFilter.value
-  router.get('/accounting/lettrage', params, { preserveState: false })
+  router.get('/accounting/account-matching', params, { preserveState: false })
 }
 
 watch(selectedAccountId, () => navigateToAccount())
@@ -84,7 +84,7 @@ const lettering = ref(false)
 function letterSelected() {
   if (!isBalanced.value || !props.account) return
   lettering.value = true
-  router.post('/accounting/lettrage', {
+  router.post('/accounting/account-matching', {
     account_id: props.account.id,
     line_ids: selectedLineIds.value,
   }, {
@@ -107,7 +107,7 @@ function confirmUnletter(lot) {
 function executeUnletter() {
   if (!unletterTarget.value) return
   unlettering.value = true
-  router.delete(`/accounting/lettrage/${unletterTarget.value.id}`, {
+  router.delete(`/accounting/account-matching/${unletterTarget.value.id}`, {
     preserveScroll: true,
     onFinish: () => {
       unlettering.value = false

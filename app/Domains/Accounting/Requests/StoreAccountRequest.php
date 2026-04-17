@@ -21,7 +21,7 @@ class StoreAccountRequest extends FormRequest
             'code' => [
                 'required',
                 'string',
-                'max:20',
+                'max:10',
                 Rule::unique('accounts', 'code')->where('organization_id', $orgId),
             ],
             'name' => 'required|string|max:255',

@@ -52,9 +52,9 @@ function quarterDates(y, q) {
 const exportParams = computed(() => {
   if (mode.value === 'quarter') {
     const { from, to } = quarterDates(year.value, quarter.value)
-    return { from, to }
+    return { from_date: from, to_date: to }
   }
-  return { from: customFrom.value, to: customTo.value }
+  return { from_date: customFrom.value, to_date: customTo.value }
 })
 
 function applyFilter() {
@@ -77,8 +77,8 @@ const settleForm = useForm({
 
 function postSettlement() {
   const params = exportParams.value
-  settleForm.from_date = params.from
-  settleForm.to_date = params.to
+  settleForm.from_date = params.from_date
+  settleForm.to_date = params.to_date
   settleForm.post('/reports/vat/settlement', {
     preserveScroll: true,
     onSuccess: () => { showSettle.value = false },

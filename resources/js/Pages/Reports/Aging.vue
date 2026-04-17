@@ -13,6 +13,7 @@ import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { useMediaQuery } from '@/lib/useMediaQuery'
+import { normalizeAgingContract } from '@/lib/inertiaContracts'
 
 const props = defineProps({
   report: Object,
@@ -22,7 +23,11 @@ const { t } = useTranslations()
 const { formatCurrency } = useFormatters()
 const isMobile = useMediaQuery('(max-width: 639px)')
 
-const selectedType = ref(props.type)
+const contract = computed(() => normalizeAgingContract(props))
+const report = computed(() => contract.value.report)
+const reportRows = computed(() => report.value.rows ?? [])
+
+const selectedType = ref(contract.value.type || contract.value.report?.type || 'receivables')
 
 const exportParams = computed(() => ({ type: selectedType.value }))
 
@@ -43,8 +48,8 @@ const bracketColors = {
 const brackets = ['current', 'b1_30', 'b31_60', 'b61_90', 'b90plus']
 
 function bracketSum(key) {
-  if (!props.report?.rows?.length) return 0
-  return props.report.rows.reduce((s, r) => s + (r[key] ?? 0), 0)
+  if (!reportRows.value.length) return 0
+  return reportRows.value.reduce((s, r) => s + (r[key] ?? 0), 0)
 }
 
 function rowTotal(row) {
@@ -52,8 +57,8 @@ function rowTotal(row) {
 }
 
 function grandTotal() {
-  if (!props.report?.rows?.length) return 0
-  return props.report.rows.reduce((s, r) => s + rowTotal(r), 0)
+  if (!reportRows.value.length) return 0
+  return reportRows.value.reduce((s, r) => s + rowTotal(r), 0)
 }
 </script>
 
@@ -99,8 +104,8 @@ function grandTotal() {
       <CardContent class="p-0">
         <!-- Mobile card view -->
         <div v-if="isMobile" class="divide-y divide-[hsl(var(--border))]">
-          <template v-if="report?.rows?.length">
-            <div v-for="row in report.rows" :key="row.id" class="px-4 py-3 space-y-2">
+          <template v-if="reportRows.length">
+            <div v-for="row in reportRows" :key="row.id" class="px-4 py-3 space-y-2">
               <div class="flex justify-between items-center">
                 <span class="font-medium text-sm">{{ row.name }}</span>
                 <span class="text-sm font-semibold tabular-nums">{{ formatCurrency(rowTotal(row)) }}</span>
@@ -121,7 +126,7 @@ function grandTotal() {
             {{ t('no_aging_entries') }}
           </div>
           <!-- Mobile totals -->
-          <div v-if="report?.rows?.length" class="px-4 py-3 bg-[hsl(var(--muted))]/30 space-y-1">
+          <div v-if="reportRows.length" class="px-4 py-3 bg-[hsl(var(--muted))]/30 space-y-1">
             <div class="flex justify-between text-xs font-bold">
               <span>{{ t('totals') }}</span>
               <span class="tabular-nums">{{ formatCurrency(grandTotal()) }}</span>
@@ -154,9 +159,9 @@ function grandTotal() {
             </tr>
           </thead>
           <tbody>
-            <template v-if="report?.rows?.length">
+            <template v-if="reportRows.length">
               <tr
-                v-for="row in report.rows"
+                v-for="row in reportRows"
                 :key="row.id"
                 class="border-b last:border-0 hover:bg-[hsl(var(--accent))]/40"
               >
@@ -191,7 +196,7 @@ function grandTotal() {
             </tr>
           </tbody>
           <!-- Totals footer -->
-          <tfoot v-if="report?.rows?.length">
+          <tfoot v-if="reportRows.length">
             <tr class="border-t-2 bg-[hsl(var(--muted))]/30 text-xs font-bold">
               <td colspan="4" class="px-4 py-3 text-[hsl(var(--muted-foreground))]">{{ t('totals') }}</td>
               <td class="px-4 py-3 text-right tabular-nums text-green-700">{{ formatCurrency(bracketSum('current')) }}</td>

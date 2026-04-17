@@ -4,6 +4,7 @@ namespace App\Domains\Accounting\Controllers;
 
 use App\Domains\Accounting\Actions\PostSocialChargesAction;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Requests\PostSocialChargesRequest;
 use App\Domains\Accounting\Services\SocialChargesService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
@@ -40,15 +41,11 @@ class SocialChargesController extends Controller
         return response()->json($result);
     }
 
-    public function post(Request $request, PostSocialChargesAction $action, CurrentOrganization $currentOrg): RedirectResponse
+    public function post(PostSocialChargesRequest $request, PostSocialChargesAction $action, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', Account::class);
 
-        $validated = $request->validate([
-            'amount' => ['required', 'numeric', 'gt:0', 'max:99999999.99'],
-            'description' => ['required', 'string', 'max:255'],
-            'date' => ['nullable', 'date'],
-        ]);
+        $validated = $request->validated();
 
         $action->execute(
             $currentOrg->id(),
@@ -57,7 +54,7 @@ class SocialChargesController extends Controller
             $validated['date'] ?? null,
         );
 
-        return redirect()->route('accounting.socialCharges')
+        return redirect()->route('accounting.social-charges')
             ->with('success', __('app.social_charges_posted'));
     }
 }

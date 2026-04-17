@@ -18,6 +18,7 @@ import EmptyState from '@/Components/UI/EmptyState.vue'
 import PageHeader from '@/Components/UI/PageHeader.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
+import { normalizeReconciliationShowContract } from '@/lib/inertiaContracts'
 import { ref, computed, nextTick } from 'vue'
 import { Upload, Check, Link2, RotateCcw, Loader2, UserX, Plus } from 'lucide-vue-next'
 
@@ -31,6 +32,15 @@ const props = defineProps({
   pageFeatures: { type: Object, default: () => ({}) },
 })
 
+const contract = computed(() => normalizeReconciliationShowContract(props))
+const bankAccountSafe = computed(() => contract.value.bankAccount)
+const transactionsSafe = computed(() => contract.value.transactions)
+const suggestionsSafe = computed(() => contract.value.suggestions)
+const personalSuggestionsSafe = computed(() => contract.value.personalSuggestions)
+const filterSafe = computed(() => contract.value.filter)
+const openInvoicesSafe = computed(() => contract.value.openInvoices)
+const pageFeaturesSafe = computed(() => contract.value.pageFeatures)
+
 const { t } = useTranslations()
 const { formatCurrency, formatDate } = useFormatters()
 
@@ -42,7 +52,7 @@ const csvHeaders = ref([])
 const pendingCsvFile = ref(null)
 
 function submitUpload() {
-  uploadForm.post(`/reconciliation/${props.bankAccount.uuid}/import`, {
+  uploadForm.post(`/reconciliation/${bankAccountSafe.value.uuid}/import`, {
     forceFormData: true,
     onSuccess: () => { showUploadModal.value = false; uploadForm.reset() },
   })
@@ -87,7 +97,7 @@ const matchManualForm = useForm({ contra_account_code: '' })
 
 // Invoice combobox options: "INV-001 — Customer Name (CHF 1'500.00)"
 const invoiceOptions = computed(() =>
-  props.openInvoices.map((inv) => ({
+  openInvoicesSafe.value.map((inv) => ({
     value: inv.id,
     label: `${inv.number} — ${inv.customer?.name || '—'} (${formatCurrency(inv.total, inv.currency)})`,
   }))
@@ -177,7 +187,7 @@ const autoReconciling = ref(false)
 function autoReconcile() {
   if (autoReconciling.value) return
   autoReconciling.value = true
-  router.post(`/reconciliation/${props.bankAccount.uuid}/auto`, {}, {
+  router.post(`/reconciliation/${bankAccountSafe.value.uuid}/auto`, {}, {
     onFinish: () => { autoReconciling.value = false },
   })
 }
@@ -208,7 +218,7 @@ function togglePersonalSelection(txId) {
 function bulkMarkAsPersonal() {
   if (bulkProcessing.value || selectedForPersonal.value.size === 0) return
   bulkProcessing.value = true
-  router.post(`/reconciliation/${props.bankAccount.uuid}/bulk-personal`, {
+  router.post(`/reconciliation/${bankAccountSafe.value.uuid}/bulk-personal`, {
     transaction_ids: Array.from(selectedForPersonal.value),
   }, {
     onFinish: () => {
@@ -220,8 +230,8 @@ function bulkMarkAsPersonal() {
 
 // Triage summary for mixed-use accounts
 const triageSummary = computed(() => {
-  if (!props.bankAccount.is_mixed_use || !props.transactions?.data) return null
-  const all = props.transactions.data
+  if (!bankAccountSafe.value.is_mixed_use || !transactionsSafe.value?.data) return null
+  const all = transactionsSafe.value.data
   return {
     unclassified: all.filter(tx => !tx.is_reconciled).length,
     personal: all.filter(tx => tx.is_personal === true).length,
@@ -230,28 +240,28 @@ const triageSummary = computed(() => {
 })
 
 function changeFilter(newFilter) {
-  router.get(`/reconciliation/${props.bankAccount.uuid}`, { filter: newFilter }, { preserveState: true })
+  router.get(`/reconciliation/${bankAccountSafe.value.uuid}`, { filter: newFilter }, { preserveState: true })
 }
 
 const currentSuggestions = computed(() => {
   if (!matchingTransaction.value) return { invoices: [], expenses: [] }
-  return props.suggestions[matchingTransaction.value.id] || { invoices: [], expenses: [] }
+  return suggestionsSafe.value[matchingTransaction.value.id] || { invoices: [], expenses: [] }
 })
 </script>
 
 <template>
-  <AppLayout :title="`${t('reconciliation')} — ${bankAccount.name}`">
+  <AppLayout :title="`${t('reconciliation')} — ${bankAccountSafe.name}`">
     <PageHeader>
       <template #start>
         <div class="flex items-center gap-3">
           <Button as="a" href="/reconciliation" variant="outline" size="sm">← {{ t('back') }}</Button>
-          <h2 class="text-xl font-semibold">{{ bankAccount.name }}</h2>
-          <Badge v-if="bankAccount.is_mixed_use" variant="outline">{{ t('mixed') }}</Badge>
-          <Badge variant="secondary">{{ formatCurrency(bankAccount.balance, bankAccount.currency) }}</Badge>
+          <h2 class="text-xl font-semibold">{{ bankAccountSafe.name }}</h2>
+          <Badge v-if="bankAccountSafe.is_mixed_use" variant="outline">{{ t('mixed') }}</Badge>
+          <Badge variant="secondary">{{ formatCurrency(bankAccountSafe.balance, bankAccountSafe.currency) }}</Badge>
         </div>
       </template>
       <div class="flex items-center gap-2">
-        <Button v-if="pageFeatures.auto_reconciliation" @click="autoReconcile" variant="outline" :disabled="autoReconciling">
+        <Button v-if="pageFeaturesSafe.auto_reconciliation" @click="autoReconcile" variant="outline" :disabled="autoReconciling">
           <Loader2 v-if="autoReconciling" class="mr-2 h-4 w-4 animate-spin" />
           <RotateCcw v-else class="mr-2 h-4 w-4" />
           {{ t('auto_reconcile') }}
@@ -267,7 +277,7 @@ const currentSuggestions = computed(() => {
       <Button
         v-for="f in ['unreconciled', 'reconciled', 'all']"
         :key="f"
-        :variant="filter === f ? 'default' : 'outline'"
+        :variant="filterSafe === f ? 'default' : 'outline'"
         size="sm"
         @click="changeFilter(f)"
       >
@@ -295,15 +305,15 @@ const currentSuggestions = computed(() => {
       <CardHeader>
         <CardTitle>{{ t('transactions') }}</CardTitle>
         <CardDescription>
-          {{ (transactions?.data?.length || 0) }} {{ t('transactions') }}
+          {{ (transactionsSafe?.data?.length || 0) }} {{ t('transactions') }}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <EmptyState v-if="!transactions?.data?.length" :title="t('no_transactions')" />
+        <EmptyState v-if="!transactionsSafe?.data?.length" :title="t('no_transactions')" />
 
         <div v-else class="space-y-3">
           <div
-            v-for="tx in transactions.data"
+            v-for="tx in transactionsSafe.data"
             :key="tx.id"
             :class="[
               'flex items-start justify-between rounded-lg border p-4 transition-colors',
@@ -342,10 +352,10 @@ const currentSuggestions = computed(() => {
               </div>
 
               <!-- Quick suggestions for unreconciled -->
-              <div v-if="!tx.is_reconciled && (suggestions[tx.id] || (bankAccount.is_mixed_use && personalSuggestions.includes(tx.id)))" class="mt-2 flex flex-wrap gap-1">
+              <div v-if="!tx.is_reconciled && (suggestionsSafe[tx.id] || (bankAccountSafe.is_mixed_use && personalSuggestionsSafe.includes(tx.id)))" class="mt-2 flex flex-wrap gap-1">
                 <!-- Personal suggestion badge -->
                 <button
-                  v-if="bankAccount.is_mixed_use && personalSuggestions.includes(tx.id)"
+                  v-if="bankAccountSafe.is_mixed_use && personalSuggestionsSafe.includes(tx.id)"
                   class="inline-flex items-center gap-1 rounded-md border border-purple-300 bg-purple-50 px-2 py-0.5 text-xs text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300"
                   :disabled="markingPersonal === tx.id"
                   @click="markAsPersonal(tx.id)"
@@ -353,9 +363,9 @@ const currentSuggestions = computed(() => {
                   <UserX class="h-3 w-3" />
                   {{ t('personal') }}?
                 </button>
-                <template v-if="suggestions[tx.id].invoices?.length">
+                <template v-if="suggestionsSafe[tx.id].invoices?.length">
                   <button
-                    v-for="inv in suggestions[tx.id].invoices.slice(0, 3)"
+                    v-for="inv in suggestionsSafe[tx.id].invoices.slice(0, 3)"
                     :key="inv.id"
                     :class="[
                       'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs transition-colors',
@@ -374,9 +384,9 @@ const currentSuggestions = computed(() => {
                     <span v-if="inv.customer || inv.client" class="opacity-70">— {{ (inv.customer ?? inv.client).name }}</span>
                   </button>
                 </template>
-                <template v-if="suggestions[tx.id].expenses?.length">
+                <template v-if="suggestionsSafe[tx.id].expenses?.length">
                   <button
-                    v-for="exp in suggestions[tx.id].expenses.slice(0, 2)"
+                    v-for="exp in suggestionsSafe[tx.id].expenses.slice(0, 2)"
                     :key="exp.id"
                     class="inline-flex items-center gap-1 rounded-md border border-orange-200 bg-orange-50 px-2 py-0.5 text-xs text-orange-700 hover:bg-orange-100 dark:border-orange-900 dark:bg-orange-950 dark:text-orange-300"
                     @click="quickMatch(tx, 'expense', exp.id)"
@@ -395,7 +405,7 @@ const currentSuggestions = computed(() => {
               ]">
                 {{ tx.type === 'credit' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
               </span>
-              <template v-if="!tx.is_reconciled && bankAccount.is_mixed_use">
+              <template v-if="!tx.is_reconciled && bankAccountSafe.is_mixed_use">
                 <input
                   type="checkbox"
                   class="h-4 w-4 rounded border-[hsl(var(--input))]"
@@ -420,6 +430,30 @@ const currentSuggestions = computed(() => {
                 @click="openMatchModal(tx)"
               >
                 {{ t('match') }}
+              </Button>
+            </div>
+          </div>
+
+          <div v-if="transactionsSafe?.last_page > 1" class="mt-2 flex items-center justify-between border-t border-[hsl(var(--border))] pt-3">
+            <span class="text-sm text-muted-foreground">
+              {{ t('page') }} {{ transactionsSafe.current_page }} / {{ transactionsSafe.last_page }}
+            </span>
+            <div class="flex gap-2">
+              <Button
+                v-if="transactionsSafe.prev_page_url"
+                size="sm"
+                variant="outline"
+                @click="router.visit(transactionsSafe.prev_page_url, { preserveState: true, preserveScroll: true })"
+              >
+                {{ t('previous') }}
+              </Button>
+              <Button
+                v-if="transactionsSafe.next_page_url"
+                size="sm"
+                variant="outline"
+                @click="router.visit(transactionsSafe.next_page_url, { preserveState: true, preserveScroll: true })"
+              >
+                {{ t('next') }}
               </Button>
             </div>
           </div>

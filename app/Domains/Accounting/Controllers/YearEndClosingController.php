@@ -7,6 +7,8 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Requests\ReopenFiscalYearRequest;
+use App\Domains\Accounting\Requests\StoreYearEndClosingRequest;
 use App\Domains\Accounting\Services\ClosingAccountsService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\LegalArchivingService;
@@ -59,19 +61,13 @@ class YearEndClosingController extends Controller
         ]);
     }
 
-    public function store(Request $request, CurrentOrganization $currentOrg, LedgerService $ledger): RedirectResponse
+    public function store(StoreYearEndClosingRequest $request, CurrentOrganization $currentOrg, LedgerService $ledger): RedirectResponse
     {
         $this->authorize('closeYear', Account::class);
 
         $orgId = $currentOrg->id();
 
-        $validated = $request->validate([
-            'year' => 'required|integer|min:2000|max:2100',
-            'closing_date' => 'required|date',
-            'reference' => 'required|string|max:50',
-            'result_account_code' => 'required|string|max:20',
-        ]);
-
+        $validated = $request->validated();
         $year = (int) $validated['year'];
         $from = "{$year}-01-01";
         $to = "{$year}-12-31";
@@ -182,13 +178,11 @@ class YearEndClosingController extends Controller
             ->with('success', __('app.year_end_closing_done'));
     }
 
-    public function reopen(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function reopen(ReopenFiscalYearRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('reopenYear', Account::class);
 
-        $validated = $request->validate([
-            'year' => 'required|integer|min:2000|max:2100',
-        ]);
+        $validated = $request->validated();
 
         $year = (int) $validated['year'];
         $org = Organization::findOrFail($currentOrg->id());

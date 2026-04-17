@@ -5,6 +5,7 @@ namespace App\Domains\Reporting\Controllers;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Jobs\GenerateAccountingExportJob;
+use App\Domains\Reporting\Requests\GenerateAccountingExportRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,13 +36,11 @@ class AccountingExportController extends Controller
         ]);
     }
 
-    public function generate(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function generate(GenerateAccountingExportRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('viewAny', Account::class);
 
-        $validated = $request->validate([
-            'fiscal_year' => ['required', 'digits:4', 'integer', 'min:2000', 'max:2100'],
-        ]);
+        $validated = $request->validated();
 
         GenerateAccountingExportJob::dispatch(
             $currentOrg->id(),

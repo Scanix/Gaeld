@@ -4,6 +4,7 @@ namespace App\Domains\Api\Controllers;
 
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Api\Requests\PostExpenseToLedgerRequest;
 use App\Domains\Api\Requests\StoreExpenseApiRequest;
 use App\Domains\Api\Requests\UpdateExpenseApiRequest;
 use App\Domains\Api\Resources\ExpenseResource;
@@ -136,7 +137,7 @@ class ExpenseApiController extends Controller
     ): ExpenseResource {
         $this->authorize('update', $expense);
 
-        $validated = $request->validated();
+        $validated = $this->completeUpdatePayload($expense, $request->validated());
 
         // Resolve vat_rate_id UUID to internal integer FK
         if (isset($validated['vat_rate_id'])) {
@@ -149,6 +150,29 @@ class ExpenseApiController extends Controller
         $action->execute($expense, $dto);
 
         return new ExpenseResource($expense->fresh());
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function completeUpdatePayload(Expense $expense, array $validated): array
+    {
+        return [
+            'category' => $validated['category'] ?? $expense->category,
+            'amount' => $validated['amount'] ?? $expense->amount,
+            'date' => $validated['date'] ?? $expense->date->toDateString(),
+            'description' => array_key_exists('description', $validated) ? $validated['description'] : $expense->description,
+            'vat_amount' => array_key_exists('vat_amount', $validated) ? $validated['vat_amount'] : $expense->vat_amount,
+            'vat_rate_id' => array_key_exists('vat_rate_id', $validated) ? $validated['vat_rate_id'] : $expense->vat_rate_id,
+            'vendor' => array_key_exists('vendor', $validated) ? $validated['vendor'] : $expense->vendor,
+            'currency' => array_key_exists('currency', $validated) ? $validated['currency'] : $expense->currency,
+            'supplier_id' => $expense->supplier_id,
+            'payment_method' => $expense->payment_method,
+            'expense_account_code' => $expense->expense_account_code,
+            'bank_account_code' => $expense->bank_account_code,
+            'receipt_path' => $expense->receipt_path,
+        ];
     }
 
     /**
@@ -212,17 +236,14 @@ class ExpenseApiController extends Controller
      * @response 422 scenario="Invalid state" {"message":"Expense cannot be posted in its current state."}
      */
     public function postToLedger(
-        Request $request,
+        PostExpenseToLedgerRequest $request,
         Expense $expense,
         PostExpenseAction $action,
         DashboardService $dashboardService,
     ): ExpenseResource|JsonResponse {
         $this->authorize('update', $expense);
 
-        $validated = $request->validate([
-            'expense_account_code' => 'required|string|max:20',
-            'bank_account_code' => 'nullable|string|max:20',
-        ]);
+        $validated = $request->validated();
 
         try {
             $action->execute(

@@ -4,6 +4,7 @@ namespace App\Domains\Accounting\Controllers;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\LettrageLot;
+use App\Domains\Accounting\Requests\StoreLettrageRequest;
 use App\Domains\Accounting\Services\LettrageService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
@@ -63,13 +64,9 @@ class LettrageController extends Controller
     /**
      * Letter a set of transaction lines.
      */
-    public function store(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    public function store(StoreLettrageRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
-        $validated = $request->validate([
-            'account_id' => ['required', 'integer'],
-            'line_ids' => ['required', 'array', 'min:2'],
-            'line_ids.*' => ['required', 'integer'],
-        ]);
+        $validated = $request->validated();
 
         /** @var Account $account */
         $account = Account::where('organization_id', $currentOrg->id())

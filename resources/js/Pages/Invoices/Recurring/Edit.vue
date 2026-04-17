@@ -26,13 +26,13 @@ const { t } = useTranslations()
 const form = useForm({
   customer_id: props.recurringInvoice.customer_id ?? '',
   frequency: props.recurringInvoice.frequency ?? 'monthly',
-  start_date: props.recurringInvoice.start_date ?? '',
+  start_date: props.recurringInvoice.next_issue_date ?? '',
   end_date: props.recurringInvoice.end_date ?? '',
-  currency: props.recurringInvoice.currency ?? 'CHF',
-  notes: props.recurringInvoice.notes ?? '',
-  payment_terms: props.recurringInvoice.payment_terms ?? '',
-  lines: props.recurringInvoice.lines?.length
-    ? props.recurringInvoice.lines.map(l => ({
+  currency: props.recurringInvoice.template_data?.currency ?? 'CHF',
+  notes: props.recurringInvoice.template_data?.notes ?? '',
+  payment_terms: props.recurringInvoice.template_data?.payment_terms ?? '',
+  lines: props.recurringInvoice.template_data?.lines?.length
+    ? props.recurringInvoice.template_data.lines.map(l => ({
         description: l.description,
         quantity: l.quantity,
         unit_price: l.unit_price,
@@ -52,7 +52,20 @@ function removeLine(index) {
 }
 
 function submit() {
-  form.put(`/invoices/recurring/${props.recurringInvoice.uuid}`)
+  form
+    .transform((data) => ({
+      customer_id: data.customer_id,
+      frequency: data.frequency,
+      next_issue_date: data.start_date,
+      end_date: data.end_date || null,
+      template_data: {
+        lines: data.lines,
+        notes: data.notes,
+        currency: data.currency,
+        payment_terms: data.payment_terms,
+      },
+    }))
+    .put(`/invoices/recurring/${props.recurringInvoice.uuid}`)
 }
 
 const clientOptions = computed(() =>
@@ -109,7 +122,7 @@ const vatOptions = computed(() => [
               v-model="form.start_date"
               type="date"
               :label="t('start_date')"
-              :error="form.errors.start_date"
+              :error="form.errors.next_issue_date"
               required
             />
             <FormInput

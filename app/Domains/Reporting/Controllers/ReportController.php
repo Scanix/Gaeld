@@ -246,6 +246,7 @@ class ReportController extends Controller
 
         return Inertia::render('Reports/Aging', [
             'report' => $report,
+            'type' => $type,
         ]);
     }
 
