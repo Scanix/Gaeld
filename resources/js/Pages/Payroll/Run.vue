@@ -264,10 +264,10 @@ async function postSlips() {
               <tr v-for="emp in preview" :key="emp.id">
                 <td class="py-2.5">{{ emp.first_name }} {{ emp.last_name }}</td>
                 <td class="py-2.5 text-right font-mono">{{ formatCurrency(emp.gross_salary) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.avs) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.ac) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.aanp) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.lpp) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.avs) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.ac) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.aanp) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.lpp) }}</td>
                 <td class="py-2.5 text-right font-mono font-bold text-green-700 dark:text-green-400">{{ formatCurrency(emp.net) }}</td>
               </tr>
             </tbody>
