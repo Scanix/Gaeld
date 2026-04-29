@@ -5,7 +5,9 @@ namespace Tests\Feature\Invoicing;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Actions\SendInvoiceAction;
+use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -71,5 +73,29 @@ class QrInvoiceValidationFlashTest extends TestCase
 
         $response->assertRedirect(route('invoices.show', $invoice));
         $response->assertSessionHas('error', $expected);
+    }
+
+    public function test_invoice_reminder_uses_generic_flash_error_when_exception_message_is_empty(): void
+    {
+        $this->setUpOrganization();
+
+        $customer = Customer::factory()->for($this->org, 'organization')->create();
+        $invoice = Invoice::factory()
+            ->for($this->org, 'organization')
+            ->for($customer, 'customer')
+            ->create(['status' => InvoiceStatus::Sent]);
+
+        $this->mock(SendInvoiceReminderAction::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('execute')
+                ->once()
+                ->andThrow(new InvalidInvoiceStateException(''));
+        });
+
+        $response = $this->actAsOrg()
+            ->from(route('invoices.show', $invoice))
+            ->post(route('invoices.reminder', $invoice));
+
+        $response->assertRedirect(route('invoices.show', $invoice));
+        $response->assertSessionHas('error', __('app.unexpected_error'));
     }
 }

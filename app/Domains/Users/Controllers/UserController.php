@@ -6,6 +6,7 @@ use App\Domains\Users\DTOs\UpdateUserProfileData;
 use App\Domains\Users\Jobs\ExportUserDataJob;
 use App\Domains\Users\Notifications\VerifyNewEmailNotification;
 use App\Domains\Users\Services\UserService;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class UserController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function profile(Request $request): Response
     {
         $this->authorize('view', $request->user());
@@ -176,11 +179,11 @@ class UserController extends Controller
         $user = $request->user();
 
         if (! $user || ! $user->pending_email || ! $user->email_change_token) {
-            return redirect()->route('profile')->with('error', __('app.email_change_invalid'));
+            return $this->routeWithError('profile', [], __('app.email_change_invalid'));
         }
 
         if (! hash_equals($user->email_change_token, hash('sha256', $token))) {
-            return redirect()->route('profile')->with('error', __('app.email_change_invalid'));
+            return $this->routeWithError('profile', [], __('app.email_change_invalid'));
         }
 
         // Check expiration (24 hours)
@@ -191,7 +194,7 @@ class UserController extends Controller
                 'email_change_requested_at' => null,
             ]);
 
-            return redirect()->route('profile')->with('error', __('app.email_change_expired'));
+            return $this->routeWithError('profile', [], __('app.email_change_expired'));
         }
 
         $user->update([

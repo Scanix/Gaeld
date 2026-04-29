@@ -17,8 +17,8 @@ class StoreExchangeRateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'currency_from' => ['required', 'string', 'size:3'],
-            'currency_to' => ['required', 'string', 'size:3'],
+            'currency_from' => ['required', 'string', 'size:3', 'alpha', 'different:currency_to'],
+            'currency_to' => ['required', 'string', 'size:3', 'alpha'],
             'rate' => ['required', 'numeric', 'gt:0'],
             'date' => ['required', 'date'],
         ];

@@ -7,11 +7,14 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
+use App\Domains\Expenses\Actions\DeleteExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\DTOs\CreateExpenseData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
+use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery\MockInterface;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -143,5 +146,23 @@ class ExpenseFlowTest extends TestCase
         $this->expectExceptionMessage('already posted');
 
         $postAction->execute($expense->fresh(), '6530');
+    }
+
+    public function test_destroy_uses_generic_flash_error_when_exception_message_is_empty(): void
+    {
+        $expense = $this->createExpense();
+
+        $this->mock(DeleteExpenseAction::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('execute')
+                ->once()
+                ->andThrow(new InvalidExpenseStateException(''));
+        });
+
+        $response = $this->actAsOrg()
+            ->from(route('expenses.show', $expense))
+            ->delete(route('expenses.destroy', $expense));
+
+        $response->assertRedirect(route('expenses.show', $expense));
+        $response->assertSessionHas('error', __('app.unexpected_error'));
     }
 }

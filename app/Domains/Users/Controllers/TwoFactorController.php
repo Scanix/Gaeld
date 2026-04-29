@@ -3,6 +3,7 @@
 namespace App\Domains\Users\Controllers;
 
 use App\Domains\Users\Notifications\TwoFactorDisabledNotification;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -20,6 +21,8 @@ use PragmaRX\Google2FA\Google2FA;
  */
 class TwoFactorController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function __construct(
         private Google2FA $google2fa,
     ) {}
@@ -64,7 +67,7 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if (! $user->two_factor_secret) {
-            return back()->with('error', trans('app.two_factor_not_started'));
+            return $this->backWithError(trans('app.two_factor_not_started'));
         }
 
         $valid = $this->google2fa->verifyKey($user->two_factor_secret, $request->code);
@@ -120,7 +123,7 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if (! $user->hasTwoFactorEnabled()) {
-            return back()->with('error', trans('app.two_factor_not_enabled'));
+            return $this->backWithError(trans('app.two_factor_not_enabled'));
         }
 
         return redirect()->route('profile')
@@ -140,7 +143,7 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if (! $user->hasTwoFactorEnabled()) {
-            return back()->with('error', trans('app.two_factor_not_enabled'));
+            return $this->backWithError(trans('app.two_factor_not_enabled'));
         }
 
         $recoveryCodes = $this->generateRecoveryCodes();

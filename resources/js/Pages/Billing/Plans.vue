@@ -10,6 +10,7 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
+import { subscriptionStatusClass, invoiceStatusClass } from '@/lib/statusClasses'
 import { CheckCircle2, Zap, AlertCircle, CreditCard, FileText, Settings, Download, ExternalLink } from 'lucide-vue-next'
 
 const { t } = useTranslations()
@@ -41,14 +42,6 @@ const invoiceQuotaPercent = computed(() => {
   if (invoice_monthly_limit === -1) return null
   return Math.min(100, Math.round((invoices_this_month / invoice_monthly_limit) * 100))
 })
-
-const statusBadgeClass = {
-  active: 'text-[hsl(var(--primary))] bg-[hsl(var(--accent))]',
-  trialing: 'text-blue-700 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/50',
-  past_due: 'text-[hsl(var(--destructive))] bg-[hsl(var(--destructive)/0.1)]',
-  canceled: 'text-[hsl(var(--muted-foreground))] bg-[hsl(var(--muted))]',
-  paused: 'text-yellow-700 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-950/50',
-}
 
 function checkout(planId) {
   router.post(`/billing/checkout/${planId}`)
@@ -94,7 +87,9 @@ function openPortal() {
       >
         <AlertCircle class="h-4 w-4 shrink-0" />
         <span>{{ t('payment_failed_warning') }}</span>
-        <button class="ml-auto underline font-medium" @click="openPortal">{{ t('update_payment_method') }}</button>
+        <Button variant="link" size="sm" class="ml-auto h-auto p-0 font-medium" @click="openPortal">
+          {{ t('update_payment_method') }}
+        </Button>
       </div>
 
       <!-- Trial without payment method — prompt to complete setup -->
@@ -104,12 +99,14 @@ function openPortal() {
       >
         <CreditCard class="h-4 w-4 shrink-0" />
         <span>{{ t('trial_complete_payment_hint') }}</span>
-        <button
-          class="ml-auto underline font-medium whitespace-nowrap"
+        <Button
+          variant="link"
+          size="sm"
+          class="ml-auto h-auto p-0 font-medium whitespace-nowrap"
           @click="checkoutCurrentPlan"
         >
           {{ t('add_payment_method') }}
-        </button>
+        </Button>
       </div>
 
       <!-- ══ MY SUBSCRIPTION ══ -->
@@ -118,7 +115,7 @@ function openPortal() {
           <div class="flex items-center justify-between">
             <CardTitle>{{ t('my_subscription') }}</CardTitle>
             <span
-              :class="statusBadgeClass[currentSubscription.status]"
+              :class="subscriptionStatusClass[currentSubscription.status]"
               class="text-xs font-medium px-2.5 py-1 rounded-full"
             >
               {{ t(`subscription_status_${currentSubscription.status}`) }}
@@ -200,12 +197,7 @@ function openPortal() {
                     </td>
                     <td class="py-2.5 px-1 text-center">
                       <span
-                        :class="{
-                          'text-[hsl(var(--primary))] bg-[hsl(var(--accent))]': invoice.status === 'paid',
-                          'text-yellow-700 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-950/50': invoice.status === 'open',
-                          'text-[hsl(var(--destructive))] bg-[hsl(var(--destructive)/0.1)]': invoice.status === 'uncollectible',
-                          'text-[hsl(var(--muted-foreground))] bg-[hsl(var(--muted))]': invoice.status === 'draft' || invoice.status === 'void',
-                        }"
+                        :class="invoiceStatusClass[invoice.status] ?? invoiceStatusClass.draft"
                         class="text-xs font-medium px-2 py-0.5 rounded-full"
                       >
                         {{ t(`invoice_status_${invoice.status}`) }}

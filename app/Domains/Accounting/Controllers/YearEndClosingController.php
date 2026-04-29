@@ -14,6 +14,7 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +28,8 @@ use Inertia\Response;
  */
 class YearEndClosingController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function __construct(
         private readonly ClosingAccountsService $closingAccounts,
         private readonly LegalArchivingService $archiving,
@@ -77,14 +80,13 @@ class YearEndClosingController extends Controller
         $allAccounts = array_merge($income, $expenses);
 
         if (empty($allAccounts)) {
-            return redirect()->back()->with('error', 'No accounts to close for this period.');
+            return $this->backWithError('No accounts to close for this period.');
         }
 
         // Hard block: require all VAT periods to be settled before closing
         $unsettled = $this->getUnsettledVatPeriods($orgId, $year);
         if (! empty($unsettled)) {
-            return redirect()->back()->with(
-                'error',
+            return $this->backWithError(
                 __('app.fiscal_year_unsettled_vat', [
                     'year' => $year,
                     'periods' => implode(', ', $unsettled),
@@ -171,7 +173,7 @@ class YearEndClosingController extends Controller
             // Generate opening balance entries for the next fiscal year
             app(GenerateOpeningBalancesAction::class)->execute($orgId, $year);
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->route('accounting.closing')
@@ -188,7 +190,7 @@ class YearEndClosingController extends Controller
         $org = Organization::findOrFail($currentOrg->id());
 
         if (! $org->isFiscalYearClosed($year)) {
-            return redirect()->back()->with('error', __('app.fiscal_year_not_closed', ['year' => $year]));
+            return $this->backWithError(__('app.fiscal_year_not_closed', ['year' => $year]));
         }
 
         $org->reopenFiscalYear($year);

@@ -7,6 +7,7 @@ use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Support\QrBillValidationMessageFormatter;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class InvoiceDocumentController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function __construct(
         private FileUploadService $uploadService,
     ) {}
@@ -74,7 +77,7 @@ class InvoiceDocumentController extends Controller
         try {
             $pdf = $action->execute($invoice, $organization, $locale);
         } catch (QrBillValidationException $e) {
-            return redirect()->back()->with('error', $messageFormatter->format($e->violations));
+            return $this->backWithError($messageFormatter->format($e->violations));
         }
 
         $filename = 'invoice-'.($invoice->number ?? $invoice->id).'.pdf';

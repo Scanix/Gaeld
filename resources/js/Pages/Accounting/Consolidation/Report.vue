@@ -8,6 +8,7 @@ import Button from '@/Components/UI/Button.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import FormSelect from '@/Components/UI/FormSelect.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
@@ -19,6 +20,10 @@ const props = defineProps({
   group: Object,
   fiscal_year: Number,
   result: Object,
+  accountOptions: {
+    type: Array,
+    default: () => [],
+  },
 })
 
 const { t } = useTranslations()
@@ -107,6 +112,18 @@ function performDeleteElim() {
         </CardContent>
       </Card>
 
+      <Card v-if="result?.missing_exchange_rates?.length" class="border-amber-300 bg-amber-50/60">
+        <CardContent class="pt-4 text-sm text-amber-900">
+          <p class="font-semibold">{{ t('exchange_rates') }}</p>
+          <p class="mt-1">
+            {{ t('unexpected_error') }}
+          </p>
+          <p class="mt-1">
+            Missing pairs: {{ result.missing_exchange_rates.join(', ') }}
+          </p>
+        </CardContent>
+      </Card>
+
       <!-- Consolidated accounts -->
       <Card v-if="result?.accounts?.length">
         <CardHeader><CardTitle>{{ t('chart_of_accounts') }}</CardTitle></CardHeader>
@@ -147,8 +164,24 @@ function performDeleteElim() {
     <!-- Add elimination dialog -->
     <Modal :open="showElimForm" :title="t('consolidation_eliminations')" @close="showElimForm = false">
       <form class="space-y-4" @submit.prevent="submitElimination">
-        <FormInput id="account_debit_id" v-model="elimForm.account_debit_id" :label="t('debit_account')" :error="elimForm.errors.account_debit_id" required />
-        <FormInput id="account_credit_id" v-model="elimForm.account_credit_id" :label="t('credit_account')" :error="elimForm.errors.account_credit_id" required />
+        <FormSelect
+          id="account_debit_id"
+          v-model="elimForm.account_debit_id"
+          :label="t('debit_account')"
+          :options="accountOptions"
+          :error="elimForm.errors.account_debit_id"
+          :placeholder="t('select')"
+          required
+        />
+        <FormSelect
+          id="account_credit_id"
+          v-model="elimForm.account_credit_id"
+          :label="t('credit_account')"
+          :options="accountOptions"
+          :error="elimForm.errors.account_credit_id"
+          :placeholder="t('select')"
+          required
+        />
         <FormInput id="amount" v-model="elimForm.amount" type="number" step="0.01" :label="t('amount')" :error="elimForm.errors.amount" required />
         <FormInput id="description" v-model="elimForm.description" :label="t('description')" :error="elimForm.errors.description" />
         <div class="flex justify-end gap-2">

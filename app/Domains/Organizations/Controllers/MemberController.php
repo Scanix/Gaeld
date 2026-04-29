@@ -6,6 +6,7 @@ use App\Domains\Organizations\Enums\Role;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\OrganizationService;
 use App\Domains\Users\Models\User;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,8 @@ use Illuminate\Validation\Rules\Enum;
  */
 class MemberController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function __construct(
         private readonly OrganizationService $organizationService,
     ) {}
@@ -67,8 +70,7 @@ class MemberController extends Controller
         }
 
         if ($this->organizationService->isLastOwner($organization, $user)) {
-            return redirect()->route('organizations.show', $organization)
-                ->with('error', __('app.cannot_remove_last_owner'));
+            return $this->routeWithError('organizations.show', $organization, __('app.cannot_remove_last_owner'));
         }
 
         $this->organizationService->removeMember($organization, $user);
@@ -87,14 +89,12 @@ class MemberController extends Controller
         }
 
         if ($this->organizationService->isLastOwner($organization, $user)) {
-            return redirect()->route('organizations.show', $organization)
-                ->with('error', __('app.cannot_leave_as_last_owner'));
+            return $this->routeWithError('organizations.show', $organization, __('app.cannot_leave_as_last_owner'));
         }
 
         // Prevent leaving if sole member
         if ($organization->users()->count() === 1) {
-            return redirect()->route('organizations.show', $organization)
-                ->with('error', __('app.cannot_leave_as_sole_member'));
+            return $this->routeWithError('organizations.show', $organization, __('app.cannot_leave_as_sole_member'));
         }
 
         $this->organizationService->removeMember($organization, $user);
