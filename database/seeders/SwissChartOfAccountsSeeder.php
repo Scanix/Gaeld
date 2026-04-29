@@ -30,7 +30,7 @@ class SwissChartOfAccountsSeeder extends Seeder
             ['code' => '1021', 'name' => 'Bank Account EUR', 'type' => AccountType::Asset->value],
             ['code' => '1100', 'name' => 'Accounts Receivable', 'type' => AccountType::Asset->value],
             ['code' => '1109', 'name' => 'Allowance for Doubtful Accounts', 'type' => AccountType::Asset->value],
-            ['code' => '1170', 'name' => 'VAT Input Tax (Vorsteuer)', 'type' => AccountType::Asset->value],
+            ['code' => '1170', 'name' => 'VAT Input Tax', 'type' => AccountType::Asset->value],
             ['code' => '1200', 'name' => 'Inventory', 'type' => AccountType::Asset->value],
             ['code' => '1300', 'name' => 'Prepaid Expenses', 'type' => AccountType::Asset->value],
             ['code' => '1500', 'name' => 'Machinery and Equipment', 'type' => AccountType::Asset->value],
@@ -42,7 +42,7 @@ class SwissChartOfAccountsSeeder extends Seeder
             // Class 2: Liabilities (Passiven)
             ['code' => '2000', 'name' => 'Accounts Payable', 'type' => AccountType::Liability->value],
             ['code' => '2100', 'name' => 'Bank Loan Short-term', 'type' => AccountType::Liability->value],
-            ['code' => '2200', 'name' => 'VAT Output Tax (Umsatzsteuer)', 'type' => AccountType::Liability->value],
+            ['code' => '2200', 'name' => 'VAT Output Tax', 'type' => AccountType::Liability->value],
             ['code' => '2201', 'name' => 'VAT Payable', 'type' => AccountType::Liability->value],
             ['code' => '2270', 'name' => 'Social Security Payable', 'type' => AccountType::Liability->value],
             ['code' => '2271', 'name' => 'Unemployment Insurance (AC) Payable', 'type' => AccountType::Liability->value],

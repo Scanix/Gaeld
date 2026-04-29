@@ -5,6 +5,7 @@ namespace App\Domains\Banking\Controllers;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Queries\AccountQuery;
 use App\Domains\Banking\DTOs\CreateBankAccountData;
 use App\Domains\Banking\DTOs\RecordBankTransactionData;
 use App\Domains\Banking\Models\BankAccount;
@@ -25,17 +26,13 @@ use Inertia\Response;
  */
 class BankingController extends Controller
 {
-    public function index(Request $request, CurrentOrganization $currentOrg): Response
+    public function index(Request $request): Response
     {
         $this->authorize('viewAny', BankAccount::class);
 
         return Inertia::render('Banking/Index', [
             'bankAccounts' => BankAccountQuery::list($request),
-            'accounts' => Account::where('organization_id', $currentOrg->id())
-                ->where('is_active', true)
-                ->select('id', 'code', 'name')
-                ->orderBy('code')
-                ->get(),
+            'accounts' => AccountQuery::forSelect(AccountType::Asset),
         ]);
     }
 

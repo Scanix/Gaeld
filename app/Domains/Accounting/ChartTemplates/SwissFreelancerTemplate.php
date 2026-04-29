@@ -44,7 +44,7 @@ class SwissFreelancerTemplate implements ChartTemplateInterface
                 'en' => 'Accounts Receivable', 'fr' => 'Débiteurs', 'de' => 'Debitoren', 'it' => 'Debitori', 'rm' => 'Debiturs',
             ]],
             ['code' => '1170', 'type' => AccountType::Asset->value, 'name' => [
-                'en' => 'VAT Input Tax (Vorsteuer)', 'fr' => 'Impôt préalable (TVA)', 'de' => 'Vorsteuer (MWST)', 'it' => 'Imposta precedente (IVA)', 'rm' => 'Tagl sin la valur agiunschida precedenta',
+                'en' => 'VAT Input Tax', 'fr' => 'Impôt préalable (TVA)', 'de' => 'Vorsteuer (MWST)', 'it' => 'Imposta precedente (IVA)', 'rm' => 'Tagl sin la valur agiunschida precedenta',
             ]],
             ['code' => '1300', 'type' => AccountType::Asset->value, 'name' => [
                 'en' => 'Prepaid Expenses', 'fr' => 'Charges payées d\'avance', 'de' => 'Aktive Rechnungsabgrenzung', 'it' => 'Risconti attivi', 'rm' => 'Delimitaziun activa',
@@ -58,7 +58,7 @@ class SwissFreelancerTemplate implements ChartTemplateInterface
                 'en' => 'Accounts Payable', 'fr' => 'Créanciers', 'de' => 'Kreditoren', 'it' => 'Creditori', 'rm' => 'Crediturs',
             ]],
             ['code' => '2200', 'type' => AccountType::Liability->value, 'name' => [
-                'en' => 'VAT Output Tax (Umsatzsteuer)', 'fr' => 'TVA due', 'de' => 'Umsatzsteuer (MWST)', 'it' => 'IVA dovuta', 'rm' => 'Tagl sin la cifra d\'affars',
+                'en' => 'VAT Output Tax', 'fr' => 'TVA due', 'de' => 'Umsatzsteuer (MWST)', 'it' => 'IVA dovuta', 'rm' => 'Tagl sin la cifra d\'affars',
             ]],
             ['code' => '2201', 'type' => AccountType::Liability->value, 'name' => [
                 'en' => 'VAT Payable', 'fr' => 'TVA à payer', 'de' => 'MWST-Zahllast', 'it' => 'IVA da pagare', 'rm' => 'TIVA da pajar',

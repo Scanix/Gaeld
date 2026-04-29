@@ -75,6 +75,8 @@ const categoryLabel = computed(() => {
   return key ? t(key) : props.expense.category
 })
 
+const expenseTitle = computed(() => props.expense.description || categoryLabel.value)
+
 const journalColumns = computed(() => [
   { key: 'account', label: t('account'), format: (_, row) => `${row.account?.code} — ${row.account?.name}` },
   { key: 'debit', label: t('debit'), format: v => formatCurrency(v) },
@@ -83,12 +85,12 @@ const journalColumns = computed(() => [
 </script>
 
 <template>
-  <AppLayout :title="`${t('expense')} — ${categoryLabel}`" help-page="expenses">
-    <Breadcrumb :items="[{ label: t('expenses'), href: '/expenses' }, { label: categoryLabel }]" class="mb-4" />
+  <AppLayout :title="`${t('expense')} — ${expenseTitle}`" help-page="expenses">
+    <Breadcrumb :items="[{ label: t('expenses'), href: '/expenses' }, { label: expenseTitle }]" class="mb-4" />
 
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
-        <h2 class="text-xl font-semibold">{{ categoryLabel }}</h2>
+        <h2 class="text-xl font-semibold">{{ expenseTitle }}</h2>
         <Badge :variant="statusVariant[expense.status] || 'default'">{{ t('expense_status_' + expense.status) }}</Badge>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -105,7 +107,9 @@ const journalColumns = computed(() => [
         <Button
           v-if="expense.status === 'approved'"
           size="sm"
-          @click="showPostDialog = true"
+          :disabled="!expense.expense_account_code"
+          :title="!expense.expense_account_code ? t('expense_account_code_required') : undefined"
+          @click="expense.expense_account_code && (showPostDialog = true)"
         >
           {{ t('post_to_ledger') }}
         </Button>
@@ -145,13 +149,12 @@ const journalColumns = computed(() => [
             <dd>{{ expense.vat_amount ? formatCurrency(expense.vat_amount, expense.currency) : '—' }}</dd>
             <dt class="text-muted-foreground">{{ t('date') }}</dt>
             <dd>{{ formatDate(expense.date) }}</dd>
-            <dt class="text-muted-foreground">{{ t('vendor') }}</dt>
-            <dd>{{ expense.vendor || '—' }}</dd>
             <dt class="text-muted-foreground">{{ t('supplier') }}</dt>
             <dd>
               <a v-if="expense.supplier" :href="`/suppliers/${expense.supplier.uuid}`" class="text-[hsl(var(--primary))] hover:underline">
                 {{ expense.supplier.name }}
               </a>
+              <span v-else-if="expense.vendor">{{ expense.vendor }}</span>
               <span v-else>—</span>
             </dd>
             <dt class="text-muted-foreground">{{ t('description') }}</dt>

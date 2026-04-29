@@ -18,10 +18,13 @@ export function intlLocale(appLocale) {
 
 export function formatCurrency(amount, currency = 'CHF', locale = 'de-CH') {
   const value = Number(amount)
-  return new Intl.NumberFormat(intlLocale(locale), {
+  const formatted = new Intl.NumberFormat(intlLocale(locale), {
     style: 'currency',
     currency,
   }).format(Number.isFinite(value) ? value : 0)
+  // Normalize negative formatting: some Swiss locales produce "CHF-85.50" without a space.
+  // Ensure there is always a space between the currency code and the minus sign.
+  return formatted.replace(/([A-Z]{3})(-)/, '$1 $2')
 }
 
 export const formatMoney = formatCurrency
