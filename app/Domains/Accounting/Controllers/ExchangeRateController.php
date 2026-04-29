@@ -7,6 +7,7 @@ use App\Domains\Accounting\Models\ExchangeRate;
 use App\Domains\Accounting\Requests\StoreExchangeRateRequest;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,8 @@ use Inertia\Response;
 
 class ExchangeRateController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function index(CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', Account::class);
@@ -78,12 +81,12 @@ class ExchangeRateController extends Controller
         $response = Http::timeout(10)->get('https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml');
 
         if (! $response->successful()) {
-            return back()->withErrors(['exchange_rates' => __('app.unexpected_error')]);
+            return $this->backWithError(__('app.unexpected_error'));
         }
 
         $xml = @simplexml_load_string($response->body());
         if (! $xml) {
-            return back()->withErrors(['exchange_rates' => __('app.unexpected_error')]);
+            return $this->backWithError(__('app.unexpected_error'));
         }
 
         $namespaces = $xml->getNamespaces(true);
@@ -95,7 +98,7 @@ class ExchangeRateController extends Controller
         }
 
         if (! $dateNode || ! isset($dateNode['time'])) {
-            return back()->withErrors(['exchange_rates' => __('app.unexpected_error')]);
+            return $this->backWithError(__('app.unexpected_error'));
         }
 
         $date = (string) $dateNode['time'];
@@ -108,7 +111,7 @@ class ExchangeRateController extends Controller
         }
 
         if (! $chfRate || $chfRate <= 0) {
-            return back()->withErrors(['exchange_rates' => __('app.unexpected_error')]);
+            return $this->backWithError(__('app.unexpected_error'));
         }
 
         $rates = [];

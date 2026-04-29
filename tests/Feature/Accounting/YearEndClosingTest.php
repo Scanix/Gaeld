@@ -4,9 +4,13 @@ namespace Tests\Feature\Accounting;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Services\ClosingAccountsService;
+use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery\MockInterface;
 use Tests\TestCase;
 use Tests\Traits\WithActiveSubscription;
 use Tests\Traits\WithOrganizationPermissions;
@@ -142,5 +146,61 @@ class YearEndClosingTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->where('canReopenYear', false)
         );
+    }
+
+    public function test_store_uses_generic_flash_error_when_internal_exception_message_is_empty(): void
+    {
+        Account::create([
+            'organization_id' => $this->organization->id,
+            'code' => '2900',
+            'name' => 'Year-End Result',
+            'type' => AccountType::Liability->value,
+        ]);
+
+        foreach ([[1, '01-01', '03-31'], [2, '04-01', '06-30'], [3, '07-01', '09-30'], [4, '10-01', '12-31']] as [, $from, $to]) {
+            JournalEntry::create([
+                'organization_id' => $this->organization->id,
+                'date' => "2025-{$from}",
+                'reference' => "VAT-SETTLEMENT-2025-{$from}-2025-{$to}",
+                'description' => 'VAT settlement',
+                'type' => 'vat_settlement',
+                'is_posted' => true,
+            ]);
+        }
+
+        $asset = Account::where('organization_id', $this->organization->id)
+            ->where('code', '1100')
+            ->firstOrFail();
+
+        $this->mock(ClosingAccountsService::class, function (MockInterface $mock) use ($asset): void {
+            $mock->shouldReceive('compute')
+                ->once()
+                ->andReturn([
+                    [[
+                        'account_id' => (string) $asset->id,
+                        'code' => '1100',
+                        'balance' => '100.00',
+                    ]],
+                    [],
+                ]);
+        });
+
+        $this->mock(LedgerService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('postEntry')
+                ->once()
+                ->andThrow(new \RuntimeException(''));
+        });
+
+        $response = $this->asOwner()
+            ->from('/accounting/year-end-closing?year=2025')
+            ->post('/accounting/year-end-closing', [
+                'year' => 2025,
+                'closing_date' => '2025-12-31',
+                'reference' => 'YE-2025',
+                'result_account_code' => '2900',
+            ]);
+
+        $response->assertRedirect('/accounting/year-end-closing?year=2025');
+        $response->assertSessionHas('error', __('app.unexpected_error'));
     }
 }

@@ -69,6 +69,13 @@ class TaxDeclarationController extends Controller
             abort(404);
         }
 
+        if ($taxDeclaration->status === 'draft') {
+            $taxDeclaration->update([
+                'data' => $this->buildSummaryData($currentOrg->id(), $taxDeclaration->fiscal_year),
+            ]);
+            $taxDeclaration->refresh();
+        }
+
         return Inertia::render('Accounting/TaxDeclarations/Show', [
             'declaration' => $taxDeclaration,
         ]);

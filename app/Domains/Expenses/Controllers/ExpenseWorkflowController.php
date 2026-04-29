@@ -10,6 +10,7 @@ use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Notifications\ExpenseApprovedNotification;
 use App\Domains\Reporting\Services\DashboardService;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +20,8 @@ use Illuminate\Http\RedirectResponse;
  */
 class ExpenseWorkflowController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function approve(Expense $expense, ApproveExpenseAction $action, DashboardService $dashboardService): RedirectResponse
     {
         $this->authorize('update', $expense);
@@ -26,7 +29,7 @@ class ExpenseWorkflowController extends Controller
         try {
             $action->execute($expense);
         } catch (InvalidExpenseStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         $dashboardService->flushCache($expense->organization_id);
@@ -46,7 +49,7 @@ class ExpenseWorkflowController extends Controller
         $this->authorize('update', $expense);
 
         if (! $expense->expense_account_code) {
-            return redirect()->back()->with('error', __('app.expense_account_code_required'));
+            return $this->backWithError(__('app.expense_account_code_required'));
         }
 
         try {
@@ -56,9 +59,9 @@ class ExpenseWorkflowController extends Controller
                 $expense->bank_account_code ?? AccountCode::BANK_CASH,
             );
         } catch (InvalidExpenseStateException|ExpenseLedgerPostingException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         } catch (ModelNotFoundException) {
-            return redirect()->back()->with('error', __('app.account_not_found', ['code' => $expense->expense_account_code]));
+            return $this->backWithError(__('app.account_not_found', ['code' => $expense->expense_account_code]));
         }
 
         $dashboardService->flushCache($expense->organization_id);

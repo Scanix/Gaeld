@@ -18,6 +18,7 @@ use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Mockery\MockInterface;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -433,5 +434,26 @@ class ReconciliationFlowTest extends TestCase
 
         $response->assertRedirect();
         $this->assertEquals(3, BankTransaction::where('bank_account_id', $this->bankAccount->id)->count());
+    }
+
+    public function test_camt_upload_uses_generic_error_when_import_exception_message_is_empty(): void
+    {
+        $xmlContent = file_get_contents(__DIR__.'/../../fixtures/camt053_sample.xml');
+        $file = UploadedFile::fake()->createWithContent('test.xml', $xmlContent);
+
+        $this->mock(BankImportService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('importCamtFile')
+                ->once()
+                ->andThrow(new \RuntimeException(''));
+        });
+
+        $response = $this->actingAs($this->user)
+            ->from("/reconciliation/{$this->bankAccount->uuid}")
+            ->post("/reconciliation/{$this->bankAccount->uuid}/import", [
+                'camt_file' => $file,
+            ]);
+
+        $response->assertRedirect("/reconciliation/{$this->bankAccount->uuid}");
+        $response->assertSessionHas('error', __('app.unexpected_error'));
     }
 }

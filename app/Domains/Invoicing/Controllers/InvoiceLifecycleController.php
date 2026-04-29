@@ -15,6 +15,7 @@ use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Notifications\InvoicePaymentRecordedNotification;
 use App\Domains\Invoicing\Requests\RecordPaymentRequest;
 use App\Domains\Organizations\Enums\Permission;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,8 @@ use Spatie\Permission\PermissionRegistrar;
  */
 class InvoiceLifecycleController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function finalize(Invoice $invoice, FinalizeInvoiceAction $action): RedirectResponse
     {
         $this->authorize('finalize', $invoice);
@@ -33,7 +36,7 @@ class InvoiceLifecycleController extends Controller
         try {
             $action->execute($invoice);
         } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->route('invoices.show', $invoice)
@@ -47,7 +50,7 @@ class InvoiceLifecycleController extends Controller
         try {
             $action->execute($invoice);
         } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->route('invoices.show', $invoice)
@@ -63,9 +66,9 @@ class InvoiceLifecycleController extends Controller
         try {
             $action->execute($invoice, $dto);
         } catch (InvalidInvoiceStateException|InvalidPaymentException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         } catch (ModelNotFoundException) {
-            return redirect()->back()->with('error', __('app.account_not_found', ['code' => $validated['bank_account_code'] ?? '']));
+            return $this->backWithError(__('app.account_not_found', ['code' => $validated['bank_account_code'] ?? '']));
         }
 
         // Notify org users with invoice permissions (excluding the actor)
@@ -99,7 +102,7 @@ class InvoiceLifecycleController extends Controller
         try {
             $creditNote = $action->execute($invoice);
         } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->route('invoices.show', $creditNote)
@@ -113,7 +116,7 @@ class InvoiceLifecycleController extends Controller
         try {
             $action->execute($invoice);
         } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->route('invoices.index')

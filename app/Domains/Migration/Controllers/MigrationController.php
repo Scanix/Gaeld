@@ -13,6 +13,7 @@ use App\Domains\Migration\Requests\UploadMigrationFileRequest;
 use App\Domains\Migration\Services\MigrationOrchestrator;
 use App\Domains\Migration\Services\MigrationRegistry;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -20,6 +21,8 @@ use Inertia\Response;
 
 class MigrationController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function __construct(
         private readonly MigrationOrchestrator $orchestrator,
         private readonly MigrationRegistry $registry,
@@ -106,8 +109,7 @@ class MigrationController extends Controller
                 ? implode(', ', $parseResult->errors)
                 : __('migration.no_rows_found');
 
-            return redirect()->back()
-                ->with('error', $errorMessage);
+            return $this->backWithError($errorMessage);
         }
 
         // Store parsed rows in session storage for preview/execution
@@ -147,8 +149,7 @@ class MigrationController extends Controller
             $rows = cache()->get($cacheKey);
 
             if ($rows === null) {
-                return redirect()->back()
-                    ->with('error', __('migration.expired_upload', ['type' => $dataType->value]));
+                return $this->backWithError(__('migration.expired_upload', ['type' => $dataType->value]));
             }
 
             $rowsByType[$dataType->value] = $rows;

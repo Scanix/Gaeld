@@ -18,6 +18,7 @@ use App\Domains\Invoicing\Requests\StoreInvoiceRequest;
 use App\Domains\Invoicing\Requests\UpdateInvoiceRequest;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use App\Support\FeatureFlag;
 use App\Support\Services\FileUploadService;
@@ -32,6 +33,8 @@ use Inertia\Response;
  */
 class InvoiceController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function __construct(
         private FileUploadService $uploadService,
     ) {}
@@ -76,7 +79,7 @@ class InvoiceController extends Controller
             if ($newCount > $limit) {
                 Cache::decrement($monthlyKey);
 
-                return redirect()->back()->with('error', __('app.invoice_monthly_limit_reached'));
+                return $this->backWithError(__('app.invoice_monthly_limit_reached'));
             }
         }
 
@@ -161,7 +164,7 @@ class InvoiceController extends Controller
         try {
             $action->execute($invoice, $dto);
         } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->route('invoices.show', $invoice)
@@ -175,7 +178,7 @@ class InvoiceController extends Controller
         try {
             $action->execute($invoice);
         } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->route('invoices.index')
