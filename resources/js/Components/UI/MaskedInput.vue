@@ -1,7 +1,7 @@
 <script>
 const MASKS = {
   iban: { mask: 'AA## #### #### #### #### #', eager: true },
-  phone: { mask: '+## ## ### ## ##', eager: true },
+  phone: { mask: '+## ## ### ## ##' },
   postal: { mask: '####' },
 }
 </script>

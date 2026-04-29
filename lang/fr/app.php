@@ -1871,6 +1871,7 @@ return [
     'categorization_vat' => 'Catégorie et TVA',
     'invoice_details' => 'Détails de la facture',
     'notes_and_terms' => 'Notes et conditions',
+    'notes_printed_hint' => 'Ces notes apparaissent sur la facture imprimée.',
 
     // Tooltips
     'tooltip_internal_notes' => 'Les notes internes ne sont visibles que par votre équipe, jamais par le contact.',

@@ -1847,6 +1847,7 @@ return [
     'categorization_vat' => 'Kategorie & MwSt.',
     'invoice_details' => 'Rechnungsdetails',
     'notes_and_terms' => 'Notizen & Bedingungen',
+    'notes_printed_hint' => 'Diese Notizen erscheinen auf der gedruckten Rechnung.',
 
     // Tooltips
     'tooltip_internal_notes' => 'Interne Notizen sind nur für Ihr Team sichtbar, nie für den Kontakt.',

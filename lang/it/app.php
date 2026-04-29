@@ -1820,6 +1820,7 @@ return [
     'categorization_vat' => 'Categoria e IVA',
     'invoice_details' => 'Dettagli della fattura',
     'notes_and_terms' => 'Note e condizioni',
+    'notes_printed_hint' => 'Queste note appaiono sulla fattura stampata.',
 
     // Tooltips
     'tooltip_internal_notes' => 'Le note interne sono visibili solo al tuo team, mai al contatto.',

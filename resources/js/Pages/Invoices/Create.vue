@@ -421,6 +421,7 @@ function onDueDateManualEdit() {
               v-model="form.notes"
               :label="t('notes')"
             />
+            <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('notes_printed_hint') }}</p>
             <div>
               <FormInput
                 id="payment_terms"

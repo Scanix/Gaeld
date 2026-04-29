@@ -1863,6 +1863,7 @@ return [
     'categorization_vat' => 'Categorization & VAT',
     'invoice_details' => 'Invoice Details',
     'notes_and_terms' => 'Notes & Terms',
+    'notes_printed_hint' => 'These notes appear on the printed invoice.',
 
     // Tooltips
     'tooltip_internal_notes' => 'Internal notes are only visible to your team, never to the contact.',
