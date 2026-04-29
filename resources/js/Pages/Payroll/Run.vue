@@ -109,7 +109,7 @@ async function generateSlips() {
         'Accept': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
       },
-      body: JSON.stringify({ employee_ids: selectedEmployeeIds.value, month: month.value, year: year.value, post: true }),
+      body: JSON.stringify({ employee_ids: selectedEmployeeIds.value, month: month.value, year: year.value }),
     })
     if (!response.ok) {
       const err = await response.json().catch(() => ({}))
@@ -118,7 +118,7 @@ async function generateSlips() {
     }
     const data = await response.json()
     generatedSlipIds.value = data.slip_ids ?? []
-    step.value = 4
+    step.value = 3
   } catch {
     errorMessage.value = t('payroll_generate_error')
   } finally {
