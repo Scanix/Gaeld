@@ -141,7 +141,7 @@ const lineColumns = computed(() => [
 const paymentColumns = computed(() => [
   { key: 'payment_date', label: t('date'), format: (v) => formatDate(v) },
   { key: 'amount', label: t('amount'), class: 'text-right', format: (v) => formatCurrency(v) },
-  { key: 'payment_method', label: t('payment_method') },
+  { key: 'payment_method', label: t('payment_method'), format: (v) => paymentMethodOptions.find(o => o.value === v)?.label || v },
   { key: 'reference', label: t('reference') },
 ])
 

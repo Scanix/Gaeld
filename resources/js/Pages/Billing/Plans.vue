@@ -276,7 +276,7 @@ function openPortal() {
               <ul class="space-y-2 text-sm">
                 <li class="flex items-center gap-2">
                   <CheckCircle2 class="h-4 w-4 text-[hsl(var(--primary))] shrink-0" />
-                  {{ plan.max_users === -1 ? t('unlimited_users') : `${plan.max_users} ${t('users')}` }}
+                  {{ plan.max_users === -1 ? t('unlimited_users') : `${plan.max_users} ${plan.max_users === 1 ? t('user') : t('users')}` }}
                 </li>
                 <li class="flex items-center gap-2">
                   <CheckCircle2 class="h-4 w-4 text-[hsl(var(--primary))] shrink-0" />
