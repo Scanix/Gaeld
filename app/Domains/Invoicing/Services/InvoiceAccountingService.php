@@ -15,7 +15,6 @@ use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Support\Money;
-use App\Support\SwissRounding;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 
@@ -106,36 +105,6 @@ class InvoiceAccountingService
                         debit: $isCreditNote ? $vatAmount : '0',
                         credit: $isCreditNote ? '0' : $vatAmount,
                         description: "VAT Output — {$rateName}",
-                    );
-                }
-            }
-
-            // Apply Swiss 5-centime rounding for CHF invoices
-            if (strtoupper($invoice->currency) === 'CHF') {
-                $originalTotal = $isCreditNote
-                    ? Money::absoluteAmount((string) $invoice->total)
-                    : (string) $invoice->total;
-                $adj = SwissRounding::adjustment(Money::of($originalTotal));
-
-                if ($adj) {
-                    $roundingAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ROUNDING_DIFFERENCE);
-
-                    // Adjust the AR line to the rounded total
-                    $lines[0] = new JournalLineData(
-                        accountId: (string) $ar->id,
-                        debit: $isCreditNote ? '0' : $adj['rounded'],
-                        credit: $isCreditNote ? $adj['rounded'] : '0',
-                        description: 'Accounts Receivable',
-                    );
-
-                    // Post the rounding difference to keep the entry balanced
-                    $absDiff = Money::absoluteAmount($adj['diff']);
-                    $isRoundedDown = Money::isNegative($adj['diff']);
-                    $lines[] = new JournalLineData(
-                        accountId: (string) $roundingAccount->id,
-                        debit: $isCreditNote ? ($isRoundedDown ? '0' : $adj['diff']) : ($isRoundedDown ? $absDiff : '0'),
-                        credit: $isCreditNote ? ($isRoundedDown ? $absDiff : '0') : ($isRoundedDown ? '0' : $adj['diff']),
-                        description: 'Rounding difference (5ct)',
                     );
                 }
             }

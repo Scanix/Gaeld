@@ -132,6 +132,7 @@ const lineColumns = computed(() => [
   { key: 'description', label: t('description') },
   { key: 'quantity', label: t('qty'), class: 'text-right', format: (v, row) => row.type === 'discount' && row.discount_type === 'percentage' ? '—' : v },
   { key: 'unit_price', label: t('unit_price'), class: 'text-right', format: (v, row) => row.type === 'discount' && row.discount_type === 'percentage' ? `${v}%` : formatCurrency(v) },
+  { key: 'vat_rate_id', label: t('vat'), class: 'text-right', format: (v, row) => row.vatRate ? `${row.vatRate.rate}%` : '—' },
   { key: 'total', label: t('total'), class: 'text-right', format: (v, row) => {
     if (row.type === 'discount') return formatCurrency(-Math.abs(parseFloat(row.amount)))
     return formatCurrency(row.amount)
@@ -305,10 +306,20 @@ const bankAccountOptions = computed(() =>
         <CardContent>
           <DataTable :columns="lineColumns" :rows="invoice?.lines ?? []" />
           <div class="mt-4 flex justify-end">
-            <div class="text-right">
-              <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('total') }}</p>
-              <p class="text-2xl font-bold">{{ formatCurrency(invoice?.total) }}</p>
-              <p v-if="invoice?.payments?.length" class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
+            <div class="w-48 space-y-1 text-sm">
+              <div v-if="parseFloat(invoice?.vat_amount) > 0" class="flex justify-between text-[hsl(var(--muted-foreground))]">
+                <span>{{ t('subtotal') }}</span>
+                <span class="tabular-nums">{{ formatCurrency(invoice?.subtotal) }}</span>
+              </div>
+              <div v-if="parseFloat(invoice?.vat_amount) > 0" class="flex justify-between text-[hsl(var(--muted-foreground))]">
+                <span>{{ t('vat_total') }}</span>
+                <span class="tabular-nums">{{ formatCurrency(invoice?.vat_amount) }}</span>
+              </div>
+              <div class="flex justify-between border-t pt-1 font-semibold">
+                <span>{{ t('total') }}</span>
+                <span class="text-xl tabular-nums">{{ formatCurrency(invoice?.total) }}</span>
+              </div>
+              <p v-if="invoice?.payments?.length" class="text-right text-[hsl(var(--muted-foreground))]">
                 {{ t('amount_due') }} {{ formatCurrency(amountDue) }}
               </p>
             </div>

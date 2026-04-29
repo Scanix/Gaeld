@@ -154,7 +154,6 @@ const localeOptions = [
 ]
 
 const cantonOptions = [
-  { value: '', label: t('select_placeholder') },
   { value: 'AG', label: 'Aargau' }, { value: 'AI', label: 'Appenzell I.Rh.' },
   { value: 'AR', label: 'Appenzell A.Rh.' }, { value: 'BE', label: 'Bern' },
   { value: 'BL', label: 'Basel-Land' }, { value: 'BS', label: 'Basel-Stadt' },
@@ -246,6 +245,7 @@ const cantonOptions = [
                   v-model="generalForm.canton"
                   :label="t('canton')"
                   :options="cantonOptions"
+                  :placeholder="t('select_placeholder')"
                   :error="generalForm.errors.canton"
                 />
               </div>

@@ -379,6 +379,7 @@ const total = computed(() => subtotal.value + vatTotal.value)
               v-model="form.notes"
               :label="t('notes')"
             />
+            <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('notes_printed_hint') }}</p>
             <FormInput
               id="payment_terms"
               v-model="form.payment_terms"
