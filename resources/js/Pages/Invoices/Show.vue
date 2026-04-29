@@ -173,7 +173,7 @@ const bankAccountOptions = computed(() =>
       { label: invoice?.number },
     ]" />
 
-    <HelpText :title="t('help_reminders_title')" class="mb-6">
+    <HelpText v-if="invoice?.status !== 'paid' && invoice?.status !== 'cancelled'" :title="t('help_reminders_title')" class="mb-6">
       <p>{{ t('help_reminders_text') }}</p>
     </HelpText>
 

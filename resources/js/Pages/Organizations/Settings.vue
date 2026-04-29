@@ -349,6 +349,7 @@ const cantonOptions = [
               <!-- Upload input -->
               <FileUpload
                 accept="image/png,image/jpeg"
+                :max-size-mb="2"
                 :help-text="t('settings_logo_hint')"
                 @change="onLogoSelect"
               />
