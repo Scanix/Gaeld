@@ -34,7 +34,7 @@ host('production')
     ->setLabels(['stage' => 'production'])
     ->setHostname(getenv('DEPLOY_HOST') ?: 'your-server-alias-or-ip')
     ->setRemoteUser(getenv('DEPLOY_USER') ?: 'deploy')
-    ->set('branch', 'main')
+    ->set('branch', getenv('DEPLOY_BRANCH') ?: 'develop')
     ->set('http_user', 'www-data')
     ->setDeployPath(getenv('DEPLOY_PATH') ?: '/var/www/gaeld')
     ->setForwardAgent(true);

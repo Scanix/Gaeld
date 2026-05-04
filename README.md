@@ -13,7 +13,7 @@
 
 Proper double-entry bookkeeping, Swiss QR-Bill invoicing, VAT reporting, and bank reconciliation — built with Laravel and Vue, AGPL-3.0-or-later licensed, fully self-hostable.
 
-> Early beta — the core is solid but expect rough edges and breaking changes between versions.
+> First full production release: stability is now the default and breaking changes follow documented release notes.
 
 [Website](https://gaeld.ch) · [Documentation](https://docs.gaeld.ch) · [Hosted version](https://app.gaeld.ch)
 
@@ -57,7 +57,7 @@ Add `--demo` for a non-interactive setup with sample data:
 ```bash
 cp .env.example .env
 docker compose up -d --wait
-docker compose exec laravel.test php artisan gaeld:install
+./vendor/bin/sail artisan gaeld:install
 ```
 
 </details>
@@ -77,18 +77,18 @@ Other useful commands:
 ### Manual
 
 ```bash
-composer install
+./vendor/bin/sail composer install
 pnpm install && pnpm run build
 cp .env.example .env
-php artisan key:generate
-php artisan gaeld:install
-php artisan serve
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail artisan gaeld:install
+./vendor/bin/sail up
 ```
 
 ### Updating
 
 ```bash
-php artisan gaeld:update
+./vendor/bin/sail artisan gaeld:update
 ```
 
 Runs pending migrations, clears caches, and restarts the queue worker — safe to run on a live instance.
@@ -162,8 +162,8 @@ Plugins are auto-discovered on boot. See `plugins/example-plugin/` for a minimal
 Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a PR.
 
 ```bash
-docker compose exec laravel.test php artisan test   # run the test suite
-./vendor/bin/pint                                   # fix code style
+./vendor/bin/sail artisan test                      # run the test suite
+./vendor/bin/sail pint                              # fix code style
 ```
 
 Please keep pull requests focused and include tests for new behaviour.

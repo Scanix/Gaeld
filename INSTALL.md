@@ -21,10 +21,10 @@ cp .env.example .env
 docker compose up -d --wait
 
 # 4. Run the installer
-docker compose exec laravel.test php artisan gaeld:install
+./vendor/bin/sail artisan gaeld:install
 
 # Or with demo data:
-docker compose exec laravel.test php artisan gaeld:install --demo
+./vendor/bin/sail artisan gaeld:install --demo
 ```
 
 Visit `http://localhost:8080` to access the application.
@@ -34,7 +34,7 @@ Visit `http://localhost:8080` to access the application.
 Tests run against the PostgreSQL `testing` database (automatically created by the container on first start). Always run tests **inside** the container:
 
 ```bash
-docker compose exec laravel.test php artisan test
+./vendor/bin/sail artisan test
 ```
 
 ### Default Demo Credentials
@@ -63,7 +63,7 @@ git clone https://github.com/Scanix/Gaeld.git
 cd Gaeld/api
 
 # 2. Install PHP dependencies
-composer install
+./vendor/bin/sail composer install
 
 # 3. Install and build frontend
 pnpm install
@@ -71,7 +71,7 @@ pnpm run build
 
 # 4. Configure environment
 cp .env.example .env
-php artisan key:generate
+./vendor/bin/sail artisan key:generate
 
 # 5. Update .env with your database credentials
 # DB_HOST=127.0.0.1
@@ -80,13 +80,13 @@ php artisan key:generate
 # DB_PASSWORD=your_password
 
 # 6. Run the installer
-php artisan gaeld:install
+./vendor/bin/sail artisan gaeld:install
 
 # Or with demo data:
-php artisan gaeld:install --demo
+./vendor/bin/sail artisan gaeld:install --demo
 
 # 7. Start the development server
-php artisan serve
+./vendor/bin/sail up
 ```
 
 Visit `http://localhost:8000` to access the application.

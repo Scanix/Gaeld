@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.0] — 2026-05-01
+
+### Added
+- **Production release baseline** — formalized first full production release process with aligned documentation, branch targeting, and deployment defaults.
+- **Release/deploy consistency** — deployment branch is now configurable via `DEPLOY_BRANCH` in `deploy.php` template.
+
+### Changed
+- **Documentation alignment** — root docs now describe production readiness and use Sail-based command examples for PHP workflows.
+- **Branch policy alignment** — contribution and security documentation now reference `develop` as the default supported development branch.
+- **CI PR coverage** — GitHub Actions now runs for pull requests targeting both `develop` and `main`.
+
+---
+
 ## [2.18.0] — 2026-04-14
 
 ### Added
