@@ -3,7 +3,9 @@
 namespace App\Domains\Banking\Models;
 
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\Money;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use App\Support\Traits\HasPublicUuid;
@@ -83,5 +85,29 @@ class BankAccount extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(BankTransaction::class);
+    }
+
+    /**
+     * Derive the current balance from the linked GL account's journal lines.
+     *
+     * Asset (debit-normal): balance = SUM(debit) − SUM(credit).
+     * Falls back to the denormalized `balance` column when no GL account is linked.
+     */
+    public function derivedBalance(): string
+    {
+        if (! $this->account_id) {
+            return (string) ($this->balance ?? '0');
+        }
+
+        /** @var object{debit_total: string|null, credit_total: string|null}|null $row */
+        $row = TransactionLine::query()
+            ->where('account_id', $this->account_id)
+            ->selectRaw('COALESCE(SUM(debit), 0) AS debit_total, COALESCE(SUM(credit), 0) AS credit_total')
+            ->first();
+
+        $debit = (string) ($row->debit_total ?? '0');
+        $credit = (string) ($row->credit_total ?? '0');
+
+        return Money::subtract($debit, $credit);
     }
 }

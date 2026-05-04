@@ -57,6 +57,12 @@ class ReconciliationController extends Controller
             ->paginate(25)
             ->withQueryString();
 
+        // Decorate each item with the GL-derived balance so the listing
+        // matches what the bank-detail and Banking listing already show.
+        foreach ($bankAccounts->items() as $ba) {
+            $ba->setAttribute('derived_balance', $ba->derivedBalance());
+        }
+
         return Inertia::render('Banking/Reconciliation', [
             'bankAccounts' => $bankAccounts,
         ]);
