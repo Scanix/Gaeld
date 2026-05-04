@@ -305,7 +305,9 @@ function openPortal() {
                       ? t('add_payment_method')
                       : currentSubscription
                         ? t('switch_plan')
-                        : t('start_trial')
+                        : plan.price_chf == 0
+                          ? t('activate_free_plan')
+                          : t('start_trial')
                 }}
               </Button>
             </CardContent>
