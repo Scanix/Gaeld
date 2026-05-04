@@ -26,11 +26,16 @@ const props = defineProps({
 // Step state: 1=Select, 2=Preview, 3=Generate, 4=Post
 const step = ref(1)
 const selectedEmployeeIds = ref([])
-const month = ref(String(new Date().getMonth() + 1))
+const month = ref(String(((new Date().getMonth() + 11) % 12) + 1))
 const year = ref(
-  props.fiscalYears.length
-    ? String(props.fiscalYears[0])
-    : String(new Date().getFullYear())
+  // Default to last month's year (handles January → previous year).
+  (() => {
+    const now = new Date()
+    const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+    return props.fiscalYears.length
+      ? String(props.fiscalYears.includes(lastMonthYear) ? lastMonthYear : props.fiscalYears[0])
+      : String(lastMonthYear)
+  })()
 )
 const preview = ref([])
 const generatedSlipIds = ref([])

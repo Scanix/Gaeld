@@ -114,9 +114,19 @@ class PostPayrollAction
             );
         }
 
+        // Build a human-friendly reference: PAY-<INITIALS>-<YYYY>-<MM>.
+        // Falls back to a short employee-id slug when initials are unavailable.
+        $initials = collect((array) preg_split('/\s+/', trim((string) $employee->fullName())))
+            ->filter()
+            ->map(fn ($p) => strtoupper(mb_substr((string) $p, 0, 1)))
+            ->take(3)
+            ->implode('');
+        $tag = $initials !== '' ? $initials : substr((string) $slip->employee_id, 0, 4);
+        $monthPad = str_pad((string) $slip->period_month, 2, '0', STR_PAD_LEFT);
+
         $entry = new JournalEntryData(
             date: Carbon::create($slip->period_year, $slip->period_month)->endOfMonth()->toDateString(),
-            reference: "PAY-{$slip->employee_id}-{$slip->period_year}-{$slip->period_month}",
+            reference: "PAY-{$tag}-{$slip->period_year}-{$monthPad}",
             description: $description,
             lines: $lines,
         );

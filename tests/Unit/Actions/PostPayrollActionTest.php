@@ -92,7 +92,7 @@ class PostPayrollActionTest extends TestCase
             ->shouldReceive('postEntry')
             ->once()
             ->with('org-1', Mockery::on(function ($entry) {
-                return $entry->reference === 'PAY-emp-42-2026-3';
+                return $entry->reference === 'PAY-JD-2026-03';
             }))
             ->andReturn($this->makeJournalEntry(99));
 
