@@ -2,7 +2,7 @@
 
 namespace App\Domains\Organizations\Requests;
 
-use App\Support\Rules\QrIban;
+use App\Support\Rules\Iban;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateInvoiceSettingsRequest extends FormRequest
@@ -16,7 +16,7 @@ class UpdateInvoiceSettingsRequest extends FormRequest
             'invoice_header_text' => 'nullable|string|max:1000',
             'invoice_footer_text' => 'nullable|string|max:1000',
             'default_invoice_notes' => 'nullable|string|max:1000',
-            'qr_iban' => ['nullable', 'string', 'max:50', new QrIban],
+            'qr_iban' => ['nullable', 'string', 'max:50', new Iban],
         ];
     }
 }

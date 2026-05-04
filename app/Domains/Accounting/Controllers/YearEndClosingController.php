@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Requests\ReopenFiscalYearRequest;
 use App\Domains\Accounting\Requests\StoreYearEndClosingRequest;
 use App\Domains\Accounting\Services\ClosingAccountsService;
@@ -48,6 +49,14 @@ class YearEndClosingController extends Controller
 
         $org = Organization::findOrFail($orgId);
         $startYear = $org->created_at ? $org->created_at->year : (now()->year - 5);
+
+        // Include any earlier years that already have journal entries (e.g. back-dated postings)
+        $earliestEntryYear = (int) JournalEntry::where('organization_id', $orgId)
+            ->min(DB::raw('EXTRACT(YEAR FROM date)'));
+        if ($earliestEntryYear > 0 && $earliestEntryYear < $startYear) {
+            $startYear = $earliestEntryYear;
+        }
+
         $availableYears = range($startYear, (int) now()->year);
 
         return Inertia::render('Accounting/YearEndClosing', [
@@ -227,6 +236,18 @@ class YearEndClosingController extends Controller
         $unsettled = [];
 
         foreach ($quarters as $q => [$from, $to]) {
+            // Skip quarters that have no VAT-bearing activity at all
+            $hasVatActivity = VatEntry::query()
+                ->whereHas('journalEntry', fn ($jq) => $jq
+                    ->where('organization_id', $orgId)
+                    ->whereBetween('date', [$from, $to])
+                )
+                ->exists();
+
+            if (! $hasVatActivity) {
+                continue;
+            }
+
             $exists = JournalEntry::where('organization_id', $orgId)
                 ->where('type', 'vat_settlement')
                 ->where('reference', "VAT-SETTLEMENT-{$from}-{$to}")
