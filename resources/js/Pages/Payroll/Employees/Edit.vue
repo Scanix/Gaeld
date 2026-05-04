@@ -101,7 +101,7 @@ function submit() {
               id="ahv_number"
               v-model="form.ahv_number"
               type="text"
-              placeholder="756.XXXX.XXXX.XX"
+              :placeholder="t('placeholder_ahv')"
               pattern="\d{3}\.\d{4}\.\d{4}\.\d{2}"
               maxlength="16"
               required
