@@ -27,7 +27,7 @@ Open an issue with the **feature request** label. Describe the use case and what
 
 ### Pull requests
 
-1. **Fork** the repository and create your branch from `main`.
+1. **Fork** the repository and create your branch from `develop`.
 2. **Install** the development environment (see below).
 3. **Make your changes** — keep the PR focused on a single concern.
 4. **Add tests** for new behaviour.
@@ -41,12 +41,12 @@ For larger changes, please open an issue first so we can discuss the approach.
 ## Development setup
 
 ```bash
-composer install
+./vendor/bin/sail composer install
 pnpm install && pnpm build
 cp .env.example .env
-php artisan key:generate
-php artisan gaeld:install --demo
-php artisan serve
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail artisan gaeld:install --demo
+./vendor/bin/sail up
 ```
 
 Or with Docker:
@@ -54,7 +54,7 @@ Or with Docker:
 ```bash
 cp .env.example .env
 docker compose up -d
-docker compose exec laravel.test php artisan gaeld:install --demo
+./vendor/bin/sail artisan gaeld:install --demo
 ```
 
 ---
@@ -64,9 +64,9 @@ docker compose exec laravel.test php artisan gaeld:install --demo
 We use [Laravel Pint](https://laravel.com/docs/pint) with the Laravel preset and [PHPStan](https://phpstan.org/) at level 5:
 
 ```bash
-composer format          # auto-fix code style
-composer lint            # check without fixing
-vendor/bin/phpstan analyse
+./vendor/bin/sail composer format   # auto-fix code style
+./vendor/bin/sail composer lint     # check without fixing
+./vendor/bin/sail phpstan analyse
 ```
 
 ### General rules
@@ -81,13 +81,13 @@ vendor/bin/phpstan analyse
 ## Running tests
 
 ```bash
-php artisan test
+./vendor/bin/sail artisan test
 ```
 
-Or with Docker:
+Or with Docker/Sail:
 
 ```bash
-docker compose exec laravel.test php artisan test
+./vendor/bin/sail artisan test
 ```
 
 The test suite includes Unit, Feature, and Security test suites. All three must pass before a PR can be merged.
@@ -122,12 +122,12 @@ Use descriptive branch names:
 ## Git workflow
 
 1. Fork the repository on GitHub.
-2. Create a feature branch from `main`: `git checkout -b feature/my-feature`
+2. Create a feature branch from `develop`: `git checkout -b feature/my-feature`
 3. Commit your changes with clear messages.
 4. Push to your fork: `git push origin feature/my-feature`
-5. Open a pull request targeting `main`.
+5. Open a pull request targeting `develop`.
 
-We use a Git Flow model internally — `main` is the stable development branch. All community contributions target `main` via pull requests.
+The default public development branch is `develop`. All community contributions target `develop` via pull requests.
 
 ---
 
