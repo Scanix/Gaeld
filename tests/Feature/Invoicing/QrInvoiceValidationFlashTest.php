@@ -23,6 +23,12 @@ class QrInvoiceValidationFlashTest extends TestCase
     {
         $this->setUpOrganization();
 
+        // The controller short-circuits with a configuration warning when
+        // qr_iban is empty (covered by a separate test). Here we simulate the
+        // org having one configured so the action runs and we can assert the
+        // detailed validation-error flash message.
+        $this->org->update(['qr_iban' => 'CH4431999123000889012']);
+
         $customer = Customer::factory()->for($this->org, 'organization')->create();
         $invoice = Invoice::factory()
             ->for($this->org, 'organization')

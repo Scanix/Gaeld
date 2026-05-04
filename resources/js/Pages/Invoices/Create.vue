@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { useForm, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -31,6 +31,7 @@ const props = defineProps({
   suggestedNumber: { type: String, default: '' },
   defaultNotes: { type: String, default: '' },
   defaultPaymentTermsDays: { type: Number, default: null },
+  defaultVatRateId: { type: [String, Number], default: null },
 })
 
 const { t } = useTranslations()
@@ -46,9 +47,33 @@ const form = useForm({
   currency: 'CHF',
   notes: props.defaultNotes,
   payment_terms: '',
-  lines: [{ type: 'item', discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: '' }],
+  lines: [{ type: 'item', discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: props.defaultVatRateId ? String(props.defaultVatRateId) : '' }],
   justificatif: null,
   finalize: false,
+})
+
+// Track whether the user has manually edited the suggested number; if not, we
+// re-suggest it server-side whenever the issue-date year changes (so back-dating
+// to a prior fiscal year produces e.g. INV-2025-001 instead of INV-2026-NNN).
+const numberManuallyEdited = ref(false)
+watch(() => form.number, (val, oldVal) => {
+  if (val !== props.suggestedNumber && oldVal === props.suggestedNumber) {
+    numberManuallyEdited.value = true
+  }
+})
+
+let lastReloadedYear = new Date(form.issue_date).getFullYear()
+watch(() => form.issue_date, (val) => {
+  if (numberManuallyEdited.value || !val) return
+  const y = new Date(val).getFullYear()
+  if (Number.isNaN(y) || y === lastReloadedYear) return
+  lastReloadedYear = y
+  router.reload({
+    only: ['suggestedNumber'],
+    data: { for_year: y },
+    preserveState: true,
+    onSuccess: () => { form.number = props.suggestedNumber },
+  })
 })
 
 function saveDraft() {
@@ -81,7 +106,7 @@ const draftValidation = useFormValidation(z.object({
 }))
 
 function addLine(type = 'item') {
-  form.lines.push({ type, discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
+  form.lines.push({ type, discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: type === 'item' && props.defaultVatRateId ? String(props.defaultVatRateId) : '' })
 }
 
 function removeLine(index) {
@@ -210,6 +235,15 @@ function applyPaymentTerms() {
 
 watch(() => form.customer_id, applyPaymentTerms)
 watch(() => form.issue_date, applyPaymentTerms)
+
+// When the user manually changes payment_terms, recompute due_date too
+// (unless they previously edited the due_date by hand).
+watch(() => form.payment_terms, (days) => {
+  if (dueDateManuallyEdited.value) return
+  if (days && form.issue_date) {
+    form.due_date = computeDueDate(form.issue_date, days)
+  }
+})
 
 function onDueDateManualEdit() {
   dueDateManuallyEdited.value = true

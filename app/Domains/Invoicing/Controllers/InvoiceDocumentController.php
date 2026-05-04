@@ -72,6 +72,12 @@ class InvoiceDocumentController extends Controller
         $this->authorize('view', $invoice);
 
         $organization = $currentOrg->get();
+
+        // Guard: a QR-bill cannot be issued without a QR-IBAN configured on the org.
+        if (empty($organization->qr_iban)) {
+            return $this->backWithError(__('app.qr_iban_required'));
+        }
+
         $locale = $organization->locale ?? app()->getLocale();
 
         try {
