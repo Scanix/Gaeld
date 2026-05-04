@@ -9,6 +9,7 @@ import Badge from '@/Components/UI/Badge.vue'
 import ContactPersonsSection from '@/Components/Contacts/ContactPersonsSection.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
+import { countryLabel } from '@/lib/contactOptions'
 import { Pencil } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import EmptyState from '@/Components/UI/EmptyState.vue'
@@ -62,7 +63,7 @@ const cp = useContactPersons('suppliers', props.supplier.uuid, props.supplier.co
           <div v-if="supplier.address || supplier.city">
             <span class="text-[hsl(var(--muted-foreground))]">{{ t('address') }}:</span>
             <span class="ml-2">
-              {{ [supplier.address, supplier.postal_code, supplier.city, supplier.country].filter(Boolean).join(', ') }}
+              {{ [supplier.address, supplier.postal_code, supplier.city, countryLabel(supplier.country, t)].filter(Boolean).join(', ') }}
             </span>
           </div>
           <div v-if="supplier.vat_number">

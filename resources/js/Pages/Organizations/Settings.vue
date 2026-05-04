@@ -14,7 +14,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import FileUpload from '@/Components/UI/FileUpload.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { currencyOptions } from '@/lib/contactOptions'
+import { currencyOptions, countryOptions } from '@/lib/contactOptions'
 import IbanHint from '@/Components/IbanHint.vue'
 import { Upload, Trash2, Plus } from 'lucide-vue-next'
 
@@ -46,6 +46,8 @@ const generalForm = useForm({
   postal_code: props.organization.postal_code || '',
   canton: props.organization.canton || '',
   country: props.organization.country || 'CH',
+  business_type: props.organization.business_type || '',
+  fiscal_year_start: props.organization.fiscal_year_start || '01-01',
   vat_number: props.organization.vat_number || '',
   currency: props.organization.currency || 'CHF',
   locale: props.organization.locale || 'en',
@@ -168,6 +170,25 @@ const cantonOptions = [
   { value: 'VD', label: 'Vaud' }, { value: 'VS', label: 'Valais' },
   { value: 'ZG', label: 'Zug' }, { value: 'ZH', label: 'Zürich' },
 ]
+
+// Country options provided by shared helper (full ISO list, neighbours pinned).
+const countryList = countryOptions(t)
+
+// 12 fiscal year start choices, formatted MM-DD as stored on the org.
+const fiscalYearStartOptions = (() => {
+  const result = []
+  for (let i = 0; i < 12; i++) {
+    const monthName = new Date(2000, i, 1).toLocaleString(undefined, { month: 'long' })
+    result.push({ value: `${String(i + 1).padStart(2, '0')}-01`, label: `1 ${monthName}` })
+  }
+  return result
+})()
+
+const businessTypeOptions = [
+  { value: 'freelancer', label: t('business_type_freelancer') },
+  { value: 'sme', label: t('business_type_sme') },
+  { value: 'fiduciary', label: t('business_type_fiduciary') },
+]
 </script>
 
 <template>
@@ -250,13 +271,38 @@ const cantonOptions = [
                 />
               </div>
 
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <FormSelect
+                  id="country"
+                  v-model="generalForm.country"
+                  :label="t('country')"
+                  :options="countryList"
+                  :error="generalForm.errors.country"
+                />
+                <FormSelect
+                  id="fiscal_year_start"
+                  v-model="generalForm.fiscal_year_start"
+                  :label="t('fiscal_year_start')"
+                  :options="fiscalYearStartOptions"
+                  :error="generalForm.errors.fiscal_year_start"
+                />
+                <FormSelect
+                  id="business_type"
+                  v-model="generalForm.business_type"
+                  :label="t('business_type')"
+                  :options="businessTypeOptions"
+                  :placeholder="t('select_placeholder')"
+                  :error="generalForm.errors.business_type"
+                />
+              </div>
+
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormInput
                   id="vat_number"
                   v-model="generalForm.vat_number"
                   :label="t('vat_number')"
                   :error="generalForm.errors.vat_number"
-                  placeholder="CHE-123.456.789"
+                  :placeholder="t('placeholder_vat_uid')"
                 />
                 <FormSelect
                   id="currency"
@@ -392,11 +438,11 @@ const cantonOptions = [
               <FormInput
                 id="qr_iban"
                 v-model="invoiceForm.qr_iban"
-                :label="t('qr_iban')"
+                :label="t('iban_qr_iban')"
                 :error="invoiceForm.errors.qr_iban"
                 :placeholder="t('qr_iban_placeholder')"
               />
-              <IbanHint :iban="invoiceForm.qr_iban" mode="qr" />
+              <IbanHint :iban="invoiceForm.qr_iban" mode="any" />
 
               <div class="flex justify-end">
                 <Button type="submit" :disabled="invoiceForm.processing" :loading="invoiceForm.processing">
