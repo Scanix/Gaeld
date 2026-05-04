@@ -5,6 +5,7 @@ namespace App\Domains\Banking\Controllers;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Queries\AccountQuery;
 use App\Domains\Banking\DTOs\CreateBankAccountData;
 use App\Domains\Banking\DTOs\RecordBankTransactionData;
@@ -30,9 +31,15 @@ class BankingController extends Controller
     {
         $this->authorize('viewAny', BankAccount::class);
 
+        $bankAccounts = BankAccountQuery::list($request);
+        // Attach the GL-derived balance to each item for the listing view
+        foreach ($bankAccounts->items() as $ba) {
+            $ba->setAttribute('derived_balance', $ba->derivedBalance());
+        }
+
         return Inertia::render('Banking/Index', [
-            'bankAccounts' => BankAccountQuery::list($request),
-            'accounts' => AccountQuery::forSelect(AccountType::Asset),
+            'bankAccounts' => $bankAccounts,
+            'accounts' => AccountQuery::cashOrBankForSelect(),
         ]);
     }
 
@@ -45,9 +52,39 @@ class BankingController extends Controller
             ->orderByDesc('date')
             ->paginate(config('accounting.pagination.default'));
 
+        $bankAccount->load('ledgerAccount');
+        $bankAccount->setAttribute('derived_balance', $bankAccount->derivedBalance());
+
+        // Ledger movements: every TransactionLine touching this bank's GL account.
+        // Surfaced so the bank-detail page reflects activity even before any
+        // CAMT statement has been imported (e.g. invoice payments recorded
+        // against this account via "Record Payment").
+        $ledgerMovements = collect();
+        if ($bankAccount->account_id) {
+            $ledgerMovements = TransactionLine::query()
+                ->where('account_id', $bankAccount->account_id)
+                ->with(['journalEntry:id,date,description,reference,source_type,source_id'])
+                ->whereHas('journalEntry')
+                ->get(['id', 'journal_entry_id', 'debit', 'credit', 'description'])
+                ->sortByDesc(fn ($l) => optional($l->journalEntry)->date)
+                ->take(50)
+                ->values()
+                ->map(fn ($l) => [
+                    'id' => $l->id,
+                    'date' => optional($l->journalEntry)->date?->toDateString(),
+                    'description' => $l->description ?: optional($l->journalEntry)->description,
+                    'reference' => optional($l->journalEntry)->reference,
+                    'source_type' => optional($l->journalEntry)->source_type,
+                    'source_id' => optional($l->journalEntry)->source_id,
+                    'debit' => (string) $l->debit,
+                    'credit' => (string) $l->credit,
+                ]);
+        }
+
         return Inertia::render('Banking/Show', [
-            'bankAccount' => $bankAccount->load('ledgerAccount'),
+            'bankAccount' => $bankAccount,
             'transactions' => $transactions,
+            'ledgerMovements' => $ledgerMovements,
             'accounts' => Account::where('organization_id', $bankAccount->organization_id)
                 ->where('is_active', true)
                 ->select('id', 'code', 'name')

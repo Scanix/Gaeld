@@ -24,7 +24,7 @@ const { formatCurrency } = useFormatters()
 const columns = computed(() => [
   { key: 'name', label: t('account_name') },
   { key: 'iban', label: t('iban'), format: v => v || '—' },
-  { key: 'balance', label: t('balance'), class: 'text-right', format: v => formatCurrency(v) },
+  { key: 'balance', label: t('balance'), class: 'text-right', format: (v, row) => formatCurrency(row.derived_balance ?? v ?? 0, row.currency || 'CHF') },
   { key: 'unreconciled_count', label: t('unreconciled'), class: 'text-center' },
 ])
 </script>
