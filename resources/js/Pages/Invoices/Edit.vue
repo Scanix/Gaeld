@@ -29,6 +29,7 @@ const props = defineProps({
   customers: { type: Array, default: () => [] },
   vatRates: { type: Array, default: () => [] },
   justificatifUrl: { type: String, default: null },
+  defaultVatRateId: { type: [String, Number], default: null },
 })
 
 const { t } = useTranslations()
@@ -56,7 +57,7 @@ const form = useForm({
 })
 
 if (form.lines.length === 0) {
-  form.lines.push({ type: 'item', discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
+  form.lines.push({ type: 'item', discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: props.defaultVatRateId ? String(props.defaultVatRateId) : '' })
 }
 
 function saveDraft() {
@@ -84,7 +85,7 @@ const { errors: clientErrors, validate, validateField } = useFormValidation(z.ob
 }))
 
 function addLine(type = 'item') {
-  form.lines.push({ type, discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: '' })
+  form.lines.push({ type, discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: type === 'item' && props.defaultVatRateId ? String(props.defaultVatRateId) : '' })
 }
 
 function removeLine(index) {

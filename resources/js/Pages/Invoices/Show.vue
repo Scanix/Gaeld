@@ -31,6 +31,7 @@ const props = defineProps({
   relatedInvoice: { type: Object, default: null },
   reminderCount: { type: Number, default: 0 },
   lastRemindedAt: { type: String, default: null },
+  hasQrIban: { type: Boolean, default: false },
 })
 
 const { t } = useTranslations()
@@ -132,7 +133,12 @@ const lineColumns = computed(() => [
   { key: 'description', label: t('description') },
   { key: 'quantity', label: t('qty'), class: 'text-right', format: (v, row) => row.type === 'discount' && row.discount_type === 'percentage' ? '—' : v },
   { key: 'unit_price', label: t('unit_price'), class: 'text-right', format: (v, row) => row.type === 'discount' && row.discount_type === 'percentage' ? `${v}%` : formatCurrency(v) },
-  { key: 'vat_rate_id', label: t('vat'), class: 'text-right', format: (v, row) => row.vatRate ? `${row.vatRate.rate}%` : '—' },
+  { key: 'vat_rate_id', label: t('vat'), class: 'text-right', format: (v, row) => {
+    const vr = row.vat_rate ?? row.vatRate
+    if (!vr) return '—'
+    const amount = row.vat_amount != null ? formatCurrency(row.vat_amount) : null
+    return amount ? `${vr.rate}% (${amount})` : `${vr.rate}%`
+  } },
   { key: 'total', label: t('total'), class: 'text-right', format: (v, row) => {
     if (row.type === 'discount') return formatCurrency(-Math.abs(parseFloat(row.amount)))
     return formatCurrency(row.amount)
@@ -220,7 +226,7 @@ const bankAccountOptions = computed(() =>
             {{ t('record_payment') }}
           </Button>
           <Button
-            v-if="invoice?.status !== 'draft' && invoice?.status !== 'cancelled'"
+            v-if="hasQrIban && invoice?.status !== 'draft' && invoice?.status !== 'cancelled'"
             as="a"
             :href="`/invoices/${invoice.id}/qr-pdf`"
             variant="outline"

@@ -24,6 +24,7 @@ use App\Support\FeatureFlag;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -58,12 +59,26 @@ class InvoiceController extends Controller
     {
         $this->authorize('create', Invoice::class);
 
+        // Allow the front-end to request a number scoped to a specific issue-date year
+        // (e.g. when the user back-dates an invoice into a previous fiscal year).
+        $forYear = null;
+        if ($request->filled('for_year')) {
+            $forYear = $request->integer('for_year');
+        } elseif ($request->filled('issue_date')) {
+            try {
+                $forYear = Carbon::parse((string) $request->input('issue_date'))->year;
+            } catch (\Throwable) {
+                $forYear = null;
+            }
+        }
+
         return Inertia::render('Invoices/Create', [
             'customers' => CustomerQuery::forSelect(),
             'vatRates' => VatRateQuery::active(),
-            'suggestedNumber' => $numberGenerator->next($currentOrg->id()),
+            'suggestedNumber' => $numberGenerator->next($currentOrg->id(), null, $forYear),
             'defaultNotes' => $currentOrg->get()->default_invoice_notes ?? '',
             'defaultPaymentTermsDays' => $currentOrg->get()->default_payment_terms_days,
+            'defaultVatRateId' => optional(VatRateQuery::active()->firstWhere('is_default', true))->id,
         ]);
     }
 
@@ -115,6 +130,7 @@ class InvoiceController extends Controller
             'justificatifUrl' => $invoice->justificatif_path
                 ? route('invoices.justificatif.download', $invoice)
                 : null,
+            'hasQrIban' => ! empty($invoice->organization->qr_iban ?? null),
             'bankAccounts' => BankAccount::where('organization_id', $invoice->organization_id)
                 ->where('is_active', true)
                 ->select('id', 'account_id', 'name', 'iban', 'currency')
@@ -143,6 +159,7 @@ class InvoiceController extends Controller
             'justificatifUrl' => $invoice->justificatif_path
                 ? route('invoices.justificatif.download', $invoice)
                 : null,
+            'defaultVatRateId' => optional(VatRateQuery::active()->firstWhere('is_default', true))->id,
         ]);
     }
 
