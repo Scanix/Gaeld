@@ -9,16 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.0.0] — 2026-05-01
+## [3.0.0] — 2026-05-05
+
+First full production release. Includes the QA hardening pass, payroll IBAN
+support, banking ledger surfacing, billing UX polish, and release/deploy docs.
 
 ### Added
-- **Production release baseline** — formalized first full production release process with aligned documentation, branch targeting, and deployment defaults.
+- **Payroll: encrypted employee IBAN** — new `iban` field on employees with MOD-97 validation, encrypted at rest, surfaced across create/edit/show forms and DTOs.
+- **Payroll: human-friendly journal references** — posted payroll entries now use `PAY-{INITIALS}-YYYY-MM` references for readability in the GL.
+- **Banking: ledger movements card** — bank account and reconciliation pages now surface posted GL movements alongside CAMT statement entries.
+- **Billing: free-plan CTA** — Plans page shows an explicit "Activate free plan" action for the free tier and tidies the post-register flow.
+- **Contacts: full ISO country list** — country selectors across contacts and organization settings now use the complete ISO list via `Intl.DisplayNames`, sharing a single source of truth.
+- **i18n** — new translation keys across DE, EN, FR, IT for billing, banking, payroll, settings, and free-plan activation.
+- **Production release baseline** — formalized release process with aligned documentation, branch targeting, deploy defaults, and a `RELEASE.md` runbook.
 - **Release/deploy consistency** — deployment branch is now configurable via `DEPLOY_BRANCH` in `deploy.php` template.
 
 ### Changed
-- **Documentation alignment** — root docs now describe production readiness and use Sail-based command examples for PHP workflows.
-- **Branch policy alignment** — contribution and security documentation now reference `develop` as the default supported development branch.
+- **Invoicing: due-date sync** — invoice due date now updates automatically from payment terms; QR-bill validation feedback is clearer.
+- **Accounting/expenses/settings** — tightened controllers, queries, and validation rules across year-end closing, expense flows, and settings.
+- **Documentation alignment** — root docs describe production readiness and use Sail-based command examples for PHP workflows.
+- **Branch policy alignment** — contribution and security documentation reference `develop` as the default supported development branch.
 - **CI PR coverage** — GitHub Actions now runs for pull requests targeting both `develop` and `main`.
+- **UI polish** — minor refinements across auth, onboarding, organizations, expenses, and reporting screens.
+
+### Fixed
+- **Payroll: salary slip lazy-load violation** — `EmployeeController::show` now eager-loads slips with their employee, preventing 500s on the employee detail page.
+- **Payroll: deduction sign formatting** — deductions now render as `CHF -x` instead of `-CHF x` (QA bug 33).
+- **Translations: dynamic key prefixes** — translation checker now ignores keys ending in `_` to avoid false positives on dynamic prefixes.
+- **QA hardening** — three batches of fixes across search, banking, expenses, invoices, billing, payroll, settings, dashboard, and Maska input handling.
+
+### Security
+- See [2.18.0](#2180--2026-04-14) — invitation guard, invoice lifecycle policies, cross-org IDOR prevention, server-side VAT enforcement, expense account validation, CSP nonce, GDPR retention, AHV at-rest encryption.
 
 ---
 
