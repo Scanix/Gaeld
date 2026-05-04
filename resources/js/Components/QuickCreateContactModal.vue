@@ -233,7 +233,7 @@ async function submit() {
           v-model="vatNumber"
           :label="t('vat_number')"
           :error="errors.vat_number?.[0]"
-          placeholder="CHE-123.456.789"
+          :placeholder="t('placeholder_vat_uid')"
         />
         <FormInput
           id="qc-payment-terms"
