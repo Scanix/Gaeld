@@ -133,7 +133,7 @@ const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
         <SharePrintButton :title="t('vat_report')" />
         <ExportDropdown base-url="/reports/vat/export" :params="exportParams" />
         <Button
-          v-if="report"
+          v-if="report && (Number(report.total_output_vat || 0) !== 0 || Number(report.total_input_vat || 0) !== 0)"
           variant="outline"
           :disabled="isPeriodClosed"
           :title="isPeriodClosed ? t('fiscal_year_closed_action_disabled') : undefined"

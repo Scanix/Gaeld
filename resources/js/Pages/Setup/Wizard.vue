@@ -208,7 +208,7 @@ function prevStep() {
             </div>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormSelect id="org_canton" v-model="form.org_canton" :label="t('canton')" :options="cantons" :placeholder="t('select')" />
-              <FormInput id="org_vat_number" v-model="form.org_vat_number" :label="t('vat_number')" placeholder="CHE-123.456.789" />
+              <FormInput id="org_vat_number" v-model="form.org_vat_number" :label="t('vat_number')" :placeholder="t('placeholder_vat_uid')" />
             </div>
           </fieldset>
 
