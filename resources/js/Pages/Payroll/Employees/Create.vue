@@ -39,6 +39,7 @@ function submit() {
     first_name: data.first_name,
     last_name: data.last_name,
     email: data.email || null,
+    iban: data.iban || null,
     ahv_number: data.ahv_number || null,
     entry_date: data.start_date,
     gross_salary: data.gross_salary,
@@ -103,7 +104,7 @@ function submit() {
               id="ahv_number"
               v-model="form.ahv_number"
               type="text"
-              placeholder="756.XXXX.XXXX.XX"
+              :placeholder="t('placeholder_ahv')"
               pattern="\d{3}\.\d{4}\.\d{4}\.\d{2}"
               maxlength="16"
               required

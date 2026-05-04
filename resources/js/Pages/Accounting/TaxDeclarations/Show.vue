@@ -37,10 +37,44 @@ const dataColumns = [
   { key: 'value', label: t('amount'), class: 'text-right', format: v => typeof v === 'number' ? formatCurrency(v) : v },
 ]
 
+const declarationKeyOrder = [
+  'revenue',
+  'expenses',
+  'profit',
+  'net_result',
+  'assets',
+  'liabilities',
+  'equity',
+  'vat_payable_estimate',
+]
+
+function formatDeclarationLabel(key) {
+  return key
+    .split('_')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
 function dataRows() {
   const data = props.declaration.data
   if (!data || typeof data !== 'object') return []
-  return Object.entries(data).map(([key, value]) => ({ label: key, value }))
+
+  const entries = Object.entries(data)
+  entries.sort(([a], [b]) => {
+    const aIndex = declarationKeyOrder.indexOf(a)
+    const bIndex = declarationKeyOrder.indexOf(b)
+
+    if (aIndex === -1 && bIndex === -1) return a.localeCompare(b)
+    if (aIndex === -1) return 1
+    if (bIndex === -1) return -1
+
+    return aIndex - bIndex
+  })
+
+  return entries.map(([key, value]) => ({
+    label: formatDeclarationLabel(key),
+    value,
+  }))
 }
 </script>
 

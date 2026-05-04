@@ -18,6 +18,7 @@ use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use App\Support\Exceptions\FeatureDisabledException;
 use App\Support\FeatureFlag;
@@ -32,6 +33,8 @@ use Inertia\Response;
  */
 class ReconciliationController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function __construct(
         private BankImportService $importService,
         private ReconciliationService $reconciliationService,
@@ -53,6 +56,12 @@ class ReconciliationController extends Controller
             ->orderBy('name')
             ->paginate(25)
             ->withQueryString();
+
+        // Decorate each item with the GL-derived balance so the listing
+        // matches what the bank-detail and Banking listing already show.
+        foreach ($bankAccounts->items() as $ba) {
+            $ba->setAttribute('derived_balance', $ba->derivedBalance());
+        }
 
         return Inertia::render('Banking/Reconciliation', [
             'bankAccounts' => $bankAccounts,
@@ -133,7 +142,7 @@ class ReconciliationController extends Controller
         $file = $request->file('camt_file');
         $content = file_get_contents($file->getRealPath());
         if ($content === false) {
-            return redirect()->back()->with('error', 'Could not read the uploaded file.');
+            return $this->backWithError('Could not read the uploaded file.');
         }
         $filename = preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($file->getClientOriginalName()));
         $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
@@ -152,8 +161,7 @@ class ReconciliationController extends Controller
             return redirect()->route('reconciliation.show', $bankAccount)
                 ->with('success', __('app.transactions_imported', ['count' => $import->transaction_count, 'filename' => $filename]));
         } catch (\InvalidArgumentException|\RuntimeException $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
     }
 
@@ -174,7 +182,7 @@ class ReconciliationController extends Controller
         try {
             $this->reconciliationService->reconcileWithInvoice($transaction, $invoice);
         } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->back()
@@ -202,7 +210,7 @@ class ReconciliationController extends Controller
                 $validated['expense_account_code'],
             );
         } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->back()
@@ -225,7 +233,7 @@ class ReconciliationController extends Controller
                 $validated['contra_account_code'],
             );
         } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->back()
@@ -243,7 +251,7 @@ class ReconciliationController extends Controller
         try {
             $this->reconciliationService->confirmMatch($match);
         } catch (AlreadyReconciledException|UnlinkedBankAccountException|ReconciliationFailedException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->back()
@@ -260,7 +268,7 @@ class ReconciliationController extends Controller
         try {
             $result = $this->reconciliationService->autoReconcile($bankAccount);
         } catch (FeatureDisabledException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->back()
@@ -278,13 +286,13 @@ class ReconciliationController extends Controller
         $this->authorize('update', $bankAccount);
 
         if (! $bankAccount->is_mixed_use) {
-            return redirect()->back()->with('error', __('app.mixed_use_required'));
+            return $this->backWithError(__('app.mixed_use_required'));
         }
 
         try {
             $this->reconciliationService->reconcileAsPersonal($transaction);
         } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->back()
@@ -299,7 +307,7 @@ class ReconciliationController extends Controller
         $this->authorize('update', $bankAccount);
 
         if (! $bankAccount->is_mixed_use) {
-            return redirect()->back()->with('error', __('app.mixed_use_required'));
+            return $this->backWithError(__('app.mixed_use_required'));
         }
 
         $validated = $request->validate([

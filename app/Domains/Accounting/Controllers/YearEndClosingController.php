@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Requests\ReopenFiscalYearRequest;
 use App\Domains\Accounting\Requests\StoreYearEndClosingRequest;
 use App\Domains\Accounting\Services\ClosingAccountsService;
@@ -14,6 +15,7 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +29,8 @@ use Inertia\Response;
  */
 class YearEndClosingController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function __construct(
         private readonly ClosingAccountsService $closingAccounts,
         private readonly LegalArchivingService $archiving,
@@ -45,6 +49,14 @@ class YearEndClosingController extends Controller
 
         $org = Organization::findOrFail($orgId);
         $startYear = $org->created_at ? $org->created_at->year : (now()->year - 5);
+
+        // Include any earlier years that already have journal entries (e.g. back-dated postings)
+        $earliestEntryYear = (int) JournalEntry::where('organization_id', $orgId)
+            ->min(DB::raw('EXTRACT(YEAR FROM date)'));
+        if ($earliestEntryYear > 0 && $earliestEntryYear < $startYear) {
+            $startYear = $earliestEntryYear;
+        }
+
         $availableYears = range($startYear, (int) now()->year);
 
         return Inertia::render('Accounting/YearEndClosing', [
@@ -77,14 +89,13 @@ class YearEndClosingController extends Controller
         $allAccounts = array_merge($income, $expenses);
 
         if (empty($allAccounts)) {
-            return redirect()->back()->with('error', 'No accounts to close for this period.');
+            return $this->backWithError('No accounts to close for this period.');
         }
 
         // Hard block: require all VAT periods to be settled before closing
         $unsettled = $this->getUnsettledVatPeriods($orgId, $year);
         if (! empty($unsettled)) {
-            return redirect()->back()->with(
-                'error',
+            return $this->backWithError(
                 __('app.fiscal_year_unsettled_vat', [
                     'year' => $year,
                     'periods' => implode(', ', $unsettled),
@@ -171,7 +182,7 @@ class YearEndClosingController extends Controller
             // Generate opening balance entries for the next fiscal year
             app(GenerateOpeningBalancesAction::class)->execute($orgId, $year);
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->route('accounting.closing')
@@ -188,7 +199,7 @@ class YearEndClosingController extends Controller
         $org = Organization::findOrFail($currentOrg->id());
 
         if (! $org->isFiscalYearClosed($year)) {
-            return redirect()->back()->with('error', __('app.fiscal_year_not_closed', ['year' => $year]));
+            return $this->backWithError(__('app.fiscal_year_not_closed', ['year' => $year]));
         }
 
         $org->reopenFiscalYear($year);
@@ -225,6 +236,18 @@ class YearEndClosingController extends Controller
         $unsettled = [];
 
         foreach ($quarters as $q => [$from, $to]) {
+            // Skip quarters that have no VAT-bearing activity at all
+            $hasVatActivity = VatEntry::query()
+                ->whereHas('journalEntry', fn ($jq) => $jq
+                    ->where('organization_id', $orgId)
+                    ->whereBetween('date', [$from, $to])
+                )
+                ->exists();
+
+            if (! $hasVatActivity) {
+                continue;
+            }
+
             $exists = JournalEntry::where('organization_id', $orgId)
                 ->where('type', 'vat_settlement')
                 ->where('reference', "VAT-SETTLEMENT-{$from}-{$to}")

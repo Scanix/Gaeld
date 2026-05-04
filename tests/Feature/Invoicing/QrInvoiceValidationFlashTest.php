@@ -5,7 +5,9 @@ namespace Tests\Feature\Invoicing;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Actions\SendInvoiceAction;
+use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,6 +22,12 @@ class QrInvoiceValidationFlashTest extends TestCase
     public function test_qr_pdf_download_flashes_actionable_message_for_qr_iban_validation_error(): void
     {
         $this->setUpOrganization();
+
+        // The controller short-circuits with a configuration warning when
+        // qr_iban is empty (covered by a separate test). Here we simulate the
+        // org having one configured so the action runs and we can assert the
+        // detailed validation-error flash message.
+        $this->org->update(['qr_iban' => 'CH4431999123000889012']);
 
         $customer = Customer::factory()->for($this->org, 'organization')->create();
         $invoice = Invoice::factory()
@@ -71,5 +79,29 @@ class QrInvoiceValidationFlashTest extends TestCase
 
         $response->assertRedirect(route('invoices.show', $invoice));
         $response->assertSessionHas('error', $expected);
+    }
+
+    public function test_invoice_reminder_uses_generic_flash_error_when_exception_message_is_empty(): void
+    {
+        $this->setUpOrganization();
+
+        $customer = Customer::factory()->for($this->org, 'organization')->create();
+        $invoice = Invoice::factory()
+            ->for($this->org, 'organization')
+            ->for($customer, 'customer')
+            ->create(['status' => InvoiceStatus::Sent]);
+
+        $this->mock(SendInvoiceReminderAction::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('execute')
+                ->once()
+                ->andThrow(new InvalidInvoiceStateException(''));
+        });
+
+        $response = $this->actAsOrg()
+            ->from(route('invoices.show', $invoice))
+            ->post(route('invoices.reminder', $invoice));
+
+        $response->assertRedirect(route('invoices.show', $invoice));
+        $response->assertSessionHas('error', __('app.unexpected_error'));
     }
 }

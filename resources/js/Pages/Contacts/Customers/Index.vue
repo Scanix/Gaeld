@@ -1,14 +1,15 @@
 <script setup>
-import { Link, router } from '@inertiajs/vue3'
+import { Link } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Button from '@/Components/UI/Button.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useEntityIndexQuery, useCountryFilters, useEntityDelete } from '@/lib/useEntityIndexTable'
 import { Plus, Pencil, Trash2, Eye, Users } from 'lucide-vue-next'
 import EmptyState from '@/Components/UI/EmptyState.vue'
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 
 const { t } = useTranslations()
 
@@ -20,43 +21,16 @@ const props = defineProps({
   },
 })
 
-const deleteTarget = ref(null)
-const deleting = ref(false)
+const queryState = computed(() => props.query)
 
-function confirmDelete(customer) {
-  deleteTarget.value = customer
-}
+const { handleSort, handleSearch, handleFilter } = useEntityIndexQuery({
+  basePath: '/customers',
+  query: queryState,
+})
 
-function executeDelete() {
-  if (!deleteTarget.value) return
-  deleting.value = true
-  router.delete(`/customers/${deleteTarget.value.uuid}`, {
-    onFinish: () => {
-      deleting.value = false
-      deleteTarget.value = null
-    },
-  })
-}
-
-function applyQuery(params) {
-  router.get('/customers', {
-    ...props.query,
-    ...params,
-    page: 1,
-  }, { preserveState: true, replace: true })
-}
-
-function handleSort({ sort, direction }) {
-  applyQuery({ sort, direction })
-}
-
-function handleSearch(search) {
-  applyQuery({ search })
-}
-
-function handleFilter({ key, value }) {
-  applyQuery({ filter: { ...props.query.filter, [key]: value } })
-}
+const { deleteTarget, deleting, confirmDelete, executeDelete } = useEntityDelete({
+  basePath: '/customers',
+})
 
 const columns = computed(() => [
   { key: 'name', label: t('name'), sortable: true },
@@ -67,20 +41,7 @@ const columns = computed(() => [
   { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 
-const countryFilters = computed(() => [
-  {
-    key: 'country',
-    label: t('all_countries'),
-    value: props.query.filter?.country ?? '',
-    options: [
-      { value: 'CH', label: t('country_switzerland') },
-      { value: 'DE', label: t('country_germany') },
-      { value: 'AT', label: t('country_austria') },
-      { value: 'FR', label: t('country_france') },
-      { value: 'IT', label: t('country_italy') },
-    ],
-  },
-])
+const countryFilters = useCountryFilters({ t, query: queryState })
 </script>
 
 <template>

@@ -98,6 +98,11 @@ class SalarySlip extends Model
 
     public function getEmployeeNameAttribute(): string
     {
-        return $this->employee->fullName();
+        // Only resolve when relation is already loaded — avoids lazy-loading
+        // violations when the slip is serialized in contexts where Employee
+        // wasn't eager-loaded (e.g. EmployeeController::show via $employee->salarySlips).
+        $employee = $this->relationLoaded('employee') ? $this->getRelation('employee') : null;
+
+        return $employee instanceof Employee ? $employee->fullName() : '';
     }
 }

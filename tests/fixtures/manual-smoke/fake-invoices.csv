@@ -1,0 +1,6 @@
+number,customer_email,customer_name,issue_date,due_date,currency,subtotal,vat_rate_percent,vat_amount,total,status,payment_date,payment_method,reference,notes
+INV-SMOKE-001,client.a@example.ch,Atelier Alpha Sarl,2026-04-01,2026-04-30,CHF,500.00,8.1,40.50,540.50,paid,2026-04-12,bank,PAY-INV-SMOKE-001-1,Basic paid invoice used to validate 3000/2200/1020 flow
+INV-SMOKE-002,client.b@example.ch,Beta Conseil SA,2026-04-03,2026-05-03,CHF,1000.00,8.1,81.00,1081.00,sent,,, ,Unpaid invoice to keep 1100 open
+INV-SMOKE-003,client.c@example.ch,Gamma Studio,2026-04-05,2026-05-05,CHF,1200.00,8.1,97.20,1297.20,partially_paid,2026-04-15,bank,PAY-INV-SMOKE-003-1,Partial payment target (record 500.00)
+INV-SMOKE-004,client.d@example.ch,Delta Services SNC,2026-04-08,2026-05-08,CHF,200.00,2.6,5.20,205.20,cancelled,,, ,Invoice to test cancellation and reversal behavior
+INV-SMOKE-005,client.e@example.ch,Epsilon Digital,2026-04-10,2026-05-10,CHF,300.00,0.0,0.00,300.00,draft,,, ,Draft invoice for state transition checks

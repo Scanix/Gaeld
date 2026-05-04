@@ -8,6 +8,7 @@ import Button from '@/Components/UI/Button.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
+import { subscriptionStatusClass } from '@/lib/statusClasses'
 import { TrendingUp, Users, AlertCircle, CreditCard, Clock, ShieldCheck, Ban, ArrowRightLeft, Settings, Save, ExternalLink, MessageSquare, Trash2 } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
@@ -23,14 +24,6 @@ const props = defineProps({
   horizon_url: { type: String, default: '/horizon' },
   system_message: { type: String, default: null },
 })
-
-const statusClass = {
-  active: 'text-emerald-700 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/50',
-  trialing: 'text-blue-700 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/50',
-  past_due: 'text-[hsl(var(--destructive))] bg-[hsl(var(--destructive)/0.08)]',
-  canceled: 'text-[hsl(var(--muted-foreground))] bg-[hsl(var(--muted))]',
-  paused: 'text-yellow-700 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-950/50',
-}
 
 const selectedPlan = ref({})
 const processing = ref(false)
@@ -336,7 +329,7 @@ function clearSystemMessage() {
                   <td class="py-2.5 px-3 font-medium">{{ sub.org_name }}</td>
                   <td class="py-2.5 px-3 text-[hsl(var(--muted-foreground))]">{{ sub.plan }}</td>
                   <td class="py-2.5 px-3">
-                    <span :class="statusClass[sub.status]" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize">
+                    <span :class="subscriptionStatusClass[sub.status]" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize">
                       {{ sub.status }}
                     </span>
                   </td>

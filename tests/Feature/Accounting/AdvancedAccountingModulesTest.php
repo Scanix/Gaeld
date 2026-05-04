@@ -15,6 +15,7 @@ use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 use Tests\Traits\CreatesAccountingFixtures;
@@ -105,6 +106,34 @@ class AdvancedAccountingModulesTest extends TestCase
 
         $this->assertSame('finalized', $declaration->fresh()->status);
         $this->assertNotNull($declaration->fresh()->finalized_at);
+    }
+
+    public function test_tax_declaration_show_refreshes_draft_summary_data(): void
+    {
+        $this->postJournalEntry('2026-02-01', [
+            $this->journalLine($this->bankAccount, '1000.00', '0.00', 'Client payment'),
+            $this->journalLine($this->revenueAccount, '0.00', '1000.00', 'Revenue'),
+        ], 'TD-BASE');
+
+        $this->actAsOrg()->post('/accounting/tax-declarations', [
+            'fiscal_year' => 2026,
+            'canton' => 'vd',
+        ])->assertRedirect();
+
+        $declaration = TaxDeclaration::query()->firstOrFail();
+        $this->assertSame(1000.0, (float) ($declaration->data['net_result'] ?? 0.0));
+
+        $this->postJournalEntry('2026-02-02', [
+            $this->journalLine($this->expenseAccount, '200.00', '0.00', 'Late expense'),
+            $this->journalLine($this->bankAccount, '0.00', '200.00', 'Bank payment'),
+        ], 'TD-LATE');
+
+        $this->actAsOrg()->get('/accounting/tax-declarations/'.$declaration->id)
+            ->assertStatus(200)
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('declaration.data.net_result', 800)
+                ->where('declaration.data.profit', 800)
+            );
     }
 
     public function test_cost_centers_crud_and_analytical_report_filtering(): void
@@ -224,6 +253,19 @@ XML, 200),
         $this->assertDatabaseMissing('exchange_rates', ['id' => $manualRate->id]);
     }
 
+    public function test_exchange_rates_reject_same_currency_pair(): void
+    {
+        $this->actAsOrg()->post('/accounting/exchange-rates', [
+            'currency_from' => 'CHF',
+            'currency_to' => 'CHF',
+            'rate' => '1.00',
+            'date' => '2026-04-01',
+        ])->assertRedirect()
+            ->assertSessionHasErrors('currency_from');
+
+        $this->assertDatabaseCount('exchange_rates', 0);
+    }
+
     public function test_consolidation_group_report_and_elimination_flow(): void
     {
         $memberOrganization = Organization::factory()->create();
@@ -310,5 +352,237 @@ XML, 200),
             ->assertRedirect();
 
         $this->assertDatabaseMissing('consolidation_eliminations', ['id' => $elimination->id]);
+    }
+
+    public function test_consolidation_group_rejects_non_existent_member_organization(): void
+    {
+        $missingOrganizationId = (string) Str::uuid();
+
+        $this->actAsOrg()->post('/accounting/consolidation/groups', [
+            'name' => 'Invalid Group',
+            'member_organization_ids' => [$missingOrganizationId],
+            'base_currency' => 'CHF',
+        ])->assertRedirect()
+            ->assertSessionHasErrors('member_organization_ids.0');
+
+        $this->assertDatabaseCount('consolidation_groups', 0);
+    }
+
+    public function test_consolidation_elimination_rejects_account_outside_group_members(): void
+    {
+        $memberOrganization = Organization::factory()->create();
+        $outsiderOrganization = Organization::factory()->create();
+
+        $outsiderAccount = Account::create([
+            'organization_id' => $outsiderOrganization->id,
+            'code' => '1999',
+            'name' => 'Outsider Account',
+            'type' => AccountType::Asset->value,
+        ]);
+
+        $this->actAsOrg()->post('/accounting/consolidation/groups', [
+            'name' => 'Group Alpha',
+            'member_organization_ids' => [$memberOrganization->id],
+            'base_currency' => 'CHF',
+        ])->assertRedirect();
+
+        $group = ConsolidationGroup::query()->firstOrFail();
+
+        $this->actAsOrg()->post('/accounting/consolidation/'.$group->id.'/eliminations', [
+            'account_debit_id' => $outsiderAccount->id,
+            'account_credit_id' => $this->revenueAccount->id,
+            'amount' => '100.00',
+            'fiscal_year' => 2026,
+            'description' => 'Should fail',
+        ])->assertRedirect()
+            ->assertSessionHasErrors('account_debit_id');
+
+        $this->assertDatabaseCount('consolidation_eliminations', 0);
+    }
+
+    public function test_consolidation_report_uses_sign_aware_totals_for_liability_accounts(): void
+    {
+        $memberOrganization = Organization::factory()->create(['currency' => 'CHF']);
+
+        $memberAsset = Account::create([
+            'organization_id' => $memberOrganization->id,
+            'code' => '1100',
+            'name' => 'Member Asset',
+            'type' => AccountType::Asset->value,
+        ]);
+
+        $memberLiability = Account::create([
+            'organization_id' => $memberOrganization->id,
+            'code' => '2100',
+            'name' => 'Member Liability',
+            'type' => AccountType::Liability->value,
+        ]);
+
+        $entry = JournalEntry::create([
+            'organization_id' => $memberOrganization->id,
+            'date' => '2026-05-10',
+            'reference' => 'SIG-1',
+            'description' => 'Sign check',
+            'is_posted' => true,
+        ]);
+
+        TransactionLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id' => $memberLiability->id,
+            'debit' => '100.00',
+            'credit' => '0.00',
+            'description' => 'Abnormal liability debit',
+        ]);
+
+        TransactionLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id' => $memberAsset->id,
+            'debit' => '0.00',
+            'credit' => '100.00',
+            'description' => 'Offset line',
+        ]);
+
+        $this->actAsOrg()->post('/accounting/consolidation/groups', [
+            'name' => 'Sign Group',
+            'member_organization_ids' => [$memberOrganization->id],
+            'base_currency' => 'CHF',
+        ])->assertRedirect();
+
+        $group = ConsolidationGroup::query()->firstOrFail();
+
+        $this->actAsOrg()->get('/accounting/consolidation/'.$group->id.'/report?fiscal_year=2026')
+            ->assertStatus(200)
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('result.assets', 0)
+                ->where('result.liabilities', 0)
+            );
+    }
+
+    public function test_consolidation_report_converts_member_balances_to_base_currency(): void
+    {
+        $memberOrganization = Organization::factory()->create(['currency' => 'USD']);
+
+        $memberAsset = Account::create([
+            'organization_id' => $memberOrganization->id,
+            'code' => '1100',
+            'name' => 'Member Cash USD',
+            'type' => AccountType::Asset->value,
+        ]);
+
+        $memberRevenue = Account::create([
+            'organization_id' => $memberOrganization->id,
+            'code' => '3100',
+            'name' => 'Member Revenue USD',
+            'type' => AccountType::Revenue->value,
+        ]);
+
+        $entry = JournalEntry::create([
+            'organization_id' => $memberOrganization->id,
+            'date' => '2026-05-10',
+            'reference' => 'FX-1',
+            'description' => 'FX conversion check',
+            'is_posted' => true,
+        ]);
+
+        TransactionLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id' => $memberAsset->id,
+            'debit' => '100.00',
+            'credit' => '0.00',
+            'description' => 'USD asset line',
+        ]);
+
+        TransactionLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id' => $memberRevenue->id,
+            'debit' => '0.00',
+            'credit' => '100.00',
+            'description' => 'USD revenue line',
+        ]);
+
+        ExchangeRate::create([
+            'organization_id' => $this->organization->id,
+            'currency_from' => 'USD',
+            'currency_to' => 'CHF',
+            'rate' => '0.90',
+            'date' => '2026-05-01',
+            'source' => 'manual',
+        ]);
+
+        $this->actAsOrg()->post('/accounting/consolidation/groups', [
+            'name' => 'FX Group',
+            'member_organization_ids' => [$memberOrganization->id],
+            'base_currency' => 'CHF',
+        ])->assertRedirect();
+
+        $group = ConsolidationGroup::query()->firstOrFail();
+
+        $this->actAsOrg()->get('/accounting/consolidation/'.$group->id.'/report?fiscal_year=2026')
+            ->assertStatus(200)
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('result.base_currency', 'CHF')
+                ->where('result.assets', 90)
+                ->where('result.revenue', 90)
+                ->where('result.profit', 90)
+                ->where('result.missing_exchange_rates', [])
+            );
+    }
+
+    public function test_consolidation_report_exposes_missing_exchange_rates_when_conversion_pair_is_absent(): void
+    {
+        $memberOrganization = Organization::factory()->create(['currency' => 'USD']);
+
+        $memberAsset = Account::create([
+            'organization_id' => $memberOrganization->id,
+            'code' => '1100',
+            'name' => 'Member Cash USD',
+            'type' => AccountType::Asset->value,
+        ]);
+
+        $memberRevenue = Account::create([
+            'organization_id' => $memberOrganization->id,
+            'code' => '3100',
+            'name' => 'Member Revenue USD',
+            'type' => AccountType::Revenue->value,
+        ]);
+
+        $entry = JournalEntry::create([
+            'organization_id' => $memberOrganization->id,
+            'date' => '2026-05-10',
+            'reference' => 'FX-MISS-1',
+            'description' => 'Missing FX check',
+            'is_posted' => true,
+        ]);
+
+        TransactionLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id' => $memberAsset->id,
+            'debit' => '100.00',
+            'credit' => '0.00',
+            'description' => 'USD asset line',
+        ]);
+
+        TransactionLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id' => $memberRevenue->id,
+            'debit' => '0.00',
+            'credit' => '100.00',
+            'description' => 'USD revenue line',
+        ]);
+
+        $this->actAsOrg()->post('/accounting/consolidation/groups', [
+            'name' => 'FX Missing Group',
+            'member_organization_ids' => [$memberOrganization->id],
+            'base_currency' => 'CHF',
+        ])->assertRedirect();
+
+        $group = ConsolidationGroup::query()->firstOrFail();
+
+        $this->actAsOrg()->get('/accounting/consolidation/'.$group->id.'/report?fiscal_year=2026')
+            ->assertStatus(200)
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('result.base_currency', 'CHF')
+                ->where('result.missing_exchange_rates', ['USD->CHF'])
+            );
     }
 }

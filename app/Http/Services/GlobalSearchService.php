@@ -3,6 +3,7 @@
 namespace App\Http\Services;
 
 use App\Http\Contracts\SearchProvider;
+use Illuminate\Support\Facades\Log;
 
 class GlobalSearchService
 {
@@ -24,7 +25,14 @@ class GlobalSearchService
         $results = [];
 
         foreach ($this->providers as $provider) {
-            $results = array_merge($results, $provider->search($query, $orgId, self::PER_TYPE_LIMIT));
+            try {
+                $results = array_merge($results, $provider->search($query, $orgId, self::PER_TYPE_LIMIT));
+            } catch (\Throwable $e) {
+                Log::warning('Search provider failed', [
+                    'provider' => get_class($provider),
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return $results;

@@ -61,7 +61,9 @@ class SwissQrInvoiceService
         $this->setCreditorInfo($qrBill, $invoice, $organization);
         $this->setDebtorInfo($qrBill, $invoice);
         $this->setPaymentAmount($qrBill, $invoice);
-        $this->setPaymentReference($qrBill, $invoice);
+
+        $iban = $invoice->qr_iban ?? $organization->qr_iban ?? '';
+        $this->setPaymentReference($qrBill, $invoice, $iban);
 
         $qrBill->setAdditionalInformation(
             AdditionalInformation::create($invoice->number ?? ''),
@@ -173,11 +175,11 @@ class SwissQrInvoiceService
         );
     }
 
-    private function setPaymentReference(QrBill $qrBill, Invoice $invoice): void
+    private function setPaymentReference(QrBill $qrBill, Invoice $invoice, string $iban): void
     {
         $qrType = $invoice->qr_type ?? 'QRR';
 
-        if ($qrType === 'QRR' && $invoice->qr_reference) {
+        if ($this->isQrIban($iban) && $qrType === 'QRR' && $invoice->qr_reference) {
             $refType = PaymentReference::TYPE_QR;
         } elseif ($qrType === 'SCOR' && $invoice->qr_reference) {
             $refType = PaymentReference::TYPE_SCOR;
@@ -186,7 +188,7 @@ class SwissQrInvoiceService
         }
 
         $qrBill->setPaymentReference(
-            PaymentReference::create($refType, $invoice->qr_reference ?? null),
+            PaymentReference::create($refType, $refType === PaymentReference::TYPE_NON ? null : $invoice->qr_reference),
         );
     }
 

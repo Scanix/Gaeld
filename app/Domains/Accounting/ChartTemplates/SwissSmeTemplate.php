@@ -49,7 +49,7 @@ class SwissSmeTemplate implements ChartTemplateInterface
                 'en' => 'Allowance for Doubtful Accounts', 'fr' => 'Provision pour créances douteuses', 'de' => 'Delkredere', 'it' => 'Delcredere', 'rm' => 'Delcredere',
             ]],
             ['code' => '1170', 'type' => AccountType::Asset->value, 'name' => [
-                'en' => 'VAT Input Tax (Vorsteuer)', 'fr' => 'Impôt préalable (TVA)', 'de' => 'Vorsteuer (MWST)', 'it' => 'Imposta precedente (IVA)', 'rm' => 'Tagl sin la valur agiunschida precedenta',
+                'en' => 'VAT Input Tax', 'fr' => 'Impôt préalable (TVA)', 'de' => 'Vorsteuer (MWST)', 'it' => 'Imposta precedente (IVA)', 'rm' => 'Tagl sin la valur agiunschida precedenta',
             ]],
             ['code' => '1200', 'type' => AccountType::Asset->value, 'name' => [
                 'en' => 'Inventory', 'fr' => 'Stocks', 'de' => 'Vorräte', 'it' => 'Scorte', 'rm' => 'Reservas',
@@ -81,7 +81,7 @@ class SwissSmeTemplate implements ChartTemplateInterface
                 'en' => 'Bank Loan Short-term', 'fr' => 'Emprunt bancaire court terme', 'de' => 'Bankdarlehen kurzfristig', 'it' => 'Prestito bancario a breve termine', 'rm' => 'Imprest da banca a curt termin',
             ]],
             ['code' => '2200', 'type' => AccountType::Liability->value, 'name' => [
-                'en' => 'VAT Output Tax (Umsatzsteuer)', 'fr' => 'TVA due', 'de' => 'Umsatzsteuer (MWST)', 'it' => 'IVA dovuta', 'rm' => 'Tagl sin la cifra d\'affars',
+                'en' => 'VAT Output Tax', 'fr' => 'TVA due', 'de' => 'Umsatzsteuer (MWST)', 'it' => 'IVA dovuta', 'rm' => 'Tagl sin la cifra d\'affars',
             ]],
             ['code' => '2201', 'type' => AccountType::Liability->value, 'name' => [
                 'en' => 'VAT Payable', 'fr' => 'TVA à payer', 'de' => 'MWST-Zahllast', 'it' => 'IVA da pagare', 'rm' => 'TIVA da pajar',

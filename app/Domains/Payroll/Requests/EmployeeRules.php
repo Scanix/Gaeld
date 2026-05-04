@@ -2,6 +2,8 @@
 
 namespace App\Domains\Payroll\Requests;
 
+use App\Support\Rules\Iban;
+
 trait EmployeeRules
 {
     /**
@@ -13,6 +15,7 @@ trait EmployeeRules
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
+            'iban' => ['nullable', 'string', 'max:34', new Iban],
             'ahv_number' => ['nullable', 'string', 'max:16'],
             'entry_date' => ['required', 'date'],
             'exit_date' => ['nullable', 'date', 'after_or_equal:entry_date'],

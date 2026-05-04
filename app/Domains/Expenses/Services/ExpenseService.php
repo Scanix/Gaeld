@@ -36,13 +36,15 @@ class ExpenseService
     /**
      * Post the ledger entry for an expense payment.
      *
-     * For regular expenses:
-     *   Debit  {expenseAccountCode} Expense account  (payment amount)
-     *   Credit {bankAccountCode}    Bank account     (payment amount)
+     * Convention: $expense->amount is the NET amount (excl. VAT).
+     * Gross (paid) = amount + vat_amount.
      *
-     * For credit notes (reversed):
-     *   Debit  {bankAccountCode}    Bank account     (refund amount)
-     *   Credit {expenseAccountCode} Expense account  (refund amount)
+     * For regular expenses (with VAT):
+     *   Debit  {expenseAccountCode} Expense account  (NET amount)
+     *   Debit  1170                  Input VAT        (vat_amount)
+     *   Credit {bankAccountCode}    Bank account     (GROSS = NET + VAT)
+     *
+     * For credit notes (reversed): mirror of the above.
      *
      * Marks the expense as Posted.
      *
@@ -57,33 +59,63 @@ class ExpenseService
             $expenseAccount = $this->ledgerQuery->resolveAccount($orgId, $data->expenseAccountCode);
             $bankAccount = $this->ledgerQuery->resolveAccount($orgId, $bankAccountCode);
 
-            $amount = $data->amount;
+            $netAmount = $data->amount;
+            $vatAmount = (string) ($expense->vat_amount ?? '0');
+            $hasVat = $expense->vat_rate_id && Money::isPositive($vatAmount);
+            $grossAmount = $hasVat ? Money::add($netAmount, $vatAmount) : $netAmount;
 
             if ($isCreditNote) {
-                // Credit note: reverse the normal flow (bank receives, expense account credited)
+                // Credit note: reverse the normal flow
                 $lines = [
-                    new JournalLineData(accountId: (string) $bankAccount->id, debit: $amount, credit: '0', description: 'Supplier credit note — bank refund'),
-                    new JournalLineData(accountId: (string) $expenseAccount->id, debit: '0', credit: $amount, description: $expense->description ?? 'Credit note'),
+                    new JournalLineData(accountId: (string) $bankAccount->id, debit: $grossAmount, credit: '0', description: 'Supplier credit note — bank refund'),
+                    new JournalLineData(accountId: (string) $expenseAccount->id, debit: '0', credit: $netAmount, description: $expense->description ?? 'Credit note'),
                 ];
+                if ($hasVat) {
+                    $vatAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_INPUT);
+                    $lines[] = new JournalLineData(
+                        accountId: (string) $vatAccount->id,
+                        debit: '0',
+                        credit: $vatAmount,
+                        description: 'Input VAT reversal',
+                    );
+                }
             } else {
                 $lines = [
-                    new JournalLineData(accountId: (string) $expenseAccount->id, debit: $amount, credit: '0', description: $expense->description ?? 'Expense'),
-                    new JournalLineData(accountId: (string) $bankAccount->id, debit: '0', credit: $amount, description: 'Bank withdrawal'),
+                    new JournalLineData(accountId: (string) $expenseAccount->id, debit: $netAmount, credit: '0', description: $expense->description ?? 'Expense'),
                 ];
+                if ($hasVat) {
+                    $vatAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_INPUT);
+                    $lines[] = new JournalLineData(
+                        accountId: (string) $vatAccount->id,
+                        debit: $vatAmount,
+                        credit: '0',
+                        description: 'Input VAT',
+                    );
+                }
+                $lines[] = new JournalLineData(
+                    accountId: (string) $bankAccount->id,
+                    debit: '0',
+                    credit: $grossAmount,
+                    description: 'Bank withdrawal',
+                );
             }
 
-            // Apply Swiss 5-centime rounding for CHF expenses (regular invoices only)
+            // Apply Swiss 5-centime rounding for CHF expenses (regular invoices only),
+            // adjusting the bank credit (gross) and posting the rounding difference.
             if (! $isCreditNote && strtoupper($expense->currency) === 'CHF') {
-                $adj = SwissRounding::adjustment(Money::of($amount));
+                $adj = SwissRounding::adjustment(Money::of($grossAmount));
 
                 if ($adj) {
                     $roundingAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ROUNDING_DIFFERENCE);
 
-                    // Adjust the bank credit to the rounded amount
-                    $lines = [
-                        new JournalLineData(accountId: (string) $expenseAccount->id, debit: $amount, credit: '0', description: $expense->description ?? 'Expense'),
-                        new JournalLineData(accountId: (string) $bankAccount->id, debit: '0', credit: $adj['rounded'], description: 'Bank withdrawal'),
-                    ];
+                    // Replace the bank credit line (always the last entry above) with the rounded gross
+                    $bankLineIndex = array_key_last($lines);
+                    $lines[$bankLineIndex] = new JournalLineData(
+                        accountId: (string) $bankAccount->id,
+                        debit: '0',
+                        credit: $adj['rounded'],
+                        description: 'Bank withdrawal',
+                    );
 
                     $absDiff = Money::absoluteAmount($adj['diff']);
                     $lines[] = new JournalLineData(
@@ -102,13 +134,14 @@ class ExpenseService
                 lines: $lines,
             ));
 
-            // Create VatEntry record for the VAT report (Input VAT)
-            if ($expense->vat_rate_id && Money::isPositive((string) $expense->vat_amount)) {
+            // Create VatEntry record for the VAT report (Input VAT).
+            // base_amount is NET (= expense->amount under our convention).
+            if ($hasVat) {
                 VatEntry::create([
                     'journal_entry_id' => $journalEntry->id,
                     'vat_rate_id' => $expense->vat_rate_id,
-                    'base_amount' => Money::subtract((string) $expense->amount, (string) $expense->vat_amount),
-                    'vat_amount' => (string) $expense->vat_amount,
+                    'base_amount' => (string) $expense->amount,
+                    'vat_amount' => $vatAmount,
                     'type' => VatEntryType::Input,
                 ]);
             }

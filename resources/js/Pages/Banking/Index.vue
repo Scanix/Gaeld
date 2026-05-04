@@ -16,6 +16,7 @@ import { Plus, Landmark } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import IbanHint from '@/Components/IbanHint.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import { currencyOptions } from '@/lib/contactOptions'
 import { ref, computed } from 'vue'
 
@@ -41,6 +42,7 @@ function submit() {
 }
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const accountOptions = computed(() =>
   props.accounts.map(a => ({ value: a.id.toString(), label: `${a.code} — ${a.name}` }))
@@ -52,6 +54,7 @@ const columns = computed(() => [
   { key: 'bank_name', label: t('bank'), format: v => v || '—' },
   { key: 'currency', label: t('currency') },
   { key: 'ledger_account', label: t('ledger_account'), format: (v) => v ? `${v.code} — ${v.name}` : '—' },
+  { key: 'derived_balance', label: t('balance'), class: 'text-right', format: (v, row) => formatCurrency(v ?? 0, row.currency || 'CHF') },
 ])
 </script>
 

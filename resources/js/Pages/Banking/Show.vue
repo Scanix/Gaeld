@@ -22,6 +22,7 @@ import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 const props = defineProps({
   bankAccount: Object,
   transactions: Object,
+  ledgerMovements: { type: Array, default: () => [] },
   accounts: { type: Array, default: () => [] },
 })
 
@@ -93,10 +94,18 @@ const columns = computed(() => [
   { key: 'type', label: t('type') },
   { key: 'amount', label: t('amount'), class: 'text-right', format: (v) => formatCurrency(v) },
 ])
+
+const ledgerColumns = computed(() => [
+  { key: 'date', label: t('date'), format: (v) => v ? formatDate(v) : '—' },
+  { key: 'description', label: t('description'), format: (v) => v || '—' },
+  { key: 'reference', label: t('reference'), format: (v) => v || '—' },
+  { key: 'debit', label: t('debit'), class: 'text-right', format: (v) => parseFloat(v || 0) ? formatCurrency(v, props.bankAccount.currency) : '—' },
+  { key: 'credit', label: t('credit'), class: 'text-right', format: (v) => parseFloat(v || 0) ? formatCurrency(v, props.bankAccount.currency) : '—' },
+])
 </script>
 
 <template>
-  <AppLayout :title="`${t('bank')} — ${bankAccount.name}`">
+  <AppLayout :title="`${t('bank')} — ${bankAccount.name}`" help-page="banking">
     <Breadcrumb :items="[{ label: t('bank_accounts'), href: '/banking' }, { label: bankAccount.name }]" class="mb-4" />
 
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -124,7 +133,8 @@ const columns = computed(() => [
       <Card>
         <CardHeader><CardTitle class="text-sm">{{ t('balance') }}</CardTitle></CardHeader>
         <CardContent>
-          <p class="text-2xl font-bold">{{ formatCurrency(bankAccount.balance, bankAccount.currency) }}</p>
+          <p class="text-2xl font-bold">{{ formatCurrency(bankAccount.derived_balance ?? bankAccount.balance, bankAccount.currency) }}</p>
+          <p class="text-xs text-[hsl(var(--muted-foreground))] mt-1">{{ t('derived_from_ledger') }}</p>
         </CardContent>
       </Card>
       <Card>
@@ -159,6 +169,20 @@ const columns = computed(() => [
             </Badge>
           </template>
         </DataTable>
+      </CardContent>
+    </Card>
+
+    <Card v-if="(ledgerMovements ?? []).length" class="mt-6">
+      <CardHeader>
+        <CardTitle>{{ t('ledger_movements') }}</CardTitle>
+        <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('ledger_movements_help') }}</p>
+      </CardHeader>
+      <CardContent>
+        <DataTable
+          :columns="ledgerColumns"
+          :rows="ledgerMovements"
+          :empty-message="t('no_ledger_movements')"
+        />
       </CardContent>
     </Card>
 

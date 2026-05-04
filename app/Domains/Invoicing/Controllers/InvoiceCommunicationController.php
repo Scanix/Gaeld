@@ -8,6 +8,7 @@ use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Support\QrBillValidationMessageFormatter;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 
@@ -16,6 +17,8 @@ use Illuminate\Http\RedirectResponse;
  */
 class InvoiceCommunicationController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function sendInvoice(
         Invoice $invoice,
         SendInvoiceAction $action,
@@ -26,9 +29,9 @@ class InvoiceCommunicationController extends Controller
         try {
             $action->execute($invoice->load('customer'));
         } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         } catch (QrBillValidationException $e) {
-            return redirect()->back()->with('error', $messageFormatter->format($e->violations));
+            return $this->backWithError($messageFormatter->format($e->violations));
         }
 
         return redirect()->route('invoices.show', $invoice)
@@ -42,7 +45,7 @@ class InvoiceCommunicationController extends Controller
         try {
             $action->execute($invoice);
         } catch (InvalidInvoiceStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->route('invoices.show', $invoice)
