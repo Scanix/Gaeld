@@ -56,7 +56,7 @@ class EmployeeController extends Controller
         $this->authorize('view', $employee);
 
         return Inertia::render('Payroll/Employees/Show', [
-            'employee' => $employee->load('salarySlips'),
+            'employee' => $employee->load(['salarySlips' => fn ($q) => $q->with('employee')]),
         ]);
     }
 
