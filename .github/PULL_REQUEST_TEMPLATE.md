@@ -11,10 +11,10 @@ Brief description of the changes.
 
 ## Checklist
 
-- [ ] My code follows the project code style (`./vendor/bin/pint`)
+- [ ] My code follows the project code style (`./vendor/bin/sail pint`)
 - [ ] I have added tests that cover my changes
-- [ ] All existing tests pass (`php artisan test`)
-- [ ] PHPStan passes (`vendor/bin/phpstan analyse`)
+- [ ] All existing tests pass (`./vendor/bin/sail artisan test`)
+- [ ] PHPStan passes (`./vendor/bin/sail phpstan analyse`)
 - [ ] I have updated the documentation if needed
 
 ## Related issue

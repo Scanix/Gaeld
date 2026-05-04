@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Users;
 
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -14,6 +16,7 @@ class UserProfileHttpTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutMiddleware(PreventRequestForgery::class);
         $this->setUpOrganization(['password' => Hash::make('password')]);
     }
 
@@ -114,6 +117,48 @@ class UserProfileHttpTest extends TestCase
         $this->user->refresh();
         $this->assertEquals('newemail@example.ch', $this->user->pending_email);
         $this->assertNotNull($this->user->email_change_token);
+    }
+
+    public function test_confirm_email_change_with_invalid_token_flashes_error(): void
+    {
+        $this->user->update([
+            'pending_email' => 'newemail@example.ch',
+            'email_change_token' => hash('sha256', 'valid-token'),
+            'email_change_requested_at' => now(),
+        ]);
+
+        $signedUrl = URL::temporarySignedRoute('profile.email.verify', now()->addMinutes(5), [
+            'token' => 'wrong-token',
+        ]);
+
+        $response = $this->actingAs($this->user)->get($signedUrl);
+
+        $response->assertRedirect('/profile');
+        $response->assertSessionHas('error', __('app.email_change_invalid'));
+    }
+
+    public function test_confirm_email_change_with_expired_token_flashes_error_and_clears_pending_state(): void
+    {
+        $token = 'valid-token';
+        $this->user->update([
+            'pending_email' => 'newemail@example.ch',
+            'email_change_token' => hash('sha256', $token),
+            'email_change_requested_at' => now()->subHours(25),
+        ]);
+
+        $signedUrl = URL::temporarySignedRoute('profile.email.verify', now()->addMinutes(5), [
+            'token' => $token,
+        ]);
+
+        $response = $this->actingAs($this->user)->get($signedUrl);
+
+        $response->assertRedirect('/profile');
+        $response->assertSessionHas('error', __('app.email_change_expired'));
+
+        $this->user->refresh();
+        $this->assertNull($this->user->pending_email);
+        $this->assertNull($this->user->email_change_token);
+        $this->assertNull($this->user->email_change_requested_at);
     }
 
     public function test_cancel_email_change_clears_pending(): void

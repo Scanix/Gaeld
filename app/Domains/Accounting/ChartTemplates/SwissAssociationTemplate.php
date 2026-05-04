@@ -48,7 +48,7 @@ class SwissAssociationTemplate implements ChartTemplateInterface
                 'en' => 'Membership Fees Receivable', 'fr' => 'Cotisations à recevoir', 'de' => 'Ausstehende Mitgliederbeiträge', 'it' => 'Quote associative da incassare', 'rm' => 'Contribuziuns da members da retschaiver',
             ]],
             ['code' => '1170', 'type' => AccountType::Asset->value, 'name' => [
-                'en' => 'VAT Input Tax (Vorsteuer)', 'fr' => 'Impôt préalable (TVA)', 'de' => 'Vorsteuer (MWST)', 'it' => 'Imposta precedente (IVA)', 'rm' => 'Tagl sin la valur agiunschida precedenta',
+                'en' => 'VAT Input Tax', 'fr' => 'Impôt préalable (TVA)', 'de' => 'Vorsteuer (MWST)', 'it' => 'Imposta precedente (IVA)', 'rm' => 'Tagl sin la valur agiunschida precedenta',
             ]],
             ['code' => '1300', 'type' => AccountType::Asset->value, 'name' => [
                 'en' => 'Prepaid Expenses', 'fr' => 'Charges payées d\'avance', 'de' => 'Aktive Rechnungsabgrenzung', 'it' => 'Risconti attivi', 'rm' => 'Delimitaziun activa',
@@ -62,7 +62,7 @@ class SwissAssociationTemplate implements ChartTemplateInterface
                 'en' => 'Accounts Payable', 'fr' => 'Créanciers', 'de' => 'Kreditoren', 'it' => 'Creditori', 'rm' => 'Crediturs',
             ]],
             ['code' => '2200', 'type' => AccountType::Liability->value, 'name' => [
-                'en' => 'VAT Output Tax (Umsatzsteuer)', 'fr' => 'TVA due', 'de' => 'Umsatzsteuer (MWST)', 'it' => 'IVA dovuta', 'rm' => 'Tagl sin la cifra d\'affars',
+                'en' => 'VAT Output Tax', 'fr' => 'TVA due', 'de' => 'Umsatzsteuer (MWST)', 'it' => 'IVA dovuta', 'rm' => 'Tagl sin la cifra d\'affars',
             ]],
             ['code' => '2300', 'type' => AccountType::Liability->value, 'name' => [
                 'en' => 'Accrued Liabilities', 'fr' => 'Charges à payer', 'de' => 'Passive Rechnungsabgrenzung', 'it' => 'Risconti passivi', 'rm' => 'Delimitaziun passiva',

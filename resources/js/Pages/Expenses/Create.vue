@@ -86,7 +86,6 @@ const vatOptions = [
 ]
 
 const paymentMethodOptions = [
-  { value: '', label: '—' },
   { value: 'cash', label: t('payment_cash') },
   { value: 'card', label: t('payment_card') },
   { value: 'bank_transfer', label: t('payment_bank_transfer') },
@@ -94,12 +93,10 @@ const paymentMethodOptions = [
 ]
 
 const expenseAccountOptions = [
-  { value: '', label: '—' },
   ...props.expenseAccounts.map(a => ({ value: a.code, label: `${a.code} — ${a.name}` })),
 ]
 
 const bankAccountOptions = [
-  { value: '', label: '—' },
   ...props.bankAccounts
     .filter(ba => ba.ledger_account?.code)
     .map(ba => ({ value: ba.ledger_account.code, label: `${ba.name}${ba.iban ? ` (${ba.iban})` : ''}` })),
@@ -174,7 +171,8 @@ function onSupplierCreated(supplier) {
               id="amount"
               v-model="form.amount"
               type="number"
-              :label="t('amount')"
+              :label="t('net_amount_excl_vat')"
+              :hint="t('net_amount_excl_vat_hint')"
               :error="form.errors.amount"
               required
             />
@@ -191,6 +189,7 @@ function onSupplierCreated(supplier) {
               v-model="form.payment_method"
               :label="t('payment_method')"
               :options="paymentMethodOptions"
+              :placeholder="t('select')"
               :error="form.errors.payment_method"
             />
           </div>
@@ -248,6 +247,7 @@ function onSupplierCreated(supplier) {
               v-model="form.expense_account_code"
               :label="t('expense_account')"
               :options="expenseAccountOptions"
+              :placeholder="t('select_account')"
               :error="form.errors.expense_account_code"
             />
             <FormSelect
@@ -255,6 +255,7 @@ function onSupplierCreated(supplier) {
               v-model="form.bank_account_code"
               :label="t('bank_account')"
               :options="bankAccountOptions"
+              :placeholder="t('select_account')"
               :error="form.errors.bank_account_code"
             />
           </div>

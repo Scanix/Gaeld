@@ -55,14 +55,22 @@ function submit() {
           v-for="plan in plans"
           :key="plan.id"
           type="button"
+          role="radio"
+          :aria-checked="selectedPlan === plan.id"
+          :aria-pressed="selectedPlan === plan.id"
           @click="selectedPlan = plan.id"
           :class="[
-            'rounded-lg border-2 p-4 text-left transition-all',
+            'relative rounded-lg border-2 p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2',
             selectedPlan === plan.id
-              ? 'border-[hsl(var(--primary))] bg-[hsl(var(--accent))]'
+              ? 'border-[hsl(var(--primary))] bg-[hsl(var(--accent))] ring-2 ring-[hsl(var(--primary))] ring-offset-2'
               : 'border-[hsl(var(--border))] bg-[hsl(var(--card))] opacity-80 hover:opacity-100',
           ]"
         >
+          <CheckCircle2
+            v-if="selectedPlan === plan.id"
+            class="absolute right-2 top-2 h-5 w-5 text-[hsl(var(--primary))]"
+            aria-hidden="true"
+          />
           <div class="flex items-center gap-2 mb-1">
             <Zap v-if="plan.slug !== 'starter'" class="h-4 w-4 text-[hsl(var(--primary))]" />
             <span class="font-semibold text-[hsl(var(--foreground))]">{{ plan.name }}</span>
@@ -74,15 +82,15 @@ function submit() {
           <ul class="mt-3 space-y-1">
             <li class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
               <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
-              {{ plan.max_users === -1 ? t('unlimited_users') : `${plan.max_users} ${t('users')}` }}
+              {{ plan.max_users === -1 ? t('unlimited_users') : `${plan.max_users} ${t(plan.max_users === 1 ? 'user' : 'users')}` }}
             </li>
             <li class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
               <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
-              {{ plan.max_invoices_per_month === -1 ? t('unlimited_invoices') : `${plan.max_invoices_per_month} ${t('invoices_per_month')}` }}
+              {{ plan.max_invoices_per_month === -1 ? t('unlimited_invoices') : `${plan.max_invoices_per_month} ${t(plan.max_invoices_per_month === 1 ? 'invoice_per_month' : 'invoices_per_month')}` }}
             </li>
             <li class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
               <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
-              {{ plan.max_ocr_scans_per_day === -1 ? t('unlimited_ocr_per_day') : `${plan.max_ocr_scans_per_day} ${t('ocr_scans_per_day')}` }}
+              {{ plan.max_ocr_scans_per_day === -1 ? t('unlimited_ocr_per_day') : `${plan.max_ocr_scans_per_day} ${t(plan.max_ocr_scans_per_day === 1 ? 'ocr_scan_per_day' : 'ocr_scans_per_day')}` }}
             </li>
             <li v-for="feature in plan.features" :key="feature" class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
               <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />

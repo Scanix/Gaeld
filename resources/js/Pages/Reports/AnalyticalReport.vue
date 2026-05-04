@@ -24,7 +24,7 @@ const { formatCurrency } = useFormatters()
 
 const from = ref(props.filters.from)
 const to = ref(props.filters.to)
-const costCenterId = ref('')
+const costCenterId = ref(props.filters?.cost_center_id ? String(props.filters.cost_center_id) : '')
 
 const costCenterOptions = computed(() => [
   { value: '', label: t('all') },

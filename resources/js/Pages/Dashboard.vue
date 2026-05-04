@@ -228,6 +228,11 @@ const chartOptions = computed(() => {
   }
 })
 
+const hasChartData = computed(() => {
+  const bd = contract.value.monthlyBreakdown
+  return (bd.revenue ?? []).some(v => v > 0) || (bd.expenses ?? []).some(v => v > 0)
+})
+
 const transactionColumns = computed(() => [
   { key: 'date', label: t('date'), format: (v) => formatDate(v) },
   { key: 'description', label: t('description') },
@@ -393,7 +398,10 @@ const transactionColumns = computed(() => [
       </CardHeader>
       <CardContent>
         <div class="h-96">
-          <Bar :data="chartData" :options="chartOptions" />
+          <Bar v-if="hasChartData" :data="chartData" :options="chartOptions" />
+          <div v-else class="flex h-full items-center justify-center">
+            <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('no_data') }}</p>
+          </div>
         </div>
       </CardContent>
     </Card>

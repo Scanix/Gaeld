@@ -26,11 +26,16 @@ const props = defineProps({
 // Step state: 1=Select, 2=Preview, 3=Generate, 4=Post
 const step = ref(1)
 const selectedEmployeeIds = ref([])
-const month = ref(String(new Date().getMonth() + 1))
+const month = ref(String(((new Date().getMonth() + 11) % 12) + 1))
 const year = ref(
-  props.fiscalYears.length
-    ? String(props.fiscalYears[0])
-    : String(new Date().getFullYear())
+  // Default to last month's year (handles January → previous year).
+  (() => {
+    const now = new Date()
+    const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+    return props.fiscalYears.length
+      ? String(props.fiscalYears.includes(lastMonthYear) ? lastMonthYear : props.fiscalYears[0])
+      : String(lastMonthYear)
+  })()
 )
 const preview = ref([])
 const generatedSlipIds = ref([])
@@ -109,7 +114,7 @@ async function generateSlips() {
         'Accept': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
       },
-      body: JSON.stringify({ employee_ids: selectedEmployeeIds.value, month: month.value, year: year.value, post: true }),
+      body: JSON.stringify({ employee_ids: selectedEmployeeIds.value, month: month.value, year: year.value }),
     })
     if (!response.ok) {
       const err = await response.json().catch(() => ({}))
@@ -118,7 +123,7 @@ async function generateSlips() {
     }
     const data = await response.json()
     generatedSlipIds.value = data.slip_ids ?? []
-    step.value = 4
+    step.value = 3
   } catch {
     errorMessage.value = t('payroll_generate_error')
   } finally {
@@ -264,10 +269,10 @@ async function postSlips() {
               <tr v-for="emp in preview" :key="emp.id">
                 <td class="py-2.5">{{ emp.first_name }} {{ emp.last_name }}</td>
                 <td class="py-2.5 text-right font-mono">{{ formatCurrency(emp.gross_salary) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.avs) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.ac) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.aanp) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">-{{ formatCurrency(emp.lpp) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.avs) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.ac) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.aanp) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.lpp) }}</td>
                 <td class="py-2.5 text-right font-mono font-bold text-green-700 dark:text-green-400">{{ formatCurrency(emp.net) }}</td>
               </tr>
             </tbody>

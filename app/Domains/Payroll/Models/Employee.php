@@ -48,6 +48,7 @@ class Employee extends Model
         'first_name',
         'last_name',
         'email',
+        'iban',
         'ahv_number',
         'entry_date',
         'exit_date',
@@ -67,6 +68,8 @@ class Employee extends Model
             // ahv_number is encrypted at rest using Laravel's Encrypter (APP_KEY).
             // Stored ciphertext is never interpretable without the application key.
             'ahv_number' => 'encrypted',
+            // IBAN is encrypted at rest — same rationale as ahv_number.
+            'iban' => 'encrypted',
         ];
     }
 

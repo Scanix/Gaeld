@@ -221,6 +221,9 @@ class CheckTranslationsCommand extends Command
             }
         }
 
+        // Filter out dynamic key prefixes (e.g. __('app.some_key_' . $var)) — they end with '_'
+        $keys = array_filter($keys, fn (string $k): bool => ! str_ends_with($k, '_'));
+
         return array_values(array_unique($keys));
     }
 

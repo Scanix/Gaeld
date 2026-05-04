@@ -48,7 +48,7 @@ function submit() {
               v-model="form.email"
               type="email"
               :label="t('email')"
-              placeholder="you@example.com"
+              :placeholder="t('placeholder_email')"
               :error="form.errors.email"
               required
             />

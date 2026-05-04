@@ -2,12 +2,12 @@
 
 ## Supported Versions
 
-We currently support security updates for the latest `main` branch and the latest tagged release.
+We currently support security updates for the latest `develop` branch and the latest tagged release.
 
 | Version | Supported |
 |---------|-----------|
 | Latest release | :white_check_mark: |
-| main | :white_check_mark: |
+| develop | :white_check_mark: |
 | Older versions | :x: |
 
 ## Reporting a Vulnerability

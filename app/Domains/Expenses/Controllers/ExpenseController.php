@@ -23,6 +23,7 @@ use App\Domains\Expenses\Requests\UpdateExpenseRequest;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Services\DashboardService;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
@@ -38,6 +39,8 @@ use Spatie\Permission\PermissionRegistrar;
  */
 class ExpenseController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function __construct(
         private FileUploadService $uploadService,
     ) {}
@@ -171,7 +174,7 @@ class ExpenseController extends Controller
         try {
             $action->execute($expense, UpdateExpenseData::fromArray($validated));
         } catch (InvalidExpenseStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         return redirect()->route('expenses.show', $expense)
@@ -188,7 +191,7 @@ class ExpenseController extends Controller
             $this->uploadService->delete($expense->receipt_path);
             $action->execute($expense);
         } catch (InvalidExpenseStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->backWithError($e);
         }
 
         app(DashboardService::class)->flushCache($orgId);
