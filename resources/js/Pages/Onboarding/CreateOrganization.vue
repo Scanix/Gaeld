@@ -122,7 +122,7 @@ const localeOptions = [
               </div>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormSelect id="canton" v-model="form.canton" :label="t('canton')" :options="cantons" :placeholder="t('select')" />
-                <FormInput id="vat_number" v-model="form.vat_number" :label="t('vat_number')" placeholder="CHE-123.456.789" :error="form.errors.vat_number" />
+                <FormInput id="vat_number" v-model="form.vat_number" :label="t('vat_number')" :placeholder="t('placeholder_vat_uid')" :error="form.errors.vat_number" />
               </div>
             </fieldset>
 

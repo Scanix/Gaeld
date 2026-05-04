@@ -52,6 +52,7 @@ const roleVariants = {
 const roleLabels = {
   owner: t('role_owner'),
   admin: t('role_admin'),
+  accountant: t('role_accountant'),
   member: t('role_member'),
   viewer: t('role_viewer'),
 }
@@ -59,6 +60,7 @@ const roleLabels = {
 const roleOptions = [
   { value: 'owner', label: t('role_owner') },
   { value: 'admin', label: t('role_admin') },
+  { value: 'accountant', label: t('role_accountant') },
   { value: 'member', label: t('role_member') },
   { value: 'viewer', label: t('role_viewer') },
 ]

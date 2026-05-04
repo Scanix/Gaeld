@@ -171,7 +171,8 @@ function onSupplierCreated(supplier) {
               id="amount"
               v-model="form.amount"
               type="number"
-              :label="t('amount')"
+              :label="t('net_amount_excl_vat')"
+              :hint="t('net_amount_excl_vat_hint')"
               :error="form.errors.amount"
               required
             />

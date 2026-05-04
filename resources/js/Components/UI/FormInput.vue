@@ -10,6 +10,7 @@ defineProps({
     default: 'text',
   },
   error: String,
+  hint: String,
   required: Boolean,
   placeholder: String,
   autocomplete: String,
@@ -45,5 +46,6 @@ defineEmits(['update:modelValue'])
       @input="$emit('update:modelValue', $event.target.value)"
     >
     <p v-if="error" :id="id + '-error'" role="alert" class="text-xs text-[hsl(var(--destructive))]">{{ error }}</p>
+    <p v-else-if="hint" class="text-xs text-[hsl(var(--muted-foreground))]">{{ hint }}</p>
   </div>
 </template>
