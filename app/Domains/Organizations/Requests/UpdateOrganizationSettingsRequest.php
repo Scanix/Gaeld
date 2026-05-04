@@ -33,6 +33,7 @@ class UpdateOrganizationSettingsRequest extends FormRequest
             'business_type' => ['nullable', 'string', Rule::in(BusinessType::values())],
             'require_two_factor' => 'sometimes|boolean',
             'default_payment_terms_days' => 'sometimes|integer|min:0|max:365',
+            'fiscal_year_start' => ['nullable', 'string', 'regex:/^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/'],
         ];
     }
 }

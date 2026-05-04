@@ -40,6 +40,13 @@ class ExpenseFlowTest extends TestCase
             'name' => 'Bank',
             'type' => AccountType::Asset->value,
         ]);
+
+        Account::create([
+            'organization_id' => $this->org->id,
+            'code' => '1170',
+            'name' => 'Input VAT',
+            'type' => AccountType::Asset->value,
+        ]);
     }
 
     private function createExpense(array $overrides = []): Expense
@@ -110,7 +117,8 @@ class ExpenseFlowTest extends TestCase
         $this->assertTrue($expense->journalEntry->isBalanced());
 
         $lines = $expense->journalEntry->lines;
-        $this->assertCount(2, $lines);
+        // Three lines now: expense (NET debit), input VAT (debit), bank (gross credit)
+        $this->assertCount(3, $lines);
 
         $expenseAccountId = Account::where('code', '6530')
             ->where('organization_id', $this->org->id)
@@ -118,12 +126,19 @@ class ExpenseFlowTest extends TestCase
         $bankAccountId = Account::where('code', '1020')
             ->where('organization_id', $this->org->id)
             ->value('id');
+        $vatAccountId = Account::where('code', '1170')
+            ->where('organization_id', $this->org->id)
+            ->value('id');
 
         $debitLine = $lines->firstWhere('account_id', $expenseAccountId);
+        $vatLine = $lines->firstWhere('account_id', $vatAccountId);
         $creditLine = $lines->firstWhere('account_id', $bankAccountId);
 
+        // amount=700 (NET), vat=700*8.10%=56.70 (recomputed by CreateExpenseAction), gross=756.70
         $this->assertEquals('700.00', $debitLine->debit);
-        $this->assertEquals('700.00', $creditLine->credit);
+        $this->assertEquals('56.70', $vatLine->debit);
+        // CHF Swiss-rounding may snap 756.70 to 756.70 (already a multiple of 0.05); just assert >700
+        $this->assertEquals('756.70', $creditLine->credit);
     }
 
     public function test_cannot_post_already_posted_expense(): void

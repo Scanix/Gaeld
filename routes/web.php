@@ -68,6 +68,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Logout (available to any authenticated user)
 Route::middleware('auth')->post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+// GET fallback: render a tiny auto-submitting POST form so direct links / browser typed URLs still log out.
+Route::middleware('auth')->get('/logout', fn () => response(
+    '<!doctype html><html><head><meta charset="utf-8"><title>Signing out…</title></head>'
+    .'<body><form id="f" method="POST" action="'.route('logout').'">'
+    .'<input type="hidden" name="_token" value="'.csrf_token().'">'
+    .'<noscript><button type="submit">Sign out</button></noscript>'
+    .'</form><script>document.getElementById("f").submit();</script></body></html>'
+));
 
 // Authenticated routes
 Route::middleware(['auth', 'verified', 'org', 'org-2fa', 'subscription'])->group(function () {
