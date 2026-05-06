@@ -112,6 +112,7 @@ const navigation = computed(() => {
     { key: 'banking', href: '/banking', icon: Landmark, children: [
       { key: 'bank_accounts', href: '/banking' },
       { key: 'reconciliation', href: '/reconciliation' },
+      { key: 'payments_outgoing', href: '/payments/outgoing' },
     ]},
     { key: 'accounting', href: '/accounting/journal-entries', icon: BookOpen, children: [
       { key: 'journal_entries', href: '/accounting/journal-entries' },
