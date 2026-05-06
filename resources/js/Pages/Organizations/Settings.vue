@@ -22,6 +22,7 @@ const props = defineProps({
   organization: Object,
   hasLogo: Boolean,
   expenseCategories: { type: Array, default: () => [] },
+  modules: { type: Array, default: () => [] },
 })
 
 const { t } = useTranslations()
@@ -34,6 +35,7 @@ const tabs = [
   { key: 'invoice', label: 'settings_invoice' },
   { key: 'communications', label: 'settings_communications' },
   { key: 'expenses', label: 'settings_expenses' },
+  { key: 'modules', label: 'settings_modules' },
 ]
 
 // --- General form ---
@@ -117,6 +119,23 @@ const commsForm = useForm({
 
 function submitCommunications() {
   commsForm.put('/settings/communications', { preserveScroll: true })
+}
+
+// --- Modules form ---
+// Each module key falls back to the platform-wide feature flag value when the
+// org has no explicit override yet.
+const featureFlags = usePage().props.features || {}
+const modulesForm = useForm({
+  modules: Object.fromEntries(
+    props.modules.map((key) => {
+      const orgValue = props.organization.enabled_modules?.[key]
+      return [key, orgValue ?? !!featureFlags[key]]
+    })
+  ),
+})
+
+function submitModules() {
+  modulesForm.put('/settings/modules', { preserveScroll: true })
 }
 
 // --- Expense categories ---
@@ -540,6 +559,38 @@ const businessTypeOptions = [
                 {{ t('add') }}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <!-- Modules Tab -->
+      <div v-show="activeTab === 'modules'" id="tabpanel-modules" role="tabpanel" aria-labelledby="tab-modules">
+        <Card>
+          <CardHeader>
+            <CardTitle>{{ t('settings_modules_title') }}</CardTitle>
+            <CardDescription>{{ t('settings_modules_desc') }}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form class="space-y-3" @submit.prevent="submitModules">
+              <label
+                v-for="key in modules"
+                :key="key"
+                class="flex items-start gap-3 rounded-lg border border-[hsl(var(--border))] p-3 hover:bg-[hsl(var(--accent))]/50"
+              >
+                <input
+                  type="checkbox"
+                  v-model="modulesForm.modules[key]"
+                  class="mt-0.5 h-4 w-4 rounded border-[hsl(var(--border))]"
+                />
+                <div class="flex-1">
+                  <div class="text-sm font-medium">{{ t('module_' + key) }}</div>
+                  <div class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('module_' + key + '_desc') }}</div>
+                </div>
+              </label>
+              <div class="flex justify-end pt-2">
+                <Button type="submit" :disabled="modulesForm.processing">{{ t('save') }}</Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
       </div>

@@ -21,7 +21,7 @@ class InvoiceServiceTest extends TestCase
 
     private Organization $organization;
 
-    private Customer $customer;
+    private Contact $customer;
 
     protected function setUp(): void
     {

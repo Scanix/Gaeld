@@ -4,6 +4,7 @@ namespace Tests\Security\Api;
 
 use App\Domains\Api\Enums\TokenType;
 use App\Domains\Contacts\Models\Contact;
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Tests\Security\SecurityTestCase;
@@ -20,7 +21,9 @@ class ApiTokenSecurityTest extends SecurityTestCase
 {
     private string $tokenA;
 
-    private Customer $customerB;
+    private Contact $customerB;
+
+    private Invoice $invoiceB;
 
     protected function setUp(): void
     {
@@ -30,11 +33,15 @@ class ApiTokenSecurityTest extends SecurityTestCase
 
         $this->tokenA = $this->createApiToken($this->ownerA, $this->orgA);
 
-        // Create a customer in Org B to use as cross-org target
+        // Create a customer + invoice in Org B to use as cross-org targets
         app(CurrentOrganization::class)->set($this->orgB);
         $this->customerB = Contact::create([
             'organization_id' => $this->orgB->id,
             'name' => 'Org B Secret Customer',
+        ]);
+        $this->invoiceB = Invoice::factory()->create([
+            'organization_id' => $this->orgB->id,
+            'customer_id' => $this->customerB->id,
         ]);
     }
 
@@ -44,13 +51,13 @@ class ApiTokenSecurityTest extends SecurityTestCase
 
     public function test_request_without_token_returns_401(): void
     {
-        $this->getJson('/api/v1/customers')->assertUnauthorized();
+        $this->getJson('/api/v1/invoices')->assertUnauthorized();
     }
 
     public function test_request_with_invalid_token_returns_401(): void
     {
         $this->withToken('invalid-token-string')
-            ->getJson('/api/v1/customers')
+            ->getJson('/api/v1/invoices')
             ->assertUnauthorized();
     }
 
@@ -71,7 +78,7 @@ class ApiTokenSecurityTest extends SecurityTestCase
         ]);
 
         $this->withToken($result->plainTextToken)
-            ->getJson('/api/v1/customers')
+            ->getJson('/api/v1/invoices')
             ->assertUnauthorized();
     }
 
@@ -95,7 +102,7 @@ class ApiTokenSecurityTest extends SecurityTestCase
         $result->accessToken->delete();
 
         $this->withToken($plainText)
-            ->getJson('/api/v1/customers')
+            ->getJson('/api/v1/invoices')
             ->assertUnauthorized();
     }
 
@@ -106,22 +113,22 @@ class ApiTokenSecurityTest extends SecurityTestCase
     public function test_token_scoped_to_org_a_cannot_see_org_b_customers(): void
     {
         $response = $this->withToken($this->tokenA)
-            ->getJson('/api/v1/customers');
+            ->getJson('/api/v1/invoices');
 
         $response->assertOk();
 
         $ids = collect($response->json('data'))->pluck('id');
         $this->assertNotContains(
-            (string) $this->customerB->id,
+            (string) $this->invoiceB->id,
             $ids,
-            'Org B customer must not appear in Org A token response'
+            'Org B invoice must not appear in Org A token response'
         );
     }
 
     public function test_token_scoped_to_org_a_cannot_fetch_org_b_customer_by_id(): void
     {
         $response = $this->withToken($this->tokenA)
-            ->getJson("/api/v1/customers/{$this->customerB->uuid}");
+            ->getJson("/api/v1/invoices/{$this->invoiceB->id}");
 
         $this->assertDenied($response); // 403 or 404 — both are valid security controls
     }
@@ -150,7 +157,7 @@ class ApiTokenSecurityTest extends SecurityTestCase
 
         // Verify it works before removal
         $this->withToken($memberToken)
-            ->getJson('/api/v1/customers')
+            ->getJson('/api/v1/invoices')
             ->assertOk();
 
         // Remove the member from the org
@@ -159,7 +166,7 @@ class ApiTokenSecurityTest extends SecurityTestCase
             ->delete("/organizations/{$this->orgA->id}/members/{$member->id}");
 
         // Token must be invalid after removal
-        $response = $this->withToken($memberToken)->getJson('/api/v1/customers');
+        $response = $this->withToken($memberToken)->getJson('/api/v1/invoices');
 
         // 401 (token revoked) or 403 (access denied) — both are acceptable security controls
         $this->assertContains($response->status(), [401, 403],
