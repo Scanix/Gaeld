@@ -321,6 +321,8 @@ return [
     'is_supplier' => 'Fornitore (invia spese)',
     'supplier_details' => 'Dettagli del fornitore',
     'banking_and_expense_defaults' => 'Banca e valori predefiniti',
+    'default_expense_category' => 'Categoria di spesa predefinita',
+    'more_options' => 'Altre opzioni',
     'contact_created' => 'Contatto creato.',
     'contact_updated' => 'Contatto aggiornato.',
     'contact_deleted' => 'Contatto eliminato.',

@@ -321,6 +321,8 @@ return [
     'is_supplier' => 'Fournisseur (émet des dépenses)',
     'supplier_details' => 'Détails du fournisseur',
     'banking_and_expense_defaults' => 'Banque et valeurs par défaut',
+    'default_expense_category' => 'Catégorie de dépense par défaut',
+    'more_options' => 'Plus d\'options',
     'contact_created' => 'Contact créé.',
     'contact_updated' => 'Contact mis à jour.',
     'contact_deleted' => 'Contact supprimé.',
