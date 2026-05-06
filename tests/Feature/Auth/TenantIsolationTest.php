@@ -9,7 +9,7 @@ use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\SuggestionService;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
@@ -190,7 +190,7 @@ class TenantIsolationTest extends TestCase
         ]);
 
         // Create invoice in Org B (should NOT be suggested)
-        $clientB = Customer::withoutGlobalScopes()->create([
+        $clientB = Contact::withoutGlobalScopes()->create([
             'organization_id' => $this->orgB->id,
             'name' => 'Client B',
         ]);
@@ -209,7 +209,7 @@ class TenantIsolationTest extends TestCase
         ]);
 
         // Create invoice in Org A
-        $clientA = Customer::create([
+        $clientA = Contact::create([
             'organization_id' => $this->orgA->id,
             'name' => 'Client A',
         ]);

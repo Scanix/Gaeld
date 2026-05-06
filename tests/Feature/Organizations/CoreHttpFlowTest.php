@@ -8,7 +8,7 @@ use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -70,7 +70,7 @@ class CoreHttpFlowTest extends TestCase
             'is_default' => true,
         ]);
 
-        $this->customer = Customer::create([
+        $this->customer = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'HTTP Client AG',
         ]);

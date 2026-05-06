@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\QueryBuilder;
@@ -25,12 +25,12 @@ class QueryBuilderTest extends TestCase
             'currency' => 'CHF',
         ]);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Alpha Client',
         ]);
 
-        $client2 = Customer::create([
+        $client2 = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Beta Client',
         ]);

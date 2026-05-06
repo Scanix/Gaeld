@@ -14,7 +14,7 @@ use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\ReconciliationService;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
@@ -69,7 +69,7 @@ class ReconciliationServiceTest extends TestCase
             'balance' => 1000.00,
         ]);
 
-        $this->customer = Customer::create([
+        $this->customer = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Clamp AG',
         ]);

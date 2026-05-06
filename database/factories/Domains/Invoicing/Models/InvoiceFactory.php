@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Domains\Invoicing\Models;
 
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Models\Invoice;
@@ -20,7 +20,7 @@ class InvoiceFactory extends Factory
     {
         return [
             'organization_id' => Organization::factory(),
-            'customer_id' => Customer::factory(),
+            'customer_id' => Contact::factory(),
             'number' => 'INV-'.fake()->unique()->numerify('####'),
             'status' => InvoiceStatus::Draft,
             'type' => InvoiceType::Invoice,

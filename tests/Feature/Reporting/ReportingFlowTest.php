@@ -5,7 +5,7 @@ namespace Tests\Feature\Reporting;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
@@ -153,7 +153,7 @@ class ReportingFlowTest extends TestCase
 
     private function seedFinancialActivity(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Acme AG',
         ]);

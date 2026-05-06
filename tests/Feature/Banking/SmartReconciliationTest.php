@@ -11,7 +11,7 @@ use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -93,7 +93,7 @@ class SmartReconciliationTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Helvetia GmbH',
         ]);
@@ -148,7 +148,7 @@ class SmartReconciliationTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Alpine Solutions',
         ]);
@@ -192,7 +192,7 @@ class SmartReconciliationTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Unknown Corp',
         ]);
@@ -236,7 +236,7 @@ class SmartReconciliationTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Helvetia GmbH',
         ]);
@@ -297,7 +297,7 @@ class SmartReconciliationTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Confirm Corp',
         ]);
@@ -361,7 +361,7 @@ class SmartReconciliationTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Dup Corp',
         ]);
@@ -420,7 +420,7 @@ class SmartReconciliationTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Auto Corp',
         ]);
@@ -472,7 +472,7 @@ class SmartReconciliationTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'NoAutoConfirm Corp',
         ]);
@@ -521,7 +521,7 @@ class SmartReconciliationTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client',
         ]);
@@ -558,7 +558,7 @@ class SmartReconciliationTest extends TestCase
 
     public function test_confirm_match_route(): void
     {
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Route Test Corp',
         ]);

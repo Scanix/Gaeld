@@ -11,7 +11,7 @@ use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -122,7 +122,7 @@ class ReconciliationFlowTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Acme AG',
         ]);
@@ -211,7 +211,7 @@ class ReconciliationFlowTest extends TestCase
             'is_reconciled' => true,
         ]);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client',
         ]);
@@ -265,7 +265,7 @@ class ReconciliationFlowTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Acme AG',
         ]);
@@ -302,7 +302,7 @@ class ReconciliationFlowTest extends TestCase
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Swiss Corp',
         ]);
@@ -360,7 +360,7 @@ class ReconciliationFlowTest extends TestCase
         $suggestionService = app(SuggestionService::class);
 
         // Create a high-confidence match
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Acme AG',
         ]);

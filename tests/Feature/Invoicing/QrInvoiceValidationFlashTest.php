@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Invoicing;
 
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Actions\SendInvoiceAction;
 use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
@@ -29,7 +29,7 @@ class QrInvoiceValidationFlashTest extends TestCase
         // detailed validation-error flash message.
         $this->org->update(['qr_iban' => 'CH4431999123000889012']);
 
-        $customer = Customer::factory()->for($this->org, 'organization')->create();
+        $customer = Contact::factory()->for($this->org, 'organization')->create();
         $invoice = Invoice::factory()
             ->for($this->org, 'organization')
             ->for($customer, 'customer')
@@ -58,7 +58,7 @@ class QrInvoiceValidationFlashTest extends TestCase
     {
         $this->setUpOrganization();
 
-        $customer = Customer::factory()->for($this->org, 'organization')->create();
+        $customer = Contact::factory()->for($this->org, 'organization')->create();
         $invoice = Invoice::factory()
             ->for($this->org, 'organization')
             ->for($customer, 'customer')
@@ -86,7 +86,7 @@ class QrInvoiceValidationFlashTest extends TestCase
     {
         $this->setUpOrganization();
 
-        $customer = Customer::factory()->for($this->org, 'organization')->create();
+        $customer = Contact::factory()->for($this->org, 'organization')->create();
         $invoice = Invoice::factory()
             ->for($this->org, 'organization')
             ->for($customer, 'customer')

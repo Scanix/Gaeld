@@ -4,7 +4,7 @@ namespace Tests\Security\Authorization;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Services\CurrentOrganization;
@@ -52,7 +52,7 @@ class VerticalPrivilegeTest extends SecurityTestCase
             'type' => AccountType::Asset->value,
         ]);
 
-        $this->customer = Customer::create([
+        $this->customer = Contact::create([
             'organization_id' => $this->orgA->id,
             'name' => 'Test Client',
         ]);

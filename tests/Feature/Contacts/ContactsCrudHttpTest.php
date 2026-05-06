@@ -2,9 +2,8 @@
 
 namespace Tests\Feature\Contacts;
 
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Contacts\Models\ContactPerson;
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
@@ -40,7 +39,7 @@ class ContactsCrudHttpTest extends TestCase
 
     public function test_customer_show_loads_relationships(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Show Customer',
             'country' => 'CH',
@@ -58,7 +57,7 @@ class ContactsCrudHttpTest extends TestCase
 
     public function test_customer_edit_page_renders(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Edit Customer',
             'country' => 'CH',
@@ -73,7 +72,7 @@ class ContactsCrudHttpTest extends TestCase
 
     public function test_customer_update_changes_fields(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Old Name',
             'country' => 'CH',
@@ -130,7 +129,7 @@ class ContactsCrudHttpTest extends TestCase
 
     public function test_supplier_update_changes_fields(): void
     {
-        $supplier = Supplier::create([
+        $supplier = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Old Supplier',
             'country' => 'CH',
@@ -153,7 +152,7 @@ class ContactsCrudHttpTest extends TestCase
 
     public function test_supplier_destroy_soft_deletes(): void
     {
-        $supplier = Supplier::create([
+        $supplier = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'To Delete',
             'country' => 'CH',
@@ -173,7 +172,7 @@ class ContactsCrudHttpTest extends TestCase
 
     public function test_contact_person_belongs_to_customer(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Parent Customer',
             'country' => 'CH',
@@ -181,21 +180,21 @@ class ContactsCrudHttpTest extends TestCase
         ]);
 
         $person = ContactPerson::create([
-            'contactable_type' => Customer::class,
+            'contactable_type' => Contact::class,
             'contactable_id' => $customer->id,
             'first_name' => 'Max',
             'last_name' => 'Muster',
             'email' => 'max@example.ch',
         ]);
 
-        $this->assertInstanceOf(Customer::class, $person->contactable);
+        $this->assertInstanceOf(Contact::class, $person->contactable);
         $this->assertEquals($customer->id, $person->contactable_id);
         $this->assertCount(1, $customer->fresh()->contactPersons);
     }
 
     public function test_contact_person_belongs_to_supplier(): void
     {
-        $supplier = Supplier::create([
+        $supplier = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Parent Supplier',
             'country' => 'CH',
@@ -203,14 +202,14 @@ class ContactsCrudHttpTest extends TestCase
         ]);
 
         $person = ContactPerson::create([
-            'contactable_type' => Supplier::class,
+            'contactable_type' => Contact::class,
             'contactable_id' => $supplier->id,
             'first_name' => 'Anna',
             'last_name' => 'Klein',
             'email' => 'anna@example.ch',
         ]);
 
-        $this->assertInstanceOf(Supplier::class, $person->contactable);
+        $this->assertInstanceOf(Contact::class, $person->contactable);
         $this->assertCount(1, $supplier->fresh()->contactPersons);
     }
 

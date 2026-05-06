@@ -2,7 +2,7 @@
 
 namespace App\Domains\Invoicing\Controllers;
 
-use App\Domains\Contacts\Queries\CustomerQuery;
+use App\Domains\Contacts\Queries\ContactQuery;
 use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\RecurringInvoice;
@@ -36,7 +36,7 @@ class RecurringInvoiceController extends Controller
         $this->authorize('create', Invoice::class);
 
         return Inertia::render('Invoices/Recurring/Create', [
-            'customers' => CustomerQuery::forSelect(),
+            'customers' => ContactQuery::forSelect(),
             'frequencies' => array_map(
                 fn (RecurrenceFrequency $f) => ['value' => $f->value, 'label' => ucfirst($f->value)],
                 RecurrenceFrequency::cases(),
@@ -69,7 +69,7 @@ class RecurringInvoiceController extends Controller
 
         return Inertia::render('Invoices/Recurring/Edit', [
             'recurringInvoice' => $recurring->load('customer:id,name'),
-            'customers' => CustomerQuery::forSelect(),
+            'customers' => ContactQuery::forSelect(),
             'frequencies' => array_map(
                 fn (RecurrenceFrequency $f) => ['value' => $f->value, 'label' => ucfirst($f->value)],
                 RecurrenceFrequency::cases(),
