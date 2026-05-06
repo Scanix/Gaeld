@@ -2007,4 +2007,27 @@ return [
     'password_min_length' => 'Password must be at least 8 characters.',
     'passwords_do_not_match' => 'Passwords do not match.',
     'no_journal_lines' => 'No journal entry lines found.',
+
+    // Outbound payments (pain.001)
+    'payments_outgoing' => 'Payments to send',
+    'payments_outgoing_help' => 'Select the supplier expenses to pay, then download a pain.001 file to import into your e-banking.',
+    'payments_outgoing_summary' => 'Payment batch',
+    'payments_outgoing_empty_title' => 'No payments to send',
+    'payments_outgoing_empty_description' => 'All approved expenses already have a payment, or their suppliers have no IBAN.',
+    'payments_outgoing_no_bank_title' => 'No debtor account',
+    'payments_outgoing_no_bank_description' => 'Add a bank account with an IBAN before generating a payment file.',
+    'payments_outgoing_single_currency' => 'A pain.001 batch must use a single currency. Adjust your selection.',
+    'payments_outgoing_submitted' => ':count payment(s) submitted (batch :id).',
+    'download_pain001' => 'Download pain.001 file',
+    'debtor_account' => 'Debtor account',
+    'execution_date' => 'Execution date',
+    'selected_count' => 'Selected',
+    'no_iban' => 'No IBAN',
+
+    // Justification badges
+    'justification_missing' => 'Supporting document missing',
+    'justification_missing_help' => 'This reconciled transaction has no invoice, expense or receipt attached.',
+    'no_receipt_count' => ':count reconciled without document',
+    'view_document' => 'View document',
+    'view_receipt' => 'View receipt',
 ];

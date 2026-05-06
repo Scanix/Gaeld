@@ -12,7 +12,7 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import PageHeader from '@/Components/UI/PageHeader.vue'
-import { Plus, Landmark } from 'lucide-vue-next'
+import { Plus, Landmark, Send } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import IbanHint from '@/Components/IbanHint.vue'
 import { useTranslations } from '@/lib/useTranslations'
@@ -65,6 +65,9 @@ const columns = computed(() => [
     </HelpText>
 
     <PageHeader :title="t('bank_accounts')">
+      <a href="/payments/outgoing">
+        <Button variant="outline" class="mr-2"><Send class="mr-2 h-4 w-4" /> {{ t('payments_outgoing') }}</Button>
+      </a>
       <Button @click="showModal = true"><Plus class="mr-2 h-4 w-4" /> {{ t('add_account') }}</Button>
     </PageHeader>
 
