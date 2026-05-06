@@ -9,6 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.0] — 2026-05-06
+
+Outbound payment initiation, contacts unification, and Swiss letter PDF
+polish.
+
+### Added
+- **Banking: outbound payments via pain.001** — new “Payments to send” page
+  aggregates payable expenses (supplier IBAN required, not yet posted),
+  lets you pick a debtor account and execution date, and downloads a valid
+  ISO 20022 pain.001.001.09 batch ready for any Swiss e-banking. Built on
+  a provider-agnostic `PaymentInitiationProviderInterface` so an EE bLink
+  push provider can plug in later without touching callers.
+- **Banking: justification badges** — reconciliation views surface an amber
+  badge when a reconciled transaction has no invoice/expense or when the
+  matched expense has no receipt, plus a header counter to spot the gap.
+- **Invoicing: Swiss SN 010130 / DIN 5008 PDF layout** — invoice PDFs now
+  draw fold and punch marks on the left edge and place the recipient
+  block inside the standard address window so the sheet fits a C5/C6
+  window envelope when folded in three.
+
+### Changed
+- **Contacts: unified customers and suppliers** — Customer/Supplier
+  subclasses removed in favour of a single Contact model. The expense
+  form now lists every contact and auto-flags `is_supplier` on save;
+  the contacts datatable drops the now-redundant roles column.
+- **Sidebar UX** — recurring expenses surfaced at the top level,
+  redundant contact children removed, and Trial Balance / Analytical
+  Report moved to *Reports* for a clearer Accounting vs Reports split.
+- **Security** — relaxed CSP `frame-ancestors` to `'self'` so inline
+  receipt previews can render.
+- **i18n** — backfilled 17 missing contacts keys in fr/de/it and added
+  recurring-expense translations.
+
+### Fixed
+- Use-statement ordering in cleanup scripts.
+
+---
+
 ## [3.0.0] — 2026-05-05
 
 First full production release. Includes the QA hardening pass, payroll IBAN
