@@ -44,6 +44,7 @@ const props = defineProps({
   previousRevenue: { type: [Number, String], default: 0 },
   previousExpenses: { type: [Number, String], default: 0 },
   previousBalance: { type: [Number, String], default: 0 },
+  hasPreviousYearData: { type: Boolean, default: false },
   budgetSummary: { type: Object, default: null },
   vatSummary: { type: Object, default: null },
   receivablesAging: { type: Object, default: null },
@@ -65,6 +66,10 @@ const profit = computed(() => asNumber(contract.value.revenue) - asNumber(contra
 const previousProfit = computed(() => asNumber(contract.value.previousRevenue) - asNumber(contract.value.previousExpenses))
 
 function yoyChange(current, previous) {
+  // Only compare against the previous year when the org actually had
+  // activity then; otherwise the percentage is meaningless (e.g. -100% or
+  // unbounded growth from a near-zero baseline).
+  if (!contract.value.hasPreviousYearData) return null
   const prev = Number(previous)
   const cur = Number(current)
   if (!prev || !Number.isFinite(prev) || !Number.isFinite(cur)) return null

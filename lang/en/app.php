@@ -1599,6 +1599,7 @@ return [
     'qr_invoice_error_detail_customer' => 'customer address details',
     'qr_invoice_error_detail_amount' => 'invoice amount or currency',
     'qr_invoice_error_detail_reference' => 'payment reference format',
+    'qr_invoice_error_details_label' => 'Technical details:',
     'go_to_banking' => 'Add a bank account',
     'empty_reconciliation_title' => 'No bank accounts',
     'empty_reconciliation_desc' => 'Create a bank account first to start reconciling transactions.',
