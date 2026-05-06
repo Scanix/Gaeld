@@ -11,8 +11,6 @@ readonly class UpdateContactData
 {
     public function __construct(
         public string $name,
-        public ?bool $isCustomer = null,
-        public ?bool $isSupplier = null,
         public ?string $type = null,
         public ?AddressData $addressData = null,
         public ?string $email = null,
@@ -31,8 +29,6 @@ readonly class UpdateContactData
     {
         return new self(
             name: $data['name'],
-            isCustomer: isset($data['is_customer']) ? (bool) $data['is_customer'] : null,
-            isSupplier: isset($data['is_supplier']) ? (bool) $data['is_supplier'] : null,
             type: $data['type'] ?? null,
             addressData: AddressData::fromArray($data),
             email: $data['email'] ?? null,
@@ -52,8 +48,6 @@ readonly class UpdateContactData
     {
         return array_filter([
             'name' => $this->name,
-            'is_customer' => $this->isCustomer,
-            'is_supplier' => $this->isSupplier,
             'type' => $this->type,
             'email' => $this->email,
             'phone' => $this->phone,

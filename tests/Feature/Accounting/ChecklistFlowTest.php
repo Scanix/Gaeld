@@ -4,7 +4,7 @@ namespace Tests\Feature\Accounting;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
@@ -87,7 +87,7 @@ class ChecklistFlowTest extends TestCase
         Account::create(['organization_id' => $this->org->id, 'code' => '2200', 'name' => 'VAT Output', 'type' => AccountType::Liability->value]);
         Account::create(['organization_id' => $this->org->id, 'code' => '3900', 'name' => 'Rounding', 'type' => AccountType::Revenue->value]);
 
-        $customer = Customer::create(['organization_id' => $this->org->id, 'name' => 'Client AG']);
+        $customer = Contact::create(['organization_id' => $this->org->id, 'name' => 'Client AG']);
 
         app(CreateInvoiceAction::class)->execute(CreateInvoiceData::fromArray([
             'organization_id' => $this->org->id,

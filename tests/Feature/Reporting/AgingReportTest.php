@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Reporting;
 
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -27,7 +27,7 @@ class AgingReportTest extends TestCase
 
         $this->setUpOrganization();
 
-        $this->customer = Customer::create([
+        $this->customer = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Customer AG',
         ]);

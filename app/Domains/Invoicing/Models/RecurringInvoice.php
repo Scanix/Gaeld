@@ -2,7 +2,7 @@
 
 namespace App\Domains\Invoicing\Models;
 
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
@@ -31,7 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Organization $organization
- * @property-read Customer $customer
+ * @property-read Contact $customer
  */
 class RecurringInvoice extends Model
 {
@@ -65,10 +65,10 @@ class RecurringInvoice extends Model
         return $this->belongsTo(Organization::class);
     }
 
-    /** @return BelongsTo<Customer, $this> */
+    /** @return BelongsTo<Contact, $this> */
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Contact::class);
     }
 
     /**

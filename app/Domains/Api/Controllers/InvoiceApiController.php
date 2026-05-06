@@ -7,7 +7,7 @@ use App\Domains\Api\Requests\RecordPaymentApiRequest;
 use App\Domains\Api\Requests\StoreInvoiceApiRequest;
 use App\Domains\Api\Requests\UpdateInvoiceApiRequest;
 use App\Domains\Api\Resources\InvoiceResource;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\CancelInvoiceAction;
 use App\Domains\Invoicing\Actions\CreateCreditNoteAction;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
@@ -142,7 +142,7 @@ class InvoiceApiController extends Controller
 
             // Resolve customer UUID to internal integer FK
             if (isset($payload['customer_id'])) {
-                $payload['customer_id'] = Customer::where('uuid', $payload['customer_id'])
+                $payload['customer_id'] = Contact::where('uuid', $payload['customer_id'])
                     ->where('organization_id', $currentOrg->id())
                     ->value('id');
             }
@@ -210,7 +210,7 @@ class InvoiceApiController extends Controller
 
         // Resolve customer UUID to internal integer FK
         if (isset($validated['customer_id'])) {
-            $validated['customer_id'] = Customer::where('uuid', $validated['customer_id'])
+            $validated['customer_id'] = Contact::where('uuid', $validated['customer_id'])
                 ->where('organization_id', $currentOrg->id())
                 ->value('id');
         }

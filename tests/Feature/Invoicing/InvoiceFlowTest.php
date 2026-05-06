@@ -7,7 +7,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Accounting\Services\LedgerQueryService;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\CancelInvoiceAction;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
@@ -72,7 +72,7 @@ class InvoiceFlowTest extends TestCase
             'is_default' => true,
         ]);
 
-        $this->customer = Customer::create([
+        $this->customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Test Client AG',
         ]);

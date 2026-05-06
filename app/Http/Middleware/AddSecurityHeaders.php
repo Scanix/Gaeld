@@ -58,7 +58,7 @@ class AddSecurityHeaders
                     "font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net",
                     "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://region1.google-analytics.com",
                     "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://docs.gaeld.ch",
-                    "frame-ancestors 'none'",
+                    "frame-ancestors 'self'",
                 ]),
             );
         }

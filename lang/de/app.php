@@ -6,6 +6,7 @@ return [
     'invoices' => 'Rechnungen',
     'expenses' => 'Ausgaben',
     'contacts' => 'Kontakte',
+    'contact' => 'Kontakt',
     'customers' => 'Kunden',
     'suppliers' => 'Lieferanten',
     'accounting' => 'Buchhaltung',
@@ -306,6 +307,26 @@ return [
     'ocr_pending_widget_title' => 'OCR-Belege ausstehend',
     'ocr_pending_widget_description' => 'Beleg(e) zur Validierung ausstehend',
     'review_and_adjust' => 'Überprüfen Sie die erkannten Felder und passen Sie sie bei Bedarf an.',
+
+    // Contacts (unified)
+    'new_contact' => 'Neuer Kontakt',
+    'create_contact' => 'Kontakt erstellen',
+    'manage_contacts' => 'Verwalten und sehen Sie alle Ihre Kontakte ein.',
+    'no_contacts_yet' => 'Noch keine Kontakte',
+    'no_contacts_yet_desc' => 'Fügen Sie Kontakte hinzu, um Rechnungen zu erstellen und Ausgaben zu erfassen.',
+    'edit_contact' => 'Kontakt bearbeiten',
+    'delete_contact' => 'Kontakt löschen',
+    'confirm_delete_contact' => 'Sind Sie sicher, dass Sie :name löschen möchten? Dies kann nicht rückgängig gemacht werden.',
+    'contact_roles' => 'Kontaktrollen',
+    'is_customer' => 'Kunde (erhält Rechnungen)',
+    'is_supplier' => 'Lieferant (sendet Ausgaben)',
+    'supplier_details' => 'Lieferantendetails',
+    'banking_and_expense_defaults' => 'Bank & Standardwerte',
+    'contact_created' => 'Kontakt erstellt.',
+    'contact_updated' => 'Kontakt aktualisiert.',
+    'contact_deleted' => 'Kontakt gelöscht.',
+    'help_contacts_title' => 'Kontakte verwalten',
+    'help_contacts_text' => 'Kontakte sind Personen und Unternehmen, mit denen Sie zusammenarbeiten. Ein Kontakt kann ein Kunde (Sie stellen ihm Rechnungen), ein Lieferant (Sie kaufen bei ihm) oder beides sein.',
 
     // Customers
     'new_customer' => 'Neuer Kunde',
@@ -1970,4 +1991,27 @@ return [
     'password_min_length' => 'Das Passwort muss mindestens 8 Zeichen lang sein.',
     'passwords_do_not_match' => 'Die Passwörter stimmen nicht überein.',
     'no_journal_lines' => 'Keine Buchungszeilen gefunden.',
+
+    // Ausgehende Zahlungen (pain.001)
+    'payments_outgoing' => 'Zu sendende Zahlungen',
+    'payments_outgoing_help' => 'Wählen Sie die zu bezahlenden Lieferantenrechnungen aus und laden Sie eine pain.001-Datei für Ihr E-Banking herunter.',
+    'payments_outgoing_summary' => 'Zahlungslauf',
+    'payments_outgoing_empty_title' => 'Keine Zahlungen zu senden',
+    'payments_outgoing_empty_description' => 'Alle genehmigten Spesen sind bereits bezahlt oder die Lieferanten haben keine IBAN.',
+    'payments_outgoing_no_bank_title' => 'Kein Belastungskonto',
+    'payments_outgoing_no_bank_description' => 'Legen Sie ein Bankkonto mit IBAN an, bevor Sie eine Zahlungsdatei erzeugen.',
+    'payments_outgoing_single_currency' => 'Eine pain.001-Datei darf nur eine Währung enthalten. Bitte Auswahl anpassen.',
+    'payments_outgoing_submitted' => ':count Zahlung(en) übermittelt (Lauf :id).',
+    'download_pain001' => 'pain.001-Datei herunterladen',
+    'debtor_account' => 'Belastungskonto',
+    'execution_date' => 'Ausführungsdatum',
+    'selected_count' => 'Ausgewählt',
+    'no_iban' => 'Keine IBAN',
+
+    // Belegabgleich-Badges
+    'justification_missing' => 'Beleg fehlt',
+    'justification_missing_help' => 'Diese abgeglichene Transaktion hat keine Rechnung, Spese oder Beleg.',
+    'no_receipt_count' => ':count abgeglichen ohne Beleg',
+    'view_document' => 'Dokument ansehen',
+    'view_receipt' => 'Beleg ansehen',
 ];

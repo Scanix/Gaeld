@@ -82,7 +82,7 @@ async function submit() {
   errors.value = {}
   formError.value = ''
 
-  const endpoint = props.contactType === 'customer' ? '/customers' : '/suppliers'
+  const endpoint = '/contacts'
 
   const csrfMetaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
   const xsrfCookieToken = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1]

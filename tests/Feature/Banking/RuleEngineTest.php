@@ -11,7 +11,7 @@ use App\Domains\Banking\Rules\QrReferencePaymentRule;
 use App\Domains\Banking\Rules\RecurringEntryRule;
 use App\Domains\Banking\Rules\SupplierCategoryRule;
 use App\Domains\Banking\Services\RuleEngineService;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
@@ -69,7 +69,7 @@ class RuleEngineTest extends TestCase
 
     public function test_qr_rule_matches_credit_with_structured_reference(): void
     {
-        $client = Customer::create(['organization_id' => $this->organization->id, 'name' => 'Test Client']);
+        $client = Contact::create(['organization_id' => $this->organization->id, 'name' => 'Test Client']);
         $invoice = Invoice::create([
             'organization_id' => $this->organization->id,
             'customer_id' => $client->id,

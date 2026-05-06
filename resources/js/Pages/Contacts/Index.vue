@@ -5,7 +5,6 @@ import AppLayout from '@/Components/AppLayout.vue'
 import Button from '@/Components/UI/Button.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
-import Badge from '@/Components/UI/Badge.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useEntityIndexQuery, useCountryFilters, useEntityDelete } from '@/lib/useEntityIndexTable'
@@ -35,7 +34,6 @@ const { deleteTarget, deleting, confirmDelete, executeDelete } = useEntityDelete
 
 const columns = computed(() => [
   { key: 'name', label: t('name'), sortable: true },
-  { key: 'roles', label: t('roles') },
   { key: 'email', label: t('email'), sortable: true },
   { key: 'city', label: t('city'), sortable: true },
   { key: 'country', label: t('country'), sortable: true },
@@ -76,12 +74,6 @@ const countryFilters = useCountryFilters({ t, query: queryState })
       @search="handleSearch"
       @filter="handleFilter"
     >
-      <template #cell-roles="{ row }">
-        <div class="flex gap-1 flex-wrap">
-          <Badge v-if="row.is_customer" variant="default" class="text-xs">{{ t('customer') }}</Badge>
-          <Badge v-if="row.is_supplier" variant="secondary" class="text-xs">{{ t('supplier') }}</Badge>
-        </div>
-      </template>
       <template #cell-actions="{ row }">
         <div class="flex justify-end gap-1">
           <Button

@@ -5,7 +5,7 @@ namespace Tests\Feature\Api;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Api\Enums\TokenType;
 use App\Domains\Banking\Models\BankAccount;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
@@ -48,7 +48,7 @@ class ApiContractTest extends TestCase
 
     public function test_list_invoices(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Invoice Customer',
             'country' => 'CH',
@@ -69,7 +69,7 @@ class ApiContractTest extends TestCase
 
     public function test_create_invoice(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Billed Customer',
             'country' => 'CH',
@@ -98,7 +98,7 @@ class ApiContractTest extends TestCase
 
     public function test_show_invoice(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Show Invoice Customer',
             'country' => 'CH',
@@ -115,7 +115,7 @@ class ApiContractTest extends TestCase
 
     public function test_update_invoice(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Update Invoice Customer',
             'country' => 'CH',
@@ -145,7 +145,7 @@ class ApiContractTest extends TestCase
 
     public function test_update_invoice_with_partial_payload(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Partial Update Invoice Customer',
             'country' => 'CH',
@@ -181,7 +181,7 @@ class ApiContractTest extends TestCase
 
     public function test_delete_invoice(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Delete Invoice Customer',
             'country' => 'CH',

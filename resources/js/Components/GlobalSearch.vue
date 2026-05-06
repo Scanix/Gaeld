@@ -19,8 +19,7 @@ let debounceTimer = null
 
 const typeConfig = {
   invoice: { icon: FileText, label: () => t('invoices'), color: 'text-blue-500' },
-  customer: { icon: Users, label: () => t('customers'), color: 'text-green-500' },
-  supplier: { icon: Truck, label: () => t('suppliers'), color: 'text-orange-500' },
+  contact: { icon: Users, label: () => t('contacts'), color: 'text-green-500' },
   expense: { icon: Receipt, label: () => t('expenses'), color: 'text-red-500' },
   navigation: { icon: ArrowRight, label: () => t('go_to'), color: 'text-[hsl(var(--muted-foreground))]' },
 }
@@ -31,8 +30,7 @@ const navigationItems = computed(() => [
   { type: 'navigation', id: 'nav-invoices', title: t('invoices'), url: '/invoices', icon: FileText },
   { type: 'navigation', id: 'nav-recurring', title: t('recurring'), url: '/invoices/recurring', icon: FileText },
   { type: 'navigation', id: 'nav-expenses', title: t('expenses'), url: '/expenses', icon: Receipt },
-  { type: 'navigation', id: 'nav-customers', title: t('customers'), url: '/customers', icon: Users },
-  { type: 'navigation', id: 'nav-suppliers', title: t('suppliers'), url: '/suppliers', icon: Truck },
+  { type: 'navigation', id: 'nav-contacts', title: t('contacts'), url: '/contacts', icon: Users },
   { type: 'navigation', id: 'nav-chart', title: t('chart_of_accounts'), url: '/accounting/chart-of-accounts', icon: BookOpen },
   { type: 'navigation', id: 'nav-journal', title: t('journal_entries'), url: '/accounting/journal-entries', icon: BookOpen },
   { type: 'navigation', id: 'nav-banking', title: t('banking'), url: '/banking', icon: Landmark },

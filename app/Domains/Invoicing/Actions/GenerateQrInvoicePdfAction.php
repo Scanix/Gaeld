@@ -36,6 +36,7 @@ class GenerateQrInvoicePdfAction
 
         // --- INVOICE CONTENT ---
         $this->pdfRenderer->setLocale($language);
+        $this->pdfRenderer->renderFoldMarks($tcpdf);
         $this->pdfRenderer->renderInvoiceHeader($tcpdf, $invoice, $organization);
         $this->pdfRenderer->renderLineItems($tcpdf, $invoice);
         $this->pdfRenderer->renderTotals($tcpdf, $invoice, $organization);

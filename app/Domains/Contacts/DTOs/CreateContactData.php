@@ -15,8 +15,6 @@ readonly class CreateContactData
     public function __construct(
         public string $organizationId,
         public string $name,
-        public bool $isCustomer = false,
-        public bool $isSupplier = false,
         public ?string $type = 'organization',
         public ?AddressData $addressData = null,
         public ?string $email = null,
@@ -38,8 +36,6 @@ readonly class CreateContactData
         return new self(
             organizationId: $data['organization_id'],
             name: $data['name'],
-            isCustomer: (bool) ($data['is_customer'] ?? false),
-            isSupplier: (bool) ($data['is_supplier'] ?? false),
             type: $data['type'] ?? 'organization',
             addressData: AddressData::fromArray($data),
             email: $data['email'] ?? null,
@@ -60,8 +56,6 @@ readonly class CreateContactData
         return [
             'organization_id' => $this->organizationId,
             'name' => $this->name,
-            'is_customer' => $this->isCustomer,
-            'is_supplier' => $this->isSupplier,
             'type' => $this->type,
             'email' => $this->email,
             'phone' => $this->phone,

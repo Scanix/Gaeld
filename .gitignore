@@ -44,7 +44,8 @@ yarn-error.log
 
 # deploy.php holds real credentials / paths — only tracked on `production`.
 # On `main` and `develop` it stays gitignored; deploy.php.example is the template.
-deploy.php
+# deploy.php
+!deploy.php
 
 # GitLab CI lives ONLY on the `production` branch (private GitLab default).
 # It must never reach the public GitHub mirror — it exposes internal hostnames,

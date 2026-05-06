@@ -10,8 +10,7 @@ use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankingService;
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Enums\ExpenseStatus;
@@ -456,7 +455,7 @@ class ShowcaseDataSeeder extends Seeder
     public function run(): void
     {
         // Disable Scout indexing during seeding to avoid needing the jobs table
-        $searchableModels = [Customer::class, Supplier::class, Invoice::class, Expense::class];
+        $searchableModels = [Contact::class, Invoice::class, Expense::class];
         foreach ($searchableModels as $model) {
             ModelObserver::disableSyncingFor($model);
         }
@@ -543,7 +542,7 @@ class ShowcaseDataSeeder extends Seeder
         // ── Customers ────────────────────────────────────────────
         $customers = [];
         foreach ($pack['customers'] as $c) {
-            $customers[] = Customer::firstOrCreate(
+            $customers[] = Contact::firstOrCreate(
                 ['organization_id' => $org->id, 'email' => $c['email']],
                 array_merge($c, ['organization_id' => $org->id, 'country' => 'CH'])
             );
@@ -551,7 +550,7 @@ class ShowcaseDataSeeder extends Seeder
 
         // ── Suppliers ────────────────────────────────────────────
         foreach ($pack['suppliers'] as $s) {
-            Supplier::firstOrCreate(
+            Contact::firstOrCreate(
                 ['organization_id' => $org->id, 'email' => $s['email']],
                 array_merge($s, ['organization_id' => $org->id, 'country' => 'CH'])
             );
@@ -567,12 +566,12 @@ class ShowcaseDataSeeder extends Seeder
             }
         }
         $supplierMap = [];
-        foreach (Supplier::where('organization_id', $org->id)->get() as $s) {
+        foreach (Contact::where('organization_id', $org->id)->get() as $s) {
             $supplierMap[$s->name] = $s->id;
         }
         foreach ($vendorCategories as $vendorName => $category) {
             if (! isset($supplierMap[$vendorName])) {
-                $supplier = Supplier::create([
+                $supplier = Contact::create([
                     'organization_id' => $org->id,
                     'name' => $vendorName,
                     'country' => 'CH',

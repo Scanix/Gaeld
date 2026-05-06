@@ -9,9 +9,9 @@ use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Api\Jobs\DispatchWebhookJob;
 use App\Domains\Api\Models\PersonalAccessToken;
 use App\Domains\Assets\Jobs\MonthlyDepreciationJob;
+use App\Domains\Banking\Contracts\PaymentInitiationProviderInterface;
+use App\Domains\Banking\Services\Payments\FilePain001Provider;
 use App\Domains\Contacts\Models\Contact;
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Contacts\Policies\ContactPolicy;
 use App\Domains\Contacts\Search\ContactSearchProvider;
 use App\Domains\Expenses\Contracts\ReceiptOcrInterface;
@@ -63,6 +63,10 @@ class AppServiceProvider extends ServiceProvider
                 : NullOcrService::class,
         );
 
+        // Outbound payment provider — overridden by EE GaeldEEServiceProvider
+        // when the bank_sync feature is enabled and the BankAccount uses bLink.
+        $this->app->bind(PaymentInitiationProviderInterface::class, FilePain001Provider::class);
+
         $this->app->singleton(GlobalSearchService::class, function ($app) {
             return new GlobalSearchService(
                 $app->make(InvoiceSearchProvider::class),
@@ -111,8 +115,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(LongWaitDetected::class, SendHorizonTelegramAlert::class);
 
         Gate::policy(Contact::class, ContactPolicy::class);
-        Gate::policy(Customer::class, ContactPolicy::class);
-        Gate::policy(Supplier::class, ContactPolicy::class);
 
         // Cache invalidation: flush tagged caches when models change
         $flushTags = function (string ...$tags) {
@@ -139,8 +141,6 @@ class AppServiceProvider extends ServiceProvider
             VatRate::$event($referenceFlush);
             Account::$event($referenceFlush);
             ExpenseCategory::$event($referenceFlush);
-            Customer::$event($contactsFlush);
-            Supplier::$event($contactsFlush);
             Contact::$event($contactsFlush);
             Invoice::$event($dashboardFlush);
             Expense::$event($dashboardFlush);
