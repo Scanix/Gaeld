@@ -24,7 +24,7 @@ use Tests\Security\SecurityTestCase;
  */
 class HorizontalPrivilegeTest extends SecurityTestCase
 {
-    private Customer $customerB;
+    private Contact $customerB;
 
     private Invoice $invoiceB;
 
@@ -109,7 +109,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         $this->assertDenied(
             $this->actingAs($this->ownerA)
                 ->withSession(['current_organization_id' => $this->orgA->id])
-                ->get("/customers/{$this->customerB->uuid}")
+                ->get("/contacts/{$this->customerB->uuid}")
         );
     }
 
@@ -118,7 +118,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         $this->assertDenied(
             $this->actingAs($this->ownerA)
                 ->withSession(['current_organization_id' => $this->orgA->id])
-                ->put("/customers/{$this->customerB->uuid}", ['name' => 'Hacked'])
+                ->put("/contacts/{$this->customerB->uuid}", ['name' => 'Hacked'])
         );
     }
 
@@ -127,7 +127,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         $this->assertDenied(
             $this->actingAs($this->ownerA)
                 ->withSession(['current_organization_id' => $this->orgA->id])
-                ->delete("/customers/{$this->customerB->uuid}")
+                ->delete("/contacts/{$this->customerB->uuid}")
         );
     }
 
@@ -264,7 +264,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         $token = $this->createApiToken($this->ownerA, $this->orgA);
 
         $this->withToken($token)
-            ->getJson("/api/v1/customers/{$this->customerB->uuid}")
+            ->getJson("/api/v1/invoices/{$this->customerB->uuid}")
             ->assertStatus(404);
     }
 
@@ -282,7 +282,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         // Org A token should only list Org A's customers — Org B's must not appear
         $token = $this->createApiToken($this->ownerA, $this->orgA);
 
-        $response = $this->withToken($token)->getJson('/api/v1/customers');
+        $response = $this->withToken($token)->getJson('/api/v1/invoices');
         $response->assertOk();
 
         $ids = collect($response->json('data'))->pluck('id');

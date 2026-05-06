@@ -21,7 +21,7 @@ class CoreHttpFlowTest extends TestCase
 {
     use RefreshDatabase, WithAuthenticatedOrganization;
 
-    private Customer $customer;
+    private Contact $customer;
 
     private VatRate $vatRate;
 

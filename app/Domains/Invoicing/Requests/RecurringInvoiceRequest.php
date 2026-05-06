@@ -16,7 +16,7 @@ class RecurringInvoiceRequest extends FormRequest
         $rules = [
             'customer_id' => [
                 'required',
-                Rule::exists('customers', 'id')->where('organization_id', $orgId),
+                Rule::exists('contacts', 'id')->where('organization_id', $orgId),
             ],
             'frequency' => ['required', 'string', 'in:weekly,monthly,quarterly,yearly'],
             'next_issue_date' => ['required', 'date'],

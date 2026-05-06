@@ -28,7 +28,7 @@ class FeatureFlagEnforcementTest extends SecurityTestCase
         config(['features.api_access' => false]);
 
         $this->withToken($token)
-            ->getJson('/api/v1/customers')
+            ->getJson('/api/v1/invoices')
             ->assertForbidden();
     }
 
@@ -91,7 +91,7 @@ class FeatureFlagEnforcementTest extends SecurityTestCase
         config(['features.api_access' => false]);
 
         // An attacker appending ?feature=api_access or similar must not grant access
-        $this->getJson('/api/v1/customers?feature=api_access&features[api_access]=1')
+        $this->getJson('/api/v1/invoices?feature=api_access&features[api_access]=1')
             ->assertUnauthorized(); // Not even authenticated, so 401 first; 403 after auth
     }
 }
