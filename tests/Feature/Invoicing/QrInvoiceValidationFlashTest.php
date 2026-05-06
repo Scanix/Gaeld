@@ -47,7 +47,8 @@ class QrInvoiceValidationFlashTest extends TestCase
 
         $expected = __('app.qr_invoice_error_summary', [
             'details' => __('app.qr_invoice_error_detail_qr_iban'),
-        ]).' '.__('app.qr_iban_help_where_to_find');
+        ]).' '.__('app.qr_iban_help_where_to_find')
+            .' — '.__('app.qr_invoice_error_details_label').' QR-IBAN is invalid.';
 
         $response->assertRedirect(route('invoices.show', $invoice));
         $response->assertSessionHas('error', $expected);
@@ -75,7 +76,7 @@ class QrInvoiceValidationFlashTest extends TestCase
 
         $expected = __('app.qr_invoice_error_summary', [
             'details' => __('app.qr_invoice_error_detail_creditor'),
-        ]);
+        ]).' — '.__('app.qr_invoice_error_details_label').' Creditor account is invalid.';
 
         $response->assertRedirect(route('invoices.show', $invoice));
         $response->assertSessionHas('error', $expected);

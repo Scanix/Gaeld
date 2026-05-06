@@ -1582,6 +1582,7 @@ return [
     'qr_invoice_error_detail_customer' => 'Adressangaben des Kunden',
     'qr_invoice_error_detail_amount' => 'Rechnungsbetrag oder Währung',
     'qr_invoice_error_detail_reference' => 'Format der Zahlungsreferenz',
+    'qr_invoice_error_details_label' => 'Technische Details:',
     'go_to_banking' => 'Bankkonto hinzufügen',
     'empty_reconciliation_title' => 'Keine Bankkonten',
     'empty_reconciliation_desc' => 'Erstellen Sie zuerst ein Bankkonto, um mit dem Abgleich zu beginnen.',

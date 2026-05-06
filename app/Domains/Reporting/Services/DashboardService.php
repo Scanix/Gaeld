@@ -76,6 +76,7 @@ class DashboardService
         // Year-over-year comparison
         $previousRevenue = $this->invoiceQuery->yearlyRevenue($organizationId, $year - 1);
         $previousExpenses = $this->expenseService->yearlyTotal($organizationId, $year - 1);
+        $hasPreviousYearData = $this->hasActivityInYear($organizationId, $year - 1);
 
         return [
             'revenue' => $totalRevenue,
@@ -93,6 +94,7 @@ class DashboardService
             'previousRevenue' => $previousRevenue,
             'previousExpenses' => $previousExpenses,
             'previousBalance' => Money::subtract($previousRevenue, $previousExpenses),
+            'hasPreviousYearData' => $hasPreviousYearData,
             'recentTransactions' => $this->recentTransactions($organizationId),
             'monthlyBreakdown' => $this->monthlyBreakdown($organizationId, $year),
             'budgetSummary' => $this->budgetSummary($organizationId, $year),
@@ -381,6 +383,26 @@ class DashboardService
         }
 
         return $currentYear;
+    }
+
+    /**
+     * Whether the organization recorded any invoice or expense activity
+     * during the given calendar year. Used to suppress year-over-year
+     * trend indicators when there is no real comparison baseline.
+     */
+    private function hasActivityInYear(string $organizationId, int $year): bool
+    {
+        $hasInvoice = Invoice::where('organization_id', $organizationId)
+            ->whereYear('issue_date', $year)
+            ->exists();
+
+        if ($hasInvoice) {
+            return true;
+        }
+
+        return Expense::where('organization_id', $organizationId)
+            ->whereYear('date', $year)
+            ->exists();
     }
 
     private function pendingOcrScans(string $organizationId): int

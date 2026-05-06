@@ -207,7 +207,9 @@ class SwissQrInvoiceService
     }
 
     /**
-     * Get QR bill violations (validation errors).
+     * Get QR bill violations (validation errors), each formatted as
+     * "<propertyPath>: <message>" so callers can surface the exact field
+     * that failed validation rather than a vague summary.
      *
      * @return array<string>
      */
@@ -215,11 +217,14 @@ class SwissQrInvoiceService
     {
         $qrBill = $this->buildQrBill($invoice, $organization);
 
-        $violations = $qrBill->getViolations();
-
         return array_map(
-            fn ($violation) => $violation->getMessage(),
-            iterator_to_array($violations),
+            function ($violation): string {
+                $message = (string) $violation->getMessage();
+                $path = (string) $violation->getPropertyPath();
+
+                return $path !== '' ? $path.': '.$message : $message;
+            },
+            iterator_to_array($qrBill->getViolations()),
         );
     }
 }
