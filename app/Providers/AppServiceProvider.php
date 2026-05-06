@@ -9,6 +9,8 @@ use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Api\Jobs\DispatchWebhookJob;
 use App\Domains\Api\Models\PersonalAccessToken;
 use App\Domains\Assets\Jobs\MonthlyDepreciationJob;
+use App\Domains\Banking\Contracts\PaymentInitiationProviderInterface;
+use App\Domains\Banking\Services\Payments\FilePain001Provider;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Contacts\Policies\ContactPolicy;
 use App\Domains\Contacts\Search\ContactSearchProvider;
@@ -60,6 +62,10 @@ class AppServiceProvider extends ServiceProvider
                 ? TesseractOcrService::class
                 : NullOcrService::class,
         );
+
+        // Outbound payment provider — overridden by EE GaeldEEServiceProvider
+        // when the bank_sync feature is enabled and the BankAccount uses bLink.
+        $this->app->bind(PaymentInitiationProviderInterface::class, FilePain001Provider::class);
 
         $this->app->singleton(GlobalSearchService::class, function ($app) {
             return new GlobalSearchService(

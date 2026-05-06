@@ -1995,4 +1995,27 @@ return [
     'password_min_length' => 'La password deve contenere almeno 8 caratteri.',
     'passwords_do_not_match' => 'Le password non corrispondono.',
     'no_journal_lines' => 'Nessuna riga di scrittura contabile trovata.',
+
+    // Pagamenti in uscita (pain.001)
+    'payments_outgoing' => 'Pagamenti da inviare',
+    'payments_outgoing_help' => 'Seleziona le spese fornitore da pagare, poi scarica un file pain.001 da importare nel tuo e-banking.',
+    'payments_outgoing_summary' => 'Lotto di pagamento',
+    'payments_outgoing_empty_title' => 'Nessun pagamento da inviare',
+    'payments_outgoing_empty_description' => 'Tutte le spese approvate sono già pagate o i fornitori non hanno un IBAN.',
+    'payments_outgoing_no_bank_title' => 'Nessun conto di addebito',
+    'payments_outgoing_no_bank_description' => 'Aggiungi un conto bancario con IBAN prima di generare un file di pagamento.',
+    'payments_outgoing_single_currency' => 'Un lotto pain.001 può contenere una sola valuta. Modifica la selezione.',
+    'payments_outgoing_submitted' => ':count pagamento/i inviato/i (lotto :id).',
+    'download_pain001' => 'Scarica file pain.001',
+    'debtor_account' => 'Conto di addebito',
+    'execution_date' => 'Data di esecuzione',
+    'selected_count' => 'Selezionati',
+    'no_iban' => 'Nessun IBAN',
+
+    // Badge giustificativi
+    'justification_missing' => 'Documento giustificativo mancante',
+    'justification_missing_help' => 'Questa transazione riconciliata non ha fattura, spesa o ricevuta allegata.',
+    'no_receipt_count' => ':count riconciliate senza documento',
+    'view_document' => 'Visualizza documento',
+    'view_receipt' => 'Visualizza ricevuta',
 ];

@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Banking\Controllers\BankingController;
+use App\Domains\Banking\Controllers\PaymentInitiationController;
 use App\Domains\Banking\Controllers\ReconciliationController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +12,10 @@ Route::post('/banking', [BankingController::class, 'store'])->name('banking.stor
 Route::put('/banking/{bankAccount}', [BankingController::class, 'update'])->name('banking.update');
 Route::delete('/banking/{bankAccount}', [BankingController::class, 'destroy'])->name('banking.destroy');
 Route::post('/banking/{bankAccount}/transactions', [BankingController::class, 'recordTransaction'])->name('banking.transactions.store');
+
+// Outbound payments — pain.001 generation (CE), bLink push (EE)
+Route::get('/payments/outgoing', [PaymentInitiationController::class, 'index'])->name('payments.outgoing.index');
+Route::post('/payments/outgoing/download', [PaymentInitiationController::class, 'download'])->name('payments.outgoing.download');
 
 // Manual reconciliation + CAMT import (CE)
 Route::get('/reconciliation', [ReconciliationController::class, 'index'])->name('reconciliation.index');

@@ -2015,4 +2015,27 @@ return [
     'password_min_length' => 'Le mot de passe doit comporter au moins 8 caractères.',
     'passwords_do_not_match' => 'Les mots de passe ne correspondent pas.',
     'no_journal_lines' => 'Aucune ligne d\'écriture comptable trouvée.',
+
+    // Paiements sortants (pain.001)
+    'payments_outgoing' => 'Paiements à émettre',
+    'payments_outgoing_help' => 'Sélectionnez les dépenses fournisseurs à payer, puis téléchargez un fichier pain.001 à importer dans votre e-banking.',
+    'payments_outgoing_summary' => 'Lot de paiement',
+    'payments_outgoing_empty_title' => 'Aucun paiement à émettre',
+    'payments_outgoing_empty_description' => 'Toutes les dépenses approuvées sont déjà payées ou leurs fournisseurs n\'ont pas d\'IBAN.',
+    'payments_outgoing_no_bank_title' => 'Aucun compte débiteur',
+    'payments_outgoing_no_bank_description' => 'Ajoutez un compte bancaire avec un IBAN avant de générer un fichier de paiement.',
+    'payments_outgoing_single_currency' => 'Un lot pain.001 ne peut contenir qu\'une seule devise. Ajustez votre sélection.',
+    'payments_outgoing_submitted' => ':count paiement(s) transmis (lot :id).',
+    'download_pain001' => 'Télécharger le fichier pain.001',
+    'debtor_account' => 'Compte débiteur',
+    'execution_date' => 'Date d\'exécution',
+    'selected_count' => 'Sélection',
+    'no_iban' => 'Pas d\'IBAN',
+
+    // Badges de justification
+    'justification_missing' => 'Pièce justificative manquante',
+    'justification_missing_help' => 'Cette transaction rapprochée n\'a aucune facture, dépense ou justificatif joint.',
+    'no_receipt_count' => ':count rapprochée(s) sans justificatif',
+    'view_document' => 'Voir le document',
+    'view_receipt' => 'Voir le justificatif',
 ];
