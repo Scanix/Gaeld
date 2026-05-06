@@ -12,13 +12,12 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import DropdownMenu from '@/Components/UI/DropdownMenu.vue'
-import SharePrintButton from '@/Components/UI/SharePrintButton.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail, Eye, X } from 'lucide-vue-next'
+import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail, Eye, X, Share2 } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import HelpText from '@/Components/HelpText.vue'
 
@@ -160,6 +159,17 @@ const statusVariant = {
   cancelled: 'outline',
 }
 
+const canShare = computed(() => typeof navigator !== 'undefined' && 'share' in navigator)
+
+function shareInvoice() {
+  navigator.share({
+    title: `${t('invoice')} ${props.invoice?.number}`,
+    url: window.location.href,
+  }).catch(() => {
+    // User dismissed or browser denied — silent fail
+  })
+}
+
 const paymentMethodOptions = [
   { value: 'bank', label: t('bank_transfer') },
   { value: 'cash', label: t('cash') },
@@ -198,7 +208,16 @@ const bankAccountOptions = computed(() =>
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <SharePrintButton :title="`${t('invoice')} ${invoice?.number}`" />
+          <Button
+            v-if="canShare"
+            variant="outline"
+            size="sm"
+            :aria-label="t('share')"
+            @click="shareInvoice"
+          >
+            <Share2 class="h-4 w-4 sm:mr-1.5" />
+            <span class="hidden sm:inline">{{ t('share') }}</span>
+          </Button>
           <Button
             v-if="invoice?.status === 'draft'"
             as="a"
