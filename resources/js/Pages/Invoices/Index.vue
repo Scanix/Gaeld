@@ -128,10 +128,15 @@ const statusFilters = computed(() => [
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('manage_invoices') }}
       </p>
-      <Button as="a" href="/invoices/create">
-        <Plus class="mr-2 h-4 w-4" />
-        {{ t('new_invoice') }}
-      </Button>
+      <div class="flex flex-wrap gap-2">
+        <Button as="a" href="/invoices/recurring" variant="outline">
+          {{ t('recurring_invoices') }}
+        </Button>
+        <Button as="a" href="/invoices/create">
+          <Plus class="mr-2 h-4 w-4" />
+          {{ t('new_invoice') }}
+        </Button>
+      </div>
     </div>
 
     <DataTable
