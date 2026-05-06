@@ -39,4 +39,20 @@ class ContactQuery
             fn () => Contact::orderBy('name')->get()
         );
     }
+
+    public static function hasMatchingSupplier(string $organizationId, string $creditorName): bool
+    {
+        return Contact::where('organization_id', $organizationId)
+            ->whereNotNull('default_expense_category')
+            ->where('name', 'ilike', '%'.$creditorName.'%')
+            ->exists();
+    }
+
+    public static function findByCreditorName(string $organizationId, string $creditorName): ?Contact
+    {
+        return Contact::where('organization_id', $organizationId)
+            ->whereNotNull('default_expense_category')
+            ->where('name', 'ilike', '%'.$creditorName.'%')
+            ->first();
+    }
 }

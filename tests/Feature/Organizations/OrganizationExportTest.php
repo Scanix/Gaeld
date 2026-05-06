@@ -4,7 +4,7 @@ namespace Tests\Feature\Organizations;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceType;
@@ -113,7 +113,7 @@ class OrganizationExportTest extends TestCase
             'type' => AccountType::Asset->value,
         ]);
 
-        Customer::factory()->create(['organization_id' => $this->org->id]);
+        Contact::factory()->create(['organization_id' => $this->org->id]);
 
         Invoice::factory()->create([
             'organization_id' => $this->org->id,
@@ -228,8 +228,8 @@ class OrganizationExportTest extends TestCase
         Storage::fake('local');
 
         $otherOrg = Organization::factory()->create();
-        Customer::factory()->create(['organization_id' => $otherOrg->id, 'name' => 'Other Org Customer']);
-        Customer::factory()->create(['organization_id' => $this->org->id, 'name' => 'My Customer']);
+        Contact::factory()->create(['organization_id' => $otherOrg->id, 'name' => 'Other Org Customer']);
+        Contact::factory()->create(['organization_id' => $this->org->id, 'name' => 'My Customer']);
 
         $service = app(OrganizationExportService::class);
         $zipPath = $service->generate($this->org->id);

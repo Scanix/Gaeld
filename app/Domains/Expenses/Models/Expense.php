@@ -4,7 +4,7 @@ namespace App\Domains\Expenses\Models;
 
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatRate;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Enums\ExpenseType;
 use App\Domains\Organizations\Models\Organization;
@@ -51,7 +51,7 @@ use Laravel\Scout\Searchable;
  * @property-read Organization $organization
  * @property-read JournalEntry|null $journalEntry
  * @property-read VatRate|null $vatRate
- * @property-read Supplier|null $supplier
+ * @property-read Contact|null $supplier
  */
 class Expense extends Model
 {
@@ -114,10 +114,10 @@ class Expense extends Model
         return $this->belongsTo(VatRate::class);
     }
 
-    /** @return BelongsTo<Supplier, $this> */
+    /** @return BelongsTo<Contact, $this> */
     public function supplier(): BelongsTo
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Contact::class);
     }
 
     // ──────────────────────────────────────────────────────────────

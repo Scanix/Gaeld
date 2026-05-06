@@ -5,7 +5,7 @@ namespace App\Http\Middleware\Api;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Api\Models\Webhook;
 use App\Domains\Banking\Models\BankAccount;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Enums\Permission;
@@ -25,7 +25,7 @@ final class TokenPermissionMap
     public static function get(): array
     {
         return [
-            Customer::class => [
+            Contact::class => [
                 'viewAny' => Permission::ContactsView,
                 'view' => Permission::ContactsView,
                 'create' => Permission::ContactsCreate,

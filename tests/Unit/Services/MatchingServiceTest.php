@@ -11,7 +11,7 @@ use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\MatchingService;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
@@ -184,9 +184,9 @@ class MatchingServiceTest extends TestCase
         $this->assertDatabaseCount('bank_matches', 0);
     }
 
-    private function createCustomer(string $name): Customer
+    private function createCustomer(string $name): Contact
     {
-        return Customer::create([
+        return Contact::create([
             'organization_id' => $this->organization->id,
             'name' => $name,
         ]);

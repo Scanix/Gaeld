@@ -4,7 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Domains\Api\Enums\TokenType;
 use App\Domains\Api\Models\Webhook;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
@@ -73,7 +73,7 @@ class ApiTest extends TestCase
         $orgB->users()->attach($this->user->id, ['role' => 'member']);
 
         // Token is for org A — should only see org A's data
-        Customer::create([
+        Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Org A Customer',
             'country' => 'CH',
@@ -121,7 +121,7 @@ class ApiTest extends TestCase
             'type' => TokenType::Personal,
         ]);
 
-        Customer::create([
+        Contact::create([
             'organization_id' => $orgB->id,
             'name' => 'Org B Only',
             'country' => 'CH',
@@ -248,7 +248,7 @@ class ApiTest extends TestCase
 
     public function test_list_customers(): void
     {
-        Customer::create([
+        Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Acme AG',
             'email' => 'info@acme.ch',
@@ -286,7 +286,7 @@ class ApiTest extends TestCase
 
     public function test_show_customer(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Show Me AG',
             'country' => 'CH',
@@ -301,7 +301,7 @@ class ApiTest extends TestCase
 
     public function test_update_customer(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Old Name',
             'country' => 'CH',
@@ -320,7 +320,7 @@ class ApiTest extends TestCase
 
     public function test_delete_customer(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Delete Me AG',
             'country' => 'CH',
@@ -402,7 +402,7 @@ class ApiTest extends TestCase
         ]);
 
         // Reading customers should work
-        Customer::create([
+        Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Readable AG',
             'country' => 'CH',
@@ -432,7 +432,7 @@ class ApiTest extends TestCase
             'type' => TokenType::Organization,
         ]);
 
-        Customer::create([
+        Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Readable AG',
             'country' => 'CH',

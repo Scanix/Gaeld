@@ -2,16 +2,16 @@
 
 namespace Database\Factories\Domains\Contacts\Models;
 
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Supplier>
+ * @extends Factory<Contact>
  */
-class SupplierFactory extends Factory
+class ContactFactory extends Factory
 {
-    protected $model = Supplier::class;
+    protected $model = Contact::class;
 
     public function definition(): array
     {

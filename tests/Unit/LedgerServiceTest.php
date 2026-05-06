@@ -14,7 +14,7 @@ use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankingService;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
@@ -109,7 +109,7 @@ class LedgerServiceTest extends TestCase
 
     public function test_post_invoice_creates_journal_entry(): void
     {
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client AG',
         ]);

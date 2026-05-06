@@ -59,7 +59,7 @@ class MeiliSearchSetupCommand extends Command
                 'name' => 'Gaeld API Search Key',
                 'description' => 'Backend search key with tenant-filtered access',
                 'actions' => ['search', 'documents.add', 'documents.delete', 'indexes.create', 'indexes.update', 'indexes.get'],
-                'indexes' => ['invoices', 'customers', 'suppliers', 'expenses'],
+                'indexes' => ['invoices', 'contacts', 'expenses'],
                 'expiresAt' => null,
             ]);
 
@@ -81,12 +81,7 @@ class MeiliSearchSetupCommand extends Command
                 'sortableAttributes' => ['total', 'number'],
                 'searchableAttributes' => ['number', 'customer_name', 'status', 'currency'],
             ],
-            'customers' => [
-                'filterableAttributes' => ['organization_id'],
-                'sortableAttributes' => ['name'],
-                'searchableAttributes' => ['name', 'email', 'city', 'vat_number', 'contact_persons'],
-            ],
-            'suppliers' => [
+            'contacts' => [
                 'filterableAttributes' => ['organization_id'],
                 'sortableAttributes' => ['name'],
                 'searchableAttributes' => ['name', 'email', 'city', 'vat_number', 'default_expense_category', 'contact_persons'],

@@ -6,8 +6,6 @@ use App\Domains\Contacts\DTOs\CreateContactPersonData;
 use App\Domains\Contacts\DTOs\UpdateContactPersonData;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Contacts\Models\ContactPerson;
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Contacts\Requests\StoreContactPersonRequest;
 use App\Domains\Contacts\Requests\UpdateContactPersonRequest;
 use App\Http\Controllers\Controller;
@@ -80,8 +78,6 @@ class ContactPersonController extends Controller
     {
         return match ($type) {
             'contacts' => Contact::withoutGlobalScopes()->findOrFail($id),
-            'customers' => Customer::findOrFail($id),
-            'suppliers' => Supplier::findOrFail($id),
             default => abort(404),
         };
     }

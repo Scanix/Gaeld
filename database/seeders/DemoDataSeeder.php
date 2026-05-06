@@ -8,7 +8,7 @@ use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Services\BankingService;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Enums\ExpenseStatus;
@@ -184,7 +184,7 @@ class DemoDataSeeder extends Seeder
         );
 
         // ── Customers ────────────────────────────────────────────
-        $client1 = Customer::firstOrCreate(
+        $client1 = Contact::firstOrCreate(
             ['organization_id' => $org->id, 'email' => 'hans@acme.ch'],
             [
                 'name' => 'Acme AG',
@@ -195,7 +195,7 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        $client2 = Customer::firstOrCreate(
+        $client2 = Contact::firstOrCreate(
             ['organization_id' => $org->id, 'email' => 'marie@swisstech.ch'],
             [
                 'name' => 'Swiss Tech Sàrl',
@@ -475,7 +475,7 @@ class DemoDataSeeder extends Seeder
         );
 
         // ── Customers ────────────────────────────────────────────
-        $client1 = Customer::firstOrCreate(
+        $client1 = Contact::firstOrCreate(
             ['organization_id' => $org->id, 'email' => 'info@watchmaker.ch'],
             [
                 'name' => 'Watchmaker SA',

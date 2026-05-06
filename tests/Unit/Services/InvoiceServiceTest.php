@@ -4,7 +4,7 @@ namespace Tests\Unit\Services;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\PaymentMethod;
@@ -53,7 +53,7 @@ class InvoiceServiceTest extends TestCase
             'type' => AccountType::Revenue->value,
         ]);
 
-        $this->customer = Customer::create([
+        $this->customer = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Client AG',
         ]);
