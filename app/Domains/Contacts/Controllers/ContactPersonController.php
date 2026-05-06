@@ -4,6 +4,7 @@ namespace App\Domains\Contacts\Controllers;
 
 use App\Domains\Contacts\DTOs\CreateContactPersonData;
 use App\Domains\Contacts\DTOs\UpdateContactPersonData;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Contacts\Models\ContactPerson;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
@@ -78,6 +79,7 @@ class ContactPersonController extends Controller
     private function resolveParent(string $type, string $id): Model
     {
         return match ($type) {
+            'contacts' => Contact::withoutGlobalScopes()->findOrFail($id),
             'customers' => Customer::findOrFail($id),
             'suppliers' => Supplier::findOrFail($id),
             default => abort(404),

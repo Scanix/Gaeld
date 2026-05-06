@@ -27,6 +27,12 @@ class InvoicePdfRenderer
     // ── Layout constants ──────────────────────────────────────────
     private const LEFT_MARGIN = 15;
 
+    private const LOGO_X = 15;
+
+    private const LOGO_Y = 15;
+
+    private const LOGO_WIDTH = 28;
+
     private const RIGHT_BLOCK_X = 120;
 
     private const RIGHT_BLOCK_W = 75;
@@ -76,7 +82,7 @@ class InvoicePdfRenderer
             ? Storage::disk('local')->path($organization->logo_path)
             : null;
         if ($logoFullPath && file_exists($logoFullPath)) {
-            $tcpdf->Image($logoFullPath, 150, 15, 30);
+            $tcpdf->Image($logoFullPath, self::LOGO_X, self::LOGO_Y, self::LOGO_WIDTH);
         }
 
         // Organization info (top right)
@@ -194,11 +200,18 @@ class InvoicePdfRenderer
             }
             $vatLabel = $line->vatRate ? ($line->vatRate->rate.'%') : '-';
 
-            $tcpdf->Cell(self::COL_DESC, 5, $line->description, 0, 0, 'L');
-            $tcpdf->Cell(self::COL_QTY, 5, $qtyLabel, 0, 0, 'R');
-            $tcpdf->Cell(self::COL_UNIT, 5, $priceLabel, 0, 0, 'R');
-            $tcpdf->Cell(self::COL_VAT, 5, $vatLabel, 0, 0, 'R');
-            $tcpdf->Cell(self::COL_AMOUNT, 5, number_format((float) $lineTotal, 2), 0, 1, 'R');
+            $descText = str_replace(["\r\n", "\r"], "\n", (string) $line->description);
+            $rowY = $tcpdf->GetY();
+            $lineCount = max(1, $tcpdf->getNumLines($descText, self::COL_DESC));
+            $rowHeight = max(5.0, $lineCount * 4.0);
+
+            $tcpdf->MultiCell(self::COL_DESC, 4, $descText, 0, 'L', false, 0);
+            $tcpdf->SetXY(self::LEFT_MARGIN + self::COL_DESC, $rowY);
+            $tcpdf->Cell(self::COL_QTY, $rowHeight, $qtyLabel, 0, 0, 'R');
+            $tcpdf->Cell(self::COL_UNIT, $rowHeight, $priceLabel, 0, 0, 'R');
+            $tcpdf->Cell(self::COL_VAT, $rowHeight, $vatLabel, 0, 0, 'R');
+            $tcpdf->Cell(self::COL_AMOUNT, $rowHeight, number_format((float) $lineTotal, 2), 0, 1, 'R');
+            $tcpdf->SetY($rowY + $rowHeight);
         }
 
         // Bottom border
