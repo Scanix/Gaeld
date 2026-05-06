@@ -270,11 +270,12 @@ const total = computed(() => subtotal.value + vatTotal.value)
                   />
                 </div>
                 <div :class="line.type === 'text' ? 'sm:col-span-9' : 'sm:col-span-3'">
-                  <FormInput
+                  <FormTextarea
                     :id="`line-desc-${i}`"
                     v-model="line.description"
                     :label="t('description')"
                     :error="form.errors[`lines.${i}.description`]"
+                    :rows="2"
                     required
                   />
                 </div>

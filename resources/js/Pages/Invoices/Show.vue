@@ -17,7 +17,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail, Eye, X, Share2 } from 'lucide-vue-next'
+import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail, Eye, X } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import HelpText from '@/Components/HelpText.vue'
 
@@ -159,17 +159,6 @@ const statusVariant = {
   cancelled: 'outline',
 }
 
-const canShare = computed(() => typeof navigator !== 'undefined' && 'share' in navigator)
-
-function shareInvoice() {
-  navigator.share({
-    title: `${t('invoice')} ${props.invoice?.number}`,
-    url: window.location.href,
-  }).catch(() => {
-    // User dismissed or browser denied — silent fail
-  })
-}
-
 const paymentMethodOptions = [
   { value: 'bank', label: t('bank_transfer') },
   { value: 'cash', label: t('cash') },
@@ -208,16 +197,6 @@ const bankAccountOptions = computed(() =>
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <Button
-            v-if="canShare"
-            variant="outline"
-            size="sm"
-            :aria-label="t('share')"
-            @click="shareInvoice"
-          >
-            <Share2 class="h-4 w-4 sm:mr-1.5" />
-            <span class="hidden sm:inline">{{ t('share') }}</span>
-          </Button>
           <Button
             v-if="invoice?.status === 'draft'"
             as="a"
@@ -329,7 +308,11 @@ const bankAccountOptions = computed(() =>
           <CardTitle>{{ t('line_items') }}</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable :columns="lineColumns" :rows="invoice?.lines ?? []" />
+          <DataTable :columns="lineColumns" :rows="invoice?.lines ?? []">
+            <template #cell-description="{ value }">
+              <span class="whitespace-pre-line break-words">{{ value }}</span>
+            </template>
+          </DataTable>
           <div class="mt-4 flex justify-end">
             <div class="w-48 space-y-1 text-sm">
               <div v-if="parseFloat(invoice?.vat_amount) > 0" class="flex justify-between text-[hsl(var(--muted-foreground))]">

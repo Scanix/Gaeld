@@ -9,6 +9,7 @@ use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Api\Jobs\DispatchWebhookJob;
 use App\Domains\Api\Models\PersonalAccessToken;
 use App\Domains\Assets\Jobs\MonthlyDepreciationJob;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Contacts\Models\Customer;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Contacts\Policies\ContactPolicy;
@@ -109,6 +110,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(MemberRemoved::class, RevokeOrganizationTokens::class);
         Event::listen(LongWaitDetected::class, SendHorizonTelegramAlert::class);
 
+        Gate::policy(Contact::class, ContactPolicy::class);
         Gate::policy(Customer::class, ContactPolicy::class);
         Gate::policy(Supplier::class, ContactPolicy::class);
 
@@ -139,6 +141,7 @@ class AppServiceProvider extends ServiceProvider
             ExpenseCategory::$event($referenceFlush);
             Customer::$event($contactsFlush);
             Supplier::$event($contactsFlush);
+            Contact::$event($contactsFlush);
             Invoice::$event($dashboardFlush);
             Expense::$event($dashboardFlush);
         }
