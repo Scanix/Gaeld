@@ -8,6 +8,7 @@ use App\Domains\Organizations\Actions\UpdateOrganizationAction;
 use App\Domains\Organizations\DTOs\UpdateCommunicationsData;
 use App\Domains\Organizations\DTOs\UpdateInvoiceSettingsData;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
+use App\Domains\Organizations\Enums\OrganizationModule;
 use App\Domains\Organizations\Jobs\ExportOrganizationDataJob;
 use App\Domains\Organizations\Requests\UpdateCommunicationsRequest;
 use App\Domains\Organizations\Requests\UpdateInvoiceSettingsRequest;
@@ -50,6 +51,7 @@ class OrganizationSettingsController extends Controller
             'organization' => $organization,
             'hasLogo' => $organization->logo_path && Storage::disk('local')->exists($organization->logo_path),
             'expenseCategories' => ExpenseCategoryQuery::all(),
+            'modules' => OrganizationModule::values(),
         ]);
     }
 
@@ -124,6 +126,26 @@ class OrganizationSettingsController extends Controller
 
         return redirect()->route('settings')
             ->with('success', __('app.communication_settings_updated'));
+    }
+
+    public function updateModules(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    {
+        $organization = $currentOrg->get();
+        $this->authorize('update', $organization);
+
+        $allowed = OrganizationModule::values();
+        $input = (array) $request->input('modules', []);
+        $modules = [];
+        foreach ($input as $key => $value) {
+            if (in_array($key, $allowed, true)) {
+                $modules[$key] = (bool) $value;
+            }
+        }
+
+        $organization->update(['enabled_modules' => $modules]);
+
+        return redirect()->route('settings')
+            ->with('success', __('app.modules_updated'));
     }
 
     public function exportData(CurrentOrganization $currentOrg): RedirectResponse

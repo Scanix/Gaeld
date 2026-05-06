@@ -109,7 +109,7 @@ class BruteForceProtectionTest extends SecurityTestCase
     {
         $token = $this->createApiToken($this->ownerA, $this->orgA);
 
-        $response = $this->withToken($token)->getJson('/api/v1/customers');
+        $response = $this->withToken($token)->getJson('/api/v1/invoices');
 
         // X-RateLimit-Limit indicates the throttle middleware is active
         $response->assertHeader('X-RateLimit-Limit');

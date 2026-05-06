@@ -21,7 +21,7 @@ class CreditNoteFlowTest extends TestCase
 {
     use RefreshDatabase, WithAuthenticatedOrganization;
 
-    private Customer $customer;
+    private Contact $customer;
 
     protected function setUp(): void
     {
