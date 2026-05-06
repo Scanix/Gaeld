@@ -6,8 +6,7 @@ use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Api\Enums\TokenType;
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -21,7 +20,7 @@ use Tests\Traits\WithAuthenticatedOrganization;
 /**
  * API lifecycle and workflow endpoint tests.
  *
- * Covers: Supplier CRUD, Invoice lifecycle (finalize/cancel/record-payment/send/reminder/credit-note),
+ * Covers: Contact CRUD, Invoice lifecycle (finalize/cancel/record-payment/send/reminder/credit-note),
  * and Expense workflow (approve/post-to-ledger).
  */
 class ApiLifecycleTest extends TestCase
@@ -82,7 +81,7 @@ class ApiLifecycleTest extends TestCase
 
     public function test_list_suppliers(): void
     {
-        Supplier::factory()->for($this->org, 'organization')->create(['name' => 'Digitec AG']);
+        Contact::factory()->for($this->org, 'organization')->create(['name' => 'Digitec AG']);
 
         $this->withToken($this->token)
             ->getJson('/api/v1/suppliers')
@@ -96,7 +95,7 @@ class ApiLifecycleTest extends TestCase
 
     public function test_show_supplier(): void
     {
-        $supplier = Supplier::factory()->for($this->org, 'organization')->create();
+        $supplier = Contact::factory()->for($this->org, 'organization')->create();
 
         $this->withToken($this->token)
             ->getJson("/api/v1/suppliers/{$supplier->getRouteKey()}")
@@ -124,7 +123,7 @@ class ApiLifecycleTest extends TestCase
 
     public function test_update_supplier(): void
     {
-        $supplier = Supplier::factory()->for($this->org, 'organization')->create(['name' => 'Old Name']);
+        $supplier = Contact::factory()->for($this->org, 'organization')->create(['name' => 'Old Name']);
 
         $this->withToken($this->token)
             ->putJson("/api/v1/suppliers/{$supplier->getRouteKey()}", [
@@ -136,7 +135,7 @@ class ApiLifecycleTest extends TestCase
 
     public function test_delete_supplier(): void
     {
-        $supplier = Supplier::factory()->for($this->org, 'organization')->create();
+        $supplier = Contact::factory()->for($this->org, 'organization')->create();
 
         $this->withToken($this->token)
             ->deleteJson("/api/v1/suppliers/{$supplier->getRouteKey()}")
@@ -147,7 +146,7 @@ class ApiLifecycleTest extends TestCase
 
     public function test_supplier_from_other_org_not_accessible(): void
     {
-        $otherSupplier = Supplier::factory()->create();
+        $otherSupplier = Contact::factory()->create();
 
         $this->withToken($this->token)
             ->getJson("/api/v1/suppliers/{$otherSupplier->getRouteKey()}")
@@ -275,9 +274,9 @@ class ApiLifecycleTest extends TestCase
     //  Helpers
     // ──────────────────────────────────────────────────────────────
 
-    private function makeCustomer(): Customer
+    private function makeCustomer(): Contact
     {
-        return Customer::create([
+        return Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Test Customer',
             'country' => 'CH',

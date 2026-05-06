@@ -99,15 +99,15 @@ Route::middleware(['auth', 'verified', 'org', 'org-2fa', 'subscription'])->group
         Route::post('/settings/webhooks/{webhook}/regenerate-secret', [WebhookSettingsController::class, 'regenerateSecret'])->name('settings.webhooks.regenerate-secret');
     });
 
-    // Contact persons (nested under customers/suppliers)
+    // Contact persons (nested under contacts)
     Route::post('/{contactableType}/{contactableId}/contact-persons', [ContactPersonController::class, 'store'])
-        ->where('contactableType', 'customers|suppliers')
+        ->where('contactableType', 'contacts')
         ->name('contact-persons.store');
     Route::put('/{contactableType}/{contactableId}/contact-persons/{contactPerson}', [ContactPersonController::class, 'update'])
-        ->where('contactableType', 'customers|suppliers')
+        ->where('contactableType', 'contacts')
         ->name('contact-persons.update');
     Route::delete('/{contactableType}/{contactableId}/contact-persons/{contactPerson}', [ContactPersonController::class, 'destroy'])
-        ->where('contactableType', 'customers|suppliers')
+        ->where('contactableType', 'contacts')
         ->name('contact-persons.destroy');
 
     // Domain-specific route files

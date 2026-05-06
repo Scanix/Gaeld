@@ -2,7 +2,7 @@
 
 namespace App\Domains\Expenses\Controllers;
 
-use App\Domains\Contacts\Queries\SupplierQuery;
+use App\Domains\Contacts\Queries\ContactQuery;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Models\RecurringExpense;
 use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
@@ -37,7 +37,7 @@ class RecurringExpenseController extends Controller
         $this->authorize('create', Expense::class);
 
         return Inertia::render('Expenses/Recurring/Create', [
-            'suppliers' => SupplierQuery::forSelect(),
+            'suppliers' => ContactQuery::forSelect(),
             'categories' => ExpenseCategoryQuery::forSelect(),
             'frequencies' => $this->frequencyOptions(),
         ]);
@@ -77,7 +77,7 @@ class RecurringExpenseController extends Controller
 
         return Inertia::render('Expenses/Recurring/Edit', [
             'recurringExpense' => $recurring->load('supplier:id,name'),
-            'suppliers' => SupplierQuery::forSelect(),
+            'suppliers' => ContactQuery::forSelect(),
             'categories' => ExpenseCategoryQuery::forSelect(),
             'frequencies' => $this->frequencyOptions(),
         ]);

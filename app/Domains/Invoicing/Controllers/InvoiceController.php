@@ -4,7 +4,7 @@ namespace App\Domains\Invoicing\Controllers;
 
 use App\Domains\Accounting\Queries\VatRateQuery;
 use App\Domains\Banking\Models\BankAccount;
-use App\Domains\Contacts\Queries\CustomerQuery;
+use App\Domains\Contacts\Queries\ContactQuery;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DeleteInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
@@ -73,7 +73,7 @@ class InvoiceController extends Controller
         }
 
         return Inertia::render('Invoices/Create', [
-            'customers' => CustomerQuery::forSelect(),
+            'customers' => ContactQuery::forSelect(),
             'vatRates' => VatRateQuery::active(),
             'suggestedNumber' => $numberGenerator->next($currentOrg->id(), null, $forYear),
             'defaultNotes' => $currentOrg->get()->default_invoice_notes ?? '',
@@ -154,7 +154,7 @@ class InvoiceController extends Controller
 
         return Inertia::render('Invoices/Edit', [
             'invoice' => $invoice->load('lines.vatRate'),
-            'customers' => CustomerQuery::forSelect(),
+            'customers' => ContactQuery::forSelect(),
             'vatRates' => VatRateQuery::active(),
             'justificatifUrl' => $invoice->justificatif_path
                 ? route('invoices.justificatif.download', $invoice)

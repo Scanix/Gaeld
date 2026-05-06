@@ -4,11 +4,9 @@ use App\Domains\Api\Controllers\AccountApiController;
 use App\Domains\Api\Controllers\ApiInfoController;
 use App\Domains\Api\Controllers\ApiTokenController;
 use App\Domains\Api\Controllers\BankAccountApiController;
-use App\Domains\Api\Controllers\CustomerApiController;
 use App\Domains\Api\Controllers\ExpenseApiController;
 use App\Domains\Api\Controllers\InvoiceApiController;
 use App\Domains\Api\Controllers\OrgTokenController;
-use App\Domains\Api\Controllers\SupplierApiController;
 use App\Domains\Api\Controllers\WebhookApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,15 +46,6 @@ Route::middleware(['auth:sanctum', 'api-org', 'feature:api_access', 'throttle:ap
     Route::get('/meta/abilities', [ApiTokenController::class, 'abilities'])->name('api.meta.abilities');
     Route::get('/meta/webhook-events', [ApiTokenController::class, 'webhookEvents'])->name('api.meta.webhook-events');
 
-    // Customers
-    Route::apiResource('customers', CustomerApiController::class)->names([
-        'index' => 'api.customers.index',
-        'show' => 'api.customers.show',
-        'store' => 'api.customers.store',
-        'update' => 'api.customers.update',
-        'destroy' => 'api.customers.destroy',
-    ]);
-
     // Invoices
     Route::apiResource('invoices', InvoiceApiController::class)->names([
         'index' => 'api.invoices.index',
@@ -86,15 +75,6 @@ Route::middleware(['auth:sanctum', 'api-org', 'feature:api_access', 'throttle:ap
     // Expense workflow operations
     Route::post('/expenses/{expense}/approve', [ExpenseApiController::class, 'approve'])->name('api.expenses.approve');
     Route::post('/expenses/{expense}/post-to-ledger', [ExpenseApiController::class, 'postToLedger'])->name('api.expenses.post-to-ledger');
-
-    // Suppliers
-    Route::apiResource('suppliers', SupplierApiController::class)->names([
-        'index' => 'api.suppliers.index',
-        'show' => 'api.suppliers.show',
-        'store' => 'api.suppliers.store',
-        'update' => 'api.suppliers.update',
-        'destroy' => 'api.suppliers.destroy',
-    ]);
 
     // Accounts (read-only)
     Route::get('/accounts', [AccountApiController::class, 'index'])->name('api.accounts.index');

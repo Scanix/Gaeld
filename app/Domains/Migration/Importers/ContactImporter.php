@@ -2,8 +2,7 @@
 
 namespace App\Domains\Migration\Importers;
 
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Migration\Contracts\DataTypeImporterInterface;
 use App\Domains\Migration\DTOs\ContactImportRow;
 use App\Domains\Migration\DTOs\ImportResult;
@@ -83,7 +82,7 @@ class ContactImporter implements DataTypeImporterInterface
                         'country' => self::normalizeCountry($row->country) ?? 'CH',
                     ];
 
-                    $model = $row->type === 'supplier' ? Supplier::class : Customer::class;
+                    $model = Contact::class;
 
                     // Deduplicate by name + email within same org
                     $existing = $model::where('organization_id', $organization->id)

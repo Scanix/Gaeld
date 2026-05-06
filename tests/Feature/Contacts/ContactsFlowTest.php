@@ -2,12 +2,9 @@
 
 namespace Tests\Feature\Contacts;
 
-use App\Domains\Contacts\DTOs\CreateCustomerData;
-use App\Domains\Contacts\DTOs\CreateSupplierData;
-use App\Domains\Contacts\DTOs\UpdateCustomerData;
-use App\Domains\Contacts\DTOs\UpdateSupplierData;
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\DTOs\CreateContactData;
+use App\Domains\Contacts\DTOs\UpdateContactData;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\AddressData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -30,7 +27,7 @@ class ContactsFlowTest extends TestCase
 
     public function test_create_customer_persists_record(): void
     {
-        $customer = Customer::create((new CreateCustomerData(
+        $customer = Contact::create((new CreateContactData(
             organizationId: $this->org->id,
             name: 'Acme AG',
             addressData: new AddressData(country: 'CH'),
@@ -38,7 +35,7 @@ class ContactsFlowTest extends TestCase
             currency: 'CHF',
         ))->toArray());
 
-        $this->assertInstanceOf(Customer::class, $customer);
+        $this->assertInstanceOf(Contact::class, $customer);
         $this->assertDatabaseHas('customers', [
             'organization_id' => $this->org->id,
             'name' => 'Acme AG',
@@ -48,14 +45,14 @@ class ContactsFlowTest extends TestCase
 
     public function test_update_customer_changes_fields(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Old Name',
             'country' => 'CH',
             'currency' => 'CHF',
         ]);
 
-        $customer->update((new UpdateCustomerData(
+        $customer->update((new UpdateContactData(
             name: 'New Name',
             addressData: new AddressData(city: 'Zurich'),
         ))->toArray());
@@ -68,7 +65,7 @@ class ContactsFlowTest extends TestCase
 
     public function test_customer_soft_delete(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'To Delete',
             'country' => 'CH',
@@ -78,13 +75,13 @@ class ContactsFlowTest extends TestCase
         $customer->delete();
 
         $this->assertSoftDeleted('customers', ['id' => $customer->id]);
-        $this->assertNull(Customer::find($customer->id));
-        $this->assertNotNull(Customer::withTrashed()->find($customer->id));
+        $this->assertNull(Contact::find($customer->id));
+        $this->assertNotNull(Contact::withTrashed()->find($customer->id));
     }
 
     public function test_customer_belongs_to_correct_organization(): void
     {
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Tenant Customer',
             'country' => 'CH',
@@ -101,7 +98,7 @@ class ContactsFlowTest extends TestCase
 
     public function test_create_supplier_persists_record(): void
     {
-        $supplier = Supplier::create((new CreateSupplierData(
+        $supplier = Contact::create((new CreateContactData(
             organizationId: $this->org->id,
             name: 'Swisscom AG',
             addressData: new AddressData(country: 'CH'),
@@ -111,7 +108,7 @@ class ContactsFlowTest extends TestCase
             iban: 'CH56 0483 5012 3456 7800 9',
         ))->toArray());
 
-        $this->assertInstanceOf(Supplier::class, $supplier);
+        $this->assertInstanceOf(Contact::class, $supplier);
         $this->assertDatabaseHas('suppliers', [
             'organization_id' => $this->org->id,
             'name' => 'Swisscom AG',
@@ -121,7 +118,7 @@ class ContactsFlowTest extends TestCase
 
     public function test_update_supplier_changes_category(): void
     {
-        $supplier = Supplier::create([
+        $supplier = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Migros',
             'country' => 'CH',
@@ -129,7 +126,7 @@ class ContactsFlowTest extends TestCase
             'default_expense_category' => 'office',
         ]);
 
-        $supplier->update((new UpdateSupplierData(
+        $supplier->update((new UpdateContactData(
             name: $supplier->name,
             defaultExpenseCategory: 'other',
         ))->toArray());
@@ -140,7 +137,7 @@ class ContactsFlowTest extends TestCase
 
     public function test_supplier_soft_delete(): void
     {
-        $supplier = Supplier::create([
+        $supplier = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'To Delete Supplier',
             'country' => 'CH',
@@ -160,14 +157,14 @@ class ContactsFlowTest extends TestCase
     {
         $otherOrg = Organization::create(['name' => 'Other Org', 'currency' => 'EUR']);
 
-        Customer::create([
+        Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'My Customer',
             'country' => 'CH',
             'currency' => 'CHF',
         ]);
 
-        Customer::create([
+        Contact::create([
             'organization_id' => $otherOrg->id,
             'name' => 'Other Customer',
             'country' => 'DE',
@@ -175,7 +172,7 @@ class ContactsFlowTest extends TestCase
         ]);
 
         // Global scope for current org should only return its own customers
-        $customers = Customer::all();
+        $customers = Contact::all();
         $this->assertCount(1, $customers);
         $this->assertEquals('My Customer', $customers->first()->name);
     }
@@ -184,21 +181,21 @@ class ContactsFlowTest extends TestCase
     {
         $otherOrg = Organization::create(['name' => 'Other Org', 'currency' => 'EUR']);
 
-        Supplier::create([
+        Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'My Supplier',
             'country' => 'CH',
             'currency' => 'CHF',
         ]);
 
-        Supplier::create([
+        Contact::create([
             'organization_id' => $otherOrg->id,
             'name' => 'Other Supplier',
             'country' => 'DE',
             'currency' => 'EUR',
         ]);
 
-        $suppliers = Supplier::all();
+        $suppliers = Contact::all();
         $this->assertCount(1, $suppliers);
         $this->assertEquals('My Supplier', $suppliers->first()->name);
     }
@@ -236,7 +233,7 @@ class ContactsFlowTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        $customer = Customer::create([
+        $customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'To HTTP Delete',
             'country' => 'CH',

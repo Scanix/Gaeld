@@ -2,7 +2,7 @@
 
 namespace App\Domains\Migration\Importers;
 
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Migration\Contracts\DataTypeImporterInterface;
 use App\Domains\Migration\DTOs\ExpenseImportRow;
@@ -70,12 +70,12 @@ class ExpenseImporter implements DataTypeImporterInterface
                     // Link or create supplier
                     $supplier = null;
                     if ($row->supplierName) {
-                        $supplier = Supplier::where('organization_id', $organization->id)
+                        $supplier = Contact::where('organization_id', $organization->id)
                             ->where('name', $row->supplierName)
                             ->first();
 
                         if (! $supplier) {
-                            $supplier = Supplier::create([
+                            $supplier = Contact::create([
                                 'organization_id' => $organization->id,
                                 'name' => $row->supplierName,
                                 'email' => $row->supplierEmail,

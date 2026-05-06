@@ -3,8 +3,7 @@
 namespace App\Domains\Migration\Services;
 
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Migration\Contracts\ImportRowInterface;
 use App\Domains\Migration\DTOs\ImportResult;
 use App\Domains\Migration\DTOs\ParseResult;
@@ -292,7 +291,7 @@ class MigrationOrchestrator
 
         $modelMap = [
             DataType::Accounts->value => Account::class,
-            DataType::Contacts->value => [Customer::class, Supplier::class],
+            DataType::Contacts->value => Contact::class,
         ];
 
         DB::transaction(function () use ($session, $modelMap, &$totalDeleted, &$errors): void {

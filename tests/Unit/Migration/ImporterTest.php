@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Migration;
 
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Migration\DTOs\AccountImportRow;
 use App\Domains\Migration\DTOs\ContactImportRow;
 use App\Domains\Migration\Enums\DataType;
@@ -217,7 +217,7 @@ class ImporterTest extends TestCase
         $importer = new ContactImporter;
 
         // Pre-create customer
-        Customer::create([
+        Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Acme Corp',
             'email' => 'acme@test.ch',
@@ -233,7 +233,7 @@ class ImporterTest extends TestCase
         $this->assertTrue($result->success);
         $this->assertSame(1, $result->importedCount);
         $this->assertSame(1, $result->skippedCount);
-        $this->assertSame(2, Customer::where('organization_id', $this->organization->id)->count());
+        $this->assertSame(2, Contact::where('organization_id', $this->organization->id)->count());
     }
 
     public function test_contact_importer_defaults_country_to_ch(): void
@@ -294,7 +294,7 @@ class ImporterTest extends TestCase
     {
         $importer = new ContactImporter;
 
-        Customer::creating(function ($customer) {
+        Contact::creating(function ($customer) {
             if ($customer->name === 'Fail Corp') {
                 throw new \RuntimeException('Simulated database error');
             }
@@ -322,7 +322,7 @@ class ImporterTest extends TestCase
     {
         $importer = new ContactImporter;
 
-        Customer::creating(function () {
+        Contact::creating(function () {
             throw new \RuntimeException('All rows fail');
         });
 

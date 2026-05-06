@@ -151,7 +151,7 @@ const journalColumns = computed(() => [
             <dd>{{ formatDate(expense.date) }}</dd>
             <dt class="text-muted-foreground">{{ t('supplier') }}</dt>
             <dd>
-              <a v-if="expense.supplier" :href="`/suppliers/${expense.supplier.uuid}`" class="text-[hsl(var(--primary))] hover:underline">
+              <a v-if="expense.supplier" :href="`/contacts/${expense.supplier.uuid}`" class="text-[hsl(var(--primary))] hover:underline">
                 {{ expense.supplier.name }}
               </a>
               <span v-else-if="expense.vendor">{{ expense.vendor }}</span>

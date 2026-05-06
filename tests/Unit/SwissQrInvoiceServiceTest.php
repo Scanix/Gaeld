@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\SwissQrInvoiceService;
 use App\Domains\Organizations\Models\Organization;
@@ -36,7 +36,7 @@ class SwissQrInvoiceServiceTest extends TestCase
             'qr_iban' => 'CH4431999123000889012',
         ]);
 
-        $this->client = Customer::create([
+        $this->client = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Client AG',
             'address' => 'Lagerstrasse 5',
