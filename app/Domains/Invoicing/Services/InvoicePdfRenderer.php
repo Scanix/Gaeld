@@ -37,11 +37,28 @@ class InvoicePdfRenderer
 
     private const RIGHT_BLOCK_W = 75;
 
-    private const CUSTOMER_Y = 45;
+    // Swiss letter standard SN 010130 / DIN 5008 address window:
+    //   - left edge: 20 mm, top edge: 45 mm, width: 85 mm, height: 45 mm
+    // We inset the text a little so it sits comfortably inside the window.
+    private const CUSTOMER_X = 20;
 
-    private const CUSTOMER_W = 80;
+    private const CUSTOMER_Y = 50;
 
-    private const TITLE_Y = 80;
+    private const CUSTOMER_W = 85;
+
+    // Push the invoice title below the address window (45 mm + 45 mm = 90 mm).
+    private const TITLE_Y = 100;
+
+    // Swiss fold / punch marks (SN 010130) — small ticks on the left edge of A4.
+    private const FOLD_MARK_X = 5;
+
+    private const FOLD_MARK_LENGTH = 3;
+
+    private const FOLD_MARK_TOP_Y = 105;     // first horizontal fold (trifold)
+
+    private const PUNCH_MARK_Y = 148.5;      // centre of A4 height — hole-punch reference
+
+    private const FOLD_MARK_BOTTOM_Y = 210;  // second horizontal fold (trifold)
 
     private const COL_DESC = 80;
 
@@ -73,6 +90,39 @@ class InvoicePdfRenderer
     private function t(string $key): string
     {
         return trans('app.'.$key, [], $this->locale);
+    }
+
+    /**
+     * Draw the Swiss letter standard (SN 010130 / DIN 5008) fold and punch
+     * marks on the left edge of the page so the sheet can be folded in three
+     * for a C5/C6 window envelope, with the recipient address showing through
+     * the window.
+     *
+     * - Top fold mark at 105 mm (first horizontal fold)
+     * - Centre punch / hole-punch reference at 148.5 mm
+     * - Bottom fold mark at 210 mm (second horizontal fold)
+     */
+    public function renderFoldMarks(TCPDF $tcpdf): void
+    {
+        $tcpdf->SetDrawColor(...self::MUTED_RGB);
+        $tcpdf->SetLineWidth(0.1);
+
+        $marks = [
+            self::FOLD_MARK_TOP_Y,
+            self::PUNCH_MARK_Y,
+            self::FOLD_MARK_BOTTOM_Y,
+        ];
+        foreach ($marks as $y) {
+            $tcpdf->Line(
+                self::FOLD_MARK_X,
+                $y,
+                self::FOLD_MARK_X + self::FOLD_MARK_LENGTH,
+                $y,
+            );
+        }
+
+        $tcpdf->SetDrawColor(0, 0, 0);
+        $tcpdf->SetLineWidth(0.2);
     }
 
     public function renderInvoiceHeader(TCPDF $tcpdf, Invoice $invoice, Organization $organization): void
@@ -108,10 +158,12 @@ class InvoicePdfRenderer
             $tcpdf->SetTextColor(0, 0, 0);
         }
 
-        // Customer info (top left)
+        // Customer info — placed inside the Swiss SN 010130 / DIN 5008 address
+        // window so the letter fits a standard C5/C6 window envelope when folded
+        // in three (see renderFoldMarks() for the matching fold ticks).
         $customer = $invoice->customer;
         if ($customer) {
-            $tcpdf->SetXY(self::LEFT_MARGIN, self::CUSTOMER_Y);
+            $tcpdf->SetXY(self::CUSTOMER_X, self::CUSTOMER_Y);
             $tcpdf->SetFont('Helvetica', 'B', 10);
             $tcpdf->Cell(self::CUSTOMER_W, 5, $customer->name, 0, 1);
 
@@ -122,11 +174,13 @@ class InvoicePdfRenderer
                 $customer->country ?? 'CH',
             ]);
             foreach ($customerAddress as $line) {
+                $tcpdf->SetX(self::CUSTOMER_X);
                 $tcpdf->Cell(self::CUSTOMER_W, 4, $line, 0, 1);
             }
             if ($customer->vat_number) {
                 $tcpdf->SetFont('Helvetica', '', 7);
                 $tcpdf->SetTextColor(...self::MUTED_RGB);
+                $tcpdf->SetX(self::CUSTOMER_X);
                 $tcpdf->Cell(self::CUSTOMER_W, 4, $this->t('pdf_vat_number').': '.$customer->vat_number, 0, 1);
                 $tcpdf->SetTextColor(0, 0, 0);
             }
