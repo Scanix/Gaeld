@@ -41,7 +41,7 @@ class RecurringExpenseRequest extends FormRequest
             ],
             'supplier_id' => [
                 'nullable',
-                Rule::exists('contacts', 'id')->where('organization_id', $orgId)->where('is_supplier', true),
+                Rule::exists('contacts', 'id')->where('organization_id', $orgId)->whereNull('deleted_at'),
             ],
             'expense_account_code' => [
                 'nullable',
