@@ -63,7 +63,7 @@ class BankingController extends Controller
         if ($bankAccount->account_id) {
             $ledgerMovements = TransactionLine::query()
                 ->where('account_id', $bankAccount->account_id)
-                ->with(['journalEntry:id,date,description,reference,source_type,source_id'])
+                ->with(['journalEntry:id,date,description,reference'])
                 ->whereHas('journalEntry')
                 ->get(['id', 'journal_entry_id', 'debit', 'credit', 'description'])
                 ->sortByDesc(fn ($l) => optional($l->journalEntry)->date)
@@ -74,8 +74,6 @@ class BankingController extends Controller
                     'date' => optional($l->journalEntry)->date?->toDateString(),
                     'description' => $l->description ?: optional($l->journalEntry)->description,
                     'reference' => optional($l->journalEntry)->reference,
-                    'source_type' => optional($l->journalEntry)->source_type,
-                    'source_id' => optional($l->journalEntry)->source_id,
                     'debit' => (string) $l->debit,
                     'credit' => (string) $l->credit,
                 ]);
