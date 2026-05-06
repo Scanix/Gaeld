@@ -121,7 +121,6 @@ const navigation = computed(() => {
       ...(features.value.tax_declaration && accountingRoutes.value.taxDeclarations ? [
         { key: 'tax_declarations', href: '/accounting/tax-declarations' },
       ] : []),
-      { key: 'trial_balance', href: '/accounting/trial-balance' },
       { key: 'budget', href: '/accounting/budgets' },
       ...(can('accounting.close-year') ? [
         { key: 'year_end_closing', href: '/accounting/year-end-closing' },
@@ -135,9 +134,6 @@ const navigation = computed(() => {
       ...(features.value.analytical && accountingRoutes.value.costCenters ? [
         { key: 'cost_centers', href: '/accounting/cost-centers' },
       ] : []),
-      ...(features.value.analytical && accountingRoutes.value.analyticalReport ? [
-        { key: 'analytical_report', href: '/accounting/analytical-report' },
-      ] : []),
       ...(features.value.consolidation && accountingRoutes.value.consolidation ? [
         { key: 'consolidation', href: '/accounting/consolidation' },
       ] : []),
@@ -149,8 +145,12 @@ const navigation = computed(() => {
       { key: 'profit_and_loss', href: '/reports/profit-and-loss' },
       { key: 'balance_sheet', href: '/reports/balance-sheet' },
       { key: 'cash_flow', href: '/reports/cash-flow' },
+      { key: 'trial_balance', href: '/accounting/trial-balance' },
       { key: 'vat_report', href: '/reports/vat' },
       { key: 'aging_report', href: '/reports/aging' },
+      ...(features.value.analytical && accountingRoutes.value.analyticalReport ? [
+        { key: 'analytical_report', href: '/accounting/analytical-report' },
+      ] : []),
     ]},
     ...(!isFreelancer ? [
       { key: 'assets', href: '/assets', icon: Package },
