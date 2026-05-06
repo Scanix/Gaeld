@@ -3,6 +3,7 @@
 namespace App\Domains\Expenses\Actions;
 
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\DTOs\UpdateExpenseData;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
@@ -42,6 +43,13 @@ class UpdateExpenseAction
             'expense_account_code' => $data->expenseAccountCode ?? $expense->expense_account_code,
             'bank_account_code' => $data->bankAccountCode ?? $expense->bank_account_code,
         ]);
+
+        // Unified contacts: any contact linked to an expense is implicitly a supplier.
+        if ($expense->supplier_id) {
+            Contact::where('id', $expense->supplier_id)
+                ->where('is_supplier', false)
+                ->update(['is_supplier' => true]);
+        }
 
         return $expense->fresh();
     }

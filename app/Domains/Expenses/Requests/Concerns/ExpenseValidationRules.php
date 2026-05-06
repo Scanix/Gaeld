@@ -19,7 +19,7 @@ trait ExpenseValidationRules
             ],
             'supplier_id' => [
                 'nullable',
-                Rule::exists('suppliers', 'id')->where('organization_id', $orgId),
+                Rule::exists('contacts', 'id')->where('organization_id', $orgId)->whereNull('deleted_at'),
             ],
             'type' => ['sometimes', Rule::enum(ExpenseType::class)],
             'payment_method' => ['nullable', Rule::in(['cash', 'card', 'bank_transfer', 'other'])],

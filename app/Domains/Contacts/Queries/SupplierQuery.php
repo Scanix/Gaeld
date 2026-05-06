@@ -2,6 +2,7 @@
 
 namespace App\Domains\Contacts\Queries;
 
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Contacts\Models\Supplier;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Support\QueryBuilder;
@@ -27,16 +28,22 @@ class SupplierQuery
     }
 
     /**
-     * @return Collection<int, Supplier>
+     * All contacts available for selection when creating an expense.
+     *
+     * Since contacts are unified (a single record can be customer, supplier, or both),
+     * we surface every contact here. When the user picks a contact that wasn't yet
+     * a supplier, the expense action flips `is_supplier=true` automatically.
+     *
+     * @return Collection<int, Contact>
      */
     public static function forSelect(): Collection
     {
         $orgId = app(CurrentOrganization::class)->id();
 
         return Cache::tags(["org:{$orgId}:contacts"])->remember(
-            "suppliers_select:{$orgId}",
+            "contacts_for_expense_select:{$orgId}",
             600,
-            fn () => Supplier::orderBy('name')->get()
+            fn () => Contact::orderBy('name')->get()
         );
     }
 
