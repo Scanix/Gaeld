@@ -8,16 +8,13 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
-import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
-import Tooltip from '@/Components/UI/Tooltip.vue'
 import IbanHint from '@/Components/IbanHint.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { countryOptions, currencyOptions } from '@/lib/contactOptions'
-import { HelpCircle } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 
@@ -35,8 +32,6 @@ const form = useForm({
   iban: '',
   default_expense_category: '',
   payment_terms: '',
-  internal_notes: '',
-  notes: '',
 })
 
 const { forceClear } = useUnsavedChanges(computed(() => form.isDirty))
@@ -55,10 +50,8 @@ const typeOptions = [
 
 const activeTab = ref('general')
 const tabs = [
-  { key: 'general', label: 'contact_information' },
-  { key: 'address', label: 'address_details' },
+  { key: 'general', label: 'general' },
   { key: 'billing', label: 'billing_details' },
-  { key: 'notes', label: 'notes' },
 ]
 </script>
 
@@ -131,15 +124,6 @@ const tabs = [
                 :label="t('phone')"
                 :error="form.errors.phone"
               />
-            </div>
-
-            <div
-              v-show="activeTab === 'address'"
-              id="tabpanel-address"
-              role="tabpanel"
-              aria-labelledby="tab-address"
-              class="grid grid-cols-1 gap-4 sm:grid-cols-2"
-            >
               <FormInput
                 id="address"
                 v-model="form.address"
@@ -216,34 +200,6 @@ const tabs = [
                 :label="t('default_expense_category')"
                 :error="form.errors.default_expense_category"
                 class="sm:col-span-2"
-              />
-            </div>
-
-            <div
-              v-show="activeTab === 'notes'"
-              id="tabpanel-notes"
-              role="tabpanel"
-              aria-labelledby="tab-notes"
-              class="space-y-4"
-            >
-              <div class="relative">
-                <FormTextarea
-                  id="internal_notes"
-                  v-model="form.internal_notes"
-                  :label="t('internal_notes')"
-                  :error="form.errors.internal_notes"
-                  :rows="3"
-                />
-                <Tooltip :content="t('tooltip_internal_notes')" side="top" class="absolute right-0 top-0">
-                  <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
-                </Tooltip>
-              </div>
-              <FormTextarea
-                id="notes"
-                v-model="form.notes"
-                :label="t('notes')"
-                :error="form.errors.notes"
-                :rows="3"
               />
             </div>
 
