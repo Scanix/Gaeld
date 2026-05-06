@@ -307,6 +307,25 @@ return [
     'ocr_pending_widget_description' => 'Beleg(e) zur Validierung ausstehend',
     'review_and_adjust' => 'Überprüfen Sie die erkannten Felder und passen Sie sie bei Bedarf an.',
 
+    // Contacts (unified)
+    'new_contact' => 'Neuer Kontakt',
+    'create_contact' => 'Kontakt erstellen',
+    'manage_contacts' => 'Verwalten und sehen Sie alle Ihre Kontakte ein.',
+    'no_contacts_yet' => 'Noch keine Kontakte',
+    'no_contacts_yet_desc' => 'Fügen Sie Kontakte hinzu, um Rechnungen zu erstellen und Ausgaben zu erfassen.',
+    'edit_contact' => 'Kontakt bearbeiten',
+    'delete_contact' => 'Kontakt löschen',
+    'confirm_delete_contact' => 'Sind Sie sicher, dass Sie :name löschen möchten? Dies kann nicht rückgängig gemacht werden.',
+    'contact_roles' => 'Kontaktrollen',
+    'is_customer' => 'Kunde (erhält Rechnungen)',
+    'is_supplier' => 'Lieferant (sendet Ausgaben)',
+    'supplier_details' => 'Lieferantendetails',
+    'contact_created' => 'Kontakt erstellt.',
+    'contact_updated' => 'Kontakt aktualisiert.',
+    'contact_deleted' => 'Kontakt gelöscht.',
+    'help_contacts_title' => 'Kontakte verwalten',
+    'help_contacts_text' => 'Kontakte sind Personen und Unternehmen, mit denen Sie zusammenarbeiten. Ein Kontakt kann ein Kunde (Sie stellen ihm Rechnungen), ein Lieferant (Sie kaufen bei ihm) oder beides sein.',
+
     // Customers
     'new_customer' => 'Neuer Kunde',
     'create_customer' => 'Kunde erstellen',
