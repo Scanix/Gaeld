@@ -307,6 +307,25 @@ return [
     'ocr_pending_widget_description' => 'ricevuta/e in attesa di validazione',
     'review_and_adjust' => 'Controlla i campi estratti e modificali se necessario.',
 
+    // Contacts (unified)
+    'new_contact' => 'Nuovo contatto',
+    'create_contact' => 'Crea contatto',
+    'manage_contacts' => 'Gestisci e visualizza tutti i tuoi contatti.',
+    'no_contacts_yet' => 'Nessun contatto',
+    'no_contacts_yet_desc' => 'Aggiungi contatti per iniziare a fatturare e tracciare le spese.',
+    'edit_contact' => 'Modifica contatto',
+    'delete_contact' => 'Elimina contatto',
+    'confirm_delete_contact' => 'Sei sicuro di voler eliminare :name? L’operazione non può essere annullata.',
+    'contact_roles' => 'Ruoli del contatto',
+    'is_customer' => 'Cliente (riceve fatture)',
+    'is_supplier' => 'Fornitore (invia spese)',
+    'supplier_details' => 'Dettagli del fornitore',
+    'contact_created' => 'Contatto creato.',
+    'contact_updated' => 'Contatto aggiornato.',
+    'contact_deleted' => 'Contatto eliminato.',
+    'help_contacts_title' => 'Gestione dei contatti',
+    'help_contacts_text' => 'I contatti sono le persone e le aziende con cui lavori. Un contatto può essere un cliente (gli emetti fatture), un fornitore (acquisti da lui) o entrambi.',
+
     // Customers
     'new_customer' => 'Nuovo cliente',
     'create_customer' => 'Crea cliente',
