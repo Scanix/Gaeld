@@ -3,7 +3,6 @@
 namespace App\Domains\Expenses\Actions;
 
 use App\Domains\Accounting\Models\VatRate;
-use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\DTOs\CreateExpenseData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
@@ -21,20 +20,11 @@ class CreateExpenseAction
         // Compute VAT server-side before creating; never trust $data->vatAmount.
         $vatAmount = $this->computeVatAmount($data->vatRateId, $data->amount);
 
-        $expense = Expense::create([
+        return Expense::create([
             ...$data->toArray(),
             'status' => ExpenseStatus::Pending,
             'vat_amount' => $vatAmount,
         ]);
-
-        // Unified contacts: any contact linked to an expense is implicitly a supplier.
-        if ($expense->supplier_id) {
-            Contact::where('id', $expense->supplier_id)
-                ->where('is_supplier', false)
-                ->update(['is_supplier' => true]);
-        }
-
-        return $expense;
     }
 
     /**
