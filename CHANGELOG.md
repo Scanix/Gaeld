@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.0] — 2026-05-06
+
+### Added
+- **Contacts: unified contacts table** — customers and suppliers are now a single
+  contacts entity with `is_customer` / `is_supplier` flags. Any contact can be
+  both. Includes a data migration that merges the suppliers table into contacts,
+  new `/contacts` CRUD routes, unified Vue pages (Index, Create, Edit, Show), and
+  backward-compatible `Customer` / `Supplier` models via global scopes.
+- **Invoicing: multiline line descriptions** — invoice line description fields are
+  now textareas; descriptions render with preserved line breaks in both the UI and
+  the generated PDF.
+- **Invoicing: PDF logo alignment** — the company logo is now left-aligned on
+  generated PDFs, preventing overlap with the company address block.
+- **Scripts: production data cleanup** — `scripts/cleanup-preview.php` and
+  `scripts/cleanup-delete.php` for safely removing test data older than
+  2026-01-01 from production.
+
+### Changed
+- **Invoicing: share button removed** — the share button no longer appears on the
+  invoice detail view.
+
+---
+
 ## [3.0.0] — 2026-05-05
 
 First full production release. Includes the QA hardening pass, payroll IBAN
