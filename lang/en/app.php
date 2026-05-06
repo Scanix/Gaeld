@@ -323,6 +323,8 @@ return [
     'is_supplier' => 'Supplier (sends expenses)',
     'supplier_details' => 'Supplier Details',
     'banking_and_expense_defaults' => 'Banking & Expense Defaults',
+    'default_expense_category' => 'Default expense category',
+    'more_options' => 'More options',
     'contact_created' => 'Contact created.',
     'contact_updated' => 'Contact updated.',
     'contact_deleted' => 'Contact deleted.',
