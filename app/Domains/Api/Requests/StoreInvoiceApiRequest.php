@@ -20,7 +20,7 @@ class StoreInvoiceApiRequest extends FormRequest
             'customer_id' => [
                 'required',
                 'uuid',
-                Rule::exists('customers', 'uuid')->where('organization_id', $orgId),
+                Rule::exists('contacts', 'uuid')->where('organization_id', $orgId),
             ],
             'number' => 'nullable|string|max:50',
             'issue_date' => 'required|date',

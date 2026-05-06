@@ -10,15 +10,13 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Route middleware that aborts with 403 when the requested feature flag is disabled.
  *
+ * Gates at the global/install level. Per-organization owner toggles
+ * (Settings → Modules) only hide UI; they don't block direct URL access.
+ *
  * Usage: `->middleware('feature:auto_reconciliation')`
  */
 class CheckFeatureFlag
 {
-    /**
-     * Handle an incoming request.
-     *
-     * Usage in routes: ->middleware('feature:bank_sync')
-     */
     public function handle(Request $request, Closure $next, string $feature): Response
     {
         if (FeatureFlag::disabled($feature)) {

@@ -36,6 +36,7 @@ use Illuminate\Support\Carbon;
  * @property string $currency
  * @property int|null $fiscal_year_start
  * @property array<int, int>|null $closed_fiscal_years
+ * @property array<string, bool>|null $enabled_modules
  * @property string|null $locale
  * @property BusinessType|null $business_type
  * @property bool $require_two_factor
@@ -71,6 +72,7 @@ class Organization extends Model
         'invoice_footer_text',
         'invoice_email_subject',
         'invoice_email_body',
+        'enabled_modules',
     ];
 
     protected function casts(): array
@@ -79,6 +81,7 @@ class Organization extends Model
             'require_two_factor' => 'boolean',
             'default_payment_terms_days' => 'integer',
             'closed_fiscal_years' => 'array',
+            'enabled_modules' => 'array',
             'business_type' => BusinessType::class,
         ];
     }

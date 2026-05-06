@@ -17,7 +17,7 @@ class SwissQrInvoiceServiceTest extends TestCase
 
     private Organization $org;
 
-    private Customer $client;
+    private Contact $client;
 
     protected function setUp(): void
     {

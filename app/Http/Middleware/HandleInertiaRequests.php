@@ -33,7 +33,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => $user ? $this->resolveAuth($user, $request) : null,
             'locale' => App::getLocale(),
             'translations' => fn () => trans('app'),
-            'features' => FeatureFlag::all(),
+            'features' => fn () => $this->resolveFeatures(),
             'routeCapabilities' => fn () => $this->resolveRouteCapabilities(),
             'docsBaseUrl' => config('docs.base_url'),
             'flash' => [
@@ -50,6 +50,27 @@ class HandleInertiaRequests extends Middleware
                 ? Cache::get('saas:system_message')
                 : null,
         ]);
+    }
+
+    /**
+     * Resolve feature flags for the current request, applying per-org overrides.
+     *
+     * @return array<string, bool>
+     */
+    private function resolveFeatures(): array
+    {
+        $org = $this->currentOrganization->isBound()
+            ? $this->currentOrganization->get()
+            : null;
+
+        $resolved = [];
+        foreach (FeatureFlag::all() as $key => $_) {
+            $resolved[$key] = $org
+                ? FeatureFlag::enabledForOrg($key, $org)
+                : FeatureFlag::enabled($key);
+        }
+
+        return $resolved;
     }
 
     /**
