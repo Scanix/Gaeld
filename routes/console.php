@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Assets\Jobs\MonthlyDepreciationJob;
+use App\Domains\Expenses\Jobs\GenerateRecurringExpensesJob;
 use App\Domains\Invoicing\Jobs\GenerateRecurringInvoicesJob;
 use App\Domains\Invoicing\Jobs\SendPaymentRemindersJob;
 use App\Domains\Reporting\Jobs\GenerateReportsJob;
@@ -31,6 +32,11 @@ Schedule::command('invoices:mark-overdue')->dailyAt('02:00');
  * Generate recurring invoices (03:00) — all editions.
  */
 Schedule::job(GenerateRecurringInvoicesJob::class)->dailyAt('03:00');
+
+/**
+ * Generate recurring expenses (03:30) — all editions.
+ */
+Schedule::job(GenerateRecurringExpensesJob::class)->dailyAt('03:30');
 
 /**
  * Send payment reminders for overdue invoices (04:00) — all editions.
