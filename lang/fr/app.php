@@ -1607,6 +1607,7 @@ return [
     'qr_invoice_error_detail_customer' => 'adresse du client',
     'qr_invoice_error_detail_amount' => 'montant ou devise de la facture',
     'qr_invoice_error_detail_reference' => 'format de la référence de paiement',
+    'qr_invoice_error_details_label' => 'Détails techniques :',
     'go_to_banking' => 'Ajouter un compte bancaire',
     'empty_reconciliation_title' => 'Aucun compte bancaire',
     'empty_reconciliation_desc' => 'Créez d\'abord un compte bancaire pour commencer le rapprochement.',

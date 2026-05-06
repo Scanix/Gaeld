@@ -1925,6 +1925,7 @@ return [
     'qr_invoice_error_detail_customer' => 'dati di indirizzo del cliente',
     'qr_invoice_error_detail_amount' => 'importo o valuta della fattura',
     'qr_invoice_error_detail_reference' => 'formato del riferimento di pagamento',
+    'qr_invoice_error_details_label' => 'Dettagli tecnici:',
 
     // Settings
     'edit_settings' => 'Modifica impostazioni',
