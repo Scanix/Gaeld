@@ -1836,6 +1836,21 @@ return [
     'recurring_invoice_created' => 'Wiederkehrende Rechnung erstellt.',
     'recurring_invoice_updated' => 'Wiederkehrende Rechnung aktualisiert.',
     'recurring_invoice_deleted' => 'Wiederkehrende Rechnung gelöscht.',
+
+    // Recurring Expenses
+    'recurring_expenses' => 'Wiederkehrende Ausgaben',
+    'recurring_expenses_desc' => 'Automatisieren Sie wiederkehrende Kosten wie Software-Abonnements.',
+    'new_recurring_expense' => 'Neue wiederkehrende Ausgabe',
+    'create_recurring_expense' => 'Wiederkehrende Ausgabe erstellen',
+    'edit_recurring_expense' => 'Wiederkehrende Ausgabe bearbeiten',
+    'no_recurring_expenses' => 'Noch keine wiederkehrenden Ausgaben.',
+    'no_recurring_expenses_desc' => 'Richten Sie wiederkehrende Ausgaben ein, um Abonnements und regelmässige Kosten automatisch zu erfassen.',
+    'first_due_date' => 'Erstes Fälligkeitsdatum',
+    'next_due_date' => 'Nächstes Fälligkeitsdatum',
+    'recurring_expense_created' => 'Wiederkehrende Ausgabe erstellt.',
+    'recurring_expense_updated' => 'Wiederkehrende Ausgabe aktualisiert.',
+    'recurring_expense_deleted' => 'Wiederkehrende Ausgabe gelöscht.',
+
     'import_status_pending' => 'Ausstehend',
     'import_status_validating' => 'Validierung',
     'import_status_importing' => 'Import läuft',

@@ -1860,6 +1860,21 @@ return [
     'recurring_invoice_created' => 'Facture récurrente créée.',
     'recurring_invoice_updated' => 'Facture récurrente mise à jour.',
     'recurring_invoice_deleted' => 'Facture récurrente supprimée.',
+
+    // Recurring Expenses
+    'recurring_expenses' => 'Dépenses récurrentes',
+    'recurring_expenses_desc' => 'Automatisez les coûts récurrents comme les abonnements logiciels.',
+    'new_recurring_expense' => 'Nouvelle dépense récurrente',
+    'create_recurring_expense' => 'Créer une dépense récurrente',
+    'edit_recurring_expense' => 'Modifier la dépense récurrente',
+    'no_recurring_expenses' => 'Aucune dépense récurrente pour le moment.',
+    'no_recurring_expenses_desc' => 'Configurez des dépenses récurrentes pour suivre automatiquement les abonnements et les frais réguliers.',
+    'first_due_date' => 'Première échéance',
+    'next_due_date' => 'Prochaine échéance',
+    'recurring_expense_created' => 'Dépense récurrente créée.',
+    'recurring_expense_updated' => 'Dépense récurrente mise à jour.',
+    'recurring_expense_deleted' => 'Dépense récurrente supprimée.',
+
     'import_status_pending' => 'En attente',
     'import_status_validating' => 'Validation',
     'import_status_importing' => 'Import en cours',
