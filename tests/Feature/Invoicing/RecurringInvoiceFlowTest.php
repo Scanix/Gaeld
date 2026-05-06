@@ -4,7 +4,7 @@ namespace Tests\Feature\Invoicing;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Invoicing\Jobs\GenerateRecurringInvoicesJob;
@@ -36,7 +36,7 @@ class RecurringInvoiceFlowTest extends TestCase
         Account::create(['organization_id' => $this->org->id, 'code' => '2200', 'name' => 'VAT Output', 'type' => AccountType::Liability->value]);
         Account::create(['organization_id' => $this->org->id, 'code' => '3900', 'name' => 'Rounding', 'type' => AccountType::Revenue->value]);
 
-        $this->customer = Customer::create([
+        $this->customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Recurring Client AG',
             'email' => 'billing@client.ch',

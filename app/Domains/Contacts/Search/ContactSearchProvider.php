@@ -2,8 +2,7 @@
 
 namespace App\Domains\Contacts\Search;
 
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Http\Services\BaseSearchProvider;
 
 class ContactSearchProvider extends BaseSearchProvider
@@ -12,23 +11,13 @@ class ContactSearchProvider extends BaseSearchProvider
     {
         $results = [];
 
-        foreach ($this->searchModel(Customer::class, $query, $orgId, $limit) as $customer) {
+        foreach ($this->searchModel(Contact::class, $query, $orgId, $limit) as $contact) {
             $results[] = [
-                'type' => 'customer',
-                'id' => $customer->id,
-                'title' => $customer->name,
-                'subtitle' => collect([$customer->email, $customer->city])->filter()->implode(' · '),
-                'url' => route('customers.show', $customer),
-            ];
-        }
-
-        foreach ($this->searchModel(Supplier::class, $query, $orgId, $limit) as $supplier) {
-            $results[] = [
-                'type' => 'supplier',
-                'id' => $supplier->id,
-                'title' => $supplier->name,
-                'subtitle' => collect([$supplier->email, $supplier->city])->filter()->implode(' · '),
-                'url' => route('suppliers.show', $supplier),
+                'type' => 'contact',
+                'id' => $contact->id,
+                'title' => $contact->name,
+                'subtitle' => collect([$contact->email, $contact->city])->filter()->implode(' · '),
+                'url' => route('contacts.show', $contact),
             ];
         }
 

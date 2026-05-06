@@ -3,7 +3,7 @@
 namespace App\Domains\Invoicing\Models;
 
 use App\Domains\Accounting\Models\JournalEntry;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Organizations\Models\Organization;
@@ -50,7 +50,7 @@ use Laravel\Scout\Searchable;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
- * @property-read Customer|null $customer
+ * @property-read Contact|null $customer
  * @property-read Organization $organization
  * @property-read Collection<int, InvoiceLine> $lines
  * @property-read Collection<int, InvoicePayment> $payments
@@ -107,10 +107,10 @@ class Invoice extends Model
         return $this->belongsTo(Organization::class);
     }
 
-    /** @return BelongsTo<Customer, $this> */
+    /** @return BelongsTo<Contact, $this> */
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Contact::class);
     }
 
     /** @return BelongsTo<JournalEntry, $this> */

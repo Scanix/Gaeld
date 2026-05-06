@@ -2,7 +2,7 @@
 
 namespace App\Domains\Migration\Importers;
 
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Migration\Contracts\DataTypeImporterInterface;
 use App\Domains\Migration\DTOs\ImportResult;
@@ -81,12 +81,12 @@ class InvoiceImporter implements DataTypeImporterInterface
                     // Find or create customer
                     $customer = null;
                     if ($row->customerName) {
-                        $customer = Customer::where('organization_id', $organization->id)
+                        $customer = Contact::where('organization_id', $organization->id)
                             ->where('name', $row->customerName)
                             ->first();
 
                         if (! $customer) {
-                            $customer = Customer::create([
+                            $customer = Contact::create([
                                 'organization_id' => $organization->id,
                                 'name' => $row->customerName,
                                 'email' => $row->customerEmail,

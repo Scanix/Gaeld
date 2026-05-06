@@ -56,15 +56,8 @@ class DataExportService
                 'bank_accounts' => [],
             ];
 
-            if ($org->relationLoaded('customers') || method_exists($org, 'customers')) {
-                $orgData['customers'] = $org->customers()
-                    ->withTrashed()
-                    ->get(['name', 'email', 'phone', 'address', 'city', 'postal_code', 'country', 'vat_number', 'created_at'])
-                    ->toArray();
-            }
-
-            if ($org->relationLoaded('suppliers') || method_exists($org, 'suppliers')) {
-                $orgData['suppliers'] = $org->suppliers()
+            if (method_exists($org, 'contacts')) {
+                $orgData['contacts'] = $org->contacts()
                     ->withTrashed()
                     ->get(['name', 'email', 'phone', 'address', 'city', 'postal_code', 'country', 'vat_number', 'iban', 'created_at'])
                     ->toArray();

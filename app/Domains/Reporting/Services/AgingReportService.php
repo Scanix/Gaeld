@@ -2,8 +2,7 @@
 
 namespace App\Domains\Reporting\Services;
 
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -128,7 +127,7 @@ class AgingReportService
                     ? (int) $dueDate->diffInDays($asOf)
                     : 0;
 
-                /** @var Customer|null $customer */
+                /** @var Contact|null $customer */
                 $customer = $invoice->customer;
 
                 return [
@@ -161,7 +160,7 @@ class AgingReportService
                 ? (int) $expenseDate->diffInDays($asOf)
                 : 0;
 
-            /** @var Supplier|null $supplier */
+            /** @var Contact|null $supplier */
             $supplier = $expense->supplier;
 
             return [

@@ -19,7 +19,7 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Assets\Actions\DepreciateAssetAction;
 use App\Domains\Assets\Enums\DepreciationMethod;
 use App\Domains\Assets\Models\FixedAsset;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
@@ -655,7 +655,7 @@ class FiscalYearCoherenceTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->customer = Customer::create([
+        $this->customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Client AG',
             'email' => 'client@example.com',

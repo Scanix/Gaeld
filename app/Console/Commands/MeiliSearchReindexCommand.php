@@ -2,8 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Console\Command;
@@ -11,15 +10,14 @@ use Illuminate\Console\Command;
 class MeiliSearchReindexCommand extends Command
 {
     protected $signature = 'gaeld:meilisearch:reindex
-        {model? : Specific model to reindex (invoices, customers, suppliers, expenses)}
+        {model? : Specific model to reindex (invoices, contacts, expenses)}
         {--flush : Flush existing index before re-importing}';
 
     protected $description = 'Re-index searchable models into MeiliSearch';
 
     private const MODELS = [
         'invoices' => Invoice::class,
-        'customers' => Customer::class,
-        'suppliers' => Supplier::class,
+        'contacts' => Contact::class,
         'expenses' => Expense::class,
     ];
 

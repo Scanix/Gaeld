@@ -7,7 +7,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Assets\Models\DepreciationEntry;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Migration\Models\MigrationSession;
@@ -50,7 +50,7 @@ class ChecklistService
 
         $chartConfigured = Account::where('organization_id', $organizationId)->exists();
 
-        $customerCreated = Customer::where('organization_id', $organizationId)->exists();
+        $customerCreated = Contact::where('organization_id', $organizationId)->exists();
 
         $bankAccountCreated = BankAccount::where('organization_id', $organizationId)->exists();
 

@@ -4,7 +4,7 @@ namespace Tests\Feature\Invoicing;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
@@ -40,7 +40,7 @@ class PaymentReminderFlowTest extends TestCase
         Account::create(['organization_id' => $this->org->id, 'code' => '2200', 'name' => 'VAT Output', 'type' => AccountType::Liability->value]);
         Account::create(['organization_id' => $this->org->id, 'code' => '3900', 'name' => 'Rounding', 'type' => AccountType::Revenue->value]);
 
-        $this->customer = Customer::create([
+        $this->customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Late Payer AG',
             'email' => 'finance@latepayer.ch',
@@ -109,7 +109,7 @@ class PaymentReminderFlowTest extends TestCase
     {
         Mail::fake();
 
-        $noEmailCustomer = Customer::create([
+        $noEmailCustomer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'No Email AG',
         ]);
