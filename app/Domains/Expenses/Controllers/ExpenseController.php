@@ -6,7 +6,7 @@ use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Queries\AccountQuery;
 use App\Domains\Accounting\Queries\VatRateQuery;
 use App\Domains\Banking\Queries\BankAccountQuery;
-use App\Domains\Contacts\Queries\SupplierQuery;
+use App\Domains\Contacts\Queries\ContactQuery;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\DeleteExpenseAction;
 use App\Domains\Expenses\Actions\UpdateExpenseAction;
@@ -81,7 +81,7 @@ class ExpenseController extends Controller
 
         return Inertia::render('Expenses/Create', [
             'vatRates' => VatRateQuery::active(),
-            'suppliers' => SupplierQuery::forSelect(),
+            'suppliers' => ContactQuery::forSelect(),
             'categories' => ExpenseCategoryQuery::forSelect(),
             'expenseAccounts' => AccountQuery::forSelect(AccountType::Expense),
             'bankAccounts' => BankAccountQuery::forSelect(),
@@ -151,7 +151,7 @@ class ExpenseController extends Controller
         return Inertia::render('Expenses/Edit', [
             'expense' => $expense->load('vatRate'),
             'vatRates' => VatRateQuery::active(),
-            'suppliers' => SupplierQuery::forSelect(),
+            'suppliers' => ContactQuery::forSelect(),
             'categories' => ExpenseCategoryQuery::forSelect(),
             'expenseAccounts' => AccountQuery::forSelect(AccountType::Expense),
             'bankAccounts' => BankAccountQuery::forSelect(),

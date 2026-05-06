@@ -6,6 +6,7 @@ return [
     'invoices' => 'Factures',
     'expenses' => 'Dépenses',
     'contacts' => 'Contacts',
+    'contact' => 'Contact',
     'customers' => 'Clients',
     'suppliers' => 'Fournisseurs',
     'accounting' => 'Comptabilité',
@@ -306,6 +307,26 @@ return [
     'ocr_pending_widget_title' => 'Justificatifs OCR en attente',
     'ocr_pending_widget_description' => 'justificatif(s) à valider',
     'review_and_adjust' => 'Vérifiez les champs extraits et ajustez si nécessaire.',
+
+    // Contacts (unified)
+    'new_contact' => 'Nouveau contact',
+    'create_contact' => 'Créer le contact',
+    'manage_contacts' => 'Gérez et consultez tous vos contacts.',
+    'no_contacts_yet' => 'Aucun contact pour le moment',
+    'no_contacts_yet_desc' => 'Ajoutez des contacts pour commencer à facturer et suivre vos dépenses.',
+    'edit_contact' => 'Modifier le contact',
+    'delete_contact' => 'Supprimer le contact',
+    'confirm_delete_contact' => 'Êtes-vous sûr de vouloir supprimer :name ? Cette action est irréversible.',
+    'contact_roles' => 'Rôles du contact',
+    'is_customer' => 'Client (reçoit des factures)',
+    'is_supplier' => 'Fournisseur (émet des dépenses)',
+    'supplier_details' => 'Détails du fournisseur',
+    'banking_and_expense_defaults' => 'Banque et valeurs par défaut',
+    'contact_created' => 'Contact créé.',
+    'contact_updated' => 'Contact mis à jour.',
+    'contact_deleted' => 'Contact supprimé.',
+    'help_contacts_title' => 'Gérer les contacts',
+    'help_contacts_text' => 'Les contacts sont les personnes et entreprises avec lesquelles vous travaillez. Un contact peut être un client (vous lui facturez), un fournisseur (vous lui achetez) ou les deux.',
 
     // Customers
     'new_customer' => 'Nouveau client',
@@ -1994,4 +2015,27 @@ return [
     'password_min_length' => 'Le mot de passe doit comporter au moins 8 caractères.',
     'passwords_do_not_match' => 'Les mots de passe ne correspondent pas.',
     'no_journal_lines' => 'Aucune ligne d\'écriture comptable trouvée.',
+
+    // Paiements sortants (pain.001)
+    'payments_outgoing' => 'Paiements à émettre',
+    'payments_outgoing_help' => 'Sélectionnez les dépenses fournisseurs à payer, puis téléchargez un fichier pain.001 à importer dans votre e-banking.',
+    'payments_outgoing_summary' => 'Lot de paiement',
+    'payments_outgoing_empty_title' => 'Aucun paiement à émettre',
+    'payments_outgoing_empty_description' => 'Toutes les dépenses approuvées sont déjà payées ou leurs fournisseurs n\'ont pas d\'IBAN.',
+    'payments_outgoing_no_bank_title' => 'Aucun compte débiteur',
+    'payments_outgoing_no_bank_description' => 'Ajoutez un compte bancaire avec un IBAN avant de générer un fichier de paiement.',
+    'payments_outgoing_single_currency' => 'Un lot pain.001 ne peut contenir qu\'une seule devise. Ajustez votre sélection.',
+    'payments_outgoing_submitted' => ':count paiement(s) transmis (lot :id).',
+    'download_pain001' => 'Télécharger le fichier pain.001',
+    'debtor_account' => 'Compte débiteur',
+    'execution_date' => 'Date d\'exécution',
+    'selected_count' => 'Sélection',
+    'no_iban' => 'Pas d\'IBAN',
+
+    // Badges de justification
+    'justification_missing' => 'Pièce justificative manquante',
+    'justification_missing_help' => 'Cette transaction rapprochée n\'a aucune facture, dépense ou justificatif joint.',
+    'no_receipt_count' => ':count rapprochée(s) sans justificatif',
+    'view_document' => 'Voir le document',
+    'view_receipt' => 'Voir le justificatif',
 ];

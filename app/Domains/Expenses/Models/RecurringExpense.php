@@ -2,7 +2,7 @@
 
 namespace App\Domains\Expenses\Models;
 
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
@@ -40,7 +40,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Organization $organization
- * @property-read Supplier|null $supplier
+ * @property-read Contact|null $supplier
  */
 class RecurringExpense extends Model
 {
@@ -84,10 +84,10 @@ class RecurringExpense extends Model
         return $this->belongsTo(Organization::class);
     }
 
-    /** @return BelongsTo<Supplier, $this> */
+    /** @return BelongsTo<Contact, $this> */
     public function supplier(): BelongsTo
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Contact::class);
     }
 
     /**

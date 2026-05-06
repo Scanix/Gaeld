@@ -10,8 +10,7 @@ use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\BankTransaction;
-use App\Domains\Contacts\Models\Customer;
-use App\Domains\Contacts\Models\Supplier;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
@@ -62,21 +61,21 @@ class OrganizationExportService
         ));
 
         // Customers
-        $customers = Customer::withTrashed()->where('organization_id', $org->id)->get();
+        $customers = Contact::withTrashed()->where('organization_id', $org->id)->get();
         $zip->addFromString('customers.json', $this->toJson($customers->toArray()));
         $zip->addFromString('customers.csv', $this->toCsv(
             ['ID', 'Name', 'Email', 'Phone', 'Address', 'City', 'Postal Code', 'Country', 'VAT Number', 'Currency', 'Payment Terms', 'Created At', 'Deleted At'],
-            $customers->map(fn (Customer $c): array => [
+            $customers->map(fn (Contact $c): array => [
                 $c->id, $c->name, $c->email, $c->phone, $c->address, $c->city, $c->postal_code, $c->country, $c->vat_number, $c->currency, $c->payment_terms, (string) $c->created_at, (string) $c->deleted_at,
             ])->toArray(),
         ));
 
         // Suppliers
-        $suppliers = Supplier::withTrashed()->where('organization_id', $org->id)->get();
+        $suppliers = Contact::withTrashed()->where('organization_id', $org->id)->get();
         $zip->addFromString('suppliers.json', $this->toJson($suppliers->toArray()));
         $zip->addFromString('suppliers.csv', $this->toCsv(
             ['ID', 'Name', 'Email', 'Phone', 'Address', 'City', 'Postal Code', 'Country', 'VAT Number', 'IBAN', 'Created At', 'Deleted At'],
-            $suppliers->map(fn (Supplier $s): array => [
+            $suppliers->map(fn (Contact $s): array => [
                 $s->id, $s->name, $s->email, $s->phone, $s->address, $s->city, $s->postal_code, $s->country, $s->vat_number, $s->iban, (string) $s->created_at, (string) $s->deleted_at,
             ])->toArray(),
         ));

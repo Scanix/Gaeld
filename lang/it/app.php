@@ -6,6 +6,7 @@ return [
     'invoices' => 'Fatture',
     'expenses' => 'Spese',
     'contacts' => 'Contatti',
+    'contact' => 'Contatto',
     'customers' => 'Clienti',
     'suppliers' => 'Fornitori',
     'accounting' => 'Contabilità',
@@ -306,6 +307,26 @@ return [
     'ocr_pending_widget_title' => 'Ricevute OCR in attesa',
     'ocr_pending_widget_description' => 'ricevuta/e in attesa di validazione',
     'review_and_adjust' => 'Controlla i campi estratti e modificali se necessario.',
+
+    // Contacts (unified)
+    'new_contact' => 'Nuovo contatto',
+    'create_contact' => 'Crea contatto',
+    'manage_contacts' => 'Gestisci e visualizza tutti i tuoi contatti.',
+    'no_contacts_yet' => 'Nessun contatto',
+    'no_contacts_yet_desc' => 'Aggiungi contatti per iniziare a fatturare e tracciare le spese.',
+    'edit_contact' => 'Modifica contatto',
+    'delete_contact' => 'Elimina contatto',
+    'confirm_delete_contact' => 'Sei sicuro di voler eliminare :name? L’operazione non può essere annullata.',
+    'contact_roles' => 'Ruoli del contatto',
+    'is_customer' => 'Cliente (riceve fatture)',
+    'is_supplier' => 'Fornitore (invia spese)',
+    'supplier_details' => 'Dettagli del fornitore',
+    'banking_and_expense_defaults' => 'Banca e valori predefiniti',
+    'contact_created' => 'Contatto creato.',
+    'contact_updated' => 'Contatto aggiornato.',
+    'contact_deleted' => 'Contatto eliminato.',
+    'help_contacts_title' => 'Gestione dei contatti',
+    'help_contacts_text' => 'I contatti sono le persone e le aziende con cui lavori. Un contatto può essere un cliente (gli emetti fatture), un fornitore (acquisti da lui) o entrambi.',
 
     // Customers
     'new_customer' => 'Nuovo cliente',
@@ -1974,4 +1995,27 @@ return [
     'password_min_length' => 'La password deve contenere almeno 8 caratteri.',
     'passwords_do_not_match' => 'Le password non corrispondono.',
     'no_journal_lines' => 'Nessuna riga di scrittura contabile trovata.',
+
+    // Pagamenti in uscita (pain.001)
+    'payments_outgoing' => 'Pagamenti da inviare',
+    'payments_outgoing_help' => 'Seleziona le spese fornitore da pagare, poi scarica un file pain.001 da importare nel tuo e-banking.',
+    'payments_outgoing_summary' => 'Lotto di pagamento',
+    'payments_outgoing_empty_title' => 'Nessun pagamento da inviare',
+    'payments_outgoing_empty_description' => 'Tutte le spese approvate sono già pagate o i fornitori non hanno un IBAN.',
+    'payments_outgoing_no_bank_title' => 'Nessun conto di addebito',
+    'payments_outgoing_no_bank_description' => 'Aggiungi un conto bancario con IBAN prima di generare un file di pagamento.',
+    'payments_outgoing_single_currency' => 'Un lotto pain.001 può contenere una sola valuta. Modifica la selezione.',
+    'payments_outgoing_submitted' => ':count pagamento/i inviato/i (lotto :id).',
+    'download_pain001' => 'Scarica file pain.001',
+    'debtor_account' => 'Conto di addebito',
+    'execution_date' => 'Data di esecuzione',
+    'selected_count' => 'Selezionati',
+    'no_iban' => 'Nessun IBAN',
+
+    // Badge giustificativi
+    'justification_missing' => 'Documento giustificativo mancante',
+    'justification_missing_help' => 'Questa transazione riconciliata non ha fattura, spesa o ricevuta allegata.',
+    'no_receipt_count' => ':count riconciliate senza documento',
+    'view_document' => 'Visualizza documento',
+    'view_receipt' => 'Visualizza ricevuta',
 ];

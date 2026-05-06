@@ -144,11 +144,7 @@ return [
                 'filterableAttributes' => ['organization_id', 'status', 'currency'],
                 'sortableAttributes' => ['total', 'number'],
             ],
-            'customers' => [
-                'filterableAttributes' => ['organization_id'],
-                'sortableAttributes' => ['name'],
-            ],
-            'suppliers' => [
+            'contacts' => [
                 'filterableAttributes' => ['organization_id'],
                 'sortableAttributes' => ['name'],
             ],

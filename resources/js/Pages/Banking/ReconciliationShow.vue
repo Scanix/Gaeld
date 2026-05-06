@@ -20,7 +20,7 @@ import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { normalizeReconciliationShowContract } from '@/lib/inertiaContracts'
 import { ref, computed, nextTick } from 'vue'
-import { Upload, Check, Link2, RotateCcw, Loader2, UserX, Plus } from 'lucide-vue-next'
+import { Upload, Check, Link2, RotateCcw, Loader2, UserX, Plus, AlertTriangle, Paperclip } from 'lucide-vue-next'
 
 const props = defineProps({
   bankAccount: Object,
@@ -247,6 +247,17 @@ const currentSuggestions = computed(() => {
   if (!matchingTransaction.value) return { invoices: [], expenses: [] }
   return suggestionsSafe.value[matchingTransaction.value.id] || { invoices: [], expenses: [] }
 })
+
+const justificationMissingCount = computed(() => {
+  const txs = transactionsSafe.value?.data ?? []
+  return txs.filter(
+    tx => tx.is_reconciled
+      && (
+        (!tx.matched_invoice && !tx.matched_expense)
+        || (tx.matched_expense && !tx.matched_expense.receipt_path)
+      ),
+  ).length
+})
 </script>
 
 <template>
@@ -283,6 +294,15 @@ const currentSuggestions = computed(() => {
       >
         {{ t(f) || f.charAt(0).toUpperCase() + f.slice(1) }}
       </Button>
+      <Badge
+        v-if="justificationMissingCount > 0"
+        variant="outline"
+        class="ml-auto self-center border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
+        :title="t('justification_missing_help')"
+      >
+        <AlertTriangle class="mr-1 h-3 w-3" />
+        {{ t('no_receipt_count', { count: justificationMissingCount }) }}
+      </Badge>
     </div>
 
     <!-- Triage summary for mixed-use accounts -->
@@ -344,12 +364,43 @@ const currentSuggestions = computed(() => {
               </div>
 
               <!-- Show matched entity -->
-              <div v-if="tx.matched_invoice" class="mt-2 text-xs">
+              <div v-if="tx.matched_invoice" class="mt-2 text-xs flex items-center gap-1">
                 <Badge variant="outline"><Link2 class="mr-1 h-3 w-3" />Invoice {{ tx.matched_invoice.number }}</Badge>
+                <a
+                  :href="`/invoices/${tx.matched_invoice.id}`"
+                  class="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]"
+                  :title="t('view_document')"
+                >
+                  <Paperclip class="h-3 w-3" />
+                </a>
               </div>
-              <div v-if="tx.matched_expense" class="mt-2 text-xs">
+              <div v-if="tx.matched_expense" class="mt-2 text-xs flex items-center gap-1">
                 <Badge variant="outline"><Link2 class="mr-1 h-3 w-3" />{{ tx.matched_expense.description }}</Badge>
+                <a
+                  v-if="tx.matched_expense.receipt_path"
+                  :href="`/expenses/${tx.matched_expense.id}/receipt`"
+                  class="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]"
+                  :title="t('view_receipt')"
+                >
+                  <Paperclip class="h-3 w-3" />
+                </a>
+                <Badge
+                  v-else
+                  variant="outline"
+                  class="border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                  :title="t('justification_missing_help')"
+                >
+                  <AlertTriangle class="mr-1 h-3 w-3" /> {{ t('justification_missing') }}
+                </Badge>
               </div>
+              <Badge
+                v-if="tx.is_reconciled && !tx.matched_invoice && !tx.matched_expense"
+                variant="outline"
+                class="mt-2 border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                :title="t('justification_missing_help')"
+              >
+                <AlertTriangle class="mr-1 h-3 w-3" /> {{ t('justification_missing') }}
+              </Badge>
 
               <!-- Quick suggestions for unreconciled -->
               <div v-if="!tx.is_reconciled && (suggestionsSafe[tx.id] || (bankAccountSafe.is_mixed_use && personalSuggestionsSafe.includes(tx.id)))" class="mt-2 flex flex-wrap gap-1">

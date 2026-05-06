@@ -5,7 +5,7 @@ namespace Tests\Security\Authorization;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Models\BankAccount;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
@@ -39,7 +39,7 @@ class HorizontalPrivilegeTest extends SecurityTestCase
         parent::setUp();
 
         // Create Org B resources bypassing the global scope so they land in orgB
-        $this->customerB = Customer::withoutGlobalScopes()->create([
+        $this->customerB = Contact::withoutGlobalScopes()->create([
             'organization_id' => $this->orgB->id,
             'name' => 'Org B Customer',
         ]);

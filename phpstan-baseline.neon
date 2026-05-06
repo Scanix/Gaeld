@@ -55,12 +55,6 @@ parameters:
 			path: app/Domains/Api/Controllers/ApiTokenController.php
 
 		-
-			message: '#^Dead catch \- Illuminate\\Database\\QueryException is never thrown in the try block\.$#'
-			identifier: catch.neverThrown
-			count: 1
-			path: app/Domains/Api/Controllers/CustomerApiController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
@@ -77,12 +71,6 @@ parameters:
 			identifier: method.unresolvableReturnType
 			count: 1
 			path: app/Domains/Api/Controllers/OrgTokenController.php
-
-		-
-			message: '#^Dead catch \- Illuminate\\Database\\QueryException is never thrown in the try block\.$#'
-			identifier: catch.neverThrown
-			count: 1
-			path: app/Domains/Api/Controllers/SupplierApiController.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
@@ -283,6 +271,12 @@ parameters:
 			path: app/Domains/Banking/Services/SuggestionService.php
 
 		-
+			message: '#^Call to an undefined method object\:\:getRouteKeyName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Contacts/Controllers/ContactController.php
+
+		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 3
@@ -293,24 +287,6 @@ parameters:
 			identifier: method.notFound
 			count: 3
 			path: app/Domains/Contacts/Controllers/ContactPersonController.php
-
-		-
-			message: '#^Call to an undefined method object\:\:getRouteKeyName\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Domains/Contacts/Controllers/CustomerController.php
-
-		-
-			message: '#^Call to an undefined method object\:\:getRouteKeyName\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Domains/Contacts/Controllers/SupplierController.php
-
-		-
-			message: '#^Call to an undefined method object\:\:getRouteKeyName\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Domains/Contacts/Controllers/ContactController.php
 
 		-
 			message: '#^Method App\\Domains\\Contacts\\Queries\\ContactQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Contacts\\Models\\Contact\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
@@ -325,57 +301,33 @@ parameters:
 			path: app/Domains/Contacts/Queries/ContactQuery.php
 
 		-
-			message: '#^Method App\\Domains\\Contacts\\Queries\\CustomerQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Contacts\\Models\\Customer\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domains/Contacts/Queries/CustomerQuery.php
-
-		-
-			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Contacts\\Models\\Customer\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Contacts/Queries/CustomerQuery.php
-
-		-
-			message: '#^Method App\\Domains\\Contacts\\Queries\\SupplierQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Contacts\\Models\\Supplier\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domains/Contacts/Queries/SupplierQuery.php
-
-		-
-			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Contacts\\Models\\Supplier\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Contacts/Queries/SupplierQuery.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$city\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: app/Domains/Contacts/Search/ContactSearchProvider.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: app/Domains/Contacts/Search/ContactSearchProvider.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: app/Domains/Contacts/Search/ContactSearchProvider.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: app/Domains/Contacts/Search/ContactSearchProvider.php
 
 		-
 			message: '#^Unable to resolve the template type TValue in call to function collect$#'
 			identifier: argument.templateType
-			count: 2
+			count: 1
 			path: app/Domains/Contacts/Search/ContactSearchProvider.php
 
 		-
@@ -557,6 +509,12 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Domains/Migration/Parsers/GenericCsvParser.php
+
+		-
+			message: '#^Call to function is_array\(\) with ''App\\\\Domains\\\\Accounting\\\\Models\\\\Account''\|''App\\\\Domains\\\\Contacts\\\\Models\\\\Contact''\|null will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Domains/Migration/Services/MigrationOrchestrator.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$role\.$#'
@@ -757,19 +715,13 @@ parameters:
 			path: app/Domains/Users/Services/DataExportService.php
 
 		-
-			message: '#^Call to an undefined method App\\Domains\\Organizations\\Models\\Organization\:\:suppliers\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Domains/Users/Services/DataExportService.php
-
-		-
 			message: '#^Call to function method_exists\(\) with App\\Domains\\Organizations\\Models\\Organization and ''bankAccounts'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: app/Domains/Users/Services/DataExportService.php
 
 		-
-			message: '#^Call to function method_exists\(\) with App\\Domains\\Organizations\\Models\\Organization and ''customers'' will always evaluate to true\.$#'
+			message: '#^Call to function method_exists\(\) with App\\Domains\\Organizations\\Models\\Organization and ''contacts'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: app/Domains/Users/Services/DataExportService.php
@@ -929,5 +881,3 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: app/Support/Services/FileUploadService.php
-
-

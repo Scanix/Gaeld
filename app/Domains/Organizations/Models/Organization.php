@@ -4,7 +4,7 @@ namespace App\Domains\Organizations\Models;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Banking\Models\BankAccount;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Organizations\Enums\BusinessType;
 use App\Domains\Users\Models\User;
@@ -129,10 +129,10 @@ class Organization extends Model
         return $this->hasMany(Account::class);
     }
 
-    /** @return HasMany<Customer, $this> */
-    public function customers(): HasMany
+    /** @return HasMany<Contact, $this> */
+    public function contacts(): HasMany
     {
-        return $this->hasMany(Customer::class);
+        return $this->hasMany(Contact::class);
     }
 
     /** @return HasMany<BankAccount, $this> */

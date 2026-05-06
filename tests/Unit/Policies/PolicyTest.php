@@ -7,7 +7,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Policies\AccountPolicy;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Policies\BankAccountPolicy;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Policies\ExpensePolicy;
@@ -98,7 +98,7 @@ class PolicyTest extends TestCase
     {
         $policy = new InvoicePolicy;
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client',
         ]);
@@ -124,7 +124,7 @@ class PolicyTest extends TestCase
     {
         $policy = new InvoicePolicy;
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client',
         ]);
@@ -149,7 +149,7 @@ class PolicyTest extends TestCase
     {
         $policy = new InvoicePolicy;
 
-        $client = Customer::create([
+        $client = Contact::create([
             'organization_id' => $this->organization->id,
             'name' => 'Test Client',
         ]);

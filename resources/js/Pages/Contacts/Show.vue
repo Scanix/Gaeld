@@ -49,8 +49,7 @@ const cp = useContactPersons('contacts', props.contact.uuid, props.contact.conta
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <h2 class="text-lg font-semibold">{{ contact.name }}</h2>
-        <Badge v-if="contact.is_customer" variant="default" class="text-xs">{{ t('customer') }}</Badge>
-        <Badge v-if="contact.is_supplier" variant="secondary" class="text-xs">{{ t('supplier') }}</Badge>
+        <Badge variant="default" class="text-xs">{{ t('contact') }}</Badge>
       </div>
       <Button as="a" :href="`/contacts/${contact.uuid}/edit`" variant="outline" size="sm">
         <Pencil class="mr-2 h-4 w-4" />
@@ -107,8 +106,8 @@ const cp = useContactPersons('contacts', props.contact.uuid, props.contact.conta
       </Card>
 
       <div class="lg:col-span-2 flex flex-col gap-6">
-        <!-- Invoices (customer) -->
-        <Card v-if="contact.is_customer">
+        <!-- Invoices -->
+        <Card>
           <CardHeader>
             <CardTitle>{{ t('invoices') }}</CardTitle>
           </CardHeader>
@@ -141,8 +140,8 @@ const cp = useContactPersons('contacts', props.contact.uuid, props.contact.conta
           </CardContent>
         </Card>
 
-        <!-- Expenses (supplier) -->
-        <Card v-if="contact.is_supplier">
+        <!-- Expenses -->
+        <Card>
           <CardHeader>
             <CardTitle>{{ t('expenses') }}</CardTitle>
           </CardHeader>

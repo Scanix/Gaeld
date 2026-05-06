@@ -25,8 +25,6 @@ use Laravel\Scout\Searchable;
  * @property string $uuid
  * @property string $organization_id
  * @property ContactType|null $type
- * @property bool $is_customer
- * @property bool $is_supplier
  * @property string $name
  * @property string|null $email
  * @property string|null $phone
@@ -59,8 +57,6 @@ class Contact extends Model
         'uuid',
         'organization_id',
         'type',
-        'is_customer',
-        'is_supplier',
         'name',
         'email',
         'phone',
@@ -82,14 +78,11 @@ class Contact extends Model
         return [
             'notes' => 'array',
             'type' => ContactType::class,
-            'is_customer' => 'boolean',
-            'is_supplier' => 'boolean',
             'iban' => 'encrypted',
         ];
     }
 
-    /** @return BelongsTo<Organization, $this> */
-    public function organization(): BelongsTo
+    public function searchableAs(): string
     {
         return $this->belongsTo(Organization::class);
     }

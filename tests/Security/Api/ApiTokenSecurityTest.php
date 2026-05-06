@@ -3,7 +3,7 @@
 namespace Tests\Security\Api;
 
 use App\Domains\Api\Enums\TokenType;
-use App\Domains\Contacts\Models\Customer;
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use Tests\Security\SecurityTestCase;
@@ -32,7 +32,7 @@ class ApiTokenSecurityTest extends SecurityTestCase
 
         // Create a customer in Org B to use as cross-org target
         app(CurrentOrganization::class)->set($this->orgB);
-        $this->customerB = Customer::create([
+        $this->customerB = Contact::create([
             'organization_id' => $this->orgB->id,
             'name' => 'Org B Secret Customer',
         ]);
