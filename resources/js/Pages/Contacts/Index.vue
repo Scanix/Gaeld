@@ -78,8 +78,7 @@ const countryFilters = useCountryFilters({ t, query: queryState })
     >
       <template #cell-roles="{ row }">
         <div class="flex gap-1 flex-wrap">
-          <Badge v-if="row.is_customer" variant="default" class="text-xs">{{ t('customer') }}</Badge>
-          <Badge v-if="row.is_supplier" variant="secondary" class="text-xs">{{ t('supplier') }}</Badge>
+          <Badge variant="default" class="text-xs">{{ t('contact') }}</Badge>
         </div>
       </template>
       <template #cell-actions="{ row }">

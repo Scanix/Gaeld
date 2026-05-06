@@ -30,9 +30,7 @@ class SupplierQuery
     /**
      * All contacts available for selection when creating an expense.
      *
-     * Since contacts are unified (a single record can be customer, supplier, or both),
-     * we surface every contact here. When the user picks a contact that wasn't yet
-     * a supplier, the expense action flips `is_supplier=true` automatically.
+     * Customers and suppliers are unified: any contact can be picked.
      *
      * @return Collection<int, Contact>
      */

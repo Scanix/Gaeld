@@ -23,8 +23,6 @@ const { t } = useTranslations()
 
 const form = useForm({
   type: 'organization',
-  is_customer: true,
-  is_supplier: false,
   name: '',
   email: '',
   phone: '',
@@ -66,21 +64,7 @@ const typeOptions = [
       </CardHeader>
       <CardContent>
         <form class="space-y-6" @submit.prevent="submit">
-          <!-- Role -->
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('contact_roles') }}</h3>
-          <div class="flex flex-wrap gap-6">
-            <label class="flex items-center gap-2 cursor-pointer text-sm">
-              <input id="is_customer" v-model="form.is_customer" type="checkbox" class="h-4 w-4 rounded border" />
-              {{ t('is_customer') }}
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer text-sm">
-              <input id="is_supplier" v-model="form.is_supplier" type="checkbox" class="h-4 w-4 rounded border" />
-              {{ t('is_supplier') }}
-            </label>
-          </div>
-
           <!-- Contact Information -->
-          <hr class="border-[hsl(var(--border))]" />
           <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('contact_information') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormSelect
@@ -175,9 +159,9 @@ const typeOptions = [
             />
           </div>
 
-          <!-- Supplier details (always visible — user may tick is_supplier later) -->
+          <!-- Banking & expense defaults -->
           <hr class="border-[hsl(var(--border))]" />
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('supplier_details') }}</h3>
+          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('banking_and_expense_defaults') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="sm:col-span-2">
               <MaskedInput

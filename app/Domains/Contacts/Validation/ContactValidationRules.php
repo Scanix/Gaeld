@@ -11,8 +11,6 @@ class ContactValidationRules
     {
         return [
             'type' => ['nullable', 'string', 'in:organization,individual'],
-            'is_customer' => ['nullable', 'boolean'],
-            'is_supplier' => ['nullable', 'boolean'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
@@ -35,8 +33,6 @@ class ContactValidationRules
     {
         return [
             'type' => ['sometimes', 'nullable', 'string', 'in:organization,individual'],
-            'is_customer' => ['sometimes', 'nullable', 'boolean'],
-            'is_supplier' => ['sometimes', 'nullable', 'boolean'],
             'name' => ['sometimes', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
