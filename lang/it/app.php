@@ -1808,6 +1808,21 @@ return [
     'recurring_invoice_created' => 'Fattura ricorrente creata.',
     'recurring_invoice_updated' => 'Fattura ricorrente aggiornata.',
     'recurring_invoice_deleted' => 'Fattura ricorrente eliminata.',
+
+    // Recurring Expenses
+    'recurring_expenses' => 'Spese ricorrenti',
+    'recurring_expenses_desc' => 'Automatizza i costi ricorrenti come gli abbonamenti software.',
+    'new_recurring_expense' => 'Nuova spesa ricorrente',
+    'create_recurring_expense' => 'Crea spesa ricorrente',
+    'edit_recurring_expense' => 'Modifica spesa ricorrente',
+    'no_recurring_expenses' => 'Nessuna spesa ricorrente.',
+    'no_recurring_expenses_desc' => 'Configura le spese ricorrenti per tracciare automaticamente abbonamenti e costi regolari.',
+    'first_due_date' => 'Prima scadenza',
+    'next_due_date' => 'Prossima scadenza',
+    'recurring_expense_created' => 'Spesa ricorrente creata.',
+    'recurring_expense_updated' => 'Spesa ricorrente aggiornata.',
+    'recurring_expense_deleted' => 'Spesa ricorrente eliminata.',
+
     'import_status_pending' => 'In attesa',
     'import_status_validating' => 'Validazione',
     'import_status_importing' => 'Importazione in corso',

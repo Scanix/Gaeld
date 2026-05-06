@@ -98,19 +98,14 @@ const navigation = computed(() => {
         { key: 'invoices', href: '/invoices' },
         { key: 'recurring', href: '/invoices/recurring', icon: Repeat },
       ]},
-      { key: 'expenses', href: '/expenses', icon: Receipt },
-      { key: 'contacts', href: '/contacts', icon: Users, children: [
-        { key: 'contacts', href: '/contacts' },
-        { key: 'customers', href: '/customers' },
-        { key: 'suppliers', href: '/suppliers' },
+      { key: 'expenses', href: '/expenses', icon: Receipt, children: [
+        { key: 'expenses', href: '/expenses' },
+        { key: 'recurring', href: '/expenses/recurring', icon: Repeat },
       ]},
+      { key: 'contacts', href: '/contacts', icon: Users },
     ] : []),
     ...(isFidu ? [
-      { key: 'contacts', href: '/contacts', icon: Users, children: [
-        { key: 'contacts', href: '/contacts' },
-        { key: 'customers', href: '/customers' },
-        { key: 'suppliers', href: '/suppliers' },
-      ]},
+      { key: 'contacts', href: '/contacts', icon: Users },
     ] : []),
     // ── Finances ──
     { type: 'group', label: 'nav_finances' },
