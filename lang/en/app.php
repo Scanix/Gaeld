@@ -309,6 +309,25 @@ return [
     'ocr_pending_widget_description' => 'receipt(s) awaiting validation',
     'review_and_adjust' => 'Review the extracted fields and adjust if needed.',
 
+    // Contacts (unified)
+    'new_contact' => 'New Contact',
+    'create_contact' => 'Create Contact',
+    'manage_contacts' => 'Manage and view all your contacts.',
+    'no_contacts_yet' => 'No contacts yet',
+    'no_contacts_yet_desc' => 'Add contacts to start invoicing and tracking expenses.',
+    'edit_contact' => 'Edit Contact',
+    'delete_contact' => 'Delete Contact',
+    'confirm_delete_contact' => 'Are you sure you want to delete :name? This cannot be undone.',
+    'contact_roles' => 'Contact Roles',
+    'is_customer' => 'Customer (receives invoices)',
+    'is_supplier' => 'Supplier (sends expenses)',
+    'supplier_details' => 'Supplier Details',
+    'contact_created' => 'Contact created.',
+    'contact_updated' => 'Contact updated.',
+    'contact_deleted' => 'Contact deleted.',
+    'help_contacts_title' => 'Managing contacts',
+    'help_contacts_text' => 'Contacts are the people and companies you work with. A contact can be a customer (you invoice them), a supplier (you buy from them), or both.',
+
     // Customers
     'new_customer' => 'New Customer',
     'create_customer' => 'Create Customer',

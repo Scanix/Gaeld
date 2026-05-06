@@ -99,13 +99,15 @@ const navigation = computed(() => {
         { key: 'recurring', href: '/invoices/recurring', icon: Repeat },
       ]},
       { key: 'expenses', href: '/expenses', icon: Receipt },
-      { key: 'contacts', href: '/customers', icon: Users, children: [
+      { key: 'contacts', href: '/contacts', icon: Users, children: [
+        { key: 'contacts', href: '/contacts' },
         { key: 'customers', href: '/customers' },
         { key: 'suppliers', href: '/suppliers' },
       ]},
     ] : []),
     ...(isFidu ? [
-      { key: 'contacts', href: '/customers', icon: Users, children: [
+      { key: 'contacts', href: '/contacts', icon: Users, children: [
+        { key: 'contacts', href: '/contacts' },
         { key: 'customers', href: '/customers' },
         { key: 'suppliers', href: '/suppliers' },
       ]},
