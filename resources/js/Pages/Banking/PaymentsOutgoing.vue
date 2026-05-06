@@ -68,7 +68,7 @@ function submit() {
 </script>
 
 <template>
-  <AppLayout :title="t('payments_outgoing')">
+  <AppLayout :title="t('banking')">
     <PageHeader :title="t('payments_outgoing')">
       <template #description>
         <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('payments_outgoing_help') }}</p>
