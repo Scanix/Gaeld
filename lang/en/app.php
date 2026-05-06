@@ -1852,6 +1852,21 @@ return [
     'recurring_invoice_created' => 'Recurring invoice created.',
     'recurring_invoice_updated' => 'Recurring invoice updated.',
     'recurring_invoice_deleted' => 'Recurring invoice deleted.',
+
+    // Recurring Expenses
+    'recurring_expenses' => 'Recurring Expenses',
+    'recurring_expenses_desc' => 'Automate recurring costs like software subscriptions.',
+    'new_recurring_expense' => 'New Recurring Expense',
+    'create_recurring_expense' => 'Create Recurring Expense',
+    'edit_recurring_expense' => 'Edit Recurring Expense',
+    'no_recurring_expenses' => 'No recurring expenses yet.',
+    'no_recurring_expenses_desc' => 'Set up recurring expenses to automatically track subscriptions and regular costs.',
+    'first_due_date' => 'First Due Date',
+    'next_due_date' => 'Next Due Date',
+    'recurring_expense_created' => 'Recurring expense created.',
+    'recurring_expense_updated' => 'Recurring expense updated.',
+    'recurring_expense_deleted' => 'Recurring expense deleted.',
+
     'import_status_pending' => 'Pending',
     'import_status_validating' => 'Validating',
     'import_status_importing' => 'Importing',
