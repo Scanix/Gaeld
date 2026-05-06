@@ -321,6 +321,8 @@ return [
     'is_supplier' => 'Lieferant (sendet Ausgaben)',
     'supplier_details' => 'Lieferantendetails',
     'banking_and_expense_defaults' => 'Bank & Standardwerte',
+    'default_expense_category' => 'Standard-Aufwandskategorie',
+    'more_options' => 'Weitere Optionen',
     'contact_created' => 'Kontakt erstellt.',
     'contact_updated' => 'Kontakt aktualisiert.',
     'contact_deleted' => 'Kontakt gelöscht.',
