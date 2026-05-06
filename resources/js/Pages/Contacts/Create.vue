@@ -63,9 +63,7 @@ const typeOptions = [
         <CardTitle>{{ t('new_contact') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form class="space-y-6" @submit.prevent="submit">
-          <!-- Contact Information -->
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('contact_information') }}</h3>
+        <form class="space-y-4" @submit.prevent="submit">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormSelect
               id="type"
@@ -73,7 +71,13 @@ const typeOptions = [
               :label="t('contact_type')"
               :options="typeOptions"
               :error="form.errors.type"
-              class="sm:col-span-2"
+            />
+            <FormSelect
+              id="currency"
+              v-model="form.currency"
+              :label="t('currency')"
+              :options="currencyOptions(t)"
+              :error="form.errors.currency"
             />
             <FormInput
               id="name"
@@ -97,12 +101,6 @@ const typeOptions = [
               :label="t('phone')"
               :error="form.errors.phone"
             />
-          </div>
-
-          <!-- Address -->
-          <hr class="border-[hsl(var(--border))]" />
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('address_details') }}</h3>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormInput
               id="address"
               v-model="form.address"
@@ -129,79 +127,70 @@ const typeOptions = [
               :label="t('country')"
               :options="countryOptions(t)"
               :error="form.errors.country"
+              class="sm:col-span-2"
             />
           </div>
 
-          <!-- Billing & Payment -->
-          <hr class="border-[hsl(var(--border))]" />
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('billing_details') }}</h3>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormSelect
-              id="currency"
-              v-model="form.currency"
-              :label="t('currency')"
-              :options="currencyOptions(t)"
-              :error="form.errors.currency"
-            />
-            <FormInput
-              id="vat_number"
-              v-model="form.vat_number"
-              :label="t('vat_number')"
-              :placeholder="t('vat_number_placeholder')"
-              :error="form.errors.vat_number"
-            />
-            <FormInput
-              id="payment_terms"
-              v-model="form.payment_terms"
-              :label="t('payment_terms')"
-              :placeholder="t('payment_terms_placeholder')"
-              :error="form.errors.payment_terms"
-            />
-          </div>
-
-          <!-- Banking & expense defaults -->
-          <hr class="border-[hsl(var(--border))]" />
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('banking_and_expense_defaults') }}</h3>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="sm:col-span-2">
-              <MaskedInput
-                id="iban"
-                v-model="form.iban"
-                mask="iban"
-                :label="t('iban_qr_iban')"
-                :placeholder="t('qr_iban_placeholder')"
-                :error="form.errors.iban"
+          <details class="group rounded-md border border-[hsl(var(--border))] px-3">
+            <summary class="cursor-pointer select-none py-2 text-sm font-medium text-[hsl(var(--foreground))]">
+              {{ t('more_options') }}
+            </summary>
+            <div class="space-y-4 pb-3 pt-2">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormInput
+                  id="vat_number"
+                  v-model="form.vat_number"
+                  :label="t('vat_number')"
+                  :placeholder="t('vat_number_placeholder')"
+                  :error="form.errors.vat_number"
+                />
+                <FormInput
+                  id="payment_terms"
+                  v-model="form.payment_terms"
+                  :label="t('payment_terms')"
+                  :placeholder="t('payment_terms_placeholder')"
+                  :error="form.errors.payment_terms"
+                />
+                <div class="sm:col-span-2">
+                  <MaskedInput
+                    id="iban"
+                    v-model="form.iban"
+                    mask="iban"
+                    :label="t('iban_qr_iban')"
+                    :placeholder="t('qr_iban_placeholder')"
+                    :error="form.errors.iban"
+                  />
+                  <IbanHint :iban="form.iban" mode="any" />
+                </div>
+                <FormInput
+                  id="default_expense_category"
+                  v-model="form.default_expense_category"
+                  :label="t('default_expense_category')"
+                  :error="form.errors.default_expense_category"
+                  class="sm:col-span-2"
+                />
+              </div>
+              <div class="relative">
+                <FormTextarea
+                  id="internal_notes"
+                  v-model="form.internal_notes"
+                  :label="t('internal_notes')"
+                  :error="form.errors.internal_notes"
+                  :rows="2"
+                />
+                <Tooltip :content="t('tooltip_internal_notes')" side="top" class="absolute right-0 top-0">
+                  <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
+                </Tooltip>
+              </div>
+              <FormTextarea
+                id="notes"
+                v-model="form.notes"
+                :label="t('notes')"
+                :error="form.errors.notes"
+                :rows="2"
               />
-              <IbanHint :iban="form.iban" mode="any" />
             </div>
-            <FormInput
-              id="default_expense_category"
-              v-model="form.default_expense_category"
-              :label="t('default_expense_category')"
-              :error="form.errors.default_expense_category"
-            />
-          </div>
-
-          <!-- Notes -->
-          <hr class="border-[hsl(var(--border))]" />
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('notes') }}</h3>
-          <div class="relative">
-            <FormTextarea
-              id="internal_notes"
-              v-model="form.internal_notes"
-              :label="t('internal_notes')"
-              :error="form.errors.internal_notes"
-            />
-            <Tooltip :content="t('tooltip_internal_notes')" side="top" class="absolute right-0 top-0">
-              <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
-            </Tooltip>
-          </div>
-          <FormTextarea
-            id="notes"
-            v-model="form.notes"
-            :label="t('notes')"
-            :error="form.errors.notes"
-          />
+          </details>
 
           <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" href="/contacts" variant="outline">
