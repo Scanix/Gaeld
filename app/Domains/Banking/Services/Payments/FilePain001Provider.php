@@ -102,7 +102,10 @@ class FilePain001Provider implements PaymentInitiationProviderInterface
         $pmtTpInf->appendChild($svcLvl);
         $pmtInf->appendChild($pmtTpInf);
 
-        $pmtInf->appendChild($dom->createElement('ReqdExctnDt', $execDate));
+        // pain.001.001.09: ReqdExctnDt is element-only and must wrap the date in <Dt> (or <DtTm>).
+        $reqdExctnDt = $dom->createElement('ReqdExctnDt');
+        $reqdExctnDt->appendChild($dom->createElement('Dt', $execDate));
+        $pmtInf->appendChild($reqdExctnDt);
 
         $dbtr = $dom->createElement('Dbtr');
         $dbtr->appendChild($dom->createElement('Nm', $this->sanitize($org->legal_name ?: $org->name)));
