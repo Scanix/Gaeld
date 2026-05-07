@@ -53,6 +53,7 @@ class OrganizationSettingsController extends Controller
             'hasLogo' => $organization->logo_path && Storage::disk('local')->exists($organization->logo_path),
             'expenseCategories' => ExpenseCategoryQuery::all(),
             'modules' => OrganizationModule::values(),
+            'modulePresets' => OrganizationModule::presets(),
         ]);
     }
 
@@ -135,21 +136,19 @@ class OrganizationSettingsController extends Controller
         $this->authorize('update', $organization);
 
         $allowed = OrganizationModule::values();
-        $input = (array) $request->input('modules', []);
-        $modules = [];
-        foreach ($input as $key => $value) {
-            if (in_array($key, $allowed, true)) {
-                $modules[$key] = (bool) $value;
-            }
-        }
+        $modules = collect((array) $request->input('modules', []))
+            ->only($allowed)
+            ->map(fn ($value) => (bool) $value)
+            ->all();
 
-        $organization->update(['enabled_modules' => $modules]);
+        $data = ['enabled_modules' => $modules];
 
-        // Also persist the activity-type preset if provided.
         $businessType = $request->input('business_type');
-        if ($businessType !== null && in_array($businessType, BusinessType::values(), true)) {
-            $organization->update(['business_type' => $businessType]);
+        if (in_array($businessType, BusinessType::values(), true)) {
+            $data['business_type'] = $businessType;
         }
+
+        $organization->update($data);
 
         return redirect()->route('settings')
             ->with('success', __('app.modules_updated'));

@@ -66,14 +66,14 @@ class BankingController extends Controller
                 ->with(['journalEntry:id,date,description,reference'])
                 ->whereHas('journalEntry')
                 ->get(['id', 'journal_entry_id', 'debit', 'credit', 'description'])
-                ->sortByDesc(fn ($l) => optional($l->journalEntry)->date)
+                ->sortByDesc(fn ($l) => $l->journalEntry?->date)
                 ->take(50)
                 ->values()
                 ->map(fn ($l) => [
                     'id' => $l->id,
-                    'date' => optional($l->journalEntry)->date?->toDateString(),
-                    'description' => $l->description ?: optional($l->journalEntry)->description,
-                    'reference' => optional($l->journalEntry)->reference,
+                    'date' => $l->journalEntry?->date?->toDateString(),
+                    'description' => $l->description ?: $l->journalEntry?->description,
+                    'reference' => $l->journalEntry?->reference,
                     'debit' => (string) $l->debit,
                     'credit' => (string) $l->credit,
                 ]);
