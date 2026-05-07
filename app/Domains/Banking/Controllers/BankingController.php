@@ -102,6 +102,8 @@ class BankingController extends Controller
             $this->ensurePrivateWithdrawalsAccount($currentOrg->id());
         }
 
+        $this->enforceSingleDefaultInvoicing($bankAccount);
+
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', __('app.bank_account_created'));
     }
@@ -115,6 +117,8 @@ class BankingController extends Controller
         if ($bankAccount->is_mixed_use) {
             $this->ensurePrivateWithdrawalsAccount($bankAccount->organization_id);
         }
+
+        $this->enforceSingleDefaultInvoicing($bankAccount);
 
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', __('app.bank_account_updated'));
@@ -167,5 +171,22 @@ class BankingController extends Controller
                 'is_active' => true,
             ]);
         }
+    }
+
+    /**
+     * When a bank account is flagged as the default invoicing account,
+     * un-flag every other bank account in the same organization so there
+     * is exactly one default at any time.
+     */
+    private function enforceSingleDefaultInvoicing(BankAccount $bankAccount): void
+    {
+        if (! $bankAccount->is_default_for_invoicing) {
+            return;
+        }
+
+        BankAccount::where('organization_id', $bankAccount->organization_id)
+            ->where('id', '!=', $bankAccount->id)
+            ->where('is_default_for_invoicing', true)
+            ->update(['is_default_for_invoicing' => false]);
     }
 }

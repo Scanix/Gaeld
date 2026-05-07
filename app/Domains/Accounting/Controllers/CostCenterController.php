@@ -7,6 +7,7 @@ use App\Domains\Accounting\Models\CostCenter;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Requests\StoreCostCenterRequest;
 use App\Domains\Accounting\Requests\UpdateCostCenterRequest;
+use App\Domains\Accounting\Support\AccountDisplayName;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
@@ -149,15 +150,20 @@ class CostCenterController extends Controller
 
         foreach ($rows as $row) {
             /** @var object{code:string,name:string,type:string,debit_total:float|int|string,credit_total:float|int|string} $row */
+            $displayName = AccountDisplayName::for(
+                (string) $row->code,
+                (string) $row->name,
+            );
+
             if ((string) $row->type === 'revenue') {
                 $balance = (float) $row->credit_total - (float) $row->debit_total;
-                $revenue[] = ['code' => $row->code, 'name' => $row->name, 'balance' => $balance];
+                $revenue[] = ['code' => $row->code, 'name' => $displayName, 'balance' => $balance];
                 $totalRevenue += $balance;
             }
 
             if ((string) $row->type === 'expense') {
                 $balance = (float) $row->debit_total - (float) $row->credit_total;
-                $expenses[] = ['code' => $row->code, 'name' => $row->name, 'balance' => $balance];
+                $expenses[] = ['code' => $row->code, 'name' => $displayName, 'balance' => $balance];
                 $totalExpenses += $balance;
             }
         }
