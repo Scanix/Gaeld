@@ -161,7 +161,7 @@ const navigation = computed(() => {
         { key: 'analytical_report', href: '/accounting/analytical-report' },
       ] : []),
     ]},
-    ...(!isFreelancer && features.value.assets ? [
+    ...(features.value.assets ? [
       { key: 'assets', href: '/assets', icon: Package },
     ] : []),
     // ── Management ──

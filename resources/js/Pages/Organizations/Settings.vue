@@ -125,12 +125,67 @@ function submitCommunications() {
 // org has no explicit override yet.
 const featureFlags = usePage().props.features || {}
 const modulesForm = useForm({
+  business_type: props.organization.business_type || '',
   modules: Object.fromEntries(
     props.modules.map((key) => {
       const orgValue = props.organization.enabled_modules?.[key]
       return [key, orgValue ?? !!featureFlags[key]]
     })
   ),
+})
+
+// Recommended module defaults per activity type.
+// Selecting a preset fills the checkboxes; the user can still override each one.
+const MODULE_PRESETS = {
+  freelancer: {
+    budgets: false,
+    year_end_closing: true,
+    social_charges: false,
+    account_matching: true,
+    fiduciary_export: false,
+    legal_archives: false,
+    assets: false,
+    tax_declaration: false,
+    analytical: false,
+    multi_currency: false,
+    consolidation: false,
+  },
+  sme: {
+    budgets: true,
+    year_end_closing: true,
+    social_charges: true,
+    account_matching: true,
+    fiduciary_export: false,
+    legal_archives: true,
+    assets: true,
+    tax_declaration: true,
+    analytical: false,
+    multi_currency: false,
+    consolidation: false,
+  },
+  fiduciary: {
+    budgets: true,
+    year_end_closing: true,
+    social_charges: true,
+    account_matching: true,
+    fiduciary_export: true,
+    legal_archives: true,
+    assets: true,
+    tax_declaration: true,
+    analytical: true,
+    multi_currency: true,
+    consolidation: true,
+  },
+}
+
+watch(() => modulesForm.business_type, (type) => {
+  const preset = MODULE_PRESETS[type]
+  if (!preset) return
+  props.modules.forEach((key) => {
+    if (key in preset) {
+      modulesForm.modules[key] = preset[key]
+    }
+  })
 })
 
 function submitModules() {
@@ -568,6 +623,19 @@ const businessTypeOptions = [
           </CardHeader>
           <CardContent>
             <form class="space-y-3" @submit.prevent="submitModules">
+              <!-- Activity-type preset -->
+              <div class="mb-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/40 p-4">
+                <FormSelect
+                  id="modules_business_type"
+                  v-model="modulesForm.business_type"
+                  :label="t('business_type')"
+                  :options="businessTypeOptions"
+                  :placeholder="t('select_placeholder')"
+                  :error="modulesForm.errors.business_type"
+                />
+                <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('modules_preset_hint') }}</p>
+              </div>
+
               <label
                 v-for="key in modules"
                 :key="key"

@@ -8,6 +8,7 @@ use App\Domains\Organizations\Actions\UpdateOrganizationAction;
 use App\Domains\Organizations\DTOs\UpdateCommunicationsData;
 use App\Domains\Organizations\DTOs\UpdateInvoiceSettingsData;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
+use App\Domains\Organizations\Enums\BusinessType;
 use App\Domains\Organizations\Enums\OrganizationModule;
 use App\Domains\Organizations\Jobs\ExportOrganizationDataJob;
 use App\Domains\Organizations\Requests\UpdateCommunicationsRequest;
@@ -143,6 +144,12 @@ class OrganizationSettingsController extends Controller
         }
 
         $organization->update(['enabled_modules' => $modules]);
+
+        // Also persist the activity-type preset if provided.
+        $businessType = $request->input('business_type');
+        if ($businessType !== null && in_array($businessType, BusinessType::values(), true)) {
+            $organization->update(['business_type' => $businessType]);
+        }
 
         return redirect()->route('settings')
             ->with('success', __('app.modules_updated'));
