@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { cn } from '@/lib/utils'
 import { ChevronDown, X } from 'lucide-vue-next'
 
@@ -21,7 +21,9 @@ const open = ref(false)
 const query = ref('')
 const inputRef = ref(null)
 const containerRef = ref(null)
+const triggerRef = ref(null)
 const highlightedIndex = ref(-1)
+const dropdownStyle = ref({})
 
 const selectedOption = computed(() =>
   props.options.find((o) => (typeof o === 'object' ? o[props.valueKey] : o) === props.modelValue)
@@ -59,7 +61,32 @@ function openDropdown() {
   if (props.disabled) return
   open.value = true
   highlightedIndex.value = -1
+  updateDropdownPosition()
   requestAnimationFrame(() => inputRef.value?.focus())
+}
+
+function updateDropdownPosition() {
+  if (!triggerRef.value) return
+  const rect = triggerRef.value.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - rect.bottom
+  const dropdownHeight = 280
+  if (spaceBelow >= dropdownHeight || spaceBelow >= 120) {
+    dropdownStyle.value = {
+      position: 'fixed',
+      top: rect.bottom + 4 + 'px',
+      left: rect.left + 'px',
+      width: rect.width + 'px',
+      zIndex: 9999,
+    }
+  } else {
+    dropdownStyle.value = {
+      position: 'fixed',
+      bottom: window.innerHeight - rect.top + 4 + 'px',
+      left: rect.left + 'px',
+      width: rect.width + 'px',
+      zIndex: 9999,
+    }
+  }
 }
 
 function onKeydown(e) {
@@ -78,7 +105,10 @@ function onKeydown(e) {
 }
 
 function onClickOutside(e) {
-  if (containerRef.value && !containerRef.value.contains(e.target)) {
+  if (
+    containerRef.value && !containerRef.value.contains(e.target) &&
+    inputRef.value && !inputRef.value.closest('[role="listbox"]')?.contains(e.target)
+  ) {
     open.value = false
   }
 }
@@ -94,6 +124,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 <template>
   <div ref="containerRef" :class="cn('relative', props.class)">
     <button
+      ref="triggerRef"
       type="button"
       class="flex h-10 w-full items-center justify-between rounded-md border border-[hsl(var(--input))] bg-transparent px-3 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))] disabled:cursor-not-allowed disabled:opacity-50 sm:h-9"
       :class="error ? 'border-[hsl(var(--destructive))]' : ''"
@@ -115,56 +146,59 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
       </div>
     </button>
 
-    <Transition
-      enter-active-class="transition duration-100 ease-out"
-      enter-from-class="opacity-0 scale-95"
-      enter-to-class="opacity-100 scale-100"
-      leave-active-class="transition duration-75 ease-in"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-95"
-    >
-      <div
-        v-if="open"
-        role="listbox"
-        class="absolute z-50 mt-1 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--popover))] p-1 shadow-lg"
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-100 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-75 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
       >
-        <input
-          ref="inputRef"
-          v-model="query"
-          type="text"
-          class="w-full rounded-sm border-0 bg-transparent px-2 py-1.5 text-sm placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none"
-          :placeholder="placeholder"
-          @keydown="onKeydown"
-        />
-        <div class="max-h-60 overflow-y-auto">
-          <button
-            v-for="(option, index) in filtered"
-            :key="getValue(option)"
-            type="button"
-            role="option"
-            :aria-selected="getValue(option) === modelValue"
-            :class="[
-              'flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors',
-              getValue(option) === modelValue
-                ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
-                : highlightedIndex === index
-                  ? 'bg-[hsl(var(--accent))]'
-                  : 'hover:bg-[hsl(var(--accent))]',
-            ]"
-            @click="select(option)"
-            @mouseenter="highlightedIndex = index"
-          >
-            {{ getLabel(option) }}
-          </button>
-          <p
-            v-if="filtered.length === 0"
-            class="px-2 py-4 text-center text-sm text-[hsl(var(--muted-foreground))]"
-          >
-            {{ emptyText }}
-          </p>
+        <div
+          v-if="open"
+          role="listbox"
+          :style="dropdownStyle"
+          class="rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--popover))] p-1 shadow-lg"
+        >
+          <input
+            ref="inputRef"
+            v-model="query"
+            type="text"
+            class="w-full rounded-sm border-0 bg-transparent px-2 py-1.5 text-sm placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none"
+            :placeholder="placeholder"
+            @keydown="onKeydown"
+          />
+          <div class="max-h-60 overflow-y-auto">
+            <button
+              v-for="(option, index) in filtered"
+              :key="getValue(option)"
+              type="button"
+              role="option"
+              :aria-selected="getValue(option) === modelValue"
+              :class="[
+                'flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors',
+                getValue(option) === modelValue
+                  ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
+                  : highlightedIndex === index
+                    ? 'bg-[hsl(var(--accent))]'
+                    : 'hover:bg-[hsl(var(--accent))]',
+              ]"
+              @click="select(option)"
+              @mouseenter="highlightedIndex = index"
+            >
+              {{ getLabel(option) }}
+            </button>
+            <p
+              v-if="filtered.length === 0"
+              class="px-2 py-4 text-center text-sm text-[hsl(var(--muted-foreground))]"
+            >
+              {{ emptyText }}
+            </p>
+          </div>
         </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
 
     <p v-if="error" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ error }}</p>
   </div>

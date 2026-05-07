@@ -17,6 +17,7 @@ use App\Domains\Banking\Services\PersonalPatternService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
@@ -112,9 +113,15 @@ class ReconciliationController extends Controller
             }
         }
 
-        // Fetch open invoices for the searchable reconciliation selector
+        // Fetch invoices for the searchable reconciliation selector.
+        // Include paid invoices so users can link a bank transaction to an
+        // invoice that was already recorded as paid through another channel.
         $openInvoices = Invoice::where('organization_id', $bankAccount->organization_id)
-            ->open()
+            ->whereIn('status', [
+                InvoiceStatus::Sent->value,
+                InvoiceStatus::Overdue->value,
+                InvoiceStatus::Paid->value,
+            ])
             ->with('customer:id,name')
             ->orderByDesc('issue_date')
             ->get(['id', 'number', 'total', 'currency', 'customer_id', 'issue_date', 'status']);

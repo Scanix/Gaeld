@@ -95,11 +95,11 @@ const matchInvoiceForm = useForm({ invoice_id: '' })
 const matchExpenseForm = useForm({ expense_id: '', expense_account_code: '6530' })
 const matchManualForm = useForm({ contra_account_code: '' })
 
-// Invoice combobox options: "INV-001 — Customer Name (CHF 1'500.00)"
+// Invoice combobox options: "INV-001 — Customer Name (CHF 1'500.00) [payé]"
 const invoiceOptions = computed(() =>
   openInvoicesSafe.value.map((inv) => ({
     value: inv.id,
-    label: `${inv.number} — ${inv.customer?.name || '—'} (${formatCurrency(inv.total, inv.currency)})`,
+    label: `${inv.number} — ${inv.customer?.name || '—'} (${formatCurrency(inv.total, inv.currency)})${inv.status === 'paid' ? ' ✓ ' + t('paid') : ''}`,
   }))
 )
 
