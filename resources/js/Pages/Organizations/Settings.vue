@@ -73,7 +73,6 @@ const invoiceForm = useForm({
   invoice_header_text: props.organization.invoice_header_text || '',
   invoice_footer_text: props.organization.invoice_footer_text || '',
   default_invoice_notes: props.organization.default_invoice_notes || '',
-  qr_iban: props.organization.qr_iban || '',
 })
 
 function submitInvoice() {
@@ -454,14 +453,11 @@ const businessTypeOptions = [
                 :error="invoiceForm.errors.default_invoice_notes"
               />
 
-              <FormInput
-                id="qr_iban"
-                v-model="invoiceForm.qr_iban"
-                :label="t('iban_qr_iban')"
-                :error="invoiceForm.errors.qr_iban"
-                :placeholder="t('qr_iban_placeholder')"
-              />
-              <IbanHint :iban="invoiceForm.qr_iban" mode="any" />
+              <div class="rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.3)] p-3 text-sm">
+                <p class="font-medium">{{ t('qr_iban_moved_title') }}</p>
+                <p class="mt-1 text-[hsl(var(--muted-foreground))]">{{ t('qr_iban_moved_help') }}</p>
+                <a href="/banking" class="mt-2 inline-block text-[hsl(var(--primary))] underline">{{ t('go_to_bank_accounts') }}</a>
+              </div>
 
               <div class="flex justify-end">
                 <Button type="submit" :disabled="invoiceForm.processing" :loading="invoiceForm.processing">

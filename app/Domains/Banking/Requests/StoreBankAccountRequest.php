@@ -24,6 +24,7 @@ class StoreBankAccountRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'iban' => 'nullable|string|max:34',
+            'qr_iban' => 'nullable|string|max:34',
             'bank_name' => 'nullable|string|max:255',
             'bic' => 'nullable|string|max:11',
             'account_id' => [
@@ -32,6 +33,7 @@ class StoreBankAccountRequest extends FormRequest
             ],
             'currency' => 'string|size:3',
             'is_mixed_use' => 'boolean',
+            'is_default_for_invoicing' => 'boolean',
         ];
     }
 }

@@ -17,12 +17,14 @@ readonly class CreateBankAccountData
         public string $organizationId,
         public string $name,
         public ?string $iban = null,
+        public ?string $qrIban = null,
         public ?string $bankName = null,
         public ?string $bic = null,
         public ?string $accountId = null,
         public string $currency = 'CHF',
         public string $balance = '0',
         public bool $isMixedUse = false,
+        public bool $isDefaultForInvoicing = false,
     ) {}
 
     /** @param  array<string, mixed>  $data */
@@ -34,12 +36,14 @@ readonly class CreateBankAccountData
             organizationId: $data['organization_id'],
             name: $data['name'],
             iban: $data['iban'] ?? null,
+            qrIban: $data['qr_iban'] ?? null,
             bankName: $data['bank_name'] ?? null,
             bic: $data['bic'] ?? null,
             accountId: $data['account_id'] ?? null,
             currency: $data['currency'] ?? 'CHF',
             balance: isset($data['balance']) ? (string) $data['balance'] : '0',
             isMixedUse: $data['is_mixed_use'] ?? false,
+            isDefaultForInvoicing: $data['is_default_for_invoicing'] ?? false,
         );
     }
 }
