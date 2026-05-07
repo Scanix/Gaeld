@@ -31,6 +31,7 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string|null $iban
  * @property string|null $bank_name
+ * @property string|null $bic
  * @property string $currency
  * @property string $balance
  * @property bool $is_active
@@ -54,6 +55,7 @@ class BankAccount extends Model
         'name',
         'iban',
         'bank_name',
+        'bic',
         'currency',
         'balance',
         'is_active',
