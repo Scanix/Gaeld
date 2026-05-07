@@ -10,6 +10,7 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { currencyOptions } from '@/lib/contactOptions'
@@ -145,7 +146,7 @@ const paymentMethodOptions = computed(() => [
               :label="t('vat_amount')"
               :error="form.errors.vat_amount"
             />
-            <FormSelect
+            <SearchableSelect
               id="supplier_id"
               v-model="form.supplier_id"
               :label="t('supplier')"

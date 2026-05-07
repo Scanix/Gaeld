@@ -10,6 +10,7 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import { useTranslations } from '@/lib/useTranslations'
@@ -197,7 +198,7 @@ const total = computed(() => subtotal.value + vatTotal.value)
           <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('invoice_details') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="flex items-end gap-2">
-              <FormSelect
+              <SearchableSelect
                 id="customer_id"
                 v-model="form.customer_id"
                 :label="t('client')"

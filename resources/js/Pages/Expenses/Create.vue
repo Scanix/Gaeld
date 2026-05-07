@@ -10,6 +10,7 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
@@ -17,6 +18,7 @@ import FileUpload from '@/Components/UI/FileUpload.vue'
 import Tooltip from '@/Components/UI/Tooltip.vue'
 import Alert from '@/Components/UI/Alert.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useDocsUrl } from '@/lib/useDocsUrl'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
 import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
@@ -93,8 +95,13 @@ const paymentMethodOptions = [
 ]
 
 const expenseAccountOptions = [
-  ...props.expenseAccounts.map(a => ({ value: a.code, label: `${a.code} — ${a.name}` })),
+  ...props.expenseAccounts
+    .slice()
+    .sort((a, b) => String(a.code).localeCompare(String(b.code)))
+    .map(a => ({ value: a.code, label: `${a.code} — ${a.display_name ?? a.name}` })),
 ]
+
+const chartHelpHref = useDocsUrl().url('chart-of-accounts')
 
 const bankAccountOptions = [
   ...props.bankAccounts
@@ -147,7 +154,7 @@ function onSupplierCreated(supplier) {
           <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('expense_details') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="flex items-end gap-2">
-              <FormSelect
+              <SearchableSelect
                 id="supplier_id"
                 v-model="form.supplier_id"
                 :label="t('vendor')"
@@ -242,13 +249,14 @@ function onSupplierCreated(supplier) {
           <hr class="border-[hsl(var(--border))]" />
           <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('accounting') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormSelect
+            <SearchableSelect
               id="expense_account_code"
               v-model="form.expense_account_code"
               :label="t('expense_account')"
               :options="expenseAccountOptions"
               :placeholder="t('select_account')"
               :error="form.errors.expense_account_code"
+              :help-href="chartHelpHref"
             />
             <FormSelect
               id="bank_account_code"

@@ -10,6 +10,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import PageHeader from '@/Components/UI/PageHeader.vue'
 import { Plus, Landmark, Send } from 'lucide-vue-next'
@@ -19,6 +20,8 @@ import BicField from '@/Components/BicField.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { currencyOptions } from '@/lib/contactOptions'
+import { buildAccountOptions } from '@/lib/accountOptions'
+import { useDocsUrl } from '@/lib/useDocsUrl'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -30,11 +33,13 @@ const showModal = ref(false)
 const form = useForm({
   name: '',
   iban: '',
+  qr_iban: '',
   bank_name: '',
   bic: '',
   currency: 'CHF',
   account_id: '',
   is_mixed_use: false,
+  is_default_for_invoicing: false,
 })
 
 function submit() {
@@ -47,15 +52,17 @@ const { t } = useTranslations()
 const { formatCurrency } = useFormatters()
 
 const accountOptions = computed(() =>
-  props.accounts.map(a => ({ value: a.id.toString(), label: `${a.code} — ${a.name}` }))
+  buildAccountOptions(props.accounts).map(o => ({ ...o, value: String(o.value) }))
 )
+const { url: docsUrl } = useDocsUrl()
+const chartHelpHref = docsUrl('chart-of-accounts')
 
 const columns = computed(() => [
   { key: 'name', label: t('account_name') },
   { key: 'iban', label: t('iban'), format: v => v || '—' },
   { key: 'bank_name', label: t('bank'), format: v => v || '—' },
   { key: 'currency', label: t('currency') },
-  { key: 'ledger_account', label: t('ledger_account'), format: (v) => v ? `${v.code} — ${v.name}` : '—' },
+  { key: 'ledger_account', label: t('ledger_account'), format: (v) => v ? `${v.code} — ${v.display_name ?? v.name}` : '—' },
   { key: 'derived_balance', label: t('balance'), class: 'text-right', format: (v, row) => formatCurrency(v ?? 0, row.currency || 'CHF') },
 ])
 </script>
@@ -97,6 +104,7 @@ const columns = computed(() => [
         <FormInput id="name" v-model="form.name" :label="t('account_name')" :error="form.errors.name" required />
         <FormInput id="iban" v-model="form.iban" :label="t('iban')" :placeholder="t('iban_placeholder')" :error="form.errors.iban" />
         <IbanHint :iban="form.iban" mode="any" />
+        <FormInput id="qr_iban" v-model="form.qr_iban" :label="t('iban_qr_iban')" :placeholder="t('qr_iban_placeholder')" :error="form.errors.qr_iban" :help="t('tooltip_qr_iban')" />
         <FormInput id="bank_name" v-model="form.bank_name" :label="t('bank_name')" :error="form.errors.bank_name" />
         <BicField id="bic" v-model="form.bic" :iban="form.iban" :error="form.errors.bic" />
         <FormSelect
@@ -106,13 +114,16 @@ const columns = computed(() => [
           :options="currencyOptions(t)"
           :error="form.errors.currency"
         />
-        <FormSelect
+        <SearchableSelect
           id="account_id"
           v-model="form.account_id"
           :label="t('ledger_account')"
           :options="accountOptions"
+          group-key="group"
           :placeholder="t('select_account')"
           :error="form.errors.account_id"
+          :help-href="chartHelpHref"
+          :help-label="t('chart_of_accounts')"
         />
         <div class="flex items-start gap-3">
           <input
@@ -124,6 +135,18 @@ const columns = computed(() => [
           <div>
             <label for="is_mixed_use" class="text-sm font-medium">{{ t('mixed_use_label') }}</label>
             <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('mixed_use_tooltip') }}</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <input
+            id="is_default_for_invoicing"
+            v-model="form.is_default_for_invoicing"
+            type="checkbox"
+            class="mt-1 h-4 w-4 rounded border-[hsl(var(--input))]"
+          />
+          <div>
+            <label for="is_default_for_invoicing" class="text-sm font-medium">{{ t('default_for_invoicing_label') }}</label>
+            <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('default_for_invoicing_tooltip') }}</p>
           </div>
         </div>
         <div class="flex justify-end gap-3">

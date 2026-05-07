@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Models;
 
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Support\AccountDisplayName;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
@@ -15,7 +16,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Lang;
 
 /**
  * Chart-of-accounts entry (ledger account) scoped to an organization.
@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\Lang;
  * @property string|null $description
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read string $display_name
  * @property-read Organization $organization
  * @property-read Account|null $parent
  * @property-read Collection<int, Account> $children
@@ -55,6 +56,11 @@ class Account extends Model
         'is_system',
         'description',
     ];
+
+    /**
+     * @var list<string>
+     */
+    protected $appends = ['display_name'];
 
     protected function casts(): array
     {
@@ -101,13 +107,7 @@ class Account extends Model
     protected function displayName(): Attribute
     {
         return Attribute::get(function (): string {
-            $key = 'accounts.'.$this->code;
-
-            if (Lang::has($key)) {
-                return (string) __($key);
-            }
-
-            return (string) $this->name;
+            return AccountDisplayName::for((string) $this->code, (string) $this->name);
         });
     }
 }
