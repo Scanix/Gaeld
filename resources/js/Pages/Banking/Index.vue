@@ -105,6 +105,7 @@ const columns = computed(() => [
         <FormInput id="iban" v-model="form.iban" :label="t('iban')" :placeholder="t('iban_placeholder')" :error="form.errors.iban" />
         <IbanHint :iban="form.iban" mode="any" />
         <FormInput id="qr_iban" v-model="form.qr_iban" :label="t('iban_qr_iban')" :placeholder="t('qr_iban_placeholder')" :error="form.errors.qr_iban" :help="t('tooltip_qr_iban')" />
+        <IbanHint :iban="form.qr_iban" mode="qr" />
         <FormInput id="bank_name" v-model="form.bank_name" :label="t('bank_name')" :error="form.errors.bank_name" />
         <BicField id="bic" v-model="form.bic" :iban="form.iban" :error="form.errors.bic" />
         <FormSelect

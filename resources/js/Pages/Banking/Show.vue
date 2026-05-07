@@ -13,6 +13,7 @@ import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import BicField from '@/Components/BicField.vue'
+import IbanHint from '@/Components/IbanHint.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import { currencyOptions } from '@/lib/contactOptions'
@@ -259,6 +260,7 @@ const ledgerColumns = computed(() => [
         <FormInput id="edit-name" v-model="editForm.name" :label="t('account_name')" :error="editForm.errors.name" required />
         <FormInput id="edit-iban" v-model="editForm.iban" :label="t('iban')" :error="editForm.errors.iban" />
         <FormInput id="edit-qr-iban" v-model="editForm.qr_iban" :label="t('iban_qr_iban')" :placeholder="t('qr_iban_placeholder')" :error="editForm.errors.qr_iban" :help="t('tooltip_qr_iban')" />
+        <IbanHint :iban="editForm.qr_iban" mode="qr" />
         <FormInput id="edit-bank-name" v-model="editForm.bank_name" :label="t('bank_name')" :error="editForm.errors.bank_name" />
         <BicField id="edit-bic" v-model="editForm.bic" :iban="editForm.iban" :error="editForm.errors.bic" />
         <FormSelect
