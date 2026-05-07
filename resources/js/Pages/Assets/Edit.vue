@@ -9,19 +9,23 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
-import Combobox from '@/Components/UI/Combobox.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import HelpText from '@/Components/HelpText.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { buildAccountOptions } from '@/lib/accountOptions'
+import { useDocsUrl } from '@/lib/useDocsUrl'
 
 const { t } = useTranslations()
+const { url: docsUrl } = useDocsUrl()
 
 const props = defineProps({
   asset: Object,
   accounts: { type: Array, default: () => [] },
 })
 
-const accountOptions = props.accounts.map(a => ({ value: a.id, label: `${a.code} — ${a.name}` }))
+const accountOptions = buildAccountOptions(props.accounts)
+const chartHelpHref = docsUrl('chart-of-accounts')
 
 const methodOptions = [
   { value: 'straight_line', label: t('straight_line') },
@@ -132,33 +136,39 @@ function submit() {
           <div class="space-y-4">
             <p class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('accounting_accounts') }}</p>
             <div class="grid grid-cols-1 gap-4">
-              <div>
-                <label class="mb-1.5 block text-sm font-medium">{{ t('asset_account') }}</label>
-                <Combobox
-                  v-model="form.asset_account_id"
-                  :options="accountOptions"
-                  :placeholder="t('select_account')"
-                />
-                <p v-if="form.errors.asset_account_id" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.asset_account_id }}</p>
-              </div>
-              <div>
-                <label class="mb-1.5 block text-sm font-medium">{{ t('depreciation_account') }}</label>
-                <Combobox
-                  v-model="form.depreciation_account_id"
-                  :options="accountOptions"
-                  :placeholder="t('select_account')"
-                />
-                <p v-if="form.errors.depreciation_account_id" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.depreciation_account_id }}</p>
-              </div>
-              <div>
-                <label class="mb-1.5 block text-sm font-medium">{{ t('accumulated_depreciation_account') }}</label>
-                <Combobox
-                  v-model="form.accumulated_depreciation_account_id"
-                  :options="accountOptions"
-                  :placeholder="t('select_account')"
-                />
-                <p v-if="form.errors.accumulated_depreciation_account_id" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.accumulated_depreciation_account_id }}</p>
-              </div>
+              <SearchableSelect
+                id="asset_account_id"
+                v-model="form.asset_account_id"
+                :label="t('asset_account')"
+                :options="accountOptions"
+                group-key="group"
+                :placeholder="t('select_account')"
+                :error="form.errors.asset_account_id"
+                :help-href="chartHelpHref"
+                :help-label="t('chart_of_accounts')"
+              />
+              <SearchableSelect
+                id="depreciation_account_id"
+                v-model="form.depreciation_account_id"
+                :label="t('depreciation_account')"
+                :options="accountOptions"
+                group-key="group"
+                :placeholder="t('select_account')"
+                :error="form.errors.depreciation_account_id"
+                :help-href="chartHelpHref"
+                :help-label="t('chart_of_accounts')"
+              />
+              <SearchableSelect
+                id="accumulated_depreciation_account_id"
+                v-model="form.accumulated_depreciation_account_id"
+                :label="t('accumulated_depreciation_account')"
+                :options="accountOptions"
+                group-key="group"
+                :placeholder="t('select_account')"
+                :error="form.errors.accumulated_depreciation_account_id"
+                :help-href="chartHelpHref"
+                :help-label="t('chart_of_accounts')"
+              />
             </div>
           </div>
 
