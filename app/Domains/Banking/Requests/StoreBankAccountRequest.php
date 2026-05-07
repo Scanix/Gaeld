@@ -25,6 +25,7 @@ class StoreBankAccountRequest extends FormRequest
             'name' => 'required|string|max:255',
             'iban' => 'nullable|string|max:34',
             'bank_name' => 'nullable|string|max:255',
+            'bic' => 'nullable|string|max:11',
             'account_id' => [
                 'nullable',
                 Rule::exists('accounts', 'id')->where('organization_id', $orgId),
