@@ -99,7 +99,7 @@ function doDelete() {
 </script>
 
 <template>
-  <AppLayout :title="t('vat_rates')" help-page="vat-rates">
+  <AppLayout :title="t('vat_rates')" help-page="vat">
     <Card>
       <CardHeader class="flex flex-row items-center justify-between">
         <CardTitle>{{ t('vat_rates') }}</CardTitle>

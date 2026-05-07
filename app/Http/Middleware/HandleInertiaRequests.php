@@ -36,6 +36,7 @@ class HandleInertiaRequests extends Middleware
             'features' => fn () => $this->resolveFeatures(),
             'routeCapabilities' => fn () => $this->resolveRouteCapabilities(),
             'docsBaseUrl' => config('docs.base_url'),
+            'docsRoutes' => config('docs.routes', []),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
