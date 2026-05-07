@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\SwissQrInvoiceService;
@@ -33,7 +34,15 @@ class SwissQrInvoiceServiceTest extends TestCase
             'city' => 'Zürich',
             'country' => 'CH',
             'currency' => 'CHF',
+        ]);
+
+        BankAccount::create([
+            'organization_id' => $this->org->id,
+            'name' => 'QR-Bill account',
+            'currency' => 'CHF',
             'qr_iban' => 'CH4431999123000889012',
+            'is_default_for_invoicing' => true,
+            'is_active' => true,
         ]);
 
         $this->client = Contact::create([

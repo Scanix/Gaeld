@@ -488,7 +488,6 @@ class ShowcaseDataSeeder extends Seeder
                 'locale' => $locale,
                 'fiscal_year_start' => 1,
                 'default_payment_terms_days' => 30,
-                'qr_iban' => $pack['qr_iban'] ?? null,
             ]));
 
         $syncData = [];
@@ -536,6 +535,8 @@ class ShowcaseDataSeeder extends Seeder
                 'bank_name' => $pack['bank']['bank_name'],
                 'currency' => 'CHF',
                 'balance' => 80000.00,
+                'qr_iban' => $pack['qr_iban'] ?? null,
+                'is_default_for_invoicing' => ! empty($pack['qr_iban']),
             ]
         );
 
