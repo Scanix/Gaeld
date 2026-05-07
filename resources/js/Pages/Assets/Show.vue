@@ -79,7 +79,7 @@ const historyColumns = computed(() => [
 </script>
 
 <template>
-  <AppLayout :title="asset.name" help-page="assets">
+  <AppLayout :title="asset.name" help-page="fixed-assets">
     <Breadcrumb :items="[{ label: t('assets'), href: '/assets' }, { label: asset.name }]" class="mb-4" />
 
     <ClosedYearBanner v-if="isAnyClosed" :year="displayClosedYear" />

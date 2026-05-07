@@ -21,7 +21,7 @@ set('keep_releases', 5);
 
 // --- Shared files/dirs (persisted across releases) ---
 add('shared_files', ['.env']);
-add('shared_dirs', ['storage']);
+add('shared_dirs', ['storage', 'public/build']);
 
 // --- Writable dirs ---
 add('writable_dirs', ['bootstrap/cache', 'storage']);
@@ -60,6 +60,11 @@ task('deploy:storage:link', function () {
     run('rm -f {{release_path}}/public/storage');
     run('ln -s {{deploy_path}}/shared/storage/app/public {{release_path}}/public/storage');
 })->desc('Symlink public/storage to shared storage');
+
+task('deploy:build:link', function () {
+    run('rm -rf {{release_path}}/public/build');
+    run('ln -s {{deploy_path}}/shared/public/build {{release_path}}/public/build');
+})->desc('Symlink public/build to shared build assets');
 
 task('deploy:horizon:restart', function () {
     run('sudo systemctl restart gaeld-horizon');
@@ -139,6 +144,7 @@ task('deploy', [
     'deploy:vendors',
     'deploy:ee:plugin',
     'assets:build',
+    'deploy:build:link',
     'deploy:storage:link',
     'artisan:migrate',
     'artisan:config:cache',

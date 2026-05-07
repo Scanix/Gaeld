@@ -55,7 +55,7 @@ function submit() {
 </script>
 
 <template>
-  <AppLayout :title="t('edit_asset')" help-page="assets">
+  <AppLayout :title="t('edit_asset')" help-page="fixed-assets">
     <Breadcrumb :items="[{ label: t('assets'), href: '/assets' }, { label: asset.name, href: `/assets/${asset.id}` }, { label: t('edit') }]" class="mb-4" />
 
     <Card class="max-w-2xl">
