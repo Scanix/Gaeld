@@ -1645,6 +1645,8 @@ return [
     'module_multi_currency_desc' => 'Tassi di cambio e registrazioni in valute estere.',
     'module_consolidation' => 'Consolidamento',
     'module_consolidation_desc' => 'Reporting di gruppo ed eliminazioni infragruppo.',
+    'module_payroll' => 'Buste paga',
+    'module_payroll_desc' => 'Gestione dei dipendenti, calcolo degli stipendi ed elaborazione delle paghe.',
     'settings_expense_categories_title' => 'Categorie di spesa',
     'settings_expense_categories_desc' => 'Gestisci le categorie disponibili durante la creazione delle spese.',
     'new_category_placeholder' => 'Nome nuova categoria',

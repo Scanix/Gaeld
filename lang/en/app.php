@@ -1690,6 +1690,8 @@ return [
     'module_multi_currency_desc' => 'Manage exchange rates and post entries in foreign currencies.',
     'module_consolidation' => 'Consolidation',
     'module_consolidation_desc' => 'Group reporting and inter-company eliminations.',
+    'module_payroll' => 'Payroll',
+    'module_payroll_desc' => 'Manage employees, calculate salaries, and process payroll.',
     'settings_expense_categories_title' => 'Expense Categories',
     'settings_expense_categories_desc' => 'Manage the categories available when creating expenses.',
     'new_category_placeholder' => 'New category name',

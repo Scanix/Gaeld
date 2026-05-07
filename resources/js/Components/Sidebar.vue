@@ -166,7 +166,7 @@ const navigation = computed(() => {
     ] : []),
     // ── Management ──
     { type: 'group', label: 'nav_management' },
-    ...(!isFreelancer && !isFidu && features.value.payroll !== false ? [
+    ...(features.value.payroll ? [
       { key: 'payroll', href: '/payroll/employees', icon: Briefcase, children: [
         { key: 'employees', href: '/payroll/employees' },
         { key: 'salary_slips', href: '/payroll/salary-slips' },

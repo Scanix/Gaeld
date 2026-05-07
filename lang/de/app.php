@@ -1673,6 +1673,8 @@ return [
     'module_multi_currency_desc' => 'Wechselkurse und Buchungen in Fremdwährungen.',
     'module_consolidation' => 'Konsolidierung',
     'module_consolidation_desc' => 'Konzern-Reporting und Eliminierungen zwischen Gesellschaften.',
+    'module_payroll' => 'Lohnabrechnung',
+    'module_payroll_desc' => 'Verwaltung von Mitarbeitern, Lohnberechnung und Lohnabrechnung.',
     'settings_expense_categories_title' => 'Ausgabenkategorien',
     'settings_expense_categories_desc' => 'Verwalten Sie die verfügbaren Kategorien bei der Erstellung von Ausgaben.',
     'new_category_placeholder' => 'Name der neuen Kategorie',

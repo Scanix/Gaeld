@@ -149,6 +149,7 @@ const MODULE_PRESETS = {
     analytical: false,
     multi_currency: false,
     consolidation: false,
+    payroll: false,
   },
   sme: {
     budgets: true,
@@ -162,6 +163,7 @@ const MODULE_PRESETS = {
     analytical: false,
     multi_currency: false,
     consolidation: false,
+    payroll: true,
   },
   fiduciary: {
     budgets: true,
@@ -175,6 +177,7 @@ const MODULE_PRESETS = {
     analytical: true,
     multi_currency: true,
     consolidation: true,
+    payroll: true,
   },
 }
 
