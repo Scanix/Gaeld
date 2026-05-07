@@ -14,6 +14,7 @@ return [
         'invoices' => '/docs/invoices',
         'expenses' => '/docs/expenses',
         'accounting' => '/docs/accounting',
+        'chart-of-accounts' => '/docs/accounting/chart-of-accounts',
         'reports' => '/docs/reports',
         'vat' => '/docs/vat',
         'banking' => '/docs/banking',
