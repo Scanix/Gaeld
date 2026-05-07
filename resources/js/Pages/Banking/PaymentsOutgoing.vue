@@ -59,11 +59,42 @@ function toggleAll() {
 
 const hasMultipleCurrencies = computed(() => Object.keys(totalsByCurrency.value).length > 1)
 
+const submitting = ref(false)
+
 function submit() {
-  if (hasMultipleCurrencies.value) return
-  form.post('/payments/outgoing/download', {
-    preserveScroll: true,
-  })
+  if (hasMultipleCurrencies.value || submitting.value) return
+  submitting.value = true
+
+  // Use a native form submit so the browser handles the binary file download
+  // (Inertia's form.post would interpret the binary response as an error and
+  // open the Inertia error modal instead of triggering a download).
+  const csrfToken = document.querySelector('meta[name=csrf-token]')?.content ?? ''
+  const nativeForm = document.createElement('form')
+  nativeForm.method = 'POST'
+  nativeForm.action = '/payments/outgoing/download'
+  nativeForm.style.display = 'none'
+
+  const append = (name, value) => {
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = name
+    input.value = value
+    nativeForm.appendChild(input)
+  }
+
+  append('_token', csrfToken)
+  append('bank_account_id', form.bank_account_id)
+  append('execution_date', form.execution_date ?? '')
+  for (const id of form.expense_ids) {
+    append('expense_ids[]', id)
+  }
+
+  document.body.appendChild(nativeForm)
+  nativeForm.submit()
+  nativeForm.remove()
+
+  // Re-enable the button shortly after — the download happens out-of-band.
+  setTimeout(() => { submitting.value = false }, 1500)
 }
 </script>
 
@@ -185,8 +216,8 @@ function submit() {
 
             <Button
               class="w-full"
-              :disabled="!form.expense_ids.length || form.processing || hasMultipleCurrencies"
-              :loading="form.processing"
+              :disabled="!form.expense_ids.length || submitting || hasMultipleCurrencies"
+              :loading="submitting"
               @click="submit"
             >
               <Download class="mr-2 h-4 w-4" />
