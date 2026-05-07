@@ -12,6 +12,7 @@ import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import IbanHint from '@/Components/IbanHint.vue'
+import BicField from '@/Components/BicField.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { countryOptions, currencyOptions } from '@/lib/contactOptions'
@@ -195,14 +196,14 @@ const tabs = [
                 />
                 <IbanHint :iban="form.iban" mode="any" />
               </div>
-              <FormInput
-                id="bic"
-                v-model="form.bic"
-                :label="t('bic_swift')"
-                :placeholder="t('bic_placeholder')"
-                :error="form.errors.bic"
-                class="sm:col-span-2"
-              />
+              <div class="sm:col-span-2">
+                <BicField
+                  id="bic"
+                  v-model="form.bic"
+                  :iban="form.iban"
+                  :error="form.errors.bic"
+                />
+              </div>
               <FormInput
                 id="default_expense_category"
                 v-model="form.default_expense_category"
