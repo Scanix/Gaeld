@@ -118,11 +118,7 @@ class FilePain001Provider implements PaymentInitiationProviderInterface
         $pmtInf->appendChild($dbtrAcct);
 
         $dbtrAgt = $dom->createElement('DbtrAgt');
-        $finInstnId = $dom->createElement('FinInstnId');
-        $othr = $dom->createElement('Othr');
-        $othr->appendChild($dom->createElement('Id', 'NOTPROVIDED'));
-        $finInstnId->appendChild($othr);
-        $dbtrAgt->appendChild($finInstnId);
+        $dbtrAgt->appendChild($this->buildFinInstnId($dom, $debtor->iban, $debtor->bic));
         $pmtInf->appendChild($dbtrAgt);
 
         $pmtInf->appendChild($dom->createElement('ChrgBr', 'SLEV'));
@@ -150,11 +146,7 @@ class FilePain001Provider implements PaymentInitiationProviderInterface
         $tx->appendChild($amt);
 
         $cdtrAgt = $dom->createElement('CdtrAgt');
-        $finInstnId = $dom->createElement('FinInstnId');
-        $othr = $dom->createElement('Othr');
-        $othr->appendChild($dom->createElement('Id', 'NOTPROVIDED'));
-        $finInstnId->appendChild($othr);
-        $cdtrAgt->appendChild($finInstnId);
+        $cdtrAgt->appendChild($this->buildFinInstnId($dom, $instr->creditorIban, $instr->creditorBic));
         $tx->appendChild($cdtrAgt);
 
         $cdtr = $dom->createElement('Cdtr');
@@ -224,6 +216,51 @@ class FilePain001Provider implements PaymentInitiationProviderInterface
     private function normalizeIban(string $iban): string
     {
         return strtoupper(preg_replace('/\s+/', '', $iban) ?? '');
+    }
+
+    /**
+     * Build a `<FinInstnId>` element. Emits `<BICFI>` when a BIC is known
+     * (explicit or derived from a Swiss IID), otherwise falls back to
+     * `<Othr><Id>NOTPROVIDED</Id></Othr>` per ISO 20022.
+     *
+     * Some banks (notably UBS) enforce a strict XSD profile that only
+     * accepts `<BICFI>` here; users on such banks must populate the BIC
+     * field on their bank account / supplier contact.
+     */
+    private function buildFinInstnId(\DOMDocument $dom, ?string $iban, ?string $explicitBic): \DOMElement
+    {
+        $finInstnId = $dom->createElement('FinInstnId');
+        $bic = $this->resolveBic($iban, $explicitBic);
+
+        if ($bic !== null) {
+            $finInstnId->appendChild($dom->createElement('BICFI', $bic));
+
+            return $finInstnId;
+        }
+
+        $othr = $dom->createElement('Othr');
+        $othr->appendChild($dom->createElement('Id', 'NOTPROVIDED'));
+        $finInstnId->appendChild($othr);
+
+        return $finInstnId;
+    }
+
+    /**
+     * Normalise an explicit BIC (uppercase, strip whitespace). Returns
+     * `null` when no BIC is configured so callers can fall back to
+     * `Othr/NOTPROVIDED`. Auto-derivation from Swiss IIDs is intentionally
+     * not attempted — emitting an incorrect BIC would route the payment
+     * to the wrong bank.
+     */
+    private function resolveBic(?string $iban, ?string $explicitBic): ?string
+    {
+        if ($explicitBic === null) {
+            return null;
+        }
+
+        $bic = strtoupper(preg_replace('/\s+/', '', $explicitBic) ?? '');
+
+        return $bic !== '' ? $bic : null;
     }
 
     /**

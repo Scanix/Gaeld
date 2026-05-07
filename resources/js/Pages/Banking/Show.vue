@@ -47,6 +47,7 @@ const editForm = useForm({
   name: props.bankAccount.name,
   iban: props.bankAccount.iban ?? '',
   bank_name: props.bankAccount.bank_name ?? '',
+  bic: props.bankAccount.bic ?? '',
   currency: props.bankAccount.currency ?? 'CHF',
   account_id: props.bankAccount.account_id?.toString() ?? '',
   is_mixed_use: props.bankAccount.is_mixed_use ?? false,
@@ -247,6 +248,7 @@ const ledgerColumns = computed(() => [
         <FormInput id="edit-name" v-model="editForm.name" :label="t('account_name')" :error="editForm.errors.name" required />
         <FormInput id="edit-iban" v-model="editForm.iban" :label="t('iban')" :error="editForm.errors.iban" />
         <FormInput id="edit-bank-name" v-model="editForm.bank_name" :label="t('bank_name')" :error="editForm.errors.bank_name" />
+        <FormInput id="edit-bic" v-model="editForm.bic" :label="t('bic_swift')" :placeholder="t('bic_placeholder')" :error="editForm.errors.bic" />
         <FormSelect
           id="edit-currency"
           v-model="editForm.currency"

@@ -24,6 +24,7 @@ readonly class PaymentInstructionData
         public Carbon $executionDate,
         public ?string $structuredReference,
         public ?string $unstructuredRemittance,
+        public ?string $creditorBic = null,
         public ?string $sourceType = null,
         public ?string $sourceId = null,
     ) {}
@@ -46,6 +47,7 @@ readonly class PaymentInstructionData
             executionDate: $executionDate ?? Carbon::tomorrow(),
             structuredReference: null,
             unstructuredRemittance: $expense->description ?? $expense->vendor ?? $expense->category,
+            creditorBic: $supplier->bic,
             sourceType: 'expense',
             sourceId: $expense->id,
         );
@@ -69,6 +71,7 @@ readonly class PaymentInstructionData
             executionDate: $executionDate ?? Carbon::tomorrow(),
             structuredReference: $invoice->qr_reference,
             unstructuredRemittance: $invoice->number ? "Invoice {$invoice->number}" : null,
+            creditorBic: $supplier->bic,
             sourceType: 'invoice',
             sourceId: $invoice->id,
         );

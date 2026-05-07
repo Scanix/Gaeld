@@ -34,6 +34,7 @@ const form = useForm({
   vat_number: props.contact.vat_number ?? '',
   currency: props.contact.currency ?? 'CHF',
   iban: props.contact.iban ?? '',
+  bic: props.contact.bic ?? '',
   default_expense_category: props.contact.default_expense_category ?? '',
   payment_terms: props.contact.payment_terms ?? '',
 })
@@ -205,6 +206,14 @@ const tabs = [
                 />
                 <IbanHint :iban="form.iban" mode="any" />
               </div>
+              <FormInput
+                id="bic"
+                v-model="form.bic"
+                :label="t('bic_swift')"
+                :placeholder="t('bic_placeholder')"
+                :error="form.errors.bic"
+                class="sm:col-span-2"
+              />
               <FormInput
                 id="default_expense_category"
                 v-model="form.default_expense_category"
