@@ -1698,6 +1698,8 @@ return [
     'module_multi_currency_desc' => 'Taux de change et écritures en devises étrangères.',
     'module_consolidation' => 'Consolidation',
     'module_consolidation_desc' => 'Reporting de groupe et éliminations inter-sociétés.',
+    'module_payroll' => 'Paie',
+    'module_payroll_desc' => 'Gestion des salariés, calcul des salaires et traitement de la paie.',
     'settings_expense_categories_title' => 'Catégories de dépenses',
     'settings_expense_categories_desc' => 'Gérez les catégories disponibles lors de la création de dépenses.',
     'new_category_placeholder' => 'Nom de la nouvelle catégorie',
