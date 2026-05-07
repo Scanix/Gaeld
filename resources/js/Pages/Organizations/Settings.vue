@@ -268,7 +268,7 @@ const businessTypeOptions = [
 </script>
 
 <template>
-  <AppLayout :title="t('organization_settings')" help-page="settings">
+  <AppLayout :title="t('organization_settings')" help-page="user-management">
     <div class="max-w-3xl space-y-6">
       <!-- Tabs -->
       <div role="tablist" aria-label="Settings" class="flex gap-1 rounded-lg bg-[hsl(var(--muted))] p-1">

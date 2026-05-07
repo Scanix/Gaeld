@@ -42,7 +42,7 @@ const zipContents = [
 </script>
 
 <template>
-  <AppLayout :title="t('fiduciary_export')" help-page="accounting">
+  <AppLayout :title="t('fiduciary_export')" help-page="fiduciary-export">
     <HelpText :title="t('help_export_title')" class="mb-6">
       <p>{{ t('help_export_text') }}</p>
     </HelpText>

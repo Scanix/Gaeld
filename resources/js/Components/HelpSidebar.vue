@@ -23,12 +23,24 @@ const props = defineProps({
 
 defineEmits(['close'])
 
+const HELP_PAGE_ALIASES = {
+  assets: 'fixed-assets',
+  accounting: 'accounting-basics',
+  settings: 'user-management',
+  'vat-rates': 'vat',
+}
+
+const normalizedPage = computed(() => {
+  if (!props.page) return null
+  return HELP_PAGE_ALIASES[props.page] ?? props.page
+})
+
 // Docusaurus i18n: English has no prefix, other languages use /<locale>/docs/<page>
 const localizedPath = computed(() => {
   const prefix = props.locale && props.locale !== 'en'
     ? `/${props.locale}`
     : ''
-  return props.page ? `${prefix}/docs/${props.page}` : `${prefix}/docs`
+  return normalizedPage.value ? `${prefix}/docs/${normalizedPage.value}` : `${prefix}/docs`
 })
 const iframeSrc = computed(() => props.baseUrl ? `${props.baseUrl}${localizedPath.value}` : null)
 const loadError = ref(!props.baseUrl)

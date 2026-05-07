@@ -48,7 +48,7 @@ const columns = computed(() => [
 </script>
 
 <template>
-  <AppLayout :title="t('assets')" help-page="assets">
+  <AppLayout :title="t('assets')" help-page="fixed-assets">
     <HelpText :title="t('help_assets_title')" class="mb-6">
       <p>{{ t('help_assets_text') }}</p>
       <p class="mt-2 font-medium">{{ t('help_assets_rates') }}</p>
