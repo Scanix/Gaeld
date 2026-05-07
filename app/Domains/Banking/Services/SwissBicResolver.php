@@ -124,7 +124,7 @@ final class SwissBicResolver
         }
 
         foreach (self::RANGES as [$start, $end, $bic]) {
-            if (strcmp($iid, $start) >= 0 && strcmp($iid, $end) <= 0) {
+            if ($iid >= $start && $iid <= $end) {
                 return $bic;
             }
         }
