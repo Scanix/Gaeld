@@ -15,6 +15,7 @@ import PageHeader from '@/Components/UI/PageHeader.vue'
 import { Plus, Landmark, Send } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import IbanHint from '@/Components/IbanHint.vue'
+import BicField from '@/Components/BicField.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { currencyOptions } from '@/lib/contactOptions'
@@ -97,7 +98,7 @@ const columns = computed(() => [
         <FormInput id="iban" v-model="form.iban" :label="t('iban')" :placeholder="t('iban_placeholder')" :error="form.errors.iban" />
         <IbanHint :iban="form.iban" mode="any" />
         <FormInput id="bank_name" v-model="form.bank_name" :label="t('bank_name')" :error="form.errors.bank_name" />
-        <FormInput id="bic" v-model="form.bic" :label="t('bic_swift')" :placeholder="t('bic_placeholder')" :error="form.errors.bic" />
+        <BicField id="bic" v-model="form.bic" :iban="form.iban" :error="form.errors.bic" />
         <FormSelect
           id="currency"
           v-model="form.currency"

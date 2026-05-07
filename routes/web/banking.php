@@ -1,9 +1,13 @@
 <?php
 
 use App\Domains\Banking\Controllers\BankingController;
+use App\Domains\Banking\Controllers\BicLookupController;
 use App\Domains\Banking\Controllers\PaymentInitiationController;
 use App\Domains\Banking\Controllers\ReconciliationController;
 use Illuminate\Support\Facades\Route;
+
+// IBAN → BIC auto-fill helper (Swiss/LI banks)
+Route::post('/banking/bic-lookup', BicLookupController::class)->name('banking.bic-lookup');
 
 // Core banking features (CE)
 Route::get('/banking', [BankingController::class, 'index'])->name('banking.index');

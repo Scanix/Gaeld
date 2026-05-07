@@ -12,6 +12,7 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import BicField from '@/Components/BicField.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { currencyOptions } from '@/lib/contactOptions'
 import { useFormatters } from '@/lib/useFormatters'
@@ -248,7 +249,7 @@ const ledgerColumns = computed(() => [
         <FormInput id="edit-name" v-model="editForm.name" :label="t('account_name')" :error="editForm.errors.name" required />
         <FormInput id="edit-iban" v-model="editForm.iban" :label="t('iban')" :error="editForm.errors.iban" />
         <FormInput id="edit-bank-name" v-model="editForm.bank_name" :label="t('bank_name')" :error="editForm.errors.bank_name" />
-        <FormInput id="edit-bic" v-model="editForm.bic" :label="t('bic_swift')" :placeholder="t('bic_placeholder')" :error="editForm.errors.bic" />
+        <BicField id="edit-bic" v-model="editForm.bic" :iban="editForm.iban" :error="editForm.errors.bic" />
         <FormSelect
           id="edit-currency"
           v-model="editForm.currency"
