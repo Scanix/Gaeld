@@ -106,8 +106,6 @@ class Account extends Model
      */
     protected function displayName(): Attribute
     {
-        return Attribute::get(function (): string {
-            return AccountDisplayName::for((string) $this->code, (string) $this->name);
-        });
+        return Attribute::get(fn (): string => AccountDisplayName::for((string) $this->code, (string) $this->name));
     }
 }

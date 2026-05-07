@@ -29,4 +29,57 @@ enum OrganizationModule: string
     {
         return array_column(self::cases(), 'value');
     }
+
+    /**
+     * Recommended module defaults per activity type.
+     *
+     * @return array<string, array<string, bool>>
+     */
+    public static function presets(): array
+    {
+        return [
+            'freelancer' => [
+                'budgets' => false,
+                'year_end_closing' => true,
+                'social_charges' => false,
+                'account_matching' => true,
+                'fiduciary_export' => false,
+                'legal_archives' => false,
+                'assets' => false,
+                'tax_declaration' => false,
+                'analytical' => false,
+                'multi_currency' => false,
+                'consolidation' => false,
+                'payroll' => false,
+            ],
+            'sme' => [
+                'budgets' => true,
+                'year_end_closing' => true,
+                'social_charges' => true,
+                'account_matching' => true,
+                'fiduciary_export' => false,
+                'legal_archives' => true,
+                'assets' => true,
+                'tax_declaration' => true,
+                'analytical' => false,
+                'multi_currency' => false,
+                'consolidation' => false,
+                'payroll' => true,
+            ],
+            'fiduciary' => [
+                'budgets' => true,
+                'year_end_closing' => true,
+                'social_charges' => true,
+                'account_matching' => true,
+                'fiduciary_export' => true,
+                'legal_archives' => true,
+                'assets' => true,
+                'tax_declaration' => true,
+                'analytical' => true,
+                'multi_currency' => true,
+                'consolidation' => true,
+                'payroll' => true,
+            ],
+        ];
+    }
 }

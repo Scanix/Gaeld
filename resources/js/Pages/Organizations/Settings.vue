@@ -23,6 +23,7 @@ const props = defineProps({
   hasLogo: Boolean,
   expenseCategories: { type: Array, default: () => [] },
   modules: { type: Array, default: () => [] },
+  modulePresets: { type: Object, default: () => ({}) },
 })
 
 const { t } = useTranslations()
@@ -134,55 +135,8 @@ const modulesForm = useForm({
   ),
 })
 
-// Recommended module defaults per activity type.
-// Selecting a preset fills the checkboxes; the user can still override each one.
-const MODULE_PRESETS = {
-  freelancer: {
-    budgets: false,
-    year_end_closing: true,
-    social_charges: false,
-    account_matching: true,
-    fiduciary_export: false,
-    legal_archives: false,
-    assets: false,
-    tax_declaration: false,
-    analytical: false,
-    multi_currency: false,
-    consolidation: false,
-    payroll: false,
-  },
-  sme: {
-    budgets: true,
-    year_end_closing: true,
-    social_charges: true,
-    account_matching: true,
-    fiduciary_export: false,
-    legal_archives: true,
-    assets: true,
-    tax_declaration: true,
-    analytical: false,
-    multi_currency: false,
-    consolidation: false,
-    payroll: true,
-  },
-  fiduciary: {
-    budgets: true,
-    year_end_closing: true,
-    social_charges: true,
-    account_matching: true,
-    fiduciary_export: true,
-    legal_archives: true,
-    assets: true,
-    tax_declaration: true,
-    analytical: true,
-    multi_currency: true,
-    consolidation: true,
-    payroll: true,
-  },
-}
-
 watch(() => modulesForm.business_type, (type) => {
-  const preset = MODULE_PRESETS[type]
+  const preset = props.modulePresets[type]
   if (!preset) return
   props.modules.forEach((key) => {
     if (key in preset) {

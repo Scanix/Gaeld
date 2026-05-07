@@ -105,12 +105,11 @@ class ReconciliationController extends Controller
         // match known personal counterparty patterns
         $personalSuggestions = [];
         if ($bankAccount->is_mixed_use && $unreconciledOnPage->isNotEmpty()) {
-            /** @var BankTransaction $tx */
-            foreach ($unreconciledOnPage as $tx) {
-                if ($this->personalPatternService->isLikelyPersonal($tx, $bankAccount->organization_id)) {
-                    $personalSuggestions[] = $tx->id;
-                }
-            }
+            $personalSuggestions = $unreconciledOnPage
+                ->filter(fn (BankTransaction $tx) => $this->personalPatternService->isLikelyPersonal($tx, $bankAccount->organization_id))
+                ->pluck('id')
+                ->values()
+                ->all();
         }
 
         // Fetch invoices for the searchable reconciliation selector.

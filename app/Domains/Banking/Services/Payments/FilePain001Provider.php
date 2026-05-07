@@ -260,9 +260,9 @@ class FilePain001Provider implements PaymentInitiationProviderInterface
     private function resolveBic(?string $iban, ?string $explicitBic): ?string
     {
         if ($explicitBic !== null) {
-            $bic = strtoupper(preg_replace('/\s+/', '', $explicitBic) ?? '');
-            if ($bic !== '') {
-                return $bic;
+            $normalized = strtoupper(preg_replace('/\s+/', '', $explicitBic) ?? '');
+            if ($normalized !== '') {
+                return $normalized;
             }
         }
 
