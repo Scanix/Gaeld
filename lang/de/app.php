@@ -412,6 +412,8 @@ return [
     'account_name' => 'Kontobezeichnung',
     'iban' => 'IBAN',
     'bank_name' => 'Bankname',
+    'bic_swift' => 'BIC / SWIFT',
+    'bic_placeholder' => 'z. B. UBSWCHZH80A',
     'bank' => 'Bank',
     'ledger_account' => 'Buchhaltungskonto',
     'ledger' => 'Konto:',

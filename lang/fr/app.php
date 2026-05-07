@@ -412,6 +412,8 @@ return [
     'account_name' => 'Nom du compte',
     'iban' => 'IBAN',
     'bank_name' => 'Nom de la banque',
+    'bic_swift' => 'BIC / SWIFT',
+    'bic_placeholder' => 'p. ex. UBSWCHZH80A',
     'bank' => 'Banque',
     'ledger_account' => 'Compte du grand livre',
     'ledger' => 'Grand livre :',

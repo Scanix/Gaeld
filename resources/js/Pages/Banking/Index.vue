@@ -30,6 +30,7 @@ const form = useForm({
   name: '',
   iban: '',
   bank_name: '',
+  bic: '',
   currency: 'CHF',
   account_id: '',
   is_mixed_use: false,
@@ -96,6 +97,7 @@ const columns = computed(() => [
         <FormInput id="iban" v-model="form.iban" :label="t('iban')" :placeholder="t('iban_placeholder')" :error="form.errors.iban" />
         <IbanHint :iban="form.iban" mode="any" />
         <FormInput id="bank_name" v-model="form.bank_name" :label="t('bank_name')" :error="form.errors.bank_name" />
+        <FormInput id="bic" v-model="form.bic" :label="t('bic_swift')" :placeholder="t('bic_placeholder')" :error="form.errors.bic" />
         <FormSelect
           id="currency"
           v-model="form.currency"
