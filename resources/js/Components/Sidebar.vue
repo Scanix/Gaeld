@@ -161,12 +161,12 @@ const navigation = computed(() => {
         { key: 'analytical_report', href: '/accounting/analytical-report' },
       ] : []),
     ]},
-    ...(!isFreelancer && features.value.assets ? [
+    ...(features.value.assets ? [
       { key: 'assets', href: '/assets', icon: Package },
     ] : []),
     // ── Management ──
     { type: 'group', label: 'nav_management' },
-    ...(!isFreelancer && !isFidu && features.value.payroll !== false ? [
+    ...(features.value.payroll ? [
       { key: 'payroll', href: '/payroll/employees', icon: Briefcase, children: [
         { key: 'employees', href: '/payroll/employees' },
         { key: 'salary_slips', href: '/payroll/salary-slips' },

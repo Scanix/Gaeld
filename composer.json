@@ -32,6 +32,7 @@
         "knuckleswtf/scribe": "^5.9",
         "larastan/larastan": "^3.0",
         "laravel-lang/common": "^6.8",
+        "laravel/boost": "^2.4",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.26",
         "laravel/tinker": "^3.0",

@@ -22,6 +22,7 @@ enum OrganizationModule: string
     case Analytical = 'analytical';
     case MultiCurrency = 'multi_currency';
     case Consolidation = 'consolidation';
+    case Payroll = 'payroll';
 
     /** @return string[] */
     public static function values(): array

@@ -61,7 +61,7 @@ function submit() {
 </script>
 
 <template>
-  <AppLayout :title="t('new_asset')" help-page="assets">
+  <AppLayout :title="t('new_asset')" help-page="fixed-assets">
     <Breadcrumb :items="[{ label: t('assets'), href: '/assets' }, { label: t('new_asset') }]" class="mb-4" />
 
     <HelpText :title="t('help_assets_title')" class="mb-6">
