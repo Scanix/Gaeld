@@ -255,7 +255,7 @@ class SuggestionService
 
             $expense = Expense::where('organization_id', $orgId)
                 ->whereNotIn('id', $reconciledExpenseIds)
-                ->whereRaw('LOWER(REPLACE(id, ?, ?)) LIKE ?', ['-', '', $slice.'%'])
+                ->whereRaw('LOWER(REPLACE(CAST(id AS TEXT), ?, ?)) LIKE ?', ['-', '', $slice.'%'])
                 ->first();
 
             if ($expense) {
