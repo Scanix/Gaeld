@@ -456,6 +456,8 @@ return [
     'enter_invoice_id' => 'Select or enter invoice ID',
     'search_invoice' => 'Search invoice…',
     'no_invoices_found' => 'No open invoices found.',
+    'search_expense' => 'Search expense…',
+    'no_expenses_found' => 'No matching expenses found.',
     'enter_expense_id' => 'Select or enter expense ID',
     'file' => 'File',
     'import' => 'Import',
