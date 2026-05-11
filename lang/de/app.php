@@ -453,6 +453,8 @@ return [
     'enter_invoice_id' => 'Rechnungs-ID auswählen oder eingeben',
     'search_invoice' => 'Rechnung suchen…',
     'no_invoices_found' => 'Keine offenen Rechnungen gefunden.',
+    'search_expense' => 'Ausgabe suchen…',
+    'no_expenses_found' => 'Keine passenden Ausgaben gefunden.',
     'enter_expense_id' => 'Ausgaben-ID auswählen oder eingeben',
     'file' => 'Datei',
     'import' => 'Importieren',

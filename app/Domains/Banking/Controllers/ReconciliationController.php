@@ -16,6 +16,7 @@ use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\PersonalPatternService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
+use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
@@ -125,6 +126,20 @@ class ReconciliationController extends Controller
             ->orderByDesc('issue_date')
             ->get(['id', 'number', 'total', 'currency', 'customer_id', 'issue_date', 'status']);
 
+        // Fetch posted, not-yet-reconciled expenses for the searchable expense selector.
+        $reconciledExpenseIds = BankTransaction::whereHas(
+            'bankAccount',
+            fn ($q) => $q->where('organization_id', $bankAccount->organization_id),
+        )
+            ->whereNotNull('matched_expense_id')
+            ->pluck('matched_expense_id');
+
+        $openExpenses = Expense::where('organization_id', $bankAccount->organization_id)
+            ->where('status', ExpenseStatus::Posted)
+            ->whereNotIn('id', $reconciledExpenseIds)
+            ->orderByDesc('date')
+            ->get(['id', 'description', 'vendor', 'category', 'amount', 'currency', 'date', 'status']);
+
         return Inertia::render('Banking/ReconciliationShow', [
             'bankAccount' => $bankAccount->load('ledgerAccount'),
             'transactions' => $transactions,
@@ -132,6 +147,7 @@ class ReconciliationController extends Controller
             'personalSuggestions' => $personalSuggestions,
             'filter' => $filter,
             'openInvoices' => $openInvoices,
+            'openExpenses' => $openExpenses,
             'pageFeatures' => [
                 'auto_reconciliation' => FeatureFlag::enabled('auto_reconciliation'),
             ],
