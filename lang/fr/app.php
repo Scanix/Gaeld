@@ -453,6 +453,8 @@ return [
     'enter_invoice_id' => 'Sélectionner ou saisir l\'ID de facture',
     'search_invoice' => 'Rechercher une facture…',
     'no_invoices_found' => 'Aucune facture ouverte trouvée.',
+    'search_expense' => 'Rechercher une dépense…',
+    'no_expenses_found' => 'Aucune dépense correspondante trouvée.',
     'enter_expense_id' => 'Sélectionner ou saisir l\'ID de dépense',
     'file' => 'Fichier',
     'import' => 'Importer',
