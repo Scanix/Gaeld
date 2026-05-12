@@ -27,6 +27,14 @@ use Illuminate\Support\Facades\Log;
  */
 class MigrationOrchestrator
 {
+    /**
+     * Above this chart-of-accounts size, account-mapping fuzzy matching
+     * starts to dominate import time and memory. Crossing this threshold
+     * triggers a warning so we can decide whether to tighten this into a
+     * hard cap or refactor the matcher to use a prefix-bucketed index.
+     */
+    private const ACCOUNT_MAPPING_SOFT_CAP = 10000;
+
     public function __construct(
         private readonly MigrationRegistry $registry,
     ) {}
@@ -225,6 +233,20 @@ class MigrationOrchestrator
         }
 
         $targetAccounts = Account::where('organization_id', $organization->id)->get();
+
+        // Soft cap: fuzzy matching is O(rows × accounts × mappers) and the
+        // whole chart of accounts is held in memory. A normal SME has well
+        // under 1k accounts; warn if we ever see an outlier so ops can
+        // decide whether to tighten this into a hard cap or refactor the
+        // matcher into a prefix-bucketed index.
+        if ($targetAccounts->count() > self::ACCOUNT_MAPPING_SOFT_CAP) {
+            Log::warning('Migration account mapping exceeded soft cap', [
+                'organization_id' => $organization->id,
+                'account_count' => $targetAccounts->count(),
+                'soft_cap' => self::ACCOUNT_MAPPING_SOFT_CAP,
+            ]);
+        }
+
         $mappings = [];
 
         foreach ($rows as $row) {
