@@ -9,6 +9,14 @@ use Illuminate\Validation\Rule;
 class StoreApiTokenRequest extends FormRequest
 {
     /**
+     * Personal token creation — only an authenticated user may create their own token.
+     */
+    public function authorize(): bool
+    {
+        return $this->user() !== null;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function rules(): array
