@@ -2,12 +2,21 @@
 
 namespace App\Domains\Api\Requests;
 
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreInvoiceApiRequest extends FormRequest
 {
+    /**
+     * Defense-in-depth: enforce policy at the FormRequest layer in addition to the controller.
+     */
+    public function authorize(): bool
+    {
+        return $this->user()?->can('create', Invoice::class) ?? false;
+    }
+
     /**
      * @return array<string, mixed>
      */
