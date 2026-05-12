@@ -18,7 +18,16 @@ class GenerateRecurringInvoicesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 1;
+    public int $tries = 3;
+
+    public int $timeout = 300;
+
+    /**
+     * Exponential backoff between retries (seconds).
+     *
+     * @var array<int, int>
+     */
+    public array $backoff = [60, 300, 900];
 
     public function handle(CreateInvoiceAction $createInvoice, InvoiceNumberGenerator $numberGenerator): void
     {

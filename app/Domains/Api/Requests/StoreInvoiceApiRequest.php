@@ -28,7 +28,7 @@ class StoreInvoiceApiRequest extends FormRequest
             'currency' => 'string|size:3',
             'notes' => 'nullable|string',
             'payment_terms' => 'nullable|string',
-            'lines' => 'required|array|min:1',
+            'lines' => 'required|array|min:1|max:500',
             'lines.*.description' => 'required|string',
             'lines.*.quantity' => 'required|numeric|min:0.01',
             'lines.*.unit_price' => 'required|numeric|min:0',
