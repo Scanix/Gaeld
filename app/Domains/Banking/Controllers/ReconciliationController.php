@@ -16,7 +16,9 @@ use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\PersonalPatternService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
+use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
@@ -104,20 +106,39 @@ class ReconciliationController extends Controller
         // match known personal counterparty patterns
         $personalSuggestions = [];
         if ($bankAccount->is_mixed_use && $unreconciledOnPage->isNotEmpty()) {
-            /** @var BankTransaction $tx */
-            foreach ($unreconciledOnPage as $tx) {
-                if ($this->personalPatternService->isLikelyPersonal($tx, $bankAccount->organization_id)) {
-                    $personalSuggestions[] = $tx->id;
-                }
-            }
+            $personalSuggestions = $unreconciledOnPage
+                ->filter(fn (BankTransaction $tx) => $this->personalPatternService->isLikelyPersonal($tx, $bankAccount->organization_id))
+                ->pluck('id')
+                ->values()
+                ->all();
         }
 
-        // Fetch open invoices for the searchable reconciliation selector
+        // Fetch invoices for the searchable reconciliation selector.
+        // Include paid invoices so users can link a bank transaction to an
+        // invoice that was already recorded as paid through another channel.
         $openInvoices = Invoice::where('organization_id', $bankAccount->organization_id)
-            ->open()
+            ->whereIn('status', [
+                InvoiceStatus::Sent->value,
+                InvoiceStatus::Overdue->value,
+                InvoiceStatus::Paid->value,
+            ])
             ->with('customer:id,name')
             ->orderByDesc('issue_date')
             ->get(['id', 'number', 'total', 'currency', 'customer_id', 'issue_date', 'status']);
+
+        // Fetch posted, not-yet-reconciled expenses for the searchable expense selector.
+        $reconciledExpenseIds = BankTransaction::whereHas(
+            'bankAccount',
+            fn ($q) => $q->where('organization_id', $bankAccount->organization_id),
+        )
+            ->whereNotNull('matched_expense_id')
+            ->pluck('matched_expense_id');
+
+        $openExpenses = Expense::where('organization_id', $bankAccount->organization_id)
+            ->where('status', ExpenseStatus::Posted)
+            ->whereNotIn('id', $reconciledExpenseIds)
+            ->orderByDesc('date')
+            ->get(['id', 'description', 'vendor', 'category', 'amount', 'currency', 'date', 'status']);
 
         return Inertia::render('Banking/ReconciliationShow', [
             'bankAccount' => $bankAccount->load('ledgerAccount'),
@@ -126,6 +147,7 @@ class ReconciliationController extends Controller
             'personalSuggestions' => $personalSuggestions,
             'filter' => $filter,
             'openInvoices' => $openInvoices,
+            'openExpenses' => $openExpenses,
             'pageFeatures' => [
                 'auto_reconciliation' => FeatureFlag::enabled('auto_reconciliation'),
             ],

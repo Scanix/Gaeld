@@ -8,6 +8,8 @@ use App\Domains\Organizations\Actions\UpdateOrganizationAction;
 use App\Domains\Organizations\DTOs\UpdateCommunicationsData;
 use App\Domains\Organizations\DTOs\UpdateInvoiceSettingsData;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
+use App\Domains\Organizations\Enums\BusinessType;
+use App\Domains\Organizations\Enums\OrganizationModule;
 use App\Domains\Organizations\Jobs\ExportOrganizationDataJob;
 use App\Domains\Organizations\Requests\UpdateCommunicationsRequest;
 use App\Domains\Organizations\Requests\UpdateInvoiceSettingsRequest;
@@ -50,6 +52,8 @@ class OrganizationSettingsController extends Controller
             'organization' => $organization,
             'hasLogo' => $organization->logo_path && Storage::disk('local')->exists($organization->logo_path),
             'expenseCategories' => ExpenseCategoryQuery::all(),
+            'modules' => OrganizationModule::values(),
+            'modulePresets' => OrganizationModule::presets(),
         ]);
     }
 
@@ -124,6 +128,30 @@ class OrganizationSettingsController extends Controller
 
         return redirect()->route('settings')
             ->with('success', __('app.communication_settings_updated'));
+    }
+
+    public function updateModules(Request $request, CurrentOrganization $currentOrg): RedirectResponse
+    {
+        $organization = $currentOrg->get();
+        $this->authorize('update', $organization);
+
+        $allowed = OrganizationModule::values();
+        $modules = collect((array) $request->input('modules', []))
+            ->only($allowed)
+            ->map(fn ($value) => (bool) $value)
+            ->all();
+
+        $data = ['enabled_modules' => $modules];
+
+        $businessType = $request->input('business_type');
+        if (in_array($businessType, BusinessType::values(), true)) {
+            $data['business_type'] = $businessType;
+        }
+
+        $organization->update($data);
+
+        return redirect()->route('settings')
+            ->with('success', __('app.modules_updated'));
     }
 
     public function exportData(CurrentOrganization $currentOrg): RedirectResponse

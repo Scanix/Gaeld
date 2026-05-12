@@ -63,19 +63,17 @@ class BankingController extends Controller
         if ($bankAccount->account_id) {
             $ledgerMovements = TransactionLine::query()
                 ->where('account_id', $bankAccount->account_id)
-                ->with(['journalEntry:id,date,description,reference,source_type,source_id'])
+                ->with(['journalEntry:id,date,description,reference'])
                 ->whereHas('journalEntry')
                 ->get(['id', 'journal_entry_id', 'debit', 'credit', 'description'])
-                ->sortByDesc(fn ($l) => optional($l->journalEntry)->date)
+                ->sortByDesc(fn ($l) => $l->journalEntry?->date)
                 ->take(50)
                 ->values()
                 ->map(fn ($l) => [
                     'id' => $l->id,
-                    'date' => optional($l->journalEntry)->date?->toDateString(),
-                    'description' => $l->description ?: optional($l->journalEntry)->description,
-                    'reference' => optional($l->journalEntry)->reference,
-                    'source_type' => optional($l->journalEntry)->source_type,
-                    'source_id' => optional($l->journalEntry)->source_id,
+                    'date' => $l->journalEntry?->date?->toDateString(),
+                    'description' => $l->description ?: $l->journalEntry?->description,
+                    'reference' => $l->journalEntry?->reference,
                     'debit' => (string) $l->debit,
                     'credit' => (string) $l->credit,
                 ]);
@@ -104,6 +102,8 @@ class BankingController extends Controller
             $this->ensurePrivateWithdrawalsAccount($currentOrg->id());
         }
 
+        $this->enforceSingleDefaultInvoicing($bankAccount);
+
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', __('app.bank_account_created'));
     }
@@ -117,6 +117,8 @@ class BankingController extends Controller
         if ($bankAccount->is_mixed_use) {
             $this->ensurePrivateWithdrawalsAccount($bankAccount->organization_id);
         }
+
+        $this->enforceSingleDefaultInvoicing($bankAccount);
 
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', __('app.bank_account_updated'));
@@ -169,5 +171,22 @@ class BankingController extends Controller
                 'is_active' => true,
             ]);
         }
+    }
+
+    /**
+     * When a bank account is flagged as the default invoicing account,
+     * un-flag every other bank account in the same organization so there
+     * is exactly one default at any time.
+     */
+    private function enforceSingleDefaultInvoicing(BankAccount $bankAccount): void
+    {
+        if (! $bankAccount->is_default_for_invoicing) {
+            return;
+        }
+
+        BankAccount::where('organization_id', $bankAccount->organization_id)
+            ->where('id', '!=', $bankAccount->id)
+            ->where('is_default_for_invoicing', true)
+            ->update(['is_default_for_invoicing' => false]);
     }
 }

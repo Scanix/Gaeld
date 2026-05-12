@@ -30,11 +30,14 @@ use Illuminate\Support\Carbon;
  * @property int|null $account_id
  * @property string $name
  * @property string|null $iban
+ * @property string|null $qr_iban
  * @property string|null $bank_name
+ * @property string|null $bic
  * @property string $currency
  * @property string $balance
  * @property bool $is_active
  * @property bool $is_mixed_use
+ * @property bool $is_default_for_invoicing
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -53,11 +56,14 @@ class BankAccount extends Model
         'account_id',
         'name',
         'iban',
+        'qr_iban',
         'bank_name',
+        'bic',
         'currency',
         'balance',
         'is_active',
         'is_mixed_use',
+        'is_default_for_invoicing',
     ];
 
     protected function casts(): array
@@ -66,6 +72,7 @@ class BankAccount extends Model
             'balance' => 'decimal:2',
             'is_active' => 'boolean',
             'is_mixed_use' => 'boolean',
+            'is_default_for_invoicing' => 'boolean',
         ];
     }
 

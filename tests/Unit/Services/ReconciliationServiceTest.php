@@ -29,7 +29,7 @@ class ReconciliationServiceTest extends TestCase
 
     private BankAccount $bankAccount;
 
-    private Customer $customer;
+    private Contact $customer;
 
     protected function setUp(): void
     {

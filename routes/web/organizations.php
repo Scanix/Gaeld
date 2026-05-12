@@ -19,6 +19,7 @@ Route::post('/settings/invoice/logo', [OrganizationSettingsController::class, 'u
 Route::delete('/settings/invoice/logo', [OrganizationSettingsController::class, 'deleteLogo'])->name('settings.logo.delete');
 Route::get('/settings/logo', [OrganizationSettingsController::class, 'serveLogo'])->name('settings.logo');
 Route::put('/settings/communications', [OrganizationSettingsController::class, 'updateCommunications'])->name('settings.communications');
+Route::put('/settings/modules', [OrganizationSettingsController::class, 'updateModules'])->name('settings.modules');
 
 // Organization data export (GDPR portability)
 Route::post('/settings/export', [OrganizationSettingsController::class, 'exportData'])->middleware('throttle:3,5')->name('settings.export');

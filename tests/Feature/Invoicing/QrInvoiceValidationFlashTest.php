@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Invoicing;
 
+use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Actions\SendInvoiceAction;
@@ -27,7 +28,14 @@ class QrInvoiceValidationFlashTest extends TestCase
         // qr_iban is empty (covered by a separate test). Here we simulate the
         // org having one configured so the action runs and we can assert the
         // detailed validation-error flash message.
-        $this->org->update(['qr_iban' => 'CH4431999123000889012']);
+        BankAccount::create([
+            'organization_id' => $this->org->id,
+            'name' => 'QR-Bill account',
+            'currency' => 'CHF',
+            'qr_iban' => 'CH4431999123000889012',
+            'is_default_for_invoicing' => true,
+            'is_active' => true,
+        ]);
 
         $customer = Contact::factory()->for($this->org, 'organization')->create();
         $invoice = Invoice::factory()

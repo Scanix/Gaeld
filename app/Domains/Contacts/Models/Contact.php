@@ -9,7 +9,9 @@ use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use App\Support\Traits\HasPublicUuid;
+use Database\Factories\Domains\Contacts\Models\ContactFactory;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -34,6 +36,7 @@ use Laravel\Scout\Searchable;
  * @property string|null $country
  * @property string|null $vat_number
  * @property string|null $iban
+ * @property string|null $bic
  * @property string|null $default_expense_category
  * @property string|null $currency
  * @property string|null $payment_terms
@@ -49,7 +52,8 @@ use Laravel\Scout\Searchable;
  */
 class Contact extends Model
 {
-    use Auditable, BelongsToOrganization, HasPublicUuid, Searchable, SoftDeletes;
+    /** @use HasFactory<ContactFactory> */
+    use Auditable, BelongsToOrganization, HasFactory, HasPublicUuid, Searchable, SoftDeletes;
 
     protected $table = 'contacts';
 
@@ -66,6 +70,7 @@ class Contact extends Model
         'country',
         'vat_number',
         'iban',
+        'bic',
         'default_expense_category',
         'currency',
         'payment_terms',
@@ -83,6 +88,12 @@ class Contact extends Model
     }
 
     public function searchableAs(): string
+    {
+        return 'contacts';
+    }
+
+    /** @return BelongsTo<Organization, $this> */
+    public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }

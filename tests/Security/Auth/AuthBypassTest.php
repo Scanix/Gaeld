@@ -31,8 +31,8 @@ class AuthBypassTest extends SecurityTestCase
             'dashboard' => ['get', '/'],
             'invoices index' => ['get', '/invoices'],
             'expenses index' => ['get', '/expenses'],
-            'customers index' => ['get', '/customers'],
-            'suppliers index' => ['get', '/suppliers'],
+            'contacts index' => ['get', '/contacts'],
+            'contacts (suppliers) index' => ['get', '/contacts'],
             'banking index' => ['get', '/banking'],
             'reconciliation' => ['get', '/reconciliation'],
             'search' => ['get', '/search'],
@@ -55,7 +55,7 @@ class AuthBypassTest extends SecurityTestCase
     public static function protectedApiRoutes(): array
     {
         return [
-            'GET customers' => ['getJson', '/api/v1/customers'],
+            'GET invoices' => ['getJson', '/api/v1/invoices'],
             'GET invoices' => ['getJson', '/api/v1/invoices'],
             'GET expenses' => ['getJson', '/api/v1/expenses'],
             'GET accounts' => ['getJson', '/api/v1/accounts'],

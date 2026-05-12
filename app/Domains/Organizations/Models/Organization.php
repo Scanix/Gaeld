@@ -32,10 +32,10 @@ use Illuminate\Support\Carbon;
  * @property string|null $canton
  * @property string|null $country
  * @property string|null $vat_number
- * @property string|null $qr_iban
  * @property string $currency
  * @property int|null $fiscal_year_start
  * @property array<int, int>|null $closed_fiscal_years
+ * @property array<string, bool>|null $enabled_modules
  * @property string|null $locale
  * @property BusinessType|null $business_type
  * @property bool $require_two_factor
@@ -57,7 +57,6 @@ class Organization extends Model
         'canton',
         'country',
         'vat_number',
-        'qr_iban',
         'currency',
         'fiscal_year_start',
         'closed_fiscal_years',
@@ -71,6 +70,7 @@ class Organization extends Model
         'invoice_footer_text',
         'invoice_email_subject',
         'invoice_email_body',
+        'enabled_modules',
     ];
 
     protected function casts(): array
@@ -79,6 +79,7 @@ class Organization extends Model
             'require_two_factor' => 'boolean',
             'default_payment_terms_days' => 'integer',
             'closed_fiscal_years' => 'array',
+            'enabled_modules' => 'array',
             'business_type' => BusinessType::class,
         ];
     }
@@ -139,6 +140,33 @@ class Organization extends Model
     public function bankAccounts(): HasMany
     {
         return $this->hasMany(BankAccount::class);
+    }
+
+    /**
+     * The bank account flagged as the default invoicing account, used to
+     * source the QR-IBAN when generating QR-bills. Falls back to the first
+     * active account that has a QR-IBAN configured.
+     */
+    public function defaultInvoicingBankAccount(): ?BankAccount
+    {
+        return $this->bankAccounts()
+            ->where('is_default_for_invoicing', true)
+            ->first()
+            ?? $this->bankAccounts()
+                ->whereNotNull('qr_iban')
+                ->where('qr_iban', '!=', '')
+                ->where('is_active', true)
+                ->first();
+    }
+
+    /**
+     * Backward-compatible accessor: many call sites still read
+     * `$organization->qr_iban`. Resolves to the default invoicing bank
+     * account's QR-IBAN, or `null` when none is configured.
+     */
+    public function getQrIbanAttribute(): ?string
+    {
+        return $this->defaultInvoicingBankAccount()?->qr_iban;
     }
 
     /** @return HasMany<OrganizationInvitation, $this> */

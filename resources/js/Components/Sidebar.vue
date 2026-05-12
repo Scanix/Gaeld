@@ -112,22 +112,31 @@ const navigation = computed(() => {
     { key: 'banking', href: '/banking', icon: Landmark, children: [
       { key: 'bank_accounts', href: '/banking' },
       { key: 'reconciliation', href: '/reconciliation' },
+      { key: 'payments_outgoing', href: '/payments/outgoing' },
     ]},
-    { key: 'accounting', href: '/accounting/chart-of-accounts', icon: BookOpen, children: [
-      { key: 'chart_of_accounts', href: '/accounting/chart-of-accounts' },
+    { key: 'accounting', href: '/accounting/journal-entries', icon: BookOpen, children: [
       { key: 'journal_entries', href: '/accounting/journal-entries' },
+      { key: 'chart_of_accounts', href: '/accounting/chart-of-accounts' },
       { key: 'vat_rates', href: '/accounting/vat-rates' },
-      { key: 'social_charges', href: '/accounting/social-charges' },
+      ...(features.value.social_charges ? [
+        { key: 'social_charges', href: '/accounting/social-charges' },
+      ] : []),
       ...(features.value.tax_declaration && accountingRoutes.value.taxDeclarations ? [
         { key: 'tax_declarations', href: '/accounting/tax-declarations' },
       ] : []),
-      { key: 'budget', href: '/accounting/budgets' },
-      ...(can('accounting.close-year') ? [
+      ...(features.value.budgets ? [
+        { key: 'budget', href: '/accounting/budgets' },
+      ] : []),
+      ...(features.value.year_end_closing && can('accounting.close-year') ? [
         { key: 'year_end_closing', href: '/accounting/year-end-closing' },
       ] : []),
-      { key: 'lettrage', href: '/accounting/account-matching' },
-      { key: 'fiduciary_export', href: '/accounting/export' },
-      ...(can('accounting.view') ? [
+      ...(features.value.account_matching ? [
+        { key: 'lettrage', href: '/accounting/account-matching' },
+      ] : []),
+      ...(features.value.fiduciary_export ? [
+        { key: 'fiduciary_export', href: '/accounting/export' },
+      ] : []),
+      ...(features.value.legal_archives && can('accounting.view') ? [
         { key: 'legal_archives', href: '/accounting/archives' },
       ] : []),
       // Advanced (feature-gated)
@@ -152,12 +161,12 @@ const navigation = computed(() => {
         { key: 'analytical_report', href: '/accounting/analytical-report' },
       ] : []),
     ]},
-    ...(!isFreelancer ? [
+    ...(features.value.assets ? [
       { key: 'assets', href: '/assets', icon: Package },
     ] : []),
     // ── Management ──
     { type: 'group', label: 'nav_management' },
-    ...(!isFreelancer && !isFidu && features.value.payroll !== false ? [
+    ...(features.value.payroll ? [
       { key: 'payroll', href: '/payroll/employees', icon: Briefcase, children: [
         { key: 'employees', href: '/payroll/employees' },
         { key: 'salary_slips', href: '/payroll/salary-slips' },
@@ -183,8 +192,6 @@ const navigation = computed(() => {
         { key: 'webhooks', href: '/settings/webhooks' },
       ] : []),
     ]},
-    // Show "all features" link when menu is filtered
-    ...(bt ? [{ key: 'all_features', href: '/settings', type: 'all-features' }] : []),
   ]
 })
 
@@ -283,16 +290,6 @@ function isGroupActive(item) {
           :class="collapsed ? 'sr-only' : ''"
         >
           {{ t(item.label) }}
-        </div>
-
-        <!-- "All features" link -->
-        <div v-else-if="item.type === 'all-features'" class="mt-2 border-t border-[hsl(var(--sidebar-border))] pt-2">
-          <Link
-            href="/settings"
-            class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--sidebar-foreground))] transition-colors"
-          >
-            <span v-if="!collapsed">{{ t('all_features') }}</span>
-          </Link>
         </div>
 
         <div v-else-if="item.children">

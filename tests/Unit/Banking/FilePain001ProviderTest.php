@@ -5,6 +5,7 @@ namespace Tests\Unit\Banking;
 use App\Domains\Banking\DTOs\PaymentInstructionData;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Services\Payments\FilePain001Provider;
+use App\Domains\Banking\Services\SwissBicResolver;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Support\Carbon;
 use PHPUnit\Framework\TestCase;
@@ -43,7 +44,7 @@ class FilePain001ProviderTest extends TestCase
 
     public function test_builds_valid_pain001_with_qrr_reference(): void
     {
-        $provider = new FilePain001Provider;
+        $provider = new FilePain001Provider(new SwissBicResolver);
         $result = $provider->initiate($this->debtor(), [
             $this->instruction('GAELD-1', '120.00', 'CHF', '210000000003139471430009017'),
         ]);
@@ -64,7 +65,7 @@ class FilePain001ProviderTest extends TestCase
 
     public function test_uses_scor_for_iso_creditor_reference(): void
     {
-        $provider = new FilePain001Provider;
+        $provider = new FilePain001Provider(new SwissBicResolver);
         $result = $provider->initiate($this->debtor(), [
             $this->instruction('GAELD-2', '50.00', 'CHF', 'RF18539007547034'),
         ]);
@@ -76,7 +77,7 @@ class FilePain001ProviderTest extends TestCase
 
     public function test_uses_unstructured_remittance_when_no_reference(): void
     {
-        $provider = new FilePain001Provider;
+        $provider = new FilePain001Provider(new SwissBicResolver);
         $result = $provider->initiate($this->debtor(), [
             $this->instruction('GAELD-3', '75.00'),
         ]);
@@ -88,7 +89,7 @@ class FilePain001ProviderTest extends TestCase
 
     public function test_aggregates_total_amount(): void
     {
-        $provider = new FilePain001Provider;
+        $provider = new FilePain001Provider(new SwissBicResolver);
         $result = $provider->initiate($this->debtor(), [
             $this->instruction('GAELD-A', '100.00'),
             $this->instruction('GAELD-B', '250.50'),
@@ -104,13 +105,13 @@ class FilePain001ProviderTest extends TestCase
     public function test_throws_on_empty_batch(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        (new FilePain001Provider)->initiate($this->debtor(), []);
+        (new FilePain001Provider(new SwissBicResolver))->initiate($this->debtor(), []);
     }
 
     public function test_throws_on_mixed_currencies(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        (new FilePain001Provider)->initiate($this->debtor(), [
+        (new FilePain001Provider(new SwissBicResolver))->initiate($this->debtor(), [
             $this->instruction('A', '10.00', 'CHF'),
             $this->instruction('B', '10.00', 'EUR'),
         ]);
@@ -123,6 +124,6 @@ class FilePain001ProviderTest extends TestCase
         $ba->setRelation('organization', $org);
 
         $this->expectException(\InvalidArgumentException::class);
-        (new FilePain001Provider)->initiate($ba, [$this->instruction('A', '10.00')]);
+        (new FilePain001Provider(new SwissBicResolver))->initiate($ba, [$this->instruction('A', '10.00')]);
     }
 }
