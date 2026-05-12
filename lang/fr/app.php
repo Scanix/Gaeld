@@ -709,8 +709,10 @@ return [
 
     // Signup / SaaS
     'signup_title' => 'Commencez votre essai gratuit de :days jours',
+    'signup_title_free' => 'Créez votre compte Gäld gratuit',
     'signup_subtitle' => 'Aucune carte de crédit requise. Annulez à tout moment.',
     'signup_cta' => 'Commencer l\'essai de :days jours',
+    'signup_cta_free' => 'Créer un compte gratuit',
     'signup_disclaimer' => 'Après l\'essai, vous serez redirigé vers Stripe pour ajouter votre moyen de paiement.',
     'creating_account' => 'Création du compte…',
     'unlimited_invoices' => 'Factures illimitées',
