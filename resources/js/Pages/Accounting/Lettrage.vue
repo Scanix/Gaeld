@@ -11,13 +11,18 @@ import Button from '@/Components/UI/Button.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
+import { buildAccountOptions } from '@/lib/accountOptions'
+import { useDocsUrl } from '@/lib/useDocsUrl'
 import { Link2, Unlink, CalendarDays } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 const { formatDate, formatMoney } = useFormatters()
+const { url: docsUrl } = useDocsUrl()
+const chartHelpHref = docsUrl('chart-of-accounts')
 
 const props = defineProps({
   accounts: Array,
@@ -32,7 +37,7 @@ const selectedAccountId = ref(props.account?.id ? String(props.account.id) : '')
 const dateFilter = ref(props.filterDate ?? '')
 
 const accountOptions = computed(() =>
-  (props.accounts ?? []).map(a => ({ value: String(a.id), label: `${a.code} — ${a.name}` })),
+  buildAccountOptions(props.accounts ?? []).map(o => ({ ...o, value: String(o.value) })),
 )
 
 function navigateToAccount() {
@@ -144,12 +149,15 @@ const lotColumns = computed(() => [
       <CardContent class="pt-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
           <div class="flex-1">
-            <FormSelect
+            <SearchableSelect
               id="account"
               v-model="selectedAccountId"
               :label="t('lettrage_account')"
               :options="accountOptions"
+              group-key="group"
               :placeholder="t('select')"
+              :help-href="chartHelpHref"
+              :help-label="t('chart_of_accounts')"
             />
           </div>
           <div class="sm:w-48">

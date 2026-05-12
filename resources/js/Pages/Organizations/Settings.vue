@@ -22,6 +22,8 @@ const props = defineProps({
   organization: Object,
   hasLogo: Boolean,
   expenseCategories: { type: Array, default: () => [] },
+  modules: { type: Array, default: () => [] },
+  modulePresets: { type: Object, default: () => ({}) },
 })
 
 const { t } = useTranslations()
@@ -34,6 +36,7 @@ const tabs = [
   { key: 'invoice', label: 'settings_invoice' },
   { key: 'communications', label: 'settings_communications' },
   { key: 'expenses', label: 'settings_expenses' },
+  { key: 'modules', label: 'settings_modules' },
 ]
 
 // --- General form ---
@@ -71,7 +74,6 @@ const invoiceForm = useForm({
   invoice_header_text: props.organization.invoice_header_text || '',
   invoice_footer_text: props.organization.invoice_footer_text || '',
   default_invoice_notes: props.organization.default_invoice_notes || '',
-  qr_iban: props.organization.qr_iban || '',
 })
 
 function submitInvoice() {
@@ -117,6 +119,34 @@ const commsForm = useForm({
 
 function submitCommunications() {
   commsForm.put('/settings/communications', { preserveScroll: true })
+}
+
+// --- Modules form ---
+// Each module key falls back to the platform-wide feature flag value when the
+// org has no explicit override yet.
+const featureFlags = usePage().props.features || {}
+const modulesForm = useForm({
+  business_type: props.organization.business_type || '',
+  modules: Object.fromEntries(
+    props.modules.map((key) => {
+      const orgValue = props.organization.enabled_modules?.[key]
+      return [key, orgValue ?? !!featureFlags[key]]
+    })
+  ),
+})
+
+watch(() => modulesForm.business_type, (type) => {
+  const preset = props.modulePresets[type]
+  if (!preset) return
+  props.modules.forEach((key) => {
+    if (key in preset) {
+      modulesForm.modules[key] = preset[key]
+    }
+  })
+})
+
+function submitModules() {
+  modulesForm.put('/settings/modules', { preserveScroll: true })
 }
 
 // --- Expense categories ---
@@ -192,7 +222,7 @@ const businessTypeOptions = [
 </script>
 
 <template>
-  <AppLayout :title="t('organization_settings')" help-page="settings">
+  <AppLayout :title="t('organization_settings')" help-page="user-management">
     <div class="max-w-3xl space-y-6">
       <!-- Tabs -->
       <div role="tablist" aria-label="Settings" class="flex gap-1 rounded-lg bg-[hsl(var(--muted))] p-1">
@@ -435,14 +465,11 @@ const businessTypeOptions = [
                 :error="invoiceForm.errors.default_invoice_notes"
               />
 
-              <FormInput
-                id="qr_iban"
-                v-model="invoiceForm.qr_iban"
-                :label="t('iban_qr_iban')"
-                :error="invoiceForm.errors.qr_iban"
-                :placeholder="t('qr_iban_placeholder')"
-              />
-              <IbanHint :iban="invoiceForm.qr_iban" mode="any" />
+              <div class="rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.3)] p-3 text-sm">
+                <p class="font-medium">{{ t('qr_iban_moved_title') }}</p>
+                <p class="mt-1 text-[hsl(var(--muted-foreground))]">{{ t('qr_iban_moved_help') }}</p>
+                <a href="/banking" class="mt-2 inline-block text-[hsl(var(--primary))] underline">{{ t('go_to_bank_accounts') }}</a>
+              </div>
 
               <div class="flex justify-end">
                 <Button type="submit" :disabled="invoiceForm.processing" :loading="invoiceForm.processing">
@@ -540,6 +567,51 @@ const businessTypeOptions = [
                 {{ t('add') }}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <!-- Modules Tab -->
+      <div v-show="activeTab === 'modules'" id="tabpanel-modules" role="tabpanel" aria-labelledby="tab-modules">
+        <Card>
+          <CardHeader>
+            <CardTitle>{{ t('settings_modules_title') }}</CardTitle>
+            <CardDescription>{{ t('settings_modules_desc') }}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form class="space-y-3" @submit.prevent="submitModules">
+              <!-- Activity-type preset -->
+              <div class="mb-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/40 p-4">
+                <FormSelect
+                  id="modules_business_type"
+                  v-model="modulesForm.business_type"
+                  :label="t('business_type')"
+                  :options="businessTypeOptions"
+                  :placeholder="t('select_placeholder')"
+                  :error="modulesForm.errors.business_type"
+                />
+                <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('modules_preset_hint') }}</p>
+              </div>
+
+              <label
+                v-for="key in modules"
+                :key="key"
+                class="flex items-start gap-3 rounded-lg border border-[hsl(var(--border))] p-3 hover:bg-[hsl(var(--accent))]/50"
+              >
+                <input
+                  type="checkbox"
+                  v-model="modulesForm.modules[key]"
+                  class="mt-0.5 h-4 w-4 rounded border-[hsl(var(--border))]"
+                />
+                <div class="flex-1">
+                  <div class="text-sm font-medium">{{ t('module_' + key) }}</div>
+                  <div class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('module_' + key + '_desc') }}</div>
+                </div>
+              </label>
+              <div class="flex justify-end pt-2">
+                <Button type="submit" :disabled="modulesForm.processing">{{ t('save') }}</Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
       </div>

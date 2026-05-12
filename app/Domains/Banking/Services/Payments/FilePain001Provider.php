@@ -6,6 +6,7 @@ use App\Domains\Banking\Contracts\PaymentInitiationProviderInterface;
 use App\Domains\Banking\DTOs\PaymentInitiationResult;
 use App\Domains\Banking\DTOs\PaymentInstructionData;
 use App\Domains\Banking\Models\BankAccount;
+use App\Domains\Banking\Services\SwissBicResolver;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +21,8 @@ use Symfony\Component\HttpFoundation\Response;
 class FilePain001Provider implements PaymentInitiationProviderInterface
 {
     private const NAMESPACE_URI = 'urn:iso:std:iso:20022:tech:xsd:pain.001.001.09';
+
+    public function __construct(private readonly SwissBicResolver $bicResolver) {}
 
     /**
      * @param  PaymentInstructionData[]  $instructions
@@ -95,14 +98,20 @@ class FilePain001Provider implements PaymentInitiationProviderInterface
         $pmtInf->appendChild($dom->createElement('NbOfTxs', (string) count($instructions)));
         $pmtInf->appendChild($dom->createElement('CtrlSum', $controlSum));
 
-        $pmtTpInf = $dom->createElement('PmtTpInf');
-        $svcLvl = $dom->createElement('SvcLvl');
-        $svcLvl->appendChild($dom->createElement('Cd', 'SEPA')); // generic; banks accept for CHF/EUR
-        // For CH-domestic, no SvcLvl is fine; keeping minimal "SEPA" gives broad compat.
-        $pmtTpInf->appendChild($svcLvl);
-        $pmtInf->appendChild($pmtTpInf);
+        // PmtTpInf is omitted for SPS Type 3 (Swiss-domestic CHF/EUR) which covers
+        // the vast majority of payments. SEPA SvcLvl is EUR-only and would cause
+        // strict banks (e.g. UBS) to reject CHF payments with "format invalide".
+        // Only emit SvcLvl/SEPA when the payment is actually a SEPA EUR payment
+        // from a CH/LI debtor to a non-CH/LI SEPA-zone creditor.
+        $pmtTpInf = $this->buildPmtTpInf($dom, $debtor, $instructions, $currency);
+        if ($pmtTpInf !== null) {
+            $pmtInf->appendChild($pmtTpInf);
+        }
 
-        $pmtInf->appendChild($dom->createElement('ReqdExctnDt', $execDate));
+        // pain.001.001.09: ReqdExctnDt is element-only and must wrap the date in <Dt> (or <DtTm>).
+        $reqdExctnDt = $dom->createElement('ReqdExctnDt');
+        $reqdExctnDt->appendChild($dom->createElement('Dt', $execDate));
+        $pmtInf->appendChild($reqdExctnDt);
 
         $dbtr = $dom->createElement('Dbtr');
         $dbtr->appendChild($dom->createElement('Nm', $this->sanitize($org->legal_name ?: $org->name)));
@@ -115,11 +124,7 @@ class FilePain001Provider implements PaymentInitiationProviderInterface
         $pmtInf->appendChild($dbtrAcct);
 
         $dbtrAgt = $dom->createElement('DbtrAgt');
-        $finInstnId = $dom->createElement('FinInstnId');
-        $othr = $dom->createElement('Othr');
-        $othr->appendChild($dom->createElement('Id', 'NOTPROVIDED'));
-        $finInstnId->appendChild($othr);
-        $dbtrAgt->appendChild($finInstnId);
+        $dbtrAgt->appendChild($this->buildFinInstnId($dom, $debtor->iban, $debtor->bic));
         $pmtInf->appendChild($dbtrAgt);
 
         $pmtInf->appendChild($dom->createElement('ChrgBr', 'SLEV'));
@@ -147,11 +152,7 @@ class FilePain001Provider implements PaymentInitiationProviderInterface
         $tx->appendChild($amt);
 
         $cdtrAgt = $dom->createElement('CdtrAgt');
-        $finInstnId = $dom->createElement('FinInstnId');
-        $othr = $dom->createElement('Othr');
-        $othr->appendChild($dom->createElement('Id', 'NOTPROVIDED'));
-        $finInstnId->appendChild($othr);
-        $cdtrAgt->appendChild($finInstnId);
+        $cdtrAgt->appendChild($this->buildFinInstnId($dom, $instr->creditorIban, $instr->creditorBic));
         $tx->appendChild($cdtrAgt);
 
         $cdtr = $dom->createElement('Cdtr');
@@ -221,6 +222,108 @@ class FilePain001Provider implements PaymentInitiationProviderInterface
     private function normalizeIban(string $iban): string
     {
         return strtoupper(preg_replace('/\s+/', '', $iban) ?? '');
+    }
+
+    /**
+     * Build a `<FinInstnId>` element. Emits `<BICFI>` when a BIC is known
+     * (explicit or derived from a Swiss IID), otherwise falls back to
+     * `<Othr><Id>NOTPROVIDED</Id></Othr>` per ISO 20022.
+     *
+     * Some banks (notably UBS) enforce a strict XSD profile that only
+     * accepts `<BICFI>` here; users on such banks must populate the BIC
+     * field on their bank account / supplier contact.
+     */
+    private function buildFinInstnId(\DOMDocument $dom, ?string $iban, ?string $explicitBic): \DOMElement
+    {
+        $finInstnId = $dom->createElement('FinInstnId');
+        $bic = $this->resolveBic($iban, $explicitBic);
+
+        if ($bic !== null) {
+            $finInstnId->appendChild($dom->createElement('BICFI', $bic));
+
+            return $finInstnId;
+        }
+
+        $othr = $dom->createElement('Othr');
+        $othr->appendChild($dom->createElement('Id', 'NOTPROVIDED'));
+        $finInstnId->appendChild($othr);
+
+        return $finInstnId;
+    }
+
+    /**
+     * Resolve a BIC for a given (optional) IBAN + explicit BIC. Explicit BIC
+     * always wins. When absent, falls back to a curated CH/LI IID lookup that
+     * only returns a BIC when the issuing institution is unambiguous; returns
+     * `null` otherwise so the caller can emit `Othr/NOTPROVIDED`.
+     */
+    private function resolveBic(?string $iban, ?string $explicitBic): ?string
+    {
+        if ($explicitBic !== null) {
+            $normalized = strtoupper(preg_replace('/\s+/', '', $explicitBic) ?? '');
+            if ($normalized !== '') {
+                return $normalized;
+            }
+        }
+
+        // Fallback: derive from Swiss/LI IBAN via curated IID table.
+        // Only returns a BIC when the IID is unambiguously known.
+        return $this->bicResolver->resolveFromIban($iban);
+    }
+
+    /**
+     * Build PmtTpInf only when a service level is actually required.
+     *
+     * Per Swiss Payment Standards:
+     *  - Type 1 (SEPA): SvcLvl/SEPA, EUR only, debtor in CH/LI, creditor in SEPA zone.
+     *  - Type 3 (Swiss-domestic): no SvcLvl, no LclInstrm.
+     *  - Type 2 (foreign): no SvcLvl.
+     *
+     * @param  PaymentInstructionData[]  $instructions
+     */
+    private function buildPmtTpInf(
+        \DOMDocument $dom,
+        BankAccount $debtor,
+        array $instructions,
+        string $currency,
+    ): ?\DOMElement {
+        if ($currency !== 'EUR') {
+            return null;
+        }
+
+        $debtorCountry = strtoupper(substr($this->normalizeIban($debtor->iban ?? ''), 0, 2));
+        if (! in_array($debtorCountry, ['CH', 'LI'], true)) {
+            return null;
+        }
+
+        // All creditors must sit in the SEPA zone for the SEPA service level
+        // to be valid. If any single creditor is non-SEPA, drop SvcLvl.
+        foreach ($instructions as $instr) {
+            $cdtrCountry = strtoupper(substr($this->normalizeIban($instr->creditorIban), 0, 2));
+            if (! $this->isSepaCountry($cdtrCountry)) {
+                return null;
+            }
+        }
+
+        $pmtTpInf = $dom->createElement('PmtTpInf');
+        $svcLvl = $dom->createElement('SvcLvl');
+        $svcLvl->appendChild($dom->createElement('Cd', 'SEPA'));
+        $pmtTpInf->appendChild($svcLvl);
+
+        return $pmtTpInf;
+    }
+
+    private function isSepaCountry(string $cc): bool
+    {
+        // SEPA member countries (EU + EEA + UK + CH + LI + MC + SM + AD + VA).
+        static $sepa = [
+            'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR',
+            'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL',
+            'PT', 'RO', 'SE', 'SI', 'SK', 'IS', 'LI', 'NO', 'CH', 'GB', 'MC',
+            'SM', 'AD', 'VA',
+        ];
+
+        return in_array($cc, $sepa, true);
     }
 
     /**

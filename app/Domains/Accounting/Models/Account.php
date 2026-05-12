@@ -3,11 +3,13 @@
 namespace App\Domains\Accounting\Models;
 
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Support\AccountDisplayName;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use App\Support\Traits\HasPublicUuid;
 use Database\Factories\Domains\Accounting\Models\AccountFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -33,6 +35,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $description
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read string $display_name
  * @property-read Organization $organization
  * @property-read Account|null $parent
  * @property-read Collection<int, Account> $children
@@ -53,6 +56,11 @@ class Account extends Model
         'is_system',
         'description',
     ];
+
+    /**
+     * @var list<string>
+     */
+    protected $appends = ['display_name'];
 
     protected function casts(): array
     {
@@ -85,5 +93,19 @@ class Account extends Model
     public function transactionLines(): HasMany
     {
         return $this->hasMany(TransactionLine::class);
+    }
+
+    /**
+     * Localized display name for the account.
+     *
+     * Seeded system accounts use a translation keyed by `code` (see
+     * `lang/{locale}/accounts.php`); user-created accounts fall back to
+     * the stored `name`.
+     *
+     * @return Attribute<string, never>
+     */
+    protected function displayName(): Attribute
+    {
+        return Attribute::get(fn (): string => AccountDisplayName::for((string) $this->code, (string) $this->name));
     }
 }

@@ -105,7 +105,7 @@ class FiscalYearCoherenceTest extends TestCase
     // ── Invoicing ─────────────────────────────────────────────────
     private VatRate $vatNormal;
 
-    private Customer $customer;
+    private Contact $customer;
 
     // ── Payroll ───────────────────────────────────────────────────
     private Employee $jean;

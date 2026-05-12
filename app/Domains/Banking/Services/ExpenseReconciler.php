@@ -53,7 +53,7 @@ class ExpenseReconciler
                 paymentDate: $transaction->date->toDateString(),
                 reference: $reference,
                 transactionDescription: $transaction->description,
-                expenseDescription: $expense->description,
+                expenseDescription: $expense->description ?? $expense->vendor ?? (string) $expense->id,
                 expenseAccountCode: $expenseAccountCode,
                 bankAccountCode: $bankAccount->ledgerAccount->code,
             ));

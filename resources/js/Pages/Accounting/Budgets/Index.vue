@@ -9,11 +9,13 @@ import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
-import Combobox from '@/Components/UI/Combobox.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
+import { buildAccountOptions } from '@/lib/accountOptions'
+import { useDocsUrl } from '@/lib/useDocsUrl'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import { Plus, Trash2, PieChart } from 'lucide-vue-next'
 
@@ -35,10 +37,10 @@ function switchYear(val) {
   router.get('/accounting/budgets', { year: val }, { preserveState: true })
 }
 
-// Account options for combobox
-const accountOptions = computed(() =>
-  props.accounts.map(a => ({ value: a.id, label: `${a.code} — ${a.name}` }))
-)
+// Account options for searchable selector
+const accountOptions = computed(() => buildAccountOptions(props.accounts))
+const { url: docsUrl } = useDocsUrl()
+const chartHelpHref = docsUrl('chart-of-accounts')
 
 // Inline editing: track dirty rows
 const editingRows = ref({})
@@ -134,17 +136,17 @@ function annualTotal(monthly) {
       <CardContent>
         <div class="flex flex-wrap items-end gap-4">
           <div class="flex-1 min-w-48">
-            <label class="mb-1.5 block text-sm font-medium">{{ t('account') }}</label>
-            <Combobox
+            <SearchableSelect
+              id="add-account"
               v-model="addForm.account_id"
+              :label="t('account')"
               :options="accountOptions"
-              value-key="value"
-              label-key="label"
+              group-key="group"
               :placeholder="t('select_account')"
+              :error="addForm.errors.account_id"
+              :help-href="chartHelpHref"
+              :help-label="t('chart_of_accounts')"
             />
-            <p v-if="addForm.errors.account_id" class="mt-1 text-xs text-[hsl(var(--destructive))]">
-              {{ addForm.errors.account_id }}
-            </p>
           </div>
           <FormInput
             id="add-monthly"
@@ -186,7 +188,7 @@ function annualTotal(monthly) {
                 <td class="px-4 py-2.5 font-mono text-xs text-[hsl(var(--muted-foreground))]">
                   {{ budget.account?.code }}
                 </td>
-                <td class="px-4 py-2.5 font-medium">{{ budget.account?.name }}</td>
+                <td class="px-4 py-2.5 font-medium">{{ budget.account?.display_name ?? budget.account?.name }}</td>
 
                 <!-- Editable monthly amount -->
                 <td class="px-4 py-2.5 text-right">

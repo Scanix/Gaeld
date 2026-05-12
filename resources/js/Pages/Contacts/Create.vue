@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -8,16 +8,14 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
-import FormTextarea from '@/Components/UI/FormTextarea.vue'
 import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
-import Tooltip from '@/Components/UI/Tooltip.vue'
 import IbanHint from '@/Components/IbanHint.vue'
+import BicField from '@/Components/BicField.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { countryOptions, currencyOptions } from '@/lib/contactOptions'
-import { HelpCircle } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 
@@ -33,10 +31,9 @@ const form = useForm({
   vat_number: '',
   currency: 'CHF',
   iban: '',
+  bic: '',
   default_expense_category: '',
   payment_terms: '',
-  internal_notes: '',
-  notes: '',
 })
 
 const { forceClear } = useUnsavedChanges(computed(() => form.isDirty))
@@ -52,167 +49,181 @@ const typeOptions = [
   { value: 'organization', label: t('organization') },
   { value: 'individual', label: t('individual') },
 ]
+
+const activeTab = ref('general')
+const tabs = [
+  { key: 'general', label: 'general' },
+  { key: 'billing', label: 'billing_details' },
+]
 </script>
 
 <template>
   <AppLayout :title="t('new_contact')" help-page="contacts">
     <Breadcrumb :items="[{ label: t('contacts'), href: '/contacts' }, { label: t('new_contact') }]" class="mb-4" />
 
-    <Card class="max-w-2xl">
-      <CardHeader>
-        <CardTitle>{{ t('new_contact') }}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form class="space-y-6" @submit.prevent="submit">
-          <!-- Contact Information -->
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('contact_information') }}</h3>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormSelect
-              id="type"
-              v-model="form.type"
-              :label="t('contact_type')"
-              :options="typeOptions"
-              :error="form.errors.type"
-              class="sm:col-span-2"
-            />
-            <FormInput
-              id="name"
-              v-model="form.name"
-              :label="t('name')"
-              :error="form.errors.name"
-              required
-              class="sm:col-span-2"
-            />
-            <FormInput
-              id="email"
-              v-model="form.email"
-              type="email"
-              :label="t('email')"
-              :error="form.errors.email"
-            />
-            <MaskedInput
-              id="phone"
-              v-model="form.phone"
-              mask="phone"
-              :label="t('phone')"
-              :error="form.errors.phone"
-            />
-          </div>
+    <div class="max-w-2xl space-y-6">
+      <div role="tablist" aria-label="Contact form" class="flex gap-1 rounded-lg bg-[hsl(var(--muted))] p-1">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          type="button"
+          role="tab"
+          :id="`tab-${tab.key}`"
+          :aria-selected="activeTab === tab.key"
+          :aria-controls="`tabpanel-${tab.key}`"
+          :tabindex="activeTab === tab.key ? 0 : -1"
+          :class="[
+            'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+            activeTab === tab.key
+              ? 'bg-[hsl(var(--background))] text-[hsl(var(--foreground))] shadow-sm'
+              : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
+          ]"
+          @click="activeTab = tab.key"
+        >
+          {{ t(tab.label) }}
+        </button>
+      </div>
 
-          <!-- Address -->
-          <hr class="border-[hsl(var(--border))]" />
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('address_details') }}</h3>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormInput
-              id="address"
-              v-model="form.address"
-              :label="t('address')"
-              :error="form.errors.address"
-              class="sm:col-span-2"
-            />
-            <MaskedInput
-              id="postal_code"
-              v-model="form.postal_code"
-              mask="postal"
-              :label="t('postal_code')"
-              :error="form.errors.postal_code"
-            />
-            <FormInput
-              id="city"
-              v-model="form.city"
-              :label="t('city')"
-              :error="form.errors.city"
-            />
-            <FormSelect
-              id="country"
-              v-model="form.country"
-              :label="t('country')"
-              :options="countryOptions(t)"
-              :error="form.errors.country"
-            />
-          </div>
-
-          <!-- Billing & Payment -->
-          <hr class="border-[hsl(var(--border))]" />
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('billing_details') }}</h3>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormSelect
-              id="currency"
-              v-model="form.currency"
-              :label="t('currency')"
-              :options="currencyOptions(t)"
-              :error="form.errors.currency"
-            />
-            <FormInput
-              id="vat_number"
-              v-model="form.vat_number"
-              :label="t('vat_number')"
-              :placeholder="t('vat_number_placeholder')"
-              :error="form.errors.vat_number"
-            />
-            <FormInput
-              id="payment_terms"
-              v-model="form.payment_terms"
-              :label="t('payment_terms')"
-              :placeholder="t('payment_terms_placeholder')"
-              :error="form.errors.payment_terms"
-            />
-          </div>
-
-          <!-- Banking & expense defaults -->
-          <hr class="border-[hsl(var(--border))]" />
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('banking_and_expense_defaults') }}</h3>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="sm:col-span-2">
-              <MaskedInput
-                id="iban"
-                v-model="form.iban"
-                mask="iban"
-                :label="t('iban_qr_iban')"
-                :placeholder="t('qr_iban_placeholder')"
-                :error="form.errors.iban"
+      <Card>
+        <CardHeader>
+          <CardTitle>{{ t('new_contact') }}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form class="space-y-4" @submit.prevent="submit">
+            <div
+              v-show="activeTab === 'general'"
+              id="tabpanel-general"
+              role="tabpanel"
+              aria-labelledby="tab-general"
+              class="grid grid-cols-1 gap-4 sm:grid-cols-2"
+            >
+              <FormSelect
+                id="type"
+                v-model="form.type"
+                :label="t('contact_type')"
+                :options="typeOptions"
+                :error="form.errors.type"
               />
-              <IbanHint :iban="form.iban" mode="any" />
+              <FormInput
+                id="name"
+                v-model="form.name"
+                :label="t('name')"
+                :error="form.errors.name"
+                required
+                class="sm:col-span-2"
+              />
+              <FormInput
+                id="email"
+                v-model="form.email"
+                type="email"
+                :label="t('email')"
+                :error="form.errors.email"
+              />
+              <MaskedInput
+                id="phone"
+                v-model="form.phone"
+                mask="phone"
+                :label="t('phone')"
+                :error="form.errors.phone"
+              />
+              <FormInput
+                id="address"
+                v-model="form.address"
+                :label="t('address')"
+                :error="form.errors.address"
+                class="sm:col-span-2"
+              />
+              <MaskedInput
+                id="postal_code"
+                v-model="form.postal_code"
+                mask="postal"
+                :label="t('postal_code')"
+                :error="form.errors.postal_code"
+              />
+              <FormInput
+                id="city"
+                v-model="form.city"
+                :label="t('city')"
+                :error="form.errors.city"
+              />
+              <FormSelect
+                id="country"
+                v-model="form.country"
+                :label="t('country')"
+                :options="countryOptions(t)"
+                :error="form.errors.country"
+                class="sm:col-span-2"
+              />
             </div>
-            <FormInput
-              id="default_expense_category"
-              v-model="form.default_expense_category"
-              :label="t('default_expense_category')"
-              :error="form.errors.default_expense_category"
-            />
-          </div>
 
-          <!-- Notes -->
-          <hr class="border-[hsl(var(--border))]" />
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('notes') }}</h3>
-          <div class="relative">
-            <FormTextarea
-              id="internal_notes"
-              v-model="form.internal_notes"
-              :label="t('internal_notes')"
-              :error="form.errors.internal_notes"
-            />
-            <Tooltip :content="t('tooltip_internal_notes')" side="top" class="absolute right-0 top-0">
-              <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
-            </Tooltip>
-          </div>
-          <FormTextarea
-            id="notes"
-            v-model="form.notes"
-            :label="t('notes')"
-            :error="form.errors.notes"
-          />
+            <div
+              v-show="activeTab === 'billing'"
+              id="tabpanel-billing"
+              role="tabpanel"
+              aria-labelledby="tab-billing"
+              class="grid grid-cols-1 gap-4 sm:grid-cols-2"
+            >
+              <FormSelect
+                id="currency"
+                v-model="form.currency"
+                :label="t('currency')"
+                :options="currencyOptions(t)"
+                :error="form.errors.currency"
+              />
+              <FormInput
+                id="vat_number"
+                v-model="form.vat_number"
+                :label="t('vat_number')"
+                :placeholder="t('vat_number_placeholder')"
+                :error="form.errors.vat_number"
+              />
+              <FormInput
+                id="payment_terms"
+                v-model="form.payment_terms"
+                :label="t('payment_terms')"
+                :placeholder="t('payment_terms_placeholder')"
+                :error="form.errors.payment_terms"
+                class="sm:col-span-2"
+              />
+              <div class="sm:col-span-2">
+                <MaskedInput
+                  id="iban"
+                  v-model="form.iban"
+                  mask="iban"
+                  :label="t('iban_qr_iban')"
+                  :placeholder="t('qr_iban_placeholder')"
+                  :error="form.errors.iban"
+                />
+                <IbanHint :iban="form.iban" mode="any" />
+              </div>
+              <div class="sm:col-span-2">
+                <BicField
+                  id="bic"
+                  v-model="form.bic"
+                  :iban="form.iban"
+                  :error="form.errors.bic"
+                />
+              </div>
+              <FormInput
+                id="default_expense_category"
+                v-model="form.default_expense_category"
+                :label="t('default_expense_category')"
+                :error="form.errors.default_expense_category"
+                class="sm:col-span-2"
+              />
+            </div>
 
-          <div class="flex flex-wrap justify-end gap-3">
-            <Button as="a" href="/contacts" variant="outline">
-              {{ t('cancel') }}
-            </Button>
-            <Button type="submit" :disabled="form.processing" :loading="form.processing">
-              {{ t('create_contact') }}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+            <div class="flex flex-wrap justify-end gap-3 border-t border-[hsl(var(--border))] pt-4">
+              <Button as="a" href="/contacts" variant="outline">
+                {{ t('cancel') }}
+              </Button>
+              <Button type="submit" :disabled="form.processing" :loading="form.processing">
+                {{ t('create_contact') }}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   </AppLayout>
 </template>

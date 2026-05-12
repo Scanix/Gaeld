@@ -4,6 +4,7 @@ import Modal from '@/Components/UI/Modal.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { router } from '@inertiajs/vue3'
 
@@ -34,12 +35,19 @@ const errors = ref({})
 const processing = ref(false)
 
 const parentOptions = computed(() => {
-  const opts = [{ value: '', label: t('no_parent') }]
+  const opts = [{ value: '', label: t('no_parent'), group: '' }]
   if (!props.accounts) return opts
+  const groupLabel = (type) => type ? t('account_type_' + type) : ''
   return opts.concat(
     props.accounts
       .filter(a => !props.account || a.id !== props.account.id)
-      .map(a => ({ value: a.id, label: `${a.code} — ${a.name}` }))
+      .slice()
+      .sort((a, b) => String(a.code).localeCompare(String(b.code)))
+      .map(a => ({
+        value: a.id,
+        label: `${a.code} — ${a.display_name ?? a.name}`,
+        group: groupLabel(a.type),
+      })),
   )
 })
 
@@ -121,11 +129,12 @@ function submit() {
         required
       />
 
-      <FormSelect
+      <SearchableSelect
         id="account-parent"
         v-model="form.parent_id"
         :label="t('parent_account')"
         :options="parentOptions"
+        group-key="group"
         :error="errors.parent_id"
       />
 

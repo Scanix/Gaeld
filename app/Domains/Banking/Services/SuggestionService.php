@@ -28,6 +28,15 @@ class SuggestionService
 
     private const EXPENSE_SCORE_VENDOR_MATCH = 30;
 
+    /**
+     * EndToEndId prefix used by outbound pain.001 payments emitted by the app.
+     * Matches PaymentInstructionData::generateEndToEndId().
+     */
+    private const GAELD_REFERENCE_PREFIX = 'GAELD-';
+
+    /** Length of the expense-id slice embedded in the GAELD reference. */
+    private const GAELD_ID_SLICE_LENGTH = 12;
+
     public function __construct(
         private MatchingService $matchingService,
     ) {}
@@ -168,6 +177,10 @@ class SuggestionService
             ->whereNotNull('matched_expense_id')
             ->pluck('matched_expense_id');
 
+        // Priority 1: Exact match via GAELD-<expense-id-slice>-... reference
+        // emitted by our own pain.001 outbound payments.
+        $gaeldMatch = $this->matchExpenseByGaeldReference($orgId, $transaction, $reconciledExpenseIds);
+
         $candidateExpenses = Expense::where('organization_id', $orgId)
             ->where('status', ExpenseStatus::Posted)
             ->whereNotIn('id', $reconciledExpenseIds)
@@ -184,7 +197,7 @@ class SuggestionService
             ->limit(self::MAX_EXPENSE_CANDIDATES)
             ->get();
 
-        return $candidateExpenses->map(function ($expense) use ($amount, $transaction) {
+        $heuristicSuggestions = $candidateExpenses->map(function ($expense) use ($amount, $transaction) {
             $score = 0;
 
             if (Money::compare((string) $expense->amount, $amount) === 0) {
@@ -199,6 +212,60 @@ class SuggestionService
             }
 
             return new ExpenseSuggestion(expense: $expense, score: $score);
-        })->sortByDesc(fn ($s) => $s->score)->values();
+        });
+
+        if ($gaeldMatch) {
+            // Place the GAELD match first and drop any duplicate from the heuristic list.
+            $heuristicSuggestions = $heuristicSuggestions->reject(
+                fn (ExpenseSuggestion $s) => $s->expense->id === $gaeldMatch->expense->id
+            );
+            $heuristicSuggestions = collect([$gaeldMatch])->concat($heuristicSuggestions);
+        }
+
+        return $heuristicSuggestions->sortByDesc(fn ($s) => $s->score)->values();
+    }
+
+    /**
+     * Match an expense by the GAELD-<expense-id-slice>-<random> end-to-end reference
+     * that we generate for outbound pain.001 payments.
+     *
+     * @param  Collection<int, mixed>|iterable<mixed>  $reconciledExpenseIds
+     */
+    private function matchExpenseByGaeldReference(
+        string $orgId,
+        BankTransaction $transaction,
+        iterable $reconciledExpenseIds,
+    ): ?ExpenseSuggestion {
+        $candidates = array_filter([
+            $transaction->end_to_end_id,
+            $transaction->reference,
+            $transaction->structured_reference,
+        ]);
+
+        foreach ($candidates as $candidate) {
+            if (! preg_match(
+                '/'.preg_quote(self::GAELD_REFERENCE_PREFIX, '/').'([A-Za-z0-9]{'.self::GAELD_ID_SLICE_LENGTH.'})/',
+                (string) $candidate,
+                $matches,
+            )) {
+                continue;
+            }
+
+            $slice = strtolower($matches[1]);
+
+            $expense = Expense::where('organization_id', $orgId)
+                ->whereNotIn('id', $reconciledExpenseIds)
+                ->whereRaw('LOWER(REPLACE(CAST(id AS TEXT), ?, ?)) LIKE ?', ['-', '', $slice.'%'])
+                ->first();
+
+            if ($expense) {
+                return new ExpenseSuggestion(
+                    expense: $expense,
+                    score: MatchConfidence::QrReference->value,
+                );
+            }
+        }
+
+        return null;
     }
 }

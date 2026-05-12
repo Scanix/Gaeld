@@ -32,7 +32,7 @@ class VerticalPrivilegeTest extends SecurityTestCase
 
     private Invoice $invoice;
 
-    private Customer $customer;
+    private Contact $customer;
 
     protected function setUp(): void
     {
@@ -111,7 +111,7 @@ class VerticalPrivilegeTest extends SecurityTestCase
     {
         $this->actingAs($this->viewer)
             ->withSession(['current_organization_id' => $this->orgA->id])
-            ->post('/customers', ['name' => 'Hacker Corp'])
+            ->post('/contacts', ['name' => 'Hacker Corp'])
             ->assertForbidden();
     }
 
@@ -147,7 +147,7 @@ class VerticalPrivilegeTest extends SecurityTestCase
     {
         $this->actingAs($this->member)
             ->withSession(['current_organization_id' => $this->orgA->id])
-            ->delete("/customers/{$this->customer->uuid}")
+            ->delete("/contacts/{$this->customer->uuid}")
             ->assertForbidden();
     }
 

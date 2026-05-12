@@ -29,6 +29,7 @@ const props = defineProps({
   personalSuggestions: { type: Array, default: () => [] },
   filter: { type: String, default: 'unreconciled' },
   openInvoices: { type: Array, default: () => [] },
+  openExpenses: { type: Array, default: () => [] },
   pageFeatures: { type: Object, default: () => ({}) },
 })
 
@@ -39,6 +40,7 @@ const suggestionsSafe = computed(() => contract.value.suggestions)
 const personalSuggestionsSafe = computed(() => contract.value.personalSuggestions)
 const filterSafe = computed(() => contract.value.filter)
 const openInvoicesSafe = computed(() => contract.value.openInvoices)
+const openExpensesSafe = computed(() => contract.value.openExpenses)
 const pageFeaturesSafe = computed(() => contract.value.pageFeatures)
 
 const { t } = useTranslations()
@@ -95,11 +97,19 @@ const matchInvoiceForm = useForm({ invoice_id: '' })
 const matchExpenseForm = useForm({ expense_id: '', expense_account_code: '6530' })
 const matchManualForm = useForm({ contra_account_code: '' })
 
-// Invoice combobox options: "INV-001 — Customer Name (CHF 1'500.00)"
+// Invoice combobox options: "INV-001 — Customer Name (CHF 1'500.00) [payé]"
 const invoiceOptions = computed(() =>
   openInvoicesSafe.value.map((inv) => ({
     value: inv.id,
-    label: `${inv.number} — ${inv.customer?.name || '—'} (${formatCurrency(inv.total, inv.currency)})`,
+    label: `${inv.number} — ${inv.customer?.name || '—'} (${formatCurrency(inv.total, inv.currency)})${inv.status === 'paid' ? ' ✓ ' + t('paid') : ''}`,
+  }))
+)
+
+// Expense combobox options: "Description — Vendor (CHF 250.00)"
+const expenseOptions = computed(() =>
+  openExpensesSafe.value.map((exp) => ({
+    value: exp.id,
+    label: `${exp.description || exp.category || '—'} — ${exp.vendor || '—'} (${formatCurrency(exp.amount, exp.currency)})`,
   }))
 )
 
@@ -640,13 +650,17 @@ const justificationMissingCount = computed(() => {
           <details v-if="currentSuggestions.expenses?.length" class="text-sm">
             <summary class="cursor-pointer text-muted-foreground hover:text-foreground">{{ t('manual_entry') }}</summary>
             <div class="mt-2 space-y-3">
-              <FormInput
-                id="expense_id"
-                v-model="matchExpenseForm.expense_id"
-                :label="t('expense_id')"
-                :error="matchExpenseForm.errors.expense_id"
-                :placeholder="t('enter_expense_id')"
-              />
+              <div class="space-y-1">
+                <label class="text-sm font-medium">{{ t('expense') }}</label>
+                <Combobox
+                  v-model="matchExpenseForm.expense_id"
+                  :options="expenseOptions"
+                  :placeholder="t('search_expense')"
+                  :emptyText="t('no_expenses_found')"
+                  :error="matchExpenseForm.errors.expense_id"
+                />
+                <p v-if="matchExpenseForm.errors.expense_id" class="text-xs text-[hsl(var(--destructive))]">{{ matchExpenseForm.errors.expense_id }}</p>
+              </div>
               <FormInput
                 id="expense_account_code"
                 v-model="matchExpenseForm.expense_account_code"
@@ -657,13 +671,17 @@ const justificationMissingCount = computed(() => {
             </div>
           </details>
           <template v-else>
-            <FormInput
-              id="expense_id"
-              v-model="matchExpenseForm.expense_id"
-              :label="t('expense_id')"
-              :error="matchExpenseForm.errors.expense_id"
-              :placeholder="t('enter_expense_id')"
-            />
+            <div class="space-y-1">
+              <label class="text-sm font-medium">{{ t('expense') }}</label>
+              <Combobox
+                v-model="matchExpenseForm.expense_id"
+                :options="expenseOptions"
+                :placeholder="t('search_expense')"
+                :emptyText="t('no_expenses_found')"
+                :error="matchExpenseForm.errors.expense_id"
+              />
+              <p v-if="matchExpenseForm.errors.expense_id" class="text-xs text-[hsl(var(--destructive))]">{{ matchExpenseForm.errors.expense_id }}</p>
+            </div>
             <FormInput
               id="expense_account_code"
               v-model="matchExpenseForm.expense_account_code"

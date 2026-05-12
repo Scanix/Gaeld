@@ -20,7 +20,7 @@ class UpdateInvoiceApiRequest extends FormRequest
             'customer_id' => [
                 'sometimes',
                 'uuid',
-                Rule::exists('customers', 'uuid')->where('organization_id', $orgId),
+                Rule::exists('contacts', 'uuid')->where('organization_id', $orgId),
             ],
             'number' => 'nullable|string|max:50',
             'issue_date' => 'sometimes|date',

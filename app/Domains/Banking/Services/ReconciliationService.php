@@ -132,8 +132,19 @@ class ReconciliationService
         $bestExpense = $suggestions['expenses']->first();
 
         if ($bestExpense && $bestExpense->score >= MatchConfidence::AutoExpenseThreshold->value) {
+            $expenseAccountCode = $bestExpense->expense->expense_account_code;
+
+            if (! $expenseAccountCode) {
+                Log::warning('Auto-reconcile: skipped expense match (missing expense_account_code)', [
+                    'transaction_id' => $transaction->id,
+                    'expense_id' => $bestExpense->expense->id,
+                ]);
+
+                return false;
+            }
+
             try {
-                $this->expenseReconciler->reconcileWithExpense($transaction, $bestExpense->expense);
+                $this->expenseReconciler->reconcileWithExpense($transaction, $bestExpense->expense, $expenseAccountCode);
 
                 return true;
             } catch (AlreadyReconciledException|UnlinkedBankAccountException $e) {

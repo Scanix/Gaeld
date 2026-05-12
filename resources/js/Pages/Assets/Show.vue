@@ -13,17 +13,21 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
-import Combobox from '@/Components/UI/Combobox.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
+import { buildAccountOptions } from '@/lib/accountOptions'
+import { useDocsUrl } from '@/lib/useDocsUrl'
 import ClosedYearBanner from '@/Components/UI/ClosedYearBanner.vue'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import { computed } from 'vue'
 
 const { t } = useTranslations()
 const { formatDate, formatCurrency } = useFormatters()
+const { url: docsUrl } = useDocsUrl()
+const chartHelpHref = docsUrl('chart-of-accounts')
 
 const props = defineProps({
   asset: Object,
@@ -39,7 +43,7 @@ const disposeForm = useForm({
   disposal_account_id: null,
 })
 
-const accountOptions = props.accounts.map(a => ({ value: a.id, label: `${a.code} — ${a.name}` }))
+const accountOptions = buildAccountOptions(props.accounts)
 
 function recordDepreciation() {
   recordForm.post(`/assets/${props.asset.id}/depreciate`)
@@ -75,7 +79,7 @@ const historyColumns = computed(() => [
 </script>
 
 <template>
-  <AppLayout :title="asset.name" help-page="assets">
+  <AppLayout :title="asset.name" help-page="fixed-assets">
     <Breadcrumb :items="[{ label: t('assets'), href: '/assets' }, { label: asset.name }]" class="mb-4" />
 
     <ClosedYearBanner v-if="isAnyClosed" :year="displayClosedYear" />
@@ -226,13 +230,17 @@ const historyColumns = computed(() => [
           :error="disposeForm.errors.disposal_amount"
         />
         <div>
-          <label class="mb-1.5 block text-sm font-medium">{{ t('disposal_account') }}</label>
-          <Combobox
+          <SearchableSelect
+            id="disposal_account_id"
             v-model="disposeForm.disposal_account_id"
+            :label="t('disposal_account')"
             :options="accountOptions"
+            group-key="group"
             :placeholder="t('select_account')"
+            :error="disposeForm.errors.disposal_account_id"
+            :help-href="chartHelpHref"
+            :help-label="t('chart_of_accounts')"
           />
-          <p v-if="disposeForm.errors.disposal_account_id" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ disposeForm.errors.disposal_account_id }}</p>
         </div>
         <div class="flex justify-end gap-3 pt-2">
           <Button type="button" variant="outline" @click="showDisposeModal = false">{{ t('cancel') }}</Button>

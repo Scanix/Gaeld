@@ -12,7 +12,10 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
+import BicField from '@/Components/BicField.vue'
+import IbanHint from '@/Components/IbanHint.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import { currencyOptions } from '@/lib/contactOptions'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
@@ -46,10 +49,13 @@ const transactionForm = useForm({
 const editForm = useForm({
   name: props.bankAccount.name,
   iban: props.bankAccount.iban ?? '',
+  qr_iban: props.bankAccount.qr_iban ?? '',
   bank_name: props.bankAccount.bank_name ?? '',
+  bic: props.bankAccount.bic ?? '',
   currency: props.bankAccount.currency ?? 'CHF',
   account_id: props.bankAccount.account_id?.toString() ?? '',
   is_mixed_use: props.bankAccount.is_mixed_use ?? false,
+  is_default_for_invoicing: props.bankAccount.is_default_for_invoicing ?? false,
 })
 
 function recordTransaction() {
@@ -80,11 +86,17 @@ const typeOptions = [
 ]
 
 const accountOptions = computed(() =>
-  props.accounts.map(a => ({ value: a.code, label: `${a.code} — ${a.name}` }))
+  props.accounts
+    .slice()
+    .sort((a, b) => String(a.code).localeCompare(String(b.code)))
+    .map(a => ({ value: a.code, label: `${a.code} — ${a.display_name ?? a.name}`, group: t('account_type_' + a.type) }))
 )
 
 const accountIdOptions = computed(() =>
-  props.accounts.map(a => ({ value: a.id.toString(), label: `${a.code} — ${a.name}` }))
+  props.accounts
+    .slice()
+    .sort((a, b) => String(a.code).localeCompare(String(b.code)))
+    .map(a => ({ value: a.id.toString(), label: `${a.code} — ${a.display_name ?? a.name}`, group: t('account_type_' + a.type) }))
 )
 
 const columns = computed(() => [
@@ -219,11 +231,12 @@ const ledgerColumns = computed(() => [
           :error="transactionForm.errors.type"
           required
         />
-        <FormSelect
+        <SearchableSelect
           id="txn-contra-account"
           v-model="transactionForm.contra_account_code"
           :label="t('contra_account')"
           :options="accountOptions"
+          group-key="group"
           :placeholder="t('select_account')"
           :error="transactionForm.errors.contra_account_code"
           required
@@ -246,7 +259,10 @@ const ledgerColumns = computed(() => [
       <form class="space-y-6" @submit.prevent="submitEdit">
         <FormInput id="edit-name" v-model="editForm.name" :label="t('account_name')" :error="editForm.errors.name" required />
         <FormInput id="edit-iban" v-model="editForm.iban" :label="t('iban')" :error="editForm.errors.iban" />
+        <FormInput id="edit-qr-iban" v-model="editForm.qr_iban" :label="t('iban_qr_iban')" :placeholder="t('qr_iban_placeholder')" :error="editForm.errors.qr_iban" :help="t('tooltip_qr_iban')" />
+        <IbanHint :iban="editForm.qr_iban" mode="qr" />
         <FormInput id="edit-bank-name" v-model="editForm.bank_name" :label="t('bank_name')" :error="editForm.errors.bank_name" />
+        <BicField id="edit-bic" v-model="editForm.bic" :iban="editForm.iban" :error="editForm.errors.bic" />
         <FormSelect
           id="edit-currency"
           v-model="editForm.currency"
@@ -254,11 +270,12 @@ const ledgerColumns = computed(() => [
           :options="currencyOptions(t)"
           :error="editForm.errors.currency"
         />
-        <FormSelect
+        <SearchableSelect
           id="edit-account-id"
           v-model="editForm.account_id"
           :label="t('ledger_account')"
           :options="accountIdOptions"
+          group-key="group"
           :placeholder="t('select_account')"
           :error="editForm.errors.account_id"
         />
@@ -272,6 +289,18 @@ const ledgerColumns = computed(() => [
           <div>
             <label for="edit-is_mixed_use" class="text-sm font-medium">{{ t('mixed_use_label') }}</label>
             <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('mixed_use_tooltip') }}</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <input
+            id="edit-is_default_for_invoicing"
+            v-model="editForm.is_default_for_invoicing"
+            type="checkbox"
+            class="mt-1 h-4 w-4 rounded border-[hsl(var(--input))]"
+          />
+          <div>
+            <label for="edit-is_default_for_invoicing" class="text-sm font-medium">{{ t('default_for_invoicing_label') }}</label>
+            <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('default_for_invoicing_tooltip') }}</p>
           </div>
         </div>
         <div class="flex justify-end gap-3">

@@ -18,6 +18,17 @@ return [
     // CE features (enabled by default)
     'bank_import' => env('FEATURE_BANK_IMPORT', true),
 
+    // Per-organization toggleable modules — defaults preserve current behavior.
+    // Owners override these from Settings → Modules.
+    'budgets' => env('FEATURE_BUDGETS', true),
+    'year_end_closing' => env('FEATURE_YEAR_END_CLOSING', true),
+    'social_charges' => env('FEATURE_SOCIAL_CHARGES', true),
+    'account_matching' => env('FEATURE_ACCOUNT_MATCHING', true),
+    'fiduciary_export' => env('FEATURE_FIDUCIARY_EXPORT', true),
+    'legal_archives' => env('FEATURE_LEGAL_ARCHIVES', true),
+    'assets' => env('FEATURE_ASSETS', true),
+    'payroll' => env('FEATURE_PAYROLL', true),
+
     // EE features (disabled by default)
     'auto_reconciliation' => env('FEATURE_AUTO_RECONCILIATION', false),
     'bank_sync' => env('FEATURE_BANK_SYNC', false),

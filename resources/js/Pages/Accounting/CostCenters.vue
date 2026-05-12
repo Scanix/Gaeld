@@ -11,6 +11,7 @@ import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import Modal from '@/Components/UI/Modal.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import { computed, ref } from 'vue'
@@ -161,7 +162,7 @@ function performDelete() {
       <form class="space-y-6" @submit.prevent="submitForm">
         <FormInput id="code" v-model="form.code" :label="t('cost_center_code')" :error="form.errors.code" required />
         <FormInput id="name" v-model="form.name" :label="t('cost_center_name')" :error="form.errors.name" required />
-        <FormSelect
+        <SearchableSelect
           v-if="!editingCenter"
           id="parent_id"
           v-model="form.parent_id"
