@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.0] — 2026-05-12
+
+### Added
+- **Migration orchestrator**: warn when account-mapping target set exceeds soft cap
+
+### Changed
+- Remove stale PHPStan baseline entry for ExpenseReconciler
+
+---
+
 ## [3.2.0] — 2026-05-06
 
 Outbound payment initiation, contacts unification, and Swiss letter PDF
