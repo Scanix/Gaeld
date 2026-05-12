@@ -60,6 +60,14 @@ class Invoice extends Model
     /** @use HasFactory<InvoiceFactory> */
     use Auditable, BelongsToOrganization, HasFactory, HasUuids, Searchable, SoftDeletes;
 
+    /**
+     * Always eager-load the customer + organization to avoid N+1 in lists
+     * (invoice cards/tables in the dashboard always render the customer name).
+     *
+     * @var list<string>
+     */
+    protected $with = ['customer'];
+
     protected $fillable = [
         'organization_id',
         'customer_id',
