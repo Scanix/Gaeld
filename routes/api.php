@@ -8,6 +8,7 @@ use App\Domains\Api\Controllers\ExpenseApiController;
 use App\Domains\Api\Controllers\InvoiceApiController;
 use App\Domains\Api\Controllers\OrgTokenController;
 use App\Domains\Api\Controllers\WebhookApiController;
+use App\Http\Middleware\LogOrgTokenActivity;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,7 +31,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/', ApiInfoController::class)->name('api.info');
 });
 
-Route::middleware(['auth:sanctum', 'api-org', 'feature:api_access', 'throttle:api'])->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum', 'api-org', LogOrgTokenActivity::class, 'feature:api_access', 'throttle:api'])->prefix('v1')->group(function () {
 
     // Personal token management (user's own tokens)
     Route::get('/tokens', [ApiTokenController::class, 'index'])->name('api.tokens.index');
