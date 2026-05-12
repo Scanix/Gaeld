@@ -720,8 +720,10 @@ return [
 
     // Signup / SaaS
     'signup_title' => 'Start your :days-day free trial',
+    'signup_title_free' => 'Create your free Gäld account',
     'signup_subtitle' => 'No credit card required to start. Cancel anytime.',
     'signup_cta' => 'Start :days-day free trial',
+    'signup_cta_free' => 'Create free account',
     'signup_disclaimer' => 'After the trial, you\'ll be redirected to Stripe to add your payment method.',
     'creating_account' => 'Creating account…',
     'unlimited_invoices' => 'Unlimited invoices',
