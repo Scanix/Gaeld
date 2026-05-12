@@ -6,6 +6,7 @@ use App\Domains\Accounting\Controllers\BudgetController;
 use App\Domains\Accounting\Controllers\ConsolidationController;
 use App\Domains\Accounting\Controllers\CostCenterController;
 use App\Domains\Accounting\Controllers\ExchangeRateController;
+use App\Domains\Accounting\Controllers\FiscalYearsController;
 use App\Domains\Accounting\Controllers\LegalArchiveController;
 use App\Domains\Accounting\Controllers\LettrageController;
 use App\Domains\Accounting\Controllers\SocialChargesController;
@@ -29,6 +30,10 @@ Route::get('/accounting/journal-entries/export/{format}', [AccountingController:
 Route::get('/accounting/year-end-closing', [YearEndClosingController::class, 'index'])->name('accounting.closing');
 Route::post('/accounting/year-end-closing', [YearEndClosingController::class, 'store'])->name('accounting.closing.store');
 Route::post('/accounting/year-end-closing/reopen', [YearEndClosingController::class, 'reopen'])->name('accounting.closing.reopen');
+Route::get('/accounting/fiscal-years', [FiscalYearsController::class, 'index'])->name('accounting.fiscal-years.index');
+Route::post('/accounting/fiscal-years', [FiscalYearsController::class, 'store'])->name('accounting.fiscal-years.store');
+Route::put('/accounting/fiscal-years/{fiscalYear}', [FiscalYearsController::class, 'update'])->name('accounting.fiscal-years.update');
+Route::delete('/accounting/fiscal-years/{fiscalYear}', [FiscalYearsController::class, 'destroy'])->name('accounting.fiscal-years.destroy');
 Route::get('/accounting/social-charges', [SocialChargesController::class, 'index'])->name('accounting.social-charges');
 Route::post('/accounting/social-charges/calculate', [SocialChargesController::class, 'calculate'])->name('accounting.social-charges.calculate');
 Route::post('/accounting/social-charges/post', [SocialChargesController::class, 'post'])->name('accounting.social-charges.post');

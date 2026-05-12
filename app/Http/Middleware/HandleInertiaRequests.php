@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use App\Support\FeatureFlag;
@@ -222,6 +223,21 @@ class HandleInertiaRequests extends Middleware
         $data = $org->only('id', 'name', 'currency', 'locale', 'require_two_factor');
         $data['closed_fiscal_years'] = $org->closed_fiscal_years ?? [];
         $data['business_type'] = $org->business_type?->value;
+
+        $data['fiscal_years'] = FiscalYear::query()
+            ->withoutGlobalScopes()
+            ->where('organization_id', $org->id)
+            ->orderBy('start_date')
+            ->get()
+            ->map(fn ($fy) => [
+                'id' => $fy->id,
+                'name' => $fy->name,
+                'start_date' => $fy->start_date->toDateString(),
+                'end_date' => $fy->end_date->toDateString(),
+                'status' => $fy->status->value,
+            ])
+            ->values()
+            ->all();
 
         return $data;
     }

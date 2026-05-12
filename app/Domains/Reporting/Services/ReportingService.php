@@ -6,6 +6,7 @@ use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\Budget;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Assets\Models\DepreciationEntry;
 use App\Domains\Organizations\Models\Organization;
@@ -140,10 +141,22 @@ class ReportingService
     /**
      * Determine the fiscal year start date for the organization containing the given as-of date.
      *
-     * Uses the organization's `fiscal_year_start` (MM-DD) if set, otherwise defaults to Jan 1.
+     * Prefers a record from the fiscal_years table (supports custom durations
+     * like Swiss long fiscal years up to 23 months). Falls back to parsing the
+     * organization's legacy `fiscal_year_start` (MM-DD) field.
      */
     private function resolveFiscalYearStart(string $organizationId, string $asOfDate): string
     {
+        $fiscalYear = FiscalYear::query()
+            ->withoutGlobalScopes()
+            ->where('organization_id', $organizationId)
+            ->forDate($asOfDate)
+            ->first();
+
+        if ($fiscalYear !== null) {
+            return $fiscalYear->start_date->toDateString();
+        }
+
         $org = Organization::findOrFail($organizationId);
         $asOf = Carbon::parse($asOfDate);
 
