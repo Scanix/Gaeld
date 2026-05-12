@@ -128,6 +128,7 @@ const navigation = computed(() => {
         { key: 'budget', href: '/accounting/budgets' },
       ] : []),
       ...(features.value.year_end_closing && can('accounting.close-year') ? [
+        { key: 'fiscal_years', href: '/accounting/fiscal-years' },
         { key: 'year_end_closing', href: '/accounting/year-end-closing' },
       ] : []),
       ...(features.value.account_matching ? [
