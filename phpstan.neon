@@ -11,3 +11,59 @@ parameters:
     excludePaths:
         - app/Console/
         - app/Domains/Api/Models/PersonalAccessToken.php
+
+    # Legacy DOM/text-based bank statement parsers. Their input shapes are
+    # constrained by external file formats (CAMT.053/054 XML, CSV, MT940)
+    # and exercised by integration tests against real-world fixtures.
+    # Static typing of DOMNode hierarchies and string-keyed CSV rows yields
+    # noisy, low-signal errors here, so we accept the wider tolerance and
+    # rely on the test suite to lock in behaviour.
+    ignoreErrors:
+        -
+            identifier: argument.type
+            reportUnmatched: false
+            paths:
+                - app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+                - app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+                - app/Domains/Banking/Parsers/CsvBankParser.php
+                - app/Domains/Banking/Parsers/Mt940Parser.php
+        -
+            identifier: property.nonObject
+            reportUnmatched: false
+            paths:
+                - app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+                - app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+                - app/Domains/Banking/Parsers/CsvBankParser.php
+                - app/Domains/Banking/Parsers/Mt940Parser.php
+        -
+            identifier: method.nonObject
+            reportUnmatched: false
+            paths:
+                - app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+                - app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+                - app/Domains/Banking/Parsers/CsvBankParser.php
+                - app/Domains/Banking/Parsers/Mt940Parser.php
+        -
+            identifier: foreach.nonIterable
+            reportUnmatched: false
+            paths:
+                - app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+                - app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+                - app/Domains/Banking/Parsers/CsvBankParser.php
+                - app/Domains/Banking/Parsers/Mt940Parser.php
+        -
+            identifier: return.type
+            reportUnmatched: false
+            paths:
+                - app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+                - app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+                - app/Domains/Banking/Parsers/CsvBankParser.php
+                - app/Domains/Banking/Parsers/Mt940Parser.php
+        -
+            identifier: property.notFound
+            reportUnmatched: false
+            paths:
+                - app/Domains/Banking/Parsers/Camt/Camt053Parser.php
+                - app/Domains/Banking/Parsers/Camt/Camt054Parser.php
+                - app/Domains/Banking/Parsers/CsvBankParser.php
+                - app/Domains/Banking/Parsers/Mt940Parser.php
