@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
 use Laragear\WebAuthn\Contracts\WebAuthnAuthenticatable;
 use Laragear\WebAuthn\WebAuthnAuthentication;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -75,6 +76,29 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         $prefs = is_array($this->notification_preferences) ? $this->notification_preferences : [];
 
         return (bool) ($prefs[$type] ?? true);
+    }
+
+    /**
+     * Override the Auditable default (logAll) to redact secrets and tokens.
+     *
+     * Without this, password hashes, decrypted 2FA secrets/recovery codes and
+     * the email-change token are written to the activity log on every change.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logExcept([
+                'password',
+                'remember_token',
+                'two_factor_secret',
+                'two_factor_recovery_codes',
+                'two_factor_confirmed_at',
+                'email_change_token',
+            ])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $event) => 'User '.$event);
     }
 
     public function hasTwoFactorEnabled(): bool
