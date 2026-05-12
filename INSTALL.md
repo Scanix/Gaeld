@@ -106,3 +106,27 @@ Key environment variables:
 | `FEATURE_AUTOMATION` | Enable automation | `false` |
 | `DOCS_BASE_URL` | Documentation site URL | `http://localhost:3000` |
 | `PLUGINS_ENABLED` | Enable plugin system | `true` |
+| `TRUSTED_PROXIES` | Trusted reverse proxies (see below) | _(unset)_ |
+
+---
+
+## Reverse Proxy / HTTPS
+
+When Gäld runs behind a reverse proxy that terminates TLS — for example
+Coolify, Traefik, nginx, Caddy, or Cloudflare — you must tell Laravel to
+trust the forwarded headers (`X-Forwarded-Proto`, `X-Forwarded-For`,
+`X-Forwarded-Host`). Without this, Laravel generates `http://` URLs and
+redirects from an HTTPS page, which the browser blocks as mixed content.
+
+Set the `TRUSTED_PROXIES` environment variable:
+
+```bash
+# Trust any proxy — safe when the container is only reachable via the proxy
+TRUSTED_PROXIES=*
+
+# Or restrict to specific proxy IPs / CIDR ranges for tighter security
+TRUSTED_PROXIES=10.0.0.5,172.18.0.0/16
+```
+
+Also make sure `APP_URL` uses the public HTTPS URL, e.g.
+`APP_URL=https://accounting.example.com`.
