@@ -703,8 +703,10 @@ return [
 
     // Signup / SaaS
     'signup_title' => 'Inizia la tua prova gratuita di :days giorni',
+    'signup_title_free' => 'Crea il tuo account Gäld gratuito',
     'signup_subtitle' => 'Nessuna carta di credito richiesta. Annulla in qualsiasi momento.',
     'signup_cta' => 'Inizia la prova di :days giorni',
+    'signup_cta_free' => 'Crea un account gratuito',
     'signup_disclaimer' => 'Dopo la prova, verrai reindirizzato a Stripe per aggiungere il tuo metodo di pagamento.',
     'creating_account' => 'Creazione account…',
     'unlimited_invoices' => 'Fatture illimitate',
