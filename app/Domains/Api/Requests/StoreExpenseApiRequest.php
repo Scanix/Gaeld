@@ -2,6 +2,7 @@
 
 namespace App\Domains\Api\Requests;
 
+use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Validation\ExpenseSharedValidationRules;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,6 +10,14 @@ use Illuminate\Validation\Rule;
 
 class StoreExpenseApiRequest extends FormRequest
 {
+    /**
+     * Defense-in-depth: enforce policy at the FormRequest layer in addition to the controller.
+     */
+    public function authorize(): bool
+    {
+        return $this->user()?->can('create', Expense::class) ?? false;
+    }
+
     /**
      * @return array<string, mixed>
      */
