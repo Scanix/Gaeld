@@ -710,8 +710,10 @@ return [
 
     // Signup / SaaS
     'signup_title' => 'Starten Sie Ihre :days-tägige kostenlose Testphase',
+    'signup_title_free' => 'Erstellen Sie Ihr kostenloses Gäld-Konto',
     'signup_subtitle' => 'Keine Kreditkarte erforderlich. Jederzeit kündbar.',
     'signup_cta' => ':days-tägige Testphase starten',
+    'signup_cta_free' => 'Kostenloses Konto erstellen',
     'signup_disclaimer' => 'Nach der Testphase werden Sie zu Stripe weitergeleitet, um Ihre Zahlungsmethode hinzuzufügen.',
     'creating_account' => 'Konto wird erstellt…',
     'unlimited_invoices' => 'Unbegrenzte Rechnungen',

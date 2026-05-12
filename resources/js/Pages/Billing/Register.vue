@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { CheckCircle2, Zap } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
@@ -17,6 +17,11 @@ const props = defineProps({
 })
 
 const selectedPlan = ref(props.plans[0]?.id ?? null)
+
+const selectedPlanIsFree = computed(() => {
+  const plan = props.plans.find(p => p.id === selectedPlan.value)
+  return plan ? Number(plan.price_chf) === 0 : false
+})
 
 const form = useForm({
   name: '',
@@ -42,7 +47,7 @@ function submit() {
     <div class="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
       <img src="/logo-wide.svg" alt="Gäld" class="h-8 mx-auto mb-6" />
       <h2 class="text-2xl font-bold text-[hsl(var(--foreground))]">
-        {{ t('signup_title', { days: trial_days }) }}
+        {{ selectedPlanIsFree ? t('signup_title_free') : t('signup_title', { days: trial_days }) }}
       </h2>
       <p class="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{{ t('signup_subtitle') }}</p>
     </div>
@@ -194,7 +199,7 @@ function submit() {
           </div>
 
           <Button type="submit" class="w-full" :disabled="form.processing">
-            {{ form.processing ? t('creating_account') : t('signup_cta', { days: trial_days }) }}
+            {{ form.processing ? t('creating_account') : (selectedPlanIsFree ? t('signup_cta_free') : t('signup_cta', { days: trial_days })) }}
           </Button>
 
           <p class="text-center text-xs text-[hsl(var(--muted-foreground))]">
