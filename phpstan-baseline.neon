@@ -253,12 +253,6 @@ parameters:
 			path: app/Domains/Banking/Services/BankingService.php
 
 		-
-			message: '#^Method App\\Domains\\Banking\\Services\\ExpenseReconciler\:\:reconcileWithExpense\(\) invoked with 2 parameters, 3 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: app/Domains/Banking/Services/ReconciliationService.php
-
-		-
 			message: '#^Method App\\Domains\\Banking\\Services\\SuggestionService\:\:generateSuggestionsForTransactions\(\) should return array\<string, array\{invoices\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\DTOs\\InvoiceSuggestion\>, expenses\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\DTOs\\ExpenseSuggestion\>, matches\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\Models\\BankMatch\>\}\> but returns array\<int, array\{invoices\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\DTOs\\InvoiceSuggestion\>, expenses\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\DTOs\\ExpenseSuggestion\>, matches\: Illuminate\\Support\\Collection\<int, App\\Domains\\Banking\\Models\\BankMatch\>\}\>\.$#'
 			identifier: return.type
 			count: 1
