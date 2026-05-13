@@ -17,13 +17,13 @@ echo ""
 
 # 0. Drift guard: production must not be ahead of main
 echo "🔍 [0/2] Checking production is not ahead of main..."
-git fetch gitlab main --quiet 2>/dev/null || git fetch origin main --quiet 2>/dev/null || true
+git fetch gitlab main --quiet 2>/dev/null || true
 AHEAD=$(git log gitlab/main..HEAD --oneline 2>/dev/null | wc -l | tr -d ' ')
 if [ "$AHEAD" -gt 0 ]; then
     echo ""
     echo "❌ Production is $AHEAD commit(s) ahead of main."
     echo "   Merge production → main and push main first, then retry."
-    echo "   Run: git checkout main && git merge --ff-only production && git push gitlab main && git push origin main"
+    echo "   Run: git checkout main && git merge --ff-only production && git push gitlab main"
     echo "   Push to production aborted."
     exit 1
 fi

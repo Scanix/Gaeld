@@ -106,15 +106,15 @@ task('deploy:meilisearch:sync', function () {
 
 set('sentry', [
     'organization' => static function () {
-        return trim(run('grep "^SENTRY_ORG=" {{deploy_path}}/shared/.env | cut -d= -f2 2>/dev/null || true'));
+        return trim(run('grep "^SENTRY_ORG=" {{deploy_path}}/shared/.env | cut -d= -f2- 2>/dev/null || true'), " \t\n\r\0\x0B\"'");
     },
     'projects' => static function () {
-        $project = trim(run('grep "^SENTRY_PROJECT=" {{deploy_path}}/shared/.env | cut -d= -f2 2>/dev/null || true'));
+        $project = trim(run('grep "^SENTRY_PROJECT=" {{deploy_path}}/shared/.env | cut -d= -f2- 2>/dev/null || true'), " \t\n\r\0\x0B\"'");
 
         return $project === '' ? [] : [$project];
     },
     'token' => static function () {
-        return trim(run('grep "^SENTRY_AUTH_TOKEN=" {{deploy_path}}/shared/.env | cut -d= -f2 2>/dev/null || true'));
+        return trim(run('grep "^SENTRY_AUTH_TOKEN=" {{deploy_path}}/shared/.env | cut -d= -f2- 2>/dev/null || true'), " \t\n\r\0\x0B\"'");
     },
     'environment' => 'production',
     'git_version_command' => 'git describe --tags --abbrev=0',
