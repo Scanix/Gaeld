@@ -12,6 +12,7 @@
 namespace Deployer;
 
 require 'recipe/laravel.php';
+require 'contrib/sentry.php';
 
 // --- Project ---
 set('application', 'gaeld');
@@ -103,39 +104,28 @@ task('deploy:meilisearch:sync', function () {
     run('cd {{release_path}} && {{bin/php}} artisan scout:sync-index-settings 2>/dev/null || true');
 })->desc('Sync MeiliSearch index settings');
 
+set('sentry', [
+    'organization' => static function () {
+        return trim(run('grep "^SENTRY_ORG=" {{deploy_path}}/shared/.env | cut -d= -f2 2>/dev/null || true'));
+    },
+    'projects' => static function () {
+        $project = trim(run('grep "^SENTRY_PROJECT=" {{deploy_path}}/shared/.env | cut -d= -f2 2>/dev/null || true'));
+
+        return $project === '' ? [] : [$project];
+    },
+    'token' => static function () {
+        return trim(run('grep "^SENTRY_AUTH_TOKEN=" {{deploy_path}}/shared/.env | cut -d= -f2 2>/dev/null || true'));
+    },
+    'environment' => 'production',
+    'git_version_command' => 'git describe --tags --abbrev=0',
+]);
+
 task('deploy:sentry:release', function () {
-    $version = runLocally('git describe --tags --abbrev=0');
-    run("cd {{release_path}} && {{bin/php}} artisan sentry:publish {$version} 2>/dev/null || true");
-
-    $token = run('grep "^SENTRY_AUTH_TOKEN=" {{deploy_path}}/shared/.env | cut -d= -f2');
-    $org = run('grep "^SENTRY_ORG=" {{deploy_path}}/shared/.env | cut -d= -f2');
-    $project = run('grep "^SENTRY_PROJECT=" {{deploy_path}}/shared/.env | cut -d= -f2');
-
-    if (empty($token) || empty($org) || empty($project)) {
-        warning('Sentry env vars incomplete — skipping release notification');
-
-        return;
+    try {
+        invoke('deploy:sentry');
+    } catch (\Throwable $exception) {
+        warning('Sentry release notification skipped: '.$exception->getMessage());
     }
-
-    // Create release
-    run(sprintf(
-        'curl -sS -X POST "https://sentry.io/api/0/organizations/%s/releases/" '
-        .'-H "Authorization: Bearer %s" '
-        .'-H "Content-Type: application/json" '
-        .'-d \'{"version":"%s","projects":["%s"]}\'',
-        $org, $token, $version, $project,
-    ));
-
-    // Mark deploy
-    run(sprintf(
-        'curl -sS -X POST "https://sentry.io/api/0/organizations/%s/releases/%s/deploys/" '
-        .'-H "Authorization: Bearer %s" '
-        .'-H "Content-Type: application/json" '
-        .'-d \'{"environment":"production"}\'',
-        $org, $version, $token,
-    ));
-
-    info("Sentry release {$version} created & deploy marked");
 })->desc('Notify Sentry of new release and mark deploy');
 
 // --- Deployment flow ---
