@@ -78,7 +78,14 @@ Schedule::command('horizon:snapshot')->everyFiveMinutes();
  * Configure SCHEDULE_HEARTBEAT_URL in .env (e.g. a Healthchecks.io ping URL).
  */
 if ($heartbeatUrl = config('features.schedule_heartbeat_url')) {
-    Schedule::call(fn () => Http::get($heartbeatUrl))
+    Schedule::call(function () use ($heartbeatUrl) {
+        try {
+            Http::timeout(5)->connectTimeout(5)->get($heartbeatUrl);
+        } catch (Throwable $e) {
+            // Heartbeat endpoint is best-effort; never let transient
+            // network failures bubble up and pollute error reporting.
+        }
+    })
         ->everyFiveMinutes()
         ->name('heartbeat');
 }
