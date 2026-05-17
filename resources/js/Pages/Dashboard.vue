@@ -14,7 +14,6 @@ import { useTheme } from '@/lib/useTheme'
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X, AlertTriangle, Receipt, Target, ScanLine } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
-import AccountingChecklist from '@/Components/AccountingChecklist.vue'
 import { normalizeDashboardContract } from '@/lib/inertiaContracts'
 import { Bar } from 'vue-chartjs'
 import {
@@ -50,7 +49,6 @@ const props = defineProps({
   receivablesAging: { type: Object, default: null },
   recentTransactions: { type: Array, default: () => [] },
   monthlyBreakdown: { type: Object, default: () => ({ monthIndices: [], revenue: [], expenses: [], forecast: [], revenueItems: [], expenseItems: [], forecastItems: [] }) },
-  checklist: { type: Object, default: () => ({ getting_started: [], accounting: [] }) },
   pendingOcrScans: { type: Number, default: 0 },
   displayYear: { type: Number, default: () => new Date().getFullYear() },
 })
@@ -339,11 +337,6 @@ const transactionColumns = computed(() => [
           <a href="/reports/vat" class="text-sm font-medium text-purple-700 hover:underline dark:text-purple-300">{{ t('view') }}</a>
         </CardContent>
       </Card>
-    </div>
-
-    <!-- Accounting Checklist -->
-    <div v-if="checklist.getting_started?.length || checklist.accounting?.length" class="mt-6">
-      <AccountingChecklist :getting-started="checklist.getting_started ?? []" :accounting="checklist.accounting ?? []" />
     </div>
 
     <!-- Budget vs Actual -->
