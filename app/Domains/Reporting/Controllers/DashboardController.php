@@ -3,7 +3,6 @@
 namespace App\Domains\Reporting\Controllers;
 
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Organizations\Services\ChecklistService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Services\DashboardService;
 use App\Http\Controllers\Controller;
@@ -16,23 +15,12 @@ use Inertia\Response;
  */
 class DashboardController extends Controller
 {
-    public function index(Request $request, DashboardService $dashboardService, ChecklistService $checklistService, CurrentOrganization $currentOrg): Response
+    public function index(Request $request, DashboardService $dashboardService, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', Account::class);
 
         $orgId = $currentOrg->id();
-        $checklist = $checklistService->checklist($orgId);
 
-        // Hide getting_started section once the user has dismissed onboarding
-        if ($request->user()->onboarding_completed_at) {
-            $checklist['getting_started'] = [];
-        }
-
-        return Inertia::render('Dashboard', array_merge(
-            $dashboardService->metrics($orgId),
-            [
-                'checklist' => $checklist,
-            ],
-        ));
+        return Inertia::render('Dashboard', $dashboardService->metrics($orgId));
     }
 }
