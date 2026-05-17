@@ -5,10 +5,11 @@ import CardHeader from '@/Components/UI/CardHeader.vue'
 import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
+import Badge from '@/Components/UI/Badge.vue'
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
-import { subscriptionStatusClass } from '@/lib/statusClasses'
+import { subscriptionStatusVariant } from '@/lib/statusClasses'
 import { TrendingUp, Users, AlertCircle, CreditCard, Clock, ShieldCheck, Ban, ArrowRightLeft, Settings, Save, ExternalLink, MessageSquare, Trash2 } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
@@ -329,9 +330,9 @@ function clearSystemMessage() {
                   <td class="py-2.5 px-3 font-medium">{{ sub.org_name }}</td>
                   <td class="py-2.5 px-3 text-[hsl(var(--muted-foreground))]">{{ sub.plan }}</td>
                   <td class="py-2.5 px-3">
-                    <span :class="subscriptionStatusClass[sub.status]" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize">
+                    <Badge :variant="subscriptionStatusVariant[sub.status] ?? 'secondary'" class="capitalize">
                       {{ sub.status }}
-                    </span>
+                    </Badge>
                   </td>
                   <td class="py-2.5 px-3 text-[hsl(var(--muted-foreground))] tabular-nums">{{ sub.created_at }}</td>
                   <td class="py-2.5 px-3">
