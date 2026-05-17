@@ -38,9 +38,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **i18n: missing fiscal-year translations** for de/fr/it (PR #17 only
   shipped the English keys).
 
+### Security
+- **postcss CVE GHSA-qx2v-qp2m-jg93** — bumped `vue` to 3.5.34 and `vite`
+  to 8.0.13 to force transitive `postcss` to ≥ 8.5.10; added
+  `pnpm.overrides` as a lockfile-level safety net.
+
+### Changed
+- **UI: status badges** — replaced inline `<span>` badges with the shared
+  `Badge` component across `FiscalYears/Index`, `Billing/Plans`, and
+  `SaasAdmin/Dashboard`; `statusClasses.js` now exports variant-name maps
+  instead of raw CSS class strings.
+
+### Dependencies
+- `tailwindcss` 4.2.2 → 4.3.0
+- `@tailwindcss/vite` 4.2.2 → 4.3.0
+- `vue` 3.5.32 → 3.5.34
+- `vite` 8.0.8 → 8.0.13
+
 ### Internal
-- `phpunit.xml`: pin `APP_BASE_PATH` so the EE plugin vendor tree does not
-  break Laravel's base-path inference under tests.
+- `phpunit.xml`: removed hardcoded `APP_BASE_PATH=/var/www/html` that
+  caused test suite failures on non-Docker CI runners.
+- CI: pinned `gitleaks/gitleaks-action` to v2.3.9 and opted into Node 24
+  runners to silence Node 20 deprecation warnings.
+
+### Docs
+- `INSTALL.md`: fixed manual installation commands (were incorrectly using
+  `vendor/bin/sail`); added **Upgrading** section for both Docker and
+  manual installs; bumped Node.js minimum to 22+.
 
 ---
 
