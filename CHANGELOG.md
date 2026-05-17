@@ -24,6 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   seeded from active balance-sheet accounts; `RecordOpeningBalancesAction`
   posts a balanced opening entry on demand, plugging the diff into
   account 9000.
+- **Settings: per-organisation module toggles** — organisation owners can
+  now enable or disable feature modules (budgets, year-end closing, social
+  charges, assets, payroll, etc.) from Settings → Modules without touching
+  environment variables.
+- **Banking: BIC field for strict pain.001 (FF01)** — bank account form
+  now accepts a BIC/SWIFT code required for SEPA FF01-compliant pain.001
+  exports.
+- **Banking: BIC autofill from IBAN** — entering an IBAN auto-populates the
+  BIC field via lookup, reducing manual entry errors.
 - **Security: organization API token audit log** — every API token request
   against an organisation is now recorded in the activity log.
 - **Security: defense-in-depth `authorize()` on API FormRequests** — all
@@ -34,7 +43,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Jobs: harden `GenerateRecurringInvoicesJob` retry policy** — back-off
   and failure handling improved to avoid silent drops on transient errors.
 
+### Changed
+- **Banking: QR-IBAN moved to bank account** — the QR-IBAN field has been
+  relocated from the payment initiation form to the bank account settings,
+  so it is configured once per account rather than per payment.
+- **UI: contact form redesigned** — contact create/edit pages now use a
+  compact tabbed layout (general, address, banking) replacing the previous
+  single-scroll form.
+
 ### Fixed
+- **Banking: pain.001 SEPA SvcLvl + auto BIC hotfix** — corrects missing
+  `SvcLvl` element and auto-fills BIC for SEPA transfers in generated
+  pain.001.001.09 files.
+- **Banking: pain.001 `ReqdExctnDt` fix (FF01)** — execution date element
+  was malformed for FF01 (instant credit transfer); now emits a valid date
+  string.
+- **Banking: pain.001 download hotfix** — fixes a regression where the
+  download response was empty after the initial pain.001 implementation.
+- **Reconciliation: combobox overflow + paid invoices** — dropdown no longer
+  overflows its container in a modal; paid invoices are now visible in the
+  reconciliation matching list.
+- **Banking: QR-IBAN field label clarified** in the bank account form.
 - **HTTP: trust reverse proxy headers for HTTPS detection (#18)** — fixes
   `secure` cookie / redirect issues when running behind nginx/Cloudflare;
   adds `TrustedProxiesTest` coverage.
