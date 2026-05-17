@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [develop, main]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
     name: Tests & Lint
@@ -42,7 +45,7 @@ jobs:
           fetch-depth: 0
 
       - name: Secret scanning (Gitleaks)
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

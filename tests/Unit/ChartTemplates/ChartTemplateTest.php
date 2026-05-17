@@ -203,4 +203,32 @@ class ChartTemplateTest extends TestCase
             $this->assertTrue($account->is_system, "Account {$code} must be marked as system");
         }
     }
+
+    /**
+     * Regression: a duplicate POST /organizations (double-click, retry) used to
+     * trigger accounts_organization_id_code_unique on code 1020. Seeding must
+     * be idempotent.
+     */
+    public function test_seed_template_is_idempotent_when_called_twice(): void
+    {
+        $org = Organization::factory()->create(['locale' => 'en']);
+        $service = app(ChartTemplateService::class);
+
+        $service->seedTemplate($org, 'swiss_sme');
+        $service->ensureSystemAccounts($org);
+
+        $firstCount = Account::where('organization_id', $org->id)->count();
+        $this->assertGreaterThan(0, $firstCount);
+
+        // Second pass must not raise UniqueConstraintViolationException
+        // and must not create additional rows.
+        $service->seedTemplate($org, 'swiss_sme');
+        $service->ensureSystemAccounts($org);
+
+        $this->assertSame(
+            $firstCount,
+            Account::where('organization_id', $org->id)->count(),
+            'Re-seeding the same template must not create duplicate accounts',
+        );
+    }
 }

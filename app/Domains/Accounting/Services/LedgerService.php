@@ -14,6 +14,7 @@ use App\Domains\Accounting\Exceptions\FiscalYearClosedException;
 use App\Domains\Accounting\Exceptions\InvalidEntryDataException;
 use App\Domains\Accounting\Exceptions\UnbalancedEntryException;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Organizations\Models\Organization;
@@ -273,12 +274,34 @@ class LedgerService
     /**
      * Prevent posting entries into a closed fiscal year.
      *
+     * Prefers the fiscal_years table (date-range based) so long fiscal
+     * years (Swiss law: up to 23 months) work correctly. Falls back to
+     * the legacy calendar-year `closed_fiscal_years` array on Organization
+     * for organizations that have not yet been migrated.
+     *
      * @throws FiscalYearClosedException
      */
     private function guardClosedFiscalYear(string $organizationId, string $date): void
     {
         $timestamp = strtotime($date);
+        $isoDate = $timestamp !== false ? date('Y-m-d', $timestamp) : date('Y-m-d');
         $year = $timestamp !== false ? (int) date('Y', $timestamp) : (int) date('Y');
+
+        $fiscalYear = FiscalYear::query()
+            ->withoutGlobalScopes()
+            ->where('organization_id', $organizationId)
+            ->forDate($isoDate)
+            ->first();
+
+        if ($fiscalYear !== null) {
+            if ($fiscalYear->isClosed()) {
+                throw new FiscalYearClosedException($year);
+            }
+
+            return;
+        }
+
+        // Legacy fallback for orgs without fiscal_year records.
         $org = Organization::find($organizationId);
 
         if ($org && $org->isFiscalYearClosed($year)) {

@@ -8,9 +8,10 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
+import Badge from '@/Components/UI/Badge.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
-import { subscriptionStatusClass, invoiceStatusClass } from '@/lib/statusClasses'
+import { subscriptionStatusVariant, invoiceStatusVariant } from '@/lib/statusClasses'
 import { CheckCircle2, Zap, AlertCircle, CreditCard, FileText, Settings, Download, ExternalLink } from 'lucide-vue-next'
 
 const { t } = useTranslations()
@@ -95,7 +96,7 @@ function openPortal() {
       <!-- Trial without payment method — prompt to complete setup -->
       <div
         v-if="isTrialingWithoutStripe"
-        class="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/50 p-4 text-sm text-blue-700 dark:text-blue-400"
+        class="flex items-center gap-3 rounded-lg border border-[hsl(var(--info)/0.3)] bg-[hsl(var(--info)/0.08)] p-4 text-sm text-[hsl(var(--info))]"
       >
         <CreditCard class="h-4 w-4 shrink-0" />
         <span>{{ t('trial_complete_payment_hint') }}</span>
@@ -114,12 +115,9 @@ function openPortal() {
         <CardHeader>
           <div class="flex items-center justify-between">
             <CardTitle>{{ t('my_subscription') }}</CardTitle>
-            <span
-              :class="subscriptionStatusClass[currentSubscription.status]"
-              class="text-xs font-medium px-2.5 py-1 rounded-full"
-            >
+            <Badge :variant="subscriptionStatusVariant[currentSubscription.status] ?? 'secondary'">
               {{ t(`subscription_status_${currentSubscription.status}`) }}
-            </span>
+            </Badge>
           </div>
         </CardHeader>
         <CardContent class="space-y-5">
@@ -196,12 +194,9 @@ function openPortal() {
                       {{ formatCurrency(invoice.amount, invoice.currency) }}
                     </td>
                     <td class="py-2.5 px-1 text-center">
-                      <span
-                        :class="invoiceStatusClass[invoice.status] ?? invoiceStatusClass.draft"
-                        class="text-xs font-medium px-2 py-0.5 rounded-full"
-                      >
+                      <Badge :variant="invoiceStatusVariant[invoice.status] ?? 'secondary'">
                         {{ t(`invoice_status_${invoice.status}`) }}
-                      </span>
+                      </Badge>
                     </td>
                     <td class="py-2.5 px-1 text-right">
                       <div class="flex items-center justify-end gap-1">

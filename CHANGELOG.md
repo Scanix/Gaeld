@@ -9,6 +9,110 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.0] — 2026-05-17
+
+### Added
+- **Accounting: fiscal year management (#17)** — first-class fiscal year
+  entity with planned / operative / expired / closed lifecycle, overlap
+  guard, and support for long fiscal years (up to Swiss legal maximum,
+  e.g. company founding). New `FiscalYearService`, REST + Inertia UI,
+  migrations with backfill from existing organisation settings.
+- **Accounting: manual journal entry CRUD** — `JournalEntryCreate` Vue
+  page with multi-line entry, draft/post toggle, live balance footer;
+  draft entries can be deleted, posted entries are immutable.
+- **Accounting: opening balances wizard** — new `OpeningBalances` page
+  seeded from active balance-sheet accounts; `RecordOpeningBalancesAction`
+  posts a balanced opening entry on demand, plugging the diff into
+  account 9000.
+- **Settings: per-organisation module toggles** — organisation owners can
+  now enable or disable feature modules (budgets, year-end closing, social
+  charges, assets, payroll, etc.) from Settings → Modules without touching
+  environment variables.
+- **Banking: BIC field for strict pain.001 (FF01)** — bank account form
+  now accepts a BIC/SWIFT code required for SEPA FF01-compliant pain.001
+  exports.
+- **Banking: BIC autofill from IBAN** — entering an IBAN auto-populates the
+  BIC field via lookup, reducing manual entry errors.
+- **Security: organization API token audit log** — every API token request
+  against an organisation is now recorded in the activity log.
+- **Security: defense-in-depth `authorize()` on API FormRequests** — all
+  API form requests explicitly enforce authorization so policy checks
+  cannot be accidentally bypassed.
+- **API: invoice line cap** — `POST /invoices` rejects payloads with more
+  than 500 lines, preventing runaway memory usage.
+- **Jobs: harden `GenerateRecurringInvoicesJob` retry policy** — back-off
+  and failure handling improved to avoid silent drops on transient errors.
+
+### Changed
+- **Banking: QR-IBAN moved to bank account** — the QR-IBAN field has been
+  relocated from the payment initiation form to the bank account settings,
+  so it is configured once per account rather than per payment.
+- **UI: contact form redesigned** — contact create/edit pages now use a
+  compact tabbed layout (general, address, banking) replacing the previous
+  single-scroll form.
+
+### Fixed
+- **Banking: pain.001 SEPA SvcLvl + auto BIC hotfix** — corrects missing
+  `SvcLvl` element and auto-fills BIC for SEPA transfers in generated
+  pain.001.001.09 files.
+- **Banking: pain.001 `ReqdExctnDt` fix (FF01)** — execution date element
+  was malformed for FF01 (instant credit transfer); now emits a valid date
+  string.
+- **Banking: pain.001 download hotfix** — fixes a regression where the
+  download response was empty after the initial pain.001 implementation.
+- **Reconciliation: combobox overflow + paid invoices** — dropdown no longer
+  overflows its container in a modal; paid invoices are now visible in the
+  reconciliation matching list.
+- **Banking: QR-IBAN field label clarified** in the bank account form.
+- **HTTP: trust reverse proxy headers for HTTPS detection (#18)** — fixes
+  `secure` cookie / redirect issues when running behind nginx/Cloudflare;
+  adds `TrustedProxiesTest` coverage.
+- **Accounting: idempotent chart-of-accounts seeding** — `ChartTemplateService`
+  no longer fails when re-seeding an organisation that already has matching
+  account codes (root cause of duplicate-code-on-org-create errors).
+- **Scheduler: heartbeat HTTP errors are swallowed** — `routes/console.php`
+  pins short connect/read timeouts and catches transport exceptions so a
+  flaky heartbeat endpoint can no longer block the scheduler tick.
+- **i18n: missing fiscal-year translations** for de/fr/it (PR #17 only
+  shipped the English keys).
+- **Security: secrets and tokens redacted from User activity log** — API
+  keys and token values are no longer stored in plain text in activity
+  log payloads.
+- **Invoicing: N+1 queries eliminated** — Invoice relations are now
+  eager-loaded, removing per-row queries on list and export views.
+- **Signup: repair accounts schema + free-plan copy + registration gate** —
+  fixes a schema inconsistency that caused 500 errors on new sign-ups.
+
+### Security
+- **postcss CVE GHSA-qx2v-qp2m-jg93** — bumped `vue` to 3.5.34 and `vite`
+  to 8.0.13 to force transitive `postcss` to ≥ 8.5.10; added
+  `pnpm.overrides` as a lockfile-level safety net.
+
+### Changed
+- **UI: status badges** — replaced inline `<span>` badges with the shared
+  `Badge` component across `FiscalYears/Index`, `Billing/Plans`, and
+  `SaasAdmin/Dashboard`; `statusClasses.js` now exports variant-name maps
+  instead of raw CSS class strings.
+
+### Dependencies
+- `tailwindcss` 4.2.2 → 4.3.0
+- `@tailwindcss/vite` 4.2.2 → 4.3.0
+- `vue` 3.5.32 → 3.5.34
+- `vite` 8.0.8 → 8.0.13
+
+### Internal
+- `phpunit.xml`: removed hardcoded `APP_BASE_PATH=/var/www/html` that
+  caused test suite failures on non-Docker CI runners.
+- CI: pinned `gitleaks/gitleaks-action` to v2.3.9 and opted into Node 24
+  runners to silence Node 20 deprecation warnings.
+
+### Docs
+- `INSTALL.md`: fixed manual installation commands (were incorrectly using
+  `vendor/bin/sail`); added **Upgrading** section for both Docker and
+  manual installs; bumped Node.js minimum to 22+.
+
+---
+
 ## [3.3.0] — 2026-05-12
 
 ### Added
