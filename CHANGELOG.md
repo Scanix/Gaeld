@@ -9,6 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.0] — 2026-05-17
+
+### Added
+- **Accounting: fiscal year management (#17)** — first-class fiscal year
+  entity with planned / operative / expired / closed lifecycle, overlap
+  guard, and support for long fiscal years (up to Swiss legal maximum,
+  e.g. company founding). New `FiscalYearService`, REST + Inertia UI,
+  migrations with backfill from existing organisation settings.
+- **Accounting: manual journal entry CRUD** — `JournalEntryCreate` Vue
+  page with multi-line entry, draft/post toggle, live balance footer;
+  draft entries can be deleted, posted entries are immutable.
+- **Accounting: opening balances wizard** — new `OpeningBalances` page
+  seeded from active balance-sheet accounts; `RecordOpeningBalancesAction`
+  posts a balanced opening entry on demand, plugging the diff into
+  account 9000.
+
+### Fixed
+- **HTTP: trust reverse proxy headers for HTTPS detection (#18)** — fixes
+  `secure` cookie / redirect issues when running behind nginx/Cloudflare;
+  adds `TrustedProxiesTest` coverage.
+- **Accounting: idempotent chart-of-accounts seeding** — `ChartTemplateService`
+  no longer fails when re-seeding an organisation that already has matching
+  account codes (root cause of duplicate-code-on-org-create errors).
+- **Scheduler: heartbeat HTTP errors are swallowed** — `routes/console.php`
+  pins short connect/read timeouts and catches transport exceptions so a
+  flaky heartbeat endpoint can no longer block the scheduler tick.
+- **i18n: missing fiscal-year translations** for de/fr/it (PR #17 only
+  shipped the English keys).
+
+### Internal
+- `phpunit.xml`: pin `APP_BASE_PATH` so the EE plugin vendor tree does not
+  break Laravel's base-path inference under tests.
+
+---
+
 ## [3.3.0] — 2026-05-12
 
 ### Added
