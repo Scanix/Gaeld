@@ -50,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI: contact form redesigned** — contact create/edit pages now use a
   compact tabbed layout (general, address, banking) replacing the previous
   single-scroll form.
+- **UI: status badges** — replaced inline `<span>` badges with the shared
+  `Badge` component across `FiscalYears/Index`, `Billing/Plans`, and
+  `SaasAdmin/Dashboard`; `statusClasses.js` now exports variant-name maps
+  instead of raw CSS class strings.
 
 ### Fixed
 - **Banking: pain.001 SEPA SvcLvl + auto BIC hotfix** — corrects missing
@@ -87,12 +91,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **postcss CVE GHSA-qx2v-qp2m-jg93** — bumped `vue` to 3.5.34 and `vite`
   to 8.0.13 to force transitive `postcss` to ≥ 8.5.10; added
   `pnpm.overrides` as a lockfile-level safety net.
-
-### Changed
-- **UI: status badges** — replaced inline `<span>` badges with the shared
-  `Badge` component across `FiscalYears/Index`, `Billing/Plans`, and
-  `SaasAdmin/Dashboard`; `statusClasses.js` now exports variant-name maps
-  instead of raw CSS class strings.
 
 ### Dependencies
 - `tailwindcss` 4.2.2 → 4.3.0
