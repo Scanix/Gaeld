@@ -24,6 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   seeded from active balance-sheet accounts; `RecordOpeningBalancesAction`
   posts a balanced opening entry on demand, plugging the diff into
   account 9000.
+- **Security: organization API token audit log** — every API token request
+  against an organisation is now recorded in the activity log.
+- **Security: defense-in-depth `authorize()` on API FormRequests** — all
+  API form requests explicitly enforce authorization so policy checks
+  cannot be accidentally bypassed.
+- **API: invoice line cap** — `POST /invoices` rejects payloads with more
+  than 500 lines, preventing runaway memory usage.
+- **Jobs: harden `GenerateRecurringInvoicesJob` retry policy** — back-off
+  and failure handling improved to avoid silent drops on transient errors.
 
 ### Fixed
 - **HTTP: trust reverse proxy headers for HTTPS detection (#18)** — fixes
@@ -37,6 +46,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   flaky heartbeat endpoint can no longer block the scheduler tick.
 - **i18n: missing fiscal-year translations** for de/fr/it (PR #17 only
   shipped the English keys).
+- **Security: secrets and tokens redacted from User activity log** — API
+  keys and token values are no longer stored in plain text in activity
+  log payloads.
+- **Invoicing: N+1 queries eliminated** — Invoice relations are now
+  eager-loaded, removing per-row queries on list and export views.
+- **Signup: repair accounts schema + free-plan copy + registration gate** —
+  fixes a schema inconsistency that caused 500 errors on new sign-ups.
 
 ### Security
 - **postcss CVE GHSA-qx2v-qp2m-jg93** — bumped `vue` to 3.5.34 and `vite`
