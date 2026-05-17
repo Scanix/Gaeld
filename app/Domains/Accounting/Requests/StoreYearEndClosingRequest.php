@@ -10,6 +10,7 @@ class StoreYearEndClosingRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'fiscal_year_id' => ['nullable', 'string', 'uuid', 'exists:fiscal_years,id'],
             'year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'closing_date' => ['required', 'date'],
             'reference' => ['required', 'string', 'max:50'],

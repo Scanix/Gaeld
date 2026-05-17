@@ -13,9 +13,11 @@ import { useTranslations } from '@/lib/useTranslations'
 import { computed } from 'vue'
 import HelpText from '@/Components/HelpText.vue'
 import EmptyState from '@/Components/UI/EmptyState.vue'
-import { HelpCircle, BookText } from 'lucide-vue-next'
+import Button from '@/Components/UI/Button.vue'
+import { Link } from '@inertiajs/vue3'
+import { HelpCircle, BookText, Plus } from 'lucide-vue-next'
 
-defineProps({ entries: Object })
+defineProps({ entries: Object, can: { type: Object, default: () => ({ create: false, delete: false }) } })
 
 const { t } = useTranslations()
 const { formatCurrency, formatDate } = useFormatters()
@@ -34,7 +36,13 @@ const columns = computed(() => [
       <p>{{ t('help_journal_text') }}</p>
     </HelpText>
 
-    <div class="mb-4 flex justify-end">
+    <div class="mb-4 flex justify-end gap-2">
+      <Link v-if="can.create" href="/accounting/journal-entries/create">
+        <Button>
+          <Plus class="mr-1 h-4 w-4" />
+          {{ t('new_journal_entry') }}
+        </Button>
+      </Link>
       <ExportDropdown base-url="/accounting/journal-entries/export" />
     </div>
 
@@ -47,8 +55,8 @@ const columns = computed(() => [
               :icon="BookText"
               :title="t('empty_journal_entries_title')"
               :description="t('empty_journal_entries_desc')"
-              :action-label="t('go_to_invoices')"
-              action-href="/invoices/create"
+              :action-label="can.create ? t('new_journal_entry') : t('go_to_invoices')"
+              :action-href="can.create ? '/accounting/journal-entries/create' : '/invoices/create'"
             />
           </template>
           <template #cell-is_posted="{ value }">

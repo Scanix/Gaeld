@@ -3,6 +3,7 @@
 namespace App\Domains\Organizations\Models;
 
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\ExpenseCategory;
@@ -128,6 +129,12 @@ class Organization extends Model
     public function accounts(): HasMany
     {
         return $this->hasMany(Account::class);
+    }
+
+    /** @return HasMany<FiscalYear, $this> */
+    public function fiscalYears(): HasMany
+    {
+        return $this->hasMany(FiscalYear::class);
     }
 
     /** @return HasMany<Contact, $this> */

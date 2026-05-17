@@ -28,6 +28,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust reverse proxies (Coolify, Traefik, nginx, Cloudflare, ...) so that
+        // X-Forwarded-Proto / -For / -Host headers are honoured when generating
+        // URLs and detecting HTTPS. Only enabled when TRUSTED_PROXIES is set, so
+        // bare/local installs are unaffected.
+        $trustedProxies = env('TRUSTED_PROXIES');
+        if (! empty($trustedProxies)) {
+            $middleware->trustProxies(at: $trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)));
+        }
+
         $middleware->prepend(AddSecurityHeaders::class);
 
         $middleware->web(append: [

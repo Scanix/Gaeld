@@ -2,15 +2,21 @@
 
 namespace App\Domains\Accounting\Controllers;
 
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Requests\StoreJournalEntryRequest;
 use App\Domains\Accounting\Services\LedgerQueryService;
+use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use App\Support\CsvExportService;
 use App\Support\PdfExportService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,6 +27,8 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
  */
 class AccountingController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function chartOfAccounts(Request $request): Response
     {
         $this->authorize('viewAny', Account::class);
@@ -65,9 +73,87 @@ class AccountingController extends Controller
             ->orderByDesc('date')
             ->paginate(config('accounting.pagination.default'));
 
+        $user = $request->user();
+
         return Inertia::render('Accounting/JournalEntries', [
             'entries' => $entries,
+            'can' => [
+                'create' => $user?->can('create', JournalEntry::class) ?? false,
+                'delete' => $user?->hasPermissionTo(Permission::AccountingDelete) ?? false,
+            ],
         ]);
+    }
+
+    public function createJournalEntry(CurrentOrganization $currentOrg): Response
+    {
+        $this->authorize('create', JournalEntry::class);
+
+        $accounts = Account::where('organization_id', $currentOrg->id())
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'type'])
+            ->map(fn (Account $a) => [
+                'id' => $a->id,
+                'code' => $a->code,
+                'name' => $a->display_name,
+                'type' => $a->type->value,
+            ]);
+
+        return Inertia::render('Accounting/JournalEntryCreate', [
+            'accounts' => $accounts,
+            'defaultDate' => now()->toDateString(),
+        ]);
+    }
+
+    public function storeJournalEntry(
+        StoreJournalEntryRequest $request,
+        CurrentOrganization $currentOrg,
+        LedgerService $ledger,
+    ): RedirectResponse {
+        $this->authorize('create', JournalEntry::class);
+
+        $validated = $request->validated();
+        $isPosted = (bool) $request->boolean('is_posted', true);
+
+        $lines = array_map(fn (array $line) => new JournalLineData(
+            accountId: (string) $line['account_id'],
+            debit: (string) ($line['debit'] ?? '0'),
+            credit: (string) ($line['credit'] ?? '0'),
+            description: $line['description'] ?? null,
+        ), $validated['lines']);
+
+        $entryData = new JournalEntryData(
+            date: $validated['date'],
+            reference: $validated['reference'] ?? null,
+            description: $validated['description'] ?? null,
+            lines: $lines,
+        );
+
+        try {
+            $isPosted
+                ? $ledger->postEntry($currentOrg->id(), $entryData)
+                : $ledger->createDraft($currentOrg->id(), $entryData);
+        } catch (\Throwable $e) {
+            return $this->backWithError($e);
+        }
+
+        return redirect()->route('accounting.journal')
+            ->with('success', __($isPosted ? 'app.journal_entry_posted' : 'app.journal_entry_draft_saved'));
+    }
+
+    public function destroyJournalEntry(JournalEntry $journalEntry, LedgerService $ledger): RedirectResponse
+    {
+        $this->authorize('delete', $journalEntry);
+
+        try {
+            $journalEntry->lines()->delete();
+            $journalEntry->delete();
+        } catch (\Throwable $e) {
+            return $this->backWithError($e);
+        }
+
+        return redirect()->route('accounting.journal')
+            ->with('success', __('app.journal_entry_deleted'));
     }
 
     public function trialBalance(Request $request, LedgerQueryService $ledgerService, CurrentOrganization $currentOrg): Response

@@ -24,6 +24,7 @@ Proper double-entry bookkeeping, Swiss QR-Bill invoicing, VAT reporting, and ban
 Gäld covers the full accounting workflow for a small Swiss business:
 
 - **Double-entry accounting** — journal, ledger, and trial balance with strict debit/credit balance enforcement
+- **Fiscal year management** — create and close fiscal years, record opening balances, and manage year-end closings
 - **Invoicing** — professional PDFs with Swiss QR-Bill payment slip (ready to print and send)
 - **Expense tracking** — log expenses, attach receipts, categorise by supplier
 - **Swiss VAT (MWST)** — correct rates preconfigured, VAT report ready for the tax authority
@@ -74,21 +75,28 @@ Other useful commands:
 ./gaeld down               # Stop everything
 ```
 
-### Manual
+### Manual (no Docker)
+
+Requires PHP 8.4+, Composer, Node.js 22+, pnpm, PostgreSQL 15+, and Redis 7+.
 
 ```bash
-./vendor/bin/sail composer install
+composer install
 pnpm install && pnpm run build
 cp .env.example .env
-./vendor/bin/sail artisan key:generate
-./vendor/bin/sail artisan gaeld:install
-./vendor/bin/sail up
+php artisan key:generate
+# Edit .env with your DB credentials, then:
+php artisan gaeld:install
+php artisan serve
 ```
+
+Visit `http://localhost:8000`.
 
 ### Updating
 
 ```bash
-./vendor/bin/sail artisan gaeld:update
+php artisan gaeld:update      # manual install
+# or
+./vendor/bin/sail artisan gaeld:update   # Docker / Sail
 ```
 
 Runs pending migrations, clears caches, and restarts the queue worker — safe to run on a live instance.
@@ -112,7 +120,7 @@ Runs pending migrations, clears caches, and restarts the queue worker — safe t
 The codebase follows a domain-driven structure. Each business domain is self-contained under `app/Domains/`:
 
 ```
-Accounting/     — chart of accounts, journal entries, ledger
+Accounting/     — chart of accounts, journal entries, ledger, fiscal years, opening balances
 Banking/        — bank accounts, CAMT import, transaction reconciliation
 Contacts/       — customers and suppliers
 Expenses/       — expense recording and reporting
