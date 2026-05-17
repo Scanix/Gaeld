@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.1] — 2026-05-17
+
+### Changed
+- **Dashboard: removed Getting Started checklist** — the onboarding
+  checklist panel has been removed from the dashboard; it was more
+  distracting than useful and will be replaced by a proper onboarding
+  wizard in a future release.
+
+### Fixed
+- **EE: subscription plan gating now enforced in SaaS mode** — EE features
+  (bank_sync, auto_reconciliation, automation, multi_currency, api_access,
+  rule_engine, advanced_permissions, and others) are now always gated by
+  the organisation's subscription plan when `FEATURE_SAAS=true`. Previously
+  a server-wide flag such as `FEATURE_BANK_SYNC=true` bypassed the per-org
+  plan check, granting every organisation free access to paid features.
+
+---
+
 ## [3.4.0] — 2026-05-17
 
 ### Added
