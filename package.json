@@ -13,9 +13,9 @@
         "@vitejs/plugin-vue": "^6.0.6",
         "autoprefixer": "^10.5.0",
         "laravel-vite-plugin": "^3.0.1",
-        "postcss": "^8.5.9",
+        "postcss": "^8.5.14",
         "tailwindcss": "^4.2.2",
-        "vite": "^8.0.8"
+        "vite": "^8.0.13"
     },
     "dependencies": {
         "@simplewebauthn/browser": "^13.3.0",
@@ -27,11 +27,14 @@
         "maska": "^3.2.0",
         "tailwind-merge": "^3.5.0",
         "vanilla-cookieconsent": "^3.1.0",
-        "vue": "^3.5.32",
+        "vue": "^3.5.34",
         "vue-chartjs": "^5.3.3",
         "zod": "^4.3.6"
     },
     "pnpm": {
+        "overrides": {
+            "postcss": ">=8.5.10"
+        },
         "onlyBuiltDependencies": [
             "@sentry/cli",
             "esbuild"
