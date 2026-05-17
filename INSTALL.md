@@ -17,7 +17,8 @@ cd Gaeld/api
 # 2. Copy environment file
 cp .env.example .env
 
-# 3. Start the containers and wait until ready (composer install runs on first start)
+# 3. Start the containers and wait until ready
+#    (composer install, pnpm build, and key generation run automatically on first start)
 docker compose up -d --wait
 
 # 4. Run the installer
@@ -51,7 +52,7 @@ After seeding:
 
 - PHP 8.4+
 - Composer
-- Node.js 20+ and pnpm
+- Node.js 22+ and pnpm
 - PostgreSQL 15+
 - Redis 7+
 
@@ -63,7 +64,7 @@ git clone https://github.com/Scanix/Gaeld.git
 cd Gaeld/api
 
 # 2. Install PHP dependencies
-./vendor/bin/sail composer install
+composer install
 
 # 3. Install and build frontend
 pnpm install
@@ -71,7 +72,7 @@ pnpm run build
 
 # 4. Configure environment
 cp .env.example .env
-./vendor/bin/sail artisan key:generate
+php artisan key:generate
 
 # 5. Update .env with your database credentials
 # DB_HOST=127.0.0.1
@@ -80,13 +81,13 @@ cp .env.example .env
 # DB_PASSWORD=your_password
 
 # 6. Run the installer
-./vendor/bin/sail artisan gaeld:install
+php artisan gaeld:install
 
 # Or with demo data:
-./vendor/bin/sail artisan gaeld:install --demo
+php artisan gaeld:install --demo
 
 # 7. Start the development server
-./vendor/bin/sail up
+php artisan serve
 ```
 
 Visit `http://localhost:8000` to access the application.
@@ -130,3 +131,55 @@ TRUSTED_PROXIES=10.0.0.5,172.18.0.0/16
 
 Also make sure `APP_URL` uses the public HTTPS URL, e.g.
 `APP_URL=https://accounting.example.com`.
+
+---
+
+## Upgrading
+
+> **Before upgrading:** read the [CHANGELOG](CHANGELOG.md) for breaking
+> changes, and back up your database.
+
+### Docker
+
+```bash
+# 1. Pull latest code
+git pull
+
+# 2. Rebuild the image (picks up PHP/Node changes)
+docker compose build
+
+# 3. Restart containers — composer install and pnpm build run automatically
+docker compose up -d --wait
+
+# 4. Run migrations
+./vendor/bin/sail artisan migrate --force
+
+# 5. Clear compiled caches
+./vendor/bin/sail artisan optimize:clear
+
+# 6. Restart queue workers
+./vendor/bin/sail artisan horizon:terminate
+```
+
+### Manual
+
+```bash
+# 1. Pull latest code
+git pull
+
+# 2. Update PHP dependencies
+composer install --no-dev --optimize-autoloader
+
+# 3. Rebuild frontend assets
+pnpm install
+pnpm run build
+
+# 4. Run migrations
+php artisan migrate --force
+
+# 5. Clear compiled caches
+php artisan optimize:clear
+
+# 6. Restart queue workers
+php artisan horizon:terminate
+```
