@@ -15,19 +15,21 @@ fi
 echo "🔒 Pushing to production — running pre-push checks..."
 echo ""
 
-# 0. Drift guard: production must not be ahead of main
-echo "🔍 [0/2] Checking production is not ahead of main..."
-git fetch gitlab main --quiet 2>/dev/null || git fetch origin main --quiet 2>/dev/null || true
-AHEAD=$(git log gitlab/main..HEAD --oneline 2>/dev/null | wc -l | tr -d ' ')
-if [ "$AHEAD" -gt 0 ]; then
+# 0. Drift guard: production must only differ from CE main in deploy-specific files.
+# Uses origin/main (GitHub CE) as the reference — gitlab/main is the production
+# remote and intentionally differs, so it must never be used for this check.
+echo "🔍 [0/2] Checking production has no unreleased app code..."
+git fetch origin main --quiet 2>/dev/null || true
+UNEXPECTED=$(git diff origin/main HEAD --name-only -- . ':!deploy.php' ':!INSTALL.md' 2>/dev/null | wc -l | tr -d ' ')
+if [ "$UNEXPECTED" -gt 0 ]; then
     echo ""
-    echo "❌ Production is $AHEAD commit(s) ahead of main."
-    echo "   Merge production → main and push main first, then retry."
-    echo "   Run: git checkout main && git merge --ff-only production && git push gitlab main && git push origin main"
+    echo "❌ Production has $UNEXPECTED file(s) with changes not in CE main (origin/main):"
+    git diff origin/main HEAD --name-only -- . ':!deploy.php' ':!INSTALL.md'
+    echo "   Merge your changes to main first, then re-merge main → production."
     echo "   Push to production aborted."
     exit 1
 fi
-echo "✅ Production is in sync with main."
+echo "✅ Production content matches CE main (only deploy-specific files differ)."
 echo ""
 
 # 1. Pint (code style)
