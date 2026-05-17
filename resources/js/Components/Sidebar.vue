@@ -116,6 +116,9 @@ const navigation = computed(() => {
     ]},
     { key: 'accounting', href: '/accounting/journal-entries', icon: BookOpen, children: [
       { key: 'journal_entries', href: '/accounting/journal-entries' },
+      ...(can('accounting.create') ? [
+        { key: 'opening_balances', href: '/accounting/opening-balances' },
+      ] : []),
       { key: 'chart_of_accounts', href: '/accounting/chart-of-accounts' },
       { key: 'vat_rates', href: '/accounting/vat-rates' },
       ...(features.value.social_charges ? [
