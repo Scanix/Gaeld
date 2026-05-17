@@ -101,13 +101,20 @@ class ChartTemplateService
 
             $name = $def->name[$locale] ?? $def->name['en'];
 
-            Account::create([
-                'organization_id' => $organization->id,
-                'code' => $def->code,
-                'name' => $name,
-                'type' => $def->type->value,
-                'is_system' => in_array($def->code, $systemCodes, true),
-            ]);
+            // Use firstOrCreate keyed on (organization_id, code) so the seeder is
+            // idempotent and safe against double form submissions or retries that
+            // would otherwise trigger accounts_organization_id_code_unique.
+            Account::firstOrCreate(
+                [
+                    'organization_id' => $organization->id,
+                    'code' => $def->code,
+                ],
+                [
+                    'name' => $name,
+                    'type' => $def->type->value,
+                    'is_system' => in_array($def->code, $systemCodes, true),
+                ],
+            );
         }
     }
 
@@ -149,23 +156,20 @@ class ChartTemplateService
             ]],
         ];
 
-        $existingCodes = Account::where('organization_id', $organization->id)
-            ->whereIn('code', array_column($systemAccounts, 'code'))
-            ->pluck('code')
-            ->all();
-
         foreach ($systemAccounts as $account) {
-            if (in_array($account['code'], $existingCodes, true)) {
-                continue;
-            }
-
-            Account::create([
-                'organization_id' => $organization->id,
-                'code' => $account['code'],
-                'name' => $account['name'][$locale] ?? $account['name']['en'],
-                'type' => $account['type']->value,
-                'is_system' => true,
-            ]);
+            // firstOrCreate replaces the previous pluck-then-check pattern, which
+            // was racy under concurrent organization creation requests.
+            Account::firstOrCreate(
+                [
+                    'organization_id' => $organization->id,
+                    'code' => $account['code'],
+                ],
+                [
+                    'name' => $account['name'][$locale] ?? $account['name']['en'],
+                    'type' => $account['type']->value,
+                    'is_system' => true,
+                ],
+            );
         }
     }
 
