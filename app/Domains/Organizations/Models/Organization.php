@@ -39,6 +39,8 @@ use Illuminate\Support\Carbon;
  * @property array<string, bool>|null $enabled_modules
  * @property string|null $locale
  * @property BusinessType|null $business_type
+ * @property string $setup_mode
+ * @property Carbon|null $founded_at
  * @property bool $require_two_factor
  * @property int|null $default_payment_terms_days
  * @property Carbon|null $created_at
@@ -72,6 +74,8 @@ class Organization extends Model
         'invoice_email_subject',
         'invoice_email_body',
         'enabled_modules',
+        'setup_mode',
+        'founded_at',
     ];
 
     protected function casts(): array
@@ -82,6 +86,7 @@ class Organization extends Model
             'closed_fiscal_years' => 'array',
             'enabled_modules' => 'array',
             'business_type' => BusinessType::class,
+            'founded_at' => 'date',
         ];
     }
 

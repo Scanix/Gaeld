@@ -1990,6 +1990,17 @@ return [
     'step_account' => 'Account',
     'step_organization' => 'Organization',
     'step_settings' => 'Settings',
+    'step_setup_mode' => 'Setup Mode',
+    'setup_mode_desc' => 'This helps us guide you to the right first steps.',
+    'setup_mode_fresh' => 'Starting fresh',
+    'setup_mode_fresh_desc' => 'No prior accounting records — I\'m starting from scratch.',
+    'setup_mode_migrating' => 'Migrating from another system',
+    'setup_mode_migrating_desc' => 'I have prior-year books I want to import or enter as opening balances.',
+    'vat_threshold_hint' => 'Swiss law requires VAT registration above CHF 100,000 annual turnover.',
+    'founded_at' => 'Founding date',
+    'founded_at_hint' => 'Optional. Used to suggest a fiscal year start date.',
+    'opening_balances_fresh_start_title' => 'Starting fresh?',
+    'opening_balances_fresh_start_text' => 'If this is your first year in Gäld, you can skip opening balances. They are only needed when migrating from another accounting system.',
     'back' => 'Back',
 
     // UI & layout

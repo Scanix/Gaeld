@@ -1951,6 +1951,17 @@ return [
     'step_account' => 'Konto',
     'step_organization' => 'Organisation',
     'step_settings' => 'Einstellungen',
+    'step_setup_mode' => 'Startmodus',
+    'setup_mode_desc' => 'So können wir Sie zu den richtigen ersten Schritten führen.',
+    'setup_mode_fresh' => 'Neustart',
+    'setup_mode_fresh_desc' => 'Keine vorherigen Buchhaltungsunterlagen — ich fange von vorne an.',
+    'setup_mode_migrating' => 'Migration von einem anderen System',
+    'setup_mode_migrating_desc' => 'Ich habe Bücher aus Vorjahren, die ich importieren oder als Eröffnungssalden eingeben möchte.',
+    'vat_threshold_hint' => 'Das Schweizer Recht verlangt eine MWST-Registrierung ab CHF 100\'000 Jahresumsatz.',
+    'founded_at' => 'Gründungsdatum',
+    'founded_at_hint' => 'Optional. Wird verwendet, um ein Geschäftsjahresbeginn vorzuschlagen.',
+    'opening_balances_fresh_start_title' => 'Neustart?',
+    'opening_balances_fresh_start_text' => 'Wenn dies Ihr erstes Jahr in Gäld ist, können Sie die Eröffnungssalden überspringen. Sie werden nur bei der Migration von einem anderen Buchhaltungssystem benötigt.',
     'back' => 'Zurück',
 
     // UI & layout

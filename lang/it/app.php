@@ -1923,6 +1923,17 @@ return [
     'step_account' => 'Account',
     'step_organization' => 'Organizzazione',
     'step_settings' => 'Impostazioni',
+    'step_setup_mode' => 'Modalità di avvio',
+    'setup_mode_desc' => 'Questo ci aiuta a guidarla verso i primi passi giusti.',
+    'setup_mode_fresh' => 'Partenza da zero',
+    'setup_mode_fresh_desc' => 'Nessun archivio contabile precedente — parto da zero.',
+    'setup_mode_migrating' => 'Migrazione da un altro sistema',
+    'setup_mode_migrating_desc' => 'Ho i libri degli anni precedenti da importare o inserire come saldi di apertura.',
+    'vat_threshold_hint' => 'La legge svizzera richiede la registrazione IVA oltre CHF 100\'000 di fatturato annuo.',
+    'founded_at' => 'Data di fondazione',
+    'founded_at_hint' => 'Opzionale. Usato per suggerire la data di inizio esercizio.',
+    'opening_balances_fresh_start_title' => 'Partenza da zero?',
+    'opening_balances_fresh_start_text' => 'Se questo è il primo anno in Gäld, è possibile saltare i saldi di apertura. Sono necessari solo durante una migrazione da un altro sistema contabile.',
     'back' => 'Indietro',
 
     // UI & layout

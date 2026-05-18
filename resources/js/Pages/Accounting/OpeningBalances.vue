@@ -17,6 +17,7 @@ const props = defineProps({
   accounts: { type: Array, default: () => [] },
   defaultDate: { type: String, default: '' },
   existingOpening: { type: Object, default: null },
+  isStartingFresh: { type: Boolean, default: false },
 })
 
 const { t } = useTranslations()
@@ -73,6 +74,11 @@ function submit() {
       <p>{{ t('opening_balances_help') }}</p>
       <p class="mt-2">{{ t('opening_balances_sign_help') }}</p>
     </HelpText>
+
+    <div v-if="props.isStartingFresh && !existingOpening" class="mb-4 rounded-md border border-[hsl(var(--primary)/0.3)] bg-[hsl(var(--primary)/0.06)] p-4 text-sm">
+      <p class="font-medium text-[hsl(var(--primary))]">{{ t('opening_balances_fresh_start_title') }}</p>
+      <p class="mt-1 text-[hsl(var(--muted-foreground))]">{{ t('opening_balances_fresh_start_text') }}</p>
+    </div>
 
     <div v-if="existingOpening" class="mb-4 rounded-md border border-[hsl(var(--warning)/0.4)] bg-[hsl(var(--warning)/0.1)] p-4 text-sm">
       <p>

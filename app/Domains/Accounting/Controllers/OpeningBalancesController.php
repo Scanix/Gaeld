@@ -27,6 +27,7 @@ class OpeningBalancesController extends Controller
     {
         $this->authorize('create', JournalEntry::class);
 
+        $org = $currentOrg->get();
         $orgId = $currentOrg->id();
 
         $balanceSheetTypes = [
@@ -58,6 +59,7 @@ class OpeningBalancesController extends Controller
             'accounts' => $accounts,
             'defaultDate' => sprintf('%d-01-01', now()->year),
             'existingOpening' => $existingOpening,
+            'isStartingFresh' => $org->setup_mode === 'fresh',
         ]);
     }
 
