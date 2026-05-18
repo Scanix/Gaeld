@@ -199,6 +199,10 @@ return [
     'action_cards_widget' => 'Avvisi e Azioni',
     'saving' => 'Salvataggio…',
     'reset' => 'Ripristina',
+    'dashboard_empty_state_title' => 'Pronti per iniziare?',
+    'dashboard_empty_state_desc' => 'Nessuna attività ancora. Crea la tua prima fattura o registra una spesa per iniziare.',
+    'dashboard_create_first_invoice' => 'Crea la mia prima fattura',
+    'dashboard_export_for_accountant' => 'Esporta per il mio contabile',
 
     // Invoices
     'create_invoice' => 'Crea fattura',
@@ -1249,9 +1253,9 @@ return [
     'export_content_vat' => 'Dichiarazione IVA (modulo AFC)',
     'export_content_invoices' => 'Fatture clienti',
     'export_content_expenses' => 'Spese con giustificativi',
-    'export_format_note' => 'Tutti i documenti sono generati in PDF e CSV, pronti per essere consegnati al fiduciario.',
-    'help_export_title' => 'Cosa consegnare al fiduciario',
-    'help_export_text' => 'A fine esercizio, il fiduciario ha bisogno di un dossier contabile completo. Questo export genera un archivio ZIP con tutti i giornali, rapporti, fatture e dichiarazioni IVA dell\'esercizio selezionato.',
+    'export_format_note' => 'Tutti i documenti sono generati in PDF e CSV, pronti per essere consegnati al contabile.',
+    'help_export_title' => 'Il vostro pacchetto di fine esercizio',
+    'help_export_text' => 'Questo export genera un archivio ZIP con tutti i giornali, rapporti, fatture e dichiarazioni IVA dell\'esercizio selezionato. Inviarlo al contabile a fine esercizio — avrà tutto il necessario.',
 
     // Accounting Checklist
     'accounting_checklist' => 'Checklist contabile',

@@ -199,6 +199,10 @@ return [
     'action_cards_widget' => 'Hinweise & Aktionen',
     'saving' => 'Speichern…',
     'reset' => 'Zurücksetzen',
+    'dashboard_empty_state_title' => 'Bereit loszulegen?',
+    'dashboard_empty_state_desc' => 'Noch keine Aktivität. Erstellen Sie Ihre erste Rechnung oder erfassen Sie eine Ausgabe.',
+    'dashboard_create_first_invoice' => 'Erste Rechnung erstellen',
+    'dashboard_export_for_accountant' => 'Export für meinen Buchhalter',
 
     // Invoices
     'create_invoice' => 'Rechnung erstellen',
@@ -1256,9 +1260,9 @@ return [
     'export_content_vat' => 'MWST-Abrechnung (ESTV-Formular)',
     'export_content_invoices' => 'Kundenrechnungen',
     'export_content_expenses' => 'Aufwände mit Belegen',
-    'export_format_note' => 'Alle Dokumente werden als PDF und CSV generiert, bereit für die Übergabe an Ihren Treuhänder.',
-    'help_export_title' => 'Was Sie Ihrem Treuhänder geben',
-    'help_export_text' => 'Am Jahresende benötigt Ihr Treuhänder vollständige Buchhaltungsunterlagen. Dieser Export generiert ein ZIP-Archiv mit allen Journalen, Berichten, Rechnungen und MWST-Abrechnungen des gewählten Geschäftsjahres.',
+    'export_format_note' => 'Alle Dokumente werden als PDF und CSV generiert, bereit für die Übergabe an Ihren Buchhalter.',
+    'help_export_title' => 'Ihr Jahresabschluss-Paket',
+    'help_export_text' => 'Dieser Export generiert ein ZIP-Archiv mit allen Journalen, Berichten, Rechnungen und MWST-Abrechnungen des gewählten Geschäftsjahres. Senden Sie es am Jahresende an Ihren Buchhalter — er hat damit alles, was er braucht.',
 
     // Getting Started Checklist
     'getting_started_checklist' => 'Erste Schritte',

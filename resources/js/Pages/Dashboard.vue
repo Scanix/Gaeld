@@ -16,6 +16,7 @@ import HelpText from '@/Components/HelpText.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import { normalizeDashboardContract } from '@/lib/inertiaContracts'
 import { Bar } from 'vue-chartjs'
+import { Link } from '@inertiajs/vue3'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -51,6 +52,8 @@ const props = defineProps({
   monthlyBreakdown: { type: Object, default: () => ({ monthIndices: [], revenue: [], expenses: [], forecast: [], revenueItems: [], expenseItems: [], forecastItems: [] }) },
   pendingOcrScans: { type: Number, default: 0 },
   displayYear: { type: Number, default: () => new Date().getFullYear() },
+  isEmptyState: { type: Boolean, default: false },
+  hasExportModule: { type: Boolean, default: false },
 })
 
 const contract = computed(() => normalizeDashboardContract(props))
@@ -263,6 +266,30 @@ const transactionColumns = computed(() => [
         :icon-class="card.color"
         :trend="card.trend"
       />
+    </div>
+
+    <!-- Empty state: no activity yet — guide the user to their first action -->
+    <div
+      v-if="isEmptyState"
+      class="mt-6 rounded-lg border-2 border-dashed border-[hsl(var(--border))] p-8 text-center"
+    >
+      <h3 class="text-lg font-semibold">{{ t('dashboard_empty_state_title') }}</h3>
+      <p class="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{{ t('dashboard_empty_state_desc') }}</p>
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <Link
+          href="/invoices/create"
+          class="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+        >
+          {{ t('dashboard_create_first_invoice') }}
+        </Link>
+        <Link
+          v-if="hasExportModule"
+          href="/accounting/export"
+          class="inline-flex items-center rounded-md border border-[hsl(var(--border))] bg-background px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+        >
+          {{ t('dashboard_export_for_accountant') }}
+        </Link>
+      </div>
     </div>
 
     <!-- OCR Receipts — pending validation (shown only when there are pending scans) -->
