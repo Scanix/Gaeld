@@ -199,6 +199,10 @@ return [
     'action_cards_widget' => 'Alertes & Actions',
     'saving' => 'Enregistrement…',
     'reset' => 'Réinitialiser',
+    'dashboard_empty_state_title' => 'Prêt à commencer ?',
+    'dashboard_empty_state_desc' => 'Aucune activité pour l\'instant. Créez votre première facture ou saisissez une dépense pour démarrer.',
+    'dashboard_create_first_invoice' => 'Créer ma première facture',
+    'dashboard_export_for_accountant' => 'Exporter pour mon comptable',
 
     // Invoices
     'create_invoice' => 'Créer une facture',
@@ -1254,9 +1258,9 @@ return [
     'export_content_vat' => 'Décompte TVA (formulaire AFC)',
     'export_content_invoices' => 'Factures clients',
     'export_content_expenses' => 'Charges avec justificatifs',
-    'export_format_note' => 'Tous les documents sont générés en PDF et CSV, prêts à être transmis à votre fiduciaire.',
-    'help_export_title' => 'Ce qu\'il faut remettre à votre fiduciaire',
-    'help_export_text' => 'En fin d\'exercice, votre fiduciaire a besoin d\'un dossier comptable complet. Cet export génère un fichier ZIP contenant tous les journaux, rapports, factures et décomptes TVA de l\'exercice sélectionné. Envoyez simplement le fichier ZIP à votre comptable.',
+    'export_format_note' => 'Tous les documents sont générés en PDF et CSV, prêts à être transmis à votre comptable.',
+    'help_export_title' => 'Votre dossier de fin d\'exercice',
+    'help_export_text' => 'Cet export génère un fichier ZIP contenant tous les journaux, rapports, factures et décomptes TVA de l\'exercice sélectionné. Transmettez-le à votre comptable en fin d\'exercice — il aura tout ce qu\'il lui faut.',
 
     // Getting Started Checklist
     'getting_started_checklist' => 'Premiers pas',

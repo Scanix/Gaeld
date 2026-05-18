@@ -200,6 +200,10 @@ return [
     'action_cards_widget' => 'Alerts & Actions',
     'saving' => 'Saving…',
     'reset' => 'Reset',
+    'dashboard_empty_state_title' => 'Ready to start?',
+    'dashboard_empty_state_desc' => 'No activity yet. Create your first invoice or record an expense to get started.',
+    'dashboard_create_first_invoice' => 'Create my first invoice',
+    'dashboard_export_for_accountant' => 'Export for my accountant',
 
     // Invoices
     'create_invoice' => 'Create Invoice',
@@ -1294,9 +1298,9 @@ return [
     'export_content_vat' => 'VAT report (AFC form)',
     'export_content_invoices' => 'Customer invoices',
     'export_content_expenses' => 'Expenses with receipts',
-    'export_format_note' => 'All documents are generated in PDF and CSV formats, ready to hand over to your fiduciary.',
-    'help_export_title' => 'What to give your fiduciary',
-    'help_export_text' => 'At year-end, your fiduciary needs a complete accounting package. This export generates a ZIP archive containing all journals, reports, invoices, and VAT declarations for the selected fiscal year. Simply email the ZIP file to your accountant.',
+    'export_format_note' => 'All documents are generated in PDF and CSV formats, ready to share with your accountant.',
+    'help_export_title' => 'Your end-of-year accounting package',
+    'help_export_text' => 'This export generates a ZIP archive containing all journals, reports, invoices, and VAT declarations for the selected fiscal year. Send it to your accountant at year-end — they will have everything they need.',
 
     // Getting Started Checklist
     'getting_started_checklist' => 'Getting Started',
