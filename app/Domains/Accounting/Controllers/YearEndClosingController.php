@@ -240,7 +240,7 @@ class YearEndClosingController extends Controller
             $org->closeFiscalYear($year);
 
             if ($fiscalYear !== null) {
-                $this->fiscalYears->close($fiscalYear, $request->user());
+                $nextYearCreated = $this->fiscalYears->close($fiscalYear, $request->user());
             }
 
             // Archive all documents for the closed fiscal year (Swiss OR 10-year retention)
@@ -253,7 +253,10 @@ class YearEndClosingController extends Controller
         }
 
         return redirect()->route('accounting.closing')
-            ->with('success', __('app.year_end_closing_done'));
+            ->with('success', ($nextYearCreated ?? false)
+                ? __('app.year_end_closing_done_next_created')
+                : __('app.year_end_closing_done')
+            );
     }
 
     public function reopen(ReopenFiscalYearRequest $request, CurrentOrganization $currentOrg): RedirectResponse

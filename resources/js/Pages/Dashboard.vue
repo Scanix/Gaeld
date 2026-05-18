@@ -11,7 +11,7 @@ import StatCard from '@/Components/UI/StatCard.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { useTheme } from '@/lib/useTheme'
-import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X, AlertTriangle, Receipt, Target, ScanLine } from 'lucide-vue-next'
+import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X, AlertTriangle, Receipt, Target, ScanLine, Clock } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import { normalizeDashboardContract } from '@/lib/inertiaContracts'
@@ -54,6 +54,7 @@ const props = defineProps({
   displayYear: { type: Number, default: () => new Date().getFullYear() },
   isEmptyState: { type: Boolean, default: false },
   hasExportModule: { type: Boolean, default: false },
+  expiredFiscalYear: { type: Object, default: null },
 })
 
 const contract = computed(() => normalizeDashboardContract(props))
@@ -288,6 +289,32 @@ const transactionColumns = computed(() => [
           class="inline-flex items-center rounded-md border border-[hsl(var(--border))] bg-background px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
         >
           {{ t('dashboard_export_for_accountant') }}
+        </Link>
+      </div>
+    </div>
+
+    <!-- Expired fiscal year banner — prompt the user to close it -->
+    <div
+      v-if="expiredFiscalYear"
+      class="mt-6 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-4"
+    >
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex items-start gap-3">
+          <Clock class="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div>
+            <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
+              {{ t('dashboard_fiscal_year_expired_title', { year: expiredFiscalYear.name }) }}
+            </p>
+            <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
+              {{ t('dashboard_fiscal_year_expired_desc') }}
+            </p>
+          </div>
+        </div>
+        <Link
+          :href="`/accounting/closing?fiscal_year_id=${expiredFiscalYear.id}`"
+          class="shrink-0 inline-flex items-center rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 transition-colors"
+        >
+          {{ t('dashboard_close_year') }}
         </Link>
       </div>
     </div>

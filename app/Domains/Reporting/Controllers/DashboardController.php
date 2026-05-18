@@ -2,7 +2,9 @@
 
 namespace App\Domains\Reporting\Controllers;
 
+use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Organizations\Enums\OrganizationModule;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Services\DashboardService;
@@ -29,9 +31,20 @@ class DashboardController extends Controller
             && $metrics['expenses'] === '0.00'
             && count($metrics['recentTransactions']) === 0;
 
+        $expiredFiscalYear = FiscalYear::query()
+            ->where('organization_id', $orgId)
+            ->where('status', FiscalYearStatus::Expired->value)
+            ->orderBy('end_date', 'desc')
+            ->first();
+
         return Inertia::render('Dashboard', array_merge($metrics, [
             'isEmptyState' => $isEmptyState,
             'hasExportModule' => FeatureFlag::enabledForOrg(OrganizationModule::FiduciaryExport->value, $org),
+            'expiredFiscalYear' => $expiredFiscalYear ? [
+                'id' => $expiredFiscalYear->id,
+                'name' => $expiredFiscalYear->name,
+                'end_date' => $expiredFiscalYear->end_date->toDateString(),
+            ] : null,
         ]));
     }
 }
