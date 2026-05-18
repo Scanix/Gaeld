@@ -62,6 +62,12 @@ const columns = computed(() => [
           <template #cell-is_posted="{ value }">
             <Badge :variant="value ? 'success' : 'warning'">{{ value ? t('posted') : t('draft') }}</Badge>
           </template>
+          <template #cell-reference="{ value, row }">
+            <span class="inline-flex items-center gap-2">
+              {{ value }}
+              <Badge v-if="row.type === 'historical_summary'" variant="secondary">{{ t('historical_summary_badge') }}</Badge>
+            </span>
+          </template>
           <template #expand-row="{ row }">
             <div v-if="row.lines?.length" class="overflow-x-auto">
               <table class="w-full text-sm">

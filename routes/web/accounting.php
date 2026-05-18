@@ -30,6 +30,7 @@ Route::post('/accounting/journal-entries', [AccountingController::class, 'storeJ
 Route::delete('/accounting/journal-entries/{journalEntry}', [AccountingController::class, 'destroyJournalEntry'])->name('accounting.journal-entries.destroy');
 Route::get('/accounting/opening-balances', [OpeningBalancesController::class, 'index'])->name('accounting.opening-balances.index');
 Route::post('/accounting/opening-balances', [OpeningBalancesController::class, 'store'])->name('accounting.opening-balances.store');
+Route::post('/accounting/opening-balances/historical', [OpeningBalancesController::class, 'storeHistorical'])->name('accounting.opening-balances.historical');
 Route::get('/accounting/trial-balance', [AccountingController::class, 'trialBalance'])->name('accounting.trial-balance');
 Route::get('/accounting/trial-balance/export/{format}', [AccountingController::class, 'exportTrialBalance'])->name('accounting.trial-balance.export');
 Route::get('/accounting/journal-entries/export/{format}', [AccountingController::class, 'exportJournalEntries'])->name('accounting.journal-entries.export');
