@@ -2003,6 +2003,13 @@ return [
     'opening_balances_fresh_start_text' => 'If this is your first year in Gäld, you can skip opening balances. They are only needed when migrating from another accounting system.',
     'back' => 'Back',
 
+    // Year-end experience (Phase 3)
+    'fiscal_year_expired_notification_body' => 'Your fiscal year :year ended on :date. Time to close it and start your next year.',
+    'dashboard_fiscal_year_expired_title' => 'Your :year fiscal year has ended',
+    'dashboard_fiscal_year_expired_desc' => 'Close it to finalize your accounts and start the next year.',
+    'dashboard_close_year' => 'Close Year',
+    'year_end_closing_done_next_created' => 'Year-end closing completed. A new fiscal year has been set up for next year.',
+
     // UI & layout
     'skip_to_content' => 'Skip to content',
     'setup_wizard' => 'Setup Wizard',

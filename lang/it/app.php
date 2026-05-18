@@ -1936,6 +1936,13 @@ return [
     'opening_balances_fresh_start_text' => 'Se questo è il primo anno in Gäld, è possibile saltare i saldi di apertura. Sono necessari solo durante una migrazione da un altro sistema contabile.',
     'back' => 'Indietro',
 
+    // Year-end experience (Phase 3)
+    'fiscal_year_expired_notification_body' => 'Il vostro anno fiscale :year è terminato il :date. È il momento di chiuderlo e avviare il prossimo anno.',
+    'dashboard_fiscal_year_expired_title' => 'Il vostro anno fiscale :year è terminato',
+    'dashboard_fiscal_year_expired_desc' => 'Chiudetelo per finalizzare i conti e iniziare il prossimo anno.',
+    'dashboard_close_year' => 'Chiudi anno',
+    'year_end_closing_done_next_created' => 'Chiusura d\'esercizio completata. Un nuovo anno fiscale è stato creato per l\'anno prossimo.',
+
     // UI & layout
     'skip_to_content' => 'Vai al contenuto',
     'setup_wizard' => 'Assistente di configurazione',

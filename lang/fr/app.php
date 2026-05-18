@@ -1988,6 +1988,13 @@ return [
     'opening_balances_fresh_start_text' => 'Si c\'est votre première année dans Gäld, vous pouvez ignorer les soldes d\'ouverture. Ils ne sont nécessaires que lors d\'une migration depuis un autre système.',
     'back' => 'Retour',
 
+    // Year-end experience (Phase 3)
+    'fiscal_year_expired_notification_body' => 'Votre exercice fiscal :year a pris fin le :date. Il est temps de le clôturer et de commencer votre prochain exercice.',
+    'dashboard_fiscal_year_expired_title' => 'Votre exercice fiscal :year est terminé',
+    'dashboard_fiscal_year_expired_desc' => 'Clôturez-le pour finaliser vos comptes et commencer le prochain exercice.',
+    'dashboard_close_year' => 'Clôturer l\'exercice',
+    'year_end_closing_done_next_created' => 'Clôture de l\'exercice effectuée. Un nouvel exercice fiscal a été créé pour l\'année prochaine.',
+
     // UI & layout
     'skip_to_content' => 'Aller au contenu',
     'setup_wizard' => 'Assistant de configuration',

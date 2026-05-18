@@ -1964,6 +1964,13 @@ return [
     'opening_balances_fresh_start_text' => 'Wenn dies Ihr erstes Jahr in Gäld ist, können Sie die Eröffnungssalden überspringen. Sie werden nur bei der Migration von einem anderen Buchhaltungssystem benötigt.',
     'back' => 'Zurück',
 
+    // Year-end experience (Phase 3)
+    'fiscal_year_expired_notification_body' => 'Ihr Geschäftsjahr :year ist am :date abgelaufen. Schliessen Sie es ab und starten Sie das nächste Jahr.',
+    'dashboard_fiscal_year_expired_title' => 'Ihr Geschäftsjahr :year ist abgelaufen',
+    'dashboard_fiscal_year_expired_desc' => 'Schliessen Sie es ab, um Ihre Konten zu finalisieren und das nächste Jahr zu beginnen.',
+    'dashboard_close_year' => 'Geschäftsjahr abschliessen',
+    'year_end_closing_done_next_created' => 'Jahresabschluss abgeschlossen. Ein neues Geschäftsjahr wurde für das nächste Jahr angelegt.',
+
     // UI & layout
     'skip_to_content' => 'Zum Inhalt springen',
     'setup_wizard' => 'Einrichtungsassistent',
