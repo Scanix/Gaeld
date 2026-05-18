@@ -24,9 +24,11 @@ class SetupWizardRequest extends FormRequest
             'org_postal_code' => 'nullable|string|max:10',
             'org_canton' => 'nullable|string|size:2',
             'org_vat_number' => 'nullable|string|max:50',
+            'org_founded_at' => 'nullable|date',
             'currency' => 'required|string|size:3',
             'locale' => ['required', 'string', Rule::in(config('accounting.supported_locales'))],
             'business_type' => ['nullable', 'string', Rule::in(BusinessType::values())],
+            'setup_mode' => ['nullable', 'string', Rule::in(['fresh', 'migrating'])],
         ];
     }
 }

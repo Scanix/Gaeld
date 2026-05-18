@@ -11,7 +11,7 @@ import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { currencyOptions } from '@/lib/contactOptions'
-import { Check, User, Building2, Calculator } from 'lucide-vue-next'
+import { Check, User, Building2, Calculator, Sparkles, ArrowRightLeft } from 'lucide-vue-next'
 
 const cantons = ['AG','AI','AR','BE','BL','BS','FR','GE','GL','GR','JU','LU','NE','NW','OW','SG','SH','SO','SZ','TG','TI','UR','VD','VS','ZG','ZH']
 
@@ -21,6 +21,7 @@ const form = useForm({
   user_password: '',
   user_password_confirmation: '',
   business_type: '',
+  setup_mode: 'fresh',
   org_name: '',
   org_legal_name: '',
   org_address: '',
@@ -28,6 +29,7 @@ const form = useForm({
   org_postal_code: '',
   org_canton: '',
   org_vat_number: '',
+  org_founded_at: '',
   currency: 'CHF',
   locale: 'en',
 })
@@ -44,6 +46,8 @@ function submit() {
       }
       if (form.errors.business_type) {
         currentStep.value = 1
+      } else if (form.errors.setup_mode) {
+        currentStep.value = 2
       }
     },
   })
@@ -63,6 +67,7 @@ const currentStep = ref(0)
 const steps = [
   { key: 'account', label: () => t('step_account') },
   { key: 'business_type', label: () => t('step_business_type') },
+  { key: 'setup_mode', label: () => t('step_setup_mode') },
   { key: 'organization', label: () => t('step_organization') },
   { key: 'settings', label: () => t('step_settings') },
 ]
@@ -73,12 +78,18 @@ const businessTypes = [
   { value: 'fiduciary', icon: Calculator, label: () => t('business_type_fiduciary'), desc: () => t('business_type_fiduciary_desc') },
 ]
 
+const setupModes = [
+  { value: 'fresh', icon: Sparkles, label: () => t('setup_mode_fresh'), desc: () => t('setup_mode_fresh_desc') },
+  { value: 'migrating', icon: ArrowRightLeft, label: () => t('setup_mode_migrating'), desc: () => t('setup_mode_migrating_desc') },
+]
+
 // Per-step required fields for client-side validation
 const stepFields = {
   0: ['user_name', 'user_email', 'user_password', 'user_password_confirmation'],
   1: [],
-  2: ['org_name'],
-  3: ['currency', 'locale'],
+  2: [],
+  3: ['org_name'],
+  4: ['currency', 'locale'],
 }
 
 const stepErrors = reactive({})
@@ -196,8 +207,29 @@ function prevStep() {
             <p v-if="form.errors.business_type" class="text-sm text-[hsl(var(--destructive))]" role="alert">{{ form.errors.business_type }}</p>
           </fieldset>
 
-          <!-- Step 3: Organization -->
+          <!-- Step 3: Setup Mode -->
           <fieldset v-show="currentStep === 2" class="space-y-6">
+            <legend class="text-lg font-semibold">{{ t('step_setup_mode') }}</legend>
+            <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('setup_mode_desc') }}</p>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <button
+                v-for="mode in setupModes"
+                :key="mode.value"
+                type="button"
+                class="flex flex-col items-start gap-3 rounded-xl border-2 p-6 text-left transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]"
+                :class="form.setup_mode === mode.value ? 'border-[hsl(var(--primary))] bg-[hsl(var(--accent))]' : 'border-[hsl(var(--border))]"
+                @click="form.setup_mode = mode.value"
+              >
+                <component :is="mode.icon" class="h-7 w-7" :class="form.setup_mode === mode.value ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]'" />
+                <span class="font-semibold">{{ mode.label() }}</span>
+                <span class="text-sm text-[hsl(var(--muted-foreground))]">{{ mode.desc() }}</span>
+              </button>
+            </div>
+            <p v-if="form.errors.setup_mode" class="text-sm text-[hsl(var(--destructive))]" role="alert">{{ form.errors.setup_mode }}</p>
+          </fieldset>
+
+          <!-- Step 4: Organization -->
+          <fieldset v-show="currentStep === 3" class="space-y-6">
             <legend class="text-lg font-semibold">{{ t('organization') }}</legend>
             <FormInput id="org_name" v-model="form.org_name" :label="t('company_name')" :error="stepErrors.org_name || form.errors.org_name" required />
             <FormInput id="org_legal_name" v-model="form.org_legal_name" :label="t('legal_name_different')" />
@@ -208,12 +240,13 @@ function prevStep() {
             </div>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormSelect id="org_canton" v-model="form.org_canton" :label="t('canton')" :options="cantons" :placeholder="t('select')" />
-              <FormInput id="org_vat_number" v-model="form.org_vat_number" :label="t('vat_number')" :placeholder="t('placeholder_vat_uid')" />
+              <FormInput id="org_vat_number" v-model="form.org_vat_number" :label="t('vat_number')" :placeholder="t('placeholder_vat_uid')" :hint="t('vat_threshold_hint')" />
             </div>
+            <FormInput id="org_founded_at" v-model="form.org_founded_at" type="date" :label="t('founded_at')" :hint="t('founded_at_hint')" />
           </fieldset>
 
-          <!-- Step 4: Settings -->
-          <fieldset v-show="currentStep === 3" class="space-y-6">
+          <!-- Step 5: Settings -->
+          <fieldset v-show="currentStep === 4" class="space-y-6">
             <legend class="text-lg font-semibold">{{ t('settings') }}</legend>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormSelect id="currency" v-model="form.currency" :label="t('currency')" :options="currencyOptions(t)" :error="stepErrors.currency || form.errors.currency" required />

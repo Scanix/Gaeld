@@ -1975,6 +1975,17 @@ return [
     'step_account' => 'Compte',
     'step_organization' => 'Organisation',
     'step_settings' => 'Paramètres',
+    'step_setup_mode' => 'Mode de démarrage',
+    'setup_mode_desc' => 'Cela nous permet de vous orienter vers les premières étapes adaptées.',
+    'setup_mode_fresh' => 'Démarrage vierge',
+    'setup_mode_fresh_desc' => 'Aucune comptabilité antérieure — je pars de zéro.',
+    'setup_mode_migrating' => 'Migration depuis un autre système',
+    'setup_mode_migrating_desc' => 'J\'ai des livres des années précédentes à importer ou saisir comme soldes d\'ouverture.',
+    'vat_threshold_hint' => 'La loi suisse exige l\'assujettissement TVA au-delà de CHF 100 000 de chiffre d\'affaires annuel.',
+    'founded_at' => 'Date de fondation',
+    'founded_at_hint' => 'Optionnel. Utilisé pour suggérer la date de début d\'exercice.',
+    'opening_balances_fresh_start_title' => 'Vous démarrez de zéro ?',
+    'opening_balances_fresh_start_text' => 'Si c\'est votre première année dans Gäld, vous pouvez ignorer les soldes d\'ouverture. Ils ne sont nécessaires que lors d\'une migration depuis un autre système.',
     'back' => 'Retour',
 
     // UI & layout
