@@ -128,7 +128,7 @@ final class GenerateArchivePdfAction
         $report = $this->reportingService->profitAndLoss($org->id, $fromDate, $toDate);
 
         return Pdf::loadView('exports.profit-and-loss', [
-            'organizationName' => $org->name,
+            'organization' => $org,
             'period' => ['from' => $fromDate, 'to' => $toDate],
             'revenue' => $report['revenue'],
             'expenses' => $report['expenses'],
@@ -143,7 +143,7 @@ final class GenerateArchivePdfAction
         $report = $this->reportingService->balanceSheet($org->id, $asOfDate);
 
         return Pdf::loadView('exports.balance-sheet', [
-            'organizationName' => $org->name,
+            'organization' => $org,
             'asOfDate' => $asOfDate,
             'assets' => $report['assets'],
             'liabilities' => $report['liabilities'],
@@ -163,7 +163,7 @@ final class GenerateArchivePdfAction
             ->get();
 
         return Pdf::loadView('exports.journal-entries', [
-            'organizationName' => $org->name,
+            'organization' => $org,
             'fromDate' => $fromDate,
             'toDate' => $toDate,
             'entries' => $entries,

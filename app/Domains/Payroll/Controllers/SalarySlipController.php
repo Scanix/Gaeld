@@ -2,6 +2,7 @@
 
 namespace App\Domains\Payroll\Controllers;
 
+use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\PostPayrollAction;
 use App\Domains\Payroll\Models\Employee;
@@ -113,10 +114,11 @@ class SalarySlipController extends Controller
         $this->authorize('view', $slip->employee);
 
         $slip->load('employee');
+        $org = Organization::findOrFail($slip->organization_id);
 
         return $pdf->download(
             'exports.salary-slip',
-            ['slip' => $slip],
+            ['slip' => $slip, 'organization' => $org],
             "salary-slip-{$slip->employee->last_name}-{$slip->period_year}-{$slip->period_month}.pdf",
         );
     }

@@ -51,6 +51,9 @@ class GenerateQrInvoicePdfAction
         $langMap = ['en' => 'en', 'de' => 'de', 'fr' => 'fr', 'it' => 'it', 'rm' => 'de'];
         $qrLang = $langMap[$language] ?? 'en';
 
+        // Place the QR payment slip + receipt on a dedicated second page.
+        $tcpdf->AddPage();
+
         $output = new TcPdfOutput($qrBill, $qrLang, $tcpdf);
         $displayOptions = (new DisplayOptions)->setPrintable(false);
         $output->setDisplayOptions($displayOptions)->getPaymentPart();

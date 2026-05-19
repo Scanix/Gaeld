@@ -14,6 +14,7 @@ return [
         'generated_by' => 'Erstellt von Gäld',
         'generated_on' => 'Erstellt am',
         'grand_total' => 'Gesamttotal',
+        'page' => 'Seite',
         'name' => 'Name',
         'no_financing_activities' => 'Keine Finanzierungstätigkeiten',
         'no_investing_activities' => 'Keine Investitionstätigkeiten',
@@ -32,6 +33,7 @@ return [
         'total_liabilities' => 'Total Fremdkapital',
         'equity' => 'Eigenkapital',
         'total_equity' => 'Total Eigenkapital',
+        'total_liabilities_equity' => 'Total Fremdkapital und Eigenkapital',
     ],
     'profit_loss' => [
         'title' => 'Erfolgsrechnung',
