@@ -494,9 +494,6 @@ return [
 
     // Auth
     'welcome' => 'Welcome to Gäld',
-    'welcome_to_gaeld' => 'Swiss accounting made simple',
-    'welcome_tagline' => 'Manage invoices, expenses, payroll, and VAT — all in one place.',
-    'get_started' => 'Get started',
     'sign_in_account' => 'Sign in to your account',
     'remember_me' => 'Remember me',
     'forgot_password' => 'Forgot password?',
