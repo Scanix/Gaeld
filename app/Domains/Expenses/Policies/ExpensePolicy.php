@@ -32,6 +32,10 @@ class ExpensePolicy extends BasePolicy
 
     public function update(User $user, Expense $expense): bool
     {
+        if ($expense->archived_at !== null) {
+            return false;
+        }
+
         return $this->belongsToOrganization($user, $expense)
             && $user->hasPermissionTo(Permission::ExpensesEdit)
             && $expense->status->isEditable();
@@ -39,6 +43,10 @@ class ExpensePolicy extends BasePolicy
 
     public function delete(User $user, Expense $expense): bool
     {
+        if ($expense->archived_at !== null) {
+            return false;
+        }
+
         return $this->belongsToOrganization($user, $expense)
             && $user->hasPermissionTo(Permission::ExpensesDelete)
             && $expense->status->isDeletable();

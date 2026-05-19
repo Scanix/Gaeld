@@ -1487,6 +1487,7 @@ return [
     'archive_year_verified' => ':count su :total verificati',
     'archive_year_earliest_expiry' => 'Prima scadenza :date',
     'loading' => 'Caricamento…',
+    'archived_record_locked' => 'Questo :type (ID :id) è archiviato legalmente e non può essere modificato.',
     'archive_expires_at' => 'Conservazione scade il',
     'archive_expiring_soon' => 'Scade entro 1 anno',
     'archived' => 'Archiviato',

@@ -9,6 +9,7 @@ use App\Domains\Accounting\Models\ConsolidationGroup;
 use App\Domains\Accounting\Models\CostCenter;
 use App\Domains\Accounting\Models\ExchangeRate;
 use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TaxDeclaration;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Accounting\Policies\ConsolidationGroupPolicy;
@@ -40,11 +41,13 @@ use App\Domains\Organizations\Events\MemberRemoved;
 use App\Domains\Organizations\Jobs\ExportOrganizationDataJob;
 use App\Domains\Organizations\Listeners\RevokeOrganizationTokens;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Reporting\Jobs\GenerateReportsJob;
 use App\Domains\Users\Jobs\ExportUserDataJob;
 use App\Http\Services\GlobalSearchService;
 use App\Listeners\SendHorizonTelegramAlert;
 use App\Support\Listeners\AuthAuditSubscriber;
+use App\Support\Observers\LocksArchivedRecord;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -130,6 +133,17 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(CostCenter::class, CostCenterPolicy::class);
         Gate::policy(ExchangeRate::class, ExchangeRatePolicy::class);
         Gate::policy(ConsolidationGroup::class, ConsolidationGroupPolicy::class);
+
+        // Lock legally archived records (Swiss CO 10-year immutability).
+        $registerLock = function (string $modelClass, string $documentType): void {
+            $observer = new LocksArchivedRecord($documentType);
+            Event::listen("eloquent.updating: {$modelClass}", fn ($model) => $observer->updating($model));
+            Event::listen("eloquent.deleting: {$modelClass}", fn ($model) => $observer->deleting($model));
+        };
+        $registerLock(JournalEntry::class, 'journal_entry');
+        $registerLock(Invoice::class, 'invoice');
+        $registerLock(Expense::class, 'expense');
+        $registerLock(SalarySlip::class, 'salary_slip');
 
         // Cache invalidation: flush tagged caches when models change
         $flushTags = function (string ...$tags) {
