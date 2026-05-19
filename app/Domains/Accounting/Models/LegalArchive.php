@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Models;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -15,7 +16,7 @@ use Illuminate\Support\Carbon;
  * Stores a SHA-256 checksum, the storage path, and a mandatory
  * retention expiry date (typically 10 years per Swiss CO).
  *
- * @property int $id
+ * @property string $id
  * @property string $organization_id
  * @property string $document_type
  * @property string $document_id
@@ -28,7 +29,7 @@ use Illuminate\Support\Carbon;
  */
 class LegalArchive extends Model
 {
-    use Auditable, BelongsToOrganization;
+    use Auditable, BelongsToOrganization, HasUuids;
 
     protected $fillable = [
         'organization_id',

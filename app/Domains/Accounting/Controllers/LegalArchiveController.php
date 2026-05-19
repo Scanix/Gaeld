@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -121,10 +122,28 @@ class LegalArchiveController extends Controller
         );
     }
 
-    public function download(LegalArchive $archive, CurrentOrganization $currentOrg): StreamedResponse
+    public function download(LegalArchive $archive, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('view', $archive);
 
+        return redirect(URL::temporarySignedRoute(
+            'accounting.archives.file',
+            now()->addMinutes(5),
+            ['archive' => $archive->id],
+        ));
+    }
+
+    /**
+     * Serve the archive file via a temporary signed URL.
+     *
+     * This route carries only `ValidateSignature` middleware — no session
+     * required — so the file streams correctly even when opened in a new
+     * browser tab where session cookies are not sent.
+     */
+    public function serveFile(LegalArchive $archive): StreamedResponse
+    {
+        // Authorization is guaranteed by the signed URL generated in
+        // download() or downloadPdf() after an authenticated policy check.
         return Storage::download(
             $archive->storage_path,
             basename($archive->storage_path)
@@ -137,7 +156,7 @@ class LegalArchiveController extends Controller
      * Generates on-demand if it doesn't exist yet so freelancers can always
      * retrieve their Swiss tax filing without going through a closing.
      */
-    public function downloadPdf(int $year, string $type, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): StreamedResponse
+    public function downloadPdf(int $year, string $type, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): RedirectResponse
     {
         $this->authorize('viewAny', LegalArchive::class);
 
@@ -169,11 +188,11 @@ class LegalArchiveController extends Controller
             $pdfAction->recoverFile($archive);
         }
 
-        return Storage::download(
-            $archive->storage_path,
-            sprintf('%s-%d.pdf', $type, $year),
-            ['Content-Type' => 'application/pdf'],
-        );
+        return redirect(URL::temporarySignedRoute(
+            'accounting.archives.file',
+            now()->addMinutes(5),
+            ['archive' => $archive->id],
+        ));
     }
 
     /**
