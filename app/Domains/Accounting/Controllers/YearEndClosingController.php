@@ -12,6 +12,8 @@ use App\Domains\Accounting\Requests\ReopenFiscalYearRequest;
 use App\Domains\Accounting\Requests\StoreYearEndClosingRequest;
 use App\Domains\Accounting\Services\ClosingAccountsService;
 use App\Domains\Accounting\Services\FiscalYearService;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
@@ -75,6 +77,26 @@ class YearEndClosingController extends Controller
 
         [$income, $expenses, $netResult] = $this->closingAccounts->compute($orgId, $from, $to);
 
+        // Step 2 of the wizard — invoices still open in the closing fiscal year.
+        // Informational only: these carry into the new year as receivables.
+        $outstandingInvoices = Invoice::query()
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
+            ->whereBetween('issue_date', [$from, $to])
+            ->with('customer:id,name')
+            ->orderBy('due_date')
+            ->get(['id', 'number', 'customer_id', 'issue_date', 'due_date', 'total', 'status'])
+            ->map(fn (Invoice $inv) => [
+                'id' => $inv->id,
+                'number' => $inv->number,
+                'customer_name' => $inv->customer?->name,
+                'issue_date' => $inv->issue_date->toDateString(),
+                'due_date' => $inv->due_date->toDateString(),
+                'total' => $inv->total,
+                'status' => $inv->status->value,
+                'days_overdue' => max(0, now()->startOfDay()->diffInDays($inv->due_date->startOfDay(), false) * -1),
+            ])
+            ->all();
+
         $startYear = $org->created_at ? $org->created_at->year : (now()->year - 5);
 
         // Include any earlier years that already have journal entries (e.g. back-dated postings).
@@ -106,6 +128,7 @@ class YearEndClosingController extends Controller
             'closedYears' => $org->closed_fiscal_years ?? [],
             'canReopenYear' => $request->user()?->can('reopenYear', Account::class) ?? false,
             'unsettledVatPeriods' => $this->getUnsettledVatPeriods($year),
+            'outstandingInvoices' => $outstandingInvoices,
         ]);
     }
 
