@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Controllers;
 
+use App\Domains\Accounting\Actions\GenerateArchivePdfAction;
 use App\Domains\Accounting\Models\LegalArchive;
 use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Services\CurrentOrganization;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -95,5 +97,104 @@ class LegalArchiveController extends Controller
             $archive->storage_path,
             basename($archive->storage_path)
         );
+    }
+
+    /**
+     * Stream one of the three per-year PDF artefacts (pnl, balance_sheet, journal).
+     *
+     * Generates on-demand if it doesn't exist yet so freelancers can always
+     * retrieve their Swiss tax filing without going through a closing.
+     */
+    public function downloadPdf(int $year, string $type, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): StreamedResponse
+    {
+        $this->authorize('viewAny', LegalArchive::class);
+
+        $documentType = $this->resolveDocumentType($type);
+
+        $archive = LegalArchive::query()
+            ->where('organization_id', $currentOrg->id())
+            ->where('fiscal_year', $year)
+            ->where('document_type', $documentType)
+            ->where('document_id', "pdf-{$year}")
+            ->first();
+
+        if ($archive === null || ! Storage::exists($archive->storage_path)) {
+            $pdfAction->execute($currentOrg->id(), $year, force: true);
+
+            $archive = LegalArchive::query()
+                ->where('organization_id', $currentOrg->id())
+                ->where('fiscal_year', $year)
+                ->where('document_type', $documentType)
+                ->where('document_id', "pdf-{$year}")
+                ->firstOrFail();
+        }
+
+        return Storage::download(
+            $archive->storage_path,
+            sprintf('%s-%d.pdf', $type, $year),
+            ['Content-Type' => 'application/pdf'],
+        );
+    }
+
+    /**
+     * Stream a ZIP bundle containing the three per-year PDFs.
+     */
+    public function downloadYearBundle(int $year, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): BinaryFileResponse
+    {
+        $this->authorize('viewAny', LegalArchive::class);
+
+        $pdfAction->execute($currentOrg->id(), $year);
+
+        $archives = LegalArchive::query()
+            ->where('organization_id', $currentOrg->id())
+            ->where('fiscal_year', $year)
+            ->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])
+            ->get();
+
+        $tmpPath = tempnam(sys_get_temp_dir(), 'archive-bundle-').'.zip';
+        $zip = new \ZipArchive;
+        if ($zip->open($tmpPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            throw new \RuntimeException('Unable to open ZIP archive');
+        }
+
+        foreach ($archives as $archive) {
+            if (! Storage::exists($archive->storage_path)) {
+                continue;
+            }
+            $zip->addFromString(basename($archive->storage_path), Storage::get($archive->storage_path));
+        }
+
+        $zip->close();
+
+        return response()->download(
+            $tmpPath,
+            sprintf('archive-%d.zip', $year),
+            ['Content-Type' => 'application/zip'],
+        )->deleteFileAfterSend();
+    }
+
+    /**
+     * Force regeneration of the three per-year PDF artefacts.
+     */
+    public function regeneratePdfs(int $year, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): RedirectResponse
+    {
+        $this->authorize('viewAny', LegalArchive::class);
+
+        $pdfAction->execute($currentOrg->id(), $year, force: true);
+
+        return back()->with('success', __('app.archive_pdfs_regenerated'));
+    }
+
+    /**
+     * Map the public route parameter to the LegalArchive `document_type` value.
+     */
+    private function resolveDocumentType(string $type): string
+    {
+        return match ($type) {
+            'pnl' => 'pdf_pnl',
+            'balance_sheet' => 'pdf_balance_sheet',
+            'journal' => 'pdf_journal',
+            default => throw new \InvalidArgumentException("Unknown archive PDF type: {$type}"),
+        };
     }
 }
