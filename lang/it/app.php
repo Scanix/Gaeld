@@ -436,6 +436,9 @@ return [
     'delete_bank_account_confirm' => 'Sei sicuro di voler eliminare il conto bancario ":name"? Questa azione non può essere annullata.',
     'bank_account_updated' => 'Conto bancario aggiornato.',
     'bank_account_deleted' => 'Conto bancario eliminato.',
+    'bic_swift' => 'BIC/SWIFT',
+    'bic_autofill_from_iban' => 'Compila BIC da IBAN',
+    'go_to_bank_accounts' => 'Vai ai conti bancari',
     'supplier' => 'Fornitore',
 
     // Reconciliation
@@ -487,6 +490,9 @@ return [
 
     // Auth
     'welcome' => 'Benvenuto su Gäld',
+    'welcome_to_gaeld' => 'La contabilità svizzera semplificata',
+    'welcome_tagline' => 'Gestisci fatture, spese, stipendi e IVA — tutto in un posto.',
+    'get_started' => 'Inizia',
     'sign_in_account' => 'Accedi al tuo account',
     'remember_me' => 'Ricordami',
     'forgot_password' => 'Password dimenticata?',
@@ -711,7 +717,7 @@ return [
     'signup_subtitle' => 'Nessuna carta di credito richiesta. Annulla in qualsiasi momento.',
     'signup_cta' => 'Inizia la prova di :days giorni',
     'signup_cta_free' => 'Crea un account gratuito',
-    'signup_disclaimer' => 'Dopo la prova, verrai reindirizzato a Stripe per aggiungere il tuo metodo di pagamento.',
+    'signup_disclaimer' => 'Verrai reindirizzato a Stripe per inserire i tuoi dati di pagamento. La tua carta non verrà addebitata fino alla fine della prova.',
     'creating_account' => 'Creazione account…',
     'unlimited_invoices' => 'Fatture illimitate',
     'trial_ends_in' => 'La tua prova termina tra :days giorno/i.',
@@ -1346,6 +1352,8 @@ return [
     'settings_default_invoice_notes' => 'Note predefinite sulla fattura',
     'settings_default_invoice_notes_placeholder' => 'es. Grazie per la collaborazione.',
     'qr_iban' => 'QR-IBAN',
+    'qr_iban_moved_title' => 'Il QR-IBAN è stato spostato',
+    'qr_iban_moved_help' => 'Il QR-IBAN è ora gestito nelle impostazioni del conto bancario.',
     'qr_iban_required' => 'Configurare un QR-IBAN nelle impostazioni dell’organizzazione prima di generare una QR-fattura.',
     'qr_iban_placeholder' => 'CH56 0483 5012 3456 7800 9',
     'vat_number_placeholder' => 'CHE-123.456.789',
@@ -1492,6 +1500,9 @@ return [
     'archive_fiscal_year' => 'Archivia esercizio',
     'archive_year_verified' => ':count su :total verificati',
     'archive_year_earliest_expiry' => 'Prima scadenza :date',
+    'archive_generated' => 'Archivio generato con successo.',
+    'fiscal_year_not_closed' => 'L\'esercizio non è chiuso.',
+    'generate_archive' => 'Genera archivio',
     'loading' => 'Caricamento…',
     'archived_record_locked' => 'Questo :type (ID :id) è archiviato legalmente e non può essere modificato.',
     'year_end_wizard_step_review' => 'Verifica saldi',

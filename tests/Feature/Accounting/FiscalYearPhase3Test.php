@@ -186,7 +186,7 @@ class FiscalYearPhase3Test extends TestCase
             'end_date' => '2023-12-31',
         ]);
 
-        $response = $this->actAsOrg()->get('/');
+        $response = $this->actAsOrg()->get('/dashboard');
 
         $response->assertInertia(
             fn ($page) => $page
@@ -198,7 +198,7 @@ class FiscalYearPhase3Test extends TestCase
 
     public function test_dashboard_passes_null_when_no_expired_fiscal_year(): void
     {
-        $response = $this->actAsOrg()->get('/');
+        $response = $this->actAsOrg()->get('/dashboard');
 
         $response->assertInertia(
             fn ($page) => $page
@@ -216,7 +216,7 @@ class FiscalYearPhase3Test extends TestCase
             'end_date' => '2023-12-31',
         ]);
 
-        $response = $this->actAsOrg()->get('/');
+        $response = $this->actAsOrg()->get('/dashboard');
 
         $response->assertInertia(
             fn ($page) => $page

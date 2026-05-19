@@ -28,7 +28,7 @@ class AuthBypassTest extends SecurityTestCase
     public static function protectedWebRoutes(): array
     {
         return [
-            'dashboard' => ['get', '/'],
+            'dashboard' => ['get', '/dashboard'],
             'invoices index' => ['get', '/invoices'],
             'expenses index' => ['get', '/expenses'],
             'contacts index' => ['get', '/contacts'],
@@ -73,14 +73,14 @@ class AuthBypassTest extends SecurityTestCase
     {
         $this->actingAs($this->ownerA)
             ->get('/login')
-            ->assertRedirect('/');
+            ->assertRedirect('/dashboard');
     }
 
     public function test_authenticated_user_cannot_access_register_page(): void
     {
         $this->actingAs($this->ownerA)
             ->get('/register')
-            ->assertRedirect('/');
+            ->assertRedirect('/dashboard');
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -95,7 +95,7 @@ class AuthBypassTest extends SecurityTestCase
 
         $this->actingAs($unverified)
             ->withSession(['current_organization_id' => $this->orgA->id])
-            ->get('/')
+            ->get('/dashboard')
             ->assertRedirectContains('/email/verify');
     }
 

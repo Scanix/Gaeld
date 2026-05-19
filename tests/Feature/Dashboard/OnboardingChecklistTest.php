@@ -27,7 +27,7 @@ class OnboardingChecklistTest extends TestCase
 
     public function test_new_organization_sees_checklist_on_dashboard(): void
     {
-        $response = $this->actAsOrg()->get('/');
+        $response = $this->actAsOrg()->get('/dashboard');
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -41,7 +41,7 @@ class OnboardingChecklistTest extends TestCase
     {
         $this->organization->forceFill(['onboarding_dismissed_at' => now()])->save();
 
-        $response = $this->actAsOrg()->get('/');
+        $response = $this->actAsOrg()->get('/dashboard');
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -95,7 +95,7 @@ class OnboardingChecklistTest extends TestCase
             'customer_id' => $customer->id,
         ]);
 
-        $response = $this->actAsOrg()->get('/');
+        $response = $this->actAsOrg()->get('/dashboard');
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page

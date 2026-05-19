@@ -436,6 +436,9 @@ return [
     'delete_bank_account_confirm' => 'Möchten Sie das Bankkonto ":name" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
     'bank_account_updated' => 'Bankkonto aktualisiert.',
     'bank_account_deleted' => 'Bankkonto gelöscht.',
+    'bic_swift' => 'BIC/SWIFT',
+    'bic_autofill_from_iban' => 'BIC aus IBAN ausfüllen',
+    'go_to_bank_accounts' => 'Zu den Bankkonten',
     'supplier' => 'Lieferant',
 
     // Reconciliation
@@ -487,6 +490,9 @@ return [
 
     // Auth
     'welcome' => 'Willkommen bei Gäld',
+    'welcome_to_gaeld' => 'Schweizer Buchhaltung leicht gemacht',
+    'welcome_tagline' => 'Verwalten Sie Rechnungen, Ausgaben, Löhne und MWST — alles an einem Ort.',
+    'get_started' => 'Loslegen',
     'sign_in_account' => 'Melden Sie sich bei Ihrem Konto an',
     'remember_me' => 'Angemeldet bleiben',
     'forgot_password' => 'Passwort vergessen?',
@@ -718,7 +724,7 @@ return [
     'signup_subtitle' => 'Keine Kreditkarte erforderlich. Jederzeit kündbar.',
     'signup_cta' => ':days-tägige Testphase starten',
     'signup_cta_free' => 'Kostenloses Konto erstellen',
-    'signup_disclaimer' => 'Nach der Testphase werden Sie zu Stripe weitergeleitet, um Ihre Zahlungsmethode hinzuzufügen.',
+    'signup_disclaimer' => 'Sie werden zu Stripe weitergeleitet, um Ihre Zahlungsdaten einzugeben. Ihre Karte wird erst nach Ablauf der Testphase belastet.',
     'creating_account' => 'Konto wird erstellt…',
     'unlimited_invoices' => 'Unbegrenzte Rechnungen',
     'trial_ends_in' => 'Ihre Testphase endet in :days Tag(en).',
@@ -1360,6 +1366,8 @@ return [
     'settings_default_invoice_notes' => 'Standard-Rechnungsnotiz',
     'settings_default_invoice_notes_placeholder' => 'z.B. Vielen Dank für die Zusammenarbeit.',
     'qr_iban' => 'QR-IBAN',
+    'qr_iban_moved_title' => 'QR-IBAN wurde verschoben',
+    'qr_iban_moved_help' => 'Der QR-IBAN wird jetzt in den Bankkonto-Einstellungen verwaltet.',
     'qr_iban_required' => 'Vor dem Erstellen einer QR-Rechnung muss in den Organisationseinstellungen eine QR-IBAN hinterlegt werden.',
     'qr_iban_placeholder' => 'CH56 0483 5012 3456 7800 9',
     'vat_number_placeholder' => 'CHE-123.456.789',
@@ -1506,6 +1514,9 @@ return [
     'archive_fiscal_year' => 'Geschäftsjahr archivieren',
     'archive_year_verified' => ':count von :total verifiziert',
     'archive_year_earliest_expiry' => 'Früheste Ablauffrist :date',
+    'archive_generated' => 'Archiv erfolgreich erstellt.',
+    'fiscal_year_not_closed' => 'Das Geschäftsjahr ist nicht abgeschlossen.',
+    'generate_archive' => 'Archiv erstellen',
     'loading' => 'Wird geladen…',
     'archived_record_locked' => 'Dieses :type (ID :id) ist rechtlich archiviert und kann nicht geändert werden.',
     'year_end_wizard_step_review' => 'Salden prüfen',

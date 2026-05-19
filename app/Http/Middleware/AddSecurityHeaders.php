@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
 class AddSecurityHeaders
@@ -11,9 +12,11 @@ class AddSecurityHeaders
     public function handle(Request $request, Closure $next): Response
     {
         // Generate a per-request CSP nonce before the response is built so that
-        // Blade templates can embed it via app('csp-nonce').
+        // Blade templates can embed it via app('csp-nonce') and the Vite blade
+        // directive can attach it to any inline scripts it injects.
         $nonce = base64_encode(random_bytes(16));
         app()->instance('csp-nonce', $nonce);
+        Vite::useCspNonce($nonce);
 
         $response = $next($request);
 

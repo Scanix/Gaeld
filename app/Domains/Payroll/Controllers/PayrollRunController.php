@@ -23,6 +23,7 @@ class PayrollRunController extends Controller
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', Employee::class);
+        abort_if(! $request->user()->hasRole('owner'), 403);
 
         $employees = Employee::query()
             ->where('is_active', true)
@@ -41,6 +42,7 @@ class PayrollRunController extends Controller
     public function generate(Request $request, CurrentOrganization $currentOrg, GeneratePayrollRunAction $action): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Employee::class);
+        abort_if(! $request->user()->hasRole('owner'), 403);
 
         $validated = $request->validate([
             'month' => ['required', 'integer', 'min:1', 'max:12'],
