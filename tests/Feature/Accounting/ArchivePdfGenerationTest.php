@@ -95,7 +95,13 @@ class ArchivePdfGenerationTest extends TestCase
 
     public function test_download_pdf_endpoint_returns_pdf_response(): void
     {
-        $response = $this->actAsOrg()->get('/accounting/archives/year/2024/pdf/pnl');
+        // downloadPdf() now redirects to a temporary signed URL; follow it manually
+        // so we can still assert streamedContent() on the final file response.
+        $redirect = $this->actAsOrg()->get('/accounting/archives/year/2024/pdf/pnl');
+        $redirect->assertRedirect();
+
+        $signedUrl = $redirect->headers->get('Location');
+        $response = $this->get($signedUrl);
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'application/pdf');
