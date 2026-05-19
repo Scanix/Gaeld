@@ -4,6 +4,7 @@ namespace App\Domains\Banking\Controllers;
 
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Queries\AccountQuery;
@@ -16,6 +17,7 @@ use App\Domains\Banking\Requests\StoreBankAccountRequest;
 use App\Domains\Banking\Requests\UpdateBankAccountRequest;
 use App\Domains\Banking\Services\BankingService;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +29,8 @@ use Inertia\Response;
  */
 class BankingController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', BankAccount::class);
@@ -141,10 +145,14 @@ class BankingController extends Controller
     ): RedirectResponse {
         $validated = $request->validated();
 
-        $bankingService->recordTransaction(
-            $bankAccount,
-            RecordBankTransactionData::fromArray($validated),
-        );
+        try {
+            $bankingService->recordTransaction(
+                $bankAccount,
+                RecordBankTransactionData::fromArray($validated),
+            );
+        } catch (DuplicateReferenceException $e) {
+            return $this->backWithError($e);
+        }
 
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', __('app.transaction_recorded'));

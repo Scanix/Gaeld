@@ -439,6 +439,9 @@ return [
     'delete_bank_account_confirm' => 'Are you sure you want to delete the bank account ":name"? This action cannot be undone.',
     'bank_account_updated' => 'Bank account updated.',
     'bank_account_deleted' => 'Bank account deleted.',
+    'bic_swift' => 'BIC/SWIFT',
+    'bic_autofill_from_iban' => 'Auto-fill BIC from IBAN',
+    'go_to_bank_accounts' => 'Go to bank accounts',
     'supplier' => 'Supplier',
 
     // Reconciliation
@@ -491,6 +494,9 @@ return [
 
     // Auth
     'welcome' => 'Welcome to Gäld',
+    'welcome_to_gaeld' => 'Swiss accounting made simple',
+    'welcome_tagline' => 'Manage invoices, expenses, payroll, and VAT — all in one place.',
+    'get_started' => 'Get started',
     'sign_in_account' => 'Sign in to your account',
     'remember_me' => 'Remember me',
     'forgot_password' => 'Forgot password?',
@@ -729,7 +735,7 @@ return [
     'signup_subtitle' => 'No credit card required to start. Cancel anytime.',
     'signup_cta' => 'Start :days-day free trial',
     'signup_cta_free' => 'Create free account',
-    'signup_disclaimer' => 'After the trial, you\'ll be redirected to Stripe to add your payment method.',
+    'signup_disclaimer' => 'You\'ll be taken to Stripe to enter your payment details. Your card won\'t be charged until the trial ends.',
     'creating_account' => 'Creating account…',
     'unlimited_invoices' => 'Unlimited invoices',
     'trial_ends_in' => 'Your trial ends in :days day(s).',
@@ -1386,6 +1392,9 @@ return [
     'archive_fiscal_year' => 'Archive Fiscal Year',
     'archive_year_verified' => ':count of :total verified',
     'archive_year_earliest_expiry' => 'Earliest expiry :date',
+    'archive_generated' => 'Archive generated successfully.',
+    'fiscal_year_not_closed' => 'The fiscal year is not closed.',
+    'generate_archive' => 'Generate Archive',
     'loading' => 'Loading…',
     'archived_record_locked' => 'This :type (ID :id) is legally archived and cannot be modified.',
     'year_end_wizard_step_review' => 'Review balances',
@@ -1529,6 +1538,8 @@ return [
     'qr_iban' => 'QR-IBAN',
     'qr_iban_required' => 'A QR-IBAN must be configured in Organization settings before generating a QR-bill.',
     'qr_iban_placeholder' => 'CH56 0483 5012 3456 7800 9',
+    'qr_iban_moved_title' => 'QR-IBAN has moved',
+    'qr_iban_moved_help' => 'The QR-IBAN is now managed in your bank account settings.',
     'vat_number_placeholder' => 'CHE-123.456.789',
     'payment_terms_placeholder' => '30',
     'iban_qr_iban' => 'IBAN / QR-IBAN',

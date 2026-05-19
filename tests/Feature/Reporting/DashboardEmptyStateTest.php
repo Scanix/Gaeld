@@ -20,7 +20,7 @@ class DashboardEmptyStateTest extends TestCase
 
     public function test_new_organization_with_no_activity_gets_empty_state_true(): void
     {
-        $response = $this->actAsOrg()->get('/');
+        $response = $this->actAsOrg()->get('/dashboard');
 
         $response->assertInertia(
             fn ($page) => $page
@@ -36,7 +36,7 @@ class DashboardEmptyStateTest extends TestCase
             'enabled_modules' => [OrganizationModule::FiduciaryExport->value => true],
         ]);
 
-        $response = $this->actAsOrg()->get('/');
+        $response = $this->actAsOrg()->get('/dashboard');
 
         $response->assertInertia(
             fn ($page) => $page
@@ -51,7 +51,7 @@ class DashboardEmptyStateTest extends TestCase
             'enabled_modules' => [OrganizationModule::FiduciaryExport->value => false],
         ]);
 
-        $response = $this->actAsOrg()->get('/');
+        $response = $this->actAsOrg()->get('/dashboard');
 
         $response->assertInertia(
             fn ($page) => $page
@@ -74,7 +74,7 @@ class DashboardEmptyStateTest extends TestCase
             'currency' => 'CHF',
         ]);
 
-        $response = $this->actAsOrg()->get('/');
+        $response = $this->actAsOrg()->get('/dashboard');
 
         $response->assertInertia(
             fn ($page) => $page

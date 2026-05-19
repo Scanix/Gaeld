@@ -105,6 +105,9 @@ Route::get('/accounting/archives/year/{year}/bundle', [LegalArchiveController::c
 Route::post('/accounting/archives/year/{year}/regenerate-pdfs', [LegalArchiveController::class, 'regeneratePdfs'])
     ->whereNumber('year')
     ->name('accounting.archives.regenerate-pdfs');
+Route::post('/accounting/archives/year/{year}/generate', [LegalArchiveController::class, 'generateForYear'])
+    ->whereNumber('year')
+    ->name('accounting.archives.generate');
 Route::post('/accounting/archives/{archive}/verify', [LegalArchiveController::class, 'verify'])->name('accounting.archives.verify');
 Route::get('/accounting/archives/{archive}/download', [LegalArchiveController::class, 'download'])->name('accounting.archives.download');
 

@@ -436,6 +436,9 @@ return [
     'delete_bank_account_confirm' => 'Êtes-vous sûr de vouloir supprimer le compte bancaire ":name" ? Cette action est irréversible.',
     'bank_account_updated' => 'Compte bancaire mis à jour.',
     'bank_account_deleted' => 'Compte bancaire supprimé.',
+    'bic_swift' => 'BIC/SWIFT',
+    'bic_autofill_from_iban' => 'Remplir le BIC depuis l\'IBAN',
+    'go_to_bank_accounts' => 'Aller aux comptes bancaires',
     'supplier' => 'Fournisseur',
 
     // Reconciliation
@@ -487,6 +490,9 @@ return [
 
     // Auth
     'welcome' => 'Bienvenue sur Gäld',
+    'welcome_to_gaeld' => 'La comptabilité suisse simplifiée',
+    'welcome_tagline' => 'Gérez vos factures, dépenses, salaires et TVA — en un seul endroit.',
+    'get_started' => 'Commencer',
     'sign_in_account' => 'Connectez-vous à votre compte',
     'remember_me' => 'Se souvenir de moi',
     'forgot_password' => 'Mot de passe oublié ?',
@@ -717,7 +723,7 @@ return [
     'signup_subtitle' => 'Aucune carte de crédit requise. Annulez à tout moment.',
     'signup_cta' => 'Commencer l\'essai de :days jours',
     'signup_cta_free' => 'Créer un compte gratuit',
-    'signup_disclaimer' => 'Après l\'essai, vous serez redirigé vers Stripe pour ajouter votre moyen de paiement.',
+    'signup_disclaimer' => 'Vous allez être redirigé vers Stripe pour saisir vos coordonnées de paiement. Votre carte ne sera débitée qu\'à la fin de l\'essai.',
     'creating_account' => 'Création du compte…',
     'unlimited_invoices' => 'Factures illimitées',
     'trial_ends_in' => 'Votre essai se termine dans :days jour(s).',
@@ -1346,6 +1352,9 @@ return [
     'archive_fiscal_year' => 'Archiver l\'exercice',
     'archive_year_verified' => ':count sur :total vérifiés',
     'archive_year_earliest_expiry' => 'Première expiration le :date',
+    'archive_generated' => 'Archive générée avec succès.',
+    'fiscal_year_not_closed' => 'L\'exercice n\'est pas clôturé.',
+    'generate_archive' => 'Générer l\'archive',
     'loading' => 'Chargement…',
     'archived_record_locked' => 'Ce :type (ID :id) est archivé légalement et ne peut pas être modifié.',
     'year_end_wizard_step_review' => 'Vérifier les soldes',
@@ -1487,6 +1496,8 @@ return [
     'settings_default_invoice_notes' => 'Notes par défaut sur la facture',
     'settings_default_invoice_notes_placeholder' => 'p.ex. Merci pour votre collaboration.',
     'qr_iban' => 'QR-IBAN',
+    'qr_iban_moved_title' => 'Le QR-IBAN a été déplacé',
+    'qr_iban_moved_help' => 'Le QR-IBAN est maintenant géré dans les paramètres de votre compte bancaire.',
     'qr_iban_required' => 'Un QR-IBAN doit être configuré dans les paramètres de l’organisation avant de générer une QR-facture.',
     'qr_iban_placeholder' => 'CH56 0483 5012 3456 7800 9',
     'vat_number_placeholder' => 'CHE-123.456.789',

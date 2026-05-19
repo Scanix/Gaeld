@@ -32,7 +32,7 @@ class LegalArchiveController extends Controller
     {
         $this->authorize('viewAny', LegalArchive::class);
 
-        $years = DB::table('legal_archives')
+        $archivedYears = DB::table('legal_archives')
             ->where('organization_id', $currentOrg->id())
             ->select('fiscal_year')
             ->selectRaw('COUNT(*) as total_count')
@@ -41,12 +41,30 @@ class LegalArchiveController extends Controller
             ->groupBy('fiscal_year')
             ->orderByDesc('fiscal_year')
             ->get()
+            ->keyBy('fiscal_year');
+
+        $closedFiscalYears = $currentOrg->get()->closed_fiscal_years ?? [];
+
+        $unarchivedYears = array_diff($closedFiscalYears, $archivedYears->keys()->all());
+
+        $years = $archivedYears
             ->map(fn ($row): array => [
                 'fiscal_year' => (int) $row->fiscal_year,
                 'total_count' => (int) $row->total_count,
                 'verified_count' => (int) $row->verified_count,
                 'earliest_expiry' => $row->earliest_expiry,
             ])
+            ->values()
+            ->concat(
+                collect($unarchivedYears)->map(fn (int $year): array => [
+                    'fiscal_year' => $year,
+                    'total_count' => 0,
+                    'verified_count' => 0,
+                    'earliest_expiry' => null,
+                ])
+            )
+            ->sortByDesc('fiscal_year')
+            ->values()
             ->all();
 
         return Inertia::render('Accounting/Archives/Index', [
@@ -75,6 +93,20 @@ class LegalArchiveController extends Controller
             ->all();
 
         return response()->json(['items' => $items]);
+    }
+
+    public function generateForYear(int $year, CurrentOrganization $currentOrg): RedirectResponse
+    {
+        $this->authorize('create', LegalArchive::class);
+
+        $org = $currentOrg->get();
+
+        abort_unless($org->isFiscalYearClosed($year), 403, __('app.fiscal_year_not_closed'));
+
+        $this->service->archiveFiscalYear($currentOrg->id(), $year);
+
+        return redirect()->route('accounting.archives.index')
+            ->with('success', __('app.archive_generated'));
     }
 
     public function verify(LegalArchive $archive, CurrentOrganization $currentOrg): RedirectResponse

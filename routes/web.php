@@ -14,6 +14,7 @@ use App\Domains\Users\Controllers\RegisteredUserController;
 use App\Domains\Users\Controllers\TwoFactorChallengeController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\OnboardingDismissController;
+use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -78,9 +79,12 @@ Route::middleware('auth')->get('/logout', fn () => response(
     .'</form><script>document.getElementById("f").submit();</script></body></html>'
 ));
 
+// Public landing page — accessible to all; redirects to dashboard if authenticated
+Route::get('/', [WelcomeController::class, 'index'])->name('home');
+
 // Authenticated routes
 Route::middleware(['auth', 'verified', 'org', 'org-2fa', 'subscription'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::post('/onboarding/dismiss', OnboardingDismissController::class)->name('onboarding.dismiss');
 

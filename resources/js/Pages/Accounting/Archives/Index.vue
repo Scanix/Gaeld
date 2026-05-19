@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   FileText,
   RefreshCw,
+  PlusCircle,
 } from 'lucide-vue-next'
 
 const { t } = useTranslations()
@@ -86,6 +87,17 @@ function regeneratePdfs(year) {
     },
   })
 }
+
+const generating = ref({})
+
+function generateArchive(year) {
+  generating.value[year] = true
+  router.post(`/accounting/archives/year/${year}/generate`, {}, {
+    onFinish: () => {
+      generating.value[year] = false
+    },
+  })
+}
 </script>
 
 <template>
@@ -96,14 +108,28 @@ function regeneratePdfs(year) {
 
     <div v-if="years.length > 0" class="space-y-4">
       <Card v-for="year in years" :key="year.fiscal_year">
-        <CardHeader class="cursor-pointer" @click="toggleYear(year.fiscal_year)">
+        <CardHeader
+          :class="year.total_count > 0 ? 'cursor-pointer' : ''"
+          @click="year.total_count > 0 && toggleYear(year.fiscal_year)"
+        >
           <div class="flex flex-wrap items-center justify-between gap-3">
             <CardTitle class="flex items-center gap-2">
               <Archive class="h-5 w-5" />
               {{ t('archive_fiscal_year') }} {{ year.fiscal_year }}
               <Badge variant="secondary">{{ year.total_count }}</Badge>
             </CardTitle>
-            <div class="flex flex-wrap items-center gap-3 text-xs text-[hsl(var(--muted-foreground))]">
+            <div v-if="year.total_count === 0">
+              <Button
+                size="sm"
+                type="button"
+                :disabled="!!generating[year.fiscal_year]"
+                @click.stop="generateArchive(year.fiscal_year)"
+              >
+                <PlusCircle class="mr-1 h-4 w-4" :class="{ 'animate-spin': generating[year.fiscal_year] }" />
+                {{ t('generate_archive') }}
+              </Button>
+            </div>
+            <div v-else class="flex flex-wrap items-center gap-3 text-xs text-[hsl(var(--muted-foreground))]">
               <span class="inline-flex items-center gap-1">
                 <ShieldCheck class="h-3 w-3 text-green-600" />
                 {{ t('archive_year_verified', { count: year.verified_count, total: year.total_count }) }}

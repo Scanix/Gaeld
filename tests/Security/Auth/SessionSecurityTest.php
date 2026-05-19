@@ -63,7 +63,7 @@ class SessionSecurityTest extends SecurityTestCase
             ->withSession(['current_organization_id' => $this->orgA->id])
             ->post('/logout');
 
-        $this->get('/')->assertRedirectContains('/login');
+        $this->get('/dashboard')->assertRedirectContains('/login');
     }
 
     // ──────────────────────────────────────────────────────────────
