@@ -1221,6 +1221,7 @@ return [
     'post_to_ledger' => 'Comptabiliser',
     'download_pdf' => 'Télécharger le PDF',
     'slip_posted_to_ledger' => 'Comptabilisé',
+    'view_journal' => 'Voir le journal',
     'period' => 'Période',
     'employee_share' => 'Part employé',
     'employer_share' => 'Part employeur',

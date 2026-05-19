@@ -6,6 +6,7 @@ use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Database\Factories\Domains\Payroll\Models\EmployeeFactory;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -93,5 +94,38 @@ class Employee extends Model
     public function getStatusAttribute(): string
     {
         return $this->is_active ? 'active' : 'inactive';
+    }
+
+    /**
+     * Safely read the encrypted `ahv_number`. Returns null when the stored
+     * ciphertext cannot be decrypted with the current APP_KEY (e.g. after a
+     * key rotation or when data was seeded under a different key) instead of
+     * throwing — which would otherwise break Blade rendering (PDF exports).
+     */
+    public function getAhvNumberAttribute(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        try {
+            return $this->castAttribute('ahv_number', $value);
+        } catch (DecryptException) {
+            return null;
+        }
+    }
+
+    /** Same rationale as `getAhvNumberAttribute()`. */
+    public function getIbanAttribute(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        try {
+            return $this->castAttribute('iban', $value);
+        } catch (DecryptException) {
+            return null;
+        }
     }
 }
