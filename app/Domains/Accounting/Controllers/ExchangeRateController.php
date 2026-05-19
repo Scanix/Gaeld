@@ -23,7 +23,6 @@ class ExchangeRateController extends Controller
         $this->authorize('viewAny', Account::class);
 
         $rates = ExchangeRate::query()
-            ->where('organization_id', $currentOrg->id())
             ->orderByDesc('date')
             ->orderBy('currency_from')
             ->paginate(25)

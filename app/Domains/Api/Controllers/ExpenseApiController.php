@@ -100,7 +100,6 @@ class ExpenseApiController extends Controller
         // Resolve vat_rate_id UUID to internal integer FK
         if (isset($validated['vat_rate_id'])) {
             $validated['vat_rate_id'] = VatRate::where('uuid', $validated['vat_rate_id'])
-                ->where('organization_id', $currentOrg->id())
                 ->value('id');
         }
 
@@ -142,7 +141,6 @@ class ExpenseApiController extends Controller
         // Resolve vat_rate_id UUID to internal integer FK
         if (isset($validated['vat_rate_id'])) {
             $validated['vat_rate_id'] = VatRate::where('uuid', $validated['vat_rate_id'])
-                ->where('organization_id', $expense->organization_id)
                 ->value('id');
         }
 

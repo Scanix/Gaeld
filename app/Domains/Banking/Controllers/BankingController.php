@@ -83,7 +83,7 @@ class BankingController extends Controller
             'bankAccount' => $bankAccount,
             'transactions' => $transactions,
             'ledgerMovements' => $ledgerMovements,
-            'accounts' => Account::where('organization_id', $bankAccount->organization_id)
+            'accounts' => Account::query()
                 ->where('is_active', true)
                 ->select('id', 'code', 'name')
                 ->orderBy('code')
@@ -158,7 +158,7 @@ class BankingController extends Controller
      */
     private function ensurePrivateWithdrawalsAccount(string $organizationId): void
     {
-        $exists = Account::where('organization_id', $organizationId)
+        $exists = Account::query()
             ->where('code', AccountCode::PRIVATE_WITHDRAWALS)
             ->exists();
 
@@ -184,7 +184,7 @@ class BankingController extends Controller
             return;
         }
 
-        BankAccount::where('organization_id', $bankAccount->organization_id)
+        BankAccount::query()
             ->where('id', '!=', $bankAccount->id)
             ->where('is_default_for_invoicing', true)
             ->update(['is_default_for_invoicing' => false]);

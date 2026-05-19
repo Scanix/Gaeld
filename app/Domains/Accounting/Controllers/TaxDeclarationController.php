@@ -21,7 +21,6 @@ class TaxDeclarationController extends Controller
         $this->authorize('viewAny', Account::class);
 
         $declarations = TaxDeclaration::query()
-            ->where('organization_id', $currentOrg->id())
             ->orderByDesc('fiscal_year')
             ->orderBy('canton')
             ->get();

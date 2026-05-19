@@ -38,7 +38,7 @@ class FixedAssetController extends Controller
         $this->authorize('create', FixedAsset::class);
 
         return Inertia::render('Assets/Create', [
-            'accounts' => Account::where('organization_id', $currentOrg->id())
+            'accounts' => Account::query()
                 ->where('is_active', true)
                 ->select('id', 'code', 'name', 'type')
                 ->orderBy('code')
@@ -98,7 +98,7 @@ class FixedAssetController extends Controller
 
         return Inertia::render('Assets/Edit', [
             'asset' => $asset,
-            'accounts' => Account::where('organization_id', $asset->organization_id)
+            'accounts' => Account::query()
                 ->where('is_active', true)
                 ->select('id', 'code', 'name', 'type')
                 ->orderBy('code')

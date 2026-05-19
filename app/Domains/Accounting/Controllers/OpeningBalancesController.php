@@ -35,7 +35,6 @@ class OpeningBalancesController extends Controller
         $this->authorize('create', JournalEntry::class);
 
         $org = $currentOrg->get();
-        $orgId = $currentOrg->id();
 
         $balanceSheetTypes = [
             AccountType::Asset->value,
@@ -43,7 +42,7 @@ class OpeningBalancesController extends Controller
             AccountType::Equity->value,
         ];
 
-        $accounts = Account::where('organization_id', $orgId)
+        $accounts = Account::query()
             ->where('is_active', true)
             ->whereIn('type', $balanceSheetTypes)
             ->where('code', '!=', AccountCode::OPENING_BALANCE)
@@ -56,13 +55,13 @@ class OpeningBalancesController extends Controller
                 'type' => $a->type->value,
             ]);
 
-        $existingOpening = JournalEntry::where('organization_id', $orgId)
+        $existingOpening = JournalEntry::query()
             ->where('reference', 'like', 'OPENING-%')
             ->where('is_posted', true)
             ->orderByDesc('date')
             ->first(['id', 'date', 'reference']);
 
-        $equityAccounts = Account::where('organization_id', $orgId)
+        $equityAccounts = Account::query()
             ->where('is_active', true)
             ->where('type', AccountType::Equity->value)
             ->where('code', '!=', AccountCode::OPENING_BALANCE)
@@ -74,7 +73,7 @@ class OpeningBalancesController extends Controller
                 'name' => $a->display_name,
             ]);
 
-        $existingHistorical = JournalEntry::where('organization_id', $orgId)
+        $existingHistorical = JournalEntry::query()
             ->where('type', 'historical_summary')
             ->where('is_posted', true)
             ->orderByDesc('date')

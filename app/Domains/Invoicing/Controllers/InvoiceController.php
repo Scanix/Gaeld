@@ -131,7 +131,7 @@ class InvoiceController extends Controller
                 ? route('invoices.justificatif.download', $invoice)
                 : null,
             'hasQrIban' => ! empty($invoice->organization->qr_iban ?? null),
-            'bankAccounts' => BankAccount::where('organization_id', $invoice->organization_id)
+            'bankAccounts' => BankAccount::query()
                 ->where('is_active', true)
                 ->select('id', 'account_id', 'name', 'iban', 'currency')
                 ->with('ledgerAccount:id,code')

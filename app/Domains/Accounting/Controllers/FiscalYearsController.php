@@ -37,10 +37,7 @@ class FiscalYearsController extends Controller
     {
         $this->authorize('closeYear', Account::class);
 
-        $orgId = $currentOrg->id();
-
         $fiscalYears = FiscalYear::query()
-            ->where('organization_id', $orgId)
             ->orderBy('start_date', 'desc')
             ->get()
             ->map(fn (FiscalYear $fy) => [

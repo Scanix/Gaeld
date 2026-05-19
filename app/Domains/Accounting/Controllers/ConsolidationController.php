@@ -25,7 +25,6 @@ class ConsolidationController extends Controller
         $this->authorize('viewAny', Account::class);
 
         $groups = ConsolidationGroup::query()
-            ->where('organization_id', $currentOrg->id())
             ->withCount('eliminations')
             ->orderBy('name')
             ->get();
@@ -115,7 +114,6 @@ class ConsolidationController extends Controller
             /** @var object{account_id:int,code:string,name:string,type:string,organization_id:string,debit_total:float|int|string,credit_total:float|int|string} $row */
             $organizationCurrency = strtoupper((string) ($organizationCurrencies[$row->organization_id] ?? $baseCurrency));
             $conversionRate = $this->resolveConversionRate(
-                $currentOrg->id(),
                 $organizationCurrency,
                 $baseCurrency,
                 $asOfDate,
@@ -220,7 +218,6 @@ class ConsolidationController extends Controller
      * @param  array<string, true>  $missingRates
      */
     private function resolveConversionRate(
-        string $organizationId,
         string $fromCurrency,
         string $toCurrency,
         string $asOfDate,
@@ -237,7 +234,6 @@ class ConsolidationController extends Controller
         }
 
         $directRate = ExchangeRate::query()
-            ->where('organization_id', $organizationId)
             ->where('currency_from', $fromCurrency)
             ->where('currency_to', $toCurrency)
             ->whereDate('date', '<=', $asOfDate)
@@ -249,7 +245,6 @@ class ConsolidationController extends Controller
         }
 
         $inverseRate = ExchangeRate::query()
-            ->where('organization_id', $organizationId)
             ->where('currency_from', $toCurrency)
             ->where('currency_to', $fromCurrency)
             ->whereDate('date', '<=', $asOfDate)
