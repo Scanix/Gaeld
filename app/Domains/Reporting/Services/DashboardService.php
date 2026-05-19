@@ -383,17 +383,12 @@ class DashboardService
     {
         $currentYear = now()->year;
 
-        $latestDate = $this->ledgerService->latestPostedEntryDate($organizationId);
-
-        if ($latestDate) {
-            $latestYear = (int) Carbon::parse($latestDate)->year;
-
-            // Never project into a future year; use the current year at most.
-            return min($latestYear, $currentYear);
-        }
-
-        // No posted journal entries yet — fall back to the most recent year
-        // that has any expense or invoice activity so the dashboard is useful.
+        // Invoice and expense dates are the real business-activity signals.
+        // Journal entries are checked first in a naive implementation, but they
+        // include technical bookkeeping entries (opening balances, year-end
+        // closing) that can fall in the *next* calendar year — causing the
+        // dashboard to display an empty year with all-zero KPIs immediately
+        // after a year-end closing.
         $latestExpenseDate = Expense::where('organization_id', $organizationId)->max('date');
         $latestInvoiceDate = Invoice::where('organization_id', $organizationId)->max('issue_date');
 
@@ -404,6 +399,14 @@ class DashboardService
 
         if (! empty($activityYears)) {
             return min(max($activityYears), $currentYear);
+        }
+
+        // No invoice/expense activity yet — fall back to the most recent posted
+        // journal entry (covers manual-journal-entry-only organisations).
+        $latestDate = $this->ledgerService->latestPostedEntryDate($organizationId);
+
+        if ($latestDate) {
+            return min((int) Carbon::parse($latestDate)->year, $currentYear);
         }
 
         return $currentYear;
