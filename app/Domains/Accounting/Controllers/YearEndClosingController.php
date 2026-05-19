@@ -2,9 +2,7 @@
 
 namespace App\Domains\Accounting\Controllers;
 
-use App\Domains\Accounting\Actions\GenerateOpeningBalancesAction;
-use App\Domains\Accounting\DTOs\JournalEntryData;
-use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Actions\YearEndClosingAction;
 use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
@@ -14,13 +12,11 @@ use App\Domains\Accounting\Requests\ReopenFiscalYearRequest;
 use App\Domains\Accounting\Requests\StoreYearEndClosingRequest;
 use App\Domains\Accounting\Services\ClosingAccountsService;
 use App\Domains\Accounting\Services\FiscalYearService;
-use App\Domains\Accounting\Services\LedgerService;
-use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Users\Models\User;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
-use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,8 +32,8 @@ class YearEndClosingController extends Controller
 
     public function __construct(
         private readonly ClosingAccountsService $closingAccounts,
-        private readonly LegalArchivingService $archiving,
         private readonly FiscalYearService $fiscalYears,
+        private readonly YearEndClosingAction $closingAction,
     ) {}
 
     public function index(Request $request, CurrentOrganization $currentOrg): Response
@@ -113,147 +109,25 @@ class YearEndClosingController extends Controller
         ]);
     }
 
-    public function store(StoreYearEndClosingRequest $request, CurrentOrganization $currentOrg, LedgerService $ledger): RedirectResponse
+    public function store(StoreYearEndClosingRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('closeYear', Account::class);
 
-        $orgId = $currentOrg->id();
-
-        $validated = $request->validated();
-        $year = (int) $validated['year'];
-
-        // Resolve the FiscalYear record (preferred) or fall back to calendar year.
-        $fiscalYearId = $validated['fiscal_year_id'] ?? null;
-        $fiscalYear = null;
-        if ($fiscalYearId !== null) {
-            $fiscalYear = FiscalYear::query()
-                ->where('organization_id', $orgId)
-                ->where('id', $fiscalYearId)
-                ->first();
-        }
-        if ($fiscalYear === null) {
-            $fiscalYear = FiscalYear::query()
-                ->where('organization_id', $orgId)
-                ->whereYear('start_date', $year)
-                ->first();
-        }
-
-        if ($fiscalYear !== null) {
-            $year = (int) $fiscalYear->start_date->year;
-            $from = $fiscalYear->start_date->toDateString();
-            $to = $fiscalYear->end_date->toDateString();
-        } else {
-            $from = "{$year}-01-01";
-            $to = "{$year}-12-31";
-        }
-
-        [$income, $expenses] = $this->closingAccounts->compute($orgId, $from, $to);
-
-        $allAccounts = array_merge($income, $expenses);
-
-        if (empty($allAccounts)) {
-            return $this->backWithError('No accounts to close for this period.');
-        }
-
-        // Hard block: require all VAT periods to be settled before closing
-        $unsettled = $this->getUnsettledVatPeriods($orgId, $year);
-        if (! empty($unsettled)) {
-            return $this->backWithError(
-                __('app.fiscal_year_unsettled_vat', [
-                    'year' => $year,
-                    'periods' => implode(', ', $unsettled),
-                ])
-            );
-        }
-
-        // Find the result account
-        $resultAccount = Account::where('organization_id', $orgId)
-            ->where('code', $validated['result_account_code'])
-            ->first();
-
-        if (! $resultAccount) {
-            return redirect()->back()->withErrors([
-                'result_account_code' => "Account '{$validated['result_account_code']}' not found.",
-            ]);
-        }
+        /** @var User $actingUser */
+        $actingUser = $request->user();
 
         try {
-            DB::transaction(function () use ($income, $expenses, $year, $validated, $resultAccount, $orgId, $ledger) {
-                // Build closing journal lines
-                // Revenue (credit-normal): debit the account, credit result
-                // Expense (debit-normal):  credit the account, debit result
-                $lines = [];
-                $netDebitOnResult = '0';  // debits to result account (for expenses)
-                $netCreditOnResult = '0';  // credits to result account (for revenues)
-
-                foreach ($income as $row) {
-                    if (Money::isZero((string) $row['balance'])) {
-                        continue;
-                    }
-                    $lines[] = new JournalLineData(
-                        accountId: (string) $row['account_id'],
-                        debit: (string) $row['balance'],
-                        credit: '0',
-                        description: __('app.closing_line_description', ['year' => $year, 'code' => $row['code']]),
-                    );
-                    $netCreditOnResult = Money::add($netCreditOnResult, (string) $row['balance']);
-                }
-
-                foreach ($expenses as $row) {
-                    if (Money::isZero((string) $row['balance'])) {
-                        continue;
-                    }
-                    $lines[] = new JournalLineData(
-                        accountId: (string) $row['account_id'],
-                        debit: '0',
-                        credit: (string) $row['balance'],
-                        description: __('app.closing_line_description', ['year' => $year, 'code' => $row['code']]),
-                    );
-                    $netDebitOnResult = Money::add($netDebitOnResult, (string) $row['balance']);
-                }
-
-                // Add result account line (net debit or credit)
-                $netDebit = $netDebitOnResult;
-                $netCredit = $netCreditOnResult;
-
-                $lines[] = new JournalLineData(
-                    accountId: (string) $resultAccount->id,
-                    debit: $netDebit,
-                    credit: $netCredit,
-                    description: __('app.closing_result_description', ['year' => $year]),
-                );
-
-                $entry = new JournalEntryData(
-                    date: $validated['closing_date'],
-                    reference: $validated['reference'],
-                    description: __('app.closing_entry_description', ['year' => $year]),
-                    lines: $lines,
-                );
-
-                $journalEntry = $ledger->postEntry($orgId, $entry);
-
-                $journalEntry->update(['type' => 'year_end_closing']);
-            });
-
-            // Lock the fiscal year to prevent further postings
-            $org = Organization::findOrFail($orgId);
-            $org->closeFiscalYear($year);
-
-            if ($fiscalYear !== null) {
-                $nextYearCreated = $this->fiscalYears->close($fiscalYear, $request->user());
-            }
-
-            // Archive all documents for the closed fiscal year (Swiss OR 10-year retention)
-            $this->archiving->archiveFiscalYear($orgId, $year);
-
-            // Generate opening balance entries for the next fiscal year
-            app(GenerateOpeningBalancesAction::class)->execute($orgId, $year);
+            $nextYearCreated = $this->closingAction->execute(
+                Organization::findOrFail($currentOrg->id()),
+                $request->validated(),
+                $actingUser,
+            );
         } catch (\Throwable $e) {
             return $this->backWithError($e);
         }
 
         return redirect()->route('accounting.closing')
-            ->with('success', ($nextYearCreated ?? false)
+            ->with('success', $nextYearCreated
                 ? __('app.year_end_closing_done_next_created')
                 : __('app.year_end_closing_done')
             );
