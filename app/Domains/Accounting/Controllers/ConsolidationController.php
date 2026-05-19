@@ -9,7 +9,6 @@ use App\Domains\Accounting\Models\ExchangeRate;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Requests\StoreConsolidationEliminationRequest;
 use App\Domains\Accounting\Requests\StoreConsolidationGroupRequest;
-use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
@@ -73,11 +72,7 @@ class ConsolidationController extends Controller
 
     public function report(Request $request, ConsolidationGroup $group, CurrentOrganization $currentOrg): Response
     {
-        $this->authorize('viewAny', Account::class);
-
-        if ($group->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        $this->authorize('view', $group);
 
         $fiscalYear = (int) $request->input('fiscal_year', now()->year);
         $baseCurrency = strtoupper((string) $group->base_currency);
@@ -272,11 +267,7 @@ class ConsolidationController extends Controller
 
     public function storeElimination(StoreConsolidationEliminationRequest $request, ConsolidationGroup $group, CurrentOrganization $currentOrg): RedirectResponse
     {
-        $this->authorize('create', Account::class);
-
-        if ($group->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        $this->authorize('update', $group);
 
         $validated = $request->validated();
 
@@ -295,12 +286,9 @@ class ConsolidationController extends Controller
 
     public function destroyElimination(Request $request, ConsolidationElimination $consolidationElimination, CurrentOrganization $currentOrg): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermissionTo(Permission::AccountingDelete), 403);
-
         $group = ConsolidationGroup::query()->find($consolidationElimination->consolidation_group_id);
-        if (! $group || $group->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        abort_unless($group !== null, 404);
+        $this->authorize('delete', $group);
 
         $consolidationElimination->delete();
 

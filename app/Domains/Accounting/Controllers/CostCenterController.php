@@ -8,7 +8,6 @@ use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Requests\StoreCostCenterRequest;
 use App\Domains\Accounting\Requests\UpdateCostCenterRequest;
 use App\Domains\Accounting\Support\AccountDisplayName;
-use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -57,11 +56,7 @@ class CostCenterController extends Controller
 
     public function update(UpdateCostCenterRequest $request, CostCenter $costCenter, CurrentOrganization $currentOrg): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermissionTo(Permission::AccountingEdit), 403);
-
-        if ($costCenter->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        $this->authorize('update', $costCenter);
 
         $validated = $request->validated();
 
@@ -82,11 +77,7 @@ class CostCenterController extends Controller
 
     public function destroy(Request $request, CostCenter $costCenter, CurrentOrganization $currentOrg): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermissionTo(Permission::AccountingDelete), 403);
-
-        if ($costCenter->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        $this->authorize('delete', $costCenter);
 
         if ($costCenter->children()->exists()) {
             return back()->withErrors(['cost_center' => __('app.cannot_delete_with_children')]);
