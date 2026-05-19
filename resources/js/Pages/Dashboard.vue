@@ -14,6 +14,7 @@ import { useTheme } from '@/lib/useTheme'
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X, AlertTriangle, Receipt, Target, ScanLine, Clock } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
+import OnboardingChecklist from '@/Components/Dashboard/OnboardingChecklist.vue'
 import { normalizeDashboardContract } from '@/lib/inertiaContracts'
 import { Bar } from 'vue-chartjs'
 import { Link } from '@inertiajs/vue3'
@@ -55,6 +56,7 @@ const props = defineProps({
   isEmptyState: { type: Boolean, default: false },
   hasExportModule: { type: Boolean, default: false },
   expiredFiscalYear: { type: Object, default: null },
+  checklist: { type: Object, default: null },
 })
 
 const contract = computed(() => normalizeDashboardContract(props))
@@ -268,6 +270,9 @@ const transactionColumns = computed(() => [
         :trend="card.trend"
       />
     </div>
+
+    <!-- Onboarding checklist (org-scoped, dismissible) -->
+    <OnboardingChecklist v-if="checklist" :checklist="checklist" class="mt-6" />
 
     <!-- Empty state: no activity yet — guide the user to their first action -->
     <div

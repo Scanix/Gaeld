@@ -1285,6 +1285,12 @@ return [
     'checklist_social_charges' => 'Sozialabgaben gebucht',
     'checklist_year_end_closed' => 'Jahresabschluss durchgeführt',
     'checklist_fiduciary_exported' => 'Treuhänder-Export generiert',
+    'checklist_title' => 'Onboarding-Checkliste',
+    'checklist_progress' => ':done von :total erledigt',
+    'checklist_dismiss' => 'Ausblenden',
+    'checklist_go' => 'Los →',
+    'checklist_section_getting_started' => 'Erste Schritte',
+    'checklist_section_accounting' => 'Buchhaltung',
 
     // Tooltips
     'tooltip_expense_category' => 'Kategorien ordnen Aufwände den richtigen Konten im Kontenplan zu.',

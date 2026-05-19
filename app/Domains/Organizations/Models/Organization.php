@@ -42,6 +42,7 @@ use Illuminate\Support\Carbon;
  * @property BusinessType|null $business_type
  * @property string $setup_mode
  * @property Carbon|null $founded_at
+ * @property Carbon|null $onboarding_dismissed_at
  * @property bool $require_two_factor
  * @property int|null $default_payment_terms_days
  * @property Carbon|null $created_at
@@ -77,6 +78,7 @@ class Organization extends Model
         'enabled_modules',
         'setup_mode',
         'founded_at',
+        'onboarding_dismissed_at',
     ];
 
     protected function casts(): array
@@ -88,6 +90,7 @@ class Organization extends Model
             'enabled_modules' => 'array',
             'business_type' => BusinessType::class,
             'founded_at' => 'date',
+            'onboarding_dismissed_at' => 'datetime',
         ];
     }
 

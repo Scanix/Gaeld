@@ -13,6 +13,7 @@ use App\Domains\Users\Controllers\PasswordResetController;
 use App\Domains\Users\Controllers\RegisteredUserController;
 use App\Domains\Users\Controllers\TwoFactorChallengeController;
 use App\Http\Controllers\GlobalSearchController;
+use App\Http\Controllers\OnboardingDismissController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -80,6 +81,8 @@ Route::middleware('auth')->get('/logout', fn () => response(
 // Authenticated routes
 Route::middleware(['auth', 'verified', 'org', 'org-2fa', 'subscription'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::post('/onboarding/dismiss', OnboardingDismissController::class)->name('onboarding.dismiss');
 
     // Global search
     Route::get('/search', GlobalSearchController::class)->middleware('throttle:60,1')->name('search');

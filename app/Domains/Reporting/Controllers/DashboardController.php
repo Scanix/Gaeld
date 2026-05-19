@@ -6,6 +6,7 @@ use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Organizations\Enums\OrganizationModule;
+use App\Domains\Organizations\Services\ChecklistService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Services\DashboardService;
 use App\Http\Controllers\Controller;
@@ -19,7 +20,7 @@ use Inertia\Response;
  */
 class DashboardController extends Controller
 {
-    public function index(Request $request, DashboardService $dashboardService, CurrentOrganization $currentOrg): Response
+    public function index(Request $request, DashboardService $dashboardService, CurrentOrganization $currentOrg, ChecklistService $checklistService): Response
     {
         $this->authorize('viewAny', Account::class);
 
@@ -36,6 +37,16 @@ class DashboardController extends Controller
             ->orderBy('end_date', 'desc')
             ->first();
 
+        $checklist = null;
+
+        if ($org->onboarding_dismissed_at === null) {
+            $items = $checklistService->checklist($orgId);
+
+            if ($this->hasIncompleteItems($items)) {
+                $checklist = $items;
+            }
+        }
+
         return Inertia::render('Dashboard', array_merge($metrics, [
             'isEmptyState' => $isEmptyState,
             'hasExportModule' => FeatureFlag::enabledForOrg(OrganizationModule::FiduciaryExport->value, $org),
@@ -44,6 +55,23 @@ class DashboardController extends Controller
                 'name' => $expiredFiscalYear->name,
                 'end_date' => $expiredFiscalYear->end_date->toDateString(),
             ] : null,
+            'checklist' => $checklist,
         ]));
+    }
+
+    /**
+     * @param  array{getting_started: array<int, array{key: string, done: bool, href: string|null}>, accounting: array<int, array{key: string, done: bool, href: string|null}>}  $items
+     */
+    private function hasIncompleteItems(array $items): bool
+    {
+        foreach (['getting_started', 'accounting'] as $tier) {
+            foreach ($items[$tier] as $item) {
+                if (! $item['done']) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

@@ -1283,6 +1283,12 @@ return [
     'checklist_social_charges' => 'Charges sociales comptabilisées',
     'checklist_year_end_closed' => 'Bouclement effectué',
     'checklist_fiduciary_exported' => 'Export fiduciaire généré',
+    'checklist_title' => 'Liste d\'intégration',
+    'checklist_progress' => ':done sur :total terminé',
+    'checklist_dismiss' => 'Masquer',
+    'checklist_go' => 'Aller →',
+    'checklist_section_getting_started' => 'Démarrage',
+    'checklist_section_accounting' => 'Comptabilité',
 
     // Tooltips
     'tooltip_expense_category' => 'Les catégories associent vos charges aux comptes du plan comptable pour un reporting financier correct.',
