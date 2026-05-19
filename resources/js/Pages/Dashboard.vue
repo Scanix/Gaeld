@@ -336,7 +336,7 @@ const transactionColumns = computed(() => [
             {{ pendingOcrScans }} {{ t('ocr_pending_widget_description') }}
           </p>
         </div>
-        <a href="/expenses" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
+        <a href="/expenses/receipt-scans" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
       </CardContent>
     </Card>
 
