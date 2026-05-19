@@ -14,6 +14,7 @@ defineProps({
   required: Boolean,
   placeholder: String,
   autocomplete: String,
+  readonly: Boolean,
   class: String,
 })
 
@@ -37,6 +38,7 @@ defineEmits(['update:modelValue'])
       :required="required"
       :placeholder="placeholder"
       :autocomplete="autocomplete"
+      :readonly="readonly"
       :aria-describedby="error ? id + '-error' : undefined"
       :aria-invalid="error ? true : undefined"
       :class="cn(

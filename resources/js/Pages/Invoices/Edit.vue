@@ -80,7 +80,6 @@ const { showDialog, handleSave, handleDiscard, handleStay, forceClear } = useUns
 
 const { errors: clientErrors, validate, validateField } = useFormValidation(z.object({
   customer_id: z.string().min(1, 'This field is required.'),
-  number: z.string().min(1, 'This field is required.').max(50, 'Must be at most 50 characters.'),
   issue_date: z.string().min(1, 'This field is required.'),
   due_date: z.string().min(1, 'This field is required.'),
 }))
@@ -225,7 +224,7 @@ const total = computed(() => subtotal.value + vatTotal.value)
               :label="t('invoice_number')"
               placeholder="INV-001"
               :error="form.errors.number || clientErrors.number"
-              required
+              readonly
             />
             <FormInput
               id="issue_date"
