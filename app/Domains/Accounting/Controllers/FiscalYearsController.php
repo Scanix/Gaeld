@@ -78,8 +78,7 @@ class FiscalYearsController extends Controller
 
     public function update(UpdateFiscalYearRequest $request, FiscalYear $fiscalYear): RedirectResponse
     {
-        $this->authorize('closeYear', Account::class);
-        $this->ensureBelongsToCurrentOrg($fiscalYear);
+        $this->authorize('update', $fiscalYear);
 
         try {
             $this->fiscalYears->update($fiscalYear, FiscalYearData::fromArray($request->validated()));
@@ -93,8 +92,7 @@ class FiscalYearsController extends Controller
 
     public function destroy(FiscalYear $fiscalYear): RedirectResponse
     {
-        $this->authorize('closeYear', Account::class);
-        $this->ensureBelongsToCurrentOrg($fiscalYear);
+        $this->authorize('delete', $fiscalYear);
 
         if ($fiscalYear->status !== FiscalYearStatus::Planned) {
             return $this->backWithError(__('app.fiscal_year_only_planned_deletable'));
@@ -104,17 +102,5 @@ class FiscalYearsController extends Controller
 
         return redirect()->route('accounting.fiscal-years.index')
             ->with('success', __('app.fiscal_year_deleted'));
-    }
-
-    /**
-     * Defence in depth: even though BelongsToOrganization scopes by current
-     * org, route-model bound resources should be re-checked.
-     */
-    private function ensureBelongsToCurrentOrg(FiscalYear $fiscalYear): void
-    {
-        $orgId = app(CurrentOrganization::class)->id();
-        if ($fiscalYear->organization_id !== $orgId) {
-            abort(404);
-        }
     }
 }

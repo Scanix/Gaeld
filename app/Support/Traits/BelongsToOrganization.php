@@ -15,10 +15,21 @@ trait BelongsToOrganization
     {
         static::addGlobalScope('organization', function (Builder $builder) {
             $currentOrg = app(CurrentOrganization::class);
+
+            // After EnsureHasOrganization middleware runs, use the bound service.
+            // During route model binding (SubstituteBindings runs before route
+            // middleware), fall back to the session value so that cross-org IDs
+            // resolve to 404 rather than leaking their existence via a 403.
             if ($currentOrg->isBound()) {
+                $orgId = $currentOrg->id();
+            } else {
+                $orgId = session('current_organization_id');
+            }
+
+            if ($orgId) {
                 $builder->where(
                     $builder->getModel()->getTable().'.organization_id',
-                    $currentOrg->id(),
+                    $orgId,
                 );
             }
         });

@@ -5,7 +5,17 @@ namespace App\Providers;
 use App\Domains\Accounting\Jobs\ExportChartOfAccountsJob;
 use App\Domains\Accounting\Listeners\JournalEventSubscriber;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\ConsolidationGroup;
+use App\Domains\Accounting\Models\CostCenter;
+use App\Domains\Accounting\Models\ExchangeRate;
+use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Accounting\Models\TaxDeclaration;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Accounting\Policies\ConsolidationGroupPolicy;
+use App\Domains\Accounting\Policies\CostCenterPolicy;
+use App\Domains\Accounting\Policies\ExchangeRatePolicy;
+use App\Domains\Accounting\Policies\FiscalYearPolicy;
+use App\Domains\Accounting\Policies\TaxDeclarationPolicy;
 use App\Domains\Api\Jobs\DispatchWebhookJob;
 use App\Domains\Api\Models\PersonalAccessToken;
 use App\Domains\Assets\Jobs\MonthlyDepreciationJob;
@@ -115,6 +125,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(LongWaitDetected::class, SendHorizonTelegramAlert::class);
 
         Gate::policy(Contact::class, ContactPolicy::class);
+        Gate::policy(FiscalYear::class, FiscalYearPolicy::class);
+        Gate::policy(TaxDeclaration::class, TaxDeclarationPolicy::class);
+        Gate::policy(CostCenter::class, CostCenterPolicy::class);
+        Gate::policy(ExchangeRate::class, ExchangeRatePolicy::class);
+        Gate::policy(ConsolidationGroup::class, ConsolidationGroupPolicy::class);
 
         // Cache invalidation: flush tagged caches when models change
         $flushTags = function (string ...$tags) {
