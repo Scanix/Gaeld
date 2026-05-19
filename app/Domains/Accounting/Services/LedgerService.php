@@ -115,10 +115,11 @@ class LedgerService
     }
 
     /**
-     * Reverse a posted journal entry by creating a contra entry.
+     * Reverse a posted journal entry by creating a contra entry draft.
      *
-     * Swaps debit ↔ credit on every line and posts a new entry
-     * with a REV- reference prefix.
+     * Swaps debit ↔ credit on every line and creates a DRAFT entry
+     * with a REV- reference prefix. User must explicitly post the draft
+     * to finalize the reversal.
      *
      * @throws DuplicateReferenceException if this entry has already been reversed
      */
@@ -131,7 +132,7 @@ class LedgerService
             description: 'Reversal: '.($line->description ?? ''),
         ))->all();
 
-        $reversalEntry = $this->postEntry($journalEntry->organization_id, new JournalEntryData(
+        $reversalEntry = $this->createDraft($journalEntry->organization_id, new JournalEntryData(
             date: now()->toDateString(),
             reference: self::REFERENCE_PREFIX_REVERSAL.$journalEntry->reference,
             description: $description ?? 'Reversal of '.$journalEntry->reference,

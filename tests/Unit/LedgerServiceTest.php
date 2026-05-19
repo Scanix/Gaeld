@@ -227,7 +227,7 @@ class LedgerServiceTest extends TestCase
         $this->assertSame('500.00', $balance);
     }
 
-    public function test_reversal_creates_contra_entry_and_nets_to_zero(): void
+    public function test_reversal_creates_draft_contra_entry(): void
     {
         $entry = $this->ledgerService->postEntry($this->organization->id, new JournalEntryData(
             date: '2026-03-05',
@@ -239,9 +239,19 @@ class LedgerServiceTest extends TestCase
             ],
         ));
 
-        $this->ledgerService->reverseEntry($entry, 'Test reversal');
+        $reversal = $this->ledgerService->reverseEntry($entry, 'Test reversal');
 
-        // Net balance for both accounts should be zero after reversal
+        // Reversal should be a DRAFT (not posted)
+        $this->assertFalse($reversal->is_posted);
+        $this->assertSame('REV-INV-REV-001', $reversal->reference);
+
+        // Account balances should NOT be zero yet (reversal is not posted)
+        $this->assertSame('750.00', $this->queryService->accountBalance($this->accounts['ar']->id));
+        $this->assertSame('750.00', $this->queryService->accountBalance($this->accounts['revenue']->id));
+
+        // After posting the reversal, balances should net to zero
+        $this->ledgerService->postDraft($reversal);
+
         $this->assertSame('0.00', $this->queryService->accountBalance($this->accounts['ar']->id));
         $this->assertSame('0.00', $this->queryService->accountBalance($this->accounts['revenue']->id));
     }

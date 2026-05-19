@@ -165,4 +165,211 @@ class ManualJournalEntryTest extends TestCase
         $response->assertForbidden();
         $this->assertDatabaseHas('journal_entries', ['id' => $entry->id]);
     }
+
+    public function test_update_modifies_draft_entry(): void
+    {
+        $this->actAsOrg()->post('/accounting/journal-entries', [
+            'date' => '2026-03-15',
+            'reference' => 'JE-DRAFT-UPD',
+            'description' => 'Original description',
+            'is_posted' => false,
+            'lines' => [
+                ['account_id' => $this->bank->id, 'debit' => '100.00', 'credit' => '0'],
+                ['account_id' => $this->revenue->id, 'debit' => '0', 'credit' => '100.00'],
+            ],
+        ]);
+
+        $draft = JournalEntry::where('reference', 'JE-DRAFT-UPD')->firstOrFail();
+
+        $response = $this->actAsOrg()->put("/accounting/journal-entries/{$draft->id}", [
+            'date' => '2026-03-20',
+            'reference' => 'JE-DRAFT-UPDATED',
+            'description' => 'Modified description',
+            'lines' => [
+                ['account_id' => $this->bank->id, 'debit' => '200.00', 'credit' => '0'],
+                ['account_id' => $this->revenue->id, 'debit' => '0', 'credit' => '200.00'],
+            ],
+        ]);
+
+        $response->assertRedirect('/accounting/journal-entries');
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('journal_entries', [
+            'id' => $draft->id,
+            'reference' => 'JE-DRAFT-UPDATED',
+            'description' => 'Modified description',
+            'date' => '2026-03-20',
+        ]);
+
+        $this->assertDatabaseHas('transaction_lines', [
+            'journal_entry_id' => $draft->id,
+            'account_id' => $this->bank->id,
+            'debit' => '200.00',
+        ]);
+    }
+
+    public function test_update_blocks_posted_entry(): void
+    {
+        $this->actAsOrg()->post('/accounting/journal-entries', [
+            'date' => '2026-03-15',
+            'reference' => 'JE-POSTED-UPD',
+            'is_posted' => true,
+            'lines' => [
+                ['account_id' => $this->bank->id, 'debit' => '100.00', 'credit' => '0'],
+                ['account_id' => $this->revenue->id, 'debit' => '0', 'credit' => '100.00'],
+            ],
+        ]);
+
+        $entry = JournalEntry::where('reference', 'JE-POSTED-UPD')->firstOrFail();
+
+        $response = $this->actAsOrg()->put("/accounting/journal-entries/{$entry->id}", [
+            'date' => '2026-03-20',
+            'reference' => 'JE-MODIFIED',
+            'lines' => [
+                ['account_id' => $this->bank->id, 'debit' => '200.00', 'credit' => '0'],
+                ['account_id' => $this->revenue->id, 'debit' => '0', 'credit' => '200.00'],
+            ],
+        ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('journal_entries', [
+            'id' => $entry->id,
+            'reference' => 'JE-POSTED-UPD', // unchanged
+        ]);
+    }
+
+    public function test_post_converts_draft_to_posted(): void
+    {
+        $this->actAsOrg()->post('/accounting/journal-entries', [
+            'date' => '2026-03-15',
+            'reference' => 'JE-TO-POST',
+            'is_posted' => false,
+            'lines' => [
+                ['account_id' => $this->bank->id, 'debit' => '150.00', 'credit' => '0'],
+                ['account_id' => $this->revenue->id, 'debit' => '0', 'credit' => '150.00'],
+            ],
+        ]);
+
+        $draft = JournalEntry::where('reference', 'JE-TO-POST')->firstOrFail();
+
+        $response = $this->actAsOrg()->post("/accounting/journal-entries/{$draft->id}/post");
+
+        $response->assertRedirect('/accounting/journal-entries');
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('journal_entries', [
+            'id' => $draft->id,
+            'is_posted' => true,
+        ]);
+    }
+
+    public function test_post_blocks_already_posted_entry(): void
+    {
+        $this->actAsOrg()->post('/accounting/journal-entries', [
+            'date' => '2026-03-15',
+            'reference' => 'JE-ALREADY-POSTED',
+            'is_posted' => true,
+            'lines' => [
+                ['account_id' => $this->bank->id, 'debit' => '100.00', 'credit' => '0'],
+                ['account_id' => $this->revenue->id, 'debit' => '0', 'credit' => '100.00'],
+            ],
+        ]);
+
+        $entry = JournalEntry::where('reference', 'JE-ALREADY-POSTED')->firstOrFail();
+
+        $response = $this->actAsOrg()->post("/accounting/journal-entries/{$entry->id}/post");
+        $response->assertForbidden();
+    }
+
+    public function test_reverse_creates_draft_reversal(): void
+    {
+        $this->actAsOrg()->post('/accounting/journal-entries', [
+            'date' => '2026-03-15',
+            'reference' => 'JE-TO-REVERSE',
+            'description' => 'Original entry',
+            'is_posted' => true,
+            'lines' => [
+                ['account_id' => $this->bank->id, 'debit' => '300.00', 'credit' => '0', 'description' => 'Bank deposit'],
+                ['account_id' => $this->revenue->id, 'debit' => '0', 'credit' => '300.00', 'description' => 'Revenue earned'],
+            ],
+        ]);
+
+        $original = JournalEntry::where('reference', 'JE-TO-REVERSE')->firstOrFail();
+
+        $response = $this->actAsOrg()->post("/accounting/journal-entries/{$original->id}/reverse");
+
+        $response->assertRedirect('/accounting/journal-entries');
+        $response->assertSessionHas('success');
+
+        // Reversal should exist as a DRAFT
+        $this->assertDatabaseHas('journal_entries', [
+            'reference' => 'REV-JE-TO-REVERSE',
+            'is_posted' => false, // Key assertion: it's a draft
+        ]);
+
+        $reversal = JournalEntry::where('reference', 'REV-JE-TO-REVERSE')->firstOrFail();
+
+        // Verify lines are swapped (debit ↔ credit)
+        $this->assertDatabaseHas('transaction_lines', [
+            'journal_entry_id' => $reversal->id,
+            'account_id' => $this->bank->id,
+            'debit' => '0',
+            'credit' => '300.00',
+        ]);
+
+        $this->assertDatabaseHas('transaction_lines', [
+            'journal_entry_id' => $reversal->id,
+            'account_id' => $this->revenue->id,
+            'debit' => '300.00',
+            'credit' => '0',
+        ]);
+
+        // Original entry should remain unchanged
+        $this->assertDatabaseHas('journal_entries', [
+            'id' => $original->id,
+            'reference' => 'JE-TO-REVERSE',
+            'is_posted' => true,
+        ]);
+    }
+
+    public function test_reverse_blocks_draft_entry(): void
+    {
+        $this->actAsOrg()->post('/accounting/journal-entries', [
+            'date' => '2026-03-15',
+            'reference' => 'JE-DRAFT-REV',
+            'is_posted' => false,
+            'lines' => [
+                ['account_id' => $this->bank->id, 'debit' => '100.00', 'credit' => '0'],
+                ['account_id' => $this->revenue->id, 'debit' => '0', 'credit' => '100.00'],
+            ],
+        ]);
+
+        $draft = JournalEntry::where('reference', 'JE-DRAFT-REV')->firstOrFail();
+
+        $response = $this->actAsOrg()->post("/accounting/journal-entries/{$draft->id}/reverse");
+        $response->assertForbidden();
+    }
+
+    public function test_reverse_prevents_duplicate_reversals(): void
+    {
+        $this->actAsOrg()->post('/accounting/journal-entries', [
+            'date' => '2026-03-15',
+            'reference' => 'JE-DOUBLE-REV',
+            'is_posted' => true,
+            'lines' => [
+                ['account_id' => $this->bank->id, 'debit' => '100.00', 'credit' => '0'],
+                ['account_id' => $this->revenue->id, 'debit' => '0', 'credit' => '100.00'],
+            ],
+        ]);
+
+        $entry = JournalEntry::where('reference', 'JE-DOUBLE-REV')->firstOrFail();
+
+        // First reversal should succeed
+        $this->actAsOrg()->post("/accounting/journal-entries/{$entry->id}/reverse");
+        $this->assertDatabaseHas('journal_entries', ['reference' => 'REV-JE-DOUBLE-REV']);
+
+        // Second reversal should fail (duplicate reference)
+        $response = $this->actAsOrg()->post("/accounting/journal-entries/{$entry->id}/reverse");
+        $response->assertSessionHas('error');
+    }
 }
