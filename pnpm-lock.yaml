@@ -64,8 +64,8 @@ importers:
         specifier: ^10.5.0
         version: 10.5.0(postcss@8.5.14)
       laravel-vite-plugin:
-        specifier: ^3.0.1
-        version: 3.0.1(vite@8.0.13(jiti@2.7.0))
+        specifier: ^3.1.0
+        version: 3.1.0(vite@8.0.13(jiti@2.7.0))
       postcss:
         specifier: '>=8.5.10'
         version: 8.5.14
@@ -729,12 +729,16 @@ packages:
       axios:
         optional: true
 
-  laravel-vite-plugin@3.0.1:
-    resolution: {integrity: sha512-Bx8sVcLIaZT1d0eisABcmjQ1GZdJpaXcV66A8RhXGp9JgR3iL8jDnvakVDXuH87Tn5S9KNx3VOhmJZW1CSexOg==}
+  laravel-vite-plugin@3.1.0:
+    resolution: {integrity: sha512-Fzocl+X4eQ9jOi0RwdphYRGkUbPJ3ky1pTAST5Ot18cS2gw6d2vldK2eCrlKDVjtibCjCx5qptYDlA0373n7qg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
+      fontaine: ^0.5.0
       vite: ^8.0.0
+    peerDependenciesMeta:
+      fontaine:
+        optional: true
 
   lightningcss-android-arm64@1.32.0:
     resolution: {integrity: sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==}
@@ -1671,7 +1675,7 @@ snapshots:
     optionalDependencies:
       axios: 1.16.0
 
-  laravel-vite-plugin@3.0.1(vite@8.0.13(jiti@2.7.0)):
+  laravel-vite-plugin@3.1.0(vite@8.0.13(jiti@2.7.0)):
     dependencies:
       picocolors: 1.1.1
       tinyglobby: 0.2.16
