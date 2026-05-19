@@ -36,8 +36,7 @@ class EnsureActiveSubscription
         }
 
         // Trial expired but not yet converted
-        if ($subscription->status === 'trialing'
-            && $subscription->trial_ends_at?->isPast()) {
+        if ($subscription->isTrialExpired()) {
             return redirect()->route('billing.index')
                 ->with('error', __('app.subscription_expired'));
         }

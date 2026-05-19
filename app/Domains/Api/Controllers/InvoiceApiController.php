@@ -476,7 +476,7 @@ class InvoiceApiController extends Controller
     private function resolveInvoiceMonthlyLimit(CurrentOrganization $currentOrg): int
     {
         if (FeatureFlag::isSaas()) {
-            $plan = $currentOrg->get()->activeSubscription?->plan;
+            $plan = $currentOrg->get()->activeSubscription?->getPlan();
             if ($plan && isset($plan->max_invoices_per_month)) {
                 return (int) $plan->max_invoices_per_month;
             }
