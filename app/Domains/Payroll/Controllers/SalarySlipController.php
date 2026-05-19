@@ -29,7 +29,6 @@ class SalarySlipController extends Controller
         $month = $request->input('month');
 
         $query = SalarySlip::query()
-            ->where('organization_id', $currentOrg->id())
             ->with('employee')
             ->orderByDesc('period_year')
             ->orderByDesc('period_month');
@@ -45,7 +44,7 @@ class SalarySlipController extends Controller
         // Default year to the most recent slip's year if no filter provided
         $defaultYear = $year;
         if (! $defaultYear) {
-            $latestSlip = SalarySlip::where('organization_id', $currentOrg->id())
+            $latestSlip = SalarySlip::query()
                 ->orderByDesc('period_year')
                 ->first();
             $defaultYear = $latestSlip ? (string) $latestSlip->period_year : (string) now()->year;

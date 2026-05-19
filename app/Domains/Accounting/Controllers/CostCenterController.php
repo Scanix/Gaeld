@@ -23,10 +23,7 @@ class CostCenterController extends Controller
         $this->authorize('viewAny', Account::class);
 
         $centers = CostCenter::query()
-            ->with(['children' => fn ($query) => $query
-                ->where('organization_id', $currentOrg->id())
-                ->orderBy('code')])
-            ->where('organization_id', $currentOrg->id())
+            ->with(['children' => fn ($query) => $query->orderBy('code')])
             ->whereNull('parent_id')
             ->orderBy('code')
             ->get();
@@ -113,7 +110,6 @@ class CostCenterController extends Controller
 
         if ($costCenterId) {
             $centerExists = CostCenter::query()
-                ->where('organization_id', $currentOrg->id())
                 ->whereKey((int) $costCenterId)
                 ->exists();
             abort_unless($centerExists, 404);
@@ -160,7 +156,6 @@ class CostCenterController extends Controller
         }
 
         $costCenters = CostCenter::query()
-            ->where('organization_id', $currentOrg->id())
             ->where('is_active', true)
             ->orderBy('code')
             ->get(['id', 'code', 'name']);

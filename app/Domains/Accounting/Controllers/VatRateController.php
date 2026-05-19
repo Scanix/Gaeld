@@ -20,7 +20,7 @@ class VatRateController extends Controller
     {
         $this->authorize('viewAny', VatRate::class);
 
-        $vatRates = VatRate::where('organization_id', $currentOrg->id())
+        $vatRates = VatRate::query()
             ->orderBy('code')
             ->paginate(25)
             ->withQueryString();
@@ -40,7 +40,7 @@ class VatRateController extends Controller
         $validated['is_active'] = true;
 
         if (! empty($validated['is_default'])) {
-            VatRate::where('organization_id', $currentOrg->id())
+            VatRate::query()
                 ->where('is_default', true)
                 ->update(['is_default' => false]);
         }
@@ -58,7 +58,7 @@ class VatRateController extends Controller
         $validated = $request->validated();
 
         if (! empty($validated['is_default'])) {
-            VatRate::where('organization_id', $vatRate->organization_id)
+            VatRate::query()
                 ->where('id', '!=', $vatRate->id)
                 ->where('is_default', true)
                 ->update(['is_default' => false]);

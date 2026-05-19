@@ -32,7 +32,6 @@ class DashboardController extends Controller
             && count($metrics['recentTransactions']) === 0;
 
         $expiredFiscalYear = FiscalYear::query()
-            ->where('organization_id', $orgId)
             ->where('status', FiscalYearStatus::Expired->value)
             ->orderBy('end_date', 'desc')
             ->first();

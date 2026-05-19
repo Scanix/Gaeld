@@ -36,7 +36,7 @@ class MigrationController extends Controller
     {
         $this->authorize('viewAny', MigrationSession::class);
 
-        $sessions = MigrationSession::where('organization_id', $this->currentOrganization->id())
+        $sessions = MigrationSession::query()
             ->orderByDesc('created_at')
             ->paginate(25)
             ->withQueryString();

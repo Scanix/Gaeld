@@ -23,9 +23,7 @@ class LegalArchiveController extends Controller
     {
         $this->authorize('viewAny', LegalArchive::class);
 
-        $orgId = $currentOrg->id();
-
-        $archives = LegalArchive::where('organization_id', $orgId)
+        $archives = LegalArchive::query()
             ->orderByDesc('fiscal_year')
             ->orderBy('document_type')
             ->paginate(50)

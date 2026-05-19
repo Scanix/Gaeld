@@ -114,7 +114,6 @@ class ExpenseController extends Controller
 
         if ($request->filled('scan_id')) {
             ReceiptScan::where('scan_id', $request->input('scan_id'))
-                ->where('organization_id', $currentOrg->id())
                 ->whereIn('status', ['pending', 'completed'])
                 ->update(['status' => 'validated']);
         }

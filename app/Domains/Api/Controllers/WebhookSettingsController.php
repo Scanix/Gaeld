@@ -23,7 +23,6 @@ class WebhookSettingsController extends Controller
         $this->authorize('update', $organization);
 
         $webhooks = Webhook::query()
-            ->where('organization_id', $currentOrg->id())
             ->withCount('calls')
             ->orderByDesc('created_at')
             ->get();
