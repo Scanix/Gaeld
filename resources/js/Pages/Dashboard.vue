@@ -343,7 +343,7 @@ const transactionColumns = computed(() => [
             <p class="text-sm font-medium text-amber-800 dark:text-amber-200">{{ t('unpaid_invoice', { count: unpaidInvoices.count }) }}</p>
             <p class="text-lg font-bold text-amber-900 dark:text-amber-100">{{ formatCurrency(unpaidInvoices.total) }}</p>
           </div>
-          <a href="/invoices" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
+          <a href="/invoices?filter[status]=sent" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
         </CardContent>
       </Card>
       <Card v-if="pendingExpenses.count > 0" class="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30">
@@ -352,7 +352,7 @@ const transactionColumns = computed(() => [
             <p class="text-sm font-medium text-blue-800 dark:text-blue-200">{{ t('pending_expense', { count: pendingExpenses.count }) }}</p>
             <p class="text-lg font-bold text-blue-900 dark:text-blue-100">{{ formatCurrency(pendingExpenses.total) }}</p>
           </div>
-          <a href="/expenses" class="text-sm font-medium text-blue-700 hover:underline dark:text-blue-300">{{ t('view') }}</a>
+          <a href="/expenses?filter[status]=pending" class="text-sm font-medium text-blue-700 hover:underline dark:text-blue-300">{{ t('view') }}</a>
         </CardContent>
       </Card>
 
