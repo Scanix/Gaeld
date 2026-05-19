@@ -22,6 +22,7 @@ use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use App\Support\FeatureFlag;
 use App\Support\Services\FileUploadService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -82,7 +83,7 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function store(StoreInvoiceRequest $request, CreateInvoiceAction $action, CurrentOrganization $currentOrg, FinalizeInvoiceAction $finalizeAction): RedirectResponse
+    public function store(StoreInvoiceRequest $request, CreateInvoiceAction $action, CurrentOrganization $currentOrg, FinalizeInvoiceAction $finalizeAction, InvoiceNumberGenerator $numberGenerator): RedirectResponse
     {
         $orgId = $currentOrg->id();
         $monthlyKey = 'invoices_monthly:'.$orgId.':'.now()->format('Y-m');
@@ -108,9 +109,33 @@ class InvoiceController extends Controller
             );
         }
 
-        $dto = CreateInvoiceData::fromArray($validated);
+        // Auto-generate the invoice number, retrying up to 3 times on a unique
+        // constraint race condition (two concurrent requests picking the same sequence).
+        $invoice = null;
+        for ($attempt = 1; $attempt <= 3; $attempt++) {
+            $forYear = null;
+            if (! empty($validated['issue_date'])) {
+                try {
+                    $forYear = Carbon::parse($validated['issue_date'])->year;
+                } catch (\Throwable) {
+                }
+            }
+            $validated['number'] = $numberGenerator->next($orgId, null, $forYear);
 
-        $invoice = $action->execute($dto);
+            try {
+                $dto = CreateInvoiceData::fromArray($validated);
+                $invoice = $action->execute($dto);
+                break;
+            } catch (QueryException $e) {
+                $sqlState = $e->errorInfo[0] ?? (string) $e->getCode();
+                $isNumberConflict = $sqlState === '23505'
+                    && str_contains($e->getMessage(), 'invoices_organization_id_number_unique');
+
+                if (! $isNumberConflict || $attempt === 3) {
+                    throw $e;
+                }
+            }
+        }
 
         if ($request->boolean('finalize')) {
             $finalizeAction->execute($invoice);
