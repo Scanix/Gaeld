@@ -3,108 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ __('exports.salary_slip.title') }} — {{ $slip->employee->fullName() }}</title>
+    @include('exports._styles')
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 20mm; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 8mm; border-bottom: 2px solid #2563eb; padding-bottom: 4mm; }
-        .header h1 { font-size: 16pt; color: #2563eb; }
-        .period { font-size: 12pt; color: #4b5563; text-align: right; }
-        .section { margin-bottom: 6mm; }
-        .section-title { font-size: 11pt; font-weight: 700; color: #2563eb; border-bottom: 1px solid #e5e7eb; padding-bottom: 1mm; margin-bottom: 2mm; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }
-        th, td { padding: 2mm 3mm; text-align: left; }
-        th { font-weight: 600; color: #6b7280; font-size: 9pt; }
-        td { font-size: 10pt; }
-        .right { text-align: right; }
-        .total-row { font-weight: 700; border-top: 2px solid #2563eb; }
-        .net-row { font-size: 12pt; font-weight: 700; color: #2563eb; border-top: 3px double #2563eb; }
-        .employee-info td { padding: 1mm 3mm; }
-        .footer { margin-top: 10mm; font-size: 8pt; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 3mm; }
+        /* Swiss letter layout (SN 010130 / DIN 5008) */
+        .letter-sender { font-size: 8.5pt; line-height: 1.4; color: #555; padding-bottom: 2mm; border-bottom: 1px solid #999; width: 85mm; }
+        .letter-sender .sender-name { color: #111; font-weight: bold; }
+
+        /* Recipient block — placed at the window-envelope position (right side, ~50mm from page top) */
+        .letter-recipient { position: absolute; top: 38mm; right: 0; width: 75mm; font-size: 10pt; line-height: 1.45; }
+        .letter-recipient .recipient-label { font-size: 7.5pt; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1.5mm; }
+        .letter-recipient .recipient-name { font-size: 11pt; font-weight: bold; }
+        .letter-recipient .recipient-detail { font-size: 9pt; color: #555; }
+
+        /* Place + date — left aligned, between address block and document title */
+        .letter-place-date { margin-top: 35mm; font-size: 10pt; color: #333; }
+
+        /* Document title (Lohnausweis / Salary slip) */
+        .letter-title { margin-top: 8mm; padding-bottom: 4mm; border-bottom: 2px solid #111; margin-bottom: 7mm; }
+        .letter-title .doc-type-label { font-size: 16pt; font-weight: bold; }
+        .letter-title .doc-period-label { font-size: 11pt; color: #555; margin-top: 1mm; }
+
+        /* Net salary highlight */
+        tr.row-net td { font-size: 12pt; font-weight: bold; border-top: 3px double #111; border-bottom: none; padding-top: 6px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div>
-            <h1>{{ __('exports.salary_slip.title') }}</h1>
-        </div>
-        <div class="period">
-            {{ str_pad($slip->period_month, 2, '0', STR_PAD_LEFT) }}/{{ $slip->period_year }}
-        </div>
+    @php $deductions = $slip->deductions; @endphp
+
+    {{-- Swiss SN 010130 letter layout: sender top-left, recipient on right (window position) --}}
+    @php
+        $logoFullPath = $organization->logo_path ? storage_path('app/'.$organization->logo_path) : null;
+    @endphp
+    @if($logoFullPath && file_exists($logoFullPath))
+        <div class="doc-logo"><img src="{{ $logoFullPath }}" alt="Logo"></div>
+    @else
+        <div class="doc-logo-placeholder">Logo</div>
+    @endif
+
+    <div class="letter-sender">
+        <span class="sender-name">{{ $organization->legal_name ?? $organization->name }}</span>
+        @if($organization->address)
+            &nbsp;·&nbsp;{{ $organization->address }}
+        @endif
+        @if($organization->postal_code || $organization->city)
+            &nbsp;·&nbsp;{{ implode(' ', array_filter([$organization->postal_code ?? null, $organization->city ?? null])) }}
+        @endif
     </div>
 
-    <div class="section">
-        <div class="section-title">{{ __('exports.salary_slip.employee') }}</div>
-        <table class="employee-info">
-            <tr><td style="width:30%;">{{ __('exports.salary_slip.name') }}</td><td>{{ $slip->employee->fullName() }}</td></tr>
-            @if($slip->employee->ahv_number)
-                <tr><td>{{ __('exports.salary_slip.ahv_number') }}</td><td>{{ $slip->employee->ahv_number }}</td></tr>
-            @endif
-        </table>
+    <div class="letter-recipient">
+        <div class="recipient-label">{{ __('exports.salary_slip.employee') }}</div>
+        <div class="recipient-name">{{ $slip->employee->fullName() }}</div>
+        @if($slip->employee->ahv_number)
+            <div class="recipient-detail">{{ __('exports.salary_slip.ahv_number') }}: {{ $slip->employee->ahv_number }}</div>
+        @endif
     </div>
 
+    <div class="letter-place-date">
+        {{ $organization->city ?? '' }}{{ $organization->city ? ',' : '' }} {{ \Carbon\Carbon::now()->format('d.m.Y') }}
+    </div>
+
+    <div class="letter-title">
+        <div class="doc-type-label">{{ __('exports.salary_slip.title') }}</div>
+        <div class="doc-period-label">{{ \Carbon\Carbon::create($slip->period_year, $slip->period_month, 1)->locale(app()->getLocale())->isoFormat('MMMM YYYY') }}</div>
+    </div>
+
+    {{-- Gross salary --}}
     <div class="section">
         <div class="section-title">{{ __('exports.salary_slip.salary') }}</div>
         <table>
-            <tr>
-                <td>{{ __('exports.salary_slip.gross_salary') }}</td>
-                <td class="right">{{ number_format((float) $slip->gross_salary, 2, '.', "'") }}</td>
-            </tr>
+            <tbody>
+                <tr>
+                    <td>{{ __('exports.salary_slip.gross_salary') }}</td>
+                    <td class="r">{{ number_format((float) $slip->gross_salary, 2, '.', "'") }}</td>
+                </tr>
+            </tbody>
         </table>
     </div>
 
+    {{-- Employee deductions --}}
     <div class="section">
         <div class="section-title">{{ __('exports.salary_slip.employee_deductions') }}</div>
         <table>
-            @php $deductions = $slip->deductions; @endphp
-            @if(isset($deductions['avs_employee']) && bccomp($deductions['avs_employee'], '0', 2) > 0)
-                <tr><td>{{ __('exports.salary_slip.avs_ai_apg') }}</td><td class="right">-{{ number_format((float) $deductions['avs_employee'], 2, '.', "'") }}</td></tr>
-            @endif
-            @if(isset($deductions['ac_employee']) && bccomp($deductions['ac_employee'], '0', 2) > 0)
-                <tr><td>{{ __('exports.salary_slip.unemployment_insurance') }}</td><td class="right">-{{ number_format((float) $deductions['ac_employee'], 2, '.', "'") }}</td></tr>
-            @endif
-            @if(isset($deductions['aanp_employee']) && bccomp($deductions['aanp_employee'], '0', 2) > 0)
-                <tr><td>{{ __('exports.salary_slip.aanp') }}</td><td class="right">-{{ number_format((float) $deductions['aanp_employee'], 2, '.', "'") }}</td></tr>
-            @endif
-            @if(isset($deductions['lpp_employee']) && bccomp($deductions['lpp_employee'], '0', 2) > 0)
-                <tr><td>{{ __('exports.salary_slip.pension_lpp') }}</td><td class="right">-{{ number_format((float) $deductions['lpp_employee'], 2, '.', "'") }}</td></tr>
-            @endif
-            <tr class="total-row">
-                <td>{{ __('exports.salary_slip.total_deductions') }}</td>
-                <td class="right">-{{ number_format((float) ($deductions['total_employee'] ?? '0'), 2, '.', "'") }}</td>
-            </tr>
+            <tbody>
+                @if(isset($deductions['avs_employee']) && bccomp((string) $deductions['avs_employee'], '0', 2) > 0)
+                    <tr>
+                        <td>{{ __('exports.salary_slip.avs_ai_apg') }}</td>
+                        <td class="r">−{{ number_format((float) $deductions['avs_employee'], 2, '.', "'") }}</td>
+                    </tr>
+                @endif
+                @if(isset($deductions['ac_employee']) && bccomp((string) $deductions['ac_employee'], '0', 2) > 0)
+                    <tr>
+                        <td>{{ __('exports.salary_slip.unemployment_insurance') }}</td>
+                        <td class="r">−{{ number_format((float) $deductions['ac_employee'], 2, '.', "'") }}</td>
+                    </tr>
+                @endif
+                @if(isset($deductions['aanp_employee']) && bccomp((string) $deductions['aanp_employee'], '0', 2) > 0)
+                    <tr>
+                        <td>{{ __('exports.salary_slip.aanp') }}</td>
+                        <td class="r">−{{ number_format((float) $deductions['aanp_employee'], 2, '.', "'") }}</td>
+                    </tr>
+                @endif
+                @if(isset($deductions['lpp_employee']) && bccomp((string) $deductions['lpp_employee'], '0', 2) > 0)
+                    <tr>
+                        <td>{{ __('exports.salary_slip.pension_lpp') }}</td>
+                        <td class="r">−{{ number_format((float) $deductions['lpp_employee'], 2, '.', "'") }}</td>
+                    </tr>
+                @endif
+                <tr class="row-total">
+                    <td>{{ __('exports.salary_slip.total_deductions') }}</td>
+                    <td class="r">−{{ number_format((float) ($deductions['total_employee'] ?? '0'), 2, '.', "'") }}</td>
+                </tr>
+            </tbody>
         </table>
     </div>
 
+    {{-- Net salary --}}
     <div class="section">
         <table>
-            <tr class="net-row">
-                <td>{{ __('exports.salary_slip.net_salary') }}</td>
-                <td class="right">{{ number_format((float) $slip->net_salary, 2, '.', "'") }}</td>
-            </tr>
+            <tbody>
+                <tr class="row-net">
+                    <td>{{ __('exports.salary_slip.net_salary') }}</td>
+                    <td class="r">{{ number_format((float) $slip->net_salary, 2, '.', "'") }}</td>
+                </tr>
+            </tbody>
         </table>
     </div>
 
+    {{-- Employer charges (informational) --}}
     <div class="section">
         <div class="section-title">{{ __('exports.salary_slip.employer_charges') }}</div>
         <table>
-            @if(isset($deductions['avs_employer']) && bccomp($deductions['avs_employer'], '0', 2) > 0)
-                <tr><td>{{ __('exports.salary_slip.avs_ai_apg_employer') }}</td><td class="right">{{ number_format((float) $deductions['avs_employer'], 2, '.', "'") }}</td></tr>
-            @endif
-            @if(isset($deductions['ac_employer']) && bccomp($deductions['ac_employer'], '0', 2) > 0)
-                <tr><td>{{ __('exports.salary_slip.unemployment_insurance_employer') }}</td><td class="right">{{ number_format((float) $deductions['ac_employer'], 2, '.', "'") }}</td></tr>
-            @endif
-            @if(isset($deductions['lpp_employer']) && bccomp($deductions['lpp_employer'], '0', 2) > 0)
-                <tr><td>{{ __('exports.salary_slip.pension_lpp_employer') }}</td><td class="right">{{ number_format((float) $deductions['lpp_employer'], 2, '.', "'") }}</td></tr>
-            @endif
-            <tr class="total-row">
-                <td>{{ __('exports.salary_slip.total_employer_charges') }}</td>
-                <td class="right">{{ number_format((float) ($deductions['total_employer'] ?? '0'), 2, '.', "'") }}</td>
-            </tr>
+            <tbody>
+                @if(isset($deductions['avs_employer']) && bccomp((string) $deductions['avs_employer'], '0', 2) > 0)
+                    <tr>
+                        <td>{{ __('exports.salary_slip.avs_ai_apg_employer') }}</td>
+                        <td class="r">{{ number_format((float) $deductions['avs_employer'], 2, '.', "'") }}</td>
+                    </tr>
+                @endif
+                @if(isset($deductions['ac_employer']) && bccomp((string) $deductions['ac_employer'], '0', 2) > 0)
+                    <tr>
+                        <td>{{ __('exports.salary_slip.unemployment_insurance_employer') }}</td>
+                        <td class="r">{{ number_format((float) $deductions['ac_employer'], 2, '.', "'") }}</td>
+                    </tr>
+                @endif
+                @if(isset($deductions['lpp_employer']) && bccomp((string) $deductions['lpp_employer'], '0', 2) > 0)
+                    <tr>
+                        <td>{{ __('exports.salary_slip.pension_lpp_employer') }}</td>
+                        <td class="r">{{ number_format((float) $deductions['lpp_employer'], 2, '.', "'") }}</td>
+                    </tr>
+                @endif
+                <tr class="row-total">
+                    <td>{{ __('exports.salary_slip.total_employer_charges') }}</td>
+                    <td class="r">{{ number_format((float) ($deductions['total_employer'] ?? '0'), 2, '.', "'") }}</td>
+                </tr>
+            </tbody>
         </table>
     </div>
 
-    <div class="footer">
-        {{ __('exports.common.generated_by') }} &mdash; {{ now()->format('d.m.Y H:i') }}
+    <div class="page-footer">
+        <span>{{ __('exports.common.generated_by') }} — {{ now()->format('d.m.Y H:i') }}</span>
+        <span>{{ __('exports.common.page') }} <span class="page-num"></span> / <span class="page-total"></span></span>
     </div>
 </body>
 </html>

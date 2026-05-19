@@ -75,7 +75,7 @@ class ReportController extends Controller
         $to = $validated['to'] ?? now()->toDateString();
 
         $report = $reportingService->profitAndLoss($orgId, $from, $to);
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
 
         return $exporter->export(
             $format,
@@ -97,7 +97,7 @@ class ReportController extends Controller
                 return $exporter->csv()->export($headers, $rows, "profit-and-loss-{$from}-{$to}.csv");
             },
             pdfBuilder: fn () => $exporter->pdf()->download('exports.profit-and-loss', [
-                'organizationName' => $orgName,
+                'organization' => $org,
                 'period' => ['from' => $from, 'to' => $to],
                 'revenue' => $report['revenue'],
                 'expenses' => $report['expenses'],
@@ -122,7 +122,7 @@ class ReportController extends Controller
         $asOfDate = $validated['as_of_date'] ?? now()->toDateString();
 
         $report = $reportingService->balanceSheet($orgId, $asOfDate);
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
 
         return $exporter->export(
             $format,
@@ -140,7 +140,7 @@ class ReportController extends Controller
                 return $exporter->csv()->export($headers, $rows, "balance-sheet-{$asOfDate}.csv");
             },
             pdfBuilder: fn () => $exporter->pdf()->download('exports.balance-sheet', [
-                'organizationName' => $orgName,
+                'organization' => $org,
                 'asOfDate' => $asOfDate,
                 'assets' => $report['assets'],
                 'liabilities' => $report['liabilities'],
@@ -194,7 +194,7 @@ class ReportController extends Controller
         $to = $request->input('to', now()->toDateString());
 
         $report = $reportingService->cashFlow($currentOrg->id(), $from, $to);
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
 
         return $exporter->export(
             $format,
@@ -222,7 +222,7 @@ class ReportController extends Controller
                 return $exporter->csv()->export($headers, $rows, "cash-flow-{$from}-{$to}.csv");
             },
             pdfBuilder: fn () => $exporter->pdf()->download('exports.cash-flow', [
-                'organizationName' => $orgName,
+                'organization' => $org,
                 'period' => ['from' => $from, 'to' => $to],
                 'report' => $report,
             ], "cash-flow-{$from}-{$to}.pdf"),
@@ -265,7 +265,7 @@ class ReportController extends Controller
         $asOfDate = $request->input('as_of_date');
 
         $report = $service->generate($currentOrg->id(), $type, $asOfDate);
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
 
         return $exporter->export(
             $format,
@@ -300,7 +300,7 @@ class ReportController extends Controller
                 return $exporter->csv()->export($headers, $rows, "aging-{$type}.csv");
             },
             pdfBuilder: fn () => $exporter->pdf()->download('exports.aging', [
-                'organizationName' => $orgName,
+                'organization' => $org,
                 'report' => $report,
             ], "aging-{$type}.pdf"),
         );
