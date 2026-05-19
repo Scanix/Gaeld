@@ -490,9 +490,6 @@ return [
 
     // Auth
     'welcome' => 'Bienvenue sur Gäld',
-    'welcome_to_gaeld' => 'La comptabilité suisse simplifiée',
-    'welcome_tagline' => 'Gérez vos factures, dépenses, salaires et TVA — en un seul endroit.',
-    'get_started' => 'Commencer',
     'sign_in_account' => 'Connectez-vous à votre compte',
     'remember_me' => 'Se souvenir de moi',
     'forgot_password' => 'Mot de passe oublié ?',

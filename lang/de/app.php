@@ -490,9 +490,6 @@ return [
 
     // Auth
     'welcome' => 'Willkommen bei Gäld',
-    'welcome_to_gaeld' => 'Schweizer Buchhaltung leicht gemacht',
-    'welcome_tagline' => 'Verwalten Sie Rechnungen, Ausgaben, Löhne und MWST — alles an einem Ort.',
-    'get_started' => 'Loslegen',
     'sign_in_account' => 'Melden Sie sich bei Ihrem Konto an',
     'remember_me' => 'Angemeldet bleiben',
     'forgot_password' => 'Passwort vergessen?',
