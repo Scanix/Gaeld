@@ -60,6 +60,6 @@ class LegalArchive extends Model
 
     public function isExpiringSoon(): bool
     {
-        return $this->expires_at->diffInDays(now()) <= 365;
+        return $this->expires_at->lte(now()->addYear());
     }
 }
