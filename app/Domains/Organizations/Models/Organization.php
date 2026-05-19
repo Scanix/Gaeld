@@ -9,6 +9,7 @@ use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Organizations\Enums\BusinessType;
 use App\Domains\Users\Models\User;
+use App\Support\Contracts\SubscriptionContract;
 use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -45,7 +46,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $default_payment_terms_days
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read mixed $activeSubscription Injected at runtime by a plugin via resolveRelationUsing().
+ * @property-read SubscriptionContract|null $activeSubscription
  */
 class Organization extends Model
 {
