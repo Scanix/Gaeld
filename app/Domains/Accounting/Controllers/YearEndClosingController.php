@@ -44,7 +44,6 @@ class YearEndClosingController extends Controller
         $org = Organization::findOrFail($orgId);
 
         $fiscalYears = FiscalYear::query()
-            ->where('organization_id', $orgId)
             ->orderBy('start_date', 'desc')
             ->get();
 
@@ -78,8 +77,9 @@ class YearEndClosingController extends Controller
 
         $startYear = $org->created_at ? $org->created_at->year : (now()->year - 5);
 
-        // Include any earlier years that already have journal entries (e.g. back-dated postings)
-        $earliestEntryYear = (int) JournalEntry::where('organization_id', $orgId)
+        // Include any earlier years that already have journal entries (e.g. back-dated postings).
+        // BelongsToOrganization global scope handles tenant filtering automatically in HTTP context.
+        $earliestEntryYear = (int) JournalEntry::query()
             ->min(DB::raw('EXTRACT(YEAR FROM date)'));
         if ($earliestEntryYear > 0 && $earliestEntryYear < $startYear) {
             $startYear = $earliestEntryYear;
@@ -105,7 +105,7 @@ class YearEndClosingController extends Controller
             'netResult' => $netResult,
             'closedYears' => $org->closed_fiscal_years ?? [],
             'canReopenYear' => $request->user()?->can('reopenYear', Account::class) ?? false,
-            'unsettledVatPeriods' => $this->getUnsettledVatPeriods($orgId, $year),
+            'unsettledVatPeriods' => $this->getUnsettledVatPeriods($year),
         ]);
     }
 
@@ -146,13 +146,11 @@ class YearEndClosingController extends Controller
         $fiscalYear = null;
         if ($fiscalYearId !== null) {
             $fiscalYear = FiscalYear::query()
-                ->where('organization_id', $org->id)
                 ->where('id', $fiscalYearId)
                 ->first();
         }
         if ($fiscalYear === null) {
             $fiscalYear = FiscalYear::query()
-                ->where('organization_id', $org->id)
                 ->where('status', FiscalYearStatus::Closed->value)
                 ->whereYear('start_date', $year)
                 ->first();
@@ -190,7 +188,7 @@ class YearEndClosingController extends Controller
      *
      * @return string[]
      */
-    private function getUnsettledVatPeriods(string $orgId, int $year): array
+    private function getUnsettledVatPeriods(int $year): array
     {
         $quarters = [
             1 => ["{$year}-01-01", "{$year}-03-31"],
@@ -202,10 +200,10 @@ class YearEndClosingController extends Controller
         $unsettled = [];
 
         foreach ($quarters as $q => [$from, $to]) {
-            // Skip quarters that have no VAT-bearing activity at all
+            // Skip quarters that have no VAT-bearing activity at all.
+            // JournalEntry's BelongsToOrganization global scope applies inside whereHas in HTTP context.
             $hasVatActivity = VatEntry::query()
                 ->whereHas('journalEntry', fn ($jq) => $jq
-                    ->where('organization_id', $orgId)
                     ->whereBetween('date', [$from, $to])
                 )
                 ->exists();
@@ -214,7 +212,7 @@ class YearEndClosingController extends Controller
                 continue;
             }
 
-            $exists = JournalEntry::where('organization_id', $orgId)
+            $exists = JournalEntry::query()
                 ->where('type', 'vat_settlement')
                 ->where('reference', "VAT-SETTLEMENT-{$from}-{$to}")
                 ->exists();
