@@ -19,6 +19,8 @@ import {
   ChevronRight,
   Loader2,
   AlertTriangle,
+  FileText,
+  RefreshCw,
 } from 'lucide-vue-next'
 
 const { t } = useTranslations()
@@ -70,6 +72,20 @@ function verifyArchive(year, archive) {
     },
   })
 }
+
+const regenerating = ref({})
+
+function regeneratePdfs(year) {
+  regenerating.value[year] = true
+  router.post(`/accounting/archives/year/${year}/regenerate-pdfs`, {}, {
+    preserveScroll: true,
+    onFinish: async () => {
+      regenerating.value[year] = false
+      loadedItems.value[year] = null
+      await loadYear(year)
+    },
+  })
+}
 </script>
 
 <template>
@@ -104,6 +120,45 @@ function verifyArchive(year, archive) {
           </div>
         </CardHeader>
         <CardContent v-if="expandedYears[year.fiscal_year]">
+          <div class="mb-4 flex flex-wrap items-center gap-2 border-b border-[hsl(var(--border))] pb-4">
+            <a :href="`/accounting/archives/year/${year.fiscal_year}/pdf/pnl`">
+              <Button size="sm" type="button">
+                <FileText class="mr-1 h-4 w-4" />
+                {{ t('archive_download_pnl') }}
+              </Button>
+            </a>
+            <a :href="`/accounting/archives/year/${year.fiscal_year}/pdf/balance_sheet`">
+              <Button variant="secondary" size="sm" type="button">
+                <FileText class="mr-1 h-4 w-4" />
+                {{ t('archive_download_balance_sheet') }}
+              </Button>
+            </a>
+            <a :href="`/accounting/archives/year/${year.fiscal_year}/pdf/journal`">
+              <Button variant="secondary" size="sm" type="button">
+                <FileText class="mr-1 h-4 w-4" />
+                {{ t('archive_download_journal') }}
+              </Button>
+            </a>
+            <a :href="`/accounting/archives/year/${year.fiscal_year}/bundle`">
+              <Button variant="outline" size="sm" type="button">
+                <Download class="mr-1 h-4 w-4" />
+                {{ t('archive_download_bundle') }}
+              </Button>
+            </a>
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              :disabled="!!regenerating[year.fiscal_year]"
+              @click.stop="regeneratePdfs(year.fiscal_year)"
+            >
+              <RefreshCw
+                class="mr-1 h-4 w-4"
+                :class="{ 'animate-spin': regenerating[year.fiscal_year] }"
+              />
+              {{ t('archive_regenerate_pdfs') }}
+            </Button>
+          </div>
           <div
             v-if="loadingYears[year.fiscal_year]"
             class="flex items-center gap-2 py-6 text-sm text-[hsl(var(--muted-foreground))]"
