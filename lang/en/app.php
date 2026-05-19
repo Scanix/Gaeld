@@ -1323,6 +1323,12 @@ return [
     'checklist_social_charges' => 'Social charges posted',
     'checklist_year_end_closed' => 'Year-end closing done',
     'checklist_fiduciary_exported' => 'Fiduciary export generated',
+    'checklist_title' => 'Onboarding checklist',
+    'checklist_progress' => ':done of :total complete',
+    'checklist_dismiss' => 'Dismiss',
+    'checklist_go' => 'Go →',
+    'checklist_section_getting_started' => 'Getting started',
+    'checklist_section_accounting' => 'Accounting',
 
     // Tooltips
     'tooltip_expense_category' => 'Categories map expenses to specific accounts in your chart of accounts for correct financial reporting.',

@@ -1271,6 +1271,12 @@ return [
     'checklist_social_charges' => 'Contributi sociali contabilizzati',
     'checklist_year_end_closed' => 'Chiusura esercizio eseguita',
     'checklist_fiduciary_exported' => 'Export fiduciario generato',
+    'checklist_title' => 'Lista di onboarding',
+    'checklist_progress' => ':done di :total completati',
+    'checklist_dismiss' => 'Nascondi',
+    'checklist_go' => 'Vai →',
+    'checklist_section_getting_started' => 'Per iniziare',
+    'checklist_section_accounting' => 'Contabilità',
 
     // Tooltips
     'tooltip_expense_category' => 'Le categorie associano le spese ai conti del piano contabile per una reportistica corretta.',
