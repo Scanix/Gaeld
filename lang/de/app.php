@@ -1501,6 +1501,7 @@ return [
     'archive_year_verified' => ':count von :total verifiziert',
     'archive_year_earliest_expiry' => 'Früheste Ablauffrist :date',
     'loading' => 'Wird geladen…',
+    'archived_record_locked' => 'Dieses :type (ID :id) ist rechtlich archiviert und kann nicht geändert werden.',
     'archive_expires_at' => 'Aufbewahrung läuft ab am',
     'archive_expiring_soon' => 'Läuft in weniger als 1 Jahr ab',
     'archived' => 'Archiviert',

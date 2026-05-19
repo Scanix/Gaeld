@@ -1381,6 +1381,7 @@ return [
     'archive_year_verified' => ':count of :total verified',
     'archive_year_earliest_expiry' => 'Earliest expiry :date',
     'loading' => 'Loading…',
+    'archived_record_locked' => 'This :type (ID :id) is legally archived and cannot be modified.',
     'archive_expires_at' => 'Retention expires',
     'archive_expiring_soon' => 'Expiring within 1 year',
     'archived' => 'Archived',
