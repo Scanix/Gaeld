@@ -217,7 +217,7 @@ function prevStep() {
                 :key="mode.value"
                 type="button"
                 class="flex flex-col items-start gap-3 rounded-xl border-2 p-6 text-left transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]"
-                :class="form.setup_mode === mode.value ? 'border-[hsl(var(--primary))] bg-[hsl(var(--accent))]' : 'border-[hsl(var(--border))]"
+                :class="form.setup_mode === mode.value ? 'border-[hsl(var(--primary))] bg-[hsl(var(--accent))]' : 'border-[hsl(var(--border))]'"
                 @click="form.setup_mode = mode.value"
               >
                 <component :is="mode.icon" class="h-7 w-7" :class="form.setup_mode === mode.value ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]'" />
