@@ -11,35 +11,62 @@ import Button from '@/Components/UI/Button.vue'
 import HelpText from '@/Components/HelpText.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
-import { Link } from '@inertiajs/vue3'
-import { Archive, ShieldCheck, Download, ChevronDown, ChevronRight } from 'lucide-vue-next'
+import {
+  Archive,
+  ShieldCheck,
+  Download,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  AlertTriangle,
+} from 'lucide-vue-next'
 
 const { t } = useTranslations()
 const { formatDate } = useFormatters()
 
-const props = defineProps({
-  archivesByYear: Object,
-  pagination: Object,
+defineProps({
+  years: {
+    type: Array,
+    default: () => [],
+  },
 })
 
 const expandedYears = ref({})
-
-function toggleYear(year) {
-  expandedYears.value[year] = !expandedYears.value[year]
-}
-
-function isExpanded(year) {
-  return !!expandedYears.value[year]
-}
-
+const loadedItems = ref({})
+const loadingYears = ref({})
 const verifying = ref({})
 
-function verifyArchive(archive) {
+async function toggleYear(year) {
+  expandedYears.value[year] = !expandedYears.value[year]
+  if (expandedYears.value[year] && !loadedItems.value[year]) {
+    await loadYear(year)
+  }
+}
+
+async function loadYear(year) {
+  loadingYears.value[year] = true
+  try {
+    const res = await fetch(`/accounting/archives/year/${year}`, {
+      headers: { Accept: 'application/json' },
+      credentials: 'same-origin',
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    loadedItems.value[year] = data.items ?? []
+  } finally {
+    loadingYears.value[year] = false
+  }
+}
+
+function verifyArchive(year, archive) {
   verifying.value[archive.id] = true
   router.post(`/accounting/archives/${archive.id}/verify`, {}, {
     preserveScroll: true,
-    onFinish: () => {
+    onFinish: async () => {
       verifying.value[archive.id] = false
+      // Refresh the year so verified_at appears immediately.
+      loadedItems.value[year] = null
+      await loadYear(year)
     },
   })
 }
@@ -51,22 +78,45 @@ function verifyArchive(archive) {
       <p>{{ t('legal_archives_desc') }}</p>
     </HelpText>
 
-    <div v-if="archivesByYear && Object.keys(archivesByYear).length > 0" class="space-y-4">
-      <Card v-for="(archives, year) in archivesByYear" :key="year">
-        <CardHeader class="cursor-pointer" @click="toggleYear(year)">
-          <div class="flex items-center justify-between">
+    <div v-if="years.length > 0" class="space-y-4">
+      <Card v-for="year in years" :key="year.fiscal_year">
+        <CardHeader class="cursor-pointer" @click="toggleYear(year.fiscal_year)">
+          <div class="flex flex-wrap items-center justify-between gap-3">
             <CardTitle class="flex items-center gap-2">
               <Archive class="h-5 w-5" />
-              {{ t('archive_fiscal_year') }} {{ year }}
-              <Badge variant="secondary">{{ archives.length }}</Badge>
+              {{ t('archive_fiscal_year') }} {{ year.fiscal_year }}
+              <Badge variant="secondary">{{ year.total_count }}</Badge>
             </CardTitle>
-            <component :is="isExpanded(year) ? ChevronDown : ChevronRight" class="h-5 w-5 text-[hsl(var(--muted-foreground))]" />
+            <div class="flex flex-wrap items-center gap-3 text-xs text-[hsl(var(--muted-foreground))]">
+              <span class="inline-flex items-center gap-1">
+                <ShieldCheck class="h-3 w-3 text-green-600" />
+                {{ t('archive_year_verified', { count: year.verified_count, total: year.total_count }) }}
+              </span>
+              <span v-if="year.earliest_expiry" class="inline-flex items-center gap-1">
+                <AlertTriangle class="h-3 w-3" />
+                {{ t('archive_year_earliest_expiry', { date: formatDate(year.earliest_expiry) }) }}
+              </span>
+              <component
+                :is="expandedYears[year.fiscal_year] ? ChevronDown : ChevronRight"
+                class="h-5 w-5"
+              />
+            </div>
           </div>
         </CardHeader>
-        <CardContent v-if="isExpanded(year)">
-          <div class="divide-y divide-[hsl(var(--border))]">
+        <CardContent v-if="expandedYears[year.fiscal_year]">
+          <div
+            v-if="loadingYears[year.fiscal_year]"
+            class="flex items-center gap-2 py-6 text-sm text-[hsl(var(--muted-foreground))]"
+          >
+            <Loader2 class="h-4 w-4 animate-spin" />
+            {{ t('loading') }}
+          </div>
+          <div
+            v-else-if="loadedItems[year.fiscal_year]?.length"
+            class="divide-y divide-[hsl(var(--border))]"
+          >
             <div
-              v-for="archive in archives"
+              v-for="archive in loadedItems[year.fiscal_year]"
               :key="archive.id"
               class="flex items-center justify-between py-3 first:pt-0 last:pb-0"
             >
@@ -80,10 +130,7 @@ function verifyArchive(archive) {
                   <ShieldCheck class="mr-1 inline h-3 w-3" />
                   {{ t('verified') }} {{ formatDate(archive.verified_at) }}
                 </p>
-                <p
-                  v-if="archive.is_expiring_soon"
-                  class="mt-0.5 text-xs text-amber-600"
-                >
+                <p v-if="archive.is_expiring_soon" class="mt-0.5 text-xs text-amber-600">
                   {{ t('archive_expiring_soon') }}
                 </p>
               </div>
@@ -92,7 +139,7 @@ function verifyArchive(archive) {
                   variant="outline"
                   size="sm"
                   :disabled="!!verifying[archive.id]"
-                  @click.stop="verifyArchive(archive)"
+                  @click.stop="verifyArchive(year.fiscal_year, archive)"
                 >
                   <ShieldCheck class="mr-1 h-4 w-4" />
                   {{ t('archive_verify') }}
@@ -106,28 +153,16 @@ function verifyArchive(archive) {
               </div>
             </div>
           </div>
+          <div v-else class="py-6 text-center text-sm text-[hsl(var(--muted-foreground))]">
+            {{ t('no_archives') }}
+          </div>
         </CardContent>
       </Card>
     </div>
 
-    <!-- Pagination -->
-    <div v-if="pagination?.last_page > 1" class="mt-4 flex items-center justify-between">
-      <span class="text-sm text-[hsl(var(--muted-foreground))]">
-        {{ t('page') }} {{ pagination.current_page }} / {{ pagination.last_page }}
-      </span>
-      <div class="flex gap-2">
-        <Link v-if="pagination.prev_page_url" :href="pagination.prev_page_url">
-          <Button variant="outline" size="sm">{{ t('previous') }}</Button>
-        </Link>
-        <Link v-if="pagination.next_page_url" :href="pagination.next_page_url">
-          <Button variant="outline" size="sm">{{ t('next') }}</Button>
-        </Link>
-      </div>
-    </div>
-
-    <Card v-else-if="!archivesByYear || Object.keys(archivesByYear).length === 0">
+    <Card v-else>
       <CardContent class="py-12 text-center text-sm text-[hsl(var(--muted-foreground))]">
-        {{ t('no_archives', 'No archived documents yet.') }}
+        {{ t('no_archives') }}
       </CardContent>
     </Card>
   </AppLayout>
