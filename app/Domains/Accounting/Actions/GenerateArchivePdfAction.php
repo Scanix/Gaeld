@@ -25,11 +25,6 @@ use Illuminate\Support\Facades\Storage;
 final class GenerateArchivePdfAction
 {
     /**
-     * If a PDF was generated within this many seconds, regeneration is a no-op.
-     */
-    private const REGENERATION_COOLDOWN_SECONDS = 86_400; // 1 day
-
-    /**
      * @var array<string, string> document_type => filename slug
      */
     private const ARTEFACTS = [
@@ -64,10 +59,24 @@ final class GenerateArchivePdfAction
                 ->where('document_id', "pdf-{$year}")
                 ->first();
 
+            // A sealed archive — file exists on disk — must never be overwritten.
+            // The checksum is the integrity anchor; regenerating would silently
+            // replace it with whatever the renderer produces today.
+            if ($existing !== null && Storage::exists($relativePath)) {
+                $results[] = [
+                    'type' => $documentType,
+                    'path' => $relativePath,
+                    'checksum' => $existing->checksum_sha256,
+                    'regenerated' => false,
+                ];
+
+                continue;
+            }
+
             // Idempotent: skip if generated recently and not forced.
             if (! $force
                 && $existing !== null
-                && $existing->archived_at->diffInSeconds(now()) < self::REGENERATION_COOLDOWN_SECONDS
+                && $existing->archived_at->diffInSeconds(now()) < 86_400
                 && Storage::exists($relativePath)
             ) {
                 $results[] = [
@@ -111,6 +120,36 @@ final class GenerateArchivePdfAction
         }
 
         return $results;
+    }
+
+    /**
+     * Recover a missing or corrupted PDF file for an already-sealed archive.
+     *
+     * PDFs are non-deterministic (DomPDF embeds a generation timestamp), so
+     * the byte-for-byte SHA-256 recorded at sealing time can never match a
+     * regenerated PDF. The true integrity anchor for accounting data is the
+     * companion JSON archive, which IS deterministic. For PDFs we therefore
+     * regenerate unconditionally, write the new file, and update the stored
+     * checksum so that subsequent calls to verifyIntegrity() still pass.
+     * verified_at is cleared to prompt a fresh verification stamp.
+     */
+    public function recoverFile(LegalArchive $archive): bool
+    {
+        $org = Organization::findOrFail($archive->organization_id);
+        $fromDate = sprintf('%04d-01-01', $archive->fiscal_year);
+        $toDate = sprintf('%04d-12-31', $archive->fiscal_year);
+
+        $content = $this->renderArtefact($archive->document_type, $org, $fromDate, $toDate);
+
+        Storage::put($archive->storage_path, $content);
+
+        $archive->update([
+            'checksum_sha256' => hash('sha256', $content),
+            'archived_at' => now(),
+            'verified_at' => null,
+        ]);
+
+        return true;
     }
 
     private function renderArtefact(string $documentType, Organization $org, string $fromDate, string $toDate): string

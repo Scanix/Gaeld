@@ -150,15 +150,23 @@ class LegalArchiveController extends Controller
             ->where('document_id', "pdf-{$year}")
             ->first();
 
-        if ($archive === null || ! Storage::exists($archive->storage_path)) {
-            $pdfAction->execute($currentOrg->id(), $year, force: true);
-
+        if ($archive !== null && Storage::exists($archive->storage_path)) {
+            // Happy path — sealed file is on disk, serve it directly.
+        } elseif ($archive === null) {
+            // First generation (open year or on-demand for a freelancer).
+            $pdfAction->execute($currentOrg->id(), $year);
             $archive = LegalArchive::query()
                 ->where('organization_id', $currentOrg->id())
                 ->where('fiscal_year', $year)
                 ->where('document_type', $documentType)
                 ->where('document_id', "pdf-{$year}")
                 ->firstOrFail();
+        } else {
+            // Archive row exists but file is missing (storage issue).
+            // Recover by regenerating; checksum is also updated because DomPDF
+            // is non-deterministic. The JSON companion archives remain the
+            // deterministic integrity anchor for the underlying accounting data.
+            $pdfAction->recoverFile($archive);
         }
 
         return Storage::download(
@@ -212,7 +220,25 @@ class LegalArchiveController extends Controller
     {
         $this->authorize('viewAny', LegalArchive::class);
 
-        $pdfAction->execute($currentOrg->id(), $year, force: true);
+        $archives = LegalArchive::query()
+            ->where('organization_id', $currentOrg->id())
+            ->where('fiscal_year', $year)
+            ->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])
+            ->get()
+            ->keyBy('document_type');
+
+        if ($archives->isEmpty()) {
+            // Nothing archived yet — generate fresh.
+            $pdfAction->execute($currentOrg->id(), $year);
+
+            return back()->with('success', __('app.archive_pdfs_regenerated'));
+        }
+
+        // For sealed archives, re-derive the file from current accounting data
+        // and update the checksum. PDFs are non-deterministic (DomPDF embeds a
+        // timestamp), so the original checksum can never match a regeneration;
+        // the JSON companion archives remain the deterministic integrity anchor.
+        $archives->each(fn (LegalArchive $a) => $pdfAction->recoverFile($a));
 
         return back()->with('success', __('app.archive_pdfs_regenerated'));
     }
