@@ -86,10 +86,10 @@ function deductionRow(label, employee, employer) {
               </tr>
               <!-- Deductions -->
               <tr v-for="d in [
-                deductionRow(t('avs_employee'), slip.avs_employee, slip.avs_employer),
-                deductionRow(t('ac_employee'), slip.ac_employee, slip.ac_employer),
-                deductionRow(t('aanp_employee'), slip.aanp_employee, slip.aanp_employer),
-                deductionRow(t('lpp_employee'), slip.lpp_employee, slip.lpp_employer),
+                deductionRow(t('avs_employee'), slip.deductions?.avs_employee, slip.deductions?.avs_employer),
+                deductionRow(t('ac_employee'), slip.deductions?.ac_employee, slip.deductions?.ac_employer),
+                deductionRow(t('aanp_employee'), slip.deductions?.aanp_employee, slip.deductions?.aanp_employer),
+                deductionRow(t('lpp_employee'), slip.deductions?.lpp_employee, slip.deductions?.lpp_employer),
               ]" :key="d.label" class="text-red-700 dark:text-red-400">
                 <td class="py-2">{{ d.label }}</td>
                 <td class="py-2 text-right font-mono">{{ formatCurrency(-d.employee) }}</td>
@@ -128,7 +128,7 @@ function deductionRow(label, employee, employer) {
         <p v-if="slip.status === 'posted'" class="flex items-center text-sm text-green-700 dark:text-green-400">
           {{ t('slip_posted_to_ledger') }}
           <span v-if="slip.journal_entry_id" class="ml-2">
-            (<Link :href="`/accounting/journal-entries/${slip.journal_entry_id}`" class="hover:underline">#{{ slip.journal_entry_id }}</Link>)
+            (<Link href="/accounting/journal-entries" class="hover:underline">{{ t('view_journal') }}</Link>)
           </span>
         </p>
       </div>

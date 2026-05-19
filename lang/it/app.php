@@ -1216,6 +1216,7 @@ return [
     'post_to_ledger' => 'Contabilizza',
     'download_pdf' => 'Scarica PDF',
     'slip_posted_to_ledger' => 'Contabilizzato',
+    'view_journal' => 'Vedi giornale',
     'period' => 'Periodo',
     'employee_share' => 'Quota dipendente',
     'employer_share' => 'Quota datore',

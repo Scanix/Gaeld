@@ -1223,6 +1223,7 @@ return [
     'post_to_ledger' => 'Ins Hauptbuch buchen',
     'download_pdf' => 'PDF herunterladen',
     'slip_posted_to_ledger' => 'Im Hauptbuch gebucht',
+    'view_journal' => 'Journal anzeigen',
     'period' => 'Periode',
     'employee_share' => 'Arbeitnehmer',
     'employer_share' => 'Arbeitgeber',

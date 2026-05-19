@@ -1261,6 +1261,7 @@ return [
     'post_to_ledger' => 'Post to Ledger',
     'download_pdf' => 'Download PDF',
     'slip_posted_to_ledger' => 'Posted to ledger',
+    'view_journal' => 'View journal',
     'period' => 'Period',
     'employee_share' => 'Employee',
     'employer_share' => 'Employer',
