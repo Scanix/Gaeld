@@ -80,6 +80,12 @@ class ArchivePdfGenerationTest extends TestCase
         $action = app(GenerateArchivePdfAction::class);
 
         $action->execute($this->organization->id, $year);
+
+        // Delete the stored files so the seal-protection guard doesn't trigger.
+        foreach (['pnl', 'balance-sheet', 'journal'] as $slug) {
+            Storage::delete("archives/{$this->organization->id}/{$year}/pdf/{$slug}-{$year}.pdf");
+        }
+
         $results = $action->execute($this->organization->id, $year, force: true);
 
         foreach ($results as $r) {
@@ -129,7 +135,9 @@ class ArchivePdfGenerationTest extends TestCase
             ->where('document_type', 'pdf_pnl')
             ->first();
 
-        // Tamper with stored file to verify it gets rewritten with the same content
+        // Corrupt the file on disk (simulates storage bit-rot / accidental overwrite).
+        // recoverFile() will regenerate from source data, verify the checksum
+        // matches the one stored at sealing time, and restore the file.
         Storage::put($original->storage_path, 'tampered');
 
         $response = $this->actAsOrg()
