@@ -19,6 +19,7 @@ set('application', 'gaeld');
 set('repository', 'git@gitlab.nectoria.com:nectoria/products/gaeld/api.git');
 set('branch', 'production');
 set('keep_releases', 5);
+set('horizon_service', getenv('DEPLOY_HORIZON_SERVICE') ?: 'gaeld-horizon');
 
 // --- Shared files/dirs (persisted across releases) ---
 add('shared_files', ['.env']);
@@ -36,6 +37,16 @@ host('production')
     ->setRemoteUser(getenv('DEPLOY_USER') ?: 'deploy')
     ->set('http_user', 'www-data')
     ->setDeployPath(getenv('DEPLOY_PATH') ?: '/data/www/gaeld_app')
+    ->setForwardAgent(true);
+
+host('staging')
+    ->setLabels(['stage' => 'staging'])
+    ->set('stage', 'staging')
+    ->setHostname(getenv('DEPLOY_STAGING_HOST') ?: 'build')
+    ->setRemoteUser(getenv('DEPLOY_STAGING_USER') ?: 'deploy')
+    ->set('http_user', 'www-data')
+    ->set('horizon_service', getenv('DEPLOY_STAGING_HORIZON_SERVICE') ?: 'gaeld-worker')
+    ->setDeployPath(getenv('DEPLOY_STAGING_PATH') ?: '~/gaeld_app')
     ->setForwardAgent(true);
 
 // --- Tasks ---
@@ -68,8 +79,12 @@ task('deploy:build:link', function () {
 })->desc('Symlink public/build to shared build assets');
 
 task('deploy:horizon:restart', function () {
-    run('sudo systemctl restart gaeld-horizon');
-})->desc('Restart Horizon after deploy');
+    if (test("systemctl list-unit-files | grep -q '^{{horizon_service}}\\.service'")) {
+        run('sudo systemctl restart {{horizon_service}}');
+    } else {
+        warning('Skipping queue service restart: {{horizon_service}}.service not found.');
+    }
+})->desc('Restart queue service after deploy');
 
 // --- SaaS-specific tasks ---
 
@@ -116,7 +131,9 @@ set('sentry', [
     'token' => static function () {
         return trim(run('grep "^SENTRY_AUTH_TOKEN=" {{deploy_path}}/shared/.env | cut -d= -f2- 2>/dev/null || true'), " \t\n\r\0\x0B\"'");
     },
-    'environment' => 'production',
+    'environment' => static function () {
+        return getenv('DEPLOY_SENTRY_ENVIRONMENT') ?: (get('stage') ?: 'production');
+    },
     'git_version_command' => 'git describe --tags --abbrev=0',
 ]);
 
