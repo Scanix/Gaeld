@@ -26,10 +26,12 @@ class CancelInvoiceAction
         return DB::transaction(function () use ($invoice) {
             if ($invoice->journal_entry_id) {
                 $invoice->loadMissing('journalEntry.lines');
-                $this->ledgerService->reverseEntry(
+                $reversal = $this->ledgerService->reverseEntry(
                     $invoice->journalEntry,
                     "Cancellation of {$invoice->number}",
                 );
+                // Post the reversal immediately for invoice cancellation
+                $this->ledgerService->postDraft($reversal);
             }
 
             $invoice->update(['status' => InvoiceStatus::Cancelled]);

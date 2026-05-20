@@ -51,13 +51,23 @@ class CancelInvoiceActionTest extends TestCase
         $journalEntry = Mockery::mock(JournalEntry::class)->makePartial();
         $journalEntry->shouldReceive('getAttribute')->with('lines')->andReturn(new Collection);
 
+        $reversal = Mockery::mock(JournalEntry::class)->makePartial();
+
         $invoice = $this->makeInvoice(InvoiceStatus::Sent, journalEntryId: 'je-123', journalEntry: $journalEntry);
+
+        $reversalEntry = Mockery::mock(JournalEntry::class)->makePartial();
 
         $this->ledgerService
             ->shouldReceive('reverseEntry')
             ->once()
             ->with($journalEntry, 'Cancellation of INV-TEST')
-            ->andReturn($journalEntry);
+            ->andReturn($reversal);
+
+        $this->ledgerService
+            ->shouldReceive('postDraft')
+            ->once()
+            ->with($reversal)
+            ->andReturn($reversal);
 
         $invoice->shouldReceive('update')
             ->once()

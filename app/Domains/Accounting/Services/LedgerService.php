@@ -83,6 +83,7 @@ class LedgerService
     {
         $this->validateBalance($entry->lines);
         $this->validateAccounts($organizationId, $entry->lines);
+        $this->throwIfDuplicateReference($organizationId, $entry->reference);
 
         $journalEntry = $this->persistEntry($organizationId, $entry, false);
 
@@ -109,21 +110,38 @@ class LedgerService
 
         $journalEntry->update(['is_posted' => true]);
 
+        // Flush cached balances so reports reflect the newly posted entry
+        $this->flushCache($journalEntry->organization_id);
+
         JournalDraftPosted::dispatch($journalEntry);
 
         return $journalEntry;
     }
 
     /**
-     * Reverse a posted journal entry by creating a contra entry.
+     * Reverse a posted journal entry by creating a contra entry draft.
      *
-     * Swaps debit ↔ credit on every line and posts a new entry
-     * with a REV- reference prefix.
+     * Swaps debit ↔ credit on every line and creates a DRAFT entry
+     * with a REV- reference prefix. User must explicitly post the draft
+     * to finalize the reversal.
      *
      * @throws DuplicateReferenceException if this entry has already been reversed
      */
     public function reverseEntry(JournalEntry $journalEntry, ?string $description = null): JournalEntry
     {
+        $reversalReference = self::REFERENCE_PREFIX_REVERSAL.$journalEntry->reference;
+
+        // Prevent duplicate reversals - check if ANY entry (draft or posted) with this reference exists
+        $existingReversal = JournalEntry::where('organization_id', $journalEntry->organization_id)
+            ->where('reference', $reversalReference)
+            ->exists();
+
+        if ($existingReversal) {
+            throw new DuplicateReferenceException(
+                "This journal entry has already been reversed (reference '{$reversalReference}' exists)."
+            );
+        }
+
         $lines = $journalEntry->lines->map(fn (TransactionLine $line) => new JournalLineData(
             accountId: (string) $line->account_id,
             debit: (string) $line->credit,
@@ -131,9 +149,9 @@ class LedgerService
             description: 'Reversal: '.($line->description ?? ''),
         ))->all();
 
-        $reversalEntry = $this->postEntry($journalEntry->organization_id, new JournalEntryData(
+        $reversalEntry = $this->createDraft($journalEntry->organization_id, new JournalEntryData(
             date: now()->toDateString(),
-            reference: self::REFERENCE_PREFIX_REVERSAL.$journalEntry->reference,
+            reference: $reversalReference,
             description: $description ?? 'Reversal of '.$journalEntry->reference,
             lines: $lines,
         ));
@@ -186,11 +204,11 @@ class LedgerService
     }
 
     /**
-     * Guard against posting duplicate references within the same organization.
+     * Guard against duplicate references within the same organization.
      *
      * Null references are always allowed (e.g. bank imports without ref).
      *
-     * @throws DuplicateReferenceException When a posted entry with the same reference exists
+     * @throws DuplicateReferenceException When an entry (posted or draft) with the same reference exists
      */
     private function throwIfDuplicateReference(string $organizationId, ?string $reference): void
     {
@@ -198,9 +216,13 @@ class LedgerService
             return;
         }
 
-        if ($this->queryService->isDuplicateReference($organizationId, $reference)) {
+        $exists = JournalEntry::where('organization_id', $organizationId)
+            ->where('reference', $reference)
+            ->exists();
+
+        if ($exists) {
             throw new DuplicateReferenceException(
-                "A posted journal entry with reference '{$reference}' already exists in this organization."
+                "A journal entry with reference '{$reference}' already exists in this organization."
             );
         }
     }

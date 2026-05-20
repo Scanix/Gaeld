@@ -33,6 +33,7 @@ const form = useForm({
   reference: '',
   description: '',
   balances: props.accounts.map(a => ({ account_id: a.id, amount: '' })),
+  is_posted: true,
 })
 
 const groupedAccounts = computed(() => {
@@ -57,7 +58,8 @@ function balanceError(index) {
   return form.errors[`balances.${index}.amount`]
 }
 
-function submit() {
+function submit(post = true) {
+  form.is_posted = post
   form.transform(data => ({
     ...data,
     balances: data.balances
@@ -80,7 +82,7 @@ function submit() {
       </p>
     </div>
 
-    <form @submit.prevent="submit">
+    <form @submit.prevent="submit(true)">
       <Card class="mb-4">
         <CardHeader><CardTitle>{{ t('entry_header') }}</CardTitle></CardHeader>
         <CardContent>
@@ -169,9 +171,18 @@ function submit() {
               <Button type="button" variant="outline">{{ t('cancel') }}</Button>
             </Link>
             <Button
+              type="button"
+              variant="outline"
+              :disabled="form.processing || filledCount === 0"
+              :loading="form.processing && !form.is_posted"
+              @click="submit(false)"
+            >
+              {{ t('save_as_draft') }}
+            </Button>
+            <Button
               type="submit"
               :disabled="form.processing || filledCount === 0"
-              :loading="form.processing"
+              :loading="form.processing && form.is_posted"
             >
               {{ t('opening_balances_submit') }}
             </Button>
