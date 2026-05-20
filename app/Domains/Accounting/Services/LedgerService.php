@@ -109,6 +109,8 @@ class LedgerService
 
         $journalEntry->update(['is_posted' => true]);
 
+        $this->flushCache($journalEntry->organization_id);
+
         JournalDraftPosted::dispatch($journalEntry);
 
         return $journalEntry;
@@ -125,6 +127,19 @@ class LedgerService
      */
     public function reverseEntry(JournalEntry $journalEntry, ?string $description = null): JournalEntry
     {
+        $reversalReference = self::REFERENCE_PREFIX_REVERSAL.$journalEntry->reference;
+
+        // Prevent duplicate reversals - check if ANY entry (draft or posted) with this reference exists
+        $existingReversal = JournalEntry::where('organization_id', $journalEntry->organization_id)
+            ->where('reference', $reversalReference)
+            ->exists();
+
+        if ($existingReversal) {
+            throw new DuplicateReferenceException(
+                "This journal entry has already been reversed (reference '{$reversalReference}' exists)."
+            );
+        }
+
         $lines = $journalEntry->lines->map(fn (TransactionLine $line) => new JournalLineData(
             accountId: (string) $line->account_id,
             debit: (string) $line->credit,
@@ -134,7 +149,7 @@ class LedgerService
 
         $reversalEntry = $this->createDraft($journalEntry->organization_id, new JournalEntryData(
             date: now()->toDateString(),
-            reference: self::REFERENCE_PREFIX_REVERSAL.$journalEntry->reference,
+            reference: $reversalReference,
             description: $description ?? 'Reversal of '.$journalEntry->reference,
             lines: $lines,
         ));
