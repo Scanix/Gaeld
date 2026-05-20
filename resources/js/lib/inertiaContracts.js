@@ -32,10 +32,6 @@ const dashboardSchema = z.object({
     expenseItems: z.array(z.array(z.string())).optional(),
     forecastItems: z.array(z.array(z.string())).optional(),
   }).passthrough().optional(),
-  checklist: z.object({
-    getting_started: z.array(z.unknown()).optional(),
-    accounting: z.array(z.unknown()).optional(),
-  }).passthrough().optional(),
   pendingOcrScans: z.coerce.number().optional(),
   displayYear: z.coerce.number().optional(),
 }).passthrough()
@@ -127,7 +123,6 @@ const DASHBOARD_FALLBACK = {
     expenseItems: [],
     forecastItems: [],
   },
-  checklist: { getting_started: [], accounting: [] },
   pendingOcrScans: 0,
   displayYear: new Date().getFullYear(),
 }

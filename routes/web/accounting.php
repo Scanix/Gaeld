@@ -30,6 +30,7 @@ Route::post('/accounting/journal-entries', [AccountingController::class, 'storeJ
 Route::delete('/accounting/journal-entries/{journalEntry}', [AccountingController::class, 'destroyJournalEntry'])->name('accounting.journal-entries.destroy');
 Route::get('/accounting/opening-balances', [OpeningBalancesController::class, 'index'])->name('accounting.opening-balances.index');
 Route::post('/accounting/opening-balances', [OpeningBalancesController::class, 'store'])->name('accounting.opening-balances.store');
+Route::post('/accounting/opening-balances/historical', [OpeningBalancesController::class, 'storeHistorical'])->name('accounting.opening-balances.historical');
 Route::get('/accounting/trial-balance', [AccountingController::class, 'trialBalance'])->name('accounting.trial-balance');
 Route::get('/accounting/trial-balance/export/{format}', [AccountingController::class, 'exportTrialBalance'])->name('accounting.trial-balance.export');
 Route::get('/accounting/journal-entries/export/{format}', [AccountingController::class, 'exportJournalEntries'])->name('accounting.journal-entries.export');
@@ -93,6 +94,20 @@ Route::delete('/accounting/account-matching/{lettrageLot}', [LettrageController:
 
 // Legal Archiving (10-year retention, Swiss CO Art. 958f) — CE feature
 Route::get('/accounting/archives', [LegalArchiveController::class, 'index'])->name('accounting.archives.index');
+Route::get('/accounting/archives/year/{year}', [LegalArchiveController::class, 'forYear'])->whereNumber('year')->name('accounting.archives.year');
+Route::get('/accounting/archives/year/{year}/pdf/{type}', [LegalArchiveController::class, 'downloadPdf'])
+    ->whereNumber('year')
+    ->whereIn('type', ['pnl', 'balance_sheet', 'journal'])
+    ->name('accounting.archives.pdf');
+Route::get('/accounting/archives/year/{year}/bundle', [LegalArchiveController::class, 'downloadYearBundle'])
+    ->whereNumber('year')
+    ->name('accounting.archives.bundle');
+Route::post('/accounting/archives/year/{year}/regenerate-pdfs', [LegalArchiveController::class, 'regeneratePdfs'])
+    ->whereNumber('year')
+    ->name('accounting.archives.regenerate-pdfs');
+Route::post('/accounting/archives/year/{year}/generate', [LegalArchiveController::class, 'generateForYear'])
+    ->whereNumber('year')
+    ->name('accounting.archives.generate');
 Route::post('/accounting/archives/{archive}/verify', [LegalArchiveController::class, 'verify'])->name('accounting.archives.verify');
 Route::get('/accounting/archives/{archive}/download', [LegalArchiveController::class, 'download'])->name('accounting.archives.download');
 

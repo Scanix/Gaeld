@@ -11,16 +11,22 @@ import Badge from '@/Components/UI/Badge.vue'
 import { useForm, Link } from '@inertiajs/vue3'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { ChevronDown, ChevronUp } from 'lucide-vue-next'
 
 const props = defineProps({
   accounts: { type: Array, default: () => [] },
   defaultDate: { type: String, default: '' },
   existingOpening: { type: Object, default: null },
+  isStartingFresh: { type: Boolean, default: false },
+  equityAccounts: { type: Array, default: () => [] },
+  existingHistorical: { type: Object, default: null },
 })
 
 const { t } = useTranslations()
 const { formatCurrency, formatDate } = useFormatters()
+
+const guideOpen = ref(false)
 
 const typeLabels = {
   asset: t('account_type_asset'),
@@ -33,6 +39,14 @@ const form = useForm({
   reference: '',
   description: '',
   balances: props.accounts.map(a => ({ account_id: a.id, amount: '' })),
+})
+
+const historicalForm = useForm({
+  date: props.defaultDate,
+  account_id: props.equityAccounts[0]?.id ?? '',
+  amount: '',
+  reference: '',
+  description: '',
 })
 
 const groupedAccounts = computed(() => {
@@ -65,6 +79,10 @@ function submit() {
       .map(b => ({ account_id: b.account_id, amount: String(b.amount) })),
   })).post('/accounting/opening-balances', { preserveScroll: true })
 }
+
+function submitHistorical() {
+  historicalForm.post('/accounting/opening-balances/historical', { preserveScroll: true })
+}
 </script>
 
 <template>
@@ -74,10 +92,38 @@ function submit() {
       <p class="mt-2">{{ t('opening_balances_sign_help') }}</p>
     </HelpText>
 
+    <div v-if="props.isStartingFresh && !existingOpening" class="mb-4 rounded-md border border-[hsl(var(--primary)/0.3)] bg-[hsl(var(--primary)/0.06)] p-4 text-sm">
+      <p class="font-medium text-[hsl(var(--primary))]">{{ t('opening_balances_fresh_start_title') }}</p>
+      <p class="mt-1 text-[hsl(var(--muted-foreground))]">{{ t('opening_balances_fresh_start_text') }}</p>
+    </div>
+
     <div v-if="existingOpening" class="mb-4 rounded-md border border-[hsl(var(--warning)/0.4)] bg-[hsl(var(--warning)/0.1)] p-4 text-sm">
       <p>
         {{ t('opening_balances_already_exists', { reference: existingOpening.reference, date: formatDate(existingOpening.date) }) }}
       </p>
+    </div>
+
+    <!-- Step 4.1: Scenario guide -->
+    <div class="mb-4 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.3)]">
+      <button
+        type="button"
+        class="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-left"
+        @click="guideOpen = !guideOpen"
+      >
+        <span>{{ t('opening_balances_scenario_guide_title') }}</span>
+        <ChevronUp v-if="guideOpen" class="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+        <ChevronDown v-else class="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+      </button>
+      <div v-if="guideOpen" class="grid gap-3 border-t border-[hsl(var(--border))] px-4 py-3 sm:grid-cols-2">
+        <div class="rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-3">
+          <p class="text-sm font-semibold">{{ t('opening_balances_scenario_fresh_title') }}</p>
+          <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{{ t('opening_balances_scenario_fresh_desc') }}</p>
+        </div>
+        <div class="rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-3">
+          <p class="text-sm font-semibold">{{ t('opening_balances_scenario_migrating_title') }}</p>
+          <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{{ t('opening_balances_scenario_migrating_desc') }}</p>
+        </div>
+      </div>
     </div>
 
     <form @submit.prevent="submit">
@@ -172,6 +218,72 @@ function submit() {
               type="submit"
               :disabled="form.processing || filledCount === 0"
               :loading="form.processing"
+            >
+              {{ t('opening_balances_submit') }}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </form>
+
+    <!-- Step 4.2: Historical summary entry -->
+    <form v-if="equityAccounts.length" class="mt-6" @submit.prevent="submitHistorical">
+      <Card>
+        <CardHeader>
+          <CardTitle>{{ t('historical_summary_card_title') }}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p class="mb-4 text-sm text-[hsl(var(--muted-foreground))]">{{ t('historical_summary_desc') }}</p>
+
+          <div v-if="existingHistorical" class="mb-4 rounded-md border border-[hsl(var(--warning)/0.4)] bg-[hsl(var(--warning)/0.1)] p-3 text-sm">
+            {{ t('historical_summary_already_exists', { reference: existingHistorical.reference }) }}
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <FormInput
+              id="hist_date"
+              v-model="historicalForm.date"
+              type="date"
+              :label="t('date')"
+              :error="historicalForm.errors.date"
+              required
+            />
+            <div>
+              <label for="hist_account" class="mb-1 block text-sm font-medium">{{ t('historical_summary_account') }}</label>
+              <select
+                id="hist_account"
+                v-model="historicalForm.account_id"
+                class="w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 py-2 text-sm"
+              >
+                <option v-for="a in equityAccounts" :key="a.id" :value="a.id">{{ a.code }} — {{ a.name }}</option>
+              </select>
+              <p v-if="historicalForm.errors.account_id" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ historicalForm.errors.account_id }}</p>
+            </div>
+            <FormInput
+              id="hist_amount"
+              v-model="historicalForm.amount"
+              type="number"
+              step="0.01"
+              :label="t('historical_summary_amount')"
+              :hint="t('historical_summary_amount_hint')"
+              :error="historicalForm.errors.amount"
+              placeholder="0.00"
+              required
+            />
+            <FormInput
+              id="hist_reference"
+              v-model="historicalForm.reference"
+              :label="t('reference')"
+              :error="historicalForm.errors.reference"
+              :placeholder="t('historical_summary_reference_placeholder')"
+            />
+          </div>
+
+          <div class="mt-4 flex justify-end">
+            <Button
+              type="submit"
+              :disabled="historicalForm.processing || !historicalForm.amount"
+              :loading="historicalForm.processing"
             >
               {{ t('opening_balances_submit') }}
             </Button>

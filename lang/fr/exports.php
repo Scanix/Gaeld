@@ -14,6 +14,7 @@ return [
         'generated_by' => 'Généré par Gäld',
         'generated_on' => 'Généré le',
         'grand_total' => 'Total général',
+        'page' => 'Page',
         'name' => 'Nom',
         'no_financing_activities' => 'Aucune activité de financement',
         'no_investing_activities' => 'Aucune activité d’investissement',
@@ -32,6 +33,7 @@ return [
         'total_liabilities' => 'Total passifs',
         'equity' => 'Fonds propres',
         'total_equity' => 'Total fonds propres',
+        'total_liabilities_equity' => 'Total passifs et fonds propres',
     ],
     'profit_loss' => [
         'title' => 'Compte de résultat',

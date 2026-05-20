@@ -85,7 +85,7 @@ class ReportingFlowTest extends TestCase
     {
         $response = $this->actingAs($this->user)
             ->withSession(['current_organization_id' => $this->organization->id])
-            ->get('/');
+            ->get('/dashboard');
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -128,7 +128,7 @@ class ReportingFlowTest extends TestCase
 
         $dashboard = $this->actingAs($this->user)
             ->withSession(['current_organization_id' => $this->organization->id])
-            ->get('/');
+            ->get('/dashboard');
 
         $dashboard->assertStatus(200);
         $dashboard->assertInertia(fn ($page) => $page

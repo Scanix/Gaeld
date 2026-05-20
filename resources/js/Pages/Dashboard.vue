@@ -11,12 +11,13 @@ import StatCard from '@/Components/UI/StatCard.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { useTheme } from '@/lib/useTheme'
-import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X, AlertTriangle, Receipt, Target, ScanLine } from 'lucide-vue-next'
+import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X, AlertTriangle, Receipt, Target, ScanLine, Clock } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
-import AccountingChecklist from '@/Components/AccountingChecklist.vue'
+import OnboardingChecklist from '@/Components/Dashboard/OnboardingChecklist.vue'
 import { normalizeDashboardContract } from '@/lib/inertiaContracts'
 import { Bar } from 'vue-chartjs'
+import { Link } from '@inertiajs/vue3'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -50,9 +51,12 @@ const props = defineProps({
   receivablesAging: { type: Object, default: null },
   recentTransactions: { type: Array, default: () => [] },
   monthlyBreakdown: { type: Object, default: () => ({ monthIndices: [], revenue: [], expenses: [], forecast: [], revenueItems: [], expenseItems: [], forecastItems: [] }) },
-  checklist: { type: Object, default: () => ({ getting_started: [], accounting: [] }) },
   pendingOcrScans: { type: Number, default: 0 },
   displayYear: { type: Number, default: () => new Date().getFullYear() },
+  isEmptyState: { type: Boolean, default: false },
+  hasExportModule: { type: Boolean, default: false },
+  expiredFiscalYear: { type: Object, default: null },
+  checklist: { type: Object, default: null },
 })
 
 const contract = computed(() => normalizeDashboardContract(props))
@@ -267,6 +271,59 @@ const transactionColumns = computed(() => [
       />
     </div>
 
+    <!-- Onboarding checklist (org-scoped, dismissible) -->
+    <OnboardingChecklist v-if="checklist" :checklist="checklist" class="mt-6" />
+
+    <!-- Empty state: no activity yet — guide the user to their first action -->
+    <div
+      v-if="isEmptyState"
+      class="mt-6 rounded-lg border-2 border-dashed border-[hsl(var(--border))] p-8 text-center"
+    >
+      <h3 class="text-lg font-semibold">{{ t('dashboard_empty_state_title') }}</h3>
+      <p class="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{{ t('dashboard_empty_state_desc') }}</p>
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <Link
+          href="/invoices/create"
+          class="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+        >
+          {{ t('dashboard_create_first_invoice') }}
+        </Link>
+        <Link
+          v-if="hasExportModule"
+          href="/accounting/export"
+          class="inline-flex items-center rounded-md border border-[hsl(var(--border))] bg-background px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+        >
+          {{ t('dashboard_export_for_accountant') }}
+        </Link>
+      </div>
+    </div>
+
+    <!-- Expired fiscal year banner — prompt the user to close it -->
+    <div
+      v-if="expiredFiscalYear"
+      class="mt-6 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-4"
+    >
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex items-start gap-3">
+          <Clock class="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div>
+            <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
+              {{ t('dashboard_fiscal_year_expired_title', { year: expiredFiscalYear.name }) }}
+            </p>
+            <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
+              {{ t('dashboard_fiscal_year_expired_desc') }}
+            </p>
+          </div>
+        </div>
+        <Link
+          :href="`/accounting/closing?fiscal_year_id=${expiredFiscalYear.id}`"
+          class="shrink-0 inline-flex items-center rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 transition-colors"
+        >
+          {{ t('dashboard_close_year') }}
+        </Link>
+      </div>
+    </div>
+
     <!-- OCR Receipts — pending validation (shown only when there are pending scans) -->
     <Card v-if="pendingOcrScans > 0" class="mt-6 border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30">
       <CardContent class="flex items-center justify-between pt-6">
@@ -279,7 +336,7 @@ const transactionColumns = computed(() => [
             {{ pendingOcrScans }} {{ t('ocr_pending_widget_description') }}
           </p>
         </div>
-        <a href="/expenses" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
+        <a href="/expenses/receipt-scans" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
       </CardContent>
     </Card>
 
@@ -291,7 +348,7 @@ const transactionColumns = computed(() => [
             <p class="text-sm font-medium text-amber-800 dark:text-amber-200">{{ t('unpaid_invoice', { count: unpaidInvoices.count }) }}</p>
             <p class="text-lg font-bold text-amber-900 dark:text-amber-100">{{ formatCurrency(unpaidInvoices.total) }}</p>
           </div>
-          <a href="/invoices" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
+          <a href="/invoices?filter[status]=sent" class="text-sm font-medium text-amber-700 hover:underline dark:text-amber-300">{{ t('view') }}</a>
         </CardContent>
       </Card>
       <Card v-if="pendingExpenses.count > 0" class="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30">
@@ -300,7 +357,7 @@ const transactionColumns = computed(() => [
             <p class="text-sm font-medium text-blue-800 dark:text-blue-200">{{ t('pending_expense', { count: pendingExpenses.count }) }}</p>
             <p class="text-lg font-bold text-blue-900 dark:text-blue-100">{{ formatCurrency(pendingExpenses.total) }}</p>
           </div>
-          <a href="/expenses" class="text-sm font-medium text-blue-700 hover:underline dark:text-blue-300">{{ t('view') }}</a>
+          <a href="/expenses?filter[status]=pending" class="text-sm font-medium text-blue-700 hover:underline dark:text-blue-300">{{ t('view') }}</a>
         </CardContent>
       </Card>
 
@@ -339,11 +396,6 @@ const transactionColumns = computed(() => [
           <a href="/reports/vat" class="text-sm font-medium text-purple-700 hover:underline dark:text-purple-300">{{ t('view') }}</a>
         </CardContent>
       </Card>
-    </div>
-
-    <!-- Accounting Checklist -->
-    <div v-if="checklist.getting_started?.length || checklist.accounting?.length" class="mt-6">
-      <AccountingChecklist :getting-started="checklist.getting_started ?? []" :accounting="checklist.accounting ?? []" />
     </div>
 
     <!-- Budget vs Actual -->

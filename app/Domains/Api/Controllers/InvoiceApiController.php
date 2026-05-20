@@ -143,7 +143,6 @@ class InvoiceApiController extends Controller
             // Resolve customer UUID to internal integer FK
             if (isset($payload['customer_id'])) {
                 $payload['customer_id'] = Contact::where('uuid', $payload['customer_id'])
-                    ->where('organization_id', $currentOrg->id())
                     ->value('id');
             }
 
@@ -211,7 +210,6 @@ class InvoiceApiController extends Controller
         // Resolve customer UUID to internal integer FK
         if (isset($validated['customer_id'])) {
             $validated['customer_id'] = Contact::where('uuid', $validated['customer_id'])
-                ->where('organization_id', $currentOrg->id())
                 ->value('id');
         }
 
@@ -409,7 +407,6 @@ class InvoiceApiController extends Controller
         foreach ($lines as &$line) {
             if (isset($line['vat_rate_id'])) {
                 $line['vat_rate_id'] = VatRate::where('uuid', $line['vat_rate_id'])
-                    ->where('organization_id', $orgId)
                     ->value('id');
             }
         }
@@ -476,7 +473,7 @@ class InvoiceApiController extends Controller
     private function resolveInvoiceMonthlyLimit(CurrentOrganization $currentOrg): int
     {
         if (FeatureFlag::isSaas()) {
-            $plan = $currentOrg->get()->activeSubscription?->plan;
+            $plan = $currentOrg->get()->activeSubscription?->getPlan();
             if ($plan && isset($plan->max_invoices_per_month)) {
                 return (int) $plan->max_invoices_per_month;
             }

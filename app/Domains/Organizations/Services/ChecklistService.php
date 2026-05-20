@@ -12,6 +12,7 @@ use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Migration\Models\MigrationSession;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\FeatureFlag;
 
 /**
  * Provides a two-tier guided checklist for organizations:
@@ -66,12 +67,14 @@ class ChecklistService
     }
 
     /**
-     * Advanced accounting lifecycle items.
+     * Advanced accounting lifecycle items, filtered by the org's enabled modules.
      *
      * @return array<int, array{key: string, done: bool, href: string|null}>
      */
     private function accounting(string $organizationId): array
     {
+        $org = Organization::find($organizationId);
+
         $dataImported = MigrationSession::where('organization_id', $organizationId)
             ->where('status', 'completed')
             ->exists();
@@ -90,29 +93,39 @@ class ChecklistService
             ->where('type', 'vat_settlement')
             ->exists();
 
-        $depreciationPosted = DepreciationEntry::whereHas('fixedAsset', fn ($q) => $q->where('organization_id', $organizationId))
-            ->exists();
+        $items = [];
 
-        $socialChargesPosted = JournalEntry::where('organization_id', $organizationId)
-            ->where('type', 'social_charges')
-            ->exists();
+        // Only show data import item for orgs migrating from another system
+        if ($org?->setup_mode === 'migrating') {
+            $items[] = ['key' => 'checklist_data_imported', 'done' => $dataImported, 'href' => '/migration'];
+        }
 
-        $yearEndClosed = JournalEntry::where('organization_id', $organizationId)
+        $items[] = ['key' => 'checklist_expenses_posted',     'done' => $expensesPosted,     'href' => '/expenses'];
+        $items[] = ['key' => 'checklist_bank_imported',       'done' => $bankImported,       'href' => '/banking'];
+        $items[] = ['key' => 'checklist_reconciliation_done', 'done' => $reconciliationDone, 'href' => '/reconciliation'];
+        $items[] = ['key' => 'checklist_vat_declared',        'done' => $vatDeclared,        'href' => '/reports/vat'];
+
+        if ($org && FeatureFlag::enabledForOrg('assets', $org)) {
+            $depreciationPosted = DepreciationEntry::whereHas('fixedAsset', fn ($q) => $q->where('organization_id', $organizationId))
+                ->exists();
+            $items[] = ['key' => 'checklist_depreciation_posted', 'done' => $depreciationPosted, 'href' => '/assets'];
+        }
+
+        if ($org && FeatureFlag::enabledForOrg('social_charges', $org)) {
+            $socialChargesPosted = JournalEntry::where('organization_id', $organizationId)
+                ->where('type', 'social_charges')
+                ->exists();
+            $items[] = ['key' => 'checklist_social_charges', 'done' => $socialChargesPosted, 'href' => '/accounting/social-charges'];
+        }
+
+        $items[] = ['key' => 'checklist_year_end_closed', 'done' => JournalEntry::where('organization_id', $organizationId)
             ->where('type', 'year_end_closing')
-            ->exists();
+            ->exists(), 'href' => '/accounting/year-end-closing'];
 
-        $fiduciaryExported = false; // Would require an export log table
+        if ($org && FeatureFlag::enabledForOrg('fiduciary_export', $org)) {
+            $items[] = ['key' => 'checklist_fiduciary_exported', 'done' => false, 'href' => '/accounting/export'];
+        }
 
-        return [
-            ['key' => 'checklist_data_imported',       'done' => $dataImported,       'href' => '/migration'],
-            ['key' => 'checklist_expenses_posted',     'done' => $expensesPosted,     'href' => '/expenses'],
-            ['key' => 'checklist_bank_imported',       'done' => $bankImported,       'href' => '/banking'],
-            ['key' => 'checklist_reconciliation_done', 'done' => $reconciliationDone, 'href' => '/reconciliation'],
-            ['key' => 'checklist_vat_declared',        'done' => $vatDeclared,        'href' => '/reports/vat'],
-            ['key' => 'checklist_depreciation_posted', 'done' => $depreciationPosted, 'href' => '/assets'],
-            ['key' => 'checklist_social_charges',      'done' => $socialChargesPosted, 'href' => '/accounting/social-charges'],
-            ['key' => 'checklist_year_end_closed',     'done' => $yearEndClosed,      'href' => '/accounting/year-end-closing'],
-            ['key' => 'checklist_fiduciary_exported',  'done' => $fiduciaryExported,  'href' => '/accounting/export'],
-        ];
+        return $items;
     }
 }

@@ -21,6 +21,11 @@ class MonthlyDepreciationJob implements ShouldQueue
 
     public function handle(DepreciateAssetAction $action): void
     {
+        // This job runs outside the HTTP request lifecycle. The BelongsToOrganization
+        // global scope on FixedAsset is a no-op here (CurrentOrganization::isBound()
+        // returns false in a queue worker), so we intentionally query all
+        // organisations' assets in a single pass. Do NOT inject CurrentOrganization
+        // here — DepreciateAssetAction handles per-asset org context internally.
         FixedAsset::query()
             ->where('is_active', true)
             ->whereNull('disposed_at')

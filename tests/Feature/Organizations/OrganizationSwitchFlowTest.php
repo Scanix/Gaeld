@@ -33,7 +33,7 @@ class OrganizationSwitchFlowTest extends TestCase
             ->withSession(['current_organization_id' => $orgA->id])
             ->post("/organizations/{$orgB->id}/switch");
 
-        $switch->assertRedirect('/');
+        $switch->assertRedirect('/dashboard');
         $switch->assertSessionHas('current_organization_id', $orgB->id);
 
     }
@@ -71,7 +71,7 @@ class OrganizationSwitchFlowTest extends TestCase
 
         $response = $this->actingAs($user)
             ->withSession(['current_organization_id' => (string) fake()->uuid()])
-            ->get('/');
+            ->get('/dashboard');
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page

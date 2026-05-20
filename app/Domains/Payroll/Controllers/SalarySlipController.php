@@ -2,6 +2,7 @@
 
 namespace App\Domains\Payroll\Controllers;
 
+use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\PostPayrollAction;
 use App\Domains\Payroll\Models\Employee;
@@ -29,7 +30,6 @@ class SalarySlipController extends Controller
         $month = $request->input('month');
 
         $query = SalarySlip::query()
-            ->where('organization_id', $currentOrg->id())
             ->with('employee')
             ->orderByDesc('period_year')
             ->orderByDesc('period_month');
@@ -45,7 +45,7 @@ class SalarySlipController extends Controller
         // Default year to the most recent slip's year if no filter provided
         $defaultYear = $year;
         if (! $defaultYear) {
-            $latestSlip = SalarySlip::where('organization_id', $currentOrg->id())
+            $latestSlip = SalarySlip::query()
                 ->orderByDesc('period_year')
                 ->first();
             $defaultYear = $latestSlip ? (string) $latestSlip->period_year : (string) now()->year;
@@ -114,10 +114,11 @@ class SalarySlipController extends Controller
         $this->authorize('view', $slip->employee);
 
         $slip->load('employee');
+        $org = Organization::findOrFail($slip->organization_id);
 
         return $pdf->download(
             'exports.salary-slip',
-            ['slip' => $slip],
+            ['slip' => $slip, 'organization' => $org],
             "salary-slip-{$slip->employee->last_name}-{$slip->period_year}-{$slip->period_month}.pdf",
         );
     }

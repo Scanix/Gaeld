@@ -12,8 +12,8 @@ importers:
         specifier: ^13.3.0
         version: 13.3.0
       axios:
-        specifier: ^1.15.1
-        version: 1.16.0
+        specifier: ^1.16.1
+        version: 1.16.1
       chart.js:
         specifier: ^4.5.1
         version: 4.5.1
@@ -30,8 +30,8 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       tailwind-merge:
-        specifier: ^3.5.0
-        version: 3.5.0
+        specifier: ^3.6.0
+        version: 3.6.0
       vanilla-cookieconsent:
         specifier: ^3.1.0
         version: 3.1.0
@@ -46,8 +46,8 @@ importers:
         version: 4.3.6
     devDependencies:
       '@inertiajs/vue3':
-        specifier: ^3.0.3
-        version: 3.0.3(axios@1.16.0)(vue@3.5.34)
+        specifier: ^3.1.1
+        version: 3.1.1(axios@1.16.1)(vue@3.5.34)
       '@sentry/vite-plugin':
         specifier: ^5.2.0
         version: 5.2.0
@@ -55,14 +55,14 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0(vite@8.0.13(jiti@2.7.0))
       '@vitejs/plugin-vue':
-        specifier: ^6.0.6
-        version: 6.0.6(vite@8.0.13(jiti@2.7.0))(vue@3.5.34)
+        specifier: ^6.0.7
+        version: 6.0.7(vite@8.0.13(jiti@2.7.0))(vue@3.5.34)
       autoprefixer:
         specifier: ^10.5.0
         version: 10.5.0(postcss@8.5.14)
       laravel-vite-plugin:
-        specifier: ^3.0.1
-        version: 3.0.1(vite@8.0.13(jiti@2.7.0))
+        specifier: ^3.1.0
+        version: 3.1.0(vite@8.0.13(jiti@2.7.0))
       postcss:
         specifier: ^8.5.14
         version: 8.5.14
@@ -156,16 +156,16 @@ packages:
   '@emnapi/wasi-threads@1.2.1':
     resolution: {integrity: sha512-uTII7OYF+/Mes/MrcIOYp5yOtSMLBWSIoLPpcgwipoiKbli6k322tcoFsxoIIxPDqW01SQGAgko4EzZi2BNv2w==}
 
-  '@inertiajs/core@3.0.3':
-    resolution: {integrity: sha512-/4sW/cfNpvujjVOZlB5UNypLGNySs7X7V8IMLNSK8+3j1KsUYGS5wpLd9EqAu8wy8RiW7PPra2rPwB6Lx/ACow==}
+  '@inertiajs/core@3.1.1':
+    resolution: {integrity: sha512-l8NfuI6xaeLcSTUH67fk/RPKGr5Pm+oyeWJy6mBfWxHIiNpMctPQtha5/NLQ+RqGekJdmJ7cHH8l3JDkvoPXYg==}
     peerDependencies:
-      axios: ^1.13.2
+      axios: ^1.15.2
     peerDependenciesMeta:
       axios:
         optional: true
 
-  '@inertiajs/vue3@3.0.3':
-    resolution: {integrity: sha512-bhJN+GS66g1tYH1p6flKkG1N8oaT5J7ZLqBkavN9mHC6bVfoQCUG6sCuA07WTDfo9tDaxU89wsSSAf4mhn3SuA==}
+  '@inertiajs/vue3@3.1.1':
+    resolution: {integrity: sha512-k2xdcRIxbflGW9Doo6pg4pUfBK9t7PgODyHJFaf1p9AxOFRdBIKrxxvaGFQTT5L4GjOUdZ9trfDLxZ2IIaCabA==}
     peerDependencies:
       vue: ^3.0.0
 
@@ -291,9 +291,6 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
-
-  '@rolldown/pluginutils@1.0.0-rc.13':
-    resolution: {integrity: sha512-3ngTAv6F/Py35BsYbeeLeecvhMKdsKm4AoOETVhAA+Qc8nrA2I0kF7oa93mE9qnIurngOSpMnQ0x2nQY2FPviA==}
 
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
@@ -471,8 +468,8 @@ packages:
   '@tybys/wasm-util@0.10.2':
     resolution: {integrity: sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg==}
 
-  '@vitejs/plugin-vue@6.0.6':
-    resolution: {integrity: sha512-u9HHgfrq3AjXlysn0eINFnWQOJQLO9WN6VprZ8FXl7A2bYisv3Hui9Ij+7QZ41F/WYWarHjwBbXtD7dKg3uxbg==}
+  '@vitejs/plugin-vue@6.0.7':
+    resolution: {integrity: sha512-km+p+XdSz9Sxm5rqUbqcSfZYaAniKxWBj1KURl+Jr7UaPvvX7BmaWMdP69I5rrFDeQGyxAG7NXdc57vz+snhWg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -521,8 +518,8 @@ packages:
     peerDependencies:
       postcss: ^8.1.0
 
-  axios@1.16.0:
-    resolution: {integrity: sha512-6hp5CwvTPlN2A31g5dxnwAX0orzM7pmCRDLnZSX772mv8WDqICwFjowHuPs04Mc8deIld1+ejhtaMn5vp6b+1w==}
+  axios@1.16.1:
+    resolution: {integrity: sha512-caYkukvroVPO8KrzuJEb50Hm07KwfBZPEC3VeFHTsqWHvKTsy54hjJz9BS/cdaypROE2rH6xvm9mHX4fgWkr3A==}
 
   balanced-match@4.0.4:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
@@ -622,8 +619,8 @@ packages:
     resolution: {integrity: sha512-j6vWzfrGVfyXxge+O0x5sh6cvxAog0a/4Rdd2K36zCMV5eJ+/+tOAngRO8cODMNWbVRdVlmGZQL2YS3yR8bIUA==}
     engines: {node: '>= 0.4'}
 
-  es-toolkit@1.45.1:
-    resolution: {integrity: sha512-/jhoOj/Fx+A+IIyDNOvO3TItGmlMKhtX8ISAHKE90c4b/k1tqaqEZ+uUqfpU8DMnW5cgNJv606zS55jGvza0Xw==}
+  es-toolkit@1.46.1:
+    resolution: {integrity: sha512-5eNtXOs3tbfxXOj04tjjseeWkRWaoCjdEI+96DgwzZoe6c9juL49pXlzAFTI72aWC9Y8p7168g6XIKjh7k6pyQ==}
 
   escalade@3.2.0:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
@@ -700,8 +697,8 @@ packages:
     resolution: {integrity: sha512-NqADB8VjPFLM2V0VvHUewwwsw0ZWBaIdgo+ieHtK3hasLz4qeCRjYcqfB6AQrBggRKppKF8L52/VqdVsO47Dlw==}
     engines: {node: '>= 0.4'}
 
-  hasown@2.0.2:
-    resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
+  hasown@2.0.3:
+    resolution: {integrity: sha512-ej4AhfhfL2Q2zpMmLo7U1Uv9+PyhIZpgQLGT1F9miIGmiCJIoCgSmczFdrc97mWT4kVY72KA+WnnhJ5pghSvSg==}
     engines: {node: '>= 0.4'}
 
   https-proxy-agent@5.0.1:
@@ -736,12 +733,16 @@ packages:
       axios:
         optional: true
 
-  laravel-vite-plugin@3.0.1:
-    resolution: {integrity: sha512-Bx8sVcLIaZT1d0eisABcmjQ1GZdJpaXcV66A8RhXGp9JgR3iL8jDnvakVDXuH87Tn5S9KNx3VOhmJZW1CSexOg==}
+  laravel-vite-plugin@3.1.0:
+    resolution: {integrity: sha512-Fzocl+X4eQ9jOi0RwdphYRGkUbPJ3ky1pTAST5Ot18cS2gw6d2vldK2eCrlKDVjtibCjCx5qptYDlA0373n7qg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
+      fontaine: ^0.5.0
       vite: ^8.0.0
+    peerDependenciesMeta:
+      fontaine:
+        optional: true
 
   lightningcss-android-arm64@1.32.0:
     resolution: {integrity: sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==}
@@ -830,6 +831,7 @@ packages:
 
   lucide-vue-next@1.0.0:
     resolution: {integrity: sha512-V6SPvx1IHTj/UY+FrIYWV5faISsPSb8BnWSFDxAtezWKvWc9ZZ40PDrdu1/Qb5vg4lHWr1hs1BAMGVGm6V1Xdg==}
+    deprecated: Package deprecated. Please use @lucide/vue instead.
     peerDependencies:
       vue: '>=3.0.1'
 
@@ -937,8 +939,8 @@ packages:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
 
-  tailwind-merge@3.5.0:
-    resolution: {integrity: sha512-I8K9wewnVDkL1NTGoqWmVEIlUcB9gFriAEkXkfCjX5ib8ezGxtR3xD7iZIxrfArjEsH7F1CHD4RFUtxefdqV/A==}
+  tailwind-merge@3.6.0:
+    resolution: {integrity: sha512-uxL7qAVQriqRQPAyK3pj66VqskWqoZ37PW94jwOTwNfq/z9oyu1V+eqrZqtR2+fCiXdYOZe/Modt8GtvqNzu+w==}
 
   tailwindcss@4.3.0:
     resolution: {integrity: sha512-y6nxMGB1nMW9R6k96e5gdIFzcfL/gTJRNaqGes1YvkLnPVXzWgbqFF2yLC0T8G774n24cx3Pe8XrKoniCOAH+Q==}
@@ -1169,19 +1171,19 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@inertiajs/core@3.0.3(axios@1.16.0)':
+  '@inertiajs/core@3.1.1(axios@1.16.1)':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
-      es-toolkit: 1.45.1
-      laravel-precognition: 2.0.0(axios@1.16.0)
+      es-toolkit: 1.46.1
+      laravel-precognition: 2.0.0(axios@1.16.1)
     optionalDependencies:
-      axios: 1.16.0
+      axios: 1.16.1
 
-  '@inertiajs/vue3@3.0.3(axios@1.16.0)(vue@3.5.34)':
+  '@inertiajs/vue3@3.1.1(axios@1.16.1)(vue@3.5.34)':
     dependencies:
-      '@inertiajs/core': 3.0.3(axios@1.16.0)
-      es-toolkit: 1.45.1
-      laravel-precognition: 2.0.0(axios@1.16.0)
+      '@inertiajs/core': 3.1.1(axios@1.16.1)
+      es-toolkit: 1.46.1
+      laravel-precognition: 2.0.0(axios@1.16.1)
       vue: 3.5.34
     transitivePeerDependencies:
       - axios
@@ -1264,8 +1266,6 @@ snapshots:
 
   '@rolldown/binding-win32-x64-msvc@1.0.1':
     optional: true
-
-  '@rolldown/pluginutils@1.0.0-rc.13': {}
 
   '@rolldown/pluginutils@1.0.1': {}
 
@@ -1420,9 +1420,9 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@vitejs/plugin-vue@6.0.6(vite@8.0.13(jiti@2.7.0))(vue@3.5.34)':
+  '@vitejs/plugin-vue@6.0.7(vite@8.0.13(jiti@2.7.0))(vue@3.5.34)':
     dependencies:
-      '@rolldown/pluginutils': 1.0.0-rc.13
+      '@rolldown/pluginutils': 1.0.1
       vite: 8.0.13(jiti@2.7.0)
       vue: 3.5.34
 
@@ -1497,13 +1497,15 @@ snapshots:
       postcss: 8.5.14
       postcss-value-parser: 4.2.0
 
-  axios@1.16.0:
+  axios@1.16.1:
     dependencies:
       follow-redirects: 1.16.0
       form-data: 4.0.5
+      https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   balanced-match@4.0.4: {}
 
@@ -1584,9 +1586,9 @@ snapshots:
       es-errors: 1.3.0
       get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
-      hasown: 2.0.2
+      hasown: 2.0.3
 
-  es-toolkit@1.45.1: {}
+  es-toolkit@1.46.1: {}
 
   escalade@3.2.0: {}
 
@@ -1608,7 +1610,7 @@ snapshots:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       es-set-tostringtag: 2.1.0
-      hasown: 2.0.2
+      hasown: 2.0.3
       mime-types: 2.1.35
 
   fraction.js@5.3.4: {}
@@ -1630,7 +1632,7 @@ snapshots:
       get-proto: 1.0.1
       gopd: 1.2.0
       has-symbols: 1.1.0
-      hasown: 2.0.2
+      hasown: 2.0.3
       math-intrinsics: 1.1.0
 
   get-proto@1.0.1:
@@ -1654,7 +1656,7 @@ snapshots:
     dependencies:
       has-symbols: 1.1.0
 
-  hasown@2.0.2:
+  hasown@2.0.3:
     dependencies:
       function-bind: 1.1.2
 
@@ -1675,13 +1677,13 @@ snapshots:
 
   json5@2.2.3: {}
 
-  laravel-precognition@2.0.0(axios@1.16.0):
+  laravel-precognition@2.0.0(axios@1.16.1):
     dependencies:
-      es-toolkit: 1.45.1
+      es-toolkit: 1.46.1
     optionalDependencies:
-      axios: 1.16.0
+      axios: 1.16.1
 
-  laravel-vite-plugin@3.0.1(vite@8.0.13(jiti@2.7.0)):
+  laravel-vite-plugin@3.1.0(vite@8.0.13(jiti@2.7.0)):
     dependencies:
       picocolors: 1.1.1
       tinyglobby: 0.2.16
@@ -1841,7 +1843,7 @@ snapshots:
 
   source-map-js@1.2.1: {}
 
-  tailwind-merge@3.5.0: {}
+  tailwind-merge@3.6.0: {}
 
   tailwindcss@4.3.0: {}
 

@@ -7,34 +7,31 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "@inertiajs/vue3": "^3.0.3",
+        "@inertiajs/vue3": "^3.1.1",
         "@sentry/vite-plugin": "^5.2.0",
         "@tailwindcss/vite": "^4.3.0",
-        "@vitejs/plugin-vue": "^6.0.6",
+        "@vitejs/plugin-vue": "^6.0.7",
         "autoprefixer": "^10.5.0",
-        "laravel-vite-plugin": "^3.0.1",
+        "laravel-vite-plugin": "^3.1.0",
         "postcss": "^8.5.14",
         "tailwindcss": "^4.3.0",
         "vite": "^8.0.13"
     },
     "dependencies": {
         "@simplewebauthn/browser": "^13.3.0",
-        "axios": "^1.15.1",
+        "axios": "^1.16.1",
         "chart.js": "^4.5.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "lucide-vue-next": "^1.0.0",
         "maska": "^3.2.0",
-        "tailwind-merge": "^3.5.0",
+        "tailwind-merge": "^3.6.0",
         "vanilla-cookieconsent": "^3.1.0",
         "vue": "^3.5.34",
         "vue-chartjs": "^5.3.3",
         "zod": "^4.3.6"
     },
     "pnpm": {
-        "overrides": {
-            "postcss": ">=8.5.10"
-        },
         "onlyBuiltDependencies": [
             "@sentry/cli",
             "esbuild"

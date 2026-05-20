@@ -35,6 +35,8 @@ readonly class CompleteSetupData
                 'currency' => $data['currency'],
                 'locale' => $data['locale'],
                 'business_type' => $data['business_type'] ?? null,
+                'setup_mode' => $data['setup_mode'] ?? 'fresh',
+                'founded_at' => $data['org_founded_at'] ?? null,
             ]),
         );
     }

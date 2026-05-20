@@ -23,6 +23,8 @@ readonly class CreateOrganizationData
         public string $fiscalYearStart = '01-01',
         public string $locale = 'en',
         public ?BusinessType $businessType = null,
+        public string $setupMode = 'fresh',
+        public ?string $foundedAt = null,
     ) {}
 
     /** @param  array<string, mixed>  $data */
@@ -40,6 +42,8 @@ readonly class CreateOrganizationData
             fiscalYearStart: $data['fiscal_year_start'] ?? '01-01',
             locale: $data['locale'] ?? 'en',
             businessType: isset($data['business_type']) ? BusinessType::tryFrom($data['business_type']) : null,
+            setupMode: $data['setup_mode'] ?? 'fresh',
+            foundedAt: $data['founded_at'] ?? null,
         );
     }
 
@@ -55,6 +59,8 @@ readonly class CreateOrganizationData
             'fiscal_year_start' => $this->fiscalYearStart,
             'locale' => $this->locale,
             'business_type' => $this->businessType?->value,
+            'setup_mode' => $this->setupMode,
+            'founded_at' => $this->foundedAt,
         ] + ($this->addressData?->toArray(includeCanton: true) ?? AddressData::empty(includeCanton: true)->toArray(includeCanton: true));
     }
 }

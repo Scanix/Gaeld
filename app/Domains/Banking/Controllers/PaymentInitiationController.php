@@ -44,7 +44,6 @@ class PaymentInitiationController extends Controller
             ->values();
 
         $bankAccounts = BankAccount::query()
-            ->where('organization_id', $currentOrg->id())
             ->where('is_active', true)
             ->whereNotNull('iban')
             ->orderBy('name')

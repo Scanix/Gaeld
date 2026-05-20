@@ -92,10 +92,11 @@ const journalColumns = computed(() => [
       <div class="flex items-center gap-3">
         <h2 class="text-xl font-semibold">{{ expenseTitle }}</h2>
         <Badge :variant="statusVariant[expense.status] || 'default'">{{ t('expense_status_' + expense.status) }}</Badge>
+        <Badge v-if="expense.archived_at" variant="secondary">{{ t('archived') }}</Badge>
       </div>
       <div class="flex flex-wrap gap-2">
         <Button
-          v-if="expense.status !== 'posted'"
+          v-if="expense.status !== 'posted' && !expense.archived_at"
           as="a"
           :href="`/expenses/${expense.id}/edit`"
           variant="outline"
@@ -105,7 +106,7 @@ const journalColumns = computed(() => [
           {{ t('edit') }}
         </Button>
         <Button
-          v-if="expense.status === 'approved'"
+          v-if="expense.status === 'approved' && !expense.archived_at"
           size="sm"
           :disabled="!expense.expense_account_code"
           :title="!expense.expense_account_code ? t('expense_account_code_required') : undefined"
@@ -113,7 +114,7 @@ const journalColumns = computed(() => [
         >
           {{ t('post_to_ledger') }}
         </Button>
-        <DropdownMenu v-if="expense.status === 'pending'">
+        <DropdownMenu v-if="expense.status === 'pending' && !expense.archived_at">
           <template #default="{ close }">
             <button
               class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
@@ -169,7 +170,7 @@ const journalColumns = computed(() => [
           <div class="flex items-center justify-between">
             <CardTitle>{{ t('receipt') }}</CardTitle>
             <Button
-              v-if="expense.status !== 'posted'"
+              v-if="expense.status !== 'posted' && !expense.archived_at"
               variant="ghost"
               size="sm"
               @click="removeReceipt"
