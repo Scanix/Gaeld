@@ -2086,6 +2086,7 @@ return [
     'opening_balances_contra_help' => 'Eine Differenz zwischen Soll und Haben wird automatisch auf Konto 9000 (Eröffnungsbilanz) gebucht.',
     'opening_balances_submit' => 'Eröffnungsbilanz erfassen',
     'opening_balances_recorded' => 'Eröffnungsbilanz erfasst.',
+    'opening_balances_saved_as_draft' => 'Eröffnungsbilanz als Entwurf gespeichert.',
     'opening_balances_all_zero' => 'Es wurde kein Saldo erfasst.',
     'opening_balance_for_account' => 'Eröffnungssaldo Konto :code',
     'opening_balance_contra' => 'Eröffnungsbilanz Gegenbuchung',

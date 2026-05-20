@@ -30,7 +30,7 @@ class CancelInvoiceAction
                     $invoice->journalEntry,
                     "Cancellation of {$invoice->number}",
                 );
-                // Post the reversal immediately to zero out the AR balance
+                // Post the reversal immediately for invoice cancellation
                 $this->ledgerService->postDraft($reversal);
             }
 

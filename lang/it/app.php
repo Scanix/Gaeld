@@ -2090,6 +2090,7 @@ return [
     'opening_balances_contra_help' => 'Ogni differenza tra dare e avere viene automaticamente contabilizzata sul conto 9000 (Saldo di apertura).',
     'opening_balances_submit' => 'Registra saldi di apertura',
     'opening_balances_recorded' => 'Saldi di apertura registrati.',
+    'opening_balances_saved_as_draft' => 'Saldi di apertura salvati come bozza.',
     'opening_balances_all_zero' => 'Nessun saldo inserito.',
     'opening_balance_for_account' => 'Saldo di apertura conto :code',
     'opening_balance_contra' => 'Contropartita saldi di apertura',

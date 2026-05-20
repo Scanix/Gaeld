@@ -2125,6 +2125,7 @@ return [
     'opening_balances_contra_help' => 'Any difference between debits and credits is automatically posted to account 9000 (Opening Balance).',
     'opening_balances_submit' => 'Record opening balances',
     'opening_balances_recorded' => 'Opening balances recorded.',
+    'opening_balances_saved_as_draft' => 'Opening balances saved as draft.',
     'opening_balances_all_zero' => 'No balance was entered.',
     'opening_balance_for_account' => 'Opening balance for account :code',
     'opening_balance_contra' => 'Opening balance contra',

@@ -2111,6 +2111,7 @@ return [
     'opening_balances_contra_help' => 'L\'éventuelle différence entre débits et crédits sera automatiquement imputée au compte 9000 (Bilan d\'ouverture).',
     'opening_balances_submit' => 'Enregistrer les soldes d\'ouverture',
     'opening_balances_recorded' => 'Soldes d\'ouverture enregistrés.',
+    'opening_balances_saved_as_draft' => 'Soldes d\'ouverture enregistrés en brouillon.',
     'opening_balances_all_zero' => 'Aucun solde n\'a été saisi.',
     'opening_balance_for_account' => 'Solde d\'ouverture compte :code',
     'opening_balance_contra' => 'Contrepartie soldes d\'ouverture',

@@ -72,9 +72,11 @@ function openCreate() {
 
 function openEdit(entry) {
   editingEntry.value = entry
+  
   // Format date to YYYY-MM-DD for date input (handle both string and object dates)
   const dateStr = typeof entry.date === 'string' ? entry.date : entry.date?.toString()
   form.date = dateStr ? dateStr.split('T')[0].split(' ')[0] : new Date().toISOString().split('T')[0]
+  
   form.reference = entry.reference || ''
   form.description = entry.description || ''
   form.is_posted = entry.is_posted

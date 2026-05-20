@@ -83,6 +83,7 @@ class LedgerService
     {
         $this->validateBalance($entry->lines);
         $this->validateAccounts($organizationId, $entry->lines);
+        $this->throwIfDuplicateReference($organizationId, $entry->reference);
 
         $journalEntry = $this->persistEntry($organizationId, $entry, false);
 
@@ -109,6 +110,7 @@ class LedgerService
 
         $journalEntry->update(['is_posted' => true]);
 
+        // Flush cached balances so reports reflect the newly posted entry
         $this->flushCache($journalEntry->organization_id);
 
         JournalDraftPosted::dispatch($journalEntry);
@@ -202,11 +204,11 @@ class LedgerService
     }
 
     /**
-     * Guard against posting duplicate references within the same organization.
+     * Guard against duplicate references within the same organization.
      *
      * Null references are always allowed (e.g. bank imports without ref).
      *
-     * @throws DuplicateReferenceException When a posted entry with the same reference exists
+     * @throws DuplicateReferenceException When an entry (posted or draft) with the same reference exists
      */
     private function throwIfDuplicateReference(string $organizationId, ?string $reference): void
     {
@@ -214,9 +216,13 @@ class LedgerService
             return;
         }
 
-        if ($this->queryService->isDuplicateReference($organizationId, $reference)) {
+        $exists = JournalEntry::where('organization_id', $organizationId)
+            ->where('reference', $reference)
+            ->exists();
+
+        if ($exists) {
             throw new DuplicateReferenceException(
-                "A posted journal entry with reference '{$reference}' already exists in this organization."
+                "A journal entry with reference '{$reference}' already exists in this organization."
             );
         }
     }
