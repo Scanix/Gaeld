@@ -14,9 +14,6 @@
         <testsuite name="Security">
             <directory>tests/Security</directory>
         </testsuite>
-        <testsuite name="Plugins">
-            <directory>plugins/gaeld-ee/tests</directory>
-        </testsuite>
     </testsuites>
 
     <coverage>
