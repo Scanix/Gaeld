@@ -131,16 +131,7 @@ class LedgerService
     {
         $reversalReference = self::REFERENCE_PREFIX_REVERSAL.$journalEntry->reference;
 
-        // Prevent duplicate reversals - check if ANY entry (draft or posted) with this reference exists
-        $existingReversal = JournalEntry::where('organization_id', $journalEntry->organization_id)
-            ->where('reference', $reversalReference)
-            ->exists();
-
-        if ($existingReversal) {
-            throw new DuplicateReferenceException(
-                "This journal entry has already been reversed (reference '{$reversalReference}' exists)."
-            );
-        }
+        $this->throwIfDuplicateReference($journalEntry->organization_id, $reversalReference);
 
         $lines = $journalEntry->lines->map(fn (TransactionLine $line) => new JournalLineData(
             accountId: (string) $line->account_id,
@@ -216,13 +207,9 @@ class LedgerService
             return;
         }
 
-        $exists = JournalEntry::where('organization_id', $organizationId)
-            ->where('reference', $reference)
-            ->exists();
-
-        if ($exists) {
+        if ($this->queryService->isDuplicateReferenceAny($organizationId, $reference)) {
             throw new DuplicateReferenceException(
-                "A journal entry with reference '{$reference}' already exists in this organization."
+                "A posted journal entry with reference '{$reference}' already exists in this organization."
             );
         }
     }
