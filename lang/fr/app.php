@@ -31,6 +31,9 @@ return [
     // Type d'activité
     'business_type' => 'Type d\'activité',
     'fiscal_year_start' => 'Début de l’exercice fiscal',
+    'fiscal_year_start_hint' => 'Utilisé par défaut pour votre premier exercice. Une fois les exercices créés dans le module de comptabilité, gérez-les depuis ce module.',
+    'fiscal_year_managed_hint' => 'Les exercices fiscaux sont gérés dans le module de comptabilité.',
+    'manage_fiscal_years' => 'Gérer les exercices fiscaux',
     'placeholder_email' => 'vous@exemple.com',
     'placeholder_vat_uid' => 'CHE-123.456.789',
     'placeholder_ahv' => '756.XXXX.XXXX.XX',
