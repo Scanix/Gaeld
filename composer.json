@@ -50,9 +50,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/",
-            "Plugins\\GaeldEE\\": "plugins/gaeld-ee/src/",
-            "Plugins\\GaeldEE\\Tests\\": "plugins/gaeld-ee/tests/"
+            "Tests\\": "tests/"
         }
     },
     "scripts": {
