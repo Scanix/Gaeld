@@ -31,6 +31,9 @@ return [
     // Business type
     'business_type' => 'Business type',
     'fiscal_year_start' => 'Fiscal year start',
+    'fiscal_year_start_hint' => 'Used as the default for your first fiscal year. After you create fiscal years in the accounting module, manage them there.',
+    'fiscal_year_managed_hint' => 'Fiscal years are managed in the accounting module.',
+    'manage_fiscal_years' => 'Manage fiscal years',
     'placeholder_email' => 'you@example.com',
     'placeholder_vat_uid' => 'CHE-123.456.789',
     'placeholder_ahv' => '756.XXXX.XXXX.XX',

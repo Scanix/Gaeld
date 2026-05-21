@@ -31,6 +31,9 @@ return [
     // Geschäftstyp
     'business_type' => 'Geschäftstyp',
     'fiscal_year_start' => 'Beginn des Geschäftsjahrs',
+    'fiscal_year_start_hint' => 'Wird als Standard für Ihr erstes Geschäftsjahr verwendet. Nachdem Sie Geschäftsjahre im Buchhaltungsmodul erstellt haben, verwalten Sie sie dort.',
+    'fiscal_year_managed_hint' => 'Geschäftsjahre werden im Buchhaltungsmodul verwaltet.',
+    'manage_fiscal_years' => 'Geschäftsjahre verwalten',
     'placeholder_email' => 'sie@beispiel.com',
     'placeholder_vat_uid' => 'CHE-123.456.789',
     'placeholder_ahv' => '756.XXXX.XXXX.XX',
