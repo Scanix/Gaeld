@@ -80,7 +80,6 @@ class CoreHttpFlowTest extends TestCase
     {
         $create = $this->actAsOrg()->post('/invoices', [
             'customer_id' => $this->customer->id,
-            'number' => 'INV-HTTP-001',
             'issue_date' => '2026-03-10',
             'due_date' => '2026-03-31',
             'currency' => 'CHF',
@@ -94,7 +93,10 @@ class CoreHttpFlowTest extends TestCase
             ],
         ]);
 
-        $invoice = Invoice::where('number', 'INV-HTTP-001')->firstOrFail();
+        // The controller auto-generates the invoice number; resolve the created record
+        // from the redirect URL (/invoices/{id}) rather than searching by number.
+        $invoiceId = basename($create->headers->get('Location'));
+        $invoice = Invoice::findOrFail($invoiceId);
 
         $create->assertRedirect(route('invoices.show', $invoice));
         $this->assertSame(InvoiceStatus::Draft, $invoice->status);
