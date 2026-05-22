@@ -1286,6 +1286,8 @@ return [
     'tooltip_vat_rate' => 'Taux TVA suisses standard : 8,1% (taux normal), 3,8% (hébergement), 2,6% (alimentation/livres/médicaments). Choisissez "Sans TVA" pour les transactions exonérées.',
     'tooltip_qr_iban' => 'Le QR-IBAN est spécifique aux QR-factures suisses et diffère de votre IBAN habituel (chiffres 5 à 9 entre 30000 et 31999). Consultez votre e-banking sous bulletins de versement ou demandez-le à votre banque.',
     'bic_placeholder' => 'ex. UBSWCHZH80A',
+    'bic_swift' => 'BIC / SWIFT',
+    'bic_autofill_from_iban' => 'Remplir le BIC automatiquement depuis l\'IBAN',
     'tooltip_journal_balance' => 'En comptabilité en partie double, le total des débits doit toujours égaler le total des crédits. Une écriture déséquilibrée ne peut pas être comptabilisée.',
 
     // Lettrage

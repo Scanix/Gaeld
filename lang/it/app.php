@@ -1274,6 +1274,8 @@ return [
     'tooltip_vat_rate' => 'Aliquote IVA svizzere: 8,1% (aliquota normale), 3,8% (alloggio), 2,6% (alimenti/libri/medicinali). Scegli "Senza IVA" per le transazioni esenti.',
     'tooltip_qr_iban' => 'Il QR-IBAN inizia con CH ed è specifico per le fatture QR svizzere. È diverso dal tuo IBAN ordinario e si trova sul portale bancario.',
     'bic_placeholder' => 'es. UBSWCHZH80A',
+    'bic_swift' => 'BIC / SWIFT',
+    'bic_autofill_from_iban' => 'Compila BIC automaticamente dall\'IBAN',
     'tooltip_journal_balance' => 'Nella contabilità a partita doppia, il totale dei debiti deve sempre essere uguale al totale dei crediti. Una registrazione sbilanciata non può essere contabilizzata.',
 
     // VAT Rates management
