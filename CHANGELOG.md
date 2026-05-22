@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [3.5.0] — 2026-05-22
+
 ### Security
 - **Auth: prevent email enumeration on password reset** —
   `POST /forgot-password` now always returns the generic "if your email
