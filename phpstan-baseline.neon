@@ -325,12 +325,6 @@ parameters:
 			path: app/Domains/Invoicing/Queries/InvoiceQuery.php
 
 		-
-			message: '#^Access to an undefined property \(object\|string\)\:\:\$organization_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Invoicing/Requests/UpdateInvoiceRequest.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
 			identifier: property.notFound
 			count: 1
