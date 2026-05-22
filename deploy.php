@@ -103,8 +103,18 @@ task('deploy:ee:plugin', function () {
     // Copy cached repo into the release
     run("cp -a {$cachePath} {$pluginPath}");
 
+    // Ensure PHP-FPM (www-data) can read the plugin tree. The shared cache may
+    // have been cloned with a restrictive umask (resulting in 750 perms), which
+    // would prevent PluginServiceProvider from reading plugin.json at runtime
+    // and silently disable the EE plugin (causing BindingResolutionException
+    // on plugin-provided middleware/controllers).
+    run("chmod -R o+rX {$pluginPath}");
+
     // Install EE plugin dependencies
     run("cd {$pluginPath} && {{bin/composer}} install --no-dev --no-interaction --prefer-dist --optimize-autoloader");
+
+    // Re-apply world-read after composer install creates vendor/.
+    run("chmod -R o+rX {$pluginPath}");
 
     // Regenerate main app classmap so it picks up newly-installed EE plugin
     // classes (e.g. Plugins\GaeldEE\Http\Middleware\EnforceRegistrationGate).
