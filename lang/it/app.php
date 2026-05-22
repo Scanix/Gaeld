@@ -883,6 +883,8 @@ return [
     'private_withdrawals_account' => 'Apporti e prelievi privati',
     'mixed_use_label' => 'Conto misto (personale e professionale)',
     'mixed_use_tooltip' => 'Separa automaticamente le transazioni personali (conto 2850).',
+    'default_for_invoicing_label' => 'Conto predefinito per la fatturazione',
+    'default_for_invoicing_tooltip' => 'Questo conto sarà pre-selezionato sulle nuove fatture e utilizzato per le polizze QR.',
     'mixed' => 'Misto',
     'personal' => 'Personale',
     'business' => 'Professionale',
@@ -1271,6 +1273,9 @@ return [
     'tooltip_expense_category' => 'Le categorie associano le spese ai conti del piano contabile per una reportistica corretta.',
     'tooltip_vat_rate' => 'Aliquote IVA svizzere: 8,1% (aliquota normale), 3,8% (alloggio), 2,6% (alimenti/libri/medicinali). Scegli "Senza IVA" per le transazioni esenti.',
     'tooltip_qr_iban' => 'Il QR-IBAN inizia con CH ed è specifico per le fatture QR svizzere. È diverso dal tuo IBAN ordinario e si trova sul portale bancario.',
+    'bic_placeholder' => 'es. UBSWCHZH80A',
+    'bic_swift' => 'BIC / SWIFT',
+    'bic_autofill_from_iban' => 'Compila BIC automaticamente dall\'IBAN',
     'tooltip_journal_balance' => 'Nella contabilità a partita doppia, il totale dei debiti deve sempre essere uguale al totale dei crediti. Una registrazione sbilanciata non può essere contabilizzata.',
 
     // VAT Rates management
@@ -1534,7 +1539,7 @@ return [
     'empty_chart_of_accounts_title' => 'Nessun conto definito',
     'empty_chart_of_accounts_desc' => 'Importa il piano dei conti svizzero o crea il tuo primo conto.',
     'empty_journal_entries_title' => 'Nessuna registrazione contabile',
-    'empty_journal_entries_desc' => 'Le registrazioni appariranno qui quando creerai fatture o registrerai spese.',
+    'empty_journal_entries_desc' => 'Le registrazioni vengono create automaticamente quando invii fatture o approvi e contabilizzi spese. Puoi anche creare registrazioni manuali.',
     'empty_trial_balance_title' => 'Nessun dato disponibile',
     'empty_trial_balance_desc' => 'Il bilancio di verifica apparirà una volta registrate le scritture contabili.',
     'empty_vat_rates_title' => 'Nessuna aliquota IVA definita',

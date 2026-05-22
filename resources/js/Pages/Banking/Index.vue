@@ -102,10 +102,8 @@ const columns = computed(() => [
     <Modal :show="showModal" @close="showModal = false" :title="t('add_bank_account')">
       <form class="space-y-6" @submit.prevent="submit">
         <FormInput id="name" v-model="form.name" :label="t('account_name')" :error="form.errors.name" required />
-        <FormInput id="iban" v-model="form.iban" :label="t('iban')" :placeholder="t('iban_placeholder')" :error="form.errors.iban" />
+        <FormInput id="iban" v-model="form.iban" :label="t('iban_qr_iban')" :placeholder="t('iban_placeholder')" :error="form.errors.iban" :help="t('tooltip_qr_iban')" />
         <IbanHint :iban="form.iban" mode="any" />
-        <FormInput id="qr_iban" v-model="form.qr_iban" :label="t('iban_qr_iban')" :placeholder="t('qr_iban_placeholder')" :error="form.errors.qr_iban" :help="t('tooltip_qr_iban')" />
-        <IbanHint :iban="form.qr_iban" mode="qr" />
         <FormInput id="bank_name" v-model="form.bank_name" :label="t('bank_name')" :error="form.errors.bank_name" />
         <BicField id="bic" v-model="form.bic" :iban="form.iban" :error="form.errors.bic" />
         <FormSelect
