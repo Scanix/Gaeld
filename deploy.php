@@ -105,6 +105,13 @@ task('deploy:ee:plugin', function () {
 
     // Install EE plugin dependencies
     run("cd {$pluginPath} && {{bin/composer}} install --no-dev --no-interaction --prefer-dist --optimize-autoloader");
+
+    // Regenerate main app classmap so it picks up newly-installed EE plugin
+    // classes (e.g. Plugins\GaeldEE\Http\Middleware\EnforceRegistrationGate).
+    // Without this the original `deploy:vendors` classmap — built before the
+    // plugin was cloned — does not know about plugin classes and route
+    // resolution fails with BindingResolutionException on first request.
+    run('cd {{release_path}} && {{bin/composer}} dump-autoload --no-dev --optimize --classmap-authoritative');
 })->desc('Clone and install gaeld-ee plugin from private GitLab');
 
 task('deploy:sync:permissions', function () {
