@@ -890,6 +890,8 @@ return [
     'private_withdrawals_account' => 'Apports et prélèvements privés',
     'mixed_use_label' => 'Compte mixte (privé et professionnel)',
     'mixed_use_tooltip' => 'Sépare automatiquement les mouvements privés (compte 2850).',
+    'default_for_invoicing_label' => 'Compte par défaut pour la facturation',
+    'default_for_invoicing_tooltip' => 'Ce compte sera pré-sélectionné sur les nouvelles factures et utilisé pour les bulletins QR.',
     'mixed' => 'Mixte',
     'personal' => 'Privé',
     'business' => 'Professionnel',
@@ -1283,6 +1285,7 @@ return [
     'tooltip_expense_category' => 'Les catégories associent vos charges aux comptes du plan comptable pour un reporting financier correct.',
     'tooltip_vat_rate' => 'Taux TVA suisses standard : 8,1% (taux normal), 3,8% (hébergement), 2,6% (alimentation/livres/médicaments). Choisissez "Sans TVA" pour les transactions exonérées.',
     'tooltip_qr_iban' => 'Le QR-IBAN est spécifique aux QR-factures suisses et diffère de votre IBAN habituel (chiffres 5 à 9 entre 30000 et 31999). Consultez votre e-banking sous bulletins de versement ou demandez-le à votre banque.',
+    'bic_placeholder' => 'ex. UBSWCHZH80A',
     'tooltip_journal_balance' => 'En comptabilité en partie double, le total des débits doit toujours égaler le total des crédits. Une écriture déséquilibrée ne peut pas être comptabilisée.',
 
     // Lettrage
@@ -1573,7 +1576,7 @@ return [
     'empty_chart_of_accounts_title' => 'Aucun compte défini',
     'empty_chart_of_accounts_desc' => 'Importez le plan comptable suisse ou créez votre premier compte.',
     'empty_journal_entries_title' => 'Aucune écriture comptable',
-    'empty_journal_entries_desc' => 'Les écritures apparaîtront ici lorsque vous créerez des factures ou enregistrerez des dépenses.',
+    'empty_journal_entries_desc' => 'Les écritures sont enregistrées automatiquement lorsque vous envoyez des factures ou approuvez et comptabilisez des dépenses. Vous pouvez aussi créer des écritures manuelles.',
     'empty_trial_balance_title' => 'Aucune donnée disponible',
     'empty_trial_balance_desc' => 'Le bilan de vérification apparaîtra une fois les écritures comptables enregistrées.',
     'empty_vat_rates_title' => 'Aucun taux de TVA défini',

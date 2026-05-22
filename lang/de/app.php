@@ -890,6 +890,8 @@ return [
     'private_withdrawals_account' => 'Privateinlagen und -bezüge',
     'mixed_use_label' => 'Gemischtes Konto (privat und geschäftlich)',
     'mixed_use_tooltip' => 'Trennt automatisch private Transaktionen (Konto 2850).',
+    'default_for_invoicing_label' => 'Standardkonto für Rechnungen',
+    'default_for_invoicing_tooltip' => 'Dieses Konto wird auf neuen Rechnungen vorausgewählt und für QR-Einzahlungsscheine verwendet.',
     'mixed' => 'Gemischt',
     'personal' => 'Privat',
     'business' => 'Geschäftlich',
@@ -1285,6 +1287,7 @@ return [
     'tooltip_expense_category' => 'Kategorien ordnen Aufwände den richtigen Konten im Kontenplan zu.',
     'tooltip_vat_rate' => 'Schweizer MWST-Sätze: 8,1% (Normalsatz), 3,8% (Beherbergung), 2,6% (Lebensmittel/Bücher/Medikamente). Wählen Sie "Ohne MWST" für steuerbefreite Umsätze.',
     'tooltip_qr_iban' => 'Die QR-IBAN ist spezifisch für Schweizer QR-Rechnungen und unterscheidet sich von Ihrer normalen IBAN (Stellen 5–9 im Bereich 30000–31999). Sie finden sie im E-Banking unter Einzahlungsscheine oder fragen Sie Ihre Bank.',
+    'bic_placeholder' => 'z.B. UBSWCHZH80A',
     'tooltip_journal_balance' => 'In der doppelten Buchhaltung müssen Soll und Haben immer übereinstimmen. Eine unausgeglichene Buchung kann nicht gebucht werden.',
 
     // VAT Rates management
@@ -1548,7 +1551,7 @@ return [
     'empty_chart_of_accounts_title' => 'Keine Konten definiert',
     'empty_chart_of_accounts_desc' => 'Importieren Sie den Schweizer Kontenrahmen oder erstellen Sie Ihr erstes Konto.',
     'empty_journal_entries_title' => 'Keine Buchungen',
-    'empty_journal_entries_desc' => 'Buchungen erscheinen hier, wenn Sie Rechnungen erstellen oder Ausgaben erfassen.',
+    'empty_journal_entries_desc' => 'Buchungen werden automatisch erstellt, wenn Sie Rechnungen versenden oder Ausgaben genehmigen und buchen. Sie können auch manuelle Buchungen erfassen.',
     'empty_trial_balance_title' => 'Keine Daten verfügbar',
     'empty_trial_balance_desc' => 'Die Saldobilanz erscheint, sobald Buchungen erfasst wurden.',
     'empty_vat_rates_title' => 'Keine MWST-Sätze definiert',

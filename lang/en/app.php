@@ -905,6 +905,8 @@ return [
     'private_withdrawals_account' => 'Private contributions and withdrawals',
     'mixed_use_label' => 'Mixed-use account (personal & business)',
     'mixed_use_tooltip' => 'Automatically separates personal transactions (account 2850).',
+    'default_for_invoicing_label' => 'Default account for invoicing',
+    'default_for_invoicing_tooltip' => 'This account will be pre-selected on new invoices and used as the recipient for QR-bill payment slips.',
     'mixed' => 'Mixed',
     'personal' => 'Personal',
     'business' => 'Business',
@@ -1323,6 +1325,7 @@ return [
     'tooltip_expense_category' => 'Categories map expenses to specific accounts in your chart of accounts for correct financial reporting.',
     'tooltip_vat_rate' => 'Standard Swiss VAT rates: 8.1% (standard), 3.8% (accommodation), 2.6% (food/books/medicine). Select "No VAT" for exempt transactions.',
     'tooltip_qr_iban' => 'The QR-IBAN is specific to Swiss QR invoices and differs from your regular IBAN (digits 5-9 are in range 30000-31999). Find it in your e-banking under payment slips/QR-bills, or ask your bank.',
+    'bic_placeholder' => 'e.g. UBSWCHZH80A',
     'tooltip_journal_balance' => 'In double-entry bookkeeping, total debits must always equal total credits. An unbalanced entry cannot be posted.',
 
     // Account line matching
@@ -1588,7 +1591,7 @@ return [
     'empty_chart_of_accounts_title' => 'No accounts defined',
     'empty_chart_of_accounts_desc' => 'Import the Swiss chart of accounts or create your first account.',
     'empty_journal_entries_title' => 'No journal entries',
-    'empty_journal_entries_desc' => 'Journal entries will appear here when you create invoices or record expenses.',
+    'empty_journal_entries_desc' => 'Journal entries are posted automatically when you send invoices or approve and post expenses. You can also record manual entries.',
     'empty_trial_balance_title' => 'No data available',
     'empty_trial_balance_desc' => 'The trial balance will appear once journal entries have been recorded.',
     'empty_vat_rates_title' => 'No VAT rates defined',
