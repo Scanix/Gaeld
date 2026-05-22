@@ -207,6 +207,18 @@ class InvoiceController extends Controller
             $action->execute($invoice, $dto);
         } catch (InvalidInvoiceStateException $e) {
             return $this->backWithError($e);
+        } catch (QueryException $e) {
+            $sqlState = $e->errorInfo[0] ?? (string) $e->getCode();
+            $isNumberConflict = $sqlState === '23505'
+                && str_contains($e->getMessage(), 'invoices_organization_id_number_unique');
+
+            if (! $isNumberConflict) {
+                throw $e;
+            }
+
+            return back()
+                ->withErrors(['number' => __('validation.unique', ['attribute' => 'number'])])
+                ->withInput();
         }
 
         return redirect()->route('invoices.show', $invoice)

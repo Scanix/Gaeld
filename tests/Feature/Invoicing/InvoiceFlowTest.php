@@ -223,4 +223,52 @@ class InvoiceFlowTest extends TestCase
         $arBalance = $ledgerQuery->accountBalance($ar->id);
         $this->assertEquals('0.00', number_format((float) $arBalance, 2, '.', ''));
     }
+
+    public function test_updating_invoice_with_duplicate_number_returns_validation_error(): void
+    {
+        $this->createInvoice(['number' => 'INV-2026-001']);
+        $invoice2 = $this->createInvoice(['number' => 'INV-2026-002']);
+
+        $payload = [
+            'number' => 'INV-2026-001', // already taken by invoice1
+            'issue_date' => '2026-05-01',
+            'due_date' => '2026-05-31',
+            'currency' => 'CHF',
+            'lines' => [[
+                'description' => 'Service',
+                'quantity' => 1,
+                'unit_price' => 100.00,
+                'vat_rate_id' => $this->vatRate->id,
+            ]],
+        ];
+
+        $response = $this->actAsOrg()
+            ->put(route('invoices.update', $invoice2), $payload);
+
+        $response->assertSessionHasErrors('number');
+    }
+
+    public function test_updating_invoice_keeping_its_own_number_succeeds(): void
+    {
+        $invoice = $this->createInvoice(['number' => 'INV-2026-001']);
+
+        $payload = [
+            'number' => 'INV-2026-001', // same invoice, should not conflict with itself
+            'issue_date' => '2026-05-01',
+            'due_date' => '2026-05-31',
+            'currency' => 'CHF',
+            'lines' => [[
+                'description' => 'Updated service',
+                'quantity' => 2,
+                'unit_price' => 200.00,
+                'vat_rate_id' => $this->vatRate->id,
+            ]],
+        ];
+
+        $response = $this->actAsOrg()
+            ->put(route('invoices.update', $invoice), $payload);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('invoices.show', $invoice));
+    }
 }
