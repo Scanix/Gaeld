@@ -11,7 +11,7 @@ import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { subscriptionStatusVariant } from '@/lib/statusClasses'
 import { TrendingUp, Users, AlertCircle, CreditCard, Clock, ShieldCheck, Ban, ArrowRightLeft, Settings, Save, ExternalLink, MessageSquare, Trash2 } from 'lucide-vue-next'
-import { router } from '@inertiajs/vue3'
+import { router, Link } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 
 const { t } = useTranslations()
@@ -22,8 +22,10 @@ const props = defineProps({
   plans: { type: Array, default: () => [] },
   subscriptions: { type: Array, default: () => [] },
   unsubscribed_orgs: { type: Array, default: () => [] },
+  org_usage: { type: Array, default: () => [] },
   horizon_url: { type: String, default: '/horizon' },
   system_message: { type: String, default: null },
+  signups_disabled: { type: Boolean, default: false },
 })
 
 const selectedPlan = ref({})
@@ -113,6 +115,49 @@ function clearSystemMessage() {
     onFinish: () => { savingMessage.value = false, messageInput.value = '' },
   })
 }
+
+// Suspend / reactivate / delete an organization
+const suspendTarget = ref(null)
+const suspendReason = ref('')
+const deleteTarget = ref(null)
+
+function openSuspend(org) {
+  suspendTarget.value = org
+  suspendReason.value = ''
+}
+
+function submitSuspend() {
+  if (!suspendTarget.value) return
+  router.post(`/saas-admin/${suspendTarget.value.id}/suspend`, {
+    reason: suspendReason.value || null,
+  }, {
+    preserveScroll: true,
+    onFinish: () => {
+      suspendTarget.value = null
+      suspendReason.value = ''
+    },
+  })
+}
+
+function reactivate(org) {
+  router.post(`/saas-admin/${org.id}/reactivate`, {}, { preserveScroll: true })
+}
+
+function openDelete(org) {
+  deleteTarget.value = org
+}
+
+function submitDelete() {
+  if (!deleteTarget.value) return
+  router.delete(`/saas-admin/${deleteTarget.value.id}`, {
+    onFinish: () => { deleteTarget.value = null },
+  })
+}
+
+function toggleSignups() {
+  const url = props.signups_disabled ? '/saas-admin/signups/enable' : '/saas-admin/signups/disable'
+  router.post(url, {}, { preserveScroll: true })
+}
 </script>
 
 <template>
@@ -186,6 +231,86 @@ function clearSystemMessage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <!-- Moderation: signup kill switch + per-org suspend/delete -->
+      <Card>
+        <CardHeader>
+          <CardTitle class="flex items-center gap-2">
+            <ShieldCheck class="h-4 w-4" />
+            {{ t('moderation') }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent class="space-y-4">
+          <div class="flex items-center justify-between rounded-md border border-[hsl(var(--border))] p-3">
+            <div>
+              <p class="text-sm font-medium">{{ t('public_signups') }}</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('public_signups_desc') }}</p>
+            </div>
+            <Button :variant="signups_disabled ? 'default' : 'outline'" size="sm" @click="toggleSignups">
+              {{ signups_disabled ? t('enable_signups') : t('disable_signups') }}
+            </Button>
+          </div>
+
+          <div v-if="org_usage.length" class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-[hsl(var(--border))]">
+                  <th class="text-left py-2.5 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('organization') }}</th>
+                  <th class="text-left py-2.5 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('health') }}</th>
+                  <th class="text-left py-2.5 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('activity_30d') }}</th>
+                  <th class="text-right py-2.5 px-3 font-medium text-[hsl(var(--muted-foreground))]">{{ t('actions') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="org in org_usage" :key="org.id" class="border-b border-[hsl(var(--border))] last:border-0 hover:bg-[hsl(var(--accent)/0.3)]">
+                  <td class="py-2.5 px-3 font-medium">
+                    <Link :href="`/saas-admin/${org.id}`" class="text-[hsl(var(--primary))] hover:underline">{{ org.name }}</Link>
+                  </td>
+                  <td class="py-2.5 px-3 text-xs">{{ org.health }}</td>
+                  <td class="py-2.5 px-3 tabular-nums">{{ org.activity_30d }}</td>
+                  <td class="py-2.5 px-3">
+                    <div class="flex items-center justify-end gap-2">
+                      <Button size="sm" variant="outline" @click="openSuspend(org)">{{ t('suspend') }}</Button>
+                      <Button size="sm" variant="destructive" @click="openDelete(org)">{{ t('delete') }}</Button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Suspend dialog -->
+      <div v-if="suspendTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="suspendTarget = null">
+        <div class="w-full max-w-md rounded-lg bg-[hsl(var(--background))] p-5 shadow-lg">
+          <h3 class="text-lg font-semibold">{{ t('suspend_org_title', { name: suspendTarget.name }) }}</h3>
+          <p class="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{{ t('suspend_org_desc') }}</p>
+          <textarea
+            v-model="suspendReason"
+            class="mt-3 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 py-2 text-sm"
+            rows="3"
+            maxlength="500"
+            :placeholder="t('suspend_reason_placeholder')"
+          />
+          <div class="mt-4 flex justify-end gap-2">
+            <Button variant="outline" size="sm" @click="suspendTarget = null">{{ t('cancel') }}</Button>
+            <Button variant="destructive" size="sm" @click="submitSuspend">{{ t('suspend') }}</Button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete dialog -->
+      <div v-if="deleteTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="deleteTarget = null">
+        <div class="w-full max-w-md rounded-lg bg-[hsl(var(--background))] p-5 shadow-lg">
+          <h3 class="text-lg font-semibold">{{ t('delete_org_title', { name: deleteTarget.name }) }}</h3>
+          <p class="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{{ t('delete_org_desc') }}</p>
+          <div class="mt-4 flex justify-end gap-2">
+            <Button variant="outline" size="sm" @click="deleteTarget = null">{{ t('cancel') }}</Button>
+            <Button variant="destructive" size="sm" @click="submitDelete">{{ t('delete') }}</Button>
+          </div>
+        </div>
       </div>
 
       <!-- KPI row -->
