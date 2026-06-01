@@ -16,7 +16,7 @@ class AddSecurityHeadersTest extends TestCase
         $csp = (string) $response->headers->get('Content-Security-Policy');
 
         $this->assertStringContainsString(
-            "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://docs.gaeld.ch",
+            "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://docs.gaeld.ch https://hcaptcha.com https://*.hcaptcha.com",
             $csp,
         );
     }
