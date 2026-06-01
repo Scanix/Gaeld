@@ -51,6 +51,7 @@ class HandleInertiaRequests extends Middleware
             'systemMessage' => FeatureFlag::isSaas()
                 ? Cache::get('saas:system_message')
                 : null,
+            'hcaptchaSiteKey' => (string) config('services.hcaptcha.site_key', ''),
         ]);
     }
 

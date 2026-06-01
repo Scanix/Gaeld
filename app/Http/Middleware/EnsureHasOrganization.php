@@ -27,6 +27,27 @@ class EnsureHasOrganization
             return redirect()->route('onboarding');
         }
 
+        // Suspended organisations are locked out of the app entirely so
+        // operators can pause abusive or non-paying tenants without
+        // deleting their data. The SaaS admin keeps access — they need
+        // to be able to reactivate the organisation.
+        if ($org->isSuspended()) {
+            $adminEmail = config('ee.saas_admin_email');
+            $userEmail = (string) $request->user()->email;
+            $isAdmin = $adminEmail && strcasecmp($userEmail, (string) $adminEmail) === 0;
+
+            if (! $isAdmin) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'This organization is currently suspended.',
+                        'reason' => $org->suspended_reason,
+                    ], 403);
+                }
+
+                abort(403, $org->suspended_reason ?? 'This organization is currently suspended.');
+            }
+        }
+
         $this->currentOrganization->set($org);
 
         app(PermissionRegistrar::class)->setPermissionsTeamId($org->id);
