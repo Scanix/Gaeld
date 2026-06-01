@@ -1,10 +1,12 @@
 <script setup>
-import { Head, useForm, Link } from '@inertiajs/vue3'
+import { Head, useForm, Link, usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import Alert from '@/Components/UI/Alert.vue'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
+import HCaptcha from '@/Components/UI/HCaptcha.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import GuestBar from '@/Components/GuestBar.vue'
 
@@ -14,12 +16,20 @@ defineProps({
   status: String,
 })
 
+const page = usePage()
+const hcaptchaSiteKey = computed(() => page.props.hcaptchaSiteKey || '')
+
 const form = useForm({
   email: '',
+  'h-captcha-response': '',
 })
 
 function submit() {
-  form.post('/forgot-password')
+  form.post('/forgot-password', {
+    onError: () => {
+      form['h-captcha-response'] = ''
+    },
+  })
 }
 </script>
 
@@ -49,6 +59,18 @@ function submit() {
               :error="form.errors.email"
               required
             />
+
+            <HCaptcha
+              v-if="hcaptchaSiteKey"
+              v-model="form['h-captcha-response']"
+              :site-key="hcaptchaSiteKey"
+            />
+            <p
+              v-if="form.errors['h-captcha-response']"
+              class="text-sm text-[hsl(var(--destructive))]"
+            >
+              {{ form.errors['h-captcha-response'] }}
+            </p>
 
             <Button type="submit" class="w-full" :disabled="form.processing">
               {{ t('send_reset_link') }}

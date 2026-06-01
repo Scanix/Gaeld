@@ -1,10 +1,11 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { useForm, usePage } from '@inertiajs/vue3'
 import { CheckCircle2, Zap } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import Button from '@/Components/UI/Button.vue'
+import HCaptcha from '@/Components/UI/HCaptcha.vue'
 import PasswordStrength from '@/Components/UI/PasswordStrength.vue'
 
 const { t } = useTranslations()
@@ -23,6 +24,9 @@ const selectedPlanIsFree = computed(() => {
   return plan ? Number(plan.price_chf) === 0 : false
 })
 
+const page = usePage()
+const hcaptchaSiteKey = computed(() => page.props.hcaptchaSiteKey || '')
+
 const form = useForm({
   name: '',
   email: '',
@@ -32,11 +36,16 @@ const form = useForm({
   plan_id: selectedPlan,
   accepted_privacy: false,
   chart_of_accounts: 'swiss_sme',
+  'h-captcha-response': '',
 })
 
 function submit() {
   form.plan_id = selectedPlan.value
-  form.post('/signup')
+  form.post('/signup', {
+    onError: () => {
+      form['h-captcha-response'] = ''
+    },
+  })
 }
 </script>
 
@@ -196,6 +205,16 @@ function submit() {
               </span>
             </label>
             <p v-if="form.errors.accepted_privacy" class="text-sm text-[hsl(var(--destructive))]">{{ form.errors.accepted_privacy }}</p>
+          </div>
+
+          <div v-if="hcaptchaSiteKey" class="space-y-1">
+            <HCaptcha v-model="form['h-captcha-response']" :site-key="hcaptchaSiteKey" />
+            <p
+              v-if="form.errors['h-captcha-response']"
+              class="text-sm text-[hsl(var(--destructive))]"
+            >
+              {{ form.errors['h-captcha-response'] }}
+            </p>
           </div>
 
           <Button type="submit" class="w-full" :disabled="form.processing">

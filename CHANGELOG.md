@@ -9,6 +9,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.3] — 2026-06-01
+
+### Added
+- **Anti-spam: hCaptcha integration on signup and password reset** — added
+  `HCaptchaRule` validation rule and `<HCaptcha />` Vue component that
+  lazy-loads the hCaptcha API and renders a widget when
+  `HCAPTCHA_SITE_KEY` / `HCAPTCHA_SECRET_KEY` env vars are set. Wired
+  into the public registration flow (EE) and the password reset
+  endpoint. Login is intentionally left out (already throttled). The
+  rule is no-op without a secret key and during the `testing`
+  environment so existing tests stay green.
+- **SaaS admin: organization moderation CRUD** — the SaaS admin
+  dashboard now lists per-organization usage (members, activity in last
+  30 days, paid subscription flag) and exposes Suspend, Reactivate and
+  Delete actions plus a drill-down page (`/saas-admin/{id}`) showing
+  members, activity counts and subscription history. Suspended
+  organizations are blocked at the `EnsureHasOrganization` middleware
+  with a 403 (the SaaS admin account remains exempt).
+- **SaaS admin: signup kill-switch** — new toggle persists a cache flag
+  consumed by `EnforceRegistrationGate`; when active the public signup
+  endpoint returns 503 immediately. Useful during incident response or
+  when burning down spam.
+- **Console: `gaeld:cleanup-spam-orgs` command** — defaults to dry-run.
+  Detects suspiciously-named organizations (single-word
+  letters-only, configurable `--min-length`) created in the last
+  `--days=7` that have no business activity (invoices, expenses,
+  contacts, bank transactions, journal entries) and no paid
+  subscription, then deletes them through `DeleteOrganizationAction`
+  when `--force` is passed.
+- **Organizations: soft deletes + suspension fields** — new migration
+  adds `deleted_at`, `suspended_at`, `suspended_reason` to the
+  `organizations` table. New `DeleteOrganizationAction` detaches all
+  members, soft-deletes EE subscriptions, then soft-deletes the
+  organization within a transaction and logs `organization.deleted`.
+
+### Fixed
+- **EE: duplicate `Subscription::isPaused` declaration causing fatal
+  errors in production** — `plugins/gaeld-ee/.../Subscription.php`
+  declared `isPaused`, `isTrialExpired`, `getStatus`, `getTrialEndsAt`,
+  `getEndsAt` and `getPlan` twice, which surfaced as
+  `Cannot redeclare ... isPaused()` fatals on release 223
+  (Sentry 7518411333). The second block has been removed; behaviour
+  preserved by the earlier definitions.
+
+---
+
 ## [3.4.2] — 2026-05-17
 
 ### Fixed
