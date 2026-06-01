@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.2] — 2026-05-17
+
+### Fixed
+- **Invoicing: concurrent invoice number collisions no longer 500** —
+  `CreateInvoiceAction` now retries up to five times when the database
+  rejects an insert with `invoices_organization_id_number_unique`,
+  regenerating the auto-formatted `{PREFIX}-YYYY-NNN` number from the
+  current max. Custom user-supplied numbers still surface the original
+  uniqueness error instead of being silently rewritten. Closes the
+  Sentry-reported `UniqueConstraintViolationException` triggered by
+  double-submits and parallel requests.
+
+### Changed
+- **Tests: pinned `APP_BASE_PATH` via `tests/bootstrap.php`** — plugin
+  vendor autoloaders (notably `plugins/gaeld-ee`) registered after the
+  root `ClassLoader` could win Laravel's `Application::inferBasePath()`
+  fallback, breaking `parent::setUp()` for any feature test in the root
+  suite. The new bootstrap sets `APP_BASE_PATH` before `vendor/autoload.php`
+  runs so the application path is deterministic regardless of plugin
+  load order.
+
+---
+
 ## [3.4.1] — 2026-05-17
 
 ### Changed
