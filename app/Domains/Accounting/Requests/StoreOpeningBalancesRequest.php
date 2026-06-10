@@ -17,6 +17,7 @@ class StoreOpeningBalancesRequest extends FormRequest
             'date' => ['required', 'date'],
             'reference' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string', 'max:1000'],
+            'is_posted' => ['sometimes', 'boolean'],
             'balances' => ['required', 'array', 'min:1'],
             'balances.*.account_id' => [
                 'required',

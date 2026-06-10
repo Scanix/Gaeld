@@ -69,6 +69,7 @@ class OpeningBalancesController extends Controller
         $this->authorize('create', JournalEntry::class);
 
         $validated = $request->validated();
+        $isPosted = (bool) $request->boolean('is_posted', true);
 
         try {
             $entry = $action->execute(
@@ -77,6 +78,7 @@ class OpeningBalancesController extends Controller
                 balances: $validated['balances'],
                 reference: $validated['reference'] ?? null,
                 description: $validated['description'] ?? null,
+                isPosted: $isPosted,
             );
         } catch (\Throwable $e) {
             return $this->backWithError($e);
@@ -86,7 +88,11 @@ class OpeningBalancesController extends Controller
             return $this->backWithError(__('app.opening_balances_all_zero'));
         }
 
+        $successMessage = $isPosted
+            ? __('app.opening_balances_recorded')
+            : __('app.opening_balances_saved_as_draft');
+
         return redirect()->route('accounting.journal')
-            ->with('success', __('app.opening_balances_recorded'));
+            ->with('success', $successMessage);
     }
 }
