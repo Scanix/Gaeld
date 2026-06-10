@@ -48,6 +48,7 @@ use App\Http\Services\GlobalSearchService;
 use App\Listeners\SendHorizonTelegramAlert;
 use App\Support\Listeners\AuthAuditSubscriber;
 use App\Support\Observers\LocksArchivedRecord;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -92,6 +93,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::preventLazyLoading(! app()->isProduction());
+
+        // Authenticated users who visit /login or /register are sent to / (home)
+        // instead of directly to /dashboard, matching test expectations.
+        RedirectIfAuthenticated::redirectUsing(fn () => route('home'));
 
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 

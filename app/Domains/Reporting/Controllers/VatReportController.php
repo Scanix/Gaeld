@@ -45,7 +45,7 @@ class VatReportController extends Controller
 
         $validated = $request->validated();
         $report = $service->generate($currentOrg->id(), $validated['from_date'], $validated['to_date']);
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
         $from = $validated['from_date'];
         $to = $validated['to_date'];
 
@@ -69,7 +69,7 @@ class VatReportController extends Controller
                 return $exporter->csv()->export($headers, $rows, "vat-report-{$from}-{$to}.csv");
             },
             pdfBuilder: fn () => $exporter->pdf()->download('exports.vat-report', [
-                'organizationName' => $orgName,
+                'organization' => $org,
                 'report' => $report,
             ], "vat-report-{$from}-{$to}.pdf"),
         );
