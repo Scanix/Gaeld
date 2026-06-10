@@ -61,6 +61,9 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/onboarding', [OnboardingController::class, 'create'])->name('onboarding');
     Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
+    // onboarding.wizard is the post-signup landing route used by the EE RegistrationController.
+    // After SaaS signup the org already exists, so we route straight to the dashboard.
+    Route::get('/onboarding/wizard', fn () => redirect()->route('dashboard'))->name('onboarding.wizard');
 });
 
 // Invitation accept (authenticated but no org middleware needed)
