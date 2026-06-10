@@ -149,10 +149,6 @@ function daysOverdueLabel(n) {
     </div>
 
     <div v-else-if="!hasAccounts" class="rounded-lg border p-6 text-center text-[hsl(var(--muted-foreground))]">
-    <div v-else-if="!hasAccounts" class="rounded-lg border p-6 text-center text-[hsl(var(--muted-foreground))]">
-      {{ t('no_accounts_to_close') }}
-    </div>
->>>>>>> origin/develop
       {{ t('no_accounts_to_close') }}
     </div>
 

@@ -78,7 +78,11 @@ const { showDialog, handleSave, handleDiscard, handleStay, forceClear } = useUns
   { onSave: saveDraft, fallbackUrl: `/invoices/${props.invoice.id}` },
 )
 
-const { errors: clientErrors, validate, validateField } = useFormValidation(z.object({\n  customer_id: z.string().min(1, 'This field is required.'),\n  issue_date: z.string().min(1, 'This field is required.'),\n  due_date: z.string().min(1, 'This field is required.'),\n}))
+const { errors: clientErrors, validate, validateField } = useFormValidation(z.object({
+  customer_id: z.string().min(1, 'This field is required.'),
+  issue_date: z.string().min(1, 'This field is required.'),
+  due_date: z.string().min(1, 'This field is required.'),
+}))
 
 function addLine(type = 'item') {
   form.lines.push({ type, discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: type === 'item' && props.defaultVatRateId ? String(props.defaultVatRateId) : '' })
