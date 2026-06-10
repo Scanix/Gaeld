@@ -12,7 +12,7 @@ Route::get('/profile', [UserController::class, 'profile'])->name('profile');
 Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
 Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
 Route::post('/profile/toggle-help', [UserController::class, 'toggleHelp'])->name('profile.toggle-help');
-Route::post('/profile/onboarding/dismiss', [UserController::class, 'dismissOnboarding'])->name('profile.onboarding.dismiss');
+Route::put('/profile/locale', [UserController::class, 'updateLocale'])->name('profile.locale');
 Route::post('/profile/onboarding/reset', [UserController::class, 'resetOnboarding'])->name('profile.onboarding.reset');
 Route::post('/profile/export', [UserController::class, 'exportData'])->middleware('throttle:3,5')->name('profile.export');
 Route::get('/profile/export/download/{filename}', [UserController::class, 'downloadExport'])->name('profile.export.download')->middleware('signed');

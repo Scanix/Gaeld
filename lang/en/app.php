@@ -686,10 +686,40 @@ return [
 
     // Onboarding
     'onboarding_reset_title' => 'Onboarding',
-    'onboarding_reset_desc' => 'Show the Getting Started checklist on your dashboard again.',
-    'reset_onboarding' => 'Reset onboarding',
-    'onboarding_reset' => 'Getting Started checklist restored on your dashboard.',
-    'dismiss_onboarding' => 'Dismiss Getting Started',
+    'onboarding_reset_desc' => 'Run the guided setup wizard again to review your modules and company details.',
+    'reset_onboarding' => 'Re-run setup wizard',
+    'onboarding_reset' => 'Setup wizard re-enabled. Open it from your dashboard.',
+
+    // Onboarding wizard
+    'onboarding_wizard' => 'Setup wizard',
+    'onboarding_welcome_title' => 'Welcome to Gäld',
+    'onboarding_welcome_desc' => 'Let\'s set up your organization in a few quick steps. You can skip and finish later.',
+    'onboarding_step_modules' => 'Modules',
+    'onboarding_step_company' => 'Company',
+    'onboarding_step_fiscal_year' => 'Fiscal year',
+    'onboarding_step_bank' => 'Bank',
+    'onboarding_modules_title' => 'Choose your activity & modules',
+    'onboarding_modules_desc' => 'Pick an activity type to apply recommended modules, then turn off anything you don\'t need to keep your menu uncluttered. You can change this anytime in Settings.',
+    'onboarding_modules_preset_hint' => 'Selecting an activity type applies recommended defaults. Fine-tune individual modules below.',
+    'onboarding_company_title' => 'Company details',
+    'onboarding_company_desc' => 'These appear on your invoices and reports. You can complete them later in Settings.',
+    'onboarding_fiscal_year_title' => 'First fiscal year',
+    'onboarding_fiscal_year_desc' => 'Define your first accounting period. You can add or adjust fiscal years later.',
+    'onboarding_fiscal_year_enable' => 'Create a fiscal year now',
+    'onboarding_bank_title' => 'First bank account',
+    'onboarding_bank_desc' => 'Add a bank account to record payments and reconcile transactions.',
+    'onboarding_bank_enable' => 'Add a bank account now',
+    'onboarding_skip' => 'Skip for now',
+    'onboarding_finish' => 'Finish setup',
+    'onboarding_wizard_complete' => 'Your organization is ready. Welcome aboard!',
+    'onboarding_banner_title' => 'Finish setting up your organization',
+    'onboarding_banner_desc' => 'Choose your modules and complete your company details in a few steps.',
+    'onboarding_banner_cta' => 'Open wizard',
+    'onboarding_step_upgrade' => 'Upgrade',
+    'onboarding_upgrade_title' => 'You\u2019re all set!',
+    'onboarding_upgrade_desc' => 'Your organization is ready to go. You\u2019re on the Free plan \u2014 upgrade to unlock more invoices, additional users, and advanced features.',
+    'onboarding_upgrade_cta' => 'View plans & upgrade',
+    'onboarding_go_dashboard' => 'Go to dashboard',
 
     // Contextual help texts
     'help_dashboard_title' => 'Your financial overview',
@@ -1300,27 +1330,6 @@ return [
     'help_export_title' => 'What to give your fiduciary',
     'help_export_text' => 'At year-end, your fiduciary needs a complete accounting package. This export generates a ZIP archive containing all journals, reports, invoices, and VAT declarations for the selected fiscal year. Simply email the ZIP file to your accountant.',
 
-    // Getting Started Checklist
-    'getting_started_checklist' => 'Getting Started',
-    'getting_started_complete' => 'You\'re all set! Your organization is ready to go.',
-    'checklist_profile_complete' => 'Complete your organization profile',
-    'checklist_customer_created' => 'Add your first customer',
-    'checklist_bank_account_created' => 'Set up a bank account',
-
-    // Accounting Checklist
-    'accounting_checklist' => 'Accounting Checklist',
-    'checklist_complete' => 'Your accounting is complete for this period!',
-    'checklist_chart_configured' => 'Chart of accounts configured',
-    'checklist_invoices_created' => 'Invoices created',
-    'checklist_expenses_posted' => 'Expenses posted',
-    'checklist_bank_imported' => 'Bank transactions imported',
-    'checklist_reconciliation_done' => 'Bank reconciliation done',
-    'checklist_vat_declared' => 'VAT declared',
-    'checklist_depreciation_posted' => 'Depreciation posted',
-    'checklist_social_charges' => 'Social charges posted',
-    'checklist_year_end_closed' => 'Year-end closing done',
-    'checklist_fiduciary_exported' => 'Fiduciary export generated',
-
     // Tooltips
     'tooltip_expense_category' => 'Categories map expenses to specific accounts in your chart of accounts for correct financial reporting.',
     'tooltip_vat_rate' => 'Standard Swiss VAT rates: 8.1% (standard), 3.8% (accommodation), 2.6% (food/books/medicine). Select "No VAT" for exempt transactions.',
@@ -1776,9 +1785,6 @@ return [
     'default' => 'Default',
     'item' => 'Item',
     'user' => 'User',
-
-    // Checklist
-    'checklist_data_imported' => 'Import existing data',
 
     // Migration / Data Import
     'migration.migration' => 'Data Import',

@@ -108,7 +108,7 @@ class RegistrationTest extends TestCase
             'chart_of_accounts' => 'none',
         ]);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('onboarding.wizard'));
 
         $subscription = Subscription::where('plan_id', $plan->id)->firstOrFail();
         $this->assertSame('active', $subscription->status);

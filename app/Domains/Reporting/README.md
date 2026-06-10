@@ -21,4 +21,3 @@ Financial reports, dashboards, aging analysis, and data export for the organizat
 
 - Reads from Accounting domain's `LedgerQueryService` for all financial data
 - References Invoicing (receivables) and Expenses (payables) for aging reports
-- Dashboard injects `ChecklistService` from Organizations domain for onboarding status

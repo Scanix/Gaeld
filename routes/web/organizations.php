@@ -4,12 +4,18 @@ use App\Domains\Expenses\Controllers\ExpenseCategoryController;
 use App\Domains\Organizations\Controllers\ActivityLogController;
 use App\Domains\Organizations\Controllers\InvitationController;
 use App\Domains\Organizations\Controllers\MemberController;
+use App\Domains\Organizations\Controllers\OnboardingWizardController;
 use App\Domains\Organizations\Controllers\OrganizationController;
 use App\Domains\Organizations\Controllers\OrganizationSettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::resource('organizations', OrganizationController::class)->only(['index', 'create', 'show', 'store', 'destroy']);
 Route::post('/organizations/{organization}/switch', [OrganizationController::class, 'switchOrganization'])->name('organizations.switch');
+
+// Guided post-signup setup wizard
+Route::get('/welcome', [OnboardingWizardController::class, 'show'])->name('onboarding.wizard');
+Route::post('/welcome', [OnboardingWizardController::class, 'store'])->name('onboarding.wizard.store');
+Route::post('/welcome/skip', [OnboardingWizardController::class, 'skip'])->name('onboarding.wizard.skip');
 
 // Organization settings
 Route::get('/settings', [OrganizationSettingsController::class, 'show'])->name('settings');

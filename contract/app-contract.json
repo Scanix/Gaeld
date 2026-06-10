@@ -93,7 +93,7 @@
     "authenticated": {
       "_middleware": ["auth", "verified", "org", "org-2fa", "subscription"],
       "dashboard": [
-        {"method": "GET", "path": "/", "controller": "DashboardController@index", "page": "Dashboard", "name": "dashboard", "props": ["revenue", "expenses", "balance", "cashBalance", "unpaidInvoices", "pendingExpenses", "previousRevenue", "previousExpenses", "previousBalance", "budgetSummary", "vatSummary", "receivablesAging", "recentTransactions", "monthlyBreakdown", "checklist", "pendingOcrScans", "displayYear"]}
+        {"method": "GET", "path": "/", "controller": "DashboardController@index", "page": "Dashboard", "name": "dashboard", "props": ["revenue", "expenses", "balance", "cashBalance", "unpaidInvoices", "pendingExpenses", "previousRevenue", "previousExpenses", "previousBalance", "budgetSummary", "vatSummary", "receivablesAging", "recentTransactions", "monthlyBreakdown", "pendingOcrScans", "displayYear"]}
       ],
       "search": [
         {"method": "GET", "path": "/search", "controller": "GlobalSearchController", "page": "Search/Index", "name": "search", "props": ["query", "results"]}
