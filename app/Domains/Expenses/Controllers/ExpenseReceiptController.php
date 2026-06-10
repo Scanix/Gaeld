@@ -109,7 +109,7 @@ class ExpenseReceiptController extends Controller
     {
         if (FeatureFlag::isSaas()) {
             $org = $currentOrg->get();
-            $plan = $org->activeSubscription?->plan;
+            $plan = $org->activeSubscription?->getPlan();
             if ($plan && isset($plan->max_ocr_scans_per_day)) {
                 return (int) $plan->max_ocr_scans_per_day;
             }

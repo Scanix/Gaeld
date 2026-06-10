@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Services;
 
+use App\Domains\Accounting\Actions\GenerateArchivePdfAction;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\LegalArchive;
 use App\Domains\Expenses\Models\Expense;
@@ -9,6 +10,7 @@ use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Payroll\Models\SalarySlip;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -18,6 +20,10 @@ use Illuminate\Support\Facades\Storage;
 class LegalArchivingService
 {
     private const RETENTION_YEARS = 10;
+
+    public function __construct(
+        private readonly ?GenerateArchivePdfAction $pdfAction = null,
+    ) {}
 
     // ──────────────────────────────────────────────────────────────
     //  Single Document Archiving
@@ -147,5 +153,20 @@ class LegalArchivingService
                 $this->archiveDocument($doc, 'salary_slip');
                 $doc->update(['archived_at' => now()]);
             });
+
+        // Generate PDF artefacts for Swiss tax filing (CO art. 957a).
+        // JSON archive remains the source of truth — PDF failure must not
+        // abort the closing flow.
+        if ($this->pdfAction !== null) {
+            try {
+                $this->pdfAction->execute($orgId, $year);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to generate archive PDFs', [
+                    'organization_id' => $orgId,
+                    'fiscal_year' => $year,
+                    'exception' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 }

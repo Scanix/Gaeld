@@ -116,6 +116,9 @@ const navigation = computed(() => {
     ]},
     { key: 'accounting', href: '/accounting/journal-entries', icon: BookOpen, children: [
       { key: 'journal_entries', href: '/accounting/journal-entries' },
+      ...(can('accounting.create') ? [
+        { key: 'opening_balances', href: '/accounting/opening-balances' },
+      ] : []),
       { key: 'chart_of_accounts', href: '/accounting/chart-of-accounts' },
       { key: 'vat_rates', href: '/accounting/vat-rates' },
       ...(features.value.social_charges ? [
@@ -128,6 +131,7 @@ const navigation = computed(() => {
         { key: 'budget', href: '/accounting/budgets' },
       ] : []),
       ...(features.value.year_end_closing && can('accounting.close-year') ? [
+        { key: 'fiscal_years', href: '/accounting/fiscal-years' },
         { key: 'year_end_closing', href: '/accounting/year-end-closing' },
       ] : []),
       ...(features.value.account_matching ? [

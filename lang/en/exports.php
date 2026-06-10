@@ -15,6 +15,7 @@ return [
         'generated_on' => 'Generated on',
         'grand_total' => 'Grand Total',
         'name' => 'Name',
+        'page' => 'Page',
         'no_financing_activities' => 'No financing activities',
         'no_investing_activities' => 'No investing activities',
         'no_items_in_this_bracket' => 'No items in this bracket.',
@@ -32,6 +33,7 @@ return [
         'total_liabilities' => 'Total Liabilities',
         'equity' => 'Equity',
         'total_equity' => 'Total Equity',
+        'total_liabilities_equity' => 'Total Liabilities & Equity',
     ],
     'profit_loss' => [
         'title' => 'Profit & Loss Statement',

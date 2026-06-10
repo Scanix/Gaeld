@@ -13,6 +13,7 @@ return [
         'due_date' => 'Échéance',
         'generated_by' => 'Généré par Gäld',
         'generated_on' => 'Généré le',
+        'page' => 'Page',
         'grand_total' => 'Total général',
         'name' => 'Nom',
         'no_financing_activities' => 'Aucune activité de financement',
@@ -32,6 +33,7 @@ return [
         'total_liabilities' => 'Total passifs',
         'equity' => 'Fonds propres',
         'total_equity' => 'Total fonds propres',
+        'total_liabilities_equity' => 'Total passifs et fonds propres',
     ],
     'profit_loss' => [
         'title' => 'Compte de résultat',

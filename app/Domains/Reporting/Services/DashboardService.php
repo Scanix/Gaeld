@@ -4,6 +4,7 @@ namespace App\Domains\Reporting\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Models\Budget;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\VatReportService;
@@ -256,21 +257,44 @@ class DashboardService
     /**
      * Compute months elapsed for a given fiscal year, respecting org fiscal_year_start.
      *
-     * For past years returns 12 (full year). For the current fiscal year returns
-     * the number of months elapsed since the fiscal year start.
+     * For past years returns the full duration (typically 12 months, but can be
+     * up to 23 for Swiss long fiscal years). For the current fiscal year returns
+     * the number of months elapsed since its start.
      */
     private function computeMonthsElapsed(string $organizationId, int $year): int
     {
-        $org = Organization::find($organizationId);
-        $fyStartMonth = $org->fiscal_year_start ?? 1;
+        // Prefer a record from the fiscal_years table (handles long fiscal years).
+        $fiscalYear = FiscalYear::query()
+            ->withoutGlobalScopes()
+            ->where('organization_id', $organizationId)
+            ->forDate(Carbon::create($year, 6, 30)->toDateString())
+            ->first();
 
-        $fyStart = Carbon::create($year, $fyStartMonth, 1)->startOfDay();
-        $fyEnd = $fyStart->copy()->addYear()->subDay()->endOfDay();
+        if ($fiscalYear !== null) {
+            $fyStart = $fiscalYear->start_date->copy()->startOfDay();
+            $fyEnd = $fiscalYear->end_date->copy()->endOfDay();
+        } else {
+            $org = Organization::find($organizationId);
+            $startMonthDay = $org?->fiscal_year_start ?: '01-01';
+            $parts = preg_split('/[\.\-\/]/', (string) $startMonthDay);
+            $month = (int) ($parts[0] ?? 1);
+            $day = (int) ($parts[1] ?? 1);
+            if ($month < 1 || $month > 12) {
+                $month = 1;
+            }
+            if ($day < 1 || $day > 31) {
+                $day = 1;
+            }
+
+            $fyStart = Carbon::create($year, $month, $day)->startOfDay();
+            $fyEnd = $fyStart->copy()->addYear()->subDay()->endOfDay();
+        }
 
         $now = now();
+        $totalMonths = (int) $fyStart->diffInMonths($fyEnd->copy()->addDay());
 
         if ($now->greaterThan($fyEnd)) {
-            return 12;
+            return max(1, $totalMonths);
         }
 
         if ($now->lessThan($fyStart)) {
@@ -359,17 +383,12 @@ class DashboardService
     {
         $currentYear = now()->year;
 
-        $latestDate = $this->ledgerService->latestPostedEntryDate($organizationId);
-
-        if ($latestDate) {
-            $latestYear = (int) Carbon::parse($latestDate)->year;
-
-            // Never project into a future year; use the current year at most.
-            return min($latestYear, $currentYear);
-        }
-
-        // No posted journal entries yet — fall back to the most recent year
-        // that has any expense or invoice activity so the dashboard is useful.
+        // Invoice and expense dates are the real business-activity signals.
+        // Journal entries are checked first in a naive implementation, but they
+        // include technical bookkeeping entries (opening balances, year-end
+        // closing) that can fall in the *next* calendar year — causing the
+        // dashboard to display an empty year with all-zero KPIs immediately
+        // after a year-end closing.
         $latestExpenseDate = Expense::where('organization_id', $organizationId)->max('date');
         $latestInvoiceDate = Invoice::where('organization_id', $organizationId)->max('issue_date');
 
@@ -380,6 +399,14 @@ class DashboardService
 
         if (! empty($activityYears)) {
             return min(max($activityYears), $currentYear);
+        }
+
+        // No invoice/expense activity yet — fall back to the most recent posted
+        // journal entry (covers manual-journal-entry-only organisations).
+        $latestDate = $this->ledgerService->latestPostedEntryDate($organizationId);
+
+        if ($latestDate) {
+            return min((int) Carbon::parse($latestDate)->year, $currentYear);
         }
 
         return $currentYear;

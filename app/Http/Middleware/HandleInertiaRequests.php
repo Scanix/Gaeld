@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use App\Support\FeatureFlag;
@@ -147,10 +148,10 @@ class HandleInertiaRequests extends Middleware
         }
 
         return [
-            'status' => $sub->status,
-            'plan_slug' => $sub->plan?->slug,
-            'trial_ends_at' => $sub->trial_ends_at?->toDateString(),
-            'ends_at' => $sub->ends_at?->toDateString(),
+            'status' => $sub->getStatus(),
+            'plan_slug' => $sub->getPlan()?->slug,
+            'trial_ends_at' => $sub->getTrialEndsAt()?->format('Y-m-d'),
+            'ends_at' => $sub->getEndsAt()?->format('Y-m-d'),
         ];
     }
 
@@ -171,7 +172,7 @@ class HandleInertiaRequests extends Middleware
 
         $limit = config('services.ocr.daily_limit', 3);
         if (FeatureFlag::isSaas()) {
-            $plan = $org->activeSubscription?->plan;
+            $plan = $org->activeSubscription?->getPlan();
             if ($plan && isset($plan->max_ocr_scans_per_day)) {
                 $limit = (int) $plan->max_ocr_scans_per_day;
             }
@@ -197,7 +198,7 @@ class HandleInertiaRequests extends Middleware
 
         $limit = -1;
         if (FeatureFlag::isSaas()) {
-            $plan = $org->activeSubscription?->plan;
+            $plan = $org->activeSubscription?->getPlan();
             if ($plan && isset($plan->max_invoices_per_month)) {
                 $limit = (int) $plan->max_invoices_per_month;
             }
@@ -222,6 +223,21 @@ class HandleInertiaRequests extends Middleware
         $data = $org->only('id', 'name', 'currency', 'locale', 'require_two_factor');
         $data['closed_fiscal_years'] = $org->closed_fiscal_years ?? [];
         $data['business_type'] = $org->business_type?->value;
+
+        $data['fiscal_years'] = FiscalYear::query()
+            ->withoutGlobalScopes()
+            ->where('organization_id', $org->id)
+            ->orderBy('start_date')
+            ->get()
+            ->map(fn ($fy) => [
+                'id' => $fy->id,
+                'name' => $fy->name,
+                'start_date' => $fy->start_date->toDateString(),
+                'end_date' => $fy->end_date->toDateString(),
+                'status' => $fy->status->value,
+            ])
+            ->values()
+            ->all();
 
         return $data;
     }

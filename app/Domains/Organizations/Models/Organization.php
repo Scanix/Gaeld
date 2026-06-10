@@ -3,11 +3,13 @@
 namespace App\Domains\Organizations\Models;
 
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Organizations\Enums\BusinessType;
 use App\Domains\Users\Models\User;
+use App\Support\Contracts\SubscriptionContract;
 use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,11 +40,14 @@ use Illuminate\Support\Carbon;
  * @property array<string, bool>|null $enabled_modules
  * @property string|null $locale
  * @property BusinessType|null $business_type
+ * @property string $setup_mode
+ * @property Carbon|null $founded_at
+ * @property Carbon|null $onboarding_dismissed_at
  * @property bool $require_two_factor
  * @property int|null $default_payment_terms_days
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read mixed $activeSubscription Injected at runtime by a plugin via resolveRelationUsing().
+ * @property-read SubscriptionContract|null $activeSubscription
  */
 class Organization extends Model
 {
@@ -71,6 +76,9 @@ class Organization extends Model
         'invoice_email_subject',
         'invoice_email_body',
         'enabled_modules',
+        'setup_mode',
+        'founded_at',
+        'onboarding_dismissed_at',
     ];
 
     protected function casts(): array
@@ -81,6 +89,8 @@ class Organization extends Model
             'closed_fiscal_years' => 'array',
             'enabled_modules' => 'array',
             'business_type' => BusinessType::class,
+            'founded_at' => 'date',
+            'onboarding_dismissed_at' => 'datetime',
         ];
     }
 
@@ -128,6 +138,12 @@ class Organization extends Model
     public function accounts(): HasMany
     {
         return $this->hasMany(Account::class);
+    }
+
+    /** @return HasMany<FiscalYear, $this> */
+    public function fiscalYears(): HasMany
+    {
+        return $this->hasMany(FiscalYear::class);
     }
 
     /** @return HasMany<Contact, $this> */

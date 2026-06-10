@@ -13,6 +13,7 @@ return [
         'due_date' => 'Scadenza',
         'generated_by' => 'Generato da Gäld',
         'generated_on' => 'Generato il',
+        'page' => 'Pagina',
         'grand_total' => 'Totale generale',
         'name' => 'Nome',
         'no_financing_activities' => 'Nessuna attività di finanziamento',
@@ -32,6 +33,7 @@ return [
         'total_liabilities' => 'Totale passivi',
         'equity' => 'Patrimonio netto',
         'total_equity' => 'Totale patrimonio netto',
+        'total_liabilities_equity' => 'Totale passivi e patrimonio netto',
     ],
     'profit_loss' => [
         'title' => 'Conto economico',

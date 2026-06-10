@@ -4,6 +4,7 @@ namespace App\Domains\Banking\Controllers;
 
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Queries\AccountQuery;
@@ -16,6 +17,7 @@ use App\Domains\Banking\Requests\StoreBankAccountRequest;
 use App\Domains\Banking\Requests\UpdateBankAccountRequest;
 use App\Domains\Banking\Services\BankingService;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +29,8 @@ use Inertia\Response;
  */
 class BankingController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', BankAccount::class);
@@ -83,7 +87,7 @@ class BankingController extends Controller
             'bankAccount' => $bankAccount,
             'transactions' => $transactions,
             'ledgerMovements' => $ledgerMovements,
-            'accounts' => Account::where('organization_id', $bankAccount->organization_id)
+            'accounts' => Account::query()
                 ->where('is_active', true)
                 ->select('id', 'code', 'name')
                 ->orderBy('code')
@@ -141,10 +145,14 @@ class BankingController extends Controller
     ): RedirectResponse {
         $validated = $request->validated();
 
-        $bankingService->recordTransaction(
-            $bankAccount,
-            RecordBankTransactionData::fromArray($validated),
-        );
+        try {
+            $bankingService->recordTransaction(
+                $bankAccount,
+                RecordBankTransactionData::fromArray($validated),
+            );
+        } catch (DuplicateReferenceException $e) {
+            return $this->backWithError($e);
+        }
 
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', __('app.transaction_recorded'));
@@ -158,7 +166,7 @@ class BankingController extends Controller
      */
     private function ensurePrivateWithdrawalsAccount(string $organizationId): void
     {
-        $exists = Account::where('organization_id', $organizationId)
+        $exists = Account::query()
             ->where('code', AccountCode::PRIVATE_WITHDRAWALS)
             ->exists();
 
@@ -184,7 +192,7 @@ class BankingController extends Controller
             return;
         }
 
-        BankAccount::where('organization_id', $bankAccount->organization_id)
+        BankAccount::query()
             ->where('id', '!=', $bankAccount->id)
             ->where('is_default_for_invoicing', true)
             ->update(['is_default_for_invoicing' => false]);

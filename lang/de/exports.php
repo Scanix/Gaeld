@@ -13,6 +13,7 @@ return [
         'due_date' => 'Fälligkeitsdatum',
         'generated_by' => 'Erstellt von Gäld',
         'generated_on' => 'Erstellt am',
+        'page' => 'Seite',
         'grand_total' => 'Gesamttotal',
         'name' => 'Name',
         'no_financing_activities' => 'Keine Finanzierungstätigkeiten',
@@ -32,6 +33,7 @@ return [
         'total_liabilities' => 'Total Fremdkapital',
         'equity' => 'Eigenkapital',
         'total_equity' => 'Total Eigenkapital',
+        'total_liabilities_equity' => 'Total Fremdkapital und Eigenkapital',
     ],
     'profit_loss' => [
         'title' => 'Erfolgsrechnung',

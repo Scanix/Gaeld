@@ -148,7 +148,9 @@ class InvitationService
             return false;
         }
 
-        $maxUsers = $subscription->plan->max_users ?? -1;
+        // getPlan() returns mixed; ?-> is intentional — plan may be null at runtime.
+        // @phpstan-ignore nullsafe.neverNull
+        $maxUsers = $subscription->getPlan()?->max_users ?? -1;
         if ($maxUsers === -1) {
             return true;
         }

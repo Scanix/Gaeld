@@ -2,16 +2,24 @@
 
 namespace App\Domains\Accounting\Controllers;
 
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Accounting\Requests\StoreJournalEntryRequest;
 use App\Domains\Accounting\Services\LedgerQueryService;
+use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use App\Support\CsvExportService;
 use App\Support\PdfExportService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -21,6 +29,8 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
  */
 class AccountingController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function chartOfAccounts(Request $request): Response
     {
         $this->authorize('viewAny', Account::class);
@@ -57,7 +67,7 @@ class AccountingController extends Controller
         ]);
     }
 
-    public function journalEntries(Request $request): Response
+    public function journalEntries(Request $request, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', JournalEntry::class);
 
@@ -65,9 +75,187 @@ class AccountingController extends Controller
             ->orderByDesc('date')
             ->paginate(config('accounting.pagination.default'));
 
+        $accounts = Account::where('organization_id', $currentOrg->id())
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'type'])
+            ->map(fn (Account $a) => [
+                'id' => $a->id,
+                'code' => $a->code,
+                'name' => $a->display_name,
+                'type' => $a->type->value,
+            ]);
+
+        $user = $request->user();
+
         return Inertia::render('Accounting/JournalEntries', [
             'entries' => $entries,
+            'accounts' => $accounts,
+            'can' => [
+                'create' => $user?->can('create', JournalEntry::class) ?? false,
+                'edit' => $user?->hasPermissionTo(Permission::AccountingEdit) ?? false,
+                'delete' => $user?->hasPermissionTo(Permission::AccountingDelete) ?? false,
+            ],
         ]);
+    }
+
+    public function createJournalEntry(CurrentOrganization $currentOrg): Response
+    {
+        $this->authorize('create', JournalEntry::class);
+
+        $accounts = Account::query()
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'type'])
+            ->map(fn (Account $a) => [
+                'id' => $a->id,
+                'code' => $a->code,
+                'name' => $a->display_name,
+                'type' => $a->type->value,
+            ]);
+
+        return Inertia::render('Accounting/JournalEntryCreate', [
+            'accounts' => $accounts,
+            'defaultDate' => now()->toDateString(),
+        ]);
+    }
+
+    public function storeJournalEntry(
+        StoreJournalEntryRequest $request,
+        CurrentOrganization $currentOrg,
+        LedgerService $ledger,
+    ): RedirectResponse {
+        $this->authorize('create', JournalEntry::class);
+
+        $validated = $request->validated();
+        $isPosted = (bool) $request->boolean('is_posted', true);
+
+        $lines = array_map(fn (array $line) => new JournalLineData(
+            accountId: (string) $line['account_id'],
+            debit: (string) ($line['debit'] ?? '0'),
+            credit: (string) ($line['credit'] ?? '0'),
+            description: $line['description'] ?? null,
+        ), $validated['lines']);
+
+        $entryData = new JournalEntryData(
+            date: $validated['date'],
+            reference: $validated['reference'] ?? null,
+            description: $validated['description'] ?? null,
+            lines: $lines,
+        );
+
+        try {
+            $isPosted
+                ? $ledger->postEntry($currentOrg->id(), $entryData)
+                : $ledger->createDraft($currentOrg->id(), $entryData);
+        } catch (\Throwable $e) {
+            return $this->backWithError($e);
+        }
+
+        return redirect()->route('accounting.journal')
+            ->with('success', __($isPosted ? 'app.journal_entry_posted' : 'app.journal_entry_draft_saved'));
+    }
+
+    public function updateJournalEntry(
+        StoreJournalEntryRequest $request,
+        JournalEntry $journalEntry,
+        CurrentOrganization $currentOrg,
+    ): RedirectResponse {
+        $this->authorize('update', $journalEntry);
+
+        if ($journalEntry->is_posted) {
+            return redirect()->route('accounting.journal')
+                ->with('error', __('app.cannot_edit_posted_entry'));
+        }
+
+        $validated = $request->validated();
+
+        $lines = array_map(fn (array $line) => new JournalLineData(
+            accountId: (string) $line['account_id'],
+            debit: (string) ($line['debit'] ?? '0'),
+            credit: (string) ($line['credit'] ?? '0'),
+            description: $line['description'] ?? null,
+        ), $validated['lines']);
+
+        $entryData = new JournalEntryData(
+            date: $validated['date'],
+            reference: $validated['reference'] ?? null,
+            description: $validated['description'] ?? null,
+            lines: $lines,
+        );
+
+        try {
+            // Delete old lines and update entry in a transaction
+            DB::transaction(function () use ($journalEntry, $entryData) {
+                $journalEntry->lines()->delete();
+                $journalEntry->update([
+                    'date' => $entryData->date,
+                    'reference' => $entryData->reference,
+                    'description' => $entryData->description,
+                ]);
+
+                // Recreate lines
+                foreach ($entryData->lines as $line) {
+                    TransactionLine::create([
+                        'journal_entry_id' => $journalEntry->id,
+                        'account_id' => $line->accountId,
+                        'debit' => $line->debit,
+                        'credit' => $line->credit,
+                        'description' => $line->description,
+                    ]);
+                }
+            });
+
+            $journalEntry->load('lines.account');
+        } catch (\Throwable $e) {
+            return $this->backWithError($e);
+        }
+
+        return redirect()->route('accounting.journal')
+            ->with('success', __('app.journal_entry_updated'));
+    }
+
+    public function postJournalEntry(JournalEntry $journalEntry, LedgerService $ledger): RedirectResponse
+    {
+        $this->authorize('post', $journalEntry);
+
+        try {
+            $ledger->postDraft($journalEntry);
+        } catch (\Throwable $e) {
+            return $this->backWithError($e);
+        }
+
+        return redirect()->route('accounting.journal')
+            ->with('success', __('app.journal_entry_posted'));
+    }
+
+    public function reverseJournalEntry(JournalEntry $journalEntry, LedgerService $ledger): RedirectResponse
+    {
+        $this->authorize('reverse', $journalEntry);
+
+        try {
+            $ledger->reverseEntry($journalEntry);
+        } catch (\Throwable $e) {
+            return $this->backWithError($e);
+        }
+
+        return redirect()->route('accounting.journal')
+            ->with('success', __('app.journal_entry_reversed'));
+    }
+
+    public function destroyJournalEntry(JournalEntry $journalEntry, LedgerService $ledger): RedirectResponse
+    {
+        $this->authorize('delete', $journalEntry);
+
+        try {
+            $journalEntry->lines()->delete();
+            $journalEntry->delete();
+        } catch (\Throwable $e) {
+            return $this->backWithError($e);
+        }
+
+        return redirect()->route('accounting.journal')
+            ->with('success', __('app.journal_entry_deleted'));
     }
 
     public function trialBalance(Request $request, LedgerQueryService $ledgerService, CurrentOrganization $currentOrg): Response
@@ -100,7 +288,7 @@ class AccountingController extends Controller
         $orgId = $currentOrg->id();
         $asOfDate = $request->input('as_of_date', now()->toDateString());
         $balances = $ledgerService->trialBalance($orgId, $asOfDate);
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
 
         if ($format === 'csv') {
             $headers = ['Code', 'Account', 'Type', 'Debit', 'Credit'];
@@ -116,7 +304,7 @@ class AccountingController extends Controller
         }
 
         return $pdf->download('exports.trial-balance', [
-            'organizationName' => $orgName,
+            'organization' => $org,
             'asOfDate' => $asOfDate,
             'balances' => $balances,
         ], "trial-balance-{$asOfDate}.pdf");
@@ -137,7 +325,7 @@ class AccountingController extends Controller
         $from = $request->input('from', now()->startOfYear()->toDateString());
         $to = $request->input('to', now()->toDateString());
 
-        $entries = JournalEntry::where('organization_id', $orgId)
+        $entries = JournalEntry::query()
             ->where('is_posted', true)
             ->whereBetween('date', [$from, $to])
             ->with('lines.account')
@@ -145,7 +333,7 @@ class AccountingController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
 
         if ($format === 'csv') {
             $headers = ['Date', 'Reference', 'Description', 'Account Code', 'Account Name', 'Debit', 'Credit'];
@@ -168,7 +356,7 @@ class AccountingController extends Controller
         }
 
         return $pdf->download('exports.journal-entries', [
-            'organizationName' => $orgName,
+            'organization' => $org,
             'fromDate' => $from,
             'toDate' => $to,
             'entries' => $entries,

@@ -2,22 +2,23 @@
 
 namespace App\Domains\Accounting\Controllers;
 
-use App\Domains\Accounting\Actions\GenerateOpeningBalancesAction;
-use App\Domains\Accounting\DTOs\JournalEntryData;
-use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Actions\YearEndClosingAction;
+use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Requests\ReopenFiscalYearRequest;
 use App\Domains\Accounting\Requests\StoreYearEndClosingRequest;
 use App\Domains\Accounting\Services\ClosingAccountsService;
-use App\Domains\Accounting\Services\LedgerService;
-use App\Domains\Accounting\Services\LegalArchivingService;
+use App\Domains\Accounting\Services\FiscalYearService;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Users\Models\User;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
-use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -33,7 +34,8 @@ class YearEndClosingController extends Controller
 
     public function __construct(
         private readonly ClosingAccountsService $closingAccounts,
-        private readonly LegalArchivingService $archiving,
+        private readonly FiscalYearService $fiscalYears,
+        private readonly YearEndClosingAction $closingAction,
     ) {}
 
     public function index(Request $request, CurrentOrganization $currentOrg): Response
@@ -41,17 +43,65 @@ class YearEndClosingController extends Controller
         $this->authorize('closeYear', Account::class);
 
         $orgId = $currentOrg->id();
+        $org = Organization::findOrFail($orgId);
+
+        $fiscalYears = FiscalYear::query()
+            ->orderBy('start_date', 'desc')
+            ->get();
+
+        $fiscalYearId = $request->string('fiscal_year_id')->toString();
+        $selectedFiscalYear = $fiscalYearId !== ''
+            ? $fiscalYears->firstWhere('id', $fiscalYearId)
+            : null;
+
         $year = $request->integer('year', now()->year);
-        $from = "{$year}-01-01";
-        $to = "{$year}-12-31";
+
+        if ($selectedFiscalYear !== null) {
+            $year = (int) $selectedFiscalYear->start_date->year;
+            $from = $selectedFiscalYear->start_date->toDateString();
+            $to = $selectedFiscalYear->end_date->toDateString();
+        } else {
+            // Try to match a fiscal year record by the requested integer year.
+            $matched = $fiscalYears->first(
+                fn (FiscalYear $fy) => (int) $fy->start_date->year === $year
+            );
+            if ($matched !== null) {
+                $selectedFiscalYear = $matched;
+                $from = $matched->start_date->toDateString();
+                $to = $matched->end_date->toDateString();
+            } else {
+                $from = "{$year}-01-01";
+                $to = "{$year}-12-31";
+            }
+        }
 
         [$income, $expenses, $netResult] = $this->closingAccounts->compute($orgId, $from, $to);
 
-        $org = Organization::findOrFail($orgId);
+        // Step 2 of the wizard — invoices still open in the closing fiscal year.
+        // Informational only: these carry into the new year as receivables.
+        $outstandingInvoices = Invoice::query()
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
+            ->whereBetween('issue_date', [$from, $to])
+            ->with('customer:id,name')
+            ->orderBy('due_date')
+            ->get(['id', 'number', 'customer_id', 'issue_date', 'due_date', 'total', 'status'])
+            ->map(fn (Invoice $inv) => [
+                'id' => $inv->id,
+                'number' => $inv->number,
+                'customer_name' => $inv->customer?->name,
+                'issue_date' => $inv->issue_date->toDateString(),
+                'due_date' => $inv->due_date->toDateString(),
+                'total' => $inv->total,
+                'status' => $inv->status->value,
+                'days_overdue' => max(0, now()->startOfDay()->diffInDays($inv->due_date->startOfDay(), false) * -1),
+            ])
+            ->all();
+
         $startYear = $org->created_at ? $org->created_at->year : (now()->year - 5);
 
-        // Include any earlier years that already have journal entries (e.g. back-dated postings)
-        $earliestEntryYear = (int) JournalEntry::where('organization_id', $orgId)
+        // Include any earlier years that already have journal entries (e.g. back-dated postings).
+        // BelongsToOrganization global scope handles tenant filtering automatically in HTTP context.
+        $earliestEntryYear = (int) JournalEntry::query()
             ->min(DB::raw('EXTRACT(YEAR FROM date)'));
         if ($earliestEntryYear > 0 && $earliestEntryYear < $startYear) {
             $startYear = $earliestEntryYear;
@@ -61,7 +111,15 @@ class YearEndClosingController extends Controller
 
         return Inertia::render('Accounting/YearEndClosing', [
             'year' => $year,
+            'fiscalYearId' => $selectedFiscalYear?->id,
             'availableYears' => $availableYears,
+            'fiscalYears' => $fiscalYears->map(fn (FiscalYear $fy) => [
+                'id' => $fy->id,
+                'name' => $fy->name,
+                'start_date' => $fy->start_date->toDateString(),
+                'end_date' => $fy->end_date->toDateString(),
+                'status' => $fy->status->value,
+            ])->values(),
             'fromDate' => $from,
             'toDate' => $to,
             'income' => $income,
@@ -69,124 +127,33 @@ class YearEndClosingController extends Controller
             'netResult' => $netResult,
             'closedYears' => $org->closed_fiscal_years ?? [],
             'canReopenYear' => $request->user()?->can('reopenYear', Account::class) ?? false,
-            'unsettledVatPeriods' => $this->getUnsettledVatPeriods($orgId, $year),
+            'unsettledVatPeriods' => $this->getUnsettledVatPeriods($year),
+            'outstandingInvoices' => $outstandingInvoices,
         ]);
     }
 
-    public function store(StoreYearEndClosingRequest $request, CurrentOrganization $currentOrg, LedgerService $ledger): RedirectResponse
+    public function store(StoreYearEndClosingRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('closeYear', Account::class);
 
-        $orgId = $currentOrg->id();
-
-        $validated = $request->validated();
-        $year = (int) $validated['year'];
-        $from = "{$year}-01-01";
-        $to = "{$year}-12-31";
-
-        [$income, $expenses] = $this->closingAccounts->compute($orgId, $from, $to);
-
-        $allAccounts = array_merge($income, $expenses);
-
-        if (empty($allAccounts)) {
-            return $this->backWithError('No accounts to close for this period.');
-        }
-
-        // Hard block: require all VAT periods to be settled before closing
-        $unsettled = $this->getUnsettledVatPeriods($orgId, $year);
-        if (! empty($unsettled)) {
-            return $this->backWithError(
-                __('app.fiscal_year_unsettled_vat', [
-                    'year' => $year,
-                    'periods' => implode(', ', $unsettled),
-                ])
-            );
-        }
-
-        // Find the result account
-        $resultAccount = Account::where('organization_id', $orgId)
-            ->where('code', $validated['result_account_code'])
-            ->first();
-
-        if (! $resultAccount) {
-            return redirect()->back()->withErrors([
-                'result_account_code' => "Account '{$validated['result_account_code']}' not found.",
-            ]);
-        }
+        /** @var User $actingUser */
+        $actingUser = $request->user();
 
         try {
-            DB::transaction(function () use ($income, $expenses, $year, $validated, $resultAccount, $orgId, $ledger) {
-                // Build closing journal lines
-                // Revenue (credit-normal): debit the account, credit result
-                // Expense (debit-normal):  credit the account, debit result
-                $lines = [];
-                $netDebitOnResult = '0';  // debits to result account (for expenses)
-                $netCreditOnResult = '0';  // credits to result account (for revenues)
-
-                foreach ($income as $row) {
-                    if (Money::isZero((string) $row['balance'])) {
-                        continue;
-                    }
-                    $lines[] = new JournalLineData(
-                        accountId: (string) $row['account_id'],
-                        debit: (string) $row['balance'],
-                        credit: '0',
-                        description: __('app.closing_line_description', ['year' => $year, 'code' => $row['code']]),
-                    );
-                    $netCreditOnResult = Money::add($netCreditOnResult, (string) $row['balance']);
-                }
-
-                foreach ($expenses as $row) {
-                    if (Money::isZero((string) $row['balance'])) {
-                        continue;
-                    }
-                    $lines[] = new JournalLineData(
-                        accountId: (string) $row['account_id'],
-                        debit: '0',
-                        credit: (string) $row['balance'],
-                        description: __('app.closing_line_description', ['year' => $year, 'code' => $row['code']]),
-                    );
-                    $netDebitOnResult = Money::add($netDebitOnResult, (string) $row['balance']);
-                }
-
-                // Add result account line (net debit or credit)
-                $netDebit = $netDebitOnResult;
-                $netCredit = $netCreditOnResult;
-
-                $lines[] = new JournalLineData(
-                    accountId: (string) $resultAccount->id,
-                    debit: $netDebit,
-                    credit: $netCredit,
-                    description: __('app.closing_result_description', ['year' => $year]),
-                );
-
-                $entry = new JournalEntryData(
-                    date: $validated['closing_date'],
-                    reference: $validated['reference'],
-                    description: __('app.closing_entry_description', ['year' => $year]),
-                    lines: $lines,
-                );
-
-                $journalEntry = $ledger->postEntry($orgId, $entry);
-
-                $journalEntry->update(['type' => 'year_end_closing']);
-            });
-
-            // Lock the fiscal year to prevent further postings
-            $org = Organization::findOrFail($orgId);
-            $org->closeFiscalYear($year);
-
-            // Archive all documents for the closed fiscal year (Swiss OR 10-year retention)
-            $this->archiving->archiveFiscalYear($orgId, $year);
-
-            // Generate opening balance entries for the next fiscal year
-            app(GenerateOpeningBalancesAction::class)->execute($orgId, $year);
+            $nextYearCreated = $this->closingAction->execute(
+                Organization::findOrFail($currentOrg->id()),
+                $request->validated(),
+                $actingUser,
+            );
         } catch (\Throwable $e) {
             return $this->backWithError($e);
         }
 
         return redirect()->route('accounting.closing')
-            ->with('success', __('app.year_end_closing_done'));
+            ->with('success', $nextYearCreated
+                ? __('app.year_end_closing_done_next_created')
+                : __('app.year_end_closing_done')
+            );
     }
 
     public function reopen(ReopenFiscalYearRequest $request, CurrentOrganization $currentOrg): RedirectResponse
@@ -198,11 +165,31 @@ class YearEndClosingController extends Controller
         $year = (int) $validated['year'];
         $org = Organization::findOrFail($currentOrg->id());
 
-        if (! $org->isFiscalYearClosed($year)) {
+        $fiscalYearId = $validated['fiscal_year_id'] ?? null;
+        $fiscalYear = null;
+        if ($fiscalYearId !== null) {
+            $fiscalYear = FiscalYear::query()
+                ->where('id', $fiscalYearId)
+                ->first();
+        }
+        if ($fiscalYear === null) {
+            $fiscalYear = FiscalYear::query()
+                ->where('status', FiscalYearStatus::Closed->value)
+                ->whereYear('start_date', $year)
+                ->first();
+        }
+
+        $isClosed = $fiscalYear?->isClosed() ?? $org->isFiscalYearClosed($year);
+
+        if (! $isClosed) {
             return $this->backWithError(__('app.fiscal_year_not_closed', ['year' => $year]));
         }
 
         $org->reopenFiscalYear($year);
+
+        if ($fiscalYear !== null) {
+            $this->fiscalYears->reopen($fiscalYear);
+        }
 
         activity()
             ->causedBy($request->user())
@@ -224,7 +211,7 @@ class YearEndClosingController extends Controller
      *
      * @return string[]
      */
-    private function getUnsettledVatPeriods(string $orgId, int $year): array
+    private function getUnsettledVatPeriods(int $year): array
     {
         $quarters = [
             1 => ["{$year}-01-01", "{$year}-03-31"],
@@ -236,10 +223,10 @@ class YearEndClosingController extends Controller
         $unsettled = [];
 
         foreach ($quarters as $q => [$from, $to]) {
-            // Skip quarters that have no VAT-bearing activity at all
+            // Skip quarters that have no VAT-bearing activity at all.
+            // JournalEntry's BelongsToOrganization global scope applies inside whereHas in HTTP context.
             $hasVatActivity = VatEntry::query()
                 ->whereHas('journalEntry', fn ($jq) => $jq
-                    ->where('organization_id', $orgId)
                     ->whereBetween('date', [$from, $to])
                 )
                 ->exists();
@@ -248,7 +235,7 @@ class YearEndClosingController extends Controller
                 continue;
             }
 
-            $exists = JournalEntry::where('organization_id', $orgId)
+            $exists = JournalEntry::query()
                 ->where('type', 'vat_settlement')
                 ->where('reference', "VAT-SETTLEMENT-{$from}-{$to}")
                 ->exists();

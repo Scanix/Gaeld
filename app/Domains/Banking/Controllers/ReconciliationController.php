@@ -116,7 +116,7 @@ class ReconciliationController extends Controller
         // Fetch invoices for the searchable reconciliation selector.
         // Include paid invoices so users can link a bank transaction to an
         // invoice that was already recorded as paid through another channel.
-        $openInvoices = Invoice::where('organization_id', $bankAccount->organization_id)
+        $openInvoices = Invoice::query()
             ->whereIn('status', [
                 InvoiceStatus::Sent->value,
                 InvoiceStatus::Overdue->value,
@@ -127,14 +127,12 @@ class ReconciliationController extends Controller
             ->get(['id', 'number', 'total', 'currency', 'customer_id', 'issue_date', 'status']);
 
         // Fetch posted, not-yet-reconciled expenses for the searchable expense selector.
-        $reconciledExpenseIds = BankTransaction::whereHas(
-            'bankAccount',
-            fn ($q) => $q->where('organization_id', $bankAccount->organization_id),
-        )
+        $reconciledExpenseIds = BankTransaction::query()
+            ->whereHas('bankAccount')
             ->whereNotNull('matched_expense_id')
             ->pluck('matched_expense_id');
 
-        $openExpenses = Expense::where('organization_id', $bankAccount->organization_id)
+        $openExpenses = Expense::query()
             ->where('status', ExpenseStatus::Posted)
             ->whereNotIn('id', $reconciledExpenseIds)
             ->orderByDesc('date')
@@ -198,8 +196,7 @@ class ReconciliationController extends Controller
         $validated = $request->validated();
 
         /** @var Invoice $invoice */
-        $invoice = Invoice::where('organization_id', $bankAccount->organization_id)
-            ->findOrFail($validated['invoice_id']);
+        $invoice = Invoice::query()->findOrFail($validated['invoice_id']);
 
         try {
             $this->reconciliationService->reconcileWithInvoice($transaction, $invoice);
@@ -222,8 +219,7 @@ class ReconciliationController extends Controller
         $validated = $request->validated();
 
         /** @var Expense $expense */
-        $expense = Expense::where('organization_id', $bankAccount->organization_id)
-            ->findOrFail($validated['expense_id']);
+        $expense = Expense::query()->findOrFail($validated['expense_id']);
 
         try {
             $this->reconciliationService->reconcileWithExpense(

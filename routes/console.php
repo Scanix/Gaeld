@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Assets\Jobs\MonthlyDepreciationJob;
 use App\Domains\Expenses\Jobs\GenerateRecurringExpensesJob;
 use App\Domains\Invoicing\Jobs\GenerateRecurringInvoicesJob;
@@ -56,6 +57,13 @@ if (FeatureFlag::enabled('auto_reconciliation')) {
  */
 Schedule::job(MonthlyDepreciationJob::class)->monthlyOn(1, '05:00');
 
+/**
+ * Mark expired fiscal years (06:00) — all editions.
+ * Transitions operative fiscal years past their end_date to 'expired'
+ * and notifies organisation members.
+ */
+Schedule::call(fn () => app(FiscalYearService::class)->markExpiredAll())->dailyAt('06:00');
+
 // ──────────────────────────────────────────────────────────────
 //  Horizon
 // ──────────────────────────────────────────────────────────────
@@ -78,7 +86,14 @@ Schedule::command('horizon:snapshot')->everyFiveMinutes();
  * Configure SCHEDULE_HEARTBEAT_URL in .env (e.g. a Healthchecks.io ping URL).
  */
 if ($heartbeatUrl = config('features.schedule_heartbeat_url')) {
-    Schedule::call(fn () => Http::get($heartbeatUrl))
+    Schedule::call(function () use ($heartbeatUrl) {
+        try {
+            Http::timeout(5)->connectTimeout(5)->get($heartbeatUrl);
+        } catch (Throwable $e) {
+            // Heartbeat endpoint is best-effort; never let transient
+            // network failures bubble up and pollute error reporting.
+        }
+    })
         ->everyFiveMinutes()
         ->name('heartbeat');
 }

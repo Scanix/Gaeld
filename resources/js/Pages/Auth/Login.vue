@@ -3,10 +3,8 @@ import { Head, useForm, Link, usePage } from '@inertiajs/vue3'
 import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import Card from '@/Components/UI/Card.vue'
-import CardHeader from '@/Components/UI/CardHeader.vue'
-import CardTitle from '@/Components/UI/CardTitle.vue'
-import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
+import Alert from '@/Components/UI/Alert.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { computed } from 'vue'
 import GuestBar from '@/Components/GuestBar.vue'
@@ -43,6 +41,10 @@ function submit() {
       <Card>
         <CardContent class="pt-6">
           <form class="space-y-4" @submit.prevent="submit">
+            <Alert v-if="form.errors.form" variant="error">
+              {{ form.errors.form }}
+            </Alert>
+
             <FormInput
               id="email"
               v-model="form.email"
@@ -73,7 +75,7 @@ function submit() {
               </Link>
             </div>
 
-            <Button type="submit" class="w-full" :disabled="form.processing">
+            <Button type="submit" class="w-full" :loading="form.processing">
               {{ t('sign_in') }}
             </Button>
           </form>

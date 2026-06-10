@@ -30,6 +30,7 @@ function submit() {
   <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--muted))] p-6">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
+        <img src="/logo-wide.svg" alt="Gäld" class="mx-auto h-14 w-auto mb-4" />
         <h1 class="text-2xl font-bold">{{ t('reset_password') }}</h1>
         <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
           {{ t('reset_password_desc') }}
@@ -50,7 +51,7 @@ function submit() {
               required
             />
 
-            <Button type="submit" class="w-full" :disabled="form.processing">
+            <Button type="submit" class="w-full" :loading="form.processing">
               {{ t('send_reset_link') }}
             </Button>
           </form>

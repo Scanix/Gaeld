@@ -6,8 +6,10 @@ use App\Domains\Accounting\Controllers\BudgetController;
 use App\Domains\Accounting\Controllers\ConsolidationController;
 use App\Domains\Accounting\Controllers\CostCenterController;
 use App\Domains\Accounting\Controllers\ExchangeRateController;
+use App\Domains\Accounting\Controllers\FiscalYearsController;
 use App\Domains\Accounting\Controllers\LegalArchiveController;
 use App\Domains\Accounting\Controllers\LettrageController;
+use App\Domains\Accounting\Controllers\OpeningBalancesController;
 use App\Domains\Accounting\Controllers\SocialChargesController;
 use App\Domains\Accounting\Controllers\TaxDeclarationController;
 use App\Domains\Accounting\Controllers\VatRateController;
@@ -90,3 +92,38 @@ Route::get('/accounting/vat-rates', [VatRateController::class, 'index'])->name('
 Route::post('/accounting/vat-rates', [VatRateController::class, 'store'])->name('accounting.vat-rates.store');
 Route::put('/accounting/vat-rates/{vatRate}', [VatRateController::class, 'update'])->name('accounting.vat-rates.update');
 Route::delete('/accounting/vat-rates/{vatRate}', [VatRateController::class, 'destroy'])->name('accounting.vat-rates.destroy');
+
+// Journal entry CRUD (PR #29)
+Route::get('/accounting/journal-entries/create', [AccountingController::class, 'createJournalEntry'])->name('accounting.journal-entries.create');
+Route::post('/accounting/journal-entries', [AccountingController::class, 'storeJournalEntry'])->name('accounting.journal-entries.store');
+Route::put('/accounting/journal-entries/{journalEntry}', [AccountingController::class, 'updateJournalEntry'])->name('accounting.journal-entries.update');
+Route::post('/accounting/journal-entries/{journalEntry}/post', [AccountingController::class, 'postJournalEntry'])->name('accounting.journal-entries.post');
+Route::post('/accounting/journal-entries/{journalEntry}/reverse', [AccountingController::class, 'reverseJournalEntry'])->name('accounting.journal-entries.reverse');
+Route::delete('/accounting/journal-entries/{journalEntry}', [AccountingController::class, 'destroyJournalEntry'])->name('accounting.journal-entries.destroy');
+
+// Opening balances (PR #30)
+Route::get('/accounting/opening-balances', [OpeningBalancesController::class, 'index'])->name('accounting.opening-balances.index');
+Route::post('/accounting/opening-balances', [OpeningBalancesController::class, 'store'])->name('accounting.opening-balances.store');
+Route::post('/accounting/opening-balances/historical', [OpeningBalancesController::class, 'storeHistorical'])->name('accounting.opening-balances.historical');
+
+// Fiscal years (PR #30)
+Route::get('/accounting/fiscal-years', [FiscalYearsController::class, 'index'])->name('accounting.fiscal-years.index');
+Route::post('/accounting/fiscal-years', [FiscalYearsController::class, 'store'])->name('accounting.fiscal-years.store');
+Route::put('/accounting/fiscal-years/{fiscalYear}', [FiscalYearsController::class, 'update'])->name('accounting.fiscal-years.update');
+Route::delete('/accounting/fiscal-years/{fiscalYear}', [FiscalYearsController::class, 'destroy'])->name('accounting.fiscal-years.destroy');
+
+// Legal archives lazy-load + PDF downloads (PR #30)
+Route::get('/accounting/archives/year/{year}', [LegalArchiveController::class, 'forYear'])->whereNumber('year')->name('accounting.archives.year');
+Route::get('/accounting/archives/year/{year}/pdf/{type}', [LegalArchiveController::class, 'downloadPdf'])
+    ->whereNumber('year')
+    ->whereIn('type', ['pnl', 'balance_sheet', 'journal'])
+    ->name('accounting.archives.pdf');
+Route::get('/accounting/archives/year/{year}/bundle', [LegalArchiveController::class, 'downloadYearBundle'])
+    ->whereNumber('year')
+    ->name('accounting.archives.bundle');
+Route::post('/accounting/archives/year/{year}/regenerate-pdfs', [LegalArchiveController::class, 'regeneratePdfs'])
+    ->whereNumber('year')
+    ->name('accounting.archives.regenerate-pdfs');
+Route::post('/accounting/archives/year/{year}/generate', [LegalArchiveController::class, 'generateForYear'])
+    ->whereNumber('year')
+    ->name('accounting.archives.generate');
