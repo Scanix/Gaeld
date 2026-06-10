@@ -46,6 +46,7 @@ class SalarySlip extends Model
         'journal_entry_id',
         'deductions',
         'posted_at',
+        'archived_at',
     ];
 
     protected function casts(): array
@@ -57,6 +58,7 @@ class SalarySlip extends Model
             'net_salary' => 'decimal:2',
             'deductions' => 'array',
             'posted_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
     }
 
