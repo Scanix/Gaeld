@@ -62,4 +62,24 @@ return [
         'chat_id' => env('TELEGRAM_CHAT_ID'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | hCaptcha
+    |--------------------------------------------------------------------------
+    |
+    | HCAPTCHA_SITE_KEY   — public site key rendered by the widget
+    | HCAPTCHA_SECRET_KEY — private secret used server-side for verification
+    |
+    | When either key is empty the captcha rule passes through unconditionally,
+    | which keeps local dev and self-hosted installs unaffected. Set both to
+    | enable the captcha (recommended for any public SaaS deployment).
+    |
+    */
+
+    'hcaptcha' => [
+        'site_key' => env('HCAPTCHA_SITE_KEY'),
+        'secret_key' => env('HCAPTCHA_SECRET_KEY'),
+        'verify_url' => env('HCAPTCHA_VERIFY_URL', 'https://hcaptcha.com/siteverify'),
+    ],
+
 ];

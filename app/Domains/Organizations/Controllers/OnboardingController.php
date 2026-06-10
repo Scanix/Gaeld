@@ -61,7 +61,7 @@ class OnboardingController extends Controller
 
         session(['current_organization_id' => $org->id]);
 
-        return redirect()->route('dashboard')
+        return redirect()->route('onboarding.wizard')
             ->with('success', __('app.welcome_onboarding'));
     }
 }

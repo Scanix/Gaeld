@@ -22,7 +22,6 @@ Multi-tenant organization management: setup, invitations, switching, and onboard
 - **CurrentOrganization** — Request-scoped tenant context resolver
 - **OrganizationSwitcher** — Multi-org session management
 - **InvitationService** — Invitation lifecycle (create, accept, expire)
-- **ChecklistService** — Onboarding progress tracking across domains
 
 ## Integration
 

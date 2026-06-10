@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { usePage, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -11,10 +12,9 @@ import StatCard from '@/Components/UI/StatCard.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { useTheme } from '@/lib/useTheme'
-import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X, AlertTriangle, Receipt, Target, ScanLine } from 'lucide-vue-next'
+import { TrendingUp, TrendingDown, ArrowRightLeft, Wallet, X, AlertTriangle, Receipt, Target, ScanLine, Rocket } from 'lucide-vue-next'
 import HelpText from '@/Components/HelpText.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
-import AccountingChecklist from '@/Components/AccountingChecklist.vue'
 import { normalizeDashboardContract } from '@/lib/inertiaContracts'
 import { Bar } from 'vue-chartjs'
 import {
@@ -50,12 +50,15 @@ const props = defineProps({
   receivablesAging: { type: Object, default: null },
   recentTransactions: { type: Array, default: () => [] },
   monthlyBreakdown: { type: Object, default: () => ({ monthIndices: [], revenue: [], expenses: [], forecast: [], revenueItems: [], expenseItems: [], forecastItems: [] }) },
-  checklist: { type: Object, default: () => ({ getting_started: [], accounting: [] }) },
   pendingOcrScans: { type: Number, default: 0 },
   displayYear: { type: Number, default: () => new Date().getFullYear() },
 })
 
 const contract = computed(() => normalizeDashboardContract(props))
+
+const showOnboardingBanner = computed(
+  () => !usePage().props.auth?.user?.onboarding_completed_at
+)
 
 function asNumber(value) {
   const parsed = Number(value)
@@ -248,6 +251,22 @@ const transactionColumns = computed(() => [
 
 <template>
   <AppLayout :title="t('dashboard')" help-page="getting-started">
+    <!-- Finish-setup prompt for users who haven't completed the onboarding wizard -->
+    <Link
+      v-if="showOnboardingBanner"
+      href="/welcome"
+      class="mb-6 flex items-center justify-between rounded-lg border border-[hsl(var(--primary)/0.3)] bg-[hsl(var(--primary)/0.08)] p-4 transition-colors hover:bg-[hsl(var(--primary)/0.12)]"
+    >
+      <div class="flex items-center gap-3">
+        <Rocket class="h-5 w-5 text-[hsl(var(--primary))]" />
+        <div>
+          <p class="text-sm font-semibold">{{ t('onboarding_banner_title') }}</p>
+          <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('onboarding_banner_desc') }}</p>
+        </div>
+      </div>
+      <span class="text-sm font-medium text-[hsl(var(--primary))]">{{ t('onboarding_banner_cta') }}</span>
+    </Link>
+
     <div class="mb-6">
       <HelpText :title="t('help_dashboard_title')">
         <p>{{ t('help_dashboard_text') }}</p>
@@ -339,11 +358,6 @@ const transactionColumns = computed(() => [
           <a href="/reports/vat" class="text-sm font-medium text-purple-700 hover:underline dark:text-purple-300">{{ t('view') }}</a>
         </CardContent>
       </Card>
-    </div>
-
-    <!-- Accounting Checklist -->
-    <div v-if="checklist.getting_started?.length || checklist.accounting?.length" class="mt-6">
-      <AccountingChecklist :getting-started="checklist.getting_started ?? []" :accounting="checklist.accounting ?? []" />
     </div>
 
     <!-- Budget vs Actual -->

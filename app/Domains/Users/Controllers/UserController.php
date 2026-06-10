@@ -75,13 +75,15 @@ class UserController extends Controller
         return back();
     }
 
-    public function dismissOnboarding(Request $request): RedirectResponse
+    public function updateLocale(Request $request): RedirectResponse
     {
         $this->authorize('update', $request->user());
 
-        $request->user()->update([
-            'onboarding_completed_at' => now(),
+        $validated = $request->validate([
+            'locale' => ['required', 'string', Rule::in(config('accounting.supported_locales'))],
         ]);
+
+        $request->user()->update(['locale' => $validated['locale']]);
 
         return back();
     }

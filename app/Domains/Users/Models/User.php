@@ -26,6 +26,7 @@ use Spatie\Permission\Traits\HasRoles;
  * role-based permissions (Spatie), and per-user locale preference.
  *
  * @property Carbon|null $email_change_requested_at
+ * @property Carbon|null $onboarding_completed_at
  * @property array<string, mixed>|null $notification_preferences
  */
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, WebAuthnAuthenticatable
