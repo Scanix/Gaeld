@@ -206,9 +206,10 @@ const countryList = countryOptions(t)
 
 // 12 fiscal year start choices, formatted MM-DD as stored on the org.
 const fiscalYearStartOptions = (() => {
+  const uiLocale = page.props.locale || 'en'
   const result = []
   for (let i = 0; i < 12; i++) {
-    const monthName = new Date(2000, i, 1).toLocaleString(undefined, { month: 'long' })
+    const monthName = new Date(2000, i, 1).toLocaleString(uiLocale, { month: 'long' })
     result.push({ value: `${String(i + 1).padStart(2, '0')}-01`, label: `1 ${monthName}` })
   }
   return result

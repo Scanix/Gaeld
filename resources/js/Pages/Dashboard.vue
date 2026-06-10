@@ -397,42 +397,6 @@ const transactionColumns = computed(() => [
           <a href="/reports/vat" class="text-sm font-medium text-purple-700 hover:underline dark:text-purple-300">{{ t('view') }}</a>
         </CardContent>
       </Card>
-
-      <!-- Receivables Aging Alert -->
-      <Card v-if="receivablesAging" class="border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/30">
-        <CardContent class="pt-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <div class="flex items-center gap-2">
-                <AlertTriangle class="h-4 w-4 text-red-600 dark:text-red-400" />
-                <p class="text-sm font-medium text-red-800 dark:text-red-200">{{ t('overdue_receivables', { count: receivablesAging.overdueCount }) }}</p>
-              </div>
-              <p class="mt-1 text-lg font-bold text-red-900 dark:text-red-100">{{ formatCurrency(receivablesAging.totalOverdue) }}</p>
-              <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-red-700 dark:text-red-300">
-                <span v-if="parseFloat(receivablesAging.brackets['1_30']) > 0">1–30d: {{ formatCurrency(receivablesAging.brackets['1_30']) }}</span>
-                <span v-if="parseFloat(receivablesAging.brackets['31_60']) > 0">31–60d: {{ formatCurrency(receivablesAging.brackets['31_60']) }}</span>
-                <span v-if="parseFloat(receivablesAging.brackets['61_90']) > 0">61–90d: {{ formatCurrency(receivablesAging.brackets['61_90']) }}</span>
-                <span v-if="parseFloat(receivablesAging.brackets['90_plus']) > 0">90d+: {{ formatCurrency(receivablesAging.brackets['90_plus']) }}</span>
-              </div>
-            </div>
-            <a href="/reports/aging" class="text-sm font-medium text-red-700 hover:underline dark:text-red-300">{{ t('view') }}</a>
-          </div>
-        </CardContent>
-      </Card>
-
-      <!-- VAT Liability -->
-      <Card v-if="vatSummary" class="border-purple-200 bg-purple-50/50 dark:border-purple-800 dark:bg-purple-950/30">
-        <CardContent class="flex items-center justify-between pt-6">
-          <div>
-            <div class="flex items-center gap-2">
-              <Receipt class="h-4 w-4 text-purple-600 dark:text-purple-400" />
-              <p class="text-sm font-medium text-purple-800 dark:text-purple-200">{{ t('vat_due_quarter', { quarter: vatSummary.quarterLabel }) }}</p>
-            </div>
-            <p class="mt-1 text-lg font-bold text-purple-900 dark:text-purple-100">{{ formatCurrency(vatSummary.vatPayable) }}</p>
-          </div>
-          <a href="/reports/vat" class="text-sm font-medium text-purple-700 hover:underline dark:text-purple-300">{{ t('view') }}</a>
-        </CardContent>
-      </Card>
     </div>
 
     <!-- Accounting Checklist (legacy format: getting_started / accounting keys) -->
