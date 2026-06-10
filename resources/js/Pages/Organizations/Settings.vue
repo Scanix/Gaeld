@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -26,8 +26,19 @@ const props = defineProps({
   modulePresets: { type: Object, default: () => ({}) },
 })
 
-const { t } = useTranslations()
+const { t, locale } = useTranslations()
 const page = usePage()
+
+// Map app locale (en/fr/de/it) to BCP-47 tags for Intl APIs.
+const LOCALE_TAGS = { en: 'en-GB', fr: 'fr-CH', de: 'de-CH', it: 'it-CH' }
+const intlLocale = computed(() => LOCALE_TAGS[locale.value] || 'en-GB')
+
+// Existing fiscal year records (set up via /accounting/fiscal-years).
+// When the org has any, the legacy MM-DD field is informational only.
+const existingFiscalYears = computed(
+  () => page.props.auth?.currentOrganization?.fiscal_years ?? []
+)
+const hasFiscalYears = computed(() => existingFiscalYears.value.length > 0)
 
 // --- Tabs ---
 const activeTab = ref('general')
@@ -205,14 +216,22 @@ const cantonOptions = [
 const countryList = countryOptions(t)
 
 // 12 fiscal year start choices, formatted MM-DD as stored on the org.
-const fiscalYearStartOptions = (() => {
+// Month names follow the org locale, not the browser locale.
+const fiscalYearStartOptions = computed(() => {
   const result = []
   for (let i = 0; i < 12; i++) {
-    const monthName = new Date(2000, i, 1).toLocaleString(undefined, { month: 'long' })
+    const monthName = new Date(2000, i, 1).toLocaleString(intlLocale.value, { month: 'long' })
     result.push({ value: `${String(i + 1).padStart(2, '0')}-01`, label: `1 ${monthName}` })
   }
   return result
-})()
+})
+
+// Human-readable label for the currently saved fiscal_year_start (MM-DD).
+const fiscalYearStartLabel = computed(() => {
+  const value = generalForm.fiscal_year_start || '01-01'
+  const match = fiscalYearStartOptions.value.find((o) => o.value === value)
+  return match ? match.label : value
+})
 
 const businessTypeOptions = [
   { value: 'freelancer', label: t('business_type_freelancer') },
@@ -309,13 +328,26 @@ const businessTypeOptions = [
                   :options="countryList"
                   :error="generalForm.errors.country"
                 />
-                <FormSelect
-                  id="fiscal_year_start"
-                  v-model="generalForm.fiscal_year_start"
-                  :label="t('fiscal_year_start')"
-                  :options="fiscalYearStartOptions"
-                  :error="generalForm.errors.fiscal_year_start"
-                />
+                <div v-if="!hasFiscalYears">
+                  <FormSelect
+                    id="fiscal_year_start"
+                    v-model="generalForm.fiscal_year_start"
+                    :label="t('fiscal_year_start')"
+                    :options="fiscalYearStartOptions"
+                    :error="generalForm.errors.fiscal_year_start"
+                  />
+                  <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('fiscal_year_start_hint') }}</p>
+                </div>
+                <div v-else>
+                  <label class="mb-1 block text-sm font-medium">{{ t('fiscal_year_start') }}</label>
+                  <div class="flex h-10 items-center rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--muted))] px-3 text-sm text-[hsl(var(--muted-foreground))]">
+                    {{ fiscalYearStartLabel }}
+                  </div>
+                  <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                    {{ t('fiscal_year_managed_hint') }}
+                    <a href="/accounting/fiscal-years" class="font-medium text-[hsl(var(--primary))] underline-offset-2 hover:underline">{{ t('manage_fiscal_years') }}</a>
+                  </p>
+                </div>
                 <FormSelect
                   id="business_type"
                   v-model="generalForm.business_type"

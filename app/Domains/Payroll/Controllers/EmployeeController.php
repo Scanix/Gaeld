@@ -55,8 +55,11 @@ class EmployeeController extends Controller
     {
         $this->authorize('view', $employee);
 
+        $employee->load(['salarySlips' => fn ($q) => $q->with('employee')->orderByDesc('period_year')->orderByDesc('period_month')]);
+
         return Inertia::render('Payroll/Employees/Show', [
-            'employee' => $employee->load(['salarySlips' => fn ($q) => $q->with('employee')]),
+            'employee' => $employee,
+            'salarySlips' => $employee->salarySlips,
         ]);
     }
 

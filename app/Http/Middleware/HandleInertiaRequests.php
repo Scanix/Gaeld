@@ -148,10 +148,10 @@ class HandleInertiaRequests extends Middleware
         }
 
         return [
-            'status' => $sub->status,
-            'plan_slug' => $sub->plan?->slug,
-            'trial_ends_at' => $sub->trial_ends_at?->toDateString(),
-            'ends_at' => $sub->ends_at?->toDateString(),
+            'status' => $sub->getStatus(),
+            'plan_slug' => $sub->getPlan()?->slug,
+            'trial_ends_at' => $sub->getTrialEndsAt()?->format('Y-m-d'),
+            'ends_at' => $sub->getEndsAt()?->format('Y-m-d'),
         ];
     }
 
@@ -172,7 +172,7 @@ class HandleInertiaRequests extends Middleware
 
         $limit = config('services.ocr.daily_limit', 3);
         if (FeatureFlag::isSaas()) {
-            $plan = $org->activeSubscription?->plan;
+            $plan = $org->activeSubscription?->getPlan();
             if ($plan && isset($plan->max_ocr_scans_per_day)) {
                 $limit = (int) $plan->max_ocr_scans_per_day;
             }
@@ -198,7 +198,7 @@ class HandleInertiaRequests extends Middleware
 
         $limit = -1;
         if (FeatureFlag::isSaas()) {
-            $plan = $org->activeSubscription?->plan;
+            $plan = $org->activeSubscription?->getPlan();
             if ($plan && isset($plan->max_invoices_per_month)) {
                 $limit = (int) $plan->max_invoices_per_month;
             }

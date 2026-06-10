@@ -9,7 +9,6 @@ import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
-import EmptyState from '@/Components/UI/EmptyState.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { computed } from 'vue'
@@ -118,6 +117,7 @@ const salaryColumns = computed(() => [
           :columns="salaryColumns"
           :rows="salarySlips"
           :pagination="null"
+          :empty-message="t('no_salary_slips')"
         >
           <template #cell-period="{ row }">
             {{ row.month_label }}
@@ -139,7 +139,6 @@ const salaryColumns = computed(() => [
             </Link>
           </template>
         </DataTable>
-        <EmptyState v-if="!salarySlips.length" :title="t('no_salary_slips')" />
       </CardContent>
     </Card>
   </AppLayout>

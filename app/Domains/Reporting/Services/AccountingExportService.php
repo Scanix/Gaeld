@@ -145,7 +145,7 @@ class AccountingExportService
         $report = $this->reportingService->profitAndLoss($org->id, $fromDate, $toDate);
 
         $pdfContent = Pdf::loadView('exports.profit-and-loss', [
-            'organizationName' => $org->name,
+            'organization' => $org,
             'period' => ['from' => $fromDate, 'to' => $toDate],
             'revenue' => $report['revenue'],
             'expenses' => $report['expenses'],
@@ -162,7 +162,7 @@ class AccountingExportService
         $report = $this->reportingService->balanceSheet($org->id, $asOfDate);
 
         $pdfContent = Pdf::loadView('exports.balance-sheet', [
-            'organizationName' => $org->name,
+            'organization' => $org,
             'asOfDate' => $asOfDate,
             'assets' => $report['assets'],
             'liabilities' => $report['liabilities'],
@@ -185,7 +185,7 @@ class AccountingExportService
             $report = $this->vatReportService->generate($org->id, $fromDate, $toDate);
 
             $pdfContent = Pdf::loadView('exports.vat-report', [
-                'organizationName' => $org->name,
+                'organization' => $org,
                 'report' => $report,
             ])->setPaper('A4', 'portrait')->output();
 

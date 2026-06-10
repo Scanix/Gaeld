@@ -34,7 +34,9 @@ class ChecklistFlowTest extends TestCase
         $this->assertArrayHasKey('getting_started', $checklist);
         $this->assertArrayHasKey('accounting', $checklist);
         $this->assertCount(5, $checklist['getting_started']);
-        $this->assertCount(9, $checklist['accounting']);
+        // A fresh org inherits global module defaults (all enabled in CE config),
+        // so 8 items appear — data_imported is excluded because setup_mode defaults to 'fresh'.
+        $this->assertCount(8, $checklist['accounting']);
 
         foreach ([...$checklist['getting_started'], ...$checklist['accounting']] as $item) {
             $this->assertFalse($item['done'], "Item {$item['key']} should be not done for empty org");
@@ -57,11 +59,8 @@ class ChecklistFlowTest extends TestCase
         $this->assertContains('checklist_bank_imported', $accountingKeys);
         $this->assertContains('checklist_reconciliation_done', $accountingKeys);
         $this->assertContains('checklist_vat_declared', $accountingKeys);
-        $this->assertContains('checklist_depreciation_posted', $accountingKeys);
-        $this->assertContains('checklist_social_charges', $accountingKeys);
         $this->assertContains('checklist_year_end_closed', $accountingKeys);
-        $this->assertContains('checklist_fiduciary_exported', $accountingKeys);
-        $this->assertContains('checklist_data_imported', $accountingKeys);
+        // Module-gated items are covered in SetupModeTest.
     }
 
     public function test_chart_configured_is_done_when_accounts_exist(): void

@@ -33,18 +33,23 @@ class InvoicePdfRenderer
 
     private const LOGO_WIDTH = 28;
 
-    private const RIGHT_BLOCK_X = 120;
+    private const LOGO_HEIGHT = 18;
 
-    private const RIGHT_BLOCK_W = 75;
+    // Sender (organisation) block — top-left of the page, under the logo.
+    private const SENDER_X = 15;
 
-    // Swiss letter standard SN 010130 / DIN 5008 address window:
-    //   - left edge: 20 mm, top edge: 45 mm, width: 85 mm, height: 45 mm
-    // We inset the text a little so it sits comfortably inside the window.
-    private const CUSTOMER_X = 20;
+    private const SENDER_Y = 38;
+
+    private const SENDER_W = 85;
+
+    // Swiss letter standard SN 010130 / DIN 5008 address window — RIGHT side
+    // variant for right-window envelopes (the recipient sits on the right).
+    //   - left edge: 120 mm, top edge: 50 mm, width: 75 mm, height: 40 mm
+    private const CUSTOMER_X = 120;
 
     private const CUSTOMER_Y = 50;
 
-    private const CUSTOMER_W = 85;
+    private const CUSTOMER_W = 75;
 
     // Push the invoice title below the address window (45 mm + 45 mm = 90 mm).
     private const TITLE_Y = 100;
@@ -127,40 +132,52 @@ class InvoicePdfRenderer
 
     public function renderInvoiceHeader(TCPDF $tcpdf, Invoice $invoice, Organization $organization): void
     {
-        // Organization logo (if configured)
+        // Organization logo (or dashed placeholder when none is configured)
         $logoFullPath = $organization->logo_path
             ? Storage::disk('local')->path($organization->logo_path)
             : null;
         if ($logoFullPath && file_exists($logoFullPath)) {
             $tcpdf->Image($logoFullPath, self::LOGO_X, self::LOGO_Y, self::LOGO_WIDTH);
+        } else {
+            // Dashed placeholder so the user can see where the logo will sit.
+            $tcpdf->SetDrawColor(180, 180, 180);
+            $tcpdf->SetLineStyle(['width' => 0.2, 'dash' => '2,2']);
+            $tcpdf->Rect(self::LOGO_X, self::LOGO_Y, self::LOGO_WIDTH, self::LOGO_HEIGHT);
+            $tcpdf->SetLineStyle(['width' => 0.2, 'dash' => 0]);
+            $tcpdf->SetTextColor(...self::MUTED_RGB);
+            $tcpdf->SetFont('Helvetica', '', 8);
+            $tcpdf->SetXY(self::LOGO_X, self::LOGO_Y + (self::LOGO_HEIGHT / 2) - 2);
+            $tcpdf->Cell(self::LOGO_WIDTH, 4, 'LOGO', 0, 0, 'C');
+            $tcpdf->SetTextColor(0, 0, 0);
+            $tcpdf->SetDrawColor(0, 0, 0);
         }
 
-        // Organization info (top right)
+        // Organization info (sender) — top-LEFT, under the logo
         $tcpdf->SetFont('Helvetica', 'B', 10);
-        $tcpdf->SetXY(self::RIGHT_BLOCK_X, 15);
-        $tcpdf->Cell(self::RIGHT_BLOCK_W, 5, $organization->legal_name ?? $organization->name, 0, 1, 'R');
+        $tcpdf->SetXY(self::SENDER_X, self::SENDER_Y);
+        $tcpdf->Cell(self::SENDER_W, 5, $organization->legal_name ?? $organization->name, 0, 1, 'L');
 
         $tcpdf->SetFont('Helvetica', '', 8);
         $orgAddress = array_filter([
             $organization->address,
             trim(($organization->postal_code ?? '').' '.($organization->city ?? '')),
-            $organization->canton ? ($organization->country ?? 'CH').' — '.$organization->canton : ($organization->country ?? 'CH'),
+            $organization->canton ? ($organization->country ?? 'CH').' - '.$organization->canton : ($organization->country ?? 'CH'),
         ]);
         foreach ($orgAddress as $line) {
-            $tcpdf->SetX(self::RIGHT_BLOCK_X);
-            $tcpdf->Cell(self::RIGHT_BLOCK_W, 4, $line, 0, 1, 'R');
+            $tcpdf->SetX(self::SENDER_X);
+            $tcpdf->Cell(self::SENDER_W, 4, $line, 0, 1, 'L');
         }
         if ($organization->vat_number) {
-            $tcpdf->SetX(self::RIGHT_BLOCK_X);
+            $tcpdf->SetX(self::SENDER_X);
             $tcpdf->SetFont('Helvetica', '', 7);
             $tcpdf->SetTextColor(...self::MUTED_RGB);
-            $tcpdf->Cell(self::RIGHT_BLOCK_W, 4, $this->t('pdf_vat_number').': '.$organization->vat_number, 0, 1, 'R');
+            $tcpdf->Cell(self::SENDER_W, 4, $this->t('pdf_vat_number').': '.$organization->vat_number, 0, 1, 'L');
             $tcpdf->SetTextColor(0, 0, 0);
         }
 
-        // Customer info — placed inside the Swiss SN 010130 / DIN 5008 address
-        // window so the letter fits a standard C5/C6 window envelope when folded
-        // in three (see renderFoldMarks() for the matching fold ticks).
+        // Customer info (recipient) — RIGHT side, inside the Swiss SN 010130 /
+        // DIN 5008 address window for right-window C5/C6 envelopes (see
+        // renderFoldMarks() for the matching fold ticks).
         $customer = $invoice->customer;
         if ($customer) {
             $tcpdf->SetXY(self::CUSTOMER_X, self::CUSTOMER_Y);

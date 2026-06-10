@@ -49,7 +49,7 @@ class OrganizationSetupFlowTest extends TestCase
         $organization = Organization::where('name', 'Setup Org')->firstOrFail();
         $user = User::where('email', 'setup@example.com')->firstOrFail();
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
         $this->assertAuthenticatedAs($user);
         $this->assertDatabaseHas('organization_users', [
             'organization_id' => $organization->id,
@@ -81,7 +81,7 @@ class OrganizationSetupFlowTest extends TestCase
 
         $organization = Organization::where('name', 'Onboarding Org')->firstOrFail();
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
         $response->assertSessionHas('current_organization_id', $organization->id);
         $this->assertDatabaseHas('organization_users', [
             'organization_id' => $organization->id,
@@ -101,7 +101,7 @@ class OrganizationSetupFlowTest extends TestCase
 
         $response = $this->get('/setup');
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
     }
 
     public function test_verified_user_without_org_is_redirected_to_onboarding_from_dashboard(): void
@@ -110,7 +110,7 @@ class OrganizationSetupFlowTest extends TestCase
             'email_verified_at' => now(),
         ]);
         /** @var User $user */
-        $response = $this->actingAs($user)->get('/');
+        $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertRedirect('/onboarding');
     }
@@ -131,6 +131,6 @@ class OrganizationSetupFlowTest extends TestCase
             ->withSession(['current_organization_id' => $organization->id])
             ->get('/onboarding');
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
     }
 }

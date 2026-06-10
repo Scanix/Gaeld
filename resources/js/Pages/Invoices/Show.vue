@@ -191,6 +191,9 @@ const bankAccountOptions = computed(() =>
             <Badge :variant="statusVariant[invoice?.status] ?? 'secondary'" class="mb-1">
               {{ t('invoice_status_' + invoice?.status) }}
             </Badge>
+            <Badge v-if="invoice?.archived_at" variant="secondary" class="mb-1 ml-1">
+              {{ t('archived') }}
+            </Badge>
             <p class="text-sm text-[hsl(var(--muted-foreground))]">
               {{ invoice?.customer?.name }} &middot; {{ t('issued') }} {{ formatDate(invoice?.issue_date) }} &middot; {{ t('due') }} {{ formatDate(invoice?.due_date) }}
             </p>
@@ -198,7 +201,7 @@ const bankAccountOptions = computed(() =>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <Button
-            v-if="invoice?.status === 'draft'"
+            v-if="invoice?.status === 'draft' && !invoice?.archived_at"
             as="a"
             :href="`/invoices/${invoice.id}/edit`"
             variant="outline"
@@ -208,7 +211,7 @@ const bankAccountOptions = computed(() =>
             <span class="hidden sm:inline">{{ t('edit') }}</span>
           </Button>
           <Button
-            v-if="invoice?.status === 'draft'"
+            v-if="invoice?.status === 'draft' && !invoice?.archived_at"
             variant="outline"
             size="sm"
             :disabled="finalizeForm.processing"
@@ -217,7 +220,7 @@ const bankAccountOptions = computed(() =>
             {{ t('finalize') }}
           </Button>
           <Button
-            v-if="invoice?.status === 'sent' || invoice?.status === 'overdue'"
+            v-if="(invoice?.status === 'sent' || invoice?.status === 'overdue') && !invoice?.archived_at"
             size="sm"
             @click="showPaymentModal = true"
           >
@@ -243,7 +246,7 @@ const bankAccountOptions = computed(() =>
                 {{ t('duplicate') }}
               </button>
               <button
-                v-if="invoice?.status === 'sent'"
+                v-if="invoice?.status === 'sent' && !invoice?.archived_at"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
                 :disabled="sendForm.processing"
                 @click="sendInvoice(); close()"
@@ -252,7 +255,7 @@ const bankAccountOptions = computed(() =>
                 {{ t('send_invoice_email') }}
               </button>
               <button
-                v-if="isOverdue"
+                v-if="isOverdue && !invoice?.archived_at"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
                 :disabled="reminderForm.processing"
                 @click="sendReminder(); close()"
@@ -261,7 +264,7 @@ const bankAccountOptions = computed(() =>
                 {{ t('send_reminder') }}
               </button>
               <button
-                v-if="invoice?.type !== 'credit_note' && (invoice?.status === 'sent' || invoice?.status === 'paid')"
+                v-if="invoice?.type !== 'credit_note' && (invoice?.status === 'sent' || invoice?.status === 'paid') && !invoice?.archived_at"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
                 :disabled="creditNoteForm.processing"
                 @click="createCreditNote(); close()"
@@ -270,11 +273,11 @@ const bankAccountOptions = computed(() =>
                 {{ t('create_credit_note') }}
               </button>
               <div
-                v-if="(invoice?.status !== 'paid' && invoice?.status !== 'cancelled') || invoice?.status === 'draft'"
+                v-if="((invoice?.status !== 'paid' && invoice?.status !== 'cancelled') || invoice?.status === 'draft') && !invoice?.archived_at"
                 class="my-1 border-t border-[hsl(var(--border))]"
               />
               <button
-                v-if="invoice?.status !== 'paid' && invoice?.status !== 'cancelled'"
+                v-if="invoice?.status !== 'paid' && invoice?.status !== 'cancelled' && !invoice?.archived_at"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
                 @click="showCancelDialog = true; close()"
               >
@@ -282,7 +285,7 @@ const bankAccountOptions = computed(() =>
                 {{ t('cancel_invoice') }}
               </button>
               <button
-                v-if="invoice?.status === 'draft' || invoice?.status === 'cancelled'"
+                v-if="(invoice?.status === 'draft' || invoice?.status === 'cancelled') && !invoice?.archived_at"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
                 @click="showDeleteDialog = true; close()"
               >

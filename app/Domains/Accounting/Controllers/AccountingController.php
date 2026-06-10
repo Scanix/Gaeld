@@ -103,7 +103,7 @@ class AccountingController extends Controller
     {
         $this->authorize('create', JournalEntry::class);
 
-        $accounts = Account::where('organization_id', $currentOrg->id())
+        $accounts = Account::query()
             ->where('is_active', true)
             ->orderBy('code')
             ->get(['id', 'code', 'name', 'type'])
@@ -288,7 +288,7 @@ class AccountingController extends Controller
         $orgId = $currentOrg->id();
         $asOfDate = $request->input('as_of_date', now()->toDateString());
         $balances = $ledgerService->trialBalance($orgId, $asOfDate);
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
 
         if ($format === 'csv') {
             $headers = ['Code', 'Account', 'Type', 'Debit', 'Credit'];
@@ -304,7 +304,7 @@ class AccountingController extends Controller
         }
 
         return $pdf->download('exports.trial-balance', [
-            'organizationName' => $orgName,
+            'organization' => $org,
             'asOfDate' => $asOfDate,
             'balances' => $balances,
         ], "trial-balance-{$asOfDate}.pdf");
@@ -325,7 +325,7 @@ class AccountingController extends Controller
         $from = $request->input('from', now()->startOfYear()->toDateString());
         $to = $request->input('to', now()->toDateString());
 
-        $entries = JournalEntry::where('organization_id', $orgId)
+        $entries = JournalEntry::query()
             ->where('is_posted', true)
             ->whereBetween('date', [$from, $to])
             ->with('lines.account')
@@ -333,7 +333,7 @@ class AccountingController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
 
         if ($format === 'csv') {
             $headers = ['Date', 'Reference', 'Description', 'Account Code', 'Account Name', 'Debit', 'Credit'];
@@ -356,7 +356,7 @@ class AccountingController extends Controller
         }
 
         return $pdf->download('exports.journal-entries', [
-            'organizationName' => $orgName,
+            'organization' => $org,
             'fromDate' => $from,
             'toDate' => $to,
             'entries' => $entries,

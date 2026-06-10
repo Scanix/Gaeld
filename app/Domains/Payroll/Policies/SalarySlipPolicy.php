@@ -29,4 +29,24 @@ class SalarySlipPolicy extends BasePolicy
         return $this->hasCurrentOrganization($user)
             && $user->hasPermissionTo(Permission::PayrollCreate);
     }
+
+    public function update(User $user, SalarySlip $salarySlip): bool
+    {
+        if ($salarySlip->archived_at !== null) {
+            return false;
+        }
+
+        return $this->belongsToOrganization($user, $salarySlip)
+            && $user->hasPermissionTo(Permission::PayrollCreate);
+    }
+
+    public function delete(User $user, SalarySlip $salarySlip): bool
+    {
+        if ($salarySlip->archived_at !== null) {
+            return false;
+        }
+
+        return $this->belongsToOrganization($user, $salarySlip)
+            && $user->hasPermissionTo(Permission::PayrollCreate);
+    }
 }

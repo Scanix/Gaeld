@@ -6,7 +6,6 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\TaxDeclaration;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Requests\StoreTaxDeclarationRequest;
-use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +21,6 @@ class TaxDeclarationController extends Controller
         $this->authorize('viewAny', Account::class);
 
         $declarations = TaxDeclaration::query()
-            ->where('organization_id', $currentOrg->id())
             ->orderByDesc('fiscal_year')
             ->orderBy('canton')
             ->get();
@@ -63,11 +61,7 @@ class TaxDeclarationController extends Controller
 
     public function show(TaxDeclaration $taxDeclaration, CurrentOrganization $currentOrg): Response
     {
-        $this->authorize('viewAny', Account::class);
-
-        if ($taxDeclaration->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        $this->authorize('view', $taxDeclaration);
 
         if ($taxDeclaration->status === 'draft') {
             $taxDeclaration->update([
@@ -83,11 +77,7 @@ class TaxDeclarationController extends Controller
 
     public function finalize(Request $request, TaxDeclaration $taxDeclaration, CurrentOrganization $currentOrg): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermissionTo(Permission::AccountingEdit), 403);
-
-        if ($taxDeclaration->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        $this->authorize('update', $taxDeclaration);
 
         if ($taxDeclaration->status === 'draft') {
             $taxDeclaration->update([

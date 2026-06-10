@@ -2,30 +2,18 @@
 <html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>{{ __('exports.cash_flow.title') }}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 20mm 15mm; }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .header h1 { font-size: 16pt; margin-bottom: 4px; }
-        .header .period { font-size: 10pt; color: #555; }
-        .section { margin-top: 18px; }
-        .section-title { font-size: 11pt; font-weight: bold; background-color: #f0f0f0; padding: 5px 8px; border-bottom: 2px solid #333; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background-color: #f0f0f0; text-align: left; padding: 5px 8px; border-bottom: 1px solid #999; font-size: 9pt; text-transform: uppercase; }
-        th.amount { text-align: right; }
-        td { padding: 4px 8px; border-bottom: 1px solid #eee; }
-        td.amount { text-align: right; font-variant-numeric: tabular-nums; }
-        tr.total td { font-weight: bold; border-top: 2px solid #333; border-bottom: none; background-color: #f8f8f8; }
-        tr.net-change td { font-weight: bold; border-top: 3px double #333; font-size: 11pt; padding-top: 8px; }
-        .footer { margin-top: 30px; font-size: 8pt; color: #999; text-align: center; border-top: 1px solid #ddd; padding-top: 8px; }
-    </style>
+    <title>{{ __('exports.cash_flow.title') }} — {{ $organization->legal_name ?? $organization->name }}</title>
+    @include('exports._styles')
 </head>
 <body>
-    <div class="header">
-        <h1>{{ $organizationName }}</h1>
-        <div class="period">{{ __('exports.cash_flow.period', ['from' => $period['from'], 'to' => $period['to']]) }}</div>
-    </div>
+    @php
+        $fmt = fn ($d): string => $d ? \Carbon\Carbon::parse($d)->format('d.m.Y') : '';
+    @endphp
+
+    @include('exports._header', [
+        'docTitle'  => __('exports.cash_flow.title'),
+        'docPeriod' => $fmt($period['from']) . ' – ' . $fmt($period['to']),
+    ])
 
     {{-- Operating Activities --}}
     <div class="section">
@@ -34,17 +22,17 @@
             <tbody>
                 <tr>
                     <td>{{ __('exports.cash_flow.net_income') }}</td>
-                    <td class="amount">{{ number_format((float) $report['net_income'], 2, '.', "'") }}</td>
+                    <td class="r">{{ number_format((float) $report['net_income'], 2, '.', "'") }}</td>
                 </tr>
                 @foreach ($report['operating']['adjustments'] as $adj)
                     <tr>
-                        <td style="padding-left: 24px;">{{ $adj['label'] }}</td>
-                        <td class="amount">{{ number_format((float) $adj['amount'], 2, '.', "'") }}</td>
+                        <td style="padding-left:24px">{{ $adj['label'] }}</td>
+                        <td class="r">{{ number_format((float) $adj['amount'], 2, '.', "'") }}</td>
                     </tr>
                 @endforeach
-                <tr class="total">
+                <tr class="row-total">
                     <td>{{ __('exports.cash_flow.net_cash_operating') }}</td>
-                    <td class="amount">{{ number_format((float) $report['operating']['total'], 2, '.', "'") }}</td>
+                    <td class="r">{{ number_format((float) $report['operating']['total'], 2, '.', "'") }}</td>
                 </tr>
             </tbody>
         </table>
@@ -57,15 +45,15 @@
             <tbody>
                 @forelse ($report['investing']['items'] as $item)
                     <tr>
-                        <td style="padding-left: 24px;">{{ $item['label'] }}</td>
-                        <td class="amount">{{ number_format((float) $item['amount'], 2, '.', "'") }}</td>
+                        <td style="padding-left:24px">{{ $item['label'] }}</td>
+                        <td class="r">{{ number_format((float) $item['amount'], 2, '.', "'") }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="2" style="color:#999;">{{ __('exports.common.no_investing_activities') }}</td></tr>
+                    <tr><td colspan="2" class="muted">{{ __('exports.common.no_investing_activities') }}</td></tr>
                 @endforelse
-                <tr class="total">
+                <tr class="row-total">
                     <td>{{ __('exports.cash_flow.net_cash_investing') }}</td>
-                    <td class="amount">{{ number_format((float) $report['investing']['total'], 2, '.', "'") }}</td>
+                    <td class="r">{{ number_format((float) $report['investing']['total'], 2, '.', "'") }}</td>
                 </tr>
             </tbody>
         </table>
@@ -78,15 +66,15 @@
             <tbody>
                 @forelse ($report['financing']['items'] as $item)
                     <tr>
-                        <td style="padding-left: 24px;">{{ $item['label'] }}</td>
-                        <td class="amount">{{ number_format((float) $item['amount'], 2, '.', "'") }}</td>
+                        <td style="padding-left:24px">{{ $item['label'] }}</td>
+                        <td class="r">{{ number_format((float) $item['amount'], 2, '.', "'") }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="2" style="color:#999;">{{ __('exports.common.no_financing_activities') }}</td></tr>
+                    <tr><td colspan="2" class="muted">{{ __('exports.common.no_financing_activities') }}</td></tr>
                 @endforelse
-                <tr class="total">
+                <tr class="row-total">
                     <td>{{ __('exports.cash_flow.net_cash_financing') }}</td>
-                    <td class="amount">{{ number_format((float) $report['financing']['total'], 2, '.', "'") }}</td>
+                    <td class="r">{{ number_format((float) $report['financing']['total'], 2, '.', "'") }}</td>
                 </tr>
             </tbody>
         </table>
@@ -99,22 +87,23 @@
             <tbody>
                 <tr>
                     <td>{{ __('exports.cash_flow.beginning_cash_balance') }}</td>
-                    <td class="amount">{{ number_format((float) $report['beginning_cash'], 2, '.', "'") }}</td>
+                    <td class="r">{{ number_format((float) $report['beginning_cash'], 2, '.', "'") }}</td>
                 </tr>
                 <tr>
                     <td>{{ __('exports.cash_flow.net_change_in_cash') }}</td>
-                    <td class="amount">{{ number_format((float) $report['net_change'], 2, '.', "'") }}</td>
+                    <td class="r">{{ number_format((float) $report['net_change'], 2, '.', "'") }}</td>
                 </tr>
-                <tr class="net-change">
+                <tr class="row-grand">
                     <td>{{ __('exports.cash_flow.ending_cash_balance') }}</td>
-                    <td class="amount">{{ number_format((float) $report['ending_cash'], 2, '.', "'") }}</td>
+                    <td class="r">{{ number_format((float) $report['ending_cash'], 2, '.', "'") }}</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <div class="footer">
-        {{ __('exports.common.generated_by') }} &mdash; {{ now()->format('d.m.Y H:i') }}
+    <div class="page-footer">
+        <span>{{ __('exports.common.generated_by') }} — {{ now()->format('d.m.Y H:i') }}</span>
+        <span>{{ __('exports.common.page') }} <span class="page-num"></span> / <span class="page-total"></span></span>
     </div>
 </body>
 </html>

@@ -8,6 +8,7 @@ use App\Domains\Accounting\Exceptions\FiscalYearOverlapException;
 use App\Domains\Accounting\Exceptions\FiscalYearTooLongException;
 use App\Domains\Accounting\Exceptions\InvalidFiscalYearRangeException;
 use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Accounting\Notifications\FiscalYearExpiredNotification;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Carbon;
@@ -114,11 +115,16 @@ class FiscalYearService
 
     /**
      * Mark the fiscal year as closed, lock it, and auto-advance the next
-     * planned year (if any) to operative.
+     * planned year (if any) to operative. If no planned year exists, a new
+     * one is created automatically starting the day after this year ends.
+     *
+     * Returns true when a next fiscal year was auto-created, false otherwise.
      */
-    public function close(FiscalYear $fiscalYear, User $user): void
+    public function close(FiscalYear $fiscalYear, User $user): bool
     {
-        DB::transaction(function () use ($fiscalYear, $user) {
+        $nextYearCreated = false;
+
+        DB::transaction(function () use ($fiscalYear, $user, &$nextYearCreated) {
             $fiscalYear->update([
                 'status' => FiscalYearStatus::Closed,
                 'locked_at' => now(),
@@ -134,8 +140,20 @@ class FiscalYearService
 
             if ($next) {
                 $next->update(['status' => FiscalYearStatus::Operative]);
+            } else {
+                $nextStart = $fiscalYear->end_date->copy()->addDay();
+                FiscalYear::create([
+                    'organization_id' => $fiscalYear->organization_id,
+                    'name' => (string) $nextStart->year,
+                    'start_date' => $nextStart->toDateString(),
+                    'end_date' => $nextStart->copy()->addYear()->subDay()->toDateString(),
+                    'status' => FiscalYearStatus::Planned,
+                ]);
+                $nextYearCreated = true;
             }
         });
+
+        return $nextYearCreated;
     }
 
     /**
@@ -152,16 +170,44 @@ class FiscalYearService
     }
 
     /**
-     * Transition any operative year whose end_date has passed to 'expired'.
+     * Transition any operative year whose end_date has passed to 'expired'
+     * and notify the organisation's members.
      * Designed to be called from a scheduled command.
      */
     public function markExpired(Organization $organization): int
     {
-        return FiscalYear::query()
+        $expiring = FiscalYear::query()
+            ->withoutGlobalScope('organization')
             ->where('organization_id', $organization->id)
             ->where('status', FiscalYearStatus::Operative->value)
             ->whereDate('end_date', '<', Carbon::today()->toDateString())
-            ->update(['status' => FiscalYearStatus::Expired->value]);
+            ->get();
+
+        if ($expiring->isEmpty()) {
+            return 0;
+        }
+
+        $users = $organization->users()->get();
+
+        foreach ($expiring as $fiscalYear) {
+            $fiscalYear->update(['status' => FiscalYearStatus::Expired->value]);
+
+            $notification = new FiscalYearExpiredNotification($fiscalYear);
+            foreach ($users as $user) {
+                $user->notify($notification);
+            }
+        }
+
+        return $expiring->count();
+    }
+
+    /**
+     * Run markExpired() for every organisation.
+     * Designed to be called from the scheduler (once per day).
+     */
+    public function markExpiredAll(): void
+    {
+        Organization::query()->each(fn (Organization $org) => $this->markExpired($org));
     }
 
     /** @throws InvalidFiscalYearRangeException|FiscalYearTooLongException */

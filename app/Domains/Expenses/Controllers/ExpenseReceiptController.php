@@ -109,7 +109,7 @@ class ExpenseReceiptController extends Controller
     {
         if (FeatureFlag::isSaas()) {
             $org = $currentOrg->get();
-            $plan = $org->activeSubscription?->plan;
+            $plan = $org->activeSubscription?->getPlan();
             if ($plan && isset($plan->max_ocr_scans_per_day)) {
                 return (int) $plan->max_ocr_scans_per_day;
             }
@@ -128,7 +128,6 @@ class ExpenseReceiptController extends Controller
             // Verify org ownership even on the cache-hit path so an authenticated user
             // from a different organization cannot read results by knowing the scan UUID.
             $ownedByScan = ReceiptScan::where('scan_id', $scanId)
-                ->where('organization_id', $currentOrg->id())
                 ->where('expires_at', '>', now())
                 ->exists();
 
@@ -138,7 +137,6 @@ class ExpenseReceiptController extends Controller
         } else {
             // Cache expired (30 min TTL) — fall back to DB record (48 h TTL)
             $scan = ReceiptScan::where('scan_id', $scanId)
-                ->where('organization_id', $currentOrg->id())
                 ->where('expires_at', '>', now())
                 ->first();
 

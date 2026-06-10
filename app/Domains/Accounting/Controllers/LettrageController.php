@@ -26,15 +26,14 @@ class LettrageController extends Controller
      */
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
-        $orgId = $currentOrg->id();
-        $accounts = Account::where('organization_id', $orgId)
+        $accounts = Account::query()
             ->where('is_active', true)
             ->orderBy('code')
             ->get(['id', 'code', 'name', 'type']);
 
         $accountId = $request->query('account');
         $account = $accountId
-            ? Account::where('organization_id', $orgId)->findOrFail($accountId)
+            ? Account::query()->findOrFail($accountId)
             : null;
 
         if ($account) {
@@ -69,7 +68,7 @@ class LettrageController extends Controller
         $validated = $request->validated();
 
         /** @var Account $account */
-        $account = Account::where('organization_id', $currentOrg->id())
+        $account = Account::query()
             ->findOrFail($validated['account_id']);
 
         $this->authorize('manage', $account);

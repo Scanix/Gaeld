@@ -200,6 +200,12 @@ function doDelete() {
           <template #cell-is_posted="{ value }">
             <Badge :variant="value ? 'success' : 'warning'">{{ value ? t('posted') : t('draft') }}</Badge>
           </template>
+          <template #cell-reference="{ value, row }">
+            <span class="inline-flex items-center gap-2">
+              {{ value }}
+              <Badge v-if="row.type === 'historical_summary'" variant="secondary">{{ t('historical_summary_badge') }}</Badge>
+            </span>
+          </template>
           <template #cell-actions="{ row }">
             <div class="flex justify-end gap-1">
               <!-- Draft entry actions -->

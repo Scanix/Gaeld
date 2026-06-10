@@ -9,6 +9,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.0] — 2026-05-22
+
+### Security
+- **Auth: prevent email enumeration on password reset** —
+  `POST /forgot-password` now always returns the generic "if your email
+  exists, a reset link has been sent" response, whether the address is
+  registered or not. Previously the form leaked account existence by
+  showing different validation errors.
+
+### Fixed
+- **Invoices: enforce unique invoice number per organization on update** —
+  attempting to save an invoice with a number already taken inside the
+  same organization now returns a clean `422` validation error instead of
+  bubbling up a `UniqueConstraintViolationException` (HTTP 500). The
+  update path also catches the race-condition unique violation and
+  renders it as a field error, matching the create path.
+- **Auth: invalid credentials now shown as form-level alert** — failed
+  login no longer attaches the "invalid email or password" message under
+  the email field (which was misleading when the password was wrong).
+  The message is rendered as a banner above the form.
+
+### Changed
+- **Auth UI polish** — added the Gäld logo to the forgot-password and
+  reset-password screens, wired the submit buttons on Login,
+  ForgotPassword and ResetPassword to a proper `loading` state, and
+  added a show/hide toggle to every password input via `FormInput`.
+
+---
+
+## [3.4.1] — 2026-05-17
+
+### Changed
+- **Dashboard: removed Getting Started checklist** — the onboarding
+  checklist panel has been removed from the dashboard; it was more
+  distracting than useful and will be replaced by a proper onboarding
+  wizard in a future release.
+
+### Fixed
+- **EE: subscription plan gating now enforced in SaaS mode** — EE features
+  (bank_sync, auto_reconciliation, automation, multi_currency, api_access,
+  rule_engine, advanced_permissions, and others) are now always gated by
+  the organisation's subscription plan when `FEATURE_SAAS=true`. Previously
+  a server-wide flag such as `FEATURE_BANK_SYNC=true` bypassed the per-org
+  plan check, granting every organisation free access to paid features.
+
+---
+
 ## [3.4.0] — 2026-05-17
 
 ### Added

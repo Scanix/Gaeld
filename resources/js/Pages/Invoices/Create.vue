@@ -42,7 +42,6 @@ const { isClosed: isIssueDateClosed, closedYear } = useClosedFiscalYear(() => fo
 
 const form = useForm({
   customer_id: '',
-  number: props.suggestedNumber,
   issue_date: new Date().toISOString().slice(0, 10),
   due_date: '',
   currency: 'CHF',
@@ -53,19 +52,11 @@ const form = useForm({
   finalize: false,
 })
 
-// Track whether the user has manually edited the suggested number; if not, we
-// re-suggest it server-side whenever the issue-date year changes (so back-dating
-// to a prior fiscal year produces e.g. INV-2025-001 instead of INV-2026-NNN).
-const numberManuallyEdited = ref(false)
-watch(() => form.number, (val, oldVal) => {
-  if (val !== props.suggestedNumber && oldVal === props.suggestedNumber) {
-    numberManuallyEdited.value = true
-  }
-})
-
+// Reload the suggested-number preview whenever the issue-date year changes so
+// that back-dated invoices display the correct year-scoped sequence number.
 let lastReloadedYear = new Date(form.issue_date).getFullYear()
 watch(() => form.issue_date, (val) => {
-  if (numberManuallyEdited.value || !val) return
+  if (!val) return
   const y = new Date(val).getFullYear()
   if (Number.isNaN(y) || y === lastReloadedYear) return
   lastReloadedYear = y
@@ -73,7 +64,6 @@ watch(() => form.issue_date, (val) => {
     only: ['suggestedNumber'],
     data: { for_year: y },
     preserveState: true,
-    onSuccess: () => { form.number = props.suggestedNumber },
   })
 })
 
@@ -96,13 +86,11 @@ const { showDialog, handleSave, handleDiscard, handleStay, forceClear } = useUns
 
 const { errors: clientErrors, validate, validateField } = useFormValidation(z.object({
   customer_id: z.string().min(1, 'This field is required.'),
-  number: z.string().min(1, 'This field is required.').max(50, 'Must be at most 50 characters.'),
   issue_date: z.string().min(1, 'This field is required.'),
   due_date: z.string().min(1, 'This field is required.'),
 }))
 
 const draftValidation = useFormValidation(z.object({
-  number: z.string().min(1, 'This field is required.').max(50, 'Must be at most 50 characters.'),
   issue_date: z.string().min(1, 'This field is required.'),
 }))
 
@@ -290,15 +278,12 @@ function onDueDateManualEdit() {
                 <Plus class="h-4 w-4" />
               </Button>
             </div>
-            <FormInput
-              id="number"
-              v-model="form.number"
-              :label="t('invoice_number')"
-              :placeholder="t('invoice_number_placeholder')"
-              :error="form.errors.number || clientErrors.number"
-              required
-              @blur="validateField('number', form.number)"
-            />
+            <div class="space-y-2">
+              <label class="text-sm font-medium leading-none">{{ t('invoice_number') }}</label>
+              <div class="flex h-11 sm:h-9 w-full items-center rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--muted))] px-3 py-1 text-base sm:text-sm text-[hsl(var(--muted-foreground))] select-none">
+                {{ suggestedNumber || '…' }}
+              </div>
+            </div>
             <FormInput
               id="issue_date"
               v-model="form.issue_date"

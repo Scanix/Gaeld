@@ -23,7 +23,7 @@ class ExpenseCategoryController extends Controller
 
         $validated = $request->validated();
 
-        $maxSort = ExpenseCategory::where('organization_id', $currentOrg->id())->max('sort_order') ?? 0;
+        $maxSort = ExpenseCategory::query()->max('sort_order') ?? 0;
 
         ExpenseCategory::create([
             'organization_id' => $currentOrg->id(),
