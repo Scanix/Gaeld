@@ -64,7 +64,7 @@ git clone https://github.com/Scanix/Gaeld.git
 cd Gaeld/api
 
 # 2. Install PHP dependencies
-./vendor/bin/sail composer install
+composer install
 
 # 3. Install and build frontend
 pnpm install
@@ -72,7 +72,7 @@ pnpm run build
 
 # 4. Configure environment
 cp .env.example .env
-./vendor/bin/sail artisan key:generate
+php artisan key:generate
 
 # 5. Update .env with your database credentials
 # DB_HOST=127.0.0.1
@@ -81,13 +81,13 @@ cp .env.example .env
 # DB_PASSWORD=your_password
 
 # 6. Run the installer
-./vendor/bin/sail artisan gaeld:install
+php artisan gaeld:install
 
 # Or with demo data:
-./vendor/bin/sail artisan gaeld:install --demo
+php artisan gaeld:install --demo
 
 # 7. Start the development server
-./vendor/bin/sail up
+php artisan serve
 ```
 
 Visit `http://localhost:8000` to access the application.
