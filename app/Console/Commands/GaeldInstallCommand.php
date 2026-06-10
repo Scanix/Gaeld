@@ -144,9 +144,6 @@ class GaeldInstallCommand extends Command
         }
         $this->components->twoColumnDetail('Currency', $currency);
 
-        $this->newLine();
-        $this->components->info('Run `php artisan gaeld:install --demo` to add sample data.');
-
         return self::SUCCESS;
     }
 
