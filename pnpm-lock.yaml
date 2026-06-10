@@ -49,8 +49,8 @@ importers:
         version: 4.3.6
     devDependencies:
       '@inertiajs/vue3':
-        specifier: ^3.0.3
-        version: 3.0.3(axios@1.16.0)(vue@3.5.34)
+        specifier: ^3.1.1
+        version: 3.1.1(axios@1.16.0)(vue@3.5.34)
       '@sentry/vite-plugin':
         specifier: ^5.2.0
         version: 5.2.0
@@ -159,16 +159,16 @@ packages:
   '@emnapi/wasi-threads@1.2.1':
     resolution: {integrity: sha512-uTII7OYF+/Mes/MrcIOYp5yOtSMLBWSIoLPpcgwipoiKbli6k322tcoFsxoIIxPDqW01SQGAgko4EzZi2BNv2w==}
 
-  '@inertiajs/core@3.0.3':
-    resolution: {integrity: sha512-/4sW/cfNpvujjVOZlB5UNypLGNySs7X7V8IMLNSK8+3j1KsUYGS5wpLd9EqAu8wy8RiW7PPra2rPwB6Lx/ACow==}
+  '@inertiajs/core@3.1.1':
+    resolution: {integrity: sha512-l8NfuI6xaeLcSTUH67fk/RPKGr5Pm+oyeWJy6mBfWxHIiNpMctPQtha5/NLQ+RqGekJdmJ7cHH8l3JDkvoPXYg==}
     peerDependencies:
-      axios: ^1.13.2
+      axios: ^1.15.2
     peerDependenciesMeta:
       axios:
         optional: true
 
-  '@inertiajs/vue3@3.0.3':
-    resolution: {integrity: sha512-bhJN+GS66g1tYH1p6flKkG1N8oaT5J7ZLqBkavN9mHC6bVfoQCUG6sCuA07WTDfo9tDaxU89wsSSAf4mhn3SuA==}
+  '@inertiajs/vue3@3.1.1':
+    resolution: {integrity: sha512-k2xdcRIxbflGW9Doo6pg4pUfBK9t7PgODyHJFaf1p9AxOFRdBIKrxxvaGFQTT5L4GjOUdZ9trfDLxZ2IIaCabA==}
     peerDependencies:
       vue: ^3.0.0
 
@@ -612,8 +612,8 @@ packages:
     resolution: {integrity: sha512-j6vWzfrGVfyXxge+O0x5sh6cvxAog0a/4Rdd2K36zCMV5eJ+/+tOAngRO8cODMNWbVRdVlmGZQL2YS3yR8bIUA==}
     engines: {node: '>= 0.4'}
 
-  es-toolkit@1.45.1:
-    resolution: {integrity: sha512-/jhoOj/Fx+A+IIyDNOvO3TItGmlMKhtX8ISAHKE90c4b/k1tqaqEZ+uUqfpU8DMnW5cgNJv606zS55jGvza0Xw==}
+  es-toolkit@1.46.1:
+    resolution: {integrity: sha512-5eNtXOs3tbfxXOj04tjjseeWkRWaoCjdEI+96DgwzZoe6c9juL49pXlzAFTI72aWC9Y8p7168g6XIKjh7k6pyQ==}
 
   escalade@3.2.0:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
@@ -1160,18 +1160,18 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@inertiajs/core@3.0.3(axios@1.16.0)':
+  '@inertiajs/core@3.1.1(axios@1.16.0)':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
-      es-toolkit: 1.45.1
+      es-toolkit: 1.46.1
       laravel-precognition: 2.0.0(axios@1.16.0)
     optionalDependencies:
       axios: 1.16.0
 
-  '@inertiajs/vue3@3.0.3(axios@1.16.0)(vue@3.5.34)':
+  '@inertiajs/vue3@3.1.1(axios@1.16.0)(vue@3.5.34)':
     dependencies:
-      '@inertiajs/core': 3.0.3(axios@1.16.0)
-      es-toolkit: 1.45.1
+      '@inertiajs/core': 3.1.1(axios@1.16.0)
+      es-toolkit: 1.46.1
       laravel-precognition: 2.0.0(axios@1.16.0)
       vue: 3.5.34
     transitivePeerDependencies:
@@ -1575,7 +1575,7 @@ snapshots:
       has-tostringtag: 1.0.2
       hasown: 2.0.2
 
-  es-toolkit@1.45.1: {}
+  es-toolkit@1.46.1: {}
 
   escalade@3.2.0: {}
 
@@ -1666,7 +1666,7 @@ snapshots:
 
   laravel-precognition@2.0.0(axios@1.16.0):
     dependencies:
-      es-toolkit: 1.45.1
+      es-toolkit: 1.46.1
     optionalDependencies:
       axios: 1.16.0
 
