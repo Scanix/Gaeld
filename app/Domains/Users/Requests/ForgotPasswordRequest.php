@@ -14,7 +14,7 @@ class ForgotPasswordRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email'],
-            'h-captcha-response' => ['nullable', 'string', new HCaptchaRule],
+            'h-captcha-response' => HCaptchaRule::rules(),
         ];
     }
 }

@@ -180,4 +180,40 @@ class RegistrationTest extends TestCase
             $this->assertGreaterThan(0, $plan['price_chf'], 'Free plan should not appear when payment is required.');
         }
     }
+
+    public function test_signup_requires_hcaptcha_response_when_configured(): void
+    {
+        // Simulating a production install where hCaptcha is configured.
+        config()->set('services.hcaptcha.site_key', 'fake-site-key');
+
+        $plan = Plan::create([
+            'id' => (string) Str::uuid(),
+            'name' => 'Free',
+            'slug' => 'free-captcha-test',
+            'price_chf' => 0.00,
+            'stripe_price_id' => null,
+            'max_users' => 1,
+            'max_invoices_per_month' => 5,
+            'features' => [],
+            'is_active' => true,
+            'sort_order' => 0,
+        ]);
+
+        // Submitting a fully valid payload but WITHOUT h-captcha-response
+        // must be rejected — this was the bot-signup bypass (previous rule
+        // was `nullable`, which silently skipped the captcha check).
+        $response = $this->post('/signup', [
+            'name' => 'Bot Example',
+            'email' => 'bot@example.test',
+            'password' => 'Password!123',
+            'password_confirmation' => 'Password!123',
+            'org_name' => 'BotCorp',
+            'plan_id' => $plan->id,
+            'accepted_privacy' => true,
+            'chart_of_accounts' => 'none',
+        ]);
+
+        $response->assertSessionHasErrors('h-captcha-response');
+        $this->assertDatabaseMissing('users', ['email' => 'bot@example.test']);
+    }
 }

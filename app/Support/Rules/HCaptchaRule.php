@@ -18,10 +18,34 @@ use Illuminate\Support\Facades\Log;
  *  - Logs failures (and network errors) but never throws.
  *
  * Usage:
- *     'h-captcha-response' => ['required', 'string', new HCaptchaRule],
+ *     'h-captcha-response' => HCaptchaRule::rules(),
  */
 class HCaptchaRule implements ValidationRule
 {
+    /**
+     * Build the validation rules for an hCaptcha-protected field.
+     *
+     * When hCaptcha is configured (a site key is present) the field is
+     * `required` — both the front-end widget and the back-end token check
+     * must succeed. When hCaptcha is not configured, the field is silently
+     * skipped so self-hosted and local installs keep working.
+     *
+     * IMPORTANT: do not inline `['nullable', 'string', new HCaptchaRule]`.
+     * The `nullable` modifier causes Laravel to skip subsequent rules when
+     * the field is missing or empty, which lets bots bypass the captcha
+     * entirely by simply not submitting the token.
+     *
+     * @return array<int, string|self>
+     */
+    public static function rules(): array
+    {
+        $configured = (string) config('services.hcaptcha.site_key', '') !== '';
+
+        return $configured
+            ? ['required', 'string', new self]
+            : ['nullable', 'string'];
+    }
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $secret = (string) config('services.hcaptcha.secret_key', '');
