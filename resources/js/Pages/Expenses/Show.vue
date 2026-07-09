@@ -13,7 +13,7 @@ import DropdownMenu from '@/Components/UI/DropdownMenu.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, CheckCircle, Download, Eye, X } from 'lucide-vue-next'
+import { Pencil, Trash2, CheckCircle, RotateCcw, Download, Eye, X } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 
 const props = defineProps({
@@ -27,6 +27,7 @@ const showReceiptPreview = ref(false)
 const deleting = ref(false)
 const posting = ref(false)
 const approveForm = useForm({})
+const unapproveForm = useForm({})
 
 function submitPost() {
   posting.value = true
@@ -37,6 +38,10 @@ function submitPost() {
 
 function approve() {
   approveForm.post(`/expenses/${props.expense.id}/approve`)
+}
+
+function unapprove() {
+  unapproveForm.post(`/expenses/${props.expense.id}/unapprove`)
 }
 
 function removeReceipt() {
@@ -114,15 +119,25 @@ const journalColumns = computed(() => [
         >
           {{ t('post_to_ledger') }}
         </Button>
-        <DropdownMenu v-if="expense.status === 'pending' && !expense.archived_at">
+        <DropdownMenu v-if="(expense.status === 'pending' || expense.status === 'approved') && !expense.archived_at">
           <template #default="{ close }">
             <button
+              v-if="expense.status === 'pending'"
               class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
               :disabled="approveForm.processing"
               @click="approve(); close()"
             >
               <CheckCircle class="h-4 w-4 shrink-0" />
               {{ t('approve') }}
+            </button>
+            <button
+              v-if="expense.status === 'approved'"
+              class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+              :disabled="unapproveForm.processing"
+              @click="unapprove(); close()"
+            >
+              <RotateCcw class="h-4 w-4 shrink-0" />
+              {{ t('unapprove_expense') }}
             </button>
             <div class="my-1 border-t border-[hsl(var(--border))]" />
             <button
