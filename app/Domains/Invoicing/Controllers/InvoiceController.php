@@ -141,10 +141,6 @@ class InvoiceController extends Controller
             $finalizeAction->execute($invoice);
         }
 
-        if ($request->boolean('finalize')) {
-            $finalizeAction->execute($invoice);
-        }
-
         return redirect()->route('invoices.show', $invoice)
             ->with('success', __('app.invoice_created'));
     }
