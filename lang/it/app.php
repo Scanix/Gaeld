@@ -1870,6 +1870,7 @@ return [
     'logo_removed' => 'Logo rimosso.',
     'communication_settings_updated' => 'Impostazioni di comunicazione aggiornate.',
     'vat_settlement_posted' => 'Liquidazione IVA registrata.',
+    'vat_settlement_already_posted' => 'Questa liquidazione IVA è già stata registrata per questo periodo.',
     'expense_type_invoice' => 'Fattura',
     'expense_type_credit_note' => 'Nota di credito',
     'account_not_found' => 'Conto contabile ":code" non trovato.',

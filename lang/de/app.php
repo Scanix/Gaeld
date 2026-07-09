@@ -1898,6 +1898,7 @@ return [
     'logo_removed' => 'Logo entfernt.',
     'communication_settings_updated' => 'Kommunikationseinstellungen aktualisiert.',
     'vat_settlement_posted' => 'MWST-Abrechnung verbucht.',
+    'vat_settlement_already_posted' => 'Diese MWST-Abrechnung wurde für diesen Zeitraum bereits verbucht.',
     'expense_type_invoice' => 'Rechnung',
     'expense_type_credit_note' => 'Gutschrift',
     'account_not_found' => 'Buchungskonto ":code" nicht gefunden.',

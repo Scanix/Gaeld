@@ -1938,6 +1938,7 @@ return [
     'logo_removed' => 'Logo removed.',
     'communication_settings_updated' => 'Communication settings updated.',
     'vat_settlement_posted' => 'VAT settlement posted.',
+    'vat_settlement_already_posted' => 'This VAT settlement was already posted for this period.',
     'expense_type_invoice' => 'Invoice',
     'expense_type_credit_note' => 'Credit Note',
     'contact_type_individual' => 'Individual',

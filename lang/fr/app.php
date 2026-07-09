@@ -1923,6 +1923,7 @@ return [
     'logo_removed' => 'Logo supprimé.',
     'communication_settings_updated' => 'Paramètres de communication mis à jour.',
     'vat_settlement_posted' => 'Décompte TVA comptabilisé.',
+    'vat_settlement_already_posted' => 'Ce décompte TVA a déjà été comptabilisé pour cette période.',
     'expense_type_invoice' => 'Facture',
     'expense_type_credit_note' => 'Note de crédit',
     'contact_type_individual' => 'Personne physique',
