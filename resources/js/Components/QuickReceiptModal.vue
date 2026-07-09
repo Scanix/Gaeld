@@ -111,6 +111,16 @@ async function pollForResults(scanId) {
   const maxAttempts = 60
   const intervalMs = 2000
 
+  // Category is never auto-detected by OCR, so pre-select a visible default
+  // as soon as the user reaches the review step. This keeps the choice
+  // obvious and editable instead of silently defaulting on submit.
+  function enterReviewStage() {
+    if (!form.value.category) {
+      form.value.category = 'Other'
+    }
+    stage.value = 'review'
+  }
+
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(resolve => setTimeout(resolve, intervalMs))
 
@@ -136,21 +146,21 @@ async function pollForResults(scanId) {
       ocrConfidence.value = extracted.confidence ?? data.confidence ?? null
       ocrHasData.value = !!(extracted.amount || extracted.date || extracted.vendor)
       clearInterval(scanTimer.value)
-      stage.value = 'review'
+      enterReviewStage()
       return
     }
 
     if (data.status === 'failed') {
       // Still let user fill in manually
       clearInterval(scanTimer.value)
-      stage.value = 'review'
+      enterReviewStage()
       return
     }
   }
 
   // Timeout — let user fill in manually
   clearInterval(scanTimer.value)
-  stage.value = 'review'
+  enterReviewStage()
 }
 
 function getCsrfToken() {
@@ -162,7 +172,7 @@ function createExpense() {
   submitting.value = true
 
   const formData = new FormData()
-  formData.append('category', form.value.category || 'Other')
+  formData.append('category', form.value.category)
   formData.append('amount', form.value.amount)
   formData.append('date', form.value.date)
   formData.append('vendor', form.value.vendor)
