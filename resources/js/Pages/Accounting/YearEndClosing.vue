@@ -88,6 +88,12 @@ watch(selectedYear, (val) => {
   router.get('/accounting/year-end-closing', { year: Number(val) }, { preserveState: true })
 })
 
+watch(() => props.year, (val) => {
+  form.year         = val
+  form.closing_date = props.toDate
+  form.reference    = `BOUCL-${val}`
+})
+
 function runClosing() {
   processing.value = true
   form.post('/accounting/year-end-closing', {
