@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed left-8 bottom-8 z-[99]">
+  <div :class="['fixed left-8 bottom-8 z-[99]', !isVisible && 'pointer-events-none']">
     <button
       v-if="isVisible"
       type="button"
