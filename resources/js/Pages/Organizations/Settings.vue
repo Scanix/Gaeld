@@ -22,6 +22,8 @@ const props = defineProps({
   organization: Object,
   hasLogo: Boolean,
   expenseCategories: { type: Array, default: () => [] },
+  catalogItems: { type: Array, default: () => [] },
+  vatRates: { type: Array, default: () => [] },
   modules: { type: Array, default: () => [] },
   modulePresets: { type: Object, default: () => ({}) },
 })
@@ -175,6 +177,44 @@ function removeCategory() {
   router.delete(`/settings/expense-categories/${categoryToDelete.value.id}`, {
     preserveScroll: true,
     onFinish: () => { categoryToDelete.value = null },
+  })
+}
+
+// --- Invoice catalog items ---
+const newCatalogItem = ref({ name: '', default_unit_price: '', default_vat_rate_id: '' })
+const addingCatalogItem = ref(false)
+const catalogItemToDelete = ref(null)
+
+function vatRateLabel(vatRateId) {
+  const rate = props.vatRates.find(v => String(v.id) === String(vatRateId))
+  return rate ? `${rate.name} (${rate.rate}%)` : ''
+}
+
+function addCatalogItem() {
+  if (!newCatalogItem.value.name.trim()) return
+  addingCatalogItem.value = true
+  router.post('/invoices/catalog-items', {
+    name: newCatalogItem.value.name.trim(),
+    default_unit_price: newCatalogItem.value.default_unit_price || null,
+    default_vat_rate_id: newCatalogItem.value.default_vat_rate_id || null,
+  }, {
+    preserveScroll: true,
+    onFinish: () => {
+      newCatalogItem.value = { name: '', default_unit_price: '', default_vat_rate_id: '' }
+      addingCatalogItem.value = false
+    },
+  })
+}
+
+function confirmRemoveCatalogItem(item) {
+  catalogItemToDelete.value = item
+}
+
+function removeCatalogItem() {
+  if (!catalogItemToDelete.value) return
+  router.delete(`/invoices/catalog-items/${catalogItemToDelete.value.id}`, {
+    preserveScroll: true,
+    onFinish: () => { catalogItemToDelete.value = null },
   })
 }
 
@@ -480,6 +520,66 @@ const businessTypeOptions = [
             </form>
           </CardContent>
         </Card>
+
+        <!-- Catalog items -->
+        <Card class="mt-6">
+          <CardHeader>
+            <CardTitle>{{ t('settings_catalog_items_title') }}</CardTitle>
+            <CardDescription>{{ t('settings_catalog_items_desc') }}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul class="divide-y divide-[hsl(var(--border))]">
+              <li
+                v-for="item in catalogItems"
+                :key="item.id"
+                class="flex items-center justify-between gap-3 py-2"
+              >
+                <div class="min-w-0">
+                  <p class="truncate text-sm">{{ item.name }}</p>
+                  <p class="truncate text-xs text-[hsl(var(--muted-foreground))]">
+                    <span v-if="item.default_unit_price">{{ item.default_unit_price }}</span>
+                    <span v-if="item.default_unit_price && vatRateLabel(item.default_vat_rate_id)"> · </span>
+                    <span v-if="vatRateLabel(item.default_vat_rate_id)">{{ vatRateLabel(item.default_vat_rate_id) }}</span>
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  :aria-label="t('delete') + ' ' + item.name"
+                  class="h-8 w-8 shrink-0 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))]"
+                  @click="confirmRemoveCatalogItem(item)"
+                >
+                  <Trash2 class="h-4 w-4" />
+                </Button>
+              </li>
+            </ul>
+            <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-4">
+              <FormInput
+                id="new_catalog_item_name"
+                v-model="newCatalogItem.name"
+                :placeholder="t('settings_catalog_item_name_placeholder')"
+                class="sm:col-span-2"
+              />
+              <FormInput
+                id="new_catalog_item_price"
+                v-model="newCatalogItem.default_unit_price"
+                type="number"
+                :placeholder="t('unit_price')"
+              />
+              <FormSelect
+                id="new_catalog_item_vat"
+                v-model="newCatalogItem.default_vat_rate_id"
+                :options="[{ value: '', label: t('no_vat') }, ...vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` }))]"
+              />
+            </div>
+            <div class="mt-2 flex justify-end">
+              <Button :disabled="addingCatalogItem || !newCatalogItem.name.trim()" @click="addCatalogItem">
+                <Plus class="mr-1 h-4 w-4" />
+                {{ t('add') }}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <!-- Communications Tab -->
@@ -625,6 +725,15 @@ const businessTypeOptions = [
       :confirm-label="t('delete')"
       @confirm="removeCategory"
       @cancel="categoryToDelete = null"
+    />
+
+    <ConfirmDialog
+      :open="!!catalogItemToDelete"
+      :title="t('delete')"
+      :message="t('are_you_sure')"
+      :confirm-label="t('delete')"
+      @confirm="removeCatalogItem"
+      @cancel="catalogItemToDelete = null"
     />
   </AppLayout>
 </template>

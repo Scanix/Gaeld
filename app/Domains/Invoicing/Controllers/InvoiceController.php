@@ -13,6 +13,7 @@ use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Queries\InvoiceCatalogItemQuery;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
 use App\Domains\Invoicing\Requests\StoreInvoiceRequest;
 use App\Domains\Invoicing\Requests\UpdateInvoiceRequest;
@@ -76,6 +77,7 @@ class InvoiceController extends Controller
         return Inertia::render('Invoices/Create', [
             'customers' => ContactQuery::forSelect(),
             'vatRates' => VatRateQuery::active(),
+            'catalogItems' => InvoiceCatalogItemQuery::forSelect(),
             'suggestedNumber' => $numberGenerator->next($currentOrg->id(), null, $forYear),
             'defaultNotes' => $currentOrg->get()->default_invoice_notes ?? '',
             'defaultPaymentTermsDays' => $currentOrg->get()->default_payment_terms_days,
@@ -181,6 +183,7 @@ class InvoiceController extends Controller
             'invoice' => $invoice->load('lines.vatRate'),
             'customers' => ContactQuery::forSelect(),
             'vatRates' => VatRateQuery::active(),
+            'catalogItems' => InvoiceCatalogItemQuery::forSelect(),
             'justificatifUrl' => $invoice->justificatif_path
                 ? route('invoices.justificatif.download', $invoice)
                 : null,
