@@ -4,6 +4,7 @@ namespace App\Domains\Payroll\Controllers;
 
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\PostPayrollAction;
+use App\Domains\Payroll\Actions\UnpostPayrollAction;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Payroll\Services\PayrollCalculator;
@@ -107,6 +108,42 @@ class SalarySlipController extends Controller
 
         return redirect()->route('payroll.salarySlips.show', $slip)
             ->with('success', __('app.salary_slip_posted'));
+    }
+
+    public function unpost(Request $request, SalarySlip $slip, UnpostPayrollAction $action): RedirectResponse|JsonResponse
+    {
+        $this->authorize('update', $slip);
+
+        if (! $slip->isPosted()) {
+            if ($request->wantsJson()) {
+                return new JsonResponse(['message' => __('app.salary_slip_not_posted')], 422);
+            }
+
+            return redirect()->back()->with('error', __('app.salary_slip_not_posted'));
+        }
+
+        $action->execute($slip);
+
+        if ($request->wantsJson()) {
+            return new JsonResponse(['message' => __('app.salary_slip_unposted'), 'id' => $slip->id]);
+        }
+
+        return redirect()->route('payroll.salarySlips.show', $slip)
+            ->with('success', __('app.salary_slip_unposted'));
+    }
+
+    public function destroy(SalarySlip $slip): RedirectResponse
+    {
+        $this->authorize('delete', $slip);
+
+        if ($slip->isPosted()) {
+            return redirect()->back()->with('error', __('app.salary_slip_must_be_unposted_first'));
+        }
+
+        $slip->delete();
+
+        return redirect()->route('payroll.salarySlips.index')
+            ->with('success', __('app.salary_slip_deleted'));
     }
 
     public function downloadPdf(SalarySlip $slip, PdfExportService $pdf): HttpResponse

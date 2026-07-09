@@ -1,5 +1,6 @@
 <script setup>
-import { useForm, Link } from '@inertiajs/vue3'
+import { ref } from 'vue'
+import { useForm, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -7,6 +8,7 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
+import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
@@ -19,9 +21,30 @@ const props = defineProps({
 })
 
 const postForm = useForm({})
+const showUnpostDialog = ref(false)
+const showDeleteDialog = ref(false)
+const unposting = ref(false)
+const deleting = ref(false)
 
 function postToLedger() {
   postForm.post(`/payroll/salary-slips/${props.slip.id}/post`)
+}
+
+function unpost() {
+  unposting.value = true
+  router.post(`/payroll/salary-slips/${props.slip.id}/unpost`, {}, {
+    onFinish: () => {
+      unposting.value = false
+      showUnpostDialog.value = false
+    },
+  })
+}
+
+function executeDelete() {
+  deleting.value = true
+  router.delete(`/payroll/salary-slips/${props.slip.id}`, {
+    onFinish: () => { deleting.value = false },
+  })
 }
 
 function downloadPdf() {
@@ -122,6 +145,23 @@ function deductionRow(label, employee, employer) {
         >
           {{ t('post_to_ledger') }}
         </Button>
+        <Button
+          v-if="slip.status === 'posted'"
+          variant="outline"
+          size="sm"
+          @click="showUnpostDialog = true"
+        >
+          {{ t('unpost') }}
+        </Button>
+        <Button
+          v-if="slip.status !== 'posted'"
+          variant="outline"
+          size="sm"
+          class="text-[hsl(var(--destructive))]"
+          @click="showDeleteDialog = true"
+        >
+          {{ t('delete') }}
+        </Button>
         <Button variant="outline" size="sm" @click="downloadPdf">
           {{ t('download_pdf') }}
         </Button>
@@ -137,5 +177,25 @@ function deductionRow(label, employee, employer) {
         {{ Object.values(postForm.errors).join(', ') }}
       </p>
     </div>
+
+    <ConfirmDialog
+      :open="showUnpostDialog"
+      :title="t('unpost')"
+      :message="t('unpost_salary_slip_confirm')"
+      :confirm-label="t('unpost')"
+      :processing="unposting"
+      @confirm="unpost"
+      @cancel="showUnpostDialog = false"
+    />
+
+    <ConfirmDialog
+      :open="showDeleteDialog"
+      :title="t('delete')"
+      :message="t('delete_salary_slip_confirm')"
+      :confirm-label="t('delete')"
+      :processing="deleting"
+      @confirm="executeDelete"
+      @cancel="showDeleteDialog = false"
+    />
   </AppLayout>
 </template>
