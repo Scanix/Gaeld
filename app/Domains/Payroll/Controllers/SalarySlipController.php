@@ -62,7 +62,7 @@ class SalarySlipController extends Controller
 
     public function show(SalarySlip $slip): Response
     {
-        $this->authorize('view', $slip->employee);
+        $this->authorize('view', $slip);
 
         return Inertia::render('Payroll/SalarySlips/Show', [
             'slip' => $slip->load(['employee', 'journalEntry.lines.account']),
@@ -89,7 +89,7 @@ class SalarySlipController extends Controller
 
     public function post(Request $request, SalarySlip $slip, PostPayrollAction $action): RedirectResponse|JsonResponse
     {
-        $this->authorize('update', $slip->employee);
+        $this->authorize('update', $slip);
 
         if ($slip->isPosted()) {
             if ($request->wantsJson()) {
@@ -111,7 +111,7 @@ class SalarySlipController extends Controller
 
     public function downloadPdf(SalarySlip $slip, PdfExportService $pdf): HttpResponse
     {
-        $this->authorize('view', $slip->employee);
+        $this->authorize('view', $slip);
 
         $slip->load('employee');
 

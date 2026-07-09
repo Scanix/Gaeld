@@ -37,7 +37,7 @@ class SalarySlipPolicy extends BasePolicy
         }
 
         return $this->belongsToOrganization($user, $salarySlip)
-            && $user->hasPermissionTo(Permission::PayrollCreate);
+            && $user->hasPermissionTo(Permission::PayrollEdit);
     }
 
     public function delete(User $user, SalarySlip $salarySlip): bool
@@ -47,6 +47,6 @@ class SalarySlipPolicy extends BasePolicy
         }
 
         return $this->belongsToOrganization($user, $salarySlip)
-            && $user->hasPermissionTo(Permission::PayrollCreate);
+            && $user->hasPermissionTo(Permission::PayrollDelete);
     }
 }
