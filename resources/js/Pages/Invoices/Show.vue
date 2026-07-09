@@ -17,13 +17,14 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail, Eye, X } from 'lucide-vue-next'
+import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail, Eye, X, RotateCcw } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import HelpText from '@/Components/HelpText.vue'
 
 const props = defineProps({
   invoice: Object,
   canForceDelete: { type: Boolean, default: false },
+  canRevertToDraft: { type: Boolean, default: false },
   justificatifUrl: { type: String, default: null },
   bankAccounts: { type: Array, default: () => [] },
   creditNotes: { type: Array, default: () => [] },
@@ -39,10 +40,12 @@ const { formatCurrency, formatDate } = useFormatters()
 const showPaymentModal = ref(false)
 const showDeleteDialog = ref(false)
 const showCancelDialog = ref(false)
+const showRevertToDraftDialog = ref(false)
 const showPurgeDialog = ref(false)
 const showJustificatifPreview = ref(false)
 const deleting = ref(false)
 const cancelling = ref(false)
+const revertingToDraft = ref(false)
 const purging = ref(false)
 
 const creditNoteForm = useForm({})
@@ -114,6 +117,16 @@ function executeCancel() {
     onFinish: () => {
       cancelling.value = false
       showCancelDialog.value = false
+    },
+  })
+}
+
+function executeRevertToDraft() {
+  revertingToDraft.value = true
+  router.post(`/invoices/${props.invoice.id}/revert-to-draft`, {}, {
+    onFinish: () => {
+      revertingToDraft.value = false
+      showRevertToDraftDialog.value = false
     },
   })
 }
@@ -271,6 +284,14 @@ const bankAccountOptions = computed(() =>
               >
                 <FileMinus class="h-4 w-4 shrink-0" />
                 {{ t('create_credit_note') }}
+              </button>
+              <button
+                v-if="canRevertToDraft"
+                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+                @click="showRevertToDraftDialog = true; close()"
+              >
+                <RotateCcw class="h-4 w-4 shrink-0" />
+                {{ t('revert_to_draft') }}
               </button>
               <div
                 v-if="((invoice?.status !== 'paid' && invoice?.status !== 'cancelled') || invoice?.status === 'draft') && !invoice?.archived_at"
@@ -515,6 +536,17 @@ const bankAccountOptions = computed(() =>
       :processing="cancelling"
       @confirm="executeCancel"
       @cancel="showCancelDialog = false"
+    />
+
+    <!-- Revert to Draft Confirmation -->
+    <ConfirmDialog
+      :open="showRevertToDraftDialog"
+      :title="t('revert_to_draft')"
+      :message="t('revert_to_draft_confirm', { number: invoice?.number })"
+      :confirm-label="t('revert_to_draft')"
+      :processing="revertingToDraft"
+      @confirm="executeRevertToDraft"
+      @cancel="showRevertToDraftDialog = false"
     />
 
     <!-- Purge Confirmation -->
