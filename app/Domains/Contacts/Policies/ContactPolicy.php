@@ -41,4 +41,10 @@ class ContactPolicy extends BasePolicy
         return $this->belongsToOrganization($user, $contact)
             && $user->hasPermissionTo(Permission::ContactsDelete);
     }
+
+    public function restore(User $user, Model $contact): bool
+    {
+        return $this->belongsToOrganization($user, $contact)
+            && $user->hasPermissionTo(Permission::ContactsDelete);
+    }
 }

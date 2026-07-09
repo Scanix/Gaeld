@@ -187,9 +187,15 @@ parameters:
 			path: app/Domains/Contacts/Queries/ContactQuery.php
 
 		-
+			message: '#^Method App\\Domains\\Contacts\\Queries\\ContactQuery\:\:trashed\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Contacts\\Models\\Contact\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/Contacts/Queries/ContactQuery.php
+
+		-
 			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Contacts\\Models\\Contact\> given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 2
 			path: app/Domains/Contacts/Queries/ContactQuery.php
 
 		-
