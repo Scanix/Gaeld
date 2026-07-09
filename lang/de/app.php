@@ -227,6 +227,12 @@ return [
     'discount_flat' => 'Fester Betrag',
     'discount_percentage' => 'Prozent (%)',
     'discount_mode' => 'Modus',
+    'move_line_up' => 'Zeile nach oben verschieben',
+    'move_line_down' => 'Zeile nach unten verschieben',
+    'duplicate_line' => 'Zeile duplizieren',
+    'negative_price_hint' => 'Tipp: Geben Sie einen negativen Einzelpreis ein, um diese Position zu korrigieren oder zu reduzieren.',
+    'required_to_finalize' => 'Erforderlich zum Finalisieren dieser Rechnung',
+    'add_from_catalog' => 'Aus Katalog hinzufügen…',
     'unsaved_changes' => 'Ungespeicherte Änderungen',
     'unsaved_changes_message' => 'Sie haben ungespeicherte Änderungen. Was möchten Sie tun?',
     'discard' => 'Verwerfen',
@@ -878,6 +884,9 @@ return [
     'expense_updated' => 'Ausgabe aktualisiert.',
     'expense_deleted' => 'Ausgabe gelöscht.',
     'expense_approved' => 'Ausgabe genehmigt.',
+    'expense_unapproved' => 'Genehmigung rückgängig gemacht. Die Ausgabe ist wieder ausstehend.',
+    'unapprove_expense' => 'Genehmigung zurücknehmen',
+    'unapprove_expense_confirm' => 'Diese Ausgabe wieder auf ausstehend setzen? Sie kann danach erneut bearbeitet oder gelöscht werden.',
     'expense_posted' => 'Ausgabe ins Hauptbuch gebucht.',
     'receipt_removed' => 'Beleg entfernt.',
     'customer_created' => 'Kunde erstellt.',
@@ -925,12 +934,16 @@ return [
     'closing_result_description' => 'Jahresabschluss :year — Jahresergebnis',
     'closing_entry_description' => 'Jahresabschluss :year',
     'credit_note_created' => 'Gutschrift erstellt.',
+    'credit_note_line_prefix' => 'Gutschrift: :description',
     'receipt_file_formats' => 'JPG, PNG — max 10 MB',
 
     // Invoice cancel
     'invoice_cancelled' => 'Rechnung storniert.',
+    'invoice_reverted_to_draft' => 'Rechnung in Entwurf zurückgesetzt. Sie können sie nun korrigieren und erneut finalisieren.',
     'cancel_invoice' => 'Rechnung stornieren',
     'cancel_invoice_confirm' => 'Möchten Sie die Rechnung :number wirklich stornieren? Diese Aktion kann nicht rückgängig gemacht werden.',
+    'revert_to_draft' => 'In Entwurf zurücksetzen',
+    'revert_to_draft_confirm' => 'Rechnung :number in den Entwurf zurücksetzen? Die Buchung wird storniert und die Rechnung kann bearbeitet und erneut finalisiert werden. Nur möglich, solange keine Zahlung erfasst wurde.',
 
     // Credit notes
     'credit_note' => 'Gutschrift',
@@ -1743,6 +1756,11 @@ return [
     'expense_category_created' => 'Kategorie hinzugefügt.',
     'expense_category_deleted' => 'Kategorie entfernt.',
     'add' => 'Hinzufügen',
+    'settings_catalog_items_title' => 'Katalogartikel',
+    'settings_catalog_items_desc' => 'Speichern Sie häufig verwendete Produkte oder Dienstleistungen, um Rechnungspositionen schnell auszufüllen.',
+    'settings_catalog_item_name_placeholder' => 'Artikelname',
+    'catalog_item_created' => 'Katalogartikel hinzugefügt.',
+    'catalog_item_deleted' => 'Katalogartikel entfernt.',
 
     // Bank import
     'import_csv' => 'CSV importieren',

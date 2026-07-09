@@ -227,6 +227,12 @@ return [
     'discount_flat' => 'Importo fisso',
     'discount_percentage' => 'Percentuale (%)',
     'discount_mode' => 'Modalità',
+    'move_line_up' => 'Sposta riga in alto',
+    'move_line_down' => 'Sposta riga in basso',
+    'duplicate_line' => 'Duplica riga',
+    'negative_price_hint' => 'Suggerimento: inserisci un prezzo unitario negativo per correggere o ridurre questa riga.',
+    'required_to_finalize' => 'Richiesto per finalizzare questa fattura',
+    'add_from_catalog' => 'Aggiungi dal catalogo…',
     'unsaved_changes' => 'Modifiche non salvate',
     'unsaved_changes_message' => 'Hai delle modifiche non salvate. Cosa vuoi fare?',
     'discard' => 'Elimina',
@@ -871,6 +877,9 @@ return [
     'expense_updated' => 'Spesa aggiornata.',
     'expense_deleted' => 'Spesa eliminata.',
     'expense_approved' => 'Spesa approvata.',
+    'expense_unapproved' => 'Approvazione annullata. La spesa è di nuovo in attesa.',
+    'unapprove_expense' => 'Annulla approvazione',
+    'unapprove_expense_confirm' => 'Riportare questa spesa in attesa? Potrai modificarla o eliminarla di nuovo.',
     'expense_posted' => 'Spesa registrata in contabilità.',
     'receipt_removed' => 'Ricevuta rimossa.',
     'customer_created' => 'Cliente creato.',
@@ -918,12 +927,16 @@ return [
     'closing_result_description' => 'Chiusura annuale :year — risultato d\'esercizio',
     'closing_entry_description' => 'Chiusura annuale :year',
     'credit_note_created' => 'Nota di credito creata.',
+    'credit_note_line_prefix' => 'Nota di credito: :description',
     'receipt_file_formats' => 'JPG, PNG — max 10 MB',
 
     // Invoice cancel
     'invoice_cancelled' => 'Fattura annullata.',
+    'invoice_reverted_to_draft' => 'Fattura riportata in bozza. Ora puoi correggerla e finalizzarla di nuovo.',
     'cancel_invoice' => 'Annulla fattura',
     'cancel_invoice_confirm' => 'Sei sicuro di voler annullare la fattura :number? Questa azione non può essere annullata.',
+    'revert_to_draft' => 'Riporta in bozza',
+    'revert_to_draft_confirm' => 'Riportare la fattura :number in bozza? La relativa registrazione contabile verrà stornata e la fattura potrà essere modificata e finalizzata di nuovo. Possibile solo se non è stato registrato alcun pagamento.',
 
     // Credit notes
     'credit_note' => 'Nota di credito',
@@ -1715,6 +1728,11 @@ return [
     'expense_category_created' => 'Categoria aggiunta.',
     'expense_category_deleted' => 'Categoria rimossa.',
     'add' => 'Aggiungi',
+    'settings_catalog_items_title' => 'Articoli di catalogo',
+    'settings_catalog_items_desc' => 'Salva prodotti o servizi usati di frequente per compilare rapidamente le righe fattura.',
+    'settings_catalog_item_name_placeholder' => 'Nome articolo',
+    'catalog_item_created' => 'Articolo di catalogo aggiunto.',
+    'catalog_item_deleted' => 'Articolo di catalogo rimosso.',
 
     // Bank import
     'import_csv' => 'Importa CSV',

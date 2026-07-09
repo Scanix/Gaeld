@@ -228,6 +228,12 @@ return [
     'discount_flat' => 'Flat amount',
     'discount_percentage' => 'Percentage (%)',
     'discount_mode' => 'Mode',
+    'move_line_up' => 'Move line up',
+    'move_line_down' => 'Move line down',
+    'duplicate_line' => 'Duplicate line',
+    'negative_price_hint' => 'Tip: enter a negative unit price to correct or reduce this line.',
+    'required_to_finalize' => 'Required to finalize this invoice',
+    'add_from_catalog' => 'Add from catalog…',
     'unsaved_changes' => 'Unsaved Changes',
     'unsaved_changes_message' => 'You have unsaved changes. What would you like to do?',
     'discard' => 'Discard',
@@ -892,6 +898,9 @@ return [
     'expense_updated' => 'Expense updated.',
     'expense_deleted' => 'Expense deleted.',
     'expense_approved' => 'Expense approved.',
+    'expense_unapproved' => 'Approval reverted. The expense is pending again.',
+    'unapprove_expense' => 'Unapprove',
+    'unapprove_expense_confirm' => 'Revert this expense to pending? You can edit or delete it again once reverted.',
     'expense_posted' => 'Expense posted to ledger.',
     'account_not_found' => 'Ledger account ":code" not found.',
     'receipt_removed' => 'Receipt removed.',
@@ -963,12 +972,16 @@ return [
     'closing_result_description' => 'Year-end closing :year — net result',
     'closing_entry_description' => 'Year-end closing :year',
     'credit_note_created' => 'Credit note created.',
+    'credit_note_line_prefix' => 'Credit: :description',
     'receipt_file_formats' => 'JPG, PNG — max 10 MB',
 
     // Invoice cancel
     'invoice_cancelled' => 'Invoice cancelled.',
+    'invoice_reverted_to_draft' => 'Invoice reverted to draft. You can now correct it and re-finalize when ready.',
     'cancel_invoice' => 'Cancel Invoice',
     'cancel_invoice_confirm' => 'Are you sure you want to cancel invoice :number? This action cannot be undone.',
+    'revert_to_draft' => 'Revert to Draft',
+    'revert_to_draft_confirm' => 'Revert invoice :number to draft? Its journal entry will be reversed and it can be edited and re-finalized. Only possible while no payment has been recorded.',
 
     // Credit notes
     'credit_note' => 'Credit Note',
@@ -1783,6 +1796,11 @@ return [
     'expense_category_created' => 'Category added.',
     'expense_category_deleted' => 'Category removed.',
     'add' => 'Add',
+    'settings_catalog_items_title' => 'Catalog Items',
+    'settings_catalog_items_desc' => 'Save frequently used products or services to quickly fill in invoice lines.',
+    'settings_catalog_item_name_placeholder' => 'Item name',
+    'catalog_item_created' => 'Catalog item added.',
+    'catalog_item_deleted' => 'Catalog item removed.',
 
     // Bank import
     'import_csv' => 'Import CSV',
