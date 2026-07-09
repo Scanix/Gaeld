@@ -2,7 +2,9 @@
 
 namespace App\Domains\Banking\Controllers;
 
+use App\Domains\Banking\Actions\UnreconcileTransactionAction;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
+use App\Domains\Banking\Exceptions\NotReconciledException;
 use App\Domains\Banking\Exceptions\ReconciliationFailedException;
 use App\Domains\Banking\Exceptions\UnlinkedBankAccountException;
 use App\Domains\Banking\Models\BankAccount;
@@ -274,6 +276,26 @@ class ReconciliationController extends Controller
 
         return redirect()->back()
             ->with('success', __('app.match_confirmed', ['number' => $match->invoice->number]));
+    }
+
+    /**
+     * Undo a reconciliation: reverse the journal entry, undo the linked
+     * invoice/expense side-effects, and restore the transaction to
+     * unreconciled so it can be corrected.
+     */
+    public function unreconcile(BankTransaction $transaction, UnreconcileTransactionAction $action): RedirectResponse
+    {
+        $bankAccount = $transaction->bankAccount;
+        $this->authorize('update', $bankAccount);
+
+        try {
+            $action->execute($transaction);
+        } catch (NotReconciledException $e) {
+            return $this->backWithError($e);
+        }
+
+        return redirect()->back()
+            ->with('success', __('app.transaction_unreconciled'));
     }
 
     /**
