@@ -136,7 +136,7 @@ async function submit() {
     }
 
     const data = await res.json().catch(() => ({}))
-    const contact = data.customer || data.supplier
+    const contact = data.contact
     if (!contact?.id) {
       formError.value = t('save_error')
       return
