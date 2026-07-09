@@ -50,9 +50,18 @@ class DashboardService
         );
     }
 
+    /**
+     * Flush both the dashboard cache and the "reports" cache tag (P&L, Balance
+     * Sheet, Cash Flow, Aging, VAT). Callers use this after any invoice/expense
+     * mutation (create/update/approve/post/etc.), and several of those reports
+     * (e.g. Aging) depend on invoice/expense state directly, not just posted
+     * journal entries — flushing only the dashboard tag left them stale for
+     * up to 30 minutes after e.g. approving an expense.
+     */
     public function flushCache(string $organizationId): void
     {
         Cache::tags(["org:{$organizationId}:dashboard"])->flush();
+        Cache::tags(["org:{$organizationId}:reports"])->flush();
     }
 
     // ──────────────────────────────────────────────────────────────
