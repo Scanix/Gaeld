@@ -5,12 +5,10 @@ namespace App\Domains\Accounting\Controllers;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\ExchangeRate;
 use App\Domains\Accounting\Requests\StoreExchangeRateRequest;
-use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -57,13 +55,9 @@ class ExchangeRateController extends Controller
         return back()->with('success', __('app.saved'));
     }
 
-    public function destroy(Request $request, ExchangeRate $exchangeRate, CurrentOrganization $currentOrg): RedirectResponse
+    public function destroy(ExchangeRate $exchangeRate): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermissionTo(Permission::AccountingDelete), 403);
-
-        if ($exchangeRate->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        $this->authorize('delete', $exchangeRate);
 
         if ($exchangeRate->source !== 'manual') {
             return back()->withErrors(['rate' => __('app.forbidden')]);

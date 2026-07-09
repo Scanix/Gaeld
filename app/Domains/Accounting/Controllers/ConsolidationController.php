@@ -73,11 +73,7 @@ class ConsolidationController extends Controller
 
     public function report(Request $request, ConsolidationGroup $group, CurrentOrganization $currentOrg): Response
     {
-        $this->authorize('viewAny', Account::class);
-
-        if ($group->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        $this->authorize('view', $group);
 
         $fiscalYear = (int) $request->input('fiscal_year', now()->year);
         $baseCurrency = strtoupper((string) $group->base_currency);
@@ -273,10 +269,7 @@ class ConsolidationController extends Controller
     public function storeElimination(StoreConsolidationEliminationRequest $request, ConsolidationGroup $group, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', Account::class);
-
-        if ($group->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        $this->authorize('view', $group);
 
         $validated = $request->validated();
 
@@ -293,14 +286,9 @@ class ConsolidationController extends Controller
         return back()->with('success', __('app.saved'));
     }
 
-    public function destroyElimination(Request $request, ConsolidationElimination $consolidationElimination, CurrentOrganization $currentOrg): RedirectResponse
+    public function destroyElimination(Request $request, ConsolidationElimination $consolidationElimination): RedirectResponse
     {
         abort_unless($request->user()?->hasPermissionTo(Permission::AccountingDelete), 403);
-
-        $group = ConsolidationGroup::query()->find($consolidationElimination->consolidation_group_id);
-        if (! $group || $group->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
 
         $consolidationElimination->delete();
 
