@@ -78,7 +78,7 @@ final class PostVatSettlementAction
             );
         }
 
-        $reference = "VAT-SETTLEMENT-{$fromDate}-{$toDate}";
+        $reference = $this->resolveReference($orgId, $fromDate, $toDate);
 
         return DB::transaction(function () use ($orgId, $reference, $toDate, $fromDate, $lines, $totalOutputVat, $totalInputVat, $netVat): JournalEntry {
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
@@ -102,5 +102,27 @@ final class PostVatSettlementAction
 
             return $journalEntry;
         });
+    }
+
+    /**
+     * The settlement reference is deterministic per period so re-posting the
+     * same period is normally blocked as a duplicate. If the original
+     * settlement was reversed (a corrected/re-posted period), fall back to a
+     * versioned suffix so the new entry can be posted under a fresh reference.
+     */
+    private function resolveReference(string $orgId, string $fromDate, string $toDate): string
+    {
+        $base = "VAT-SETTLEMENT-{$fromDate}-{$toDate}";
+
+        if (! JournalEntry::where('organization_id', $orgId)->where('reference', $base)->exists()) {
+            return $base;
+        }
+
+        $version = 2;
+        while (JournalEntry::where('organization_id', $orgId)->where('reference', "{$base}-v{$version}")->exists()) {
+            $version++;
+        }
+
+        return "{$base}-v{$version}";
     }
 }

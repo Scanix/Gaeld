@@ -3,12 +3,14 @@
 namespace App\Domains\Reporting\Controllers;
 
 use App\Domains\Accounting\Actions\PostVatSettlementAction;
+use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\VatReportService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Requests\VatReportRequest;
 use App\Domains\Reporting\Services\ExportReportService;
+use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +23,8 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
  */
 class VatReportController extends Controller
 {
+    use HandlesFlashErrorResponses;
+
     public function vatReport(Request $request, VatReportService $service, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', Account::class);
@@ -31,10 +35,29 @@ class VatReportController extends Controller
         $report = $service->generate($currentOrg->id(), $from, $to);
 
         $settlementReference = "VAT-SETTLEMENT-{$from}-{$to}";
-        $isSettled = JournalEntry::where('organization_id', $currentOrg->id())
-            ->where('reference', $settlementReference)
+
+        // The settlement may have been re-posted under a versioned reference
+        // (e.g. "-v2") after an earlier attempt for this period was reversed —
+        // see PostVatSettlementAction::resolveReference(). Look at the most
+        // recent posted attempt, not just the original base reference.
+        $latestSettlement = JournalEntry::where('organization_id', $currentOrg->id())
             ->where('is_posted', true)
-            ->exists();
+            ->where(function ($query) use ($settlementReference) {
+                $query->where('reference', $settlementReference)
+                    ->orWhere('reference', 'like', "{$settlementReference}-v%");
+            })
+            ->orderByDesc('created_at')
+            ->first();
+
+        $isSettled = false;
+        if ($latestSettlement) {
+            $isReversed = JournalEntry::where('organization_id', $currentOrg->id())
+                ->where('reference', "REV-{$latestSettlement->reference}")
+                ->where('is_posted', true)
+                ->exists();
+
+            $isSettled = ! $isReversed;
+        }
 
         $report['is_settled'] = $isSettled;
 
@@ -92,7 +115,12 @@ class VatReportController extends Controller
         $this->authorize('viewAny', Account::class);
 
         $validated = $request->validated();
-        $action->execute($currentOrg->id(), $validated['from_date'], $validated['to_date']);
+
+        try {
+            $action->execute($currentOrg->id(), $validated['from_date'], $validated['to_date']);
+        } catch (DuplicateReferenceException) {
+            return $this->backWithError(__('app.vat_settlement_already_posted'));
+        }
 
         return redirect()->route('reports.vat', [
             'from_date' => $validated['from_date'],
