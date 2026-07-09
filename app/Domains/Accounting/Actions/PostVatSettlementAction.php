@@ -32,7 +32,7 @@ final class PostVatSettlementAction
 
     public function execute(string $orgId, string $fromDate, string $toDate): JournalEntry
     {
-        $report = $this->vatReportService->generate($orgId, $fromDate, $toDate);
+        $report = $this->vatReportService->generateFresh($orgId, $fromDate, $toDate);
 
         $totalOutputVat = $report['total_output_vat'];
         $totalInputVat = $report['input_vat'];

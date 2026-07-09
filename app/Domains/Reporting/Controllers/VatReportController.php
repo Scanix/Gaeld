@@ -4,6 +4,7 @@ namespace App\Domains\Reporting\Controllers;
 
 use App\Domains\Accounting\Actions\PostVatSettlementAction;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\VatReportService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Requests\VatReportRequest;
@@ -28,6 +29,14 @@ class VatReportController extends Controller
         $to = $request->input('to_date', $request->input('to', now()->endOfQuarter()->toDateString()));
 
         $report = $service->generate($currentOrg->id(), $from, $to);
+
+        $settlementReference = "VAT-SETTLEMENT-{$from}-{$to}";
+        $isSettled = JournalEntry::where('organization_id', $currentOrg->id())
+            ->where('reference', $settlementReference)
+            ->where('is_posted', true)
+            ->exists();
+
+        $report['is_settled'] = $isSettled;
 
         return Inertia::render('Reports/VatReport', [
             'report' => $report,
