@@ -13,6 +13,7 @@ class BalanceSheetRequest extends FormRequest
     {
         return [
             'as_of_date' => ['nullable', 'date'],
+            'compare_as_of_date' => ['nullable', 'date'],
         ];
     }
 }

@@ -989,6 +989,7 @@ return [
     // P&L Comparison
     'compare_with' => 'Confronta con periodo precedente',
     'compare_from' => 'Confronta dal',
+    'compare_as_of_date' => 'Confronta alla data del',
     'compare_to' => 'Confronta al',
     'comparison_period' => 'Confronto',
     'variance' => 'Scarto',

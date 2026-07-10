@@ -53,7 +53,7 @@ class ReportController extends Controller
         $orgId = $currentOrg->id();
         $asOfDate = $validated['as_of_date'] ?? now()->toDateString();
 
-        $report = $reportingService->balanceSheet($orgId, $asOfDate);
+        $report = $reportingService->balanceSheet($orgId, $asOfDate, $validated['compare_as_of_date'] ?? null);
 
         return Inertia::render('Reports/BalanceSheet', [
             'report' => $report,
@@ -121,7 +121,7 @@ class ReportController extends Controller
         $orgId = $currentOrg->id();
         $asOfDate = $validated['as_of_date'] ?? now()->toDateString();
 
-        $report = $reportingService->balanceSheet($orgId, $asOfDate);
+        $report = $reportingService->balanceSheet($orgId, $asOfDate, $validated['compare_as_of_date'] ?? null);
         $org = $currentOrg->get();
 
         return $exporter->export(

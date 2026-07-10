@@ -996,6 +996,7 @@ return [
     // P&L Comparison
     'compare_with' => 'Mit Vorperiode vergleichen',
     'compare_from' => 'Vergleich von',
+    'compare_as_of_date' => 'Vergleichsstichtag',
     'compare_to' => 'Vergleich bis',
     'comparison_period' => 'Vergleich',
     'variance' => 'Abweichung',

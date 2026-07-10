@@ -995,6 +995,7 @@ return [
     // P&L Comparison
     'compare_with' => 'Comparer avec la période précédente',
     'compare_from' => 'Comparer du',
+    'compare_as_of_date' => 'Comparer à la date du',
     'compare_to' => 'Comparer au',
     'comparison_period' => 'Comparaison',
     'variance' => 'Écart',

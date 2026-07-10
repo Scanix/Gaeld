@@ -1034,6 +1034,7 @@ return [
     // P&L Comparison
     'compare_with' => 'Compare with previous period',
     'compare_from' => 'Compare from',
+    'compare_as_of_date' => 'Compare as of',
     'compare_to' => 'Compare to',
     'comparison_period' => 'Comparison',
     'variance' => 'Variance',
