@@ -44,6 +44,15 @@ return [
         'total_expenses' => 'Totale costi',
         'net_profit_loss' => 'Utile netto / (Perdita)',
     ],
+    'analytical_report' => [
+        'title' => 'Rapporto analitico',
+        'period' => 'Rapporto analitico — da :from a :to',
+        'revenue' => 'Ricavi',
+        'total_revenue' => 'Totale ricavi',
+        'expenses' => 'Costi',
+        'total_expenses' => 'Totale costi',
+        'net_profit_loss' => 'Utile netto / (Perdita)',
+    ],
     'cash_flow' => [
         'title' => 'Rendiconto finanziario',
         'period' => 'Rendiconto finanziario (metodo indiretto) — da :from a :to',

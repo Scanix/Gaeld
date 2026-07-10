@@ -44,6 +44,15 @@ return [
         'total_expenses' => 'Total Expenses',
         'net_profit_loss' => 'Net Profit / (Loss)',
     ],
+    'analytical_report' => [
+        'title' => 'Analytical Report',
+        'period' => 'Analytical Report — :from to :to',
+        'revenue' => 'Revenue',
+        'total_revenue' => 'Total Revenue',
+        'expenses' => 'Expenses',
+        'total_expenses' => 'Total Expenses',
+        'net_profit_loss' => 'Net Profit / (Loss)',
+    ],
     'cash_flow' => [
         'title' => 'Cash Flow Statement',
         'period' => 'Cash Flow Statement (Indirect Method) — :from to :to',

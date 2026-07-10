@@ -44,6 +44,15 @@ return [
         'total_expenses' => 'Total Aufwand',
         'net_profit_loss' => 'Reingewinn / (Verlust)',
     ],
+    'analytical_report' => [
+        'title' => 'Analytischer Bericht',
+        'period' => 'Analytischer Bericht — :from bis :to',
+        'revenue' => 'Ertrag',
+        'total_revenue' => 'Total Ertrag',
+        'expenses' => 'Aufwand',
+        'total_expenses' => 'Total Aufwand',
+        'net_profit_loss' => 'Reingewinn / (Verlust)',
+    ],
     'cash_flow' => [
         'title' => 'Geldflussrechnung',
         'period' => 'Geldflussrechnung (indirekte Methode) — :from bis :to',

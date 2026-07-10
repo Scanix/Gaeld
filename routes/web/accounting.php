@@ -58,6 +58,7 @@ Route::middleware('feature:analytical')->group(function () {
     Route::delete('/accounting/cost-centers/{costCenter}', [CostCenterController::class, 'destroy'])->name('accounting.cost-centers.destroy');
 
     Route::get('/accounting/analytical-report', [CostCenterController::class, 'analyticalReport'])->name('accounting.analytical-report.index');
+    Route::get('/accounting/analytical-report/export/{format}', [CostCenterController::class, 'exportAnalyticalReport'])->name('accounting.analytical-report.export');
 });
 
 // Multi-currency exchange rates (feature-gated)

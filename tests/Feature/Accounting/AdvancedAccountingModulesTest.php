@@ -179,6 +179,14 @@ class AdvancedAccountingModulesTest extends TestCase
                 ->where('report.net_profit', 300)
             );
 
+        $csvResponse = $this->actAsOrg()->get('/accounting/analytical-report/export/csv?from=2026-01-01&to=2026-12-31&cost_center_id='.$center->id);
+        $csvResponse->assertStatus(200);
+        $this->assertStringContainsString('text/csv', $csvResponse->headers->get('Content-Type'));
+
+        $pdfResponse = $this->actAsOrg()->get('/accounting/analytical-report/export/pdf?from=2026-01-01&to=2026-12-31&cost_center_id='.$center->id);
+        $pdfResponse->assertStatus(200);
+        $this->assertStringContainsString('application/pdf', $pdfResponse->headers->get('Content-Type'));
+
         $this->actAsOrg()->delete('/accounting/cost-centers/'.$center->id)
             ->assertRedirect()
             ->assertSessionHasErrors('cost_center');

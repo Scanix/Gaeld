@@ -44,6 +44,15 @@ return [
         'total_expenses' => 'Total charges',
         'net_profit_loss' => 'Résultat net / (Perte)',
     ],
+    'analytical_report' => [
+        'title' => 'Rapport analytique',
+        'period' => 'Rapport analytique — du :from au :to',
+        'revenue' => 'Produits',
+        'total_revenue' => 'Total produits',
+        'expenses' => 'Charges',
+        'total_expenses' => 'Total charges',
+        'net_profit_loss' => 'Résultat net / (Perte)',
+    ],
     'cash_flow' => [
         'title' => 'Tableau des flux de trésorerie',
         'period' => 'Tableau des flux de trésorerie (méthode indirecte) — du :from au :to',
