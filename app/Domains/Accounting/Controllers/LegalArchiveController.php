@@ -163,7 +163,6 @@ class LegalArchiveController extends Controller
         $documentType = $this->resolveDocumentType($type);
 
         $archive = LegalArchive::query()
-            ->where('organization_id', $currentOrg->id())
             ->where('fiscal_year', $year)
             ->where('document_type', $documentType)
             ->where('document_id', "pdf-{$year}")
@@ -175,7 +174,6 @@ class LegalArchiveController extends Controller
             // First generation (open year or on-demand for a freelancer).
             $pdfAction->execute($currentOrg->id(), $year);
             $archive = LegalArchive::query()
-                ->where('organization_id', $currentOrg->id())
                 ->where('fiscal_year', $year)
                 ->where('document_type', $documentType)
                 ->where('document_id', "pdf-{$year}")
@@ -205,7 +203,6 @@ class LegalArchiveController extends Controller
         $pdfAction->execute($currentOrg->id(), $year);
 
         $archives = LegalArchive::query()
-            ->where('organization_id', $currentOrg->id())
             ->where('fiscal_year', $year)
             ->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])
             ->get();
@@ -240,7 +237,6 @@ class LegalArchiveController extends Controller
         $this->authorize('viewAny', LegalArchive::class);
 
         $archives = LegalArchive::query()
-            ->where('organization_id', $currentOrg->id())
             ->where('fiscal_year', $year)
             ->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])
             ->get()

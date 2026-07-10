@@ -15,12 +15,11 @@ use Inertia\Response;
 
 class TaxDeclarationController extends Controller
 {
-    public function index(CurrentOrganization $currentOrg): Response
+    public function index(): Response
     {
         $this->authorize('viewAny', Account::class);
 
         $declarations = TaxDeclaration::query()
-            ->where('organization_id', $currentOrg->id())
             ->orderByDesc('fiscal_year')
             ->orderBy('canton')
             ->get();

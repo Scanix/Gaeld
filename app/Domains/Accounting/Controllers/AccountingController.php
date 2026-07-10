@@ -67,7 +67,7 @@ class AccountingController extends Controller
         ]);
     }
 
-    public function journalEntries(Request $request, CurrentOrganization $currentOrg): Response
+    public function journalEntries(Request $request): Response
     {
         $this->authorize('viewAny', JournalEntry::class);
 
@@ -75,8 +75,7 @@ class AccountingController extends Controller
             ->orderByDesc('date')
             ->paginate(config('accounting.pagination.default'));
 
-        $accounts = Account::where('organization_id', $currentOrg->id())
-            ->where('is_active', true)
+        $accounts = Account::where('is_active', true)
             ->orderBy('code')
             ->get(['id', 'code', 'name', 'type'])
             ->map(fn (Account $a) => [

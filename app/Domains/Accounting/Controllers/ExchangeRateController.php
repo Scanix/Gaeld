@@ -17,12 +17,11 @@ class ExchangeRateController extends Controller
 {
     use HandlesFlashErrorResponses;
 
-    public function index(CurrentOrganization $currentOrg): Response
+    public function index(): Response
     {
         $this->authorize('viewAny', Account::class);
 
         $rates = ExchangeRate::query()
-            ->where('organization_id', $currentOrg->id())
             ->orderByDesc('date')
             ->orderBy('currency_from')
             ->paginate(25)
