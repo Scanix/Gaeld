@@ -2,6 +2,8 @@
 
 namespace App\Domains\Accounting\Models;
 
+use App\Domains\Expenses\Models\Expense;
+use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
@@ -10,6 +12,7 @@ use Database\Factories\Domains\Accounting\Models\VatRateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -57,5 +60,23 @@ class VatRate extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /** @return HasMany<InvoiceLine, $this> */
+    public function invoiceLines(): HasMany
+    {
+        return $this->hasMany(InvoiceLine::class);
+    }
+
+    /** @return HasMany<Expense, $this> */
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
+    }
+
+    /** @return HasMany<VatEntry, $this> */
+    public function vatEntries(): HasMany
+    {
+        return $this->hasMany(VatEntry::class);
     }
 }

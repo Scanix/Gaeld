@@ -1338,6 +1338,7 @@ return [
     'vat_rate_created' => 'Aliquota IVA creata.',
     'vat_rate_updated' => 'Aliquota IVA aggiornata.',
     'vat_rate_deleted' => 'Aliquota IVA eliminata.',
+    'cannot_delete_used_vat_rate' => 'Impossibile eliminare un\'aliquota IVA già utilizzata.',
     'confirm_delete_vat_rate' => "Eliminare questa aliquota IVA? Le righe che la utilizzano manterranno l'aliquota attuale.",
 
     // Chiavi comuni mancanti

@@ -1565,6 +1565,7 @@ return [
     'vat_rate_created' => 'Taux TVA créé.',
     'vat_rate_updated' => 'Taux TVA mis à jour.',
     'vat_rate_deleted' => 'Taux TVA supprimé.',
+    'cannot_delete_used_vat_rate' => 'Suppression impossible d\'un taux de TVA déjà utilisé.',
     'vat_rate_name_standard' => 'Taux normal',
     'vat_rate_name_reduced' => 'Taux réduit',
     'vat_rate_name_accommodation' => 'Taux spécial (hébergement)',

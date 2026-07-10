@@ -1603,6 +1603,7 @@ return [
     'vat_rate_created' => 'VAT rate created.',
     'vat_rate_updated' => 'VAT rate updated.',
     'vat_rate_deleted' => 'VAT rate deleted.',
+    'cannot_delete_used_vat_rate' => 'Cannot delete a VAT rate that is in use.',
     'vat_rate_name_standard' => 'Standard Rate',
     'vat_rate_name_reduced' => 'Reduced Rate',
     'vat_rate_name_accommodation' => 'Special Rate (Accommodation)',

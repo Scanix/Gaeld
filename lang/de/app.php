@@ -1352,6 +1352,7 @@ return [
     'vat_rate_created' => 'MWST-Satz erstellt.',
     'vat_rate_updated' => 'MWST-Satz aktualisiert.',
     'vat_rate_deleted' => 'MWST-Satz gelöscht.',
+    'cannot_delete_used_vat_rate' => 'Ein verwendeter MWST-Satz kann nicht gelöscht werden.',
     'confirm_delete_vat_rate' => 'Diesen MWST-Satz löschen? Positionen, die ihn bereits verwenden, behalten ihren aktuellen Satz.',
 
     // Fehlende allgemeine Schlüssel

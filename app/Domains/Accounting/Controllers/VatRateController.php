@@ -74,6 +74,14 @@ class VatRateController extends Controller
     {
         $this->authorize('delete', $vatRate);
 
+        $used = $vatRate->invoiceLines()->exists()
+            || $vatRate->expenses()->exists()
+            || $vatRate->vatEntries()->exists();
+
+        if ($used) {
+            return back()->withErrors(['vat_rate' => __('app.cannot_delete_used_vat_rate')]);
+        }
+
         $vatRate->delete();
 
         return redirect()->route('accounting.vat-rates')
