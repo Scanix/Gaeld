@@ -78,7 +78,28 @@ class YearEndClosingAction
             throw new \RuntimeException("Account '{$validated['result_account_code']}' not found.");
         }
 
-        DB::transaction(function () use ($income, $expenses, $year, $validated, $resultAccount, $orgId): void {
+        // The entire closing workflow must be atomic: posting the closing
+        // entry, locking the fiscal year, archiving documents, and
+        // generating the next year's opening balances are all part of one
+        // logical operation. If any later step fails (e.g. a duplicate
+        // "OPENING-{year}" reference when re-closing after a reopen), every
+        // earlier step must roll back too — otherwise the org is left with
+        // a posted closing entry and a locked fiscal year but no opening
+        // balances, which is an inconsistent, hard-to-recover state.
+        $nextYearCreated = false;
+
+        DB::transaction(function () use (
+            $income,
+            $expenses,
+            $year,
+            $validated,
+            $resultAccount,
+            $orgId,
+            $org,
+            $fiscalYear,
+            $actingUser,
+            &$nextYearCreated,
+        ): void {
             $lines = [];
             $netDebitOnResult = '0';
             $netCreditOnResult = '0';
@@ -125,17 +146,16 @@ class YearEndClosingAction
 
             $journalEntry = $this->ledger->postEntry($orgId, $entry);
             $journalEntry->update(['type' => 'year_end_closing']);
+
+            $org->closeFiscalYear($year);
+
+            if ($fiscalYear !== null) {
+                $nextYearCreated = $this->fiscalYears->close($fiscalYear, $actingUser);
+            }
+
+            $this->archiving->archiveFiscalYear($orgId, $year);
+            $this->openingBalances->execute($orgId, $year);
         });
-
-        $org->closeFiscalYear($year);
-
-        $nextYearCreated = false;
-        if ($fiscalYear !== null) {
-            $nextYearCreated = $this->fiscalYears->close($fiscalYear, $actingUser);
-        }
-
-        $this->archiving->archiveFiscalYear($orgId, $year);
-        $this->openingBalances->execute($orgId, $year);
 
         Log::info('Year-end closing completed', [
             'organization_id' => $orgId,

@@ -5,6 +5,7 @@ namespace Tests\Feature\Accounting;
 use App\Domains\Accounting\Actions\YearEndClosingAction;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Organizations\Models\Organization;
@@ -185,5 +186,45 @@ class YearEndClosingActionTest extends TestCase
 
         $action = app(YearEndClosingAction::class);
         $action->execute($this->organization, $validated, $this->user);
+    }
+
+    public function test_closing_rolls_back_entirely_when_opening_balances_step_fails(): void
+    {
+        $orgId = $this->organization->id;
+
+        $bank = Account::where('organization_id', $orgId)->where('code', '1020')->first();
+        $revenue = Account::where('organization_id', $orgId)->where('code', '3000')->first();
+
+        $this->postJournalEntry('2025-06-01', [
+            $this->journalLine($bank, '5000.00', '0', 'Client payment'),
+            $this->journalLine($revenue, '0', '5000.00', 'Sales'),
+        ], 'JE-R1');
+
+        // Pre-occupy the reference that GenerateOpeningBalancesAction will try
+        // to use for the next year ("OPENING-2026"), simulating the scenario
+        // where closing is re-run (e.g. after a reopen) and the opening
+        // balances step collides with an entry already posted by an earlier
+        // attempt. This must make the ENTIRE closing operation roll back —
+        // not just leave the opening-balances step incomplete.
+        $this->postJournalEntry('2026-01-01', [
+            $this->journalLine($bank, '1.00', '0', 'Pre-existing wash'),
+            $this->journalLine($revenue, '0', '1.00', 'Pre-existing wash'),
+        ], 'OPENING-2026');
+
+        $action = app(YearEndClosingAction::class);
+
+        try {
+            $action->execute($this->organization, $this->validated(reference: 'YE-2025'), $this->user);
+            $this->fail('Expected DuplicateReferenceException to be thrown.');
+        } catch (DuplicateReferenceException $e) {
+            // expected
+        }
+
+        // The closing journal entry must NOT have been committed.
+        $this->assertNull(JournalEntry::where('organization_id', $orgId)->where('reference', 'YE-2025')->first());
+
+        // The fiscal year must NOT be marked closed.
+        $this->organization->refresh();
+        $this->assertFalse($this->organization->isFiscalYearClosed(2025));
     }
 }
