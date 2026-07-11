@@ -119,6 +119,53 @@ class CoreHttpFlowTest extends TestCase
         $this->assertSame(InvoiceStatus::Paid, $invoice->status);
     }
 
+    /**
+     * Regression test: InvoiceController::store() previously called
+     * FinalizeInvoiceAction::execute() twice when finalize=true was submitted
+     * together with the create form. Since Invoice::update() inside
+     * postToLedger() mutates the passed-in $invoice instance in place, the
+     * second call saw status already Sent and threw
+     * InvalidInvoiceStateException, which the global DomainException handler
+     * converted into a `back()->with('error', ...)` redirect — masking a
+     * successful invoice creation + ledger posting as a failure and risking
+     * accidental duplicate resubmission by the user.
+     */
+    public function test_creating_invoice_with_finalize_flag_succeeds_once(): void
+    {
+        $response = $this->actAsOrg()->post('/invoices', [
+            'customer_id' => $this->customer->id,
+            'issue_date' => '2026-03-10',
+            'due_date' => '2026-03-31',
+            'currency' => 'CHF',
+            'finalize' => true,
+            'lines' => [
+                [
+                    'description' => 'Finalize-on-create consulting',
+                    'quantity' => 1,
+                    'unit_price' => 300.00,
+                    'vat_rate_id' => $this->vatRate->id,
+                ],
+            ],
+        ]);
+
+        $invoiceId = basename($response->headers->get('Location'));
+        $invoice = Invoice::findOrFail($invoiceId);
+
+        $response->assertRedirect(route('invoices.show', $invoice));
+        $response->assertSessionHas('success');
+        $response->assertSessionMissing('error');
+
+        $this->assertSame(InvoiceStatus::Sent, $invoice->status);
+        $this->assertNotNull($invoice->journal_entry_id);
+
+        // Exactly one invoice should exist for this customer — a duplicate
+        // resubmission bug would have created a second draft.
+        $this->assertSame(
+            1,
+            Invoice::where('customer_id', $this->customer->id)->count(),
+        );
+    }
+
     public function test_expense_http_flow_uses_authenticated_request_pipeline(): void
     {
         $create = $this->actAsOrg()->post('/expenses', [
