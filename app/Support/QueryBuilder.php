@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Domains\Organizations\Services\CurrentOrganization;
+use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -204,8 +205,15 @@ class QueryBuilder
      */
     private function likeOperator(): string
     {
-        return $this->query->getQuery()->getConnection()->getDriverName() === 'pgsql'
-            ? 'ilike'
-            : 'like';
+        $connection = $this->query->getQuery()->getConnection();
+
+        // getConnection() is typed to the interface, which does not declare
+        // getDriverName(); narrow to the concrete class before calling it
+        // rather than assuming every ConnectionInterface implementation has it.
+        if ($connection instanceof Connection && $connection->getDriverName() === 'pgsql') {
+            return 'ilike';
+        }
+
+        return 'like';
     }
 }
