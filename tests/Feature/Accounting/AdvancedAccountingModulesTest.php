@@ -194,6 +194,25 @@ class AdvancedAccountingModulesTest extends TestCase
         $this->assertDatabaseHas('cost_centers', ['id' => $center->id]);
     }
 
+    public function test_exchange_rates_index_renders_paginated_list(): void
+    {
+        ExchangeRate::create([
+            'organization_id' => $this->organization->id,
+            'currency_from' => 'EUR',
+            'currency_to' => 'CHF',
+            'date' => '2026-04-01',
+            'source' => 'manual',
+            'rate' => '0.97',
+        ]);
+
+        $this->actAsOrg()->get('/accounting/exchange-rates')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Accounting/ExchangeRates')
+                ->has('rates.data', 1)
+            );
+    }
+
     public function test_exchange_rates_manual_and_ecb_fetch_flow(): void
     {
         $this->actAsOrg()->post('/accounting/exchange-rates', [
@@ -272,6 +291,27 @@ XML, 200),
             ->assertSessionHasErrors('currency_from');
 
         $this->assertDatabaseCount('exchange_rates', 0);
+    }
+
+    public function test_consolidation_index_renders_groups_and_organization_options(): void
+    {
+        $memberOrganization = Organization::factory()->create(['name' => 'Member Co']);
+
+        ConsolidationGroup::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Group Alpha',
+            'member_organization_ids' => [$this->organization->id, $memberOrganization->id],
+            'base_currency' => 'CHF',
+        ]);
+
+        $this->actAsOrg()->get('/accounting/consolidation')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Accounting/Consolidation/Index')
+                ->has('groups', 1)
+                ->where('groups.0.name', 'Group Alpha')
+                ->has('organizationOptions')
+            );
     }
 
     public function test_consolidation_group_report_and_elimination_flow(): void
