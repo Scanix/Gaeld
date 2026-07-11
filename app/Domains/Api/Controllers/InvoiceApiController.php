@@ -14,8 +14,6 @@ use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\DeleteInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
-use App\Domains\Invoicing\Actions\SendInvoiceAction;
-use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
@@ -25,6 +23,7 @@ use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
+use App\Domains\Invoicing\Services\InvoiceMailerService;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
@@ -339,12 +338,12 @@ class InvoiceApiController extends Controller
      * @response 200 scenario="Sent" {"data":{"id":"9c8f...","number":"INV-2025-042","status":"sent"}}
      * @response 422 scenario="Invalid state" {"message":"Invoice cannot be sent in its current state."}
      */
-    public function send(Invoice $invoice, SendInvoiceAction $action): InvoiceResource|JsonResponse
+    public function send(Invoice $invoice, InvoiceMailerService $mailerService): InvoiceResource|JsonResponse
     {
         $this->authorize('send', $invoice);
 
         try {
-            $action->execute($invoice->load('customer'));
+            $mailerService->sendInvoice($invoice->load('customer'));
         } catch (InvalidInvoiceStateException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
@@ -362,12 +361,12 @@ class InvoiceApiController extends Controller
      * @response 200 scenario="Reminder sent" {"data":{"id":"9c8f...","number":"INV-2025-042","status":"sent"}}
      * @response 422 scenario="Invalid state" {"message":"Reminder cannot be sent for this invoice."}
      */
-    public function reminder(Invoice $invoice, SendInvoiceReminderAction $action): InvoiceResource|JsonResponse
+    public function reminder(Invoice $invoice, InvoiceMailerService $mailerService): InvoiceResource|JsonResponse
     {
         $this->authorize('send', $invoice);
 
         try {
-            $action->execute($invoice);
+            $mailerService->sendReminder($invoice);
         } catch (InvalidInvoiceStateException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
