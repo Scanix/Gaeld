@@ -2,8 +2,8 @@
 
 namespace App\Domains\Accounting\Controllers;
 
+use App\Domains\Accounting\Actions\ReopenFiscalYearAction;
 use App\Domains\Accounting\Actions\YearEndClosingAction;
-use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
@@ -11,7 +11,6 @@ use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Requests\ReopenFiscalYearRequest;
 use App\Domains\Accounting\Requests\StoreYearEndClosingRequest;
 use App\Domains\Accounting\Services\ClosingAccountsService;
-use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
@@ -34,8 +33,8 @@ class YearEndClosingController extends Controller
 
     public function __construct(
         private readonly ClosingAccountsService $closingAccounts,
-        private readonly FiscalYearService $fiscalYears,
         private readonly YearEndClosingAction $closingAction,
+        private readonly ReopenFiscalYearAction $reopenAction,
     ) {}
 
     public function index(Request $request, CurrentOrganization $currentOrg): Response
@@ -160,42 +159,18 @@ class YearEndClosingController extends Controller
     {
         $this->authorize('reopenYear', Account::class);
 
-        $validated = $request->validated();
-
-        $year = (int) $validated['year'];
         $org = Organization::findOrFail($currentOrg->id());
 
-        $fiscalYearId = $validated['fiscal_year_id'] ?? null;
-        $fiscalYear = null;
-        if ($fiscalYearId !== null) {
-            $fiscalYear = FiscalYear::query()
-                ->where('id', $fiscalYearId)
-                ->first();
-        }
-        if ($fiscalYear === null) {
-            $fiscalYear = FiscalYear::query()
-                ->where('status', FiscalYearStatus::Closed->value)
-                ->whereYear('start_date', $year)
-                ->first();
+        /** @var User $actingUser */
+        $actingUser = $request->user();
+
+        try {
+            $this->reopenAction->execute($org, $request->validated(), $actingUser);
+        } catch (\Throwable $e) {
+            return $this->backWithError($e);
         }
 
-        $isClosed = $fiscalYear?->isClosed() ?? $org->isFiscalYearClosed($year);
-
-        if (! $isClosed) {
-            return $this->backWithError(__('app.fiscal_year_not_closed', ['year' => $year]));
-        }
-
-        $org->reopenFiscalYear($year);
-
-        if ($fiscalYear !== null) {
-            $this->fiscalYears->reopen($fiscalYear);
-        }
-
-        activity()
-            ->causedBy($request->user())
-            ->performedOn($org)
-            ->withProperties(['year' => $year])
-            ->log("Fiscal year {$year} reopened");
+        $year = (int) $request->validated()['year'];
 
         return redirect()->route('accounting.closing', ['year' => $year])
             ->with('success', __('app.fiscal_year_reopened', ['year' => $year]));
