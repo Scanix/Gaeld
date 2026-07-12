@@ -16,6 +16,7 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use App\Support\CsvExportService;
+use App\Support\Exceptions\DomainException;
 use App\Support\PdfExportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -147,7 +148,7 @@ class AccountingController extends Controller
             $isPosted
                 ? $ledger->postEntry($currentOrg->id(), $entryData)
                 : $ledger->createDraft($currentOrg->id(), $entryData);
-        } catch (\Throwable $e) {
+        } catch (DomainException $e) {
             return $this->backWithError($e);
         }
 
@@ -206,7 +207,7 @@ class AccountingController extends Controller
             });
 
             $journalEntry->load('lines.account');
-        } catch (\Throwable $e) {
+        } catch (DomainException $e) {
             return $this->backWithError($e);
         }
 
@@ -220,7 +221,7 @@ class AccountingController extends Controller
 
         try {
             $ledger->postDraft($journalEntry);
-        } catch (\Throwable $e) {
+        } catch (DomainException $e) {
             return $this->backWithError($e);
         }
 
@@ -234,7 +235,7 @@ class AccountingController extends Controller
 
         try {
             $ledger->reverseEntry($journalEntry);
-        } catch (\Throwable $e) {
+        } catch (DomainException $e) {
             return $this->backWithError($e);
         }
 
@@ -249,7 +250,7 @@ class AccountingController extends Controller
         try {
             $journalEntry->lines()->delete();
             $journalEntry->delete();
-        } catch (\Throwable $e) {
+        } catch (DomainException $e) {
             return $this->backWithError($e);
         }
 
