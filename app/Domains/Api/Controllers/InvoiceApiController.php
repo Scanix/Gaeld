@@ -219,7 +219,7 @@ class InvoiceApiController extends Controller
             $validated['lines'] = $this->resolveLineVatRateUuids($validated['lines'], $currentOrg->id());
         }
 
-        $validated = $this->completeUpdatePayload($invoice, $validated, $currentOrg->id());
+        $validated = $this->completeUpdatePayload($invoice, $validated);
 
         $dto = UpdateInvoiceData::fromArray($validated);
         $action->execute($invoice, $dto);
@@ -423,12 +423,12 @@ class InvoiceApiController extends Controller
      * @param  array<string, mixed>  $validated
      * @return array<string, mixed>
      */
-    private function completeUpdatePayload(Invoice $invoice, array $validated, string $organizationId): array
+    private function completeUpdatePayload(Invoice $invoice, array $validated): array
     {
         $invoice->loadMissing('lines');
 
         return [
-            'organization_id' => $organizationId,
+            'organization_id' => $invoice->organization_id,
             'customer_id' => $validated['customer_id'] ?? $invoice->customer_id,
             'number' => $validated['number'] ?? $invoice->number,
             'issue_date' => $validated['issue_date'] ?? $invoice->issue_date->toDateString(),
