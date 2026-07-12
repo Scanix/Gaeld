@@ -6,10 +6,8 @@ use App\Domains\Accounting\Models\ConsolidationElimination;
 use App\Domains\Accounting\Models\JournalEvent;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\PersonalTransactionPattern;
-use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Expenses\Models\ReceiptScan;
 use App\Domains\Expenses\Models\RecurringExpense;
-use App\Domains\Invoicing\Models\InvoiceCatalogItem;
 use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Domains\Organizations\Models\OrganizationInvitation;
 use App\Domains\Payroll\Models\DeductionRate;
@@ -52,10 +50,8 @@ class OrganizationScopedModelPolicyCoverageTest extends TestCase
         JournalEvent::class => 'Internal audit-trail record, never exposed via a direct CRUD route.',
         BankImport::class => 'Managed exclusively through ReconciliationController; no standalone route.',
         PersonalTransactionPattern::class => 'Managed exclusively through ReconciliationController; no standalone route.',
-        ExpenseCategory::class => 'ExpenseCategoryController authorizes against the parent Organization ("update" ability), not the category itself.',
         ReceiptScan::class => 'Managed exclusively through Expense controllers, authorized via the parent Expense.',
         RecurringExpense::class => 'RecurringExpenseController has no dedicated policy yet — tracked as follow-up.',
-        InvoiceCatalogItem::class => 'InvoiceCatalogItemController authorizes against the parent Organization ("update" ability), not the item itself.',
         InvoicePayment::class => 'Managed exclusively through InvoiceLifecycleController, authorized via the parent Invoice.',
         OrganizationInvitation::class => 'InvitationController authorizes against the parent Organization ("manageUsers" ability), not the invitation itself.',
         DeductionRate::class => 'No dedicated policy yet — tracked as follow-up.',

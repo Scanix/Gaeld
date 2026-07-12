@@ -82,4 +82,27 @@ class InvoiceCatalogItemTest extends TestCase
         $response->assertNotFound();
         $this->assertDatabaseHas('invoice_catalog_items', ['id' => $foreignItem->id]);
     }
+
+    public function test_index_is_authorized_and_scoped_to_the_current_organization(): void
+    {
+        InvoiceCatalogItem::create([
+            'organization_id' => $this->org->id,
+            'name' => 'My org item',
+            'sort_order' => 1,
+        ]);
+
+        $otherOrg = Organization::factory()->create();
+        InvoiceCatalogItem::create([
+            'organization_id' => $otherOrg->id,
+            'name' => 'Other org item',
+            'sort_order' => 1,
+        ]);
+
+        $response = $this->actAsOrg()->get('/invoices/catalog-items');
+
+        $response->assertOk();
+        $names = collect($response->json())->pluck('name');
+        $this->assertTrue($names->contains('My org item'));
+        $this->assertFalse($names->contains('Other org item'));
+    }
 }

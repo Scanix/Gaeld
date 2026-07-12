@@ -14,6 +14,8 @@ class InvoiceCatalogItemController extends Controller
 {
     public function index(): JsonResponse
     {
+        $this->authorize('viewAny', InvoiceCatalogItem::class);
+
         return response()->json(InvoiceCatalogItemQuery::all());
     }
 
