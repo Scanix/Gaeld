@@ -3,6 +3,7 @@
 namespace Tests\Feature\Accounting;
 
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Enums\TaxDeclarationStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\ConsolidationElimination;
 use App\Domains\Accounting\Models\ConsolidationGroup;
@@ -86,7 +87,7 @@ class AdvancedAccountingModulesTest extends TestCase
         $declaration = TaxDeclaration::query()->firstOrFail();
 
         $this->assertSame('VD', $declaration->canton);
-        $this->assertSame('draft', $declaration->status);
+        $this->assertSame(TaxDeclarationStatus::Draft, $declaration->status);
         $this->assertSame(600.0, (float) ($declaration->data['net_result'] ?? 0.0));
         $this->assertSame(600.0, (float) ($declaration->data['profit'] ?? 0.0));
         $this->assertSame(600.0, (float) ($declaration->data['assets'] ?? 0.0));
@@ -104,7 +105,7 @@ class AdvancedAccountingModulesTest extends TestCase
         $this->actAsOrg()->post('/accounting/tax-declarations/'.$declaration->id.'/finalize')
             ->assertRedirect();
 
-        $this->assertSame('finalized', $declaration->fresh()->status);
+        $this->assertSame(TaxDeclarationStatus::Finalized, $declaration->fresh()->status);
         $this->assertNotNull($declaration->fresh()->finalized_at);
     }
 

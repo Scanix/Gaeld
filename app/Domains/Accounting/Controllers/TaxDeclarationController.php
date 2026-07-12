@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Controllers;
 
+use App\Domains\Accounting\Enums\TaxDeclarationStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\TaxDeclaration;
 use App\Domains\Accounting\Models\TransactionLine;
@@ -43,12 +44,12 @@ class TaxDeclarationController extends Controller
                 'canton' => $validated['canton'],
             ],
             [
-                'status' => 'draft',
+                'status' => TaxDeclarationStatus::Draft,
                 'data' => $this->buildSummaryData($currentOrg->id(), $validated['fiscal_year']),
             ],
         );
 
-        if ($declaration->status === 'draft' && empty($declaration->data)) {
+        if ($declaration->status === TaxDeclarationStatus::Draft && empty($declaration->data)) {
             $declaration->update([
                 'data' => $this->buildSummaryData($currentOrg->id(), $validated['fiscal_year']),
             ]);
@@ -62,7 +63,7 @@ class TaxDeclarationController extends Controller
     {
         $this->authorize('view', $taxDeclaration);
 
-        if ($taxDeclaration->status === 'draft') {
+        if ($taxDeclaration->status === TaxDeclarationStatus::Draft) {
             $taxDeclaration->update([
                 'data' => $this->buildSummaryData($currentOrg->id(), $taxDeclaration->fiscal_year),
             ]);
@@ -78,9 +79,9 @@ class TaxDeclarationController extends Controller
     {
         $this->authorize('update', $taxDeclaration);
 
-        if ($taxDeclaration->status === 'draft') {
+        if ($taxDeclaration->status === TaxDeclarationStatus::Draft) {
             $taxDeclaration->update([
-                'status' => 'finalized',
+                'status' => TaxDeclarationStatus::Finalized,
                 'finalized_at' => now(),
                 'data' => $this->buildSummaryData($currentOrg->id(), $taxDeclaration->fiscal_year),
             ]);
