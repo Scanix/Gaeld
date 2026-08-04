@@ -193,9 +193,10 @@ class QueryBuilder
         }
 
         // Validate direction
-        $direction = in_array(strtolower($direction), ['asc', 'desc'], true)
-            ? strtolower($direction)
-            : $this->defaultDirection;
+        $normalized = strtolower((string) $direction);
+        $direction = in_array($normalized, ['asc', 'desc'], true)
+            ? $normalized
+            : (strtolower($this->defaultDirection) === 'desc' ? 'desc' : 'asc');
 
         $this->query->orderBy($sort, $direction);
     }
