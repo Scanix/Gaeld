@@ -125,7 +125,7 @@ class OrganizationCrudFlowTest extends TestCase
             ->delete("/organizations/{$orgToDelete->id}");
 
         $response->assertRedirect(route('organizations.index'));
-        $this->assertDatabaseMissing('organizations', ['id' => $orgToDelete->id]);
+        $this->assertSoftDeleted('organizations', ['id' => $orgToDelete->id]);
     }
 
     public function test_member_cannot_delete_organization(): void

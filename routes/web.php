@@ -14,7 +14,6 @@ use App\Domains\Users\Controllers\PasswordResetController;
 use App\Domains\Users\Controllers\RegisteredUserController;
 use App\Domains\Users\Controllers\TwoFactorChallengeController;
 use App\Http\Controllers\GlobalSearchController;
-use App\Http\Controllers\OnboardingDismissController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -61,10 +60,9 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/onboarding', [OnboardingController::class, 'create'])->name('onboarding');
     Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
-    // onboarding.wizard is the post-signup landing route used by the EE RegistrationController.
-    // After SaaS signup the org already exists, so we route straight to the dashboard.
-    Route::get('/onboarding/wizard', fn () => redirect()->route('dashboard'))->name('onboarding.wizard');
 });
+// onboarding.wizard / onboarding.wizard.store / onboarding.wizard.skip are registered
+// in routes/web/organizations.php (post-signup landing route, org already exists).
 
 // Invitation accept (authenticated but no org middleware needed)
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -95,8 +93,6 @@ Route::get('/accounting/archives/{archive}/file', [LegalArchiveController::class
 // Authenticated routes
 Route::middleware(['auth', 'verified', 'org', 'org-2fa', 'subscription'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    Route::post('/onboarding/dismiss', OnboardingDismissController::class)->name('onboarding.dismiss');
 
     // Global search
     Route::get('/search', GlobalSearchController::class)->middleware('throttle:60,1')->name('search');

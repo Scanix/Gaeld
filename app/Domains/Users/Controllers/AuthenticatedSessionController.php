@@ -31,7 +31,9 @@ class AuthenticatedSessionController extends Controller
             'email' => $credentials['email'],
             'password' => $credentials['password'],
         ], $remember)) {
-            Log::channel('stack')->warning('Failed login attempt', [
+            // Routed to the dedicated security channel — not the stack channel —
+            // so routine bad-password attempts don't surface as Sentry issues.
+            Log::channel('security')->warning('Failed login attempt', [
                 'email' => $credentials['email'],
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
@@ -62,7 +64,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        Log::channel('stack')->info('User logged in', [
+        Log::channel('security')->info('User logged in', [
             'user_id' => Auth::id(),
             'email' => Auth::user()->email,
             'ip' => $request->ip(),

@@ -49,7 +49,7 @@ class OrganizationSetupFlowTest extends TestCase
         $organization = Organization::where('name', 'Setup Org')->firstOrFail();
         $user = User::where('email', 'setup@example.com')->firstOrFail();
 
-        $response->assertRedirect('/dashboard');
+        $response->assertRedirect(route('onboarding.wizard'));
         $this->assertAuthenticatedAs($user);
         $this->assertDatabaseHas('organization_users', [
             'organization_id' => $organization->id,
@@ -81,7 +81,7 @@ class OrganizationSetupFlowTest extends TestCase
 
         $organization = Organization::where('name', 'Onboarding Org')->firstOrFail();
 
-        $response->assertRedirect('/dashboard');
+        $response->assertRedirect(route('onboarding.wizard'));
         $response->assertSessionHas('current_organization_id', $organization->id);
         $this->assertDatabaseHas('organization_users', [
             'organization_id' => $organization->id,

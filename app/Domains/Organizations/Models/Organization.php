@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
@@ -42,16 +43,18 @@ use Illuminate\Support\Carbon;
  * @property BusinessType|null $business_type
  * @property string $setup_mode
  * @property Carbon|null $founded_at
- * @property Carbon|null $onboarding_dismissed_at
  * @property bool $require_two_factor
  * @property int|null $default_payment_terms_days
+ * @property Carbon|null $suspended_at
+ * @property string|null $suspended_reason
+ * @property Carbon|null $deleted_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read SubscriptionContract|null $activeSubscription
  */
 class Organization extends Model
 {
-    use Auditable, HasFactory, HasUuids;
+    use Auditable, HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -78,7 +81,8 @@ class Organization extends Model
         'enabled_modules',
         'setup_mode',
         'founded_at',
-        'onboarding_dismissed_at',
+        'suspended_at',
+        'suspended_reason',
     ];
 
     protected function casts(): array
@@ -90,8 +94,34 @@ class Organization extends Model
             'enabled_modules' => 'array',
             'business_type' => BusinessType::class,
             'founded_at' => 'date',
-            'onboarding_dismissed_at' => 'datetime',
+            'suspended_at' => 'datetime',
         ];
+    }
+
+    /**
+     * An organization is suspended when `suspended_at` is set. Suspended
+     * orgs are locked out of the app by BlockSuspendedOrganization
+     * middleware but their data is preserved.
+     */
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
+    }
+
+    public function suspend(?string $reason = null): void
+    {
+        $this->forceFill([
+            'suspended_at' => now(),
+            'suspended_reason' => $reason,
+        ])->save();
+    }
+
+    public function reactivate(): void
+    {
+        $this->forceFill([
+            'suspended_at' => null,
+            'suspended_reason' => null,
+        ])->save();
     }
 
     /**

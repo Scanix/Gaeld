@@ -19,6 +19,7 @@ use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
@@ -270,5 +271,26 @@ class InvoiceFlowTest extends TestCase
 
         $response->assertSessionHasNoErrors();
         $response->assertRedirect(route('invoices.show', $invoice));
+    }
+
+    public function test_create_invoice_regenerates_number_on_unique_collision(): void
+    {
+        // Simulate a race where the suggested number was already taken by a
+        // concurrent insert between the form render and the store request.
+        $this->createInvoice(['number' => 'INV-'.now()->year.'-001']);
+
+        $second = $this->createInvoice(['number' => 'INV-'.now()->year.'-001']);
+
+        $this->assertSame('INV-'.now()->year.'-002', $second->number);
+        $this->assertSame(2, Invoice::where('organization_id', $this->org->id)->count());
+    }
+
+    public function test_create_invoice_does_not_rewrite_custom_number_on_collision(): void
+    {
+        $this->createInvoice(['number' => 'CUSTOM-ABC']);
+
+        $this->expectException(UniqueConstraintViolationException::class);
+
+        $this->createInvoice(['number' => 'CUSTOM-ABC']);
     }
 }

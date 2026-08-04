@@ -50,7 +50,7 @@ class SetupWizardController extends Controller
         $user = $completeSetupAction->execute(CompleteSetupData::fromArray($validated));
         Auth::login($user);
 
-        return redirect()->route('dashboard')
+        return redirect()->route('onboarding.wizard')
             ->with('success', __('app.welcome_setup'));
     }
 }

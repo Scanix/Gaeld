@@ -51,6 +51,7 @@ class HandleInertiaRequests extends Middleware
             'systemMessage' => FeatureFlag::isSaas()
                 ? Cache::get('saas:system_message')
                 : null,
+            'hcaptchaSiteKey' => (string) config('services.hcaptcha.site_key', ''),
         ]);
     }
 
@@ -106,6 +107,7 @@ class HandleInertiaRequests extends Middleware
                 'two_factor_enabled' => $user->hasTwoFactorEnabled(),
                 'has_passkeys' => $user->webAuthnCredentials()->exists(),
                 'notification_preferences' => $user->notification_preferences ?? [],
+                'onboarding_completed_at' => $user->onboarding_completed_at?->toIso8601String(),
             ],
             'currentOrganization' => fn () => $this->resolveCurrentOrganization($user),
             'subscription' => $this->resolveSubscription($user),

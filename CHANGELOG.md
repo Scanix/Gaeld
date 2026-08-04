@@ -7,6 +7,207 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Onboarding: standardised on the post-signup wizard, retired the dashboard
+  checklist** — `main`'s post-signup onboarding wizard (module selection,
+  language switcher, upgrade nudge) and `develop`'s dashboard "Getting
+  Started" / "Accounting" checklist had evolved independently and were
+  mutually exclusive. The wizard is now the single onboarding flow;
+  `ChecklistService`, `OnboardingDismissController`, `AccountingChecklist.vue`
+  and `OnboardingChecklist.vue` have been removed along with their
+  translation keys and the never-deployed `onboarding_dismissed_at` column.
+  Dashboard empty-state guidance, the export-module CTA, and the expired
+  fiscal-year banner are unaffected and remain in place.
+
+---
+
+## [3.4.3] — 2026-06-01
+
+### Added
+- **Anti-spam: hCaptcha integration on signup and password reset** — added
+  `HCaptchaRule` validation rule and `<HCaptcha />` Vue component that
+  lazy-loads the hCaptcha API and renders a widget when
+  `HCAPTCHA_SITE_KEY` / `HCAPTCHA_SECRET_KEY` env vars are set. Wired
+  into the public registration flow (EE) and the password reset
+  endpoint. Login is intentionally left out (already throttled). The
+  rule is no-op without a secret key and during the `testing`
+  environment so existing tests stay green.
+- **SaaS admin: organization moderation CRUD** — the SaaS admin
+  dashboard now lists per-organization usage (members, activity in last
+  30 days, paid subscription flag) and exposes Suspend, Reactivate and
+  Delete actions plus a drill-down page (`/saas-admin/{id}`) showing
+  members, activity counts and subscription history. Suspended
+  organizations are blocked at the `EnsureHasOrganization` middleware
+  with a 403 (the SaaS admin account remains exempt).
+- **SaaS admin: signup kill-switch** — new toggle persists a cache flag
+  consumed by `EnforceRegistrationGate`; when active the public signup
+  endpoint returns 503 immediately. Useful during incident response or
+  when burning down spam.
+- **Console: `gaeld:cleanup-spam-orgs` command** — defaults to dry-run.
+  Detects suspiciously-named organizations (single-word
+  letters-only, configurable `--min-length`) created in the last
+  `--days=7` that have no business activity (invoices, expenses,
+  contacts, bank transactions, journal entries) and no paid
+  subscription, then deletes them through `DeleteOrganizationAction`
+  when `--force` is passed.
+- **Organizations: soft deletes + suspension fields** — new migration
+  adds `deleted_at`, `suspended_at`, `suspended_reason` to the
+  `organizations` table. New `DeleteOrganizationAction` detaches all
+  members, soft-deletes EE subscriptions, then soft-deletes the
+  organization within a transaction and logs `organization.deleted`.
+
+### Fixed
+- **EE: duplicate `Subscription::isPaused` declaration causing fatal
+  errors in production** — `plugins/gaeld-ee/.../Subscription.php`
+  declared `isPaused`, `isTrialExpired`, `getStatus`, `getTrialEndsAt`,
+  `getEndsAt` and `getPlan` twice, which surfaced as
+  `Cannot redeclare ... isPaused()` fatals on release 223
+  (Sentry 7518411333). The second block has been removed; behaviour
+  preserved by the earlier definitions.
+
+---
+
+## [3.4.2] — 2026-05-17
+
+### Fixed
+- **Invoicing: concurrent invoice number collisions no longer 500** —
+  `CreateInvoiceAction` now retries up to five times when the database
+  rejects an insert with `invoices_organization_id_number_unique`,
+  regenerating the auto-formatted `{PREFIX}-YYYY-NNN` number from the
+  current max. Custom user-supplied numbers still surface the original
+  uniqueness error instead of being silently rewritten. Closes the
+  Sentry-reported `UniqueConstraintViolationException` triggered by
+  double-submits and parallel requests.
+
+### Changed
+- **Tests: pinned `APP_BASE_PATH` via `tests/bootstrap.php`** — plugin
+  vendor autoloaders (notably `plugins/gaeld-ee`) registered after the
+  root `ClassLoader` could win Laravel's `Application::inferBasePath()`
+  fallback, breaking `parent::setUp()` for any feature test in the root
+  suite. The new bootstrap sets `APP_BASE_PATH` before `vendor/autoload.php`
+  runs so the application path is deterministic regardless of plugin
+  load order.
+
+---
+
+## [3.4.1] — 2026-05-17
+
+### Changed
+- **Dashboard: removed Getting Started checklist** — the onboarding
+  checklist panel has been removed from the dashboard; it was more
+  distracting than useful and will be replaced by a proper onboarding
+  wizard in a future release.
+
+### Fixed
+- **EE: subscription plan gating now enforced in SaaS mode** — EE features
+  (bank_sync, auto_reconciliation, automation, multi_currency, api_access,
+  rule_engine, advanced_permissions, and others) are now always gated by
+  the organisation's subscription plan when `FEATURE_SAAS=true`. Previously
+  a server-wide flag such as `FEATURE_BANK_SYNC=true` bypassed the per-org
+  plan check, granting every organisation free access to paid features.
+
+---
+
+## [3.4.0] — 2026-05-17
+
+### Added
+- **Accounting: fiscal year management (#17)** — first-class fiscal year
+  entity with planned / operative / expired / closed lifecycle, overlap
+  guard, and support for long fiscal years (up to Swiss legal maximum,
+  e.g. company founding). New `FiscalYearService`, REST + Inertia UI,
+  migrations with backfill from existing organisation settings.
+- **Accounting: manual journal entry CRUD** — `JournalEntryCreate` Vue
+  page with multi-line entry, draft/post toggle, live balance footer;
+  draft entries can be deleted, posted entries are immutable.
+- **Accounting: opening balances wizard** — new `OpeningBalances` page
+  seeded from active balance-sheet accounts; `RecordOpeningBalancesAction`
+  posts a balanced opening entry on demand, plugging the diff into
+  account 9000.
+- **Settings: per-organisation module toggles** — organisation owners can
+  now enable or disable feature modules (budgets, year-end closing, social
+  charges, assets, payroll, etc.) from Settings → Modules without touching
+  environment variables.
+- **Banking: BIC field for strict pain.001 (FF01)** — bank account form
+  now accepts a BIC/SWIFT code required for SEPA FF01-compliant pain.001
+  exports.
+- **Banking: BIC autofill from IBAN** — entering an IBAN auto-populates the
+  BIC field via lookup, reducing manual entry errors.
+- **Security: organization API token audit log** — every API token request
+  against an organisation is now recorded in the activity log.
+- **Security: defense-in-depth `authorize()` on API FormRequests** — all
+  API form requests explicitly enforce authorization so policy checks
+  cannot be accidentally bypassed.
+- **API: invoice line cap** — `POST /invoices` rejects payloads with more
+  than 500 lines, preventing runaway memory usage.
+- **Jobs: harden `GenerateRecurringInvoicesJob` retry policy** — back-off
+  and failure handling improved to avoid silent drops on transient errors.
+
+### Changed
+- **Banking: QR-IBAN moved to bank account** — the QR-IBAN field has been
+  relocated from the payment initiation form to the bank account settings,
+  so it is configured once per account rather than per payment.
+- **UI: contact form redesigned** — contact create/edit pages now use a
+  compact tabbed layout (general, address, banking) replacing the previous
+  single-scroll form.
+- **UI: status badges** — replaced inline `<span>` badges with the shared
+  `Badge` component across `FiscalYears/Index`, `Billing/Plans`, and
+  `SaasAdmin/Dashboard`; `statusClasses.js` now exports variant-name maps
+  instead of raw CSS class strings.
+
+### Fixed
+- **Banking: pain.001 SEPA SvcLvl + auto BIC hotfix** — corrects missing
+  `SvcLvl` element and auto-fills BIC for SEPA transfers in generated
+  pain.001.001.09 files.
+- **Banking: pain.001 `ReqdExctnDt` fix (FF01)** — execution date element
+  was malformed for FF01 (instant credit transfer); now emits a valid date
+  string.
+- **Banking: pain.001 download hotfix** — fixes a regression where the
+  download response was empty after the initial pain.001 implementation.
+- **Reconciliation: combobox overflow + paid invoices** — dropdown no longer
+  overflows its container in a modal; paid invoices are now visible in the
+  reconciliation matching list.
+- **Banking: QR-IBAN field label clarified** in the bank account form.
+- **HTTP: trust reverse proxy headers for HTTPS detection (#18)** — fixes
+  `secure` cookie / redirect issues when running behind nginx/Cloudflare;
+  adds `TrustedProxiesTest` coverage.
+- **Accounting: idempotent chart-of-accounts seeding** — `ChartTemplateService`
+  no longer fails when re-seeding an organisation that already has matching
+  account codes (root cause of duplicate-code-on-org-create errors).
+- **Scheduler: heartbeat HTTP errors are swallowed** — `routes/console.php`
+  pins short connect/read timeouts and catches transport exceptions so a
+  flaky heartbeat endpoint can no longer block the scheduler tick.
+- **i18n: missing fiscal-year translations** for de/fr/it (PR #17 only
+  shipped the English keys).
+- **Security: secrets and tokens redacted from User activity log** — API
+  keys and token values are no longer stored in plain text in activity
+  log payloads.
+- **Invoicing: N+1 queries eliminated** — Invoice relations are now
+  eager-loaded, removing per-row queries on list and export views.
+- **Signup: repair accounts schema + free-plan copy + registration gate** —
+  fixes a schema inconsistency that caused 500 errors on new sign-ups.
+
+### Security
+- **postcss CVE GHSA-qx2v-qp2m-jg93** — bumped `vue` to 3.5.34 and `vite`
+  to 8.0.13 to force transitive `postcss` to ≥ 8.5.10; added
+  `pnpm.overrides` as a lockfile-level safety net.
+
+### Dependencies
+- `tailwindcss` 4.2.2 → 4.3.0
+- `@tailwindcss/vite` 4.2.2 → 4.3.0
+- `vue` 3.5.32 → 3.5.34
+- `vite` 8.0.8 → 8.0.13
+
+### Internal
+- `phpunit.xml`: removed hardcoded `APP_BASE_PATH=/var/www/html` that
+  caused test suite failures on non-Docker CI runners.
+- CI: pinned `gitleaks/gitleaks-action` to v2.3.9 and opted into Node 24
+  runners to silence Node 20 deprecation warnings.
+
+### Docs
+- `INSTALL.md`: fixed manual installation commands (were incorrectly using
+  `vendor/bin/sail`); added **Upgrading** section for both Docker and
+  manual installs; bumped Node.js minimum to 22+.
+
 ---
 
 ## [3.3.0] — 2026-05-12

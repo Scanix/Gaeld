@@ -3,7 +3,6 @@
 namespace Tests\Feature\Organizations;
 
 use App\Domains\Organizations\Models\Organization;
-use App\Domains\Organizations\Services\ChecklistService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -87,95 +86,5 @@ class SetupModeTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('setup_mode');
-    }
-
-    public function test_checklist_hides_data_import_for_fresh_orgs(): void
-    {
-        /** @var Organization $org */
-        $org = Organization::factory()->create([
-            'setup_mode' => 'fresh',
-            'enabled_modules' => [],
-        ]);
-
-        $service = app(ChecklistService::class);
-        $checklist = $service->checklist($org->id);
-
-        $keys = array_column($checklist['accounting'], 'key');
-        $this->assertNotContains('checklist_data_imported', $keys);
-    }
-
-    public function test_checklist_shows_data_import_for_migrating_orgs(): void
-    {
-        /** @var Organization $org */
-        $org = Organization::factory()->create([
-            'setup_mode' => 'migrating',
-            'enabled_modules' => [],
-        ]);
-
-        $service = app(ChecklistService::class);
-        $checklist = $service->checklist($org->id);
-
-        $keys = array_column($checklist['accounting'], 'key');
-        $this->assertContains('checklist_data_imported', $keys);
-    }
-
-    public function test_checklist_hides_assets_item_when_module_disabled(): void
-    {
-        /** @var Organization $org */
-        $org = Organization::factory()->create([
-            'setup_mode' => 'fresh',
-            'enabled_modules' => ['assets' => false],
-        ]);
-
-        $service = app(ChecklistService::class);
-        $checklist = $service->checklist($org->id);
-
-        $keys = array_column($checklist['accounting'], 'key');
-        $this->assertNotContains('checklist_depreciation_posted', $keys);
-    }
-
-    public function test_checklist_shows_assets_item_when_module_enabled(): void
-    {
-        /** @var Organization $org */
-        $org = Organization::factory()->create([
-            'setup_mode' => 'fresh',
-            'enabled_modules' => ['assets' => true],
-        ]);
-
-        $service = app(ChecklistService::class);
-        $checklist = $service->checklist($org->id);
-
-        $keys = array_column($checklist['accounting'], 'key');
-        $this->assertContains('checklist_depreciation_posted', $keys);
-    }
-
-    public function test_checklist_hides_fiduciary_export_item_when_module_disabled(): void
-    {
-        /** @var Organization $org */
-        $org = Organization::factory()->create([
-            'setup_mode' => 'fresh',
-            'enabled_modules' => ['fiduciary_export' => false],
-        ]);
-
-        $service = app(ChecklistService::class);
-        $checklist = $service->checklist($org->id);
-
-        $keys = array_column($checklist['accounting'], 'key');
-        $this->assertNotContains('checklist_fiduciary_exported', $keys);
-    }
-
-    public function test_checklist_shows_fiduciary_export_item_when_module_enabled(): void
-    {
-        /** @var Organization $org */
-        $org = Organization::factory()->create([
-            'setup_mode' => 'fresh',
-            'enabled_modules' => ['fiduciary_export' => true],
-        ]);
-
-        $service = app(ChecklistService::class);
-        $checklist = $service->checklist($org->id);
-
-        $keys = array_column($checklist['accounting'], 'key');
-        $this->assertContains('checklist_fiduciary_exported', $keys);
     }
 }

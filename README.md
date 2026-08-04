@@ -77,18 +77,21 @@ Other useful commands:
 ### Manual
 
 ```bash
-./vendor/bin/sail composer install
+composer install
 pnpm install && pnpm run build
 cp .env.example .env
-./vendor/bin/sail artisan key:generate
-./vendor/bin/sail artisan gaeld:install
-./vendor/bin/sail up
+php artisan key:generate
+# Edit .env with your DB credentials, then:
+php artisan gaeld:install
+php artisan serve
 ```
 
 ### Updating
 
 ```bash
-./vendor/bin/sail artisan gaeld:update
+php artisan gaeld:update      # manual install
+# or
+./vendor/bin/sail artisan gaeld:update   # Docker / Sail
 ```
 
 Runs pending migrations, clears caches, and restarts the queue worker — safe to run on a live instance.
