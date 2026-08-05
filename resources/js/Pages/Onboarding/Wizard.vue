@@ -223,7 +223,7 @@ function skip() {
                 </span>
                 {{ step.label() }}
               </button>
-              <span v-if="i < steps.value.length - 1" class="h-px w-6 bg-[hsl(var(--border))]" />
+              <span v-if="i < steps.length - 1" class="h-px w-6 bg-[hsl(var(--border))]" />
             </li>
           </ol>
         </nav>
@@ -356,7 +356,7 @@ function skip() {
             <div class="flex items-center gap-3">
               <!-- Hide skip on the upgrade step -->
               <button
-                v-if="currentStep < steps.value.length - 1"
+                v-if="currentStep < steps.length - 1"
                 type="button"
                 class="text-sm text-[hsl(var(--muted-foreground))] underline-offset-2 hover:underline"
                 @click="skip"
