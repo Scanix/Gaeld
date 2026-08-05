@@ -34,7 +34,7 @@ const checkoutResult = computed(() => {
 const hasPlans = computed(() => props.plans.length > 0)
 
 const isTrialingWithoutStripe = computed(() =>
-  props.currentSubscription?.status === 'trialing' && !props.currentSubscription?.has_stripe
+  props.currentSubscription?.status === 'trialing' && !props.currentSubscription?.has_payment_method
 )
 
 const invoiceQuota = computed(() => page.props.auth?.invoice_quota ?? { invoices_this_month: 0, invoice_monthly_limit: -1 })
