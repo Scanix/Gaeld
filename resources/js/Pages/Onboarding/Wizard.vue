@@ -24,6 +24,7 @@ const props = defineProps({
 const { t } = useTranslations()
 const { isDark, toggleTheme } = useTheme()
 const page = usePage()
+const moduleKeys = computed(() => Array.isArray(props.modules) ? props.modules : [])
 
 const LOCALES = [
   { value: 'en', label: 'EN' },
@@ -253,7 +254,7 @@ function skip() {
 
             <div class="space-y-2">
               <label
-                v-for="key in modules"
+                v-for="key in moduleKeys"
                 :key="key"
                 class="flex items-start gap-3 rounded-lg border border-[hsl(var(--border))] p-3 hover:bg-[hsl(var(--accent))]/50"
               >
@@ -268,7 +269,7 @@ function skip() {
                 </div>
               </label>
             </div>
-            <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ enabledModuleCount }} / {{ modules.length }}</p>
+            <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ enabledModuleCount }} / {{ moduleKeys.length }}</p>
           </fieldset>
 
           <!-- Step 2: Company details -->
