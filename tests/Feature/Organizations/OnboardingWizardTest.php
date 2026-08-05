@@ -18,6 +18,7 @@ class OnboardingWizardTest extends TestCase
         parent::setUp();
 
         $this->setUpOrganization(['email_verified_at' => now()]);
+        $this->user->update(['onboarding_completed_at' => null]);
     }
 
     public function test_wizard_renders_for_user_who_has_not_completed_onboarding(): void

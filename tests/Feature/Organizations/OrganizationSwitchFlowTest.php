@@ -17,7 +17,7 @@ class OrganizationSwitchFlowTest extends TestCase
     {
         $this->seedPermissions();
 
-        $user = User::factory()->create();
+        $user = User::factory()->create(['onboarding_completed_at' => now()]);
         /** @var User $user */
         $orgA = Organization::create(['name' => 'Org A', 'currency' => 'CHF']);
         $orgB = Organization::create(['name' => 'Org B', 'currency' => 'EUR']);
@@ -62,7 +62,7 @@ class OrganizationSwitchFlowTest extends TestCase
     {
         $this->seedPermissions();
 
-        $user = User::factory()->create();
+        $user = User::factory()->create(['onboarding_completed_at' => now()]);
         /** @var User $user */
         $organization = Organization::create(['name' => 'Fallback Org', 'currency' => 'CHF']);
         $organization->users()->attach($user->id, ['role' => 'owner']);
