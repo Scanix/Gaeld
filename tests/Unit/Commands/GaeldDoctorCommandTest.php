@@ -14,7 +14,13 @@ class GaeldDoctorCommandTest extends TestCase
         // phpunit.xml sets TRUSTED_PROXIES=* globally for the test suite (other
         // feature tests rely on trusted X-Forwarded-* headers); reset it here to
         // represent a genuinely clean self-hosted default.
-        config()->set('proxy.trusted_proxies', null);
+        config()->set([
+            'app.url' => 'http://localhost:8080',
+            'proxy.trusted_proxies' => null,
+            'proxy.force_https' => null,
+            'session.domain' => null,
+            'session.secure' => false,
+        ]);
 
         $this->artisan('gaeld:doctor')
             ->assertSuccessful()
