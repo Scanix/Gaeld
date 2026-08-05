@@ -2,6 +2,7 @@
     "name": "gaeld-app",
     "private": true,
     "type": "module",
+    "packageManager": "pnpm@11.20.0",
     "scripts": {
         "dev": "vite",
         "build": "vite build"
@@ -30,15 +31,5 @@
         "vue": "^3.5.34",
         "vue-chartjs": "^5.3.3",
         "zod": "^4.3.6"
-    },
-    "pnpm": {
-        "onlyBuiltDependencies": [
-            "@sentry/cli",
-            "esbuild"
-        ],
-        "overrides": {
-            "@babel/core": "^7.29.6",
-            "brace-expansion": "^5.0.7"
-        }
     }
 }

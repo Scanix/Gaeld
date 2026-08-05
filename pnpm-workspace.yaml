@@ -1,3 +1,7 @@
 allowBuilds:
   '@sentry/cli': true
   esbuild: true
+
+overrides:
+  '@babel/core': ^7.29.6
+  brace-expansion: ^5.0.7
