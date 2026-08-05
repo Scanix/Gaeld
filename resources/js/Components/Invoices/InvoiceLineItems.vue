@@ -150,12 +150,29 @@ defineExpose({ subtotal, vatTotal, total })
 
 <template>
   <div>
-    <h3 class="mb-3 text-sm font-medium">{{ t('line_items') }}</h3>
+    <div class="mb-3 flex items-start justify-between gap-4">
+      <div>
+        <h3 class="text-sm font-medium">{{ t('line_items') }}</h3>
+        <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('invoice_line_items_hint') }}</p>
+      </div>
+      <span class="shrink-0 text-xs tabular-nums text-[hsl(var(--muted-foreground))]">{{ lines.length }} {{ t('line_items') }}</span>
+    </div>
+    <div class="mb-2 hidden grid-cols-12 gap-2 px-3 text-xs font-medium text-[hsl(var(--muted-foreground))] sm:grid">
+      <span class="col-span-2">{{ t('type') }}</span>
+      <span class="col-span-3">{{ t('description') }}</span>
+      <span class="col-span-2">{{ t('qty') }}</span>
+      <span class="col-span-2">{{ t('unit_price') }}</span>
+      <span class="col-span-2">{{ t('vat') }}</span>
+      <span class="col-span-1 text-right">{{ t('actions') }}</span>
+    </div>
     <div class="space-y-3">
       <div
         v-for="(line, i) in lines"
         :key="i"
-        class="grid grid-cols-1 gap-3 rounded-lg border border-[hsl(var(--border))] p-3 sm:grid-cols-12 sm:items-end sm:gap-2"
+        :class="[
+          'grid grid-cols-1 gap-3 rounded-lg border p-3 sm:grid-cols-12 sm:items-end sm:gap-2',
+          line.type === 'discount' ? 'border-[hsl(var(--destructive)/0.35)] bg-[hsl(var(--destructive)/0.04)]' : line.type === 'text' ? 'border-dashed border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.35)]' : 'border-[hsl(var(--border))] bg-[hsl(var(--card))]',
+        ]"
       >
         <div class="sm:col-span-2">
           <FormSelect

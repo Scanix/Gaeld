@@ -14,6 +14,7 @@ use App\Domains\Users\Controllers\PasswordResetController;
 use App\Domains\Users\Controllers\RegisteredUserController;
 use App\Domains\Users\Controllers\TwoFactorChallengeController;
 use App\Http\Controllers\GlobalSearchController;
+use App\Http\Middleware\EnsureOnboardingComplete;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -92,7 +93,9 @@ Route::get('/accounting/archives/{archive}/file', [LegalArchiveController::class
 
 // Authenticated routes
 Route::middleware(['auth', 'verified', 'org', 'org-2fa', 'subscription'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware(EnsureOnboardingComplete::class)
+        ->name('dashboard');
 
     // Global search
     Route::get('/search', GlobalSearchController::class)->middleware('throttle:60,1')->name('search');

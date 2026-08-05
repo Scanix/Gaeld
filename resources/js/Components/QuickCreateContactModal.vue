@@ -5,6 +5,7 @@ import Button from '@/Components/UI/Button.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import MaskedInput from '@/Components/UI/MaskedInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { countryOptions, currencyOptions } from '@/lib/contactOptions'
 
@@ -38,6 +39,7 @@ const defaultExpenseCategory = ref('')
 const errors = ref({})
 const formError = ref('')
 const saving = ref(false)
+const showDetails = ref(false)
 
 const typeOptions = [
   { value: 'organization', label: t('organization') },
@@ -74,6 +76,7 @@ watch(() => props.open, (val) => {
     errors.value = {}
     formError.value = ''
     saving.value = false
+    showDetails.value = false
   }
 })
 
@@ -189,60 +192,24 @@ async function submit() {
           :error="errors.phone?.[0]"
         />
       </div>
-      <FormInput
-        id="qc-address"
-        v-model="address"
-        :label="t('address')"
-        :error="errors.address?.[0]"
-      />
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <FormInput
-          id="qc-city"
-          v-model="city"
-          :label="t('city')"
-          :error="errors.city?.[0]"
-        />
-        <MaskedInput
-          id="qc-postal-code"
-          v-model="postalCode"
-          mask="postal"
-          :label="t('postal_code')"
-          :error="errors.postal_code?.[0]"
-        />
-      </div>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <FormSelect
-          id="qc-country"
-          v-model="country"
-          :label="t('country')"
-          :options="countryOptions(t)"
-          :error="errors.country?.[0]"
-        />
-        <FormSelect
-          id="qc-currency"
-          v-model="currency"
-          :label="t('currency')"
-          :options="currencyOptions(t)"
-          :error="errors.currency?.[0]"
-        />
-      </div>
-
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <FormInput
-          id="qc-vat-number"
-          v-model="vatNumber"
-          :label="t('vat_number')"
-          :error="errors.vat_number?.[0]"
-          :placeholder="t('placeholder_vat_uid')"
-        />
-        <FormInput
-          id="qc-payment-terms"
-          v-model="paymentTerms"
-          :label="t('payment_terms')"
-          :error="errors.payment_terms?.[0]"
-          placeholder="30"
-        />
-      </div>
+      <details :open="showDetails" class="rounded-md border border-[hsl(var(--border))] px-3 py-2" @toggle="showDetails = $event.target.open">
+        <summary class="cursor-pointer text-sm font-medium">{{ t('more_details') }}</summary>
+        <div class="mt-4 space-y-4">
+          <FormInput id="qc-address" v-model="address" :label="t('address')" :error="errors.address?.[0]" />
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormInput id="qc-city" v-model="city" :label="t('city')" :error="errors.city?.[0]" />
+            <MaskedInput id="qc-postal-code" v-model="postalCode" mask="postal" :label="t('postal_code')" :error="errors.postal_code?.[0]" />
+          </div>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <SearchableSelect id="qc-country" v-model="country" :label="t('country')" :options="countryOptions(t)" :error="errors.country?.[0]" :force-searchable="true" />
+            <FormSelect id="qc-currency" v-model="currency" :label="t('currency')" :options="currencyOptions(t)" :error="errors.currency?.[0]" />
+          </div>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormInput id="qc-vat-number" v-model="vatNumber" :label="t('vat_number')" :error="errors.vat_number?.[0]" :placeholder="t('placeholder_vat_uid')" />
+            <FormInput id="qc-payment-terms" v-model="paymentTerms" :label="t('payment_terms')" :error="errors.payment_terms?.[0]" placeholder="30" />
+          </div>
+        </div>
+      </details>
 
       <div v-if="contactType === 'supplier'" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <FormInput
