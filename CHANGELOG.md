@@ -5,19 +5,50 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.5.1] — 2026-08-07
+
+### Added
+- **UI: Storybook component catalog** — added Storybook 10 with Vue/Vite,
+  Tailwind v4 theme support, accessibility checks, and stories for the shared
+  Button, FormInput, Modal, and SearchableSelect components.
+- **Organizations: onboarding guard** — incomplete users are redirected to
+  the setup wizard before entering the dashboard.
+- **Organizations: expense category provisioning** — new organizations are
+  created with the default expense categories instead of waiting for a visit
+  to Settings.
 
 ### Changed
-- **Onboarding: standardised on the post-signup wizard, retired the dashboard
-  checklist** — `main`'s post-signup onboarding wizard (module selection,
-  language switcher, upgrade nudge) and `develop`'s dashboard "Getting
-  Started" / "Accounting" checklist had evolved independently and were
-  mutually exclusive. The wizard is now the single onboarding flow;
-  `ChecklistService`, `OnboardingDismissController`, `AccountingChecklist.vue`
-  and `OnboardingChecklist.vue` have been removed along with their
-  translation keys and the never-deployed `onboarding_dismissed_at` column.
-  Dashboard empty-state guidance, the export-module CTA, and the expired
-  fiscal-year banner are unaffected and remain in place.
+- **Invoicing: payment recording UX** — the payment form now pre-fills the
+  remaining balance, validates the amount client-side, shows paid/due totals
+  and progress, and provides an explicit empty payment-history state.
+- **Invoicing: line-item editor** — improved hierarchy and visual distinction
+  between item, discount, and note lines, with clearer desktop headings.
+- **Contacts: quick creation** — secondary contact fields are progressive and
+  country selection is searchable.
+- **Expenses: missing references** — an empty category reference state now
+  explains the issue and links to Settings instead of failing silently.
+
+### Fixed
+- **EE: Stripe payment-method synchronization** — checkout completion now
+  re-fetches the Stripe subscription, persists the customer subscription's
+  default PaymentMethod, and exposes the real payment-method state to Billing.
+- **EE: signup 500** — replaced the failing remote compromised-password check
+  with equivalent local password-strength requirements, avoiding a Guzzle
+  runtime incompatibility during registration.
+- **Billing: trial warning** — the payment-method banner is now based on
+  `has_payment_method`, not merely the presence of a Stripe customer.
+- **Onboarding: wizard rendering** — fixed Vue template ref unwrapping and
+  module prop references that caused the wizard to crash on staging.
+- **SaaS: unpaid access** — past-due, paused, canceled, and expired trial
+  subscriptions no longer retain access to protected routes.
+
+### Tests
+- Full suite passes with 1,242 tests and 4,436 assertions; 13 tests remain
+  skipped by design.
+- Added regression coverage for onboarding redirects, organization reference
+  provisioning, and the EE billing integration.
+- Validated the principal staging flow: signup, Stripe trial checkout, email
+  verification, onboarding wizard, invoicing, payments, expenses, and reports.
 
 ---
 
