@@ -821,6 +821,7 @@ return [
     'free' => 'Kostenlos',
     'since' => 'Seit',
     'actions' => 'Aktionen',
+    'no_payments_recorded' => 'Noch keine Zahlungen erfasst.',
     'invoice_line_items_hint' => 'Fügen Sie Leistungen, Rabatte oder Notizen hinzu. Die Summen werden während der Eingabe aktualisiert.',
     'expense_categories_unavailable' => 'Es sind noch keine Aufwandskategorien verfügbar.',
     'open_settings' => 'Einstellungen öffnen',

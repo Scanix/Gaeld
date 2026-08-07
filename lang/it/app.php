@@ -784,6 +784,7 @@ return [
     'free' => 'Gratuito',
     'since' => 'Dal',
     'actions' => 'Azioni',
+    'no_payments_recorded' => 'Nessun pagamento registrato.',
     'invoice_line_items_hint' => 'Aggiungete servizi, sconti o note. I totali si aggiornano durante la modifica.',
     'expense_categories_unavailable' => 'Non sono ancora disponibili categorie di spesa.',
     'open_settings' => 'Apri impostazioni',

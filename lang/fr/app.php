@@ -820,6 +820,7 @@ return [
     'free' => 'Gratuit',
     'since' => 'Depuis',
     'actions' => 'Actions',
+    'no_payments_recorded' => 'Aucun paiement enregistré pour le moment.',
     'invoice_line_items_hint' => 'Ajoutez des prestations, remises ou notes. Les totaux se mettent à jour pendant la saisie.',
     'expense_categories_unavailable' => 'Aucune catégorie de dépense n’est encore disponible.',
     'open_settings' => 'Ouvrir les paramètres',

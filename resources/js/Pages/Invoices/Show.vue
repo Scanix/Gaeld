@@ -74,8 +74,17 @@ const paymentForm = useForm({
 })
 
 const amountDue = computed(() => {
-  const paid = (props.invoice?.payments ?? []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0)
-  return Math.max(0, parseFloat(props.invoice?.total || 0) - paid)
+  return Math.max(0, parseFloat(props.invoice?.total || 0) - amountPaid.value)
+})
+
+const amountPaid = computed(() =>
+  (props.invoice?.payments ?? []).reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0),
+)
+
+const paymentProgress = computed(() => {
+  const total = parseFloat(props.invoice?.total || 0)
+
+  return total > 0 ? Math.min(100, Math.round((amountPaid.value / total) * 100)) : 0
 })
 
 const isOverdue = computed(() => {
@@ -88,12 +97,29 @@ function finalize() {
 }
 
 function recordPayment() {
+  const amount = parseFloat(paymentForm.amount)
+
+  if (!Number.isFinite(amount) || amount <= 0 || amount > amountDue.value) {
+    paymentForm.setError('amount', `${t('amount_due')}: ${formatCurrency(amountDue.value)}`)
+    return
+  }
+
   paymentForm.post(`/invoices/${props.invoice.id}/payment`, {
     onSuccess: () => {
       showPaymentModal.value = false
       paymentForm.reset()
     },
   })
+}
+
+function openPaymentModal() {
+  paymentForm.amount = amountDue.value.toFixed(2)
+  paymentForm.payment_date = new Date().toISOString().slice(0, 10)
+  paymentForm.payment_method = 'bank'
+  paymentForm.reference = ''
+  paymentForm.bank_account_code = ''
+  paymentForm.clearErrors()
+  showPaymentModal.value = true
 }
 
 function duplicate() {
@@ -235,7 +261,7 @@ const bankAccountOptions = computed(() =>
           <Button
             v-if="(invoice?.status === 'sent' || invoice?.status === 'overdue') && !invoice?.archived_at"
             size="sm"
-            @click="showPaymentModal = true"
+            @click="openPaymentModal"
           >
             {{ t('record_payment') }}
           </Button>
@@ -338,7 +364,7 @@ const bankAccountOptions = computed(() =>
             </template>
           </DataTable>
           <div class="mt-4 flex justify-end">
-            <div class="w-48 space-y-1 text-sm">
+            <div class="w-full max-w-xs space-y-2 text-sm">
               <div v-if="parseFloat(invoice?.vat_amount) > 0" class="flex justify-between text-[hsl(var(--muted-foreground))]">
                 <span>{{ t('subtotal') }}</span>
                 <span class="tabular-nums">{{ formatCurrency(invoice?.subtotal) }}</span>
@@ -351,22 +377,33 @@ const bankAccountOptions = computed(() =>
                 <span>{{ t('total') }}</span>
                 <span class="text-xl tabular-nums">{{ formatCurrency(invoice?.total) }}</span>
               </div>
-              <p v-if="invoice?.payments?.length" class="text-right text-[hsl(var(--muted-foreground))]">
-                {{ t('amount_due') }} {{ formatCurrency(amountDue) }}
-              </p>
+              <div v-if="invoice?.payments?.length" class="space-y-2 border-t pt-2">
+                <div class="flex justify-between text-[hsl(var(--muted-foreground))]">
+                  <span>{{ t('amount') }}</span>
+                  <span class="tabular-nums">{{ formatCurrency(amountPaid) }}</span>
+                </div>
+                <div class="h-2 overflow-hidden rounded-full bg-[hsl(var(--muted))]" aria-hidden="true">
+                  <div class="h-full rounded-full bg-[hsl(var(--primary))] transition-all" :style="{ width: `${paymentProgress}%` }" />
+                </div>
+                <p class="text-right text-[hsl(var(--muted-foreground))]">
+                  {{ t('amount_due') }} {{ formatCurrency(amountDue) }}
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <!-- Payment History -->
-      <Card v-if="invoice?.payments?.length">
+      <Card v-if="invoice?.payments?.length || amountDue > 0">
         <CardHeader>
           <CardTitle>{{ t('payment_history') }}</CardTitle>
-          <CardDescription>{{ invoice.payments.length }} {{ t('payments_recorded') }}</CardDescription>
+          <CardDescription v-if="invoice?.payments?.length">{{ invoice.payments.length }} {{ t('payments_recorded') }}</CardDescription>
+          <CardDescription v-else>{{ t('amount_due') }} {{ formatCurrency(amountDue) }}</CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTable :columns="paymentColumns" :rows="invoice.payments" />
+          <DataTable v-if="invoice?.payments?.length" :columns="paymentColumns" :rows="invoice.payments" />
+          <p v-else class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('no_payments_recorded') }}</p>
         </CardContent>
       </Card>
 
@@ -474,6 +511,9 @@ const bankAccountOptions = computed(() =>
           id="payment-amount"
           v-model="paymentForm.amount"
           type="number"
+          min="0.01"
+          :max="amountDue"
+          step="0.01"
           :label="`${t('amount')} (${t('due')}: ${formatCurrency(amountDue)})`"
           :error="paymentForm.errors.amount"
           required

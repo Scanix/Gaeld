@@ -834,6 +834,7 @@ return [
     'free' => 'Free',
     'since' => 'Since',
     'actions' => 'Actions',
+    'no_payments_recorded' => 'No payments recorded yet.',
     'invoice_line_items_hint' => 'Add services, discounts, or notes. Totals update as you edit.',
     'expense_categories_unavailable' => 'No expense categories are available yet.',
     'open_settings' => 'Open settings',
