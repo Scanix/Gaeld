@@ -45,7 +45,7 @@ host('staging')
     ->setHostname(getenv('DEPLOY_STAGING_HOST') ?: 'build')
     ->setRemoteUser(getenv('DEPLOY_STAGING_USER') ?: 'deploy')
     ->set('http_user', 'www-data')
-    ->set('horizon_service', getenv('DEPLOY_STAGING_HORIZON_SERVICE') ?: 'gaeld-worker')
+    ->set('horizon_service', getenv('DEPLOY_STAGING_HORIZON_SERVICE') ?: 'gaeld-horizon')
     ->setDeployPath(getenv('DEPLOY_STAGING_PATH') ?: '~/gaeld_app')
     ->setForwardAgent(true);
 
@@ -128,10 +128,6 @@ task('deploy:sync:permissions', function () {
     run('cd {{release_path}} && {{bin/php}} artisan gaeld:sync-permissions');
 })->desc('Sync RBAC permissions');
 
-task('deploy:opcache:clear', function () {
-    run('cd {{release_path}} && {{bin/php}} artisan opcache:clear 2>/dev/null || true');
-})->desc('Clear OPcache after deploy');
-
 task('deploy:meilisearch:sync', function () {
     run('cd {{release_path}} && {{bin/php}} artisan scout:sync-index-settings 2>/dev/null || true');
 })->desc('Sync MeiliSearch index settings');
@@ -145,9 +141,9 @@ set('sentry', [
 
         return $project === '' ? [] : [$project];
     },
-    'token' => static function () {
-        return trim(run('grep "^SENTRY_AUTH_TOKEN=" {{deploy_path}}/shared/.env | cut -d= -f2- 2>/dev/null || true'), " \t\n\r\0\x0B\"'");
-    },
+    // Read the token from the local deploy environment. Remote `run()` output
+    // is logged by Deployer and must never print a server-side secret.
+    'token' => getenv('DEPLOY_SENTRY_AUTH_TOKEN') ?: null,
     'environment' => static function () {
         return getenv('DEPLOY_SENTRY_ENVIRONMENT') ?: (get('stage') ?: 'production');
     },
@@ -178,10 +174,9 @@ task('deploy', [
     'artisan:event:cache',
     'deploy:sync:permissions',
     'deploy:meilisearch:sync',
-    'deploy:fpm:restart',
     'deploy:publish',
     'deploy:sentry:release',
-    'deploy:opcache:clear',
+    'deploy:fpm:restart',
     'deploy:horizon:restart',
 ])->desc('Deploy the SaaS application');
 
