@@ -2,6 +2,7 @@
 
 namespace App\Domains\Reporting\Services;
 
+use App\Domains\Accounting\DTOs\FiscalYearPeriod;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\FiscalYearService;
@@ -12,6 +13,7 @@ use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use ZipArchive;
@@ -45,6 +47,19 @@ class AccountingExportService
             $fiscalYearId,
             is_numeric($fiscalYear) ? (int) $fiscalYear : null,
         );
+
+        return Cache::lock(
+            "accounting-export:{$orgId}:".($period->fiscalYearId ?? $period->label),
+            900,
+        )->block(10, fn (): string => $this->generateExportForPeriod($org, $period, $fiscalYear));
+    }
+
+    private function generateExportForPeriod(
+        Organization $org,
+        FiscalYearPeriod $period,
+        string $legacyLabel,
+    ): string {
+        $orgId = $org->id;
         $fromDate = $period->fromDate;
         $toDate = $period->toDate;
 
@@ -64,7 +79,7 @@ class AccountingExportService
             $this->buildInvoicesCsv($tmpDir, $orgId, $fromDate, $toDate);
             $this->buildExpensesCsv($tmpDir, $orgId, $fromDate, $toDate);
 
-            $zipLabel = Str::slug($period->label) ?: $fiscalYear;
+            $zipLabel = Str::slug($period->label) ?: $legacyLabel;
             $zipFilename = "exports/accounting-{$orgId}-{$zipLabel}.zip";
             $zipPath = Storage::disk('local')->path($zipFilename);
 

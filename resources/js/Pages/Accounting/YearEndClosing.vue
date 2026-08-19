@@ -19,6 +19,7 @@ import { AlertTriangle, Check, CheckCircle2 } from 'lucide-vue-next'
 
 const props = defineProps({
   year:         { type: Number, required: true },
+  fiscalYearId: { type: String, default: null },
   fromDate:     { type: String, required: true },
   toDate:       { type: String, required: true },
   income:       { type: Array, default: () => [] },
@@ -40,6 +41,7 @@ const showReopenConfirm = ref(false)
 const processing   = ref(false)
 
 const form = useForm({
+  fiscal_year_id:      props.fiscalYearId,
   year:                props.year,
   closing_date:        props.toDate,
   reference:           `BOUCL-${props.year}`,
@@ -89,9 +91,14 @@ watch(selectedYear, (val) => {
 })
 
 watch(() => props.year, (val) => {
+  form.fiscal_year_id = props.fiscalYearId
   form.year         = val
   form.closing_date = props.toDate
   form.reference    = `BOUCL-${val}`
+})
+
+watch(() => props.fiscalYearId, (val) => {
+  form.fiscal_year_id = val
 })
 
 function runClosing() {

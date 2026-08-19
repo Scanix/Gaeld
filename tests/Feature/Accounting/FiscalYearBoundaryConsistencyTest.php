@@ -10,6 +10,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
@@ -109,5 +110,21 @@ class FiscalYearBoundaryConsistencyTest extends TestCase
                 ->where('toDate', '2025-06-30')
                 ->where('unsettledVatPeriods.0', 'Q2 2025')
             );
+    }
+
+    public function test_year_end_closing_rejects_a_fiscal_year_from_another_organization(): void
+    {
+        $foreignOrganization = Organization::factory()->create();
+        $foreignFiscalYear = FiscalYear::factory()->for($foreignOrganization)->create();
+
+        $this->actAsOrg()
+            ->post(route('accounting.closing.store'), [
+                'fiscal_year_id' => $foreignFiscalYear->id,
+                'year' => $foreignFiscalYear->start_date->year,
+                'closing_date' => $foreignFiscalYear->end_date->toDateString(),
+                'reference' => 'CROSS-ORG-CLOSE',
+                'result_account_code' => '9000',
+            ])
+            ->assertSessionHasErrors('fiscal_year_id');
     }
 }

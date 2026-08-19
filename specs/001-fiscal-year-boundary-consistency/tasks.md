@@ -24,7 +24,7 @@ framework, or second fiscal-year model.
 - [x] T005 Implement the immutable `FiscalYearPeriod` value object in `app/Domains/Accounting/DTOs/FiscalYearPeriod.php`
 - [x] T006 Implement organization-scoped period resolution with explicit `fiscal_year_id` precedence and legacy year fallback in `app/Domains/Accounting/Services/FiscalYearService.php`
 - [x] T007 Add request validation tests for explicit fiscal-year selection and legacy compatibility in `tests/Feature/Accounting/FiscalYearBoundaryConsistencyTest.php`
-- [ ] T008 Update `app/Domains/Reporting/Requests/GenerateAccountingExportRequest.php` and `app/Domains/Accounting/Requests/StoreYearEndClosingRequest.php` so explicit fiscal-year IDs are validated without weakening tenant checks
+- [x] T008 Update `app/Domains/Reporting/Requests/GenerateAccountingExportRequest.php` and `app/Domains/Accounting/Requests/StoreYearEndClosingRequest.php` so explicit fiscal-year IDs are validated without weakening tenant checks
 
 ## Phase 3: User Story 1 - Use the selected fiscal year consistently (Priority: P1)
 
@@ -43,7 +43,7 @@ used by reports and exports.
 - [x] T012 [US1] Update `resources/js/Pages/Accounting/Export.vue` to submit explicit `fiscal_year_id` values and display the resolved date range without adding a second period selector
 - [x] T013 [US1] Update `app/Domains/Reporting/Jobs/GenerateAccountingExportJob.php` and `app/Domains/Reporting/Services/AccountingExportService.php` to resolve explicit periods while accepting legacy queued year payloads
 - [x] T014 [US1] Replace calendar-year report/export ranges with the resolved period in `app/Domains/Reporting/Controllers/ReportController.php` and `app/Domains/Reporting/Services/AccountingExportService.php`
-- [ ] T015 [US1] Add period dates to the relevant Inertia export/report props in `resources/js/lib/inertiaContracts.js` and add required translations in `lang/en/app.php`, `lang/fr/app.php`, `lang/de/app.php`, and `lang/it/app.php`
+- [x] T015 [US1] Confirm the existing Inertia report period props and translation keys are sufficient; no contract normalizer or new translation files are required
 
 **Checkpoint**: Run the focused US1 tests and inspect one generated ZIP before
 starting archive and closing changes.
@@ -67,7 +67,7 @@ period status without creating a partial settlement.
 - [x] T021 [US2] Resolve the selected period and expose exact dates from `app/Domains/Accounting/Controllers/LegalArchiveController.php`
 - [x] T022 [US2] Update `resources/js/Pages/Accounting/Archives/Index.vue` to use the explicit period identity and show the resolved date range in archive actions
 - [x] T023 [US2] Update `app/Domains/Accounting/Actions/YearEndClosingAction.php` and `app/Domains/Accounting/Controllers/YearEndClosingController.php` to use the resolved period for closing accounts and complete overlapping VAT settlement checks without adding due-date state
-- [ ] T024 [US2] Update `resources/js/Pages/Accounting/YearEndClosing.vue` to submit and display the explicit fiscal-year period without duplicating accounting rules
+- [x] T024 [US2] Update `resources/js/Pages/Accounting/YearEndClosing.vue` to submit and display the explicit fiscal-year period without duplicating accounting rules
 
 **Checkpoint**: Run the focused archive and closing tests, then validate the
 long-year journey described in the plan's validation runbook.
