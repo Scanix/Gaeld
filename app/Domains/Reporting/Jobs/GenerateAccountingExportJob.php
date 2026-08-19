@@ -26,6 +26,7 @@ class GenerateAccountingExportJob implements ShouldQueue
         public readonly string $orgId,
         public readonly string $fiscalYear,
         public readonly string $userId,
+        public readonly ?string $fiscalYearId = null,
     ) {}
 
     public function handle(AccountingExportService $exportService): void
@@ -36,7 +37,7 @@ class GenerateAccountingExportJob implements ShouldQueue
             'user_id' => $this->userId,
         ]);
 
-        $zipPath = $exportService->generateExport($this->orgId, $this->fiscalYear);
+        $zipPath = $exportService->generateExport($this->orgId, $this->fiscalYear, $this->fiscalYearId);
 
         $relativePath = basename($zipPath);
 

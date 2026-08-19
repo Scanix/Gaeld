@@ -18,6 +18,7 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -126,7 +127,7 @@ class YearEndClosingController extends Controller
             'netResult' => $netResult,
             'closedYears' => $org->closed_fiscal_years ?? [],
             'canReopenYear' => $request->user()?->can('reopenYear', Account::class) ?? false,
-            'unsettledVatPeriods' => $this->getUnsettledVatPeriods($year),
+            'unsettledVatPeriods' => $this->getUnsettledVatPeriods($from, $to),
             'outstandingInvoices' => $outstandingInvoices,
         ]);
     }
@@ -186,18 +187,15 @@ class YearEndClosingController extends Controller
      *
      * @return string[]
      */
-    private function getUnsettledVatPeriods(int $year): array
+    private function getUnsettledVatPeriods(string $fromDate, string $toDate): array
     {
-        $quarters = [
-            1 => ["{$year}-01-01", "{$year}-03-31"],
-            2 => ["{$year}-04-01", "{$year}-06-30"],
-            3 => ["{$year}-07-01", "{$year}-09-30"],
-            4 => ["{$year}-10-01", "{$year}-12-31"],
-        ];
-
         $unsettled = [];
+        $periodStart = Carbon::parse($fromDate)->startOfQuarter();
+        $periodEnd = Carbon::parse($toDate)->endOfQuarter();
 
-        foreach ($quarters as $q => [$from, $to]) {
+        for ($quarterStart = $periodStart; $quarterStart->lte($periodEnd); $quarterStart->addQuarter()) {
+            $from = $quarterStart->toDateString();
+            $to = $quarterStart->copy()->endOfQuarter()->toDateString();
             // Skip quarters that have no VAT-bearing activity at all.
             // JournalEntry's BelongsToOrganization global scope applies inside whereHas in HTTP context.
             $hasVatActivity = VatEntry::query()
@@ -216,7 +214,7 @@ class YearEndClosingController extends Controller
                 ->exists();
 
             if (! $exists) {
-                $unsettled[] = "Q{$q}";
+                $unsettled[] = 'Q'.$quarterStart->quarter.' '.$quarterStart->year;
             }
         }
 

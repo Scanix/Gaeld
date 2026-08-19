@@ -15,6 +15,7 @@ use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use App\Support\Money;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -62,7 +63,7 @@ class YearEndClosingAction
             throw new \RuntimeException('No accounts to close for this period.');
         }
 
-        $unsettled = $this->getUnsettledVatPeriods($orgId, $year);
+        $unsettled = $this->getUnsettledVatPeriods($orgId, $from, $to);
         if (! empty($unsettled)) {
             throw new \RuntimeException(__('app.fiscal_year_unsettled_vat', [
                 'year' => $year,
@@ -193,18 +194,15 @@ class YearEndClosingAction
      *
      * @return string[]
      */
-    private function getUnsettledVatPeriods(string $orgId, int $year): array
+    private function getUnsettledVatPeriods(string $orgId, string $fromDate, string $toDate): array
     {
-        $quarters = [
-            1 => ["{$year}-01-01", "{$year}-03-31"],
-            2 => ["{$year}-04-01", "{$year}-06-30"],
-            3 => ["{$year}-07-01", "{$year}-09-30"],
-            4 => ["{$year}-10-01", "{$year}-12-31"],
-        ];
-
         $unsettled = [];
+        $periodStart = Carbon::parse($fromDate)->startOfQuarter();
+        $periodEnd = Carbon::parse($toDate)->endOfQuarter();
 
-        foreach ($quarters as $q => [$from, $to]) {
+        for ($quarterStart = $periodStart; $quarterStart->lte($periodEnd); $quarterStart->addQuarter()) {
+            $from = $quarterStart->toDateString();
+            $to = $quarterStart->copy()->endOfQuarter()->toDateString();
             $hasVatActivity = VatEntry::query()
                 ->whereHas('journalEntry', fn ($jq) => $jq
                     ->where('organization_id', $orgId)
@@ -222,7 +220,7 @@ class YearEndClosingAction
                 ->exists();
 
             if (! $exists) {
-                $unsettled[] = "Q{$q}";
+                $unsettled[] = 'Q'.$quarterStart->quarter.' '.$quarterStart->year;
             }
         }
 

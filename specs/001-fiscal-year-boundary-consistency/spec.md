@@ -67,13 +67,12 @@ archived exactly once and that relevant VAT periods are checked.
    owner archives the fiscal year, **then** that record remains unarchived and
    available to the following period.
 3. **Given** VAT activity in a reporting period that overlaps the selected
-  fiscal year, **when** the owner attempts to close the year, **then** the
-  closing workflow shows that VAT period and its status without inventing a
-  partial-period settlement.
-4. **Given** an overlapping VAT period whose filing deadline has passed and
-  whose settlement remains unresolved, **when** the owner attempts to close
-  the year, **then** the existing closing policy blocks closure and identifies
-  the overdue period.
+   fiscal year, **when** the owner attempts to close the year, **then** the
+   closing workflow evaluates the complete VAT period and does not invent a
+   partial-period settlement.
+4. **Given** an overlapping VAT period with activity and no settlement,
+   **when** the owner attempts to close the year, **then** the existing closing
+   policy blocks closure and identifies the unresolved period.
 5. **Given** an archive already generated for the selected fiscal year,
    **when** the owner repeats the archive operation, **then** existing immutable
    archive records are not duplicated or overwritten.
@@ -115,7 +114,7 @@ period and included records with the current 12-month behavior.
 - A report or export is requested for a fiscal year with no records.
 - A record is dated outside the selected fiscal year but has a related payment
   or journal entry inside it.
-- A VAT reporting period overlaps a fiscal-year boundary and is not yet due.
+- A VAT reporting period overlaps a fiscal-year boundary.
 - An archive is partially present because a previous PDF or storage operation
   failed.
 - A legacy organization has no explicit fiscal-year record.
@@ -144,21 +143,18 @@ period and included records with the current 12-month behavior.
   VAT reporting-period boundaries.
 - **FR-008**: Year-end closing MUST NOT create or require a partial settlement
   for only the portion of a VAT reporting period that overlaps the fiscal year.
-- **FR-009**: A VAT reporting period that is not yet due MUST remain visible as
-  open but MUST NOT block fiscal-year closing solely because it overlaps the
-  fiscal-year boundary.
-- **FR-010**: An overdue and unresolved VAT reporting period MUST follow the
-  existing closing policy and, when that policy requires settlement, block
-  closure with an actionable period-specific error.
-- **FR-011**: The system MUST preserve the existing 01-01 to 12-31 behavior for
+- **FR-009**: A VAT reporting period with activity that overlaps the selected
+  fiscal-year range and has no settlement MUST follow the existing closing
+  policy and block closure with an actionable period-specific error.
+- **FR-010**: The system MUST preserve the existing 01-01 to 12-31 behavior for
   organizations that have no explicit fiscal-year record.
-- **FR-012**: Explicit fiscal-year records MUST take precedence over legacy
+- **FR-011**: Explicit fiscal-year records MUST take precedence over legacy
   calendar-year settings.
-- **FR-013**: Existing archive files and database records MUST remain readable
+- **FR-012**: Existing archive files and database records MUST remain readable
   after deployment and MUST NOT be rewritten as part of a normal read or export.
-- **FR-014**: Fiscal-year resolution MUST preserve organization isolation and
+- **FR-013**: Fiscal-year resolution MUST preserve organization isolation and
   MUST NOT allow a user to select or read another organization's fiscal year.
-- **FR-015**: The feature MUST define and test behavior when concurrent requests
+- **FR-014**: The feature MUST define and test behavior when concurrent requests
   attempt to generate the same fiscal-year archive or export.
 
 ## Key Entities
@@ -190,9 +186,7 @@ period and included records with the current 12-month behavior.
 - **SC-004**: Existing legacy calendar-year regression scenarios continue to
   pass without data migration.
 - **SC-005**: A year-end closing attempt cannot complete while an applicable VAT
-  settlement is overdue and unresolved under the agreed boundary rule, while a
-  not-yet-due overlapping VAT period does not block closure solely because of
-  the fiscal-year boundary.
+  period with activity remains unsettled under the existing closing policy.
 
 ## Accounting Policy Decision
 
@@ -200,7 +194,8 @@ Swiss VAT reporting periods are independent from an organization's annual
 financial fiscal year. The fiscal year used for financial statements, archives,
 and fiduciary exports must therefore not redefine a VAT quarter or create a
 partial VAT settlement. The implementation must evaluate the complete legally
-defined VAT period and distinguish settled, not-yet-due, and overdue states.
+defined VAT period and apply the existing closing policy to its settlement state.
+It must not add a new VAT due-date model in this feature.
 
 This decision is based on the Swiss VAT Act and current Federal Tax
 Administration guidance:
@@ -222,5 +217,5 @@ Administration guidance:
 - Organizations without explicit fiscal-year records retain the current
   calendar-year fallback.
 - VAT reporting periods remain independent from the organization's financial
-  fiscal year. The closing workflow carries not-yet-due VAT liabilities forward
-  and applies the existing overdue-settlement policy to overdue periods.
+  fiscal year. The closing workflow evaluates complete overlapping periods and
+  applies the existing unsettled-period policy.

@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Services;
 
 use App\Domains\Accounting\DTOs\FiscalYearData;
+use App\Domains\Accounting\DTOs\FiscalYearPeriod;
 use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Exceptions\FiscalYearOverlapException;
 use App\Domains\Accounting\Exceptions\FiscalYearTooLongException;
@@ -24,6 +25,50 @@ class FiscalYearService
 {
     /** Swiss legal maximum for a long first fiscal year. */
     public const MAX_DURATION_MONTHS = 23;
+
+    /**
+     * Resolve an explicit fiscal-year record or the legacy calendar-year
+     * fallback into one inclusive period contract for downstream consumers.
+     */
+    public function resolvePeriod(
+        Organization $organization,
+        ?string $fiscalYearId = null,
+        ?int $year = null,
+    ): FiscalYearPeriod {
+        if ($fiscalYearId !== null) {
+            $fiscalYear = FiscalYear::query()
+                ->withoutGlobalScopes()
+                ->where('organization_id', $organization->id)
+                ->whereKey($fiscalYearId)
+                ->firstOrFail();
+
+            return $this->periodFromFiscalYear($fiscalYear);
+        }
+
+        if ($year !== null) {
+            $fiscalYear = FiscalYear::query()
+                ->withoutGlobalScopes()
+                ->where('organization_id', $organization->id)
+                ->whereYear('start_date', $year)
+                ->orderBy('start_date')
+                ->first();
+
+            if ($fiscalYear !== null) {
+                return $this->periodFromFiscalYear($fiscalYear);
+            }
+        }
+
+        $legacyYear = $year ?? now()->year;
+
+        return new FiscalYearPeriod(
+            organizationId: $organization->id,
+            fiscalYearId: null,
+            label: (string) $legacyYear,
+            fromDate: "{$legacyYear}-01-01",
+            toDate: "{$legacyYear}-12-31",
+            isLegacyFallback: true,
+        );
+    }
 
     /** The currently operative fiscal year, if any. */
     public function getOperative(Organization $organization): ?FiscalYear
@@ -258,5 +303,17 @@ class FiscalYearService
             $start->gt($today) => FiscalYearStatus::Planned,
             default => FiscalYearStatus::Operative,
         };
+    }
+
+    private function periodFromFiscalYear(FiscalYear $fiscalYear): FiscalYearPeriod
+    {
+        return new FiscalYearPeriod(
+            organizationId: $fiscalYear->organization_id,
+            fiscalYearId: $fiscalYear->id,
+            label: $fiscalYear->name,
+            fromDate: $fiscalYear->start_date->toDateString(),
+            toDate: $fiscalYear->end_date->toDateString(),
+            isLegacyFallback: false,
+        );
     }
 }

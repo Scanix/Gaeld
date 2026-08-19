@@ -108,7 +108,7 @@ Before implementation, confirm:
 **Data model**: Add a nullable `fiscal_year_id` foreign key to `legal_archives`
 for new explicit-period archives. Keep the existing integer `fiscal_year` as a
 backward-compatible display label. Preserve historical archive rows and files;
-backfill only when an existing row maps unambiguously to one fiscal-year record.
+do not backfill ambiguous historical rows in this feature.
 
 Add transient `FiscalYearPeriod` data containing the organization ID, optional
 fiscal-year ID, display label, inclusive `fromDate`, inclusive `toDate`, and a
@@ -123,7 +123,8 @@ resolution.
 
 **Frontend states**: Show the selected period dates, loading state while an
 export is queued, empty/header-only results, validation errors, forbidden
-responses, archive-present state, and idempotent repeat-generation feedback.
+responses, unresolved VAT period errors, archive-present state, and idempotent
+repeat-generation feedback.
 
 ## Design Decisions
 
@@ -132,11 +133,11 @@ responses, archive-present state, and idempotent repeat-generation feedback.
 - Use one small immutable `FiscalYearPeriod` value object. Do not add a second
 	persisted fiscal-year model, a repository layer, or a generic date framework.
 - Add nullable `legal_archives.fiscal_year_id` for new explicit-period archives;
-	preserve the existing integer label, unique key, and historical files.
+	preserve the existing integer label, unique key, and historical files. Do not
+	backfill ambiguous historical rows in this feature.
 - Keep VAT reporting periods independent from financial fiscal years. Never
-	create a partial VAT settlement. Not-yet-due periods remain visible but do not
-	block closing solely because they overlap; overdue unresolved periods follow
-	the existing closing policy.
+	create a partial VAT settlement; complete overlapping periods follow the
+	existing unsettled-period closing policy. Do not add VAT due-date data here.
 - Accept explicit `fiscal_year_id` for new requests and retain the validated
 	four-digit year fallback for legacy organizations and queued jobs.
 - Existing calendar-year organizations and historical archive files require no

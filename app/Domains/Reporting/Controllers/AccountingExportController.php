@@ -3,6 +3,8 @@
 namespace App\Domains\Reporting\Controllers;
 
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Jobs\GenerateAccountingExportJob;
 use App\Domains\Reporting\Requests\GenerateAccountingExportRequest;
@@ -19,33 +21,68 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 class AccountingExportController extends Controller
 {
-    public function index(CurrentOrganization $currentOrg): Response
+    public function index(CurrentOrganization $currentOrg, FiscalYearService $fiscalYears): Response
     {
         $this->authorize('viewAny', Account::class);
 
         $currentYear = now()->year;
+        $organization = $currentOrg->get();
+        $periods = FiscalYear::query()
+            ->orderByDesc('start_date')
+            ->get()
+            ->map(fn (FiscalYear $fiscalYear): array => [
+                'id' => $fiscalYear->id,
+                'label' => $fiscalYear->name,
+                'start_date' => $fiscalYear->start_date->toDateString(),
+                'end_date' => $fiscalYear->end_date->toDateString(),
+                'is_legacy_fallback' => false,
+            ])
+            ->values()
+            ->all();
 
-        $fiscalYears = array_map(
-            fn (int $y) => (string) $y,
-            range($currentYear, $currentYear - 5),
-        );
+        if ($periods === []) {
+            $periods = array_map(function (int $year) use ($fiscalYears, $organization): array {
+                $period = $fiscalYears->resolvePeriod($organization, null, $year);
+
+                return [
+                    'id' => null,
+                    'label' => $period->label,
+                    'start_date' => $period->fromDate,
+                    'end_date' => $period->toDate,
+                    'is_legacy_fallback' => true,
+                ];
+            }, range($currentYear, $currentYear - 5));
+        }
+
+        $currentPeriod = $periods[0] ?? null;
 
         return Inertia::render('Accounting/Export', [
-            'fiscalYears' => $fiscalYears,
-            'currentFiscalYear' => (string) $currentYear,
+            'fiscalYears' => $periods,
+            'currentFiscalYear' => $currentPeriod['label'] ?? (string) $currentYear,
+            'currentFiscalYearId' => $currentPeriod['id'] ?? null,
+            'currentPeriod' => $currentPeriod,
         ]);
     }
 
-    public function generate(GenerateAccountingExportRequest $request, CurrentOrganization $currentOrg): RedirectResponse
-    {
+    public function generate(
+        GenerateAccountingExportRequest $request,
+        CurrentOrganization $currentOrg,
+        FiscalYearService $fiscalYears,
+    ): RedirectResponse {
         $this->authorize('viewAny', Account::class);
 
         $validated = $request->validated();
+        $period = $fiscalYears->resolvePeriod(
+            $currentOrg->get(),
+            $validated['fiscal_year_id'] ?? null,
+            isset($validated['fiscal_year']) ? (int) $validated['fiscal_year'] : null,
+        );
 
         GenerateAccountingExportJob::dispatch(
             $currentOrg->id(),
-            $validated['fiscal_year'],
+            $period->label,
             (string) $request->user()->id,
+            $validated['fiscal_year_id'] ?? null,
         );
 
         return redirect()->route('accounting.export')

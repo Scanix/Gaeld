@@ -3,6 +3,7 @@
 namespace App\Domains\Reporting\Controllers;
 
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Requests\BalanceSheetRequest;
 use App\Domains\Reporting\Requests\ProfitAndLossRequest;
@@ -21,15 +22,26 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
  */
 class ReportController extends Controller
 {
-    public function profitAndLoss(ProfitAndLossRequest $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response
-    {
+    public function profitAndLoss(
+        ProfitAndLossRequest $request,
+        ReportingService $reportingService,
+        CurrentOrganization $currentOrg,
+        FiscalYearService $fiscalYears,
+    ): Response {
         $this->authorize('viewAny', Account::class);
 
         $validated = $request->validated();
 
         $orgId = $currentOrg->id();
-        $from = $validated['from'] ?? now()->startOfYear()->toDateString();
-        $to = $validated['to'] ?? now()->toDateString();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $from = $period !== null
+            ? $period->fromDate
+            : ($validated['from'] ?? now()->startOfYear()->toDateString());
+        $to = $period !== null
+            ? $period->toDate
+            : ($validated['to'] ?? now()->toDateString());
 
         $report = $reportingService->profitAndLoss(
             $orgId,
@@ -44,14 +56,23 @@ class ReportController extends Controller
         ]);
     }
 
-    public function balanceSheet(BalanceSheetRequest $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response
-    {
+    public function balanceSheet(
+        BalanceSheetRequest $request,
+        ReportingService $reportingService,
+        CurrentOrganization $currentOrg,
+        FiscalYearService $fiscalYears,
+    ): Response {
         $this->authorize('viewAny', Account::class);
 
         $validated = $request->validated();
 
         $orgId = $currentOrg->id();
-        $asOfDate = $validated['as_of_date'] ?? now()->toDateString();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $asOfDate = $period !== null
+            ? $period->toDate
+            : ($validated['as_of_date'] ?? now()->toDateString());
 
         $report = $reportingService->balanceSheet($orgId, $asOfDate, $validated['compare_as_of_date'] ?? null);
 
@@ -65,14 +86,22 @@ class ReportController extends Controller
         ReportingService $reportingService,
         CurrentOrganization $currentOrg,
         ExportReportService $exporter,
+        FiscalYearService $fiscalYears,
         string $format,
     ): HttpResponse {
         $this->authorize('viewAny', Account::class);
 
         $validated = $request->validated();
         $orgId = $currentOrg->id();
-        $from = $validated['from'] ?? now()->startOfYear()->toDateString();
-        $to = $validated['to'] ?? now()->toDateString();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $from = $period !== null
+            ? $period->fromDate
+            : ($validated['from'] ?? now()->startOfYear()->toDateString());
+        $to = $period !== null
+            ? $period->toDate
+            : ($validated['to'] ?? now()->toDateString());
 
         $report = $reportingService->profitAndLoss($orgId, $from, $to);
         $org = $currentOrg->get();
@@ -113,13 +142,19 @@ class ReportController extends Controller
         ReportingService $reportingService,
         CurrentOrganization $currentOrg,
         ExportReportService $exporter,
+        FiscalYearService $fiscalYears,
         string $format,
     ): HttpResponse {
         $this->authorize('viewAny', Account::class);
 
         $validated = $request->validated();
         $orgId = $currentOrg->id();
-        $asOfDate = $validated['as_of_date'] ?? now()->toDateString();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $asOfDate = $period !== null
+            ? $period->toDate
+            : ($validated['as_of_date'] ?? now()->toDateString());
 
         $report = $reportingService->balanceSheet($orgId, $asOfDate, $validated['compare_as_of_date'] ?? null);
         $org = $currentOrg->get();

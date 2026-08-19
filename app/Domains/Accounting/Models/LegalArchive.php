@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property string $document_type
  * @property string $document_id
  * @property int $fiscal_year
+ * @property string|null $fiscal_year_id
  * @property string $checksum_sha256
  * @property string $storage_path
  * @property Carbon $archived_at
@@ -36,6 +37,7 @@ class LegalArchive extends Model
         'document_type',
         'document_id',
         'fiscal_year',
+        'fiscal_year_id',
         'checksum_sha256',
         'storage_path',
         'archived_at',
@@ -57,6 +59,12 @@ class LegalArchive extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /** @return BelongsTo<FiscalYear, $this> */
+    public function fiscalYear(): BelongsTo
+    {
+        return $this->belongsTo(FiscalYear::class);
     }
 
     public function isExpiringSoon(): bool

@@ -3,15 +3,20 @@
 namespace App\Domains\Accounting\Controllers;
 
 use App\Domains\Accounting\Actions\GenerateArchivePdfAction;
+use App\Domains\Accounting\DTOs\FiscalYearPeriod;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\LegalArchive;
+use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -27,7 +32,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class LegalArchiveController extends Controller
 {
-    public function __construct(private readonly LegalArchivingService $service) {}
+    public function __construct(
+        private readonly LegalArchivingService $service,
+        private readonly FiscalYearService $fiscalYears,
+    ) {}
 
     public function index(CurrentOrganization $currentOrg): Response
     {
@@ -35,11 +43,11 @@ class LegalArchiveController extends Controller
 
         $archivedYears = DB::table('legal_archives')
             ->where('organization_id', $currentOrg->id())
-            ->select('fiscal_year')
+            ->select('fiscal_year', 'fiscal_year_id')
             ->selectRaw('COUNT(*) as total_count')
             ->selectRaw('SUM(CASE WHEN verified_at IS NOT NULL THEN 1 ELSE 0 END) as verified_count')
             ->selectRaw('MIN(expires_at) as earliest_expiry')
-            ->groupBy('fiscal_year')
+            ->groupBy('fiscal_year', 'fiscal_year_id')
             ->orderByDesc('fiscal_year')
             ->get()
             ->keyBy('fiscal_year');
@@ -48,21 +56,41 @@ class LegalArchiveController extends Controller
 
         $unarchivedYears = array_diff($closedFiscalYears, $archivedYears->keys()->all());
 
+        $organization = $currentOrg->get();
+
         $years = $archivedYears
-            ->map(fn ($row): array => [
-                'fiscal_year' => (int) $row->fiscal_year,
-                'total_count' => (int) $row->total_count,
-                'verified_count' => (int) $row->verified_count,
-                'earliest_expiry' => $row->earliest_expiry,
-            ])
+            ->map(function ($row) use ($organization): array {
+                $period = $this->fiscalYears->resolvePeriod(
+                    $organization,
+                    $row->fiscal_year_id,
+                    (int) $row->fiscal_year,
+                );
+
+                return [
+                    'fiscal_year' => (int) $row->fiscal_year,
+                    'fiscal_year_id' => $period->fiscalYearId,
+                    'start_date' => $period->fromDate,
+                    'end_date' => $period->toDate,
+                    'total_count' => (int) $row->total_count,
+                    'verified_count' => (int) $row->verified_count,
+                    'earliest_expiry' => $row->earliest_expiry,
+                ];
+            })
             ->values()
             ->concat(
-                collect($unarchivedYears)->map(fn (int $year): array => [
-                    'fiscal_year' => $year,
-                    'total_count' => 0,
-                    'verified_count' => 0,
-                    'earliest_expiry' => null,
-                ])
+                collect($unarchivedYears)->map(function (int $year) use ($organization): array {
+                    $period = $this->fiscalYears->resolvePeriod($organization, null, $year);
+
+                    return [
+                        'fiscal_year' => $year,
+                        'fiscal_year_id' => $period->fiscalYearId,
+                        'start_date' => $period->fromDate,
+                        'end_date' => $period->toDate,
+                        'total_count' => 0,
+                        'verified_count' => 0,
+                        'earliest_expiry' => null,
+                    ];
+                })
             )
             ->sortByDesc('fiscal_year')
             ->values()
@@ -77,8 +105,8 @@ class LegalArchiveController extends Controller
     {
         $this->authorize('viewAny', LegalArchive::class);
 
-        $items = LegalArchive::query()
-            ->where('fiscal_year', $year)
+        $period = $this->fiscalYears->resolvePeriod($currentOrg->get(), null, $year);
+        $items = $this->periodQuery($period)
             ->orderBy('document_type')
             ->orderByDesc('archived_at')
             ->get()
@@ -93,7 +121,16 @@ class LegalArchiveController extends Controller
             ])
             ->all();
 
-        return response()->json(['items' => $items]);
+        return response()->json([
+            'period' => [
+                'id' => $period->fiscalYearId,
+                'label' => $period->label,
+                'start_date' => $period->fromDate,
+                'end_date' => $period->toDate,
+                'is_legacy_fallback' => $period->isLegacyFallback,
+            ],
+            'items' => $items,
+        ]);
     }
 
     public function generateForYear(int $year, CurrentOrganization $currentOrg): RedirectResponse
@@ -101,10 +138,14 @@ class LegalArchiveController extends Controller
         $this->authorize('create', LegalArchive::class);
 
         $org = $currentOrg->get();
+        $period = $this->fiscalYears->resolvePeriod($org, null, $year);
 
-        abort_unless($org->isFiscalYearClosed($year), 403, __('app.fiscal_year_not_closed'));
+        $fiscalYear = $period->fiscalYearId
+            ? FiscalYear::query()->whereKey($period->fiscalYearId)->first()
+            : null;
+        abort_unless($fiscalYear?->isClosed() ?? $org->isFiscalYearClosed($year), 403, __('app.fiscal_year_not_closed'));
 
-        $this->service->archiveFiscalYear($currentOrg->id(), $year);
+        $this->service->archiveFiscalYear($currentOrg->id(), $period->label, $period->fiscalYearId);
 
         return redirect()->route('accounting.archives.index')
             ->with('success', __('app.archive_generated'));
@@ -161,22 +202,22 @@ class LegalArchiveController extends Controller
         $this->authorize('viewAny', LegalArchive::class);
 
         $documentType = $this->resolveDocumentType($type);
+        $period = $this->fiscalYears->resolvePeriod($currentOrg->get(), null, $year);
+        $documentId = $this->pdfDocumentId($period);
 
-        $archive = LegalArchive::query()
-            ->where('fiscal_year', $year)
+        $archive = $this->periodQuery($period)
             ->where('document_type', $documentType)
-            ->where('document_id', "pdf-{$year}")
+            ->where('document_id', $documentId)
             ->first();
 
         if ($archive !== null && Storage::exists($archive->storage_path)) {
             // Happy path — sealed file is on disk, serve it directly.
         } elseif ($archive === null) {
             // First generation (open year or on-demand for a freelancer).
-            $pdfAction->execute($currentOrg->id(), $year);
-            $archive = LegalArchive::query()
-                ->where('fiscal_year', $year)
+            $pdfAction->execute($currentOrg->id(), $period->label, $period->fiscalYearId);
+            $archive = $this->periodQuery($period)
                 ->where('document_type', $documentType)
-                ->where('document_id', "pdf-{$year}")
+                ->where('document_id', $documentId)
                 ->firstOrFail();
         } else {
             // Archive row exists but file is missing (storage issue).
@@ -200,10 +241,10 @@ class LegalArchiveController extends Controller
     {
         $this->authorize('viewAny', LegalArchive::class);
 
-        $pdfAction->execute($currentOrg->id(), $year);
+        $period = $this->fiscalYears->resolvePeriod($currentOrg->get(), null, $year);
+        $pdfAction->execute($currentOrg->id(), $period->label, $period->fiscalYearId);
 
-        $archives = LegalArchive::query()
-            ->where('fiscal_year', $year)
+        $archives = $this->periodQuery($period)
             ->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])
             ->get();
 
@@ -236,15 +277,15 @@ class LegalArchiveController extends Controller
     {
         $this->authorize('viewAny', LegalArchive::class);
 
-        $archives = LegalArchive::query()
-            ->where('fiscal_year', $year)
+        $period = $this->fiscalYears->resolvePeriod($currentOrg->get(), null, $year);
+        $archives = $this->periodQuery($period)
             ->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])
             ->get()
             ->keyBy('document_type');
 
         if ($archives->isEmpty()) {
             // Nothing archived yet — generate fresh.
-            $pdfAction->execute($currentOrg->id(), $year);
+            $pdfAction->execute($currentOrg->id(), $period->label, $period->fiscalYearId);
 
             return back()->with('success', __('app.archive_pdfs_regenerated'));
         }
@@ -269,5 +310,21 @@ class LegalArchiveController extends Controller
             'journal' => 'pdf_journal',
             default => throw new \InvalidArgumentException("Unknown archive PDF type: {$type}"),
         };
+    }
+
+    /** @return Builder<LegalArchive> */
+    private function periodQuery(FiscalYearPeriod $period): Builder
+    {
+        return LegalArchive::query()
+            ->when(
+                $period->fiscalYearId !== null,
+                fn (Builder $query): Builder => $query->where('fiscal_year_id', $period->fiscalYearId),
+                fn (Builder $query): Builder => $query->where('fiscal_year', (int) $period->label),
+            );
+    }
+
+    private function pdfDocumentId(FiscalYearPeriod $period): string
+    {
+        return 'pdf-'.(Str::slug($period->label) ?: $period->label);
     }
 }

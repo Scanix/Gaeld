@@ -4,10 +4,12 @@ namespace App\Domains\Accounting\Actions;
 
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\LegalArchive;
+use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Reporting\Services\ReportingService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Generates per-fiscal-year PDF archives (general journal, balance sheet,
@@ -35,6 +37,7 @@ final class GenerateArchivePdfAction
 
     public function __construct(
         private readonly ReportingService $reportingService,
+        private readonly FiscalYearService $fiscalYears,
     ) {}
 
     /**
@@ -42,21 +45,31 @@ final class GenerateArchivePdfAction
      *
      * @return array<int, array{type: string, path: string, checksum: string, regenerated: bool}>
      */
-    public function execute(string $orgId, int $year, bool $force = false): array
-    {
+    public function execute(
+        string $orgId,
+        string|int $fiscalYear,
+        ?string $fiscalYearId = null,
+        bool $force = false,
+    ): array {
         $org = Organization::findOrFail($orgId);
-        $fromDate = sprintf('%04d-01-01', $year);
-        $toDate = sprintf('%04d-12-31', $year);
+        $period = $this->fiscalYears->resolvePeriod(
+            $org,
+            $fiscalYearId,
+            is_numeric((string) $fiscalYear) ? (int) $fiscalYear : null,
+        );
+        $fromDate = $period->fromDate;
+        $toDate = $period->toDate;
+        $storageLabel = Str::slug($period->label) ?: (string) $fiscalYear;
 
         $results = [];
 
         foreach (self::ARTEFACTS as $documentType => $slug) {
-            $relativePath = "archives/{$orgId}/{$year}/pdf/{$slug}-{$year}.pdf";
+            $relativePath = "archives/{$orgId}/{$storageLabel}/pdf/{$slug}-{$storageLabel}.pdf";
 
             $existing = LegalArchive::query()
                 ->where('organization_id', $orgId)
                 ->where('document_type', $documentType)
-                ->where('document_id', "pdf-{$year}")
+                ->where('document_id', "pdf-{$storageLabel}")
                 ->first();
 
             // A sealed archive — file exists on disk — must never be overwritten.
@@ -99,10 +112,11 @@ final class GenerateArchivePdfAction
                 [
                     'organization_id' => $orgId,
                     'document_type' => $documentType,
-                    'document_id' => "pdf-{$year}",
+                    'document_id' => "pdf-{$storageLabel}",
                 ],
                 [
-                    'fiscal_year' => $year,
+                    'fiscal_year' => (int) substr($fromDate, 0, 4),
+                    'fiscal_year_id' => $period->fiscalYearId,
                     'checksum_sha256' => $checksum,
                     'storage_path' => $relativePath,
                     'archived_at' => $now,
@@ -136,8 +150,13 @@ final class GenerateArchivePdfAction
     public function recoverFile(LegalArchive $archive): bool
     {
         $org = Organization::findOrFail($archive->organization_id);
-        $fromDate = sprintf('%04d-01-01', $archive->fiscal_year);
-        $toDate = sprintf('%04d-12-31', $archive->fiscal_year);
+        $period = $this->fiscalYears->resolvePeriod(
+            $org,
+            $archive->fiscal_year_id,
+            $archive->fiscal_year,
+        );
+        $fromDate = $period->fromDate;
+        $toDate = $period->toDate;
 
         $content = $this->renderArtefact($archive->document_type, $org, $fromDate, $toDate);
 

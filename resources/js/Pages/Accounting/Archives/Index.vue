@@ -118,6 +118,12 @@ function generateArchive(year) {
               {{ t('archive_fiscal_year') }} {{ year.fiscal_year }}
               <Badge variant="secondary">{{ year.total_count }}</Badge>
             </CardTitle>
+            <p
+              v-if="year.start_date && year.end_date"
+              class="w-full text-xs text-[hsl(var(--muted-foreground))]"
+            >
+              {{ year.start_date }} – {{ year.end_date }}
+            </p>
             <div v-if="year.total_count === 0">
               <Button
                 size="sm"
