@@ -767,6 +767,7 @@ return [
     'signup_subtitle' => 'Aucune carte de crédit requise. Annulez à tout moment.',
     'signup_cta' => 'Commencer l\'essai de :days jours',
     'signup_cta_free' => 'Créer un compte gratuit',
+    'signup_disclaimer_free' => 'Votre forfait gratuit est activé immédiatement. Aucune donnée de paiement n\'est requise.',
     'signup_disclaimer' => 'Vous allez être redirigé vers Stripe pour saisir vos coordonnées de paiement. Votre carte ne sera débitée qu\'à la fin de l\'essai.',
     'creating_account' => 'Création du compte…',
     'unlimited_invoices' => 'Factures illimitées',

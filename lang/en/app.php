@@ -779,6 +779,7 @@ return [
     'signup_subtitle' => 'No credit card required to start. Cancel anytime.',
     'signup_cta' => 'Start :days-day free trial',
     'signup_cta_free' => 'Create free account',
+    'signup_disclaimer_free' => 'Your free plan starts immediately. No payment details are required.',
     'signup_disclaimer' => 'You\'ll be taken to Stripe to enter your payment details. Your card won\'t be charged until the trial ends.',
     'creating_account' => 'Creating account…',
     'unlimited_invoices' => 'Unlimited invoices',

@@ -731,6 +731,7 @@ return [
     'signup_subtitle' => 'Nessuna carta di credito richiesta. Annulla in qualsiasi momento.',
     'signup_cta' => 'Inizia la prova di :days giorni',
     'signup_cta_free' => 'Crea un account gratuito',
+    'signup_disclaimer_free' => 'Il tuo piano gratuito viene attivato subito. Non sono richiesti dati di pagamento.',
     'signup_disclaimer' => 'Verrai reindirizzato a Stripe per inserire i tuoi dati di pagamento. La tua carta non verrà addebitata fino alla fine della prova.',
     'creating_account' => 'Creazione account…',
     'unlimited_invoices' => 'Fatture illimitate',

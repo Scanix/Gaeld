@@ -133,36 +133,48 @@ function submit() {
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('full_name') }}</label>
+              <label for="signup-name" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('full_name') }}</label>
               <input
+                id="signup-name"
                 v-model="form.name"
                 type="text"
+                autocomplete="name"
                 required
+                :aria-describedby="form.errors.name ? 'signup-name-error' : undefined"
+                :aria-invalid="form.errors.name ? 'true' : undefined"
                 class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
-              <p v-if="form.errors.name" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.name }}</p>
+              <p v-if="form.errors.name" id="signup-name-error" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.name }}</p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('company_name') }}</label>
+              <label for="signup-org-name" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('company_name') }}</label>
               <input
+                id="signup-org-name"
                 v-model="form.org_name"
                 type="text"
+                autocomplete="organization"
                 required
+                :aria-describedby="form.errors.org_name ? 'signup-org-name-error' : undefined"
+                :aria-invalid="form.errors.org_name ? 'true' : undefined"
                 class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
-              <p v-if="form.errors.org_name" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.org_name }}</p>
+              <p v-if="form.errors.org_name" id="signup-org-name-error" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.org_name }}</p>
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('email') }}</label>
+            <label for="signup-email" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('email') }}</label>
             <input
+              id="signup-email"
               v-model="form.email"
               type="email"
+              autocomplete="email"
               required
+              :aria-describedby="form.errors.email ? 'signup-email-error' : undefined"
+              :aria-invalid="form.errors.email ? 'true' : undefined"
               class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
             />
-            <p v-if="form.errors.email" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.email }}</p>
+            <p v-if="form.errors.email" id="signup-email-error" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.email }}</p>
           </div>
 
           <!-- Business type -->
@@ -206,8 +218,9 @@ function submit() {
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('chart_of_accounts') }}</label>
+            <label for="signup-chart-of-accounts" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('chart_of_accounts') }}</label>
             <select
+              id="signup-chart-of-accounts"
               v-model="form.chart_of_accounts"
               class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
             >
@@ -220,20 +233,26 @@ function submit() {
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('password') }}</label>
+              <label for="signup-password" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('password') }}</label>
               <input
+                id="signup-password"
                 v-model="form.password"
                 type="password"
+                autocomplete="new-password"
                 required
+                :aria-describedby="form.errors.password ? 'signup-password-error' : undefined"
+                :aria-invalid="form.errors.password ? 'true' : undefined"
                 class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
-              <p v-if="form.errors.password" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.password }}</p>
+              <p v-if="form.errors.password" id="signup-password-error" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.password }}</p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('confirm_password') }}</label>
+              <label for="signup-password-confirmation" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('confirm_password') }}</label>
               <input
+                id="signup-password-confirmation"
                 v-model="form.password_confirmation"
                 type="password"
+                autocomplete="new-password"
                 required
                 class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
@@ -275,7 +294,7 @@ function submit() {
           </Button>
 
           <p class="text-center text-xs text-[hsl(var(--muted-foreground))]">
-            {{ t('signup_disclaimer') }}
+            {{ t(selectedPlanIsFree ? 'signup_disclaimer_free' : 'signup_disclaimer') }}
           </p>
         </form>
       </div>

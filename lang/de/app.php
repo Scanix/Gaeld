@@ -768,6 +768,7 @@ return [
     'signup_subtitle' => 'Keine Kreditkarte erforderlich. Jederzeit kündbar.',
     'signup_cta' => ':days-tägige Testphase starten',
     'signup_cta_free' => 'Kostenloses Konto erstellen',
+    'signup_disclaimer_free' => 'Ihr kostenloser Tarif wird sofort aktiviert. Es sind keine Zahlungsdaten erforderlich.',
     'signup_disclaimer' => 'Sie werden zu Stripe weitergeleitet, um Ihre Zahlungsdaten einzugeben. Ihre Karte wird erst nach Ablauf der Testphase belastet.',
     'creating_account' => 'Konto wird erstellt…',
     'unlimited_invoices' => 'Unbegrenzte Rechnungen',
