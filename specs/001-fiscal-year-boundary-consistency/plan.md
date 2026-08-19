@@ -53,10 +53,9 @@ tax-declaration redesign in this feature.
 	`YearEndClosingAction`, `ReportingService`, `LegalArchivingService`,
 	`GenerateArchivePdfAction`, `AccountingExportService`, and existing ledger
 	query services.
-- **Existing documentation and specs consulted**: [Product baseline](../000-product-baseline/current-state.md),
-	[architecture map](../000-product-baseline/architecture-map.md),
-	[divergence register](../000-product-baseline/divergence-register.md), and
-	[Gäld constitution](../../.specify/memory/constitution.md).
+- **Existing documentation and specs consulted**: `AGENTS.md`,
+  `CONTRIBUTING.md`, the Accounting and Reporting domain READMEs, and
+  [Gäld constitution](../../.specify/memory/constitution.md).
 
 ### Backend Surfaces
 
@@ -126,6 +125,42 @@ resolution.
 export is queued, empty/header-only results, validation errors, forbidden
 responses, archive-present state, and idempotent repeat-generation feedback.
 
+## Design Decisions
+
+- Resolve one inclusive period from the existing `FiscalYear` record and pass
+	that value through reports, exports, archives, PDFs, and closing checks.
+- Use one small immutable `FiscalYearPeriod` value object. Do not add a second
+	persisted fiscal-year model, a repository layer, or a generic date framework.
+- Add nullable `legal_archives.fiscal_year_id` for new explicit-period archives;
+	preserve the existing integer label, unique key, and historical files.
+- Keep VAT reporting periods independent from financial fiscal years. Never
+	create a partial VAT settlement. Not-yet-due periods remain visible but do not
+	block closing solely because they overlap; overdue unresolved periods follow
+	the existing closing policy.
+- Accept explicit `fiscal_year_id` for new requests and retain the validated
+	four-digit year fallback for legacy organizations and queued jobs.
+- Existing calendar-year organizations and historical archive files require no
+	migration beyond the nullable provenance column.
+
+## Contract Summary
+
+Fiscal-year pages and export/archive endpoints expose the resolved period:
+
+```json
+{
+	"id": "uuid-or-null",
+	"label": "2024",
+	"start_date": "2024-01-01",
+	"end_date": "2025-06-30",
+	"is_legacy_fallback": false
+}
+```
+
+New requests prefer `fiscal_year_id`; old `fiscal_year=YYYY` requests remain
+valid only through the organization-scoped fallback. An inaccessible period
+must return the existing validation or authorization response, never another
+organization's period.
+
 ## Test Strategy
 
 List tests by behavior, not only by class:
@@ -139,8 +174,10 @@ List tests by behavior, not only by class:
 	tests for the closing period resolver.
 - **Frontend/build**: Run the Vite build and add Inertia prop assertions to the
 	relevant feature tests; no separate frontend unit framework is introduced.
-- **Manual/browser**: Follow [quickstart.md](quickstart.md) with an 18-month
-	fiscal year and boundary-date records on the current `develop` build.
+- **Manual/browser**: Create an 18-month period from `2024-01-01` through
+	`2025-06-30`, place records on both boundaries and on `2025-07-01`, then
+	verify reports, exports, archives, PDFs, and closing use exactly the selected
+	range. Repeat with a legacy 01-01 to 12-31 organization.
 
 All new behavior must be verifiable through the repository's Sail workflow.
 
@@ -151,10 +188,6 @@ specs/001-fiscal-year-boundary-consistency/
 ├── spec.md
 ├── checklists/requirements.md
 ├── plan.md
-├── research.md
-├── data-model.md
-├── contracts/inertia.md
-├── quickstart.md
 └── tasks.md                    # generated only after plan approval
 ```
 
@@ -173,6 +206,21 @@ specs/001-fiscal-year-boundary-consistency/
 	rollback must not delete or rewrite immutable archive files.
 - **Documentation/changelog**: Update the accounting domain README and
 	changelog if user-visible export or closing behavior changes.
+
+## Validation Runbook
+
+Run the focused tests first, then the normal project checks:
+
+```bash
+vendor/bin/sail artisan test --compact \
+	tests/Unit/Accounting/FiscalYearPeriodTest.php \
+	tests/Feature/Accounting/FiscalYearBoundaryConsistencyTest.php \
+	tests/Feature/Accounting/LegalArchiveFiscalYearBoundaryTest.php \
+	tests/Feature/Accounting/AccountingExportFiscalYearBoundaryTest.php
+vendor/bin/sail bin pint --dirty --format agent
+vendor/bin/sail phpstan analyse --memory-limit=2G
+vendor/bin/sail pnpm run build
+```
 
 ## Complexity Tracking
 

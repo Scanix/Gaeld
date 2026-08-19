@@ -16,6 +16,14 @@ $ARGUMENTS
 
 You **MUST** consider the user input before proceeding (if not empty).
 
+## Gäld Artifact Policy
+
+For this repository, keep the normal feature artifact set to `spec.md`,
+`plan.md`, and `tasks.md`. Put research, data-model notes, contracts, and
+quickstart validation steps in `plan.md` unless they are large enough to need
+independent review. Create `research.md`, `data-model.md`, `contracts/`, or
+`quickstart.md` only when the feature explicitly needs that separate artifact.
+
 ## Pre-Execution Checks
 
 **Check for extension hooks (before planning)**:
@@ -62,8 +70,11 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Fill Technical Context (mark unknowns as "NEEDS CLARIFICATION")
    - Fill Constitution Check section from constitution
    - Evaluate gates (ERROR if violations unjustified)
-   - Phase 0: Generate research.md (resolve all NEEDS CLARIFICATION)
-   - Phase 1: Generate data-model.md, contracts/, quickstart.md
+   - Phase 0: Record research decisions in `plan.md`; create `research.md`
+     only when the research needs independent review.
+   - Phase 1: Record the data model, contracts, and validation runbook in
+     `plan.md`; create separate artifacts only when they are too large or
+     externally consumed.
    - Re-evaluate Constitution Check post-design
 
 ## Mandatory Post-Execution Hooks
@@ -128,11 +139,13 @@ Command ends after Phase 1 design. Report branch, IMPL_PLAN path, and generated 
    - Rationale: [why chosen]
    - Alternatives considered: [what else evaluated]
 
-**Output**: research.md with all NEEDS CLARIFICATION resolved
+**Output**: A plan with all NEEDS CLARIFICATION resolved; an optional
+`research.md` is created only when justified by the feature.
 
 ### Phase 1: Design & Contracts
 
-**Prerequisites:** `research.md` complete
+**Prerequisites:** Research decisions are complete in `plan.md` or the
+optional `research.md`.
 
 1. **Extract entities from feature spec** → `data-model.md`:
    - Entity name, fields, relationships
@@ -152,7 +165,8 @@ Command ends after Phase 1 design. Report branch, IMPL_PLAN path, and generated 
    - Do not include full implementation code, model/service/controller bodies, migrations, or complete test suites
    - Keep this artifact as a validation/run guide; implementation details belong in `tasks.md` and the implementation phase
 
-**Output**: data-model.md, /contracts/*, quickstart.md
+**Output**: A complete `plan.md`; optional supporting artifacts only when
+justified by independent review or an external contract.
 
 ## Key rules
 

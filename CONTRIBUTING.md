@@ -57,10 +57,13 @@ specify version
 → /speckit-implement → /speckit-converge
 ```
 
-The specification describes user-facing behavior and acceptance criteria. The
-plan records Laravel/domain implementation decisions, and the task list is the
-execution checklist. For a small, obvious bug fix, the normal focused workflow
-is acceptable; update the relevant spec when the intended behavior changes.
+For a normal feature, keep the artifact set to `spec.md`, `plan.md`, and
+`tasks.md`. Put research, contracts, data-model notes, and validation steps in
+`plan.md`; create separate files only when they need independent review. The
+specification describes user-facing behavior, the plan records Laravel/domain
+decisions, and the task list is the execution checklist. For a small, obvious
+bug fix, the normal focused workflow is acceptable; update the relevant spec
+when the intended behavior changes.
 
 Spec Kit's project-local files live in `.specify/` and `.github/skills/speckit-*`.
 Refresh those managed files with the CLI when upgrading Spec Kit, while
