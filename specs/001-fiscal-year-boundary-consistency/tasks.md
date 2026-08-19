@@ -77,9 +77,9 @@ long-year journey described in the plan's validation runbook.
 **Independent Test**: An organization without explicit fiscal-year records keeps
 the existing 01-01 to 12-31 report, export, archive, and closing behavior.
 
-- [ ] T025 [P] [US3] Add legacy calendar-year regression assertions in `tests/Feature/Accounting/FiscalYearBoundaryConsistencyTest.php` and `tests/Feature/Accounting/AccountingExportFiscalYearBoundaryTest.php`
+- [x] T025 [P] [US3] Add legacy calendar-year regression assertions in `tests/Feature/Accounting/FiscalYearBoundaryConsistencyTest.php` and `tests/Feature/Accounting/AccountingExportFiscalYearBoundaryTest.php`
 - [x] T026 [US3] Add backward-compatible handling for old export jobs and year-based archive URLs in `app/Domains/Reporting/Jobs/GenerateAccountingExportJob.php`, `app/Domains/Accounting/Controllers/LegalArchiveController.php`, and `routes/web/accounting.php`
-- [ ] T027 [US3] Add migration compatibility coverage for historical `legal_archives` rows with null `fiscal_year_id` in `tests/Feature/Accounting/LegalArchiveFiscalYearBoundaryTest.php`
+- [x] T027 [US3] Add migration compatibility coverage for historical `legal_archives` rows with null `fiscal_year_id` in `tests/Feature/Accounting/LegalArchiveFiscalYearBoundaryTest.php`
 
 ## Final Verification
 

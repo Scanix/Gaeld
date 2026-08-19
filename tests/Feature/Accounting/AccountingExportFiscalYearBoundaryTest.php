@@ -108,4 +108,19 @@ class AccountingExportFiscalYearBoundaryTest extends TestCase
 
         @unlink($zipPath);
     }
+
+    public function test_legacy_year_export_payload_remains_supported(): void
+    {
+        Queue::fake();
+
+        $this->actAsOrg()
+            ->post(route('accounting.export.generate'), [
+                'fiscal_year' => '2024',
+            ])
+            ->assertRedirect(route('accounting.export'));
+
+        Queue::assertPushed(GenerateAccountingExportJob::class, function (GenerateAccountingExportJob $job): bool {
+            return $job->fiscalYear === '2024' && $job->fiscalYearId === null;
+        });
+    }
 }

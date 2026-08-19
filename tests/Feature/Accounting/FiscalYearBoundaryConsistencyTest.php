@@ -127,4 +127,15 @@ class FiscalYearBoundaryConsistencyTest extends TestCase
             ])
             ->assertSessionHasErrors('fiscal_year_id');
     }
+
+    public function test_legacy_calendar_year_remains_the_report_fallback(): void
+    {
+        $this->actAsOrg()
+            ->get(route('reports.pnl', ['from' => '2024-01-01', 'to' => '2024-12-31']))
+            ->assertInertia(fn ($page) => $page
+                ->component('Reports/ProfitAndLoss')
+                ->where('report.period.from', '2024-01-01')
+                ->where('report.period.to', '2024-12-31')
+            );
+    }
 }
