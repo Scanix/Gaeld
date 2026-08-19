@@ -82,14 +82,12 @@ actual files.
 ```text
 resources/js/Pages/Accounting/Export.vue
 resources/js/Pages/Accounting/Archives/Index.vue
-resources/js/Pages/Accounting/YearEndClosing.vue
-resources/js/lib/inertiaContracts.js
-lang/{en,fr,de,it}/                       # period and status translations
+resources/js/Pages/Accounting/YearEndClosing.vue  # follow-up: explicit selector
 ```
 
-The dashboard's calendar-year display selection and the feature-gated tax
-declaration workflow remain follow-up contracts. They are not silently changed
-by this feature.
+The dashboard's calendar-year display selection, the closing-page explicit
+selector, and the feature-gated tax declaration workflow remain follow-up
+contracts. They are not silently changed by this feature.
 
 ## Constitution Check
 
