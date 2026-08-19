@@ -36,6 +36,36 @@ Open an issue with the **feature request** label. Describe the use case and what
 
 For larger changes, please open an issue first so we can discuss the approach.
 
+### Specification-driven development
+
+Gäld uses [GitHub Spec Kit](https://github.com/github/spec-kit) for new or
+substantial product changes. The existing codebase is brownfield: do not create
+specifications for historical work just to fill the directory. Instead, start a
+new flow-forward feature spec for the next change and keep its artifacts under
+`specs/`:
+
+Install the CLI once on macOS or Linux (Python 3.11+ and `uv` are required):
+
+```bash
+uv tool install specify-cli==0.16.3
+specify version
+```
+
+```text
+/speckit-specify → /speckit-clarify → /speckit-plan
+→ /speckit-checklist → /speckit-tasks → /speckit-analyze
+→ /speckit-implement → /speckit-converge
+```
+
+The specification describes user-facing behavior and acceptance criteria. The
+plan records Laravel/domain implementation decisions, and the task list is the
+execution checklist. For a small, obvious bug fix, the normal focused workflow
+is acceptable; update the relevant spec when the intended behavior changes.
+
+Spec Kit's project-local files live in `.specify/` and `.github/skills/speckit-*`.
+Refresh those managed files with the CLI when upgrading Spec Kit, while
+preserving the project constitution and any local template customizations.
+
 ---
 
 ## Development setup
