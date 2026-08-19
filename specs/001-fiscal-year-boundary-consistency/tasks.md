@@ -56,7 +56,7 @@ period status without creating a partial settlement.
 
 ### Tests First
 
-- [ ] T016 [P] [US2] Add archive inclusion, exclusion, idempotency, concurrent-request, provenance, and organization-isolation tests in `tests/Feature/Accounting/LegalArchiveFiscalYearBoundaryTest.php`
+- [x] T016 [P] [US2] Add archive inclusion, exclusion, idempotency, lock-contract, provenance, and organization-isolation tests in `tests/Feature/Accounting/LegalArchiveFiscalYearBoundaryTest.php`
 - [x] T017 [P] [US2] Add PDF/report date assertions and archive regeneration safety tests in `tests/Feature/Accounting/ArchivePdfGenerationTest.php`
 - [x] T018 [P] [US2] Add closing tests for unresolved complete VAT periods that overlap a fiscal year in `tests/Feature/Accounting/FiscalYearBoundaryConsistencyTest.php`
 

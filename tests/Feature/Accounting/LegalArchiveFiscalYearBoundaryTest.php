@@ -13,8 +13,11 @@ use App\Domains\Accounting\Models\LegalArchive;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Models\Organization;
+use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Mockery;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -131,5 +134,28 @@ class LegalArchiveFiscalYearBoundaryTest extends TestCase
 
         $this->assertNull($archive->fiscal_year_id);
         $this->assertSame(2024, $archive->fiscal_year);
+    }
+
+    public function test_archive_acquires_the_organization_period_lock(): void
+    {
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => '2024',
+            'start_date' => '2024-01-01',
+            'end_date' => '2024-12-31',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+        $lock = Mockery::mock(Lock::class);
+        $lock->shouldReceive('block')->once()->with(10)->andReturnTrue();
+        $lock->shouldReceive('release')->once()->andReturnTrue();
+        Cache::shouldReceive('lock')
+            ->once()
+            ->with("archive:{$this->organization->id}:{$fiscalYear->id}", 600)
+            ->andReturn($lock);
+
+        app(LegalArchivingService::class)->archiveFiscalYear(
+            $this->organization->id,
+            '2024',
+            $fiscalYear->id,
+        );
     }
 }
