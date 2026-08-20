@@ -41,8 +41,10 @@ After pulling a newer release, update an existing installation with:
 
 `./gaeld setup` creates `.env` when needed, builds the image, starts the
 dependencies, waits for PostgreSQL, Redis, and the application health endpoint,
-then runs the installer. It waits for Docker for up to 90 seconds but does not
-install or launch Docker Desktop automatically.
+then runs the installer. Docker must already be running: setup checks the
+selected Docker context immediately and exits with an actionable error when the
+engine is unavailable. It does not install or launch Docker Desktop
+automatically.
 
 ### Running Tests
 

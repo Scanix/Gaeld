@@ -43,9 +43,10 @@ Gäld covers the full accounting workflow for a small Swiss business:
 
 ### Docker (recommended)
 
-Install Docker Engine with Docker Compose v2 and start the Docker service
-before running setup. The command waits up to 90 seconds for Docker to become
-ready, but it does not install or launch Docker Desktop for you.
+Install Docker Engine with Docker Compose v2 and start Docker Desktop or the
+Docker service before running setup. The command checks Docker immediately and
+prints an actionable error if the selected Docker context is unavailable; it
+does not install or launch Docker Desktop for you.
 
 ```bash
 ./gaeld setup

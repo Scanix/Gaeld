@@ -36,45 +36,37 @@ warn() {
 }
 
 fail() {
-    printf "  ${RED}✖${RESET} %s\n" "$1"
-    exit 1
+    local message=$1
+    local exit_code=${2:-1}
+
+    printf "  ${RED}✖${RESET} %s\n" "$message"
+    exit "$exit_code"
 }
 
-spin() {
-    local pid=$1 label=$2
-    local frames='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
-    local i=0
-    while kill -0 "$pid" 2>/dev/null; do
-        printf "\r  ${DIM}%s${RESET} %s" "${frames:i%10:1}" "$label"
-        i=$((i + 1))
-        sleep 0.1
-    done
-    wait "$pid"
-    return $?
-}
-
-run_with_spinner() {
+run_step() {
     local label=$1
     shift
-    local logfile
-    logfile=$(mktemp)
 
-    "$@" > "$logfile" 2>&1 &
-    local pid=$!
-
-    spin "$pid" "$label"
-    local rc=$?
-
-    if [ $rc -eq 0 ]; then
-        printf "\r  ${GREEN}✔${RESET} %s\n" "$label"
+    printf "  ${BLUE}▸${RESET} ${BOLD}%s${RESET}\n" "$label"
+    if "$@"; then
+        ok "$label"
     else
-        printf "\r  ${RED}✖${RESET} %s\n" "$label"
-        echo ""
-        cat "$logfile"
-        rm -f "$logfile"
-        exit $rc
+        local rc=$?
+        fail "$label failed with exit code ${rc}" "$rc"
     fi
-    rm -f "$logfile"
+}
+
+require_docker() {
+    if ! command -v docker > /dev/null 2>&1; then
+        fail "Docker CLI is not installed. Install Docker Desktop or Docker Engine and retry."
+    fi
+
+    local context
+    context=$(docker context show 2>/dev/null || printf "unknown")
+    if ! docker info > /dev/null 2>&1; then
+        fail "Docker Engine is unavailable for context '${context}'. Start Docker Desktop or the Docker service, then retry."
+    fi
+    ok "Docker Engine is ready (${context})"
 }
 
 wait_for() {
@@ -128,8 +120,9 @@ cmd_setup() {
     printf "\n${BOLD}🏔  Gäld — Swiss Accounting Platform${RESET}\n"
     printf "${DIM}   Setting up development environment...${RESET}\n"
 
-    # Docker Desktop may still be starting when the command is invoked.
-    wait_for "Waiting for Docker Engine" 90 docker info
+    # Fail early with an actionable message instead of hiding a Docker problem
+    # behind a retry loop.
+    require_docker
 
     # 1. Environment file
     step "Environment"
@@ -145,13 +138,13 @@ cmd_setup() {
     if docker image inspect gaeld-sail/app > /dev/null 2>&1; then
         ok "Image gaeld-sail/app already built"
     else
-        run_with_spinner "Building gaeld-sail/app (first time — takes a few minutes)" \
-            docker compose build laravel.test
+        run_step "Building gaeld-sail/app (first time — takes a few minutes)" \
+            docker compose build --progress=plain laravel.test
     fi
 
     # 3. Start containers
     step "Starting services"
-    run_with_spinner "PostgreSQL, Redis, Meilisearch, Mailpit" \
+    run_step "Starting PostgreSQL, Redis, Meilisearch, and Mailpit" \
         docker compose up -d pgsql redis meilisearch mailpit
 
     # Wait for DB + Redis health (retry loops — containers need time to initialize)
@@ -162,7 +155,7 @@ cmd_setup() {
         docker compose exec -T redis redis-cli ping
 
     # Start app + worker (depend on healthy services)
-    run_with_spinner "Starting web server and queue worker" \
+    run_step "Starting web server and queue worker" \
         docker compose up -d laravel.test worker
 
     # Wait for app health
