@@ -28,13 +28,22 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Trust reverse proxies (Coolify, Traefik, nginx, Cloudflare, ...) so that
-        // X-Forwarded-Proto / -For / -Host headers are honoured when generating
-        // URLs and detecting HTTPS. Only enabled when TRUSTED_PROXIES is set, so
-        // bare/local installs are unaffected.
+        // Trust reverse proxies (Pangolin, Coolify, Traefik, nginx, Cloudflare,
+        // ...) so X-Forwarded-Proto / -For / -Host / -Port headers are honoured
+        // when generating URLs and detecting HTTPS.
+        //
+        // NOTE: this closure runs before LoadConfiguration, so config() is not
+        // yet available — we must read env() directly. Docker deployments pass
+        // env vars via `docker-compose environment:` / `env_file:` which end up
+        // in the OS env, so env() works even under `php artisan config:cache`.
+        // See config/proxy.php for the documented contract.
         $trustedProxies = env('TRUSTED_PROXIES');
         if (! empty($trustedProxies)) {
-            $middleware->trustProxies(at: $trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)));
+            $at = $trustedProxies === '*'
+                ? '*'
+                : array_map('trim', explode(',', $trustedProxies));
+
+            $middleware->trustProxies(at: $at);
         }
 
         $middleware->prepend(AddSecurityHeaders::class);

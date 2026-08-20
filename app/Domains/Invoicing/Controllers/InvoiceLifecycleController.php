@@ -8,6 +8,7 @@ use App\Domains\Invoicing\Actions\DuplicateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\PurgeInvoiceAction;
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
+use App\Domains\Invoicing\Actions\RevertInvoiceToDraftAction;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
@@ -55,6 +56,20 @@ class InvoiceLifecycleController extends Controller
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', __('app.invoice_cancelled'));
+    }
+
+    public function revertToDraft(Invoice $invoice, RevertInvoiceToDraftAction $action): RedirectResponse
+    {
+        $this->authorize('revertToDraft', $invoice);
+
+        try {
+            $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $e) {
+            return $this->backWithError($e);
+        }
+
+        return redirect()->route('invoices.edit', $invoice)
+            ->with('success', __('app.invoice_reverted_to_draft'));
     }
 
     public function recordPayment(RecordPaymentRequest $request, Invoice $invoice, RecordPaymentAction $action): RedirectResponse

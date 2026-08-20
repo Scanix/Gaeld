@@ -90,6 +90,7 @@ class Invoice extends Model
         'justificatif_path',
         'reminder_count',
         'last_reminded_at',
+        'archived_at',
     ];
 
     protected function casts(): array
@@ -104,6 +105,7 @@ class Invoice extends Model
             'type' => InvoiceType::class,
             'reminder_count' => 'integer',
             'last_reminded_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
     }
 

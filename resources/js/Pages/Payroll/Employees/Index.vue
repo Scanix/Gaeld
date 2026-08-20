@@ -47,7 +47,6 @@ function applyQuery(params) {
 const columns = computed(() => [
   { key: 'full_name', label: t('name'), sortable: true },
   { key: 'ahv_number', label: t('ahv_number') },
-  { key: 'position', label: t('position') },
   { key: 'gross_salary', label: t('gross_salary'), class: 'text-right' },
   { key: 'status', label: t('status') },
   { key: 'actions', label: '', class: 'text-right w-auto' },

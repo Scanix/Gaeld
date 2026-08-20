@@ -5,6 +5,7 @@ namespace App\Domains\Expenses\Controllers;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
+use App\Domains\Expenses\Actions\UnapproveExpenseAction;
 use App\Domains\Expenses\Exceptions\ExpenseLedgerPostingException;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
@@ -42,6 +43,22 @@ class ExpenseWorkflowController extends Controller
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', __('app.expense_approved'));
+    }
+
+    public function unapprove(Expense $expense, UnapproveExpenseAction $action, DashboardService $dashboardService): RedirectResponse
+    {
+        $this->authorize('update', $expense);
+
+        try {
+            $action->execute($expense);
+        } catch (InvalidExpenseStateException $e) {
+            return $this->backWithError($e);
+        }
+
+        $dashboardService->flushCache($expense->organization_id);
+
+        return redirect()->route('expenses.show', $expense)
+            ->with('success', __('app.expense_unapproved'));
     }
 
     public function postToLedger(Expense $expense, PostExpenseAction $action, DashboardService $dashboardService): RedirectResponse

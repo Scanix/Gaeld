@@ -37,12 +37,4 @@ class OrganizationSetupService
     {
         $this->chartTemplateService->ensureSystemAccounts($organization);
     }
-
-    /**
-     * @deprecated Use seedChartOfAccounts() instead.
-     */
-    public function seedSwissDefaults(Organization $organization): void
-    {
-        $this->seedChartOfAccounts($organization, 'swiss_sme');
-    }
 }

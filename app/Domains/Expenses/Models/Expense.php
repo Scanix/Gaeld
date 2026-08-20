@@ -77,6 +77,7 @@ class Expense extends Model
         'payment_method',
         'expense_account_code',
         'bank_account_code',
+        'archived_at',
     ];
 
     protected function casts(): array
@@ -87,6 +88,7 @@ class Expense extends Model
             'vat_amount' => 'decimal:2',
             'status' => ExpenseStatus::class,
             'type' => ExpenseType::class,
+            'archived_at' => 'datetime',
         ];
     }
 

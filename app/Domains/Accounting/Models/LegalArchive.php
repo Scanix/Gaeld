@@ -5,6 +5,7 @@ namespace App\Domains\Accounting\Models;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -15,11 +16,12 @@ use Illuminate\Support\Carbon;
  * Stores a SHA-256 checksum, the storage path, and a mandatory
  * retention expiry date (typically 10 years per Swiss CO).
  *
- * @property int $id
+ * @property string $id
  * @property string $organization_id
  * @property string $document_type
  * @property string $document_id
  * @property int $fiscal_year
+ * @property string|null $fiscal_year_id
  * @property string $checksum_sha256
  * @property string $storage_path
  * @property Carbon $archived_at
@@ -28,13 +30,14 @@ use Illuminate\Support\Carbon;
  */
 class LegalArchive extends Model
 {
-    use Auditable, BelongsToOrganization;
+    use Auditable, BelongsToOrganization, HasUuids;
 
     protected $fillable = [
         'organization_id',
         'document_type',
         'document_id',
         'fiscal_year',
+        'fiscal_year_id',
         'checksum_sha256',
         'storage_path',
         'archived_at',
@@ -58,8 +61,14 @@ class LegalArchive extends Model
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return BelongsTo<FiscalYear, $this> */
+    public function fiscalYear(): BelongsTo
+    {
+        return $this->belongsTo(FiscalYear::class);
+    }
+
     public function isExpiringSoon(): bool
     {
-        return $this->expires_at->diffInDays(now()) <= 365;
+        return $this->expires_at->lte(now()->addYear());
     }
 }

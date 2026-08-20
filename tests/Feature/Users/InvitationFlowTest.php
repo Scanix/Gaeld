@@ -98,7 +98,7 @@ class InvitationFlowTest extends TestCase
         $response = $this->actingAs($invitedUser)
             ->get("/invitations/{$plainToken}/accept");
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
 
         $this->assertDatabaseHas('organization_users', [
             'organization_id' => $this->organization->id,

@@ -14,6 +14,8 @@ class ExpenseCategoryController extends Controller
 {
     public function index(): JsonResponse
     {
+        $this->authorize('viewAny', ExpenseCategory::class);
+
         return response()->json(ExpenseCategoryQuery::all());
     }
 

@@ -33,6 +33,10 @@ class InvoicePolicy extends BasePolicy
 
     public function update(User $user, Invoice $invoice): bool
     {
+        if ($invoice->archived_at !== null) {
+            return false;
+        }
+
         return $this->belongsToOrganization($user, $invoice)
             && $user->hasPermissionTo(Permission::InvoicingEdit)
             && $invoice->status->isEditable();
@@ -40,6 +44,10 @@ class InvoicePolicy extends BasePolicy
 
     public function delete(User $user, Invoice $invoice): bool
     {
+        if ($invoice->archived_at !== null) {
+            return false;
+        }
+
         return $this->belongsToOrganization($user, $invoice)
             && $user->hasPermissionTo(Permission::InvoicingDelete)
             && $invoice->status->isDeletable();
@@ -49,6 +57,18 @@ class InvoicePolicy extends BasePolicy
     {
         return $this->belongsToOrganization($user, $invoice)
             && $user->hasPermissionTo(Permission::InvoicingFinalize);
+    }
+
+    public function revertToDraft(User $user, Invoice $invoice): bool
+    {
+        if ($invoice->archived_at !== null) {
+            return false;
+        }
+
+        return $this->belongsToOrganization($user, $invoice)
+            && $user->hasPermissionTo(Permission::InvoicingEdit)
+            && $invoice->status->canTransitionTo(InvoiceStatus::Draft)
+            && $invoice->payments()->count() === 0;
     }
 
     public function duplicate(User $user, Invoice $invoice): bool

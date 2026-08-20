@@ -43,14 +43,11 @@ class SwissDeductionService
     public function calculateDeductions(string $grossSalary, ?Collection $rates = null): array
     {
         if ($rates === null || $rates->isEmpty()) {
-            try {
+            if (app()->bound(LoggerInterface::class)) {
                 app(LoggerInterface::class)->warning(
                     'SwissDeductionService: no custom deduction rates found — falling back to built-in defaults. '
                     .'Verify your organisation\'s deduction rates are up to date for the current fiscal year.',
                 );
-            } catch (\Throwable) {
-                // Logger not available in pure unit-test context — skip gracefully.
-                // In production the warning above will be logged normally.
             }
         }
 

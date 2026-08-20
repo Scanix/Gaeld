@@ -1,0 +1,185 @@
+<?php
+
+namespace Tests\Feature\Accounting;
+
+use App\Domains\Accounting\Enums\FiscalYearStatus;
+use App\Domains\Accounting\Enums\VatEntryType;
+use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Accounting\Models\VatEntry;
+use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Organizations\Models\Organization;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+use Tests\Traits\WithAuthenticatedOrganization;
+
+class FiscalYearBoundaryConsistencyTest extends TestCase
+{
+    use RefreshDatabase, WithAuthenticatedOrganization;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpOrganization();
+    }
+
+    public function test_export_index_exposes_explicit_fiscal_year_dates(): void
+    {
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Closed,
+        ]);
+
+        $this->actAsOrg()
+            ->get(route('accounting.export'))
+            ->assertInertia(fn ($page) => $page
+                ->component('Accounting/Export')
+                ->where('fiscalYears.0.id', $fiscalYear->id)
+                ->where('fiscalYears.0.start_date', '2024-01-01')
+                ->where('fiscalYears.0.end_date', '2025-06-30')
+            );
+    }
+
+    public function test_profit_and_loss_uses_explicit_fiscal_year_range(): void
+    {
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+
+        $this->actAsOrg()
+            ->get(route('reports.pnl', ['fiscal_year_id' => $fiscalYear->id]))
+            ->assertInertia(fn ($page) => $page
+                ->component('Reports/ProfitAndLoss')
+                ->where('report.period.from', '2024-01-01')
+                ->where('report.period.to', '2025-06-30')
+            );
+    }
+
+    public function test_cash_flow_uses_explicit_fiscal_year_range(): void
+    {
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+
+        $this->actAsOrg()
+            ->get(route('reports.cash-flow', ['fiscal_year_id' => $fiscalYear->id]))
+            ->assertInertia(fn ($page) => $page
+                ->component('Reports/CashFlow')
+                ->where('report.period.from', '2024-01-01')
+                ->where('report.period.to', '2025-06-30')
+            );
+
+        $this->actAsOrg()
+            ->get(route('reports.cash-flow.export', [
+                'format' => 'csv',
+                'fiscal_year_id' => $fiscalYear->id,
+            ]))
+            ->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename="cash-flow-2024-01-01-2025-06-30.csv"');
+    }
+
+    public function test_balance_sheet_exposes_the_explicit_fiscal_year_period(): void
+    {
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+
+        $this->actAsOrg()
+            ->get(route('reports.balance-sheet', ['fiscal_year_id' => $fiscalYear->id]))
+            ->assertInertia(fn ($page) => $page
+                ->component('Reports/BalanceSheet')
+                ->where('report.period.from', '2024-01-01')
+                ->where('report.period.to', '2025-06-30')
+            );
+    }
+
+    public function test_year_end_closing_checks_vat_periods_in_the_full_long_year(): void
+    {
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+        $account = Account::factory()->for($this->organization)->create([
+            'type' => 'asset',
+        ]);
+        $contraAccount = Account::factory()->for($this->organization)->create([
+            'type' => 'revenue',
+        ]);
+        $entry = JournalEntry::create([
+            'organization_id' => $this->organization->id,
+            'date' => '2025-05-15',
+            'reference' => 'VAT-Q2-2025',
+            'description' => 'VAT activity in long fiscal year',
+            'is_posted' => true,
+        ]);
+        TransactionLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id' => $account->id,
+            'debit' => '100.00',
+            'credit' => '0.00',
+        ]);
+        TransactionLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id' => $contraAccount->id,
+            'debit' => '0.00',
+            'credit' => '100.00',
+        ]);
+        VatEntry::create([
+            'journal_entry_id' => $entry->id,
+            'vat_rate_id' => VatRate::factory()->for($this->organization)->create()->id,
+            'base_amount' => '100.00',
+            'vat_amount' => '8.10',
+            'type' => VatEntryType::Output,
+        ]);
+
+        $this->actAsOrg()
+            ->get(route('accounting.closing', ['fiscal_year_id' => $fiscalYear->id]))
+            ->assertInertia(fn ($page) => $page
+                ->where('fromDate', '2024-01-01')
+                ->where('toDate', '2025-06-30')
+                ->where('unsettledVatPeriods.0', 'Q2 2025')
+            );
+    }
+
+    public function test_year_end_closing_rejects_a_fiscal_year_from_another_organization(): void
+    {
+        $foreignOrganization = Organization::factory()->create();
+        $foreignFiscalYear = FiscalYear::factory()->for($foreignOrganization)->create();
+
+        $this->actAsOrg()
+            ->post(route('accounting.closing.store'), [
+                'fiscal_year_id' => $foreignFiscalYear->id,
+                'year' => $foreignFiscalYear->start_date->year,
+                'closing_date' => $foreignFiscalYear->end_date->toDateString(),
+                'reference' => 'CROSS-ORG-CLOSE',
+                'result_account_code' => '9000',
+            ])
+            ->assertSessionHasErrors('fiscal_year_id');
+    }
+
+    public function test_legacy_calendar_year_remains_the_report_fallback(): void
+    {
+        $this->actAsOrg()
+            ->get(route('reports.pnl', ['from' => '2024-01-01', 'to' => '2024-12-31']))
+            ->assertInertia(fn ($page) => $page
+                ->component('Reports/ProfitAndLoss')
+                ->where('report.period.from', '2024-01-01')
+                ->where('report.period.to', '2024-12-31')
+            );
+    }
+}

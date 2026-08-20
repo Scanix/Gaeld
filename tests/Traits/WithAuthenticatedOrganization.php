@@ -25,7 +25,10 @@ trait WithAuthenticatedOrganization
     {
         $this->seedPermissions();
 
-        $this->user = User::factory()->create($userAttributes);
+        $this->user = User::factory()->create([
+            'onboarding_completed_at' => now(),
+            ...$userAttributes,
+        ]);
         $this->organization = Organization::factory()->create();
         $this->org = $this->organization;
 

@@ -147,6 +147,10 @@ function onSupplierCreated(supplier) {
         <Alert v-if="ocrData?.amount || ocrData?.date || ocrData?.vendor" variant="info" class="mb-4">
           {{ t('ocr_prefilled_notice') }}
         </Alert>
+        <Alert v-if="categories.length === 0" variant="warning" class="mb-4">
+          {{ t('expense_categories_unavailable') }}
+          <a href="/settings?tab=expenses" class="ml-1 font-medium underline underline-offset-2">{{ t('open_settings') }}</a>
+        </Alert>
         <form class="space-y-6" @submit.prevent="submit">
           <input v-if="form.receipt_path" type="hidden" name="receipt_path" :value="form.receipt_path">
           <input v-if="form.scan_id" type="hidden" name="scan_id" :value="form.scan_id">
@@ -280,7 +284,7 @@ function onSupplierCreated(supplier) {
 
           <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" href="/expenses" variant="outline">{{ t('cancel') }}</Button>
-            <Button type="submit" :disabled="form.processing || isDateClosed" :title="isDateClosed ? t('fiscal_year_closed_action_disabled') : undefined">{{ t('create_expense') }}</Button>
+            <Button type="submit" :disabled="form.processing || isDateClosed || categories.length === 0" :title="isDateClosed ? t('fiscal_year_closed_action_disabled') : undefined">{{ t('create_expense') }}</Button>
           </div>
         </form>
       </CardContent>

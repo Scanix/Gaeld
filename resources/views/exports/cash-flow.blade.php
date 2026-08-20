@@ -23,7 +23,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>{{ $organizationName }}</h1>
+        <h1>{{ $organization->name }}</h1>
         <div class="period">{{ __('exports.cash_flow.period', ['from' => $period['from'], 'to' => $period['to']]) }}</div>
     </div>
 

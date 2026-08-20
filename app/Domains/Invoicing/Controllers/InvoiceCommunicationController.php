@@ -2,11 +2,10 @@
 
 namespace App\Domains\Invoicing\Controllers;
 
-use App\Domains\Invoicing\Actions\SendInvoiceAction;
-use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Services\InvoiceMailerService;
 use App\Domains\Invoicing\Support\QrBillValidationMessageFormatter;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
@@ -21,13 +20,13 @@ class InvoiceCommunicationController extends Controller
 
     public function sendInvoice(
         Invoice $invoice,
-        SendInvoiceAction $action,
+        InvoiceMailerService $mailerService,
         QrBillValidationMessageFormatter $messageFormatter,
     ): RedirectResponse {
         $this->authorize('send', $invoice);
 
         try {
-            $action->execute($invoice->load('customer'));
+            $mailerService->sendInvoice($invoice->load('customer'));
         } catch (InvalidInvoiceStateException $e) {
             return $this->backWithError($e);
         } catch (QrBillValidationException $e) {
@@ -38,12 +37,12 @@ class InvoiceCommunicationController extends Controller
             ->with('success', __('app.invoice_sent'));
     }
 
-    public function sendReminder(Invoice $invoice, SendInvoiceReminderAction $action): RedirectResponse
+    public function sendReminder(Invoice $invoice, InvoiceMailerService $mailerService): RedirectResponse
     {
         $this->authorize('send', $invoice);
 
         try {
-            $action->execute($invoice);
+            $mailerService->sendReminder($invoice);
         } catch (InvalidInvoiceStateException $e) {
             return $this->backWithError($e);
         }

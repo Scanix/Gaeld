@@ -146,4 +146,25 @@ class PayrollFlowTest extends TestCase
 
         $this->assertSame(2, SalarySlip::where('period_month', 4)->where('period_year', 2026)->count());
     }
+
+    /**
+     * Regression test: SalarySlipController used to authorize every action
+     * against $slip->employee (EmployeePolicy), which has no archived_at
+     * guard, so the archived-record rule embedded in SalarySlipPolicy was
+     * dead code from the HTTP layer's perspective. It's now authorized
+     * against the SalarySlip itself.
+     */
+    #[Test]
+    public function archived_salary_slip_cannot_be_posted_via_route(): void
+    {
+        $calculator = app(PayrollCalculator::class);
+        $slip = $calculator->calculate($this->employee, 3, 2026);
+        $slip->archived_at = now();
+        $slip->save();
+
+        $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->post(route('payroll.salarySlips.post', $slip))
+            ->assertForbidden();
+    }
 }

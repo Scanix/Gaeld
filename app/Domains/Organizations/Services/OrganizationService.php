@@ -2,6 +2,7 @@
 
 namespace App\Domains\Organizations\Services;
 
+use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
 use App\Domains\Organizations\DTOs\UpdateCommunicationsData;
 use App\Domains\Organizations\DTOs\UpdateInvoiceSettingsData;
@@ -30,6 +31,15 @@ class OrganizationService
     {
         return DB::transaction(function () use ($owner, $data) {
             $org = Organization::create($data->toArray());
+
+            foreach (ExpenseCategory::DEFAULT_CATEGORIES as $sortOrder => $name) {
+                ExpenseCategory::create([
+                    'organization_id' => $org->id,
+                    'name' => $name,
+                    'is_default' => true,
+                    'sort_order' => $sortOrder,
+                ]);
+            }
 
             $org->users()->attach($owner->id, ['role' => 'owner']);
 

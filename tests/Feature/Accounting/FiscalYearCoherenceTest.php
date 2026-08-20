@@ -362,21 +362,21 @@ class FiscalYearCoherenceTest extends TestCase
 
     private function runPhaseI_YearEndClosing(): void
     {
+        // Pre-flight: verify P&L accounts exist before handing off to the action.
         $orgId = $this->org->id;
-
         [$income, $expenses] = app(ClosingAccountsService::class)->compute($orgId, '2025-01-01', '2025-12-31');
-
         $this->assertNotEmpty($income, 'No revenue accounts found for 2025 — check invoice finalization');
         $this->assertNotEmpty($expenses, 'No expense accounts found for 2025 — check payroll/depreciation');
 
         app(YearEndClosingAction::class)->execute(
-            orgId: $orgId,
-            year: 2025,
-            income: $income,
-            expenses: $expenses,
-            resultAccount: $this->annualResult,
-            closingDate: '2025-12-31',
-            reference: 'YE-2025',
+            $this->org,
+            [
+                'year' => 2025,
+                'result_account_code' => $this->annualResult->code,
+                'closing_date' => '2025-12-31',
+                'reference' => 'YE-2025',
+            ],
+            $this->user,
         );
     }
 

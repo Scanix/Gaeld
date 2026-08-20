@@ -101,7 +101,7 @@ class OrganizationSetupFlowTest extends TestCase
 
         $response = $this->get('/setup');
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
     }
 
     public function test_verified_user_without_org_is_redirected_to_onboarding_from_dashboard(): void
@@ -110,7 +110,7 @@ class OrganizationSetupFlowTest extends TestCase
             'email_verified_at' => now(),
         ]);
         /** @var User $user */
-        $response = $this->actingAs($user)->get('/');
+        $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertRedirect('/onboarding');
     }
@@ -131,6 +131,6 @@ class OrganizationSetupFlowTest extends TestCase
             ->withSession(['current_organization_id' => $organization->id])
             ->get('/onboarding');
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
     }
 }

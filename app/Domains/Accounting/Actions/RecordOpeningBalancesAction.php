@@ -41,6 +41,7 @@ class RecordOpeningBalancesAction
         array $balances,
         ?string $reference = null,
         ?string $description = null,
+        bool $isPosted = true,
     ): ?JournalEntry {
         $year = Carbon::parse($date)->year;
 
@@ -116,11 +117,15 @@ class RecordOpeningBalancesAction
             );
         }
 
-        return $this->ledger->postEntry($orgId, new JournalEntryData(
+        $entryData = new JournalEntryData(
             date: $date,
             reference: $reference ?? "OPENING-{$year}",
             description: $description ?? __('app.opening_balance_entry_description', ['year' => $year]),
             lines: $lines,
-        ));
+        );
+
+        return $isPosted
+            ? $this->ledger->postEntry($orgId, $entryData)
+            : $this->ledger->createDraft($orgId, $entryData);
     }
 }

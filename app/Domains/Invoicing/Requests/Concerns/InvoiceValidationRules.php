@@ -8,12 +8,19 @@ use Illuminate\Validation\Rule;
 trait InvoiceValidationRules
 {
     /** @return array<string, mixed> */
-    protected function sharedRules(string $orgId): array
+    protected function sharedRules(string $orgId, ?string $ignoreInvoiceId = null): array
     {
         $finalize = $this->boolean('finalize');
 
         return [
-            'number' => 'required|string|max:50',
+            'number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('invoices', 'number')
+                    ->where('organization_id', $orgId)
+                    ->when($ignoreInvoiceId !== null, fn ($rule) => $rule->ignore($ignoreInvoiceId)),
+            ],
             'issue_date' => 'required|date',
             'due_date' => [$finalize ? 'required' : 'nullable', 'date', 'after_or_equal:issue_date'],
             'currency' => 'string|size:3',

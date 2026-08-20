@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
 use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Models\Organization;
@@ -48,6 +49,21 @@ class OrganizationServiceTest extends TestCase
             'organization_id' => $organization->id,
             'user_id' => $owner->id,
             'role' => 'owner',
+        ]);
+    }
+
+    public function test_create_seeds_default_expense_categories(): void
+    {
+        $service = new OrganizationService;
+        $owner = User::factory()->create();
+
+        $organization = $service->create($owner, new CreateOrganizationData(name: 'Expense Org'));
+
+        $this->assertDatabaseCount('expense_categories', count(ExpenseCategory::DEFAULT_CATEGORIES));
+        $this->assertDatabaseHas('expense_categories', [
+            'organization_id' => $organization->id,
+            'name' => 'Office Supplies',
+            'is_default' => true,
         ]);
     }
 

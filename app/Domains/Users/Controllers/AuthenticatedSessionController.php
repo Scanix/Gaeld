@@ -40,7 +40,7 @@ class AuthenticatedSessionController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                'email' => __('app.invalid_credentials'),
+                'form' => __('app.invalid_credentials'),
             ]);
         }
 

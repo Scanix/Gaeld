@@ -19,14 +19,20 @@ class GeneratePayrollRunAction
     ) {}
 
     /**
+     * @param  array<int, string>  $employeeIds  Optional subset of employee UUIDs to process. Empty array = all active employees.
      * @return Collection<int, SalarySlip>
      */
-    public function execute(string $orgId, int $month, int $year, bool $shouldPost = false): Collection
+    public function execute(string $orgId, int $month, int $year, bool $shouldPost = false, array $employeeIds = []): Collection
     {
-        $employees = Employee::query()
+        $query = Employee::query()
             ->where('organization_id', $orgId)
-            ->where('is_active', true)
-            ->get();
+            ->where('is_active', true);
+
+        if (! empty($employeeIds)) {
+            $query->whereIn('id', $employeeIds);
+        }
+
+        $employees = $query->get();
 
         $slips = collect();
         foreach ($employees as $employee) {

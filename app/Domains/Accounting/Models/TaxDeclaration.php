@@ -2,12 +2,16 @@
 
 namespace App\Domains\Accounting\Models;
 
+use App\Domains\Accounting\Enums\TaxDeclarationStatus;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property TaxDeclarationStatus $status
+ */
 class TaxDeclaration extends Model
 {
     use Auditable, BelongsToOrganization;
@@ -25,6 +29,7 @@ class TaxDeclaration extends Model
     {
         return [
             'fiscal_year' => 'integer',
+            'status' => TaxDeclarationStatus::class,
             'data' => 'array',
             'finalized_at' => 'datetime',
         ];

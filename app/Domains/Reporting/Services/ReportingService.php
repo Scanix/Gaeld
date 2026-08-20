@@ -85,57 +85,73 @@ class ReportingService
      *
      * Results are cached per organization + as-of date (tag: org:{orgId}:reports).
      *
-     * @return array{as_of_date: string, assets: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, liabilities: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, equity: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}}
+     * @return array{as_of_date: string, assets: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, liabilities: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, equity: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, comparison: array{as_of_date: string, assets: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, liabilities: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, equity: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}}|null}
      */
-    public function balanceSheet(string $organizationId, string $asOfDate): array
+    public function balanceSheet(string $organizationId, string $asOfDate, ?string $compareAsOfDate = null): array
     {
         $cacheKey = "bs:{$organizationId}:{$asOfDate}";
+        if ($compareAsOfDate) {
+            $cacheKey .= ":vs:{$compareAsOfDate}";
+        }
         $orgTag = "org:{$organizationId}:reports";
 
-        return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $asOfDate) {
-            $types = [
-                AccountType::Asset,
-                AccountType::Liability,
-                AccountType::Equity,
-            ];
+        return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $asOfDate, $compareAsOfDate) {
+            $result = $this->buildBalanceSheetSections($organizationId, $asOfDate);
+            $result['comparison'] = $compareAsOfDate
+                ? $this->buildBalanceSheetSections($organizationId, $compareAsOfDate)
+                : null;
 
-            $sections = [];
-
-            foreach ($types as $type) {
-                $accounts = $this->accountsWithBalances($organizationId, $type, null, $asOfDate);
-
-                $sections[$type->value] = [
-                    'accounts' => $accounts->values()->toArray(),
-                    'total' => $accounts->sum('balance'),
-                ];
-            }
-
-            // Compute current-year net income (revenue − expenses) and add it
-            // as a synthetic row in the equity section so the balance sheet balances.
-            $fiscalYearStart = $this->resolveFiscalYearStart($organizationId, $asOfDate);
-            $revenue = $this->accountsWithBalances($organizationId, AccountType::Revenue, $fiscalYearStart, $asOfDate);
-            $expenses = $this->accountsWithBalances($organizationId, AccountType::Expense, $fiscalYearStart, $asOfDate);
-            $currentYearResult = Money::subtract((string) $revenue->sum('balance'), (string) $expenses->sum('balance'));
-
-            if (! Money::isZero($currentYearResult)) {
-                $sections[AccountType::Equity->value]['accounts'][] = [
-                    'code' => '2990',
-                    'name' => __('app.current_year_result'),
-                    'balance' => $currentYearResult,
-                ];
-                $sections[AccountType::Equity->value]['total'] = Money::add(
-                    (string) $sections[AccountType::Equity->value]['total'],
-                    $currentYearResult,
-                );
-            }
-
-            return [
-                'as_of_date' => $asOfDate,
-                'assets' => $sections[AccountType::Asset->value],
-                'liabilities' => $sections[AccountType::Liability->value],
-                'equity' => $sections[AccountType::Equity->value],
-            ];
+            return $result;
         });
+    }
+
+    /**
+     * @return array{as_of_date: string, assets: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, liabilities: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}, equity: array{accounts: array<int, array{code: string, name: string, balance: string}>, total: mixed}}
+     */
+    private function buildBalanceSheetSections(string $organizationId, string $asOfDate): array
+    {
+        $types = [
+            AccountType::Asset,
+            AccountType::Liability,
+            AccountType::Equity,
+        ];
+
+        $sections = [];
+
+        foreach ($types as $type) {
+            $accounts = $this->accountsWithBalances($organizationId, $type, null, $asOfDate);
+
+            $sections[$type->value] = [
+                'accounts' => $accounts->values()->toArray(),
+                'total' => $accounts->sum('balance'),
+            ];
+        }
+
+        // Compute current-year net income (revenue − expenses) and add it
+        // as a synthetic row in the equity section so the balance sheet balances.
+        $fiscalYearStart = $this->resolveFiscalYearStart($organizationId, $asOfDate);
+        $revenue = $this->accountsWithBalances($organizationId, AccountType::Revenue, $fiscalYearStart, $asOfDate);
+        $expenses = $this->accountsWithBalances($organizationId, AccountType::Expense, $fiscalYearStart, $asOfDate);
+        $currentYearResult = Money::subtract((string) $revenue->sum('balance'), (string) $expenses->sum('balance'));
+
+        if (! Money::isZero($currentYearResult)) {
+            $sections[AccountType::Equity->value]['accounts'][] = [
+                'code' => '2990',
+                'name' => __('app.current_year_result'),
+                'balance' => $currentYearResult,
+            ];
+            $sections[AccountType::Equity->value]['total'] = Money::add(
+                (string) $sections[AccountType::Equity->value]['total'],
+                $currentYearResult,
+            );
+        }
+
+        return [
+            'as_of_date' => $asOfDate,
+            'assets' => $sections[AccountType::Asset->value],
+            'liabilities' => $sections[AccountType::Liability->value],
+            'equity' => $sections[AccountType::Equity->value],
+        ];
     }
 
     /**

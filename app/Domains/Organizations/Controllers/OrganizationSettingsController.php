@@ -2,8 +2,10 @@
 
 namespace App\Domains\Organizations\Controllers;
 
+use App\Domains\Accounting\Queries\VatRateQuery;
 use App\Domains\Expenses\Controllers\ExpenseCategoryController;
 use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
+use App\Domains\Invoicing\Queries\InvoiceCatalogItemQuery;
 use App\Domains\Organizations\Actions\UpdateOrganizationAction;
 use App\Domains\Organizations\DTOs\UpdateCommunicationsData;
 use App\Domains\Organizations\DTOs\UpdateInvoiceSettingsData;
@@ -52,6 +54,8 @@ class OrganizationSettingsController extends Controller
             'organization' => $organization,
             'hasLogo' => $organization->logo_path && Storage::disk('local')->exists($organization->logo_path),
             'expenseCategories' => ExpenseCategoryQuery::all(),
+            'catalogItems' => InvoiceCatalogItemQuery::all(),
+            'vatRates' => VatRateQuery::active(),
             'modules' => OrganizationModule::values(),
             'modulePresets' => OrganizationModule::presets(),
         ]);

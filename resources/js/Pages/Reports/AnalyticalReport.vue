@@ -9,6 +9,8 @@ import DataTable from '@/Components/UI/DataTable.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import Button from '@/Components/UI/Button.vue'
+import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
+import SharePrintButton from '@/Components/UI/SharePrintButton.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
@@ -37,6 +39,12 @@ function applyFilter() {
   router.get('/accounting/analytical-report', params, { preserveState: true })
 }
 
+const exportParams = computed(() => {
+  const params = { from: from.value, to: to.value }
+  if (costCenterId.value) params.cost_center_id = costCenterId.value
+  return params
+})
+
 const columns = [
   { key: 'code', label: t('code') },
   { key: 'name', label: t('account') },
@@ -48,11 +56,17 @@ const columns = [
   <AppLayout :title="t('analytical_report')">
     <p class="mb-4 text-sm text-[hsl(var(--muted-foreground))]">{{ t('analytical_report_desc') }}</p>
 
-    <div class="mb-6 flex flex-wrap items-end gap-4">
-      <FormInput id="from" v-model="from" type="date" :label="t('from')" />
-      <FormInput id="to" v-model="to" type="date" :label="t('to')" />
-      <FormSelect id="cost_center_id" v-model="costCenterId" :label="t('cost_center')" :options="costCenterOptions" />
-      <Button @click="applyFilter">{{ t('apply') }}</Button>
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div class="flex flex-wrap items-end gap-4">
+        <FormInput id="from" v-model="from" type="date" :label="t('from')" />
+        <FormInput id="to" v-model="to" type="date" :label="t('to')" />
+        <FormSelect id="cost_center_id" v-model="costCenterId" :label="t('cost_center')" :options="costCenterOptions" />
+        <Button @click="applyFilter">{{ t('apply') }}</Button>
+      </div>
+      <div class="flex items-center gap-2">
+        <SharePrintButton :title="t('analytical_report')" />
+        <ExportDropdown base-url="/accounting/analytical-report/export" :params="exportParams" />
+      </div>
     </div>
 
     <div class="space-y-6">

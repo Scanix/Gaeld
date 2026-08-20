@@ -26,7 +26,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>{{ $organizationName }}</h1>
+        <h1>{{ $organization->name }}</h1>
         <h2>{{ __('exports.aging.title', ['type' => ucfirst($report['type'])]) }}</h2>
         <div class="as-of">{{ __('exports.aging.as_of', ['date' => $report['as_of_date']]) }}</div>
     </div>

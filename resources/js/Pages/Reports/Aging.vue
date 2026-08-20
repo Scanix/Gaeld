@@ -7,6 +7,7 @@ import CardHeader from '@/Components/UI/CardHeader.vue'
 import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
+import FormInput from '@/Components/UI/FormInput.vue'
 import ExportDropdown from '@/Components/UI/ExportDropdown.vue'
 import SharePrintButton from '@/Components/UI/SharePrintButton.vue'
 import HelpText from '@/Components/HelpText.vue'
@@ -28,12 +29,17 @@ const report = computed(() => contract.value.report)
 const reportRows = computed(() => report.value.rows ?? [])
 
 const selectedType = ref(contract.value.type || contract.value.report?.type || 'receivables')
+const asOfDate = ref(report.value.as_of_date || '')
 
-const exportParams = computed(() => ({ type: selectedType.value }))
+const exportParams = computed(() => ({ type: selectedType.value, as_of_date: asOfDate.value }))
 
 function switchType(type) {
   selectedType.value = type
-  router.get('/reports/aging', { type }, { preserveState: true })
+  router.get('/reports/aging', { type, as_of_date: asOfDate.value }, { preserveState: true })
+}
+
+function applyAsOfDate() {
+  router.get('/reports/aging', { type: selectedType.value, as_of_date: asOfDate.value }, { preserveState: true })
 }
 
 // Color classes by aging bracket
@@ -68,31 +74,35 @@ function grandTotal() {
       <p>{{ t('help_aging_text') }}</p>
     </HelpText>
 
-    <!-- Type toggle + export -->
-    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex items-center gap-1 rounded-lg border border-[hsl(var(--border))] p-1 self-start">
-        <button
-          :class="[
-            'rounded-md px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-1.5',
-            selectedType === 'receivables'
-              ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
-              : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
-          ]"
-          @click="switchType('receivables')"
-        >
-          {{ t('receivables') }}
-        </button>
-        <button
-          :class="[
-            'rounded-md px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-1.5',
-            selectedType === 'payables'
-              ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
-              : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
-          ]"
-          @click="switchType('payables')"
-        >
-          {{ t('payables') }}
-        </button>
+    <!-- Type toggle + date filter + export -->
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div class="flex flex-wrap items-end gap-3">
+        <div class="flex items-center gap-1 rounded-lg border border-[hsl(var(--border))] p-1 self-start">
+          <button
+            :class="[
+              'rounded-md px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-1.5',
+              selectedType === 'receivables'
+                ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
+                : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
+            ]"
+            @click="switchType('receivables')"
+          >
+            {{ t('receivables') }}
+          </button>
+          <button
+            :class="[
+              'rounded-md px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-1.5',
+              selectedType === 'payables'
+                ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
+                : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
+            ]"
+            @click="switchType('payables')"
+          >
+            {{ t('payables') }}
+          </button>
+        </div>
+        <FormInput id="as_of_date" v-model="asOfDate" type="date" :label="t('as_of_date')" />
+        <Button @click="applyAsOfDate">{{ t('apply') }}</Button>
       </div>
       <div class="flex items-center gap-2">
         <SharePrintButton :title="t('aging_report')" />

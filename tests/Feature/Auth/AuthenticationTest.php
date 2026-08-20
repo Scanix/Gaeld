@@ -41,14 +41,14 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_guest_is_redirected_to_login_when_app_is_initialized(): void
+    public function test_guest_is_redirected_to_login_when_accessing_dashboard(): void
     {
         Organization::create([
             'name' => 'Test Org',
             'currency' => 'CHF',
         ]);
 
-        $this->get('/')
+        $this->get('/dashboard')
             ->assertRedirect(route('login'));
     }
 }

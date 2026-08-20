@@ -20,7 +20,7 @@ class RegistrationTest extends TestCase
     {
         parent::setUp();
 
-        if (! class_exists(Plan::class)) {
+        if (! config('plugins.enabled') || ! class_exists(Plan::class)) {
             $this->markTestSkipped('Gaeld EE plugin is not installed.');
         }
 

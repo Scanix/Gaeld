@@ -7,13 +7,13 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
-use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Jobs\SendPaymentRemindersJob;
 use App\Domains\Invoicing\Mail\InvoiceReminderMail;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Services\InvoiceMailerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -65,7 +65,7 @@ class PaymentReminderFlowTest extends TestCase
     }
 
     // ──────────────────────────────────────────────────────────────
-    //  SendInvoiceReminderAction
+    //  InvoiceMailerService::sendReminder()
     // ──────────────────────────────────────────────────────────────
 
     public function test_reminder_action_sends_mail_and_increments_count(): void
@@ -76,7 +76,7 @@ class PaymentReminderFlowTest extends TestCase
 
         $this->assertEquals(0, $invoice->reminder_count);
 
-        app(SendInvoiceReminderAction::class)->execute($invoice);
+        app(InvoiceMailerService::class)->sendReminder($invoice);
 
         $invoice->refresh();
         $this->assertEquals(1, $invoice->reminder_count);
@@ -102,7 +102,7 @@ class PaymentReminderFlowTest extends TestCase
         ]));
 
         $this->expectException(InvalidInvoiceStateException::class);
-        app(SendInvoiceReminderAction::class)->execute($invoice);
+        app(InvoiceMailerService::class)->sendReminder($invoice);
     }
 
     public function test_reminder_action_throws_if_customer_has_no_email(): void
@@ -129,7 +129,7 @@ class PaymentReminderFlowTest extends TestCase
         $invoice = app(FinalizeInvoiceAction::class)->execute($invoice);
 
         $this->expectException(InvalidInvoiceStateException::class);
-        app(SendInvoiceReminderAction::class)->execute($invoice);
+        app(InvoiceMailerService::class)->sendReminder($invoice);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -144,7 +144,7 @@ class PaymentReminderFlowTest extends TestCase
         $this->assertSame(0, $invoice->reminder_count);
 
         app(SendPaymentRemindersJob::class)->handle(
-            app(SendInvoiceReminderAction::class),
+            app(InvoiceMailerService::class),
         );
 
         Mail::assertSent(InvoiceReminderMail::class, 1);
@@ -167,7 +167,7 @@ class PaymentReminderFlowTest extends TestCase
         ]);
 
         app(SendPaymentRemindersJob::class)->handle(
-            app(SendInvoiceReminderAction::class),
+            app(InvoiceMailerService::class),
         );
 
         Mail::assertNothingSent();
@@ -189,7 +189,7 @@ class PaymentReminderFlowTest extends TestCase
         ]);
 
         app(SendPaymentRemindersJob::class)->handle(
-            app(SendInvoiceReminderAction::class),
+            app(InvoiceMailerService::class),
         );
 
         Mail::assertSent(InvoiceReminderMail::class, 1);
@@ -206,7 +206,7 @@ class PaymentReminderFlowTest extends TestCase
         $invoice->update(['status' => InvoiceStatus::Paid]);
 
         app(SendPaymentRemindersJob::class)->handle(
-            app(SendInvoiceReminderAction::class),
+            app(InvoiceMailerService::class),
         );
 
         Mail::assertNothingSent();

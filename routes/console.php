@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Assets\Jobs\MonthlyDepreciationJob;
 use App\Domains\Expenses\Jobs\GenerateRecurringExpensesJob;
 use App\Domains\Invoicing\Jobs\GenerateRecurringInvoicesJob;
@@ -55,6 +56,13 @@ if (FeatureFlag::enabled('auto_reconciliation')) {
  * Monthly depreciation of fixed assets (1st of each month at 05:00).
  */
 Schedule::job(MonthlyDepreciationJob::class)->monthlyOn(1, '05:00');
+
+/**
+ * Mark expired fiscal years (06:00) — all editions.
+ * Transitions operative fiscal years past their end_date to 'expired'
+ * and notifies organisation members.
+ */
+Schedule::call(fn () => app(FiscalYearService::class)->markExpiredAll())->dailyAt('06:00');
 
 // ──────────────────────────────────────────────────────────────
 //  Horizon

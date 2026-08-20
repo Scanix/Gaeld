@@ -29,6 +29,7 @@ Route::post('/reconciliation/transactions/{transaction}/invoice', [Reconciliatio
 Route::post('/reconciliation/transactions/{transaction}/expense', [ReconciliationController::class, 'reconcileExpense'])->name('reconciliation.expense');
 Route::post('/reconciliation/transactions/{transaction}/manual', [ReconciliationController::class, 'reconcileManual'])->name('reconciliation.manual');
 Route::post('/reconciliation/matches/{match}/confirm', [ReconciliationController::class, 'confirmMatch'])->name('reconciliation.confirm');
+Route::post('/reconciliation/transactions/{transaction}/unreconcile', [ReconciliationController::class, 'unreconcile'])->name('reconciliation.unreconcile');
 
 // Personal transaction marking (mixed-use accounts, CE)
 Route::post('/reconciliation/transactions/{transaction}/personal', [ReconciliationController::class, 'reconcilePersonal'])->name('reconciliation.personal');

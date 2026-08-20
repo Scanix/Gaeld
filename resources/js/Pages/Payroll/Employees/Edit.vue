@@ -30,8 +30,6 @@ const form = useForm({
   last_name: props.employee.last_name ?? '',
   ahv_number: props.employee.ahv_number ?? '',
   email: props.employee.email ?? '',
-  phone: props.employee.phone ?? '',
-  position: props.employee.position ?? '',
   entry_date: props.employee.entry_date ?? '',
   exit_date: props.employee.exit_date ?? '',
   gross_salary: props.employee.gross_salary ?? '',
@@ -82,20 +80,12 @@ function submit() {
               :label="t('email')"
               :error="form.errors.email"
             />
-            <FormInput
-              id="phone"
-              v-model="form.phone"
-              type="tel"
-              :label="t('phone')"
-              :error="form.errors.phone"
-            />
           </div>
 
           <!-- AHV Number -->
           <div class="relative">
             <label class="mb-1.5 block text-sm font-medium">
               {{ t('ahv_number') }}
-              <span class="text-[hsl(var(--destructive))]">*</span>
             </label>
             <input
               id="ahv_number"
@@ -104,7 +94,6 @@ function submit() {
               :placeholder="t('placeholder_ahv')"
               pattern="\d{3}\.\d{4}\.\d{4}\.\d{2}"
               maxlength="16"
-              required
               class="flex h-10 w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-[hsl(var(--muted-foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))] disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 font-mono tracking-wider"
             />
             <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('ahv_format_hint') }}</p>
@@ -118,12 +107,6 @@ function submit() {
           <hr class="border-[hsl(var(--border))]" />
           <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('employment') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormInput
-              id="position"
-              v-model="form.position"
-              :label="t('position')"
-              :error="form.errors.position"
-            />
             <FormInput
               id="entry_date"
               v-model="form.entry_date"

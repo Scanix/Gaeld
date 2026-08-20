@@ -3,6 +3,7 @@
 namespace Tests\Feature\Accounting;
 
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Enums\TaxDeclarationStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\ConsolidationElimination;
 use App\Domains\Accounting\Models\ConsolidationGroup;
@@ -86,7 +87,7 @@ class AdvancedAccountingModulesTest extends TestCase
         $declaration = TaxDeclaration::query()->firstOrFail();
 
         $this->assertSame('VD', $declaration->canton);
-        $this->assertSame('draft', $declaration->status);
+        $this->assertSame(TaxDeclarationStatus::Draft, $declaration->status);
         $this->assertSame(600.0, (float) ($declaration->data['net_result'] ?? 0.0));
         $this->assertSame(600.0, (float) ($declaration->data['profit'] ?? 0.0));
         $this->assertSame(600.0, (float) ($declaration->data['assets'] ?? 0.0));
@@ -104,7 +105,7 @@ class AdvancedAccountingModulesTest extends TestCase
         $this->actAsOrg()->post('/accounting/tax-declarations/'.$declaration->id.'/finalize')
             ->assertRedirect();
 
-        $this->assertSame('finalized', $declaration->fresh()->status);
+        $this->assertSame(TaxDeclarationStatus::Finalized, $declaration->fresh()->status);
         $this->assertNotNull($declaration->fresh()->finalized_at);
     }
 
@@ -179,11 +180,38 @@ class AdvancedAccountingModulesTest extends TestCase
                 ->where('report.net_profit', 300)
             );
 
+        $csvResponse = $this->actAsOrg()->get('/accounting/analytical-report/export/csv?from=2026-01-01&to=2026-12-31&cost_center_id='.$center->id);
+        $csvResponse->assertStatus(200);
+        $this->assertStringContainsString('text/csv', $csvResponse->headers->get('Content-Type'));
+
+        $pdfResponse = $this->actAsOrg()->get('/accounting/analytical-report/export/pdf?from=2026-01-01&to=2026-12-31&cost_center_id='.$center->id);
+        $pdfResponse->assertStatus(200);
+        $this->assertStringContainsString('application/pdf', $pdfResponse->headers->get('Content-Type'));
+
         $this->actAsOrg()->delete('/accounting/cost-centers/'.$center->id)
             ->assertRedirect()
             ->assertSessionHasErrors('cost_center');
 
         $this->assertDatabaseHas('cost_centers', ['id' => $center->id]);
+    }
+
+    public function test_exchange_rates_index_renders_paginated_list(): void
+    {
+        ExchangeRate::create([
+            'organization_id' => $this->organization->id,
+            'currency_from' => 'EUR',
+            'currency_to' => 'CHF',
+            'date' => '2026-04-01',
+            'source' => 'manual',
+            'rate' => '0.97',
+        ]);
+
+        $this->actAsOrg()->get('/accounting/exchange-rates')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Accounting/ExchangeRates')
+                ->has('rates.data', 1)
+            );
     }
 
     public function test_exchange_rates_manual_and_ecb_fetch_flow(): void
@@ -264,6 +292,27 @@ XML, 200),
             ->assertSessionHasErrors('currency_from');
 
         $this->assertDatabaseCount('exchange_rates', 0);
+    }
+
+    public function test_consolidation_index_renders_groups_and_organization_options(): void
+    {
+        $memberOrganization = Organization::factory()->create(['name' => 'Member Co']);
+
+        ConsolidationGroup::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Group Alpha',
+            'member_organization_ids' => [$this->organization->id, $memberOrganization->id],
+            'base_currency' => 'CHF',
+        ]);
+
+        $this->actAsOrg()->get('/accounting/consolidation')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Accounting/Consolidation/Index')
+                ->has('groups', 1)
+                ->where('groups.0.name', 'Group Alpha')
+                ->has('organizationOptions')
+            );
     }
 
     public function test_consolidation_group_report_and_elimination_flow(): void

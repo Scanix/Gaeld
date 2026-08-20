@@ -1,5 +1,6 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3'
+import { computed, ref } from 'vue'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -16,14 +17,46 @@ const { t } = useTranslations()
 const props = defineProps({
   fiscalYears: { type: Array, default: () => [] },
   currentFiscalYear: { type: [String, Number], default: null },
+  currentFiscalYearId: { type: String, default: null },
+  currentPeriod: { type: Object, default: null },
 })
 
-const yearOptions = props.fiscalYears.map(y => ({ value: String(y), label: String(y) }))
+const periods = props.fiscalYears.map((period) => {
+  if (typeof period === 'string' || typeof period === 'number') {
+    return {
+      id: null,
+      label: String(period),
+      start_date: `${period}-01-01`,
+      end_date: `${period}-12-31`,
+      is_legacy_fallback: true,
+    }
+  }
 
-const form = useForm({ fiscal_year: props.currentFiscalYear ? String(props.currentFiscalYear) : '' })
+  return period
+})
+
+const periodKey = (period) => period?.id ?? `legacy:${period?.label ?? ''}`
+const selectedPeriodKey = ref(
+  periodKey(props.currentPeriod ?? periods[0] ?? { label: props.currentFiscalYear })
+)
+const selectedPeriod = computed(() =>
+  periods.find(period => periodKey(period) === selectedPeriodKey.value) ?? props.currentPeriod
+)
+
+const form = useForm({
+  fiscal_year_id: props.currentFiscalYearId,
+  fiscal_year: props.currentFiscalYear ? String(props.currentFiscalYear) : '',
+})
+
+function selectPeriod(key) {
+  selectedPeriodKey.value = key
+  const period = periods.find(item => periodKey(item) === key)
+  form.fiscal_year_id = period?.id ?? null
+  form.fiscal_year = period?.id ? '' : (period?.label ?? '')
+}
 
 function generateExport() {
-  if (!form.fiscal_year) return
+  if (!form.fiscal_year_id && !form.fiscal_year) return
   form.post('/accounting/export', {
     preserveScroll: true,
   })
@@ -54,16 +87,21 @@ const zipContents = [
           <CardTitle>{{ t('select_fiscal_year') }}</CardTitle>
         </CardHeader>
         <CardContent class="space-y-4">
-          <FormSelect
-            id="fiscal_year"
-            v-model="form.fiscal_year"
+                  <FormSelect
+                    id="fiscal_year"
+                    :model-value="selectedPeriodKey"
+                    @update:model-value="selectPeriod"
             :label="t('fiscal_year')"
-            :options="yearOptions"
-            :error="form.errors.fiscal_year"
+                    :options="periods.map(period => ({ value: periodKey(period), label: period.label }))"
+                    :error="form.errors.fiscal_year_id || form.errors.fiscal_year"
           />
 
+                  <p v-if="selectedPeriod?.start_date && selectedPeriod?.end_date" class="text-sm text-[hsl(var(--muted-foreground))]">
+                    {{ t('period') }}: {{ selectedPeriod.start_date }} – {{ selectedPeriod.end_date }}
+                  </p>
+
           <Button
-            :disabled="!form.fiscal_year || form.processing"
+                    :disabled="(!form.fiscal_year_id && !form.fiscal_year) || form.processing"
             class="w-full sm:w-auto"
             @click="generateExport"
           >

@@ -2,15 +2,20 @@
 
 namespace App\Domains\Reporting\Services;
 
+use App\Domains\Accounting\DTOs\FiscalYearPeriod;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\VatReportService;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use ZipArchive;
 
 /**
@@ -23,20 +28,40 @@ class AccountingExportService
         private LedgerQueryService $ledgerService,
         private ReportingService $reportingService,
         private VatReportService $vatReportService,
+        private FiscalYearService $fiscalYears,
     ) {}
 
     /**
      * Generate a complete accounting export ZIP for fiduciary handoff.
      *
      * @param  string  $orgId  Organization UUID
-     * @param  string  $fiscalYear  Fiscal year (e.g. "2025")
+     * @param  string  $fiscalYear  Fiscal-year label or legacy year (e.g. "2025")
+     * @param  string|null  $fiscalYearId  Explicit fiscal-year UUID when available
      * @return string Absolute path to the generated ZIP file
      */
-    public function generateExport(string $orgId, string $fiscalYear): string
+    public function generateExport(string $orgId, string $fiscalYear, ?string $fiscalYearId = null): string
     {
-        $year = (int) $fiscalYear;
-        $fromDate = "{$year}-01-01";
-        $toDate = "{$year}-12-31";
+        $org = Organization::findOrFail($orgId);
+        $period = $this->fiscalYears->resolvePeriod(
+            $org,
+            $fiscalYearId,
+            is_numeric($fiscalYear) ? (int) $fiscalYear : null,
+        );
+
+        return Cache::lock(
+            "accounting-export:{$orgId}:".($period->fiscalYearId ?? $period->label),
+            900,
+        )->block(10, fn (): string => $this->generateExportForPeriod($org, $period, $fiscalYear));
+    }
+
+    private function generateExportForPeriod(
+        Organization $org,
+        FiscalYearPeriod $period,
+        string $legacyLabel,
+    ): string {
+        $orgId = $org->id;
+        $fromDate = $period->fromDate;
+        $toDate = $period->toDate;
 
         Storage::disk('local')->makeDirectory('exports');
 
@@ -45,18 +70,18 @@ class AccountingExportService
         mkdir($tmpDir.'/vat-reports', 0700, true);
 
         try {
-            $org = Organization::findOrFail($orgId);
-
             $this->buildChartOfAccounts($tmpDir, $orgId);
             $this->buildJournalEntries($tmpDir, $orgId, $fromDate, $toDate);
             $this->buildTrialBalance($tmpDir, $orgId, $toDate);
             $this->buildProfitAndLoss($tmpDir, $org, $fromDate, $toDate);
-            $this->buildBalanceSheet($tmpDir, $org, $toDate);
-            $this->buildVatReports($tmpDir, $org, $year);
+            $this->buildBalanceSheet($tmpDir, $org, $fromDate, $toDate);
+            $this->buildVatReports($tmpDir, $org, $fromDate, $toDate);
             $this->buildInvoicesCsv($tmpDir, $orgId, $fromDate, $toDate);
             $this->buildExpensesCsv($tmpDir, $orgId, $fromDate, $toDate);
 
-            $zipFilename = "exports/accounting-{$orgId}-{$fiscalYear}.zip";
+            $zipLabel = $period->fiscalYearId
+                ?? (Str::slug($period->label) ?: $legacyLabel);
+            $zipFilename = "exports/accounting-{$orgId}-{$zipLabel}.zip";
             $zipPath = Storage::disk('local')->path($zipFilename);
 
             $this->createZip($zipPath, $tmpDir);
@@ -145,7 +170,7 @@ class AccountingExportService
         $report = $this->reportingService->profitAndLoss($org->id, $fromDate, $toDate);
 
         $pdfContent = Pdf::loadView('exports.profit-and-loss', [
-            'organizationName' => $org->name,
+            'organization' => $org,
             'period' => ['from' => $fromDate, 'to' => $toDate],
             'revenue' => $report['revenue'],
             'expenses' => $report['expenses'],
@@ -157,13 +182,14 @@ class AccountingExportService
         file_put_contents($tmpDir.'/profit-and-loss.pdf', $pdfContent);
     }
 
-    private function buildBalanceSheet(string $tmpDir, Organization $org, string $asOfDate): void
+    private function buildBalanceSheet(string $tmpDir, Organization $org, string $fromDate, string $asOfDate): void
     {
         $report = $this->reportingService->balanceSheet($org->id, $asOfDate);
 
         $pdfContent = Pdf::loadView('exports.balance-sheet', [
-            'organizationName' => $org->name,
+            'organization' => $org,
             'asOfDate' => $asOfDate,
+            'period' => ['from' => $fromDate, 'to' => $asOfDate],
             'assets' => $report['assets'],
             'liabilities' => $report['liabilities'],
             'equity' => $report['equity'],
@@ -172,24 +198,30 @@ class AccountingExportService
         file_put_contents($tmpDir.'/balance-sheet.pdf', $pdfContent);
     }
 
-    private function buildVatReports(string $tmpDir, Organization $org, int $year): void
+    private function buildVatReports(string $tmpDir, Organization $org, string $fromDate, string $toDate): void
     {
-        $quarters = [
-            'Q1' => ["{$year}-01-01", "{$year}-03-31"],
-            'Q2' => ["{$year}-04-01", "{$year}-06-30"],
-            'Q3' => ["{$year}-07-01", "{$year}-09-30"],
-            'Q4' => ["{$year}-10-01", "{$year}-12-31"],
-        ];
+        $from = Carbon::parse($fromDate)->startOfQuarter();
+        $to = Carbon::parse($toDate)->endOfQuarter();
+        $isCalendarYear = $fromDate === Carbon::parse($fromDate)->startOfYear()->toDateString()
+            && $toDate === Carbon::parse($toDate)->endOfYear()->toDateString()
+            && Carbon::parse($fromDate)->year === Carbon::parse($toDate)->year;
 
-        foreach ($quarters as $quarter => [$fromDate, $toDate]) {
-            $report = $this->vatReportService->generate($org->id, $fromDate, $toDate);
+        for ($quarterStart = $from->copy(); $quarterStart->lte($to); $quarterStart->addQuarter()) {
+            $quarterEnd = $quarterStart->copy()->endOfQuarter();
+            $quarter = 'Q'.$quarterStart->quarter;
+            $filename = $isCalendarYear
+                ? $quarter
+                : $quarter.'-'.$quarterStart->year;
+            $periodFrom = $quarterStart->toDateString();
+            $periodTo = $quarterEnd->toDateString();
+            $report = $this->vatReportService->generate($org->id, $periodFrom, $periodTo);
 
             $pdfContent = Pdf::loadView('exports.vat-report', [
-                'organizationName' => $org->name,
+                'organization' => $org,
                 'report' => $report,
             ])->setPaper('A4', 'portrait')->output();
 
-            file_put_contents($tmpDir.'/vat-reports/'.$quarter.'.pdf', $pdfContent);
+            file_put_contents($tmpDir.'/vat-reports/'.$filename.'.pdf', $pdfContent);
         }
     }
 

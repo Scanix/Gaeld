@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Requests;
 
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Requests\Concerns\InvoiceValidationRules;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -19,6 +20,9 @@ class UpdateInvoiceRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->sharedRules($this->route('invoice')->organization_id);
+        /** @var Invoice $invoice */
+        $invoice = $this->route('invoice');
+
+        return $this->sharedRules($invoice->organization_id, $invoice->id);
     }
 }

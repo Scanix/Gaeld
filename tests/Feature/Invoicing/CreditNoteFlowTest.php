@@ -78,10 +78,12 @@ class CreditNoteFlowTest extends TestCase
         $this->assertTrue(bccomp((string) $creditNote->total, '0', 2) < 0);
         $this->assertEquals('-1250.00', (string) $creditNote->total);
 
-        // Lines should have "Avoir:" prefix
+        // Lines should be prefixed with the translated credit-note marker and
+        // still contain the original line description.
         $creditNote->load('lines');
-        foreach ($creditNote->lines as $line) {
-            $this->assertStringStartsWith('Avoir:', $line->description);
+        foreach ($creditNote->lines->zip(collect(['Service A', 'Service B'])) as [$line, $originalDescription]) {
+            $this->assertStringContainsString($originalDescription, $line->description);
+            $this->assertNotEquals($originalDescription, $line->description);
         }
     }
 

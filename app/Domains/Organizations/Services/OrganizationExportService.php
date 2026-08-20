@@ -17,6 +17,7 @@ use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Domains\Invoicing\Models\RecurringInvoice;
 use App\Domains\Organizations\Models\Organization;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
@@ -32,6 +33,8 @@ class OrganizationExportService
      * Generate a ZIP export of all organization data.
      *
      * @return string Absolute path to the generated ZIP file.
+     *
+     * @throws ModelNotFoundException When the organization does not exist.
      */
     public function generate(string $organizationId): string
     {

@@ -117,6 +117,16 @@ class LedgerQueryService
     }
 
     /**
+     * Check if ANY entry (draft or posted) with this reference exists
+     */
+    public function isDuplicateReferenceAny(string $organizationId, string $reference): bool
+    {
+        return JournalEntry::where('organization_id', $organizationId)
+            ->where('reference', $reference)
+            ->exists();
+    }
+
+    /**
      * Resolve an account by its chart-of-accounts code within an organization.
      *
      * @throws ModelNotFoundException

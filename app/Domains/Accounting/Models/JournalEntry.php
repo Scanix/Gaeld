@@ -42,6 +42,7 @@ class JournalEntry extends Model
         'description',
         'is_posted',
         'type',
+        'archived_at',
     ];
 
     protected function casts(): array
@@ -49,6 +50,7 @@ class JournalEntry extends Model
         return [
             'date' => 'date',
             'is_posted' => 'boolean',
+            'archived_at' => 'datetime',
         ];
     }
 

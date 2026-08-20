@@ -27,6 +27,21 @@ class ContactQuery
     }
 
     /**
+     * Soft-deleted contacts, for the "trash" recovery view.
+     *
+     * @return LengthAwarePaginator<int, Contact>
+     */
+    public static function trashed(Request $request, int $perPage = 20): LengthAwarePaginator
+    {
+        return QueryBuilder::for(Contact::onlyTrashed(), $request)
+            ->allowedSorts(['name', 'deleted_at'], 'deleted_at', 'desc')
+            ->searchable(['name', 'email'])
+            ->apply()
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    /**
      * @return Collection<int, Contact>
      */
     public static function forSelect(): Collection

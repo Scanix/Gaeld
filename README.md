@@ -24,7 +24,6 @@ Proper double-entry bookkeeping, Swiss QR-Bill invoicing, VAT reporting, and ban
 Gäld covers the full accounting workflow for a small Swiss business:
 
 - **Double-entry accounting** — journal, ledger, and trial balance with strict debit/credit balance enforcement
-- **Fiscal year management** — create and close fiscal years, record opening balances, and manage year-end closings
 - **Invoicing** — professional PDFs with Swiss QR-Bill payment slip (ready to print and send)
 - **Expense tracking** — log expenses, attach receipts, categorise by supplier
 - **Swiss VAT (MWST)** — correct rates preconfigured, VAT report ready for the tax authority
@@ -75,9 +74,7 @@ Other useful commands:
 ./gaeld down               # Stop everything
 ```
 
-### Manual (no Docker)
-
-Requires PHP 8.4+, Composer, Node.js 22+, pnpm, PostgreSQL 15+, and Redis 7+.
+### Manual
 
 ```bash
 composer install
@@ -88,8 +85,6 @@ php artisan key:generate
 php artisan gaeld:install
 php artisan serve
 ```
-
-Visit `http://localhost:8000`.
 
 ### Updating
 
@@ -120,7 +115,7 @@ Runs pending migrations, clears caches, and restarts the queue worker — safe t
 The codebase follows a domain-driven structure. Each business domain is self-contained under `app/Domains/`:
 
 ```
-Accounting/     — chart of accounts, journal entries, ledger, fiscal years, opening balances
+Accounting/     — chart of accounts, journal entries, ledger
 Banking/        — bank accounts, CAMT import, transaction reconciliation
 Contacts/       — customers and suppliers
 Expenses/       — expense recording and reporting

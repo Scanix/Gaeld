@@ -32,6 +32,10 @@ class JournalEntryPolicy extends BasePolicy
 
     public function update(User $user, JournalEntry $entry): bool
     {
+        if ($entry->archived_at !== null) {
+            return false;
+        }
+
         return $this->belongsToOrganization($user, $entry)
             && $user->hasPermissionTo(Permission::AccountingEdit)
             && ! $entry->is_posted;
@@ -39,6 +43,10 @@ class JournalEntryPolicy extends BasePolicy
 
     public function delete(User $user, JournalEntry $entry): bool
     {
+        if ($entry->archived_at !== null) {
+            return false;
+        }
+
         return $this->belongsToOrganization($user, $entry)
             && $user->hasPermissionTo(Permission::AccountingDelete)
             && ! $entry->is_posted;

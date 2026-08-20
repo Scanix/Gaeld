@@ -9,6 +9,7 @@ use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Organizations\Enums\BusinessType;
 use App\Domains\Users\Models\User;
+use App\Support\Contracts\SubscriptionContract;
 use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -40,6 +41,8 @@ use Illuminate\Support\Carbon;
  * @property array<string, bool>|null $enabled_modules
  * @property string|null $locale
  * @property BusinessType|null $business_type
+ * @property string $setup_mode
+ * @property Carbon|null $founded_at
  * @property bool $require_two_factor
  * @property int|null $default_payment_terms_days
  * @property Carbon|null $suspended_at
@@ -47,7 +50,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read mixed $activeSubscription Injected at runtime by a plugin via resolveRelationUsing().
+ * @property-read SubscriptionContract|null $activeSubscription
  */
 class Organization extends Model
 {
@@ -76,6 +79,8 @@ class Organization extends Model
         'invoice_email_subject',
         'invoice_email_body',
         'enabled_modules',
+        'setup_mode',
+        'founded_at',
         'suspended_at',
         'suspended_reason',
     ];
@@ -88,6 +93,7 @@ class Organization extends Model
             'closed_fiscal_years' => 'array',
             'enabled_modules' => 'array',
             'business_type' => BusinessType::class,
+            'founded_at' => 'date',
             'suspended_at' => 'datetime',
         ];
     }

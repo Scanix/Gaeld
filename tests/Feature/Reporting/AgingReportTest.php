@@ -194,6 +194,24 @@ class AgingReportTest extends TestCase
         $response->assertInertia(fn ($page) => $page->component('Reports/Aging'));
     }
 
+    public function test_aging_route_honors_as_of_date_query_param(): void
+    {
+        // Overdue by 15 days as of 2026-03-20, but NOT yet due as of 2026-03-01
+        // (the report's asOf date), so it must land in the "current" bracket.
+        $this->createInvoice('2026-02-01', '2026-03-05');
+
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get(route('reports.aging', ['type' => 'receivables', 'as_of_date' => '2026-03-01']));
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('Reports/Aging')
+            ->where('report.as_of_date', '2026-03-01')
+            ->where('report.brackets.current.items.0.days_overdue', 0)
+        );
+    }
+
     public function test_aging_export_pdf_returns_correct_content_type(): void
     {
         $response = $this->actingAs($this->user)

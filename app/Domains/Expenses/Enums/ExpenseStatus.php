@@ -21,7 +21,7 @@ enum ExpenseStatus: string
     {
         return match ($this) {
             self::Pending => [self::Approved],
-            self::Approved => [self::Posted],
+            self::Approved => [self::Posted, self::Pending],
             self::Posted => [],
         };
     }
@@ -42,6 +42,6 @@ enum ExpenseStatus: string
 
     public function isDeletable(): bool
     {
-        return $this === self::Pending;
+        return $this === self::Pending || $this === self::Approved;
     }
 }

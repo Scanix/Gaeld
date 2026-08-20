@@ -44,6 +44,7 @@ class ClosingAccountsService
                     ->where('is_posted', true)
                     ->where('date', '>=', $from)
                     ->where('date', '<=', $to)
+                    ->where(fn ($q2) => $q2->whereNull('type')->orWhereNot('type', 'historical_summary'))
                 );
 
             $debits = (string) (clone $query)->sum('debit');

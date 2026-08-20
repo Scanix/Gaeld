@@ -153,6 +153,51 @@ class ReportingServiceTest extends TestCase
         $this->assertSame('33.33', $report['variance']['net_profit']['percentage']);
     }
 
+    public function test_balance_sheet_without_compare_date_returns_null_comparison(): void
+    {
+        $asset = $this->makeAccount('1020', 'Bank', AccountType::Asset);
+
+        $ledgerService = Mockery::mock(LedgerQueryService::class);
+        $ledgerService->shouldReceive('accountBalance')->with($asset->id, null, '2026-03-31')->andReturn('1500.00');
+
+        $service = new ReportingService($ledgerService);
+        $report = $service->balanceSheet($this->organization->id, '2026-03-31');
+
+        $this->assertNull($report['comparison']);
+    }
+
+    public function test_balance_sheet_with_compare_as_of_date_returns_comparison_section(): void
+    {
+        $asset = $this->makeAccount('1020', 'Bank', AccountType::Asset);
+        $revenue = $this->makeAccount('3000', 'Revenue', AccountType::Revenue);
+        $expense = $this->makeAccount('6530', 'Software', AccountType::Expense);
+
+        $ledgerService = Mockery::mock(LedgerQueryService::class);
+
+        // Current as-of date: 2026-03-31 (fiscal year starts 2026-01-01)
+        $ledgerService->shouldReceive('accountBalance')->once()->with($asset->id, null, '2026-03-31')->andReturn('1500.00');
+        $ledgerService->shouldReceive('accountBalance')->once()->with($revenue->id, '2026-01-01', '2026-03-31')->andReturn('800.00');
+        $ledgerService->shouldReceive('accountBalance')->once()->with($expense->id, '2026-01-01', '2026-03-31')->andReturn('400.00');
+
+        // Comparison as-of date: 2025-03-31 (fiscal year starts 2025-01-01)
+        $ledgerService->shouldReceive('accountBalance')->once()->with($asset->id, null, '2025-03-31')->andReturn('1000.00');
+        $ledgerService->shouldReceive('accountBalance')->once()->with($revenue->id, '2025-01-01', '2025-03-31')->andReturn('500.00');
+        $ledgerService->shouldReceive('accountBalance')->once()->with($expense->id, '2025-01-01', '2025-03-31')->andReturn('300.00');
+
+        $service = new ReportingService($ledgerService);
+        $report = $service->balanceSheet($this->organization->id, '2026-03-31', '2025-03-31');
+
+        $this->assertNotNull($report['comparison']);
+        $this->assertSame('2025-03-31', $report['comparison']['as_of_date']);
+        $this->assertEquals('1000.00', $report['comparison']['assets']['total']);
+        // Comparison current-year result: 500 - 300 = 200
+        $this->assertEquals('200.00', $report['comparison']['equity']['total']);
+
+        // The primary (non-comparison) result is unaffected
+        $this->assertEquals('1500.00', $report['assets']['total']);
+        $this->assertEquals('400.00', $report['equity']['total']);
+    }
+
     private function makeAccount(string $code, string $name, AccountType $type): Account
     {
         return Account::create([

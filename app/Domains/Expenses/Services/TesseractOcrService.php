@@ -274,7 +274,8 @@ class TesseractOcrService implements ReceiptOcrInterface
         foreach ($patterns as $pattern) {
             if (preg_match_all($pattern, $text, $matches)) {
                 // Take the last match (totals are usually at the bottom)
-                $amountStr = end($matches[1]);
+                $amounts = $matches[1];
+                $amountStr = end($amounts);
                 $amountStr = str_replace(',', '.', $amountStr);
 
                 return (float) $amountStr;
@@ -284,11 +285,10 @@ class TesseractOcrService implements ReceiptOcrInterface
         // Fallback: find the last number with 2 decimal places in the text
         // (end() = last = closest to bottom = most likely to be the total)
         if (preg_match_all('/\b(\d{1,6}[.,]\d{2})\b/', $text, $matches)) {
-            if (count($matches[1]) > 0) {
-                $lastMatch = end($matches[1]);
+            $amounts = $matches[1];
+            $lastMatch = end($amounts);
 
-                return (float) str_replace(',', '.', $lastMatch);
-            }
+            return (float) str_replace(',', '.', $lastMatch);
         }
 
         return null;
@@ -370,7 +370,8 @@ class TesseractOcrService implements ReceiptOcrInterface
 
         foreach ($patterns as $pattern) {
             if (preg_match_all($pattern, $text, $matches)) {
-                $amountStr = end($matches[1]);
+                $amounts = $matches[1];
+                $amountStr = end($amounts);
 
                 return (float) str_replace(',', '.', $amountStr);
             }
