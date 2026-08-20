@@ -295,12 +295,6 @@ parameters:
 			path: app/Domains/Expenses/Search/ExpenseSearchProvider.php
 
 		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|false given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Expenses/Services/TesseractOcrService.php
-
-		-
 			message: '#^Unsafe usage of new static\(\)\.$#'
 			identifier: new.static
 			count: 1
