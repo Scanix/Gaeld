@@ -31,8 +31,9 @@ class GenerateAccountingExportJob implements ShouldQueue
         public readonly ?string $fiscalYearId = null,
     ) {}
 
-    public function handle(AccountingExportService $exportService, FiscalYearService $fiscalYears): void
+    public function handle(AccountingExportService $exportService, ?FiscalYearService $fiscalYears = null): void
     {
+        $fiscalYears ??= app(FiscalYearService::class);
         $period = $fiscalYears->resolvePeriod(
             Organization::findOrFail($this->orgId),
             $this->fiscalYearId,
