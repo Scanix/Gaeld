@@ -78,7 +78,7 @@ Route::middleware('auth')->get('/logout', fn () => response(
     .'<body><form id="f" method="POST" action="'.route('logout').'">'
     .'<input type="hidden" name="_token" value="'.csrf_token().'">'
     .'<noscript><button type="submit">Sign out</button></noscript>'
-    .'</form><script>document.getElementById("f").submit();</script></body></html>'
+    .'</form><script nonce="'.htmlspecialchars((string) app('csp-nonce'), ENT_QUOTES, 'UTF-8').'">document.getElementById("f").submit();</script></body></html>'
 ));
 
 // Root redirect — auth/verified middlewares handle the redirects for guests and unverified users
