@@ -46,6 +46,15 @@ selected Docker context immediately and exits with an actionable error when the
 engine is unavailable. It does not install or launch Docker Desktop
 automatically.
 
+On Linux, if `docker info` reports `permission denied`, grant the current user
+access to the Docker socket and start a new session:
+
+```bash
+sudo usermod -aG docker "$USER"
+newgrp docker
+docker info
+```
+
 ### Running Tests
 
 Tests run against the PostgreSQL `testing` database (automatically created by the container on first start). Always run tests **inside** the container:

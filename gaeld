@@ -62,11 +62,27 @@ require_docker() {
     fi
 
     local context
+    local docker_error
     context=$(docker context show 2>/dev/null || printf "unknown")
-    if ! docker info > /dev/null 2>&1; then
-        fail "Docker Engine is unavailable for context '${context}'. Start Docker Desktop or the Docker service, then retry."
+    if docker_error=$(docker info 2>&1); then
+        ok "Docker Engine is ready (${context})"
+        return 0
     fi
-    ok "Docker Engine is ready (${context})"
+
+    if [[ "$docker_error" == *"permission denied"* ]]; then
+        printf "  ${RED}✖${RESET} Docker socket access denied for context '${context}'.\n"
+        printf "    Add your Linux user to the docker group, then start a new session:\n"
+        printf "    sudo usermod -aG docker \"$USER\" && newgrp docker\n"
+        printf "    Verify with: docker info\n"
+        exit 1
+    fi
+
+    printf "  ${RED}✖${RESET} Docker Engine is unavailable for context '${context}'.\n"
+    printf "%s\n" "$docker_error" | tail -n 3 | while IFS= read -r line; do
+        printf "    %s\n" "$line"
+    done
+    printf "    Start Docker, select the correct context, and verify with: docker info\n"
+    exit 1
 }
 
 wait_for() {
@@ -246,37 +262,36 @@ cmd_status() {
 }
 
 cmd_help() {
-    cat <<'EOF'
-
-🏔  Gäld CLI
-
-Usage: ./gaeld <command> [options]
-
-Commands:
-  setup [--demo]     Full first-time setup (build, start, install)
-  up                 Start all containers
-    down               Stop all containers
-    doctor             Diagnose the running installation
-    update             Apply migrations and rebuild application caches
-  restart [service]  Restart all or specific service
-  artisan <cmd>      Run artisan command in the app container
-  pnpm <cmd>         Run pnpm command in the app container
-  logs [service]     Tail logs (default: laravel.test)
-  worker             Tail queue worker logs
-  status             Show container status
-  help               Show this help message
-
-Examples:
-  ./gaeld setup              Interactive first-time setup
-  ./gaeld setup --demo       Non-interactive setup with demo data
-    ./gaeld artisan migrate    Run database migrations
-    ./gaeld doctor             Diagnose configuration and service health
-    ./gaeld update             Apply pending migrations and rebuild caches
-  ./gaeld restart worker     Restart queue worker
-  ./gaeld logs worker        Tail worker logs
-  ./gaeld pnpm build         Run pnpm build inside the container
-
-EOF
+        printf '%s\n' \
+            '' \
+            '🏔  Gäld CLI' \
+            '' \
+            'Usage: ./gaeld <command> [options]' \
+            '' \
+            'Commands:' \
+            '  setup [--demo]     Full first-time setup (build, start, install)' \
+            '  up                 Start all containers' \
+            '  down               Stop all containers' \
+            '  doctor             Diagnose the running installation' \
+            '  update             Apply migrations and rebuild application caches' \
+            '  restart [service]  Restart all or specific service' \
+            '  artisan <cmd>      Run artisan command in the app container' \
+            '  pnpm <cmd>         Run pnpm command in the app container' \
+            '  logs [service]     Tail logs (default: laravel.test)' \
+            '  worker             Tail queue worker logs' \
+            '  status             Show container status' \
+            '  help               Show this help message' \
+            '' \
+            'Examples:' \
+            '  ./gaeld setup              Interactive first-time setup' \
+            '  ./gaeld setup --demo       Non-interactive setup with demo data' \
+            '  ./gaeld artisan migrate    Run database migrations' \
+            '  ./gaeld doctor             Diagnose configuration and service health' \
+            '  ./gaeld update             Apply pending migrations and rebuild caches' \
+            '  ./gaeld restart worker     Restart queue worker' \
+            '  ./gaeld logs worker        Tail worker logs' \
+            '  ./gaeld pnpm build         Run pnpm build inside the container' \
+            ''
 }
 
 # ── Main ────────────────────────────────────────────────────

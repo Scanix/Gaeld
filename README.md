@@ -48,6 +48,10 @@ Docker service before running setup. The command checks Docker immediately and
 prints an actionable error if the selected Docker context is unavailable; it
 does not install or launch Docker Desktop for you.
 
+On Linux, your user must be allowed to access Docker. If `docker info` reports
+`permission denied`, run `sudo usermod -aG docker "$USER"`, start a new login
+session (or run `newgrp docker`), and verify with `docker info`.
+
 ```bash
 ./gaeld setup
 ```
