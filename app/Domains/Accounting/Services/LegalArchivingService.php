@@ -47,6 +47,9 @@ class LegalArchivingService
         $orgId = $document->getAttribute('organization_id');
         $id = (string) $document->getKey();
         $year = $period !== null ? Carbon::parse($period->fromDate)->year : (int) now()->year;
+        $periodKey = $period === null
+            ? (string) $year
+            : ($period->fiscalYearId ?? (string) $year);
 
         // Determine fiscal year from document date if present
         foreach (['issue_date', 'date', 'period_year', 'created_at'] as $dateField) {
@@ -65,7 +68,7 @@ class LegalArchivingService
         }
         $checksum = hash('sha256', $payload);
 
-        $relativePath = "archives/{$orgId}/{$year}/{$documentType}/{$id}.json";
+        $relativePath = "archives/{$orgId}/{$periodKey}/{$documentType}/{$id}.json";
 
         // Append-only: do not overwrite an existing archive
         if (! Storage::exists($relativePath)) {
@@ -193,6 +196,14 @@ class LegalArchivingService
                     ]);
                 }
             }
+
+            Log::info('Fiscal-year archive generated', [
+                'organization_id' => $orgId,
+                'fiscal_year_id' => $period->fiscalYearId,
+                'fiscal_year' => $period->label,
+                'from_date' => $period->fromDate,
+                'to_date' => $period->toDate,
+            ]);
         } finally {
             $lock->release();
         }

@@ -3,8 +3,11 @@
 namespace Tests\Feature\Accounting;
 
 use App\Domains\Accounting\Actions\GenerateArchivePdfAction;
+use App\Domains\Accounting\Enums\FiscalYearStatus;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\LegalArchive;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
@@ -74,6 +77,17 @@ class ArchivePdfGenerationTest extends TestCase
         );
     }
 
+    public function test_action_serializes_pdf_generation_with_a_period_lock(): void
+    {
+        Cache::spy();
+
+        app(GenerateArchivePdfAction::class)->execute($this->organization->id, 2024);
+
+        Cache::shouldHaveReceived('lock')
+            ->once()
+            ->with("archive-pdf:{$this->organization->id}:2024", 600);
+    }
+
     public function test_action_regenerates_when_forced(): void
     {
         $year = 2024;
@@ -106,6 +120,37 @@ class ArchivePdfGenerationTest extends TestCase
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'application/pdf');
         $this->assertStringStartsWith('%PDF-', $response->streamedContent());
+    }
+
+    public function test_explicit_fiscal_year_uses_stable_identity_for_pdf_artifacts(): void
+    {
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+
+        app(GenerateArchivePdfAction::class)->execute(
+            $this->organization->id,
+            '2024',
+            $fiscalYear->id,
+        );
+
+        $archive = LegalArchive::query()
+            ->where('organization_id', $this->organization->id)
+            ->where('document_type', 'pdf_pnl')
+            ->firstOrFail();
+
+        $this->assertSame("pdf-{$fiscalYear->id}", $archive->document_id);
+        $this->assertStringContainsString("/{$fiscalYear->id}/pdf/", $archive->storage_path);
+
+        $redirect = $this->actAsOrg()->get(
+            "/accounting/archives/year/2024/pdf/pnl?fiscal_year_id={$fiscalYear->id}"
+        );
+        $redirect->assertRedirect();
+
+        $this->get($redirect->headers->get('Location'))->assertOk();
     }
 
     public function test_download_pdf_endpoint_rejects_unknown_type(): void

@@ -12,6 +12,7 @@ use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Reporting\Jobs\GenerateAccountingExportJob;
 use App\Domains\Reporting\Services\AccountingExportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -96,6 +97,11 @@ class AccountingExportFiscalYearBoundaryTest extends TestCase
             $fiscalYear->id,
         );
 
+        $this->assertStringContainsString(
+            "accounting-{$this->organization->id}-{$fiscalYear->id}.zip",
+            $zipPath,
+        );
+
         $zip = new \ZipArchive;
         $this->assertTrue($zip->open($zipPath) === true);
         $journal = $zip->getFromName('journal-entries.csv');
@@ -122,5 +128,29 @@ class AccountingExportFiscalYearBoundaryTest extends TestCase
         Queue::assertPushed(GenerateAccountingExportJob::class, function (GenerateAccountingExportJob $job): bool {
             return $job->fiscalYear === '2024' && $job->fiscalYearId === null;
         });
+    }
+
+    public function test_export_serializes_same_period_requests_with_a_period_lock(): void
+    {
+        Storage::fake('local');
+
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+        Cache::spy();
+
+        $path = app(AccountingExportService::class)->generateExport(
+            $this->organization->id,
+            '2024',
+            $fiscalYear->id,
+        );
+
+        $this->assertFileExists($path);
+        Cache::shouldHaveReceived('lock')
+            ->once()
+            ->with("accounting-export:{$this->organization->id}:{$fiscalYear->id}", 900);
     }
 }

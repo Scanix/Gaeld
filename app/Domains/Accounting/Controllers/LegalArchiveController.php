@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
@@ -101,11 +102,11 @@ class LegalArchiveController extends Controller
         ]);
     }
 
-    public function forYear(int $year, CurrentOrganization $currentOrg): JsonResponse
+    public function forYear(int $year, Request $request, CurrentOrganization $currentOrg): JsonResponse
     {
         $this->authorize('viewAny', LegalArchive::class);
 
-        $period = $this->fiscalYears->resolvePeriod($currentOrg->get(), null, $year);
+        $period = $this->resolveRequestedPeriod($request, $currentOrg, $year);
         $items = $this->periodQuery($period)
             ->orderBy('document_type')
             ->orderByDesc('archived_at')
@@ -133,12 +134,12 @@ class LegalArchiveController extends Controller
         ]);
     }
 
-    public function generateForYear(int $year, CurrentOrganization $currentOrg): RedirectResponse
+    public function generateForYear(int $year, Request $request, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('create', LegalArchive::class);
 
         $org = $currentOrg->get();
-        $period = $this->fiscalYears->resolvePeriod($org, null, $year);
+        $period = $this->resolveRequestedPeriod($request, $currentOrg, $year);
 
         $fiscalYear = $period->fiscalYearId
             ? FiscalYear::query()->whereKey($period->fiscalYearId)->first()
@@ -197,12 +198,12 @@ class LegalArchiveController extends Controller
      * Generates on-demand if it doesn't exist yet so freelancers can always
      * retrieve their Swiss tax filing without going through a closing.
      */
-    public function downloadPdf(int $year, string $type, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): RedirectResponse
+    public function downloadPdf(int $year, string $type, Request $request, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): RedirectResponse
     {
         $this->authorize('viewAny', LegalArchive::class);
 
         $documentType = $this->resolveDocumentType($type);
-        $period = $this->fiscalYears->resolvePeriod($currentOrg->get(), null, $year);
+        $period = $this->resolveRequestedPeriod($request, $currentOrg, $year);
         $documentId = $this->pdfDocumentId($period);
 
         $archive = $this->periodQuery($period)
@@ -237,11 +238,11 @@ class LegalArchiveController extends Controller
     /**
      * Stream a ZIP bundle containing the three per-year PDFs.
      */
-    public function downloadYearBundle(int $year, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): BinaryFileResponse
+    public function downloadYearBundle(int $year, Request $request, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): BinaryFileResponse
     {
         $this->authorize('viewAny', LegalArchive::class);
 
-        $period = $this->fiscalYears->resolvePeriod($currentOrg->get(), null, $year);
+        $period = $this->resolveRequestedPeriod($request, $currentOrg, $year);
         $pdfAction->execute($currentOrg->id(), $period->label, $period->fiscalYearId);
 
         $archives = $this->periodQuery($period)
@@ -273,11 +274,11 @@ class LegalArchiveController extends Controller
     /**
      * Force regeneration of the three per-year PDF artefacts.
      */
-    public function regeneratePdfs(int $year, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): RedirectResponse
+    public function regeneratePdfs(int $year, Request $request, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): RedirectResponse
     {
         $this->authorize('viewAny', LegalArchive::class);
 
-        $period = $this->fiscalYears->resolvePeriod($currentOrg->get(), null, $year);
+        $period = $this->resolveRequestedPeriod($request, $currentOrg, $year);
         $archives = $this->periodQuery($period)
             ->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])
             ->get()
@@ -325,6 +326,15 @@ class LegalArchiveController extends Controller
 
     private function pdfDocumentId(FiscalYearPeriod $period): string
     {
-        return 'pdf-'.(Str::slug($period->label) ?: $period->label);
+        return 'pdf-'.($period->fiscalYearId ?? (Str::slug($period->label) ?: $period->label));
+    }
+
+    private function resolveRequestedPeriod(Request $request, CurrentOrganization $currentOrg, int $year): FiscalYearPeriod
+    {
+        return $this->fiscalYears->resolvePeriod(
+            $currentOrg->get(),
+            $request->query('fiscal_year_id'),
+            $year,
+        );
     }
 }

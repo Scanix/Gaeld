@@ -113,9 +113,9 @@ controllers or refactor unrelated Stripe/SaaS code in this feature.
 
 - [ ] T034 [US1] Add a real same-period concurrent export contention test that verifies queued explicit-period payloads, serialized generation, stable ZIP output, and no duplicate or overwritten artifact per FR-014 (missing)
 - [ ] T035 [US2] Serialize direct archive-PDF and bundle generation with the organization-period lock and test that concurrent requests do not duplicate or overwrite immutable artifacts per FR-006 (partial)
-- [ ] T036 [US1] Carry explicit fiscal-year IDs through archive generation, lazy-load, PDF, bundle, and UI links, and use stable explicit-period artifact keys while retaining legacy year URLs per FR-011 (partial)
+- [x] T036 [US1] Carry explicit fiscal-year IDs through archive generation, lazy-load, PDF, bundle, and UI links, and use stable explicit-period artifact keys while retaining legacy year URLs per FR-011 (partial)
 - [ ] T037 [US1] Make every supported report, archive PDF, and ZIP package expose and test the resolved inclusive start and end dates, including balance-sheet output and empty results per FR-005 (partial)
-- [ ] T038 [US1] Resolve explicit fiscal-year periods in cash-flow report and export endpoints and enforce exact inclusive business-date selection for month-based salary records per FR-002 (partial)
-- [ ] T039 [US2] Add closing-action integration tests for complete overlapping VAT periods, no partial settlement creation, and actionable blocking of unsettled activity per FR-007 (missing)
+- [x] T038 [US1] Resolve explicit fiscal-year periods in cash-flow report and export endpoints and enforce exact inclusive business-date selection for month-based salary records per FR-002 (partial)
+- [x] T039 [US2] Add closing-action integration tests for complete overlapping VAT periods, no partial settlement creation, and actionable blocking of unsettled activity per FR-007 (missing)
 - [ ] T040 [US1] [US2] [US3] Extend boundary, empty-result, all-document-type, and legacy regression coverage across report, export, archive, and closing flows per SC-001 (partial)
-- [ ] T041 Add resolved fiscal-year ID, start date, and end date to export, archive, and closing operational logs and document the user-visible boundary change per Constitution V (partial)
+- [x] T041 Add resolved fiscal-year ID, start date, and end date to export, archive, and closing operational logs and document the user-visible boundary change per Constitution V (partial)

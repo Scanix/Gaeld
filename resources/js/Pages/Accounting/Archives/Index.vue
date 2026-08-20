@@ -39,17 +39,19 @@ const loadedItems = ref({})
 const loadingYears = ref({})
 const verifying = ref({})
 
-async function toggleYear(year) {
+async function toggleYear(period) {
+  const year = period.fiscal_year
   expandedYears.value[year] = !expandedYears.value[year]
   if (expandedYears.value[year] && !loadedItems.value[year]) {
-    await loadYear(year)
+    await loadYear(year, period.fiscal_year_id)
   }
 }
 
-async function loadYear(year) {
+async function loadYear(year, fiscalYearId = null) {
   loadingYears.value[year] = true
   try {
-    const res = await fetch(`/accounting/archives/year/${year}`, {
+    const query = fiscalYearId ? `?fiscal_year_id=${encodeURIComponent(fiscalYearId)}` : ''
+    const res = await fetch(`/accounting/archives/year/${year}${query}`, {
       headers: { Accept: 'application/json' },
       credentials: 'same-origin',
     })
@@ -61,7 +63,8 @@ async function loadYear(year) {
   }
 }
 
-function verifyArchive(year, archive) {
+function verifyArchive(period, archive) {
+  const year = period.fiscal_year
   verifying.value[archive.id] = true
   router.post(`/accounting/archives/${archive.id}/verify`, {}, {
     preserveScroll: true,
@@ -69,32 +72,37 @@ function verifyArchive(year, archive) {
       verifying.value[archive.id] = false
       // Refresh the year so verified_at appears immediately.
       loadedItems.value[year] = null
-      await loadYear(year)
+      await loadYear(year, period.fiscal_year_id)
     },
   })
 }
 
 const regenerating = ref({})
 
-function regeneratePdfs(year) {
+function regeneratePdfs(period) {
+  const year = period.fiscal_year
   regenerating.value[year] = true
-  router.post(`/accounting/archives/year/${year}/regenerate-pdfs`, {}, {
+  router.post(`/accounting/archives/year/${year}/regenerate-pdfs${periodQuery(period)}`, {}, {
     preserveScroll: true,
     onFinish: async () => {
       regenerating.value[year] = false
       loadedItems.value[year] = null
-      await loadYear(year)
+      await loadYear(year, period.fiscal_year_id)
     },
   })
 }
 
 const generating = ref({})
 
-function generateArchive(year) {
-  generating.value[year] = true
-  router.post(`/accounting/archives/year/${year}/generate`, {}, {
+function periodQuery(period) {
+  return period.fiscal_year_id ? `?fiscal_year_id=${encodeURIComponent(period.fiscal_year_id)}` : ''
+}
+
+function generateArchive(period) {
+  generating.value[period.fiscal_year] = true
+  router.post(`/accounting/archives/year/${period.fiscal_year}/generate${periodQuery(period)}`, {}, {
     onFinish: () => {
-      generating.value[year] = false
+      generating.value[period.fiscal_year] = false
     },
   })
 }
@@ -110,7 +118,7 @@ function generateArchive(year) {
       <Card v-for="year in years" :key="year.fiscal_year">
         <CardHeader
           :class="year.total_count > 0 ? 'cursor-pointer' : ''"
-          @click="year.total_count > 0 && toggleYear(year.fiscal_year)"
+          @click="year.total_count > 0 && toggleYear(year)"
         >
           <div class="flex flex-wrap items-center justify-between gap-3">
             <CardTitle class="flex items-center gap-2">
@@ -129,7 +137,7 @@ function generateArchive(year) {
                 size="sm"
                 type="button"
                 :disabled="!!generating[year.fiscal_year]"
-                @click.stop="generateArchive(year.fiscal_year)"
+                @click.stop="generateArchive(year)"
               >
                 <PlusCircle class="mr-1 h-4 w-4" :class="{ 'animate-spin': generating[year.fiscal_year] }" />
                 {{ t('generate_archive') }}
@@ -153,25 +161,25 @@ function generateArchive(year) {
         </CardHeader>
         <CardContent v-if="expandedYears[year.fiscal_year]">
           <div class="mb-4 flex flex-wrap items-center gap-2 border-b border-[hsl(var(--border))] pb-4">
-            <a :href="`/accounting/archives/year/${year.fiscal_year}/pdf/pnl`">
+            <a :href="`/accounting/archives/year/${year.fiscal_year}/pdf/pnl${periodQuery(year)}`">
               <Button size="sm" type="button">
                 <FileText class="mr-1 h-4 w-4" />
                 {{ t('archive_download_pnl') }}
               </Button>
             </a>
-            <a :href="`/accounting/archives/year/${year.fiscal_year}/pdf/balance_sheet`">
+            <a :href="`/accounting/archives/year/${year.fiscal_year}/pdf/balance_sheet${periodQuery(year)}`">
               <Button variant="secondary" size="sm" type="button">
                 <FileText class="mr-1 h-4 w-4" />
                 {{ t('archive_download_balance_sheet') }}
               </Button>
             </a>
-            <a :href="`/accounting/archives/year/${year.fiscal_year}/pdf/journal`">
+            <a :href="`/accounting/archives/year/${year.fiscal_year}/pdf/journal${periodQuery(year)}`">
               <Button variant="secondary" size="sm" type="button">
                 <FileText class="mr-1 h-4 w-4" />
                 {{ t('archive_download_journal') }}
               </Button>
             </a>
-            <a :href="`/accounting/archives/year/${year.fiscal_year}/bundle`">
+            <a :href="`/accounting/archives/year/${year.fiscal_year}/bundle${periodQuery(year)}`">
               <Button variant="outline" size="sm" type="button">
                 <Download class="mr-1 h-4 w-4" />
                 {{ t('archive_download_bundle') }}
@@ -182,7 +190,7 @@ function generateArchive(year) {
               size="sm"
               type="button"
               :disabled="!!regenerating[year.fiscal_year]"
-              @click.stop="regeneratePdfs(year.fiscal_year)"
+              @click.stop="regeneratePdfs(year)"
             >
               <RefreshCw
                 class="mr-1 h-4 w-4"
@@ -226,7 +234,7 @@ function generateArchive(year) {
                   variant="outline"
                   size="sm"
                   :disabled="!!verifying[archive.id]"
-                  @click.stop="verifyArchive(year.fiscal_year, archive)"
+                  @click.stop="verifyArchive(year, archive)"
                 >
                   <ShieldCheck class="mr-1 h-4 w-4" />
                   {{ t('archive_verify') }}

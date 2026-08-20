@@ -154,13 +154,16 @@ class YearEndClosingAction
                 $nextYearCreated = $this->fiscalYears->close($fiscalYear, $actingUser);
             }
 
-            $this->archiving->archiveFiscalYear($orgId, $year);
+            $this->archiving->archiveFiscalYear($orgId, $year, $fiscalYear?->id);
             $this->openingBalances->execute($orgId, $year);
         });
 
         Log::info('Year-end closing completed', [
             'organization_id' => $orgId,
             'fiscal_year' => $year,
+            'fiscal_year_id' => $fiscalYear?->id,
+            'from_date' => $from,
+            'to_date' => $to,
             'closing_date' => $validated['closing_date'],
             'reference' => $validated['reference'],
             'revenue_accounts_closed' => count($income),

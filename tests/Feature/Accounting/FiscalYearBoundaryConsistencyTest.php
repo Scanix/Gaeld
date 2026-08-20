@@ -62,6 +62,32 @@ class FiscalYearBoundaryConsistencyTest extends TestCase
             );
     }
 
+    public function test_cash_flow_uses_explicit_fiscal_year_range(): void
+    {
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+
+        $this->actAsOrg()
+            ->get(route('reports.cash-flow', ['fiscal_year_id' => $fiscalYear->id]))
+            ->assertInertia(fn ($page) => $page
+                ->component('Reports/CashFlow')
+                ->where('report.period.from', '2024-01-01')
+                ->where('report.period.to', '2025-06-30')
+            );
+
+        $this->actAsOrg()
+            ->get(route('reports.cash-flow.export', [
+                'format' => 'csv',
+                'fiscal_year_id' => $fiscalYear->id,
+            ]))
+            ->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename="cash-flow-2024-01-01-2025-06-30.csv"');
+    }
+
     public function test_year_end_closing_checks_vat_periods_in_the_full_long_year(): void
     {
         $fiscalYear = FiscalYear::factory()->for($this->organization)->create([

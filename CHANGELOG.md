@@ -5,6 +5,23 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Dependencies:** updated Laravel 13, Inertia, Horizon, Stripe PHP 21,
+  Symfony, Vite, Tailwind, Storybook, Vue, and related locked dependencies.
+- **Accounting periods:** explicit fiscal-year identity now flows through
+  cash-flow reports, exports, archive PDFs, bundles, and archive lazy-loading;
+  legacy year URLs remain supported.
+
+### Fixed
+- **SaaS deployment:** EE now uses PSR-7 2.13 and current Stripe/Sentry/Symfony
+  dependencies, preventing the Guzzle `asciiToUpper()` runtime mismatch.
+- **Archive concurrency:** direct PDF generation now uses the same
+  organization-period lock contract as bulk archive generation.
+- **Year-end closing:** long fiscal years pass their explicit fiscal-year ID to
+  archive generation and log the resolved period boundaries.
+
 ## [3.5.1] — 2026-08-07
 
 ### Added

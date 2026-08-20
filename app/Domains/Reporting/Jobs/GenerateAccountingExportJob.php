@@ -2,6 +2,8 @@
 
 namespace App\Domains\Reporting\Jobs;
 
+use App\Domains\Accounting\Services\FiscalYearService;
+use App\Domains\Organizations\Models\Organization;
 use App\Domains\Reporting\Mail\AccountingExportReadyMail;
 use App\Domains\Reporting\Services\AccountingExportService;
 use App\Domains\Users\Models\User;
@@ -29,11 +31,20 @@ class GenerateAccountingExportJob implements ShouldQueue
         public readonly ?string $fiscalYearId = null,
     ) {}
 
-    public function handle(AccountingExportService $exportService): void
+    public function handle(AccountingExportService $exportService, FiscalYearService $fiscalYears): void
     {
+        $period = $fiscalYears->resolvePeriod(
+            Organization::findOrFail($this->orgId),
+            $this->fiscalYearId,
+            is_numeric($this->fiscalYear) ? (int) $this->fiscalYear : null,
+        );
+
         Log::info('GenerateAccountingExportJob: starting', [
             'org_id' => $this->orgId,
             'fiscal_year' => $this->fiscalYear,
+            'fiscal_year_id' => $period->fiscalYearId,
+            'from_date' => $period->fromDate,
+            'to_date' => $period->toDate,
             'user_id' => $this->userId,
         ]);
 
@@ -56,6 +67,9 @@ class GenerateAccountingExportJob implements ShouldQueue
         Log::info('GenerateAccountingExportJob: complete, email sent', [
             'org_id' => $this->orgId,
             'fiscal_year' => $this->fiscalYear,
+            'fiscal_year_id' => $period->fiscalYearId,
+            'from_date' => $period->fromDate,
+            'to_date' => $period->toDate,
             'user_id' => $this->userId,
         ]);
     }

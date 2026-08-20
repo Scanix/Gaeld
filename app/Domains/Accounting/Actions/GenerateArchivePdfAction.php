@@ -8,6 +8,8 @@ use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Reporting\Services\ReportingService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -59,81 +61,96 @@ final class GenerateArchivePdfAction
         );
         $fromDate = $period->fromDate;
         $toDate = $period->toDate;
-        $storageLabel = Str::slug($period->label) ?: (string) $fiscalYear;
+        $storageLabel = $period->fiscalYearId
+            ?? (Str::slug($period->label) ?: (string) $fiscalYear);
 
-        $results = [];
+        return Cache::lock(
+            "archive-pdf:{$orgId}:".($period->fiscalYearId ?? $period->label),
+            600,
+        )->block(10, function () use ($fromDate, $orgId, $org, $period, $storageLabel, $toDate, $force): array {
+            $results = [];
 
-        foreach (self::ARTEFACTS as $documentType => $slug) {
-            $relativePath = "archives/{$orgId}/{$storageLabel}/pdf/{$slug}-{$storageLabel}.pdf";
+            foreach (self::ARTEFACTS as $documentType => $slug) {
+                $relativePath = "archives/{$orgId}/{$storageLabel}/pdf/{$slug}-{$storageLabel}.pdf";
 
-            $existing = LegalArchive::query()
-                ->where('organization_id', $orgId)
-                ->where('document_type', $documentType)
-                ->where('document_id', "pdf-{$storageLabel}")
-                ->first();
+                $existing = LegalArchive::query()
+                    ->where('organization_id', $orgId)
+                    ->where('document_type', $documentType)
+                    ->where('document_id', "pdf-{$storageLabel}")
+                    ->first();
 
-            // A sealed archive — file exists on disk — must never be overwritten.
-            // The checksum is the integrity anchor; regenerating would silently
-            // replace it with whatever the renderer produces today.
-            if ($existing !== null && Storage::exists($relativePath)) {
+                // A sealed archive — file exists on disk — must never be overwritten.
+                // The checksum is the integrity anchor; regenerating would silently
+                // replace it with whatever the renderer produces today.
+                if ($existing !== null && Storage::exists($relativePath)) {
+                    $results[] = [
+                        'type' => $documentType,
+                        'path' => $relativePath,
+                        'checksum' => $existing->checksum_sha256,
+                        'regenerated' => false,
+                    ];
+
+                    continue;
+                }
+
+                // Idempotent: skip if generated recently and not forced.
+                if (! $force
+                    && $existing !== null
+                    && $existing->archived_at->diffInSeconds(now()) < 86_400
+                    && Storage::exists($relativePath)
+                ) {
+                    $results[] = [
+                        'type' => $documentType,
+                        'path' => $relativePath,
+                        'checksum' => $existing->checksum_sha256,
+                        'regenerated' => false,
+                    ];
+
+                    continue;
+                }
+
+                $content = $this->renderArtefact($documentType, $org, $fromDate, $toDate);
+                $checksum = hash('sha256', $content);
+
+                Storage::put($relativePath, $content);
+
+                $now = now();
+                LegalArchive::updateOrCreate(
+                    [
+                        'organization_id' => $orgId,
+                        'document_type' => $documentType,
+                        'document_id' => "pdf-{$storageLabel}",
+                    ],
+                    [
+                        'fiscal_year' => (int) substr($fromDate, 0, 4),
+                        'fiscal_year_id' => $period->fiscalYearId,
+                        'checksum_sha256' => $checksum,
+                        'storage_path' => $relativePath,
+                        'archived_at' => $now,
+                        'expires_at' => $now->copy()->addYears(10),
+                        'verified_at' => null,
+                    ]
+                );
+
                 $results[] = [
                     'type' => $documentType,
                     'path' => $relativePath,
-                    'checksum' => $existing->checksum_sha256,
-                    'regenerated' => false,
+                    'checksum' => $checksum,
+                    'regenerated' => true,
                 ];
-
-                continue;
             }
 
-            // Idempotent: skip if generated recently and not forced.
-            if (! $force
-                && $existing !== null
-                && $existing->archived_at->diffInSeconds(now()) < 86_400
-                && Storage::exists($relativePath)
-            ) {
-                $results[] = [
-                    'type' => $documentType,
-                    'path' => $relativePath,
-                    'checksum' => $existing->checksum_sha256,
-                    'regenerated' => false,
-                ];
+            Log::info('Archive PDFs generated', [
+                'organization_id' => $orgId,
+                'fiscal_year_id' => $period->fiscalYearId,
+                'fiscal_year' => $period->label,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
+                'forced' => $force,
+            ]);
 
-                continue;
-            }
-
-            $content = $this->renderArtefact($documentType, $org, $fromDate, $toDate);
-            $checksum = hash('sha256', $content);
-
-            Storage::put($relativePath, $content);
-
-            $now = now();
-            LegalArchive::updateOrCreate(
-                [
-                    'organization_id' => $orgId,
-                    'document_type' => $documentType,
-                    'document_id' => "pdf-{$storageLabel}",
-                ],
-                [
-                    'fiscal_year' => (int) substr($fromDate, 0, 4),
-                    'fiscal_year_id' => $period->fiscalYearId,
-                    'checksum_sha256' => $checksum,
-                    'storage_path' => $relativePath,
-                    'archived_at' => $now,
-                    'expires_at' => $now->copy()->addYears(10),
-                    'verified_at' => null,
-                ]
-            );
-
-            $results[] = [
-                'type' => $documentType,
-                'path' => $relativePath,
-                'checksum' => $checksum,
-                'regenerated' => true,
-            ];
-        }
-
-        return $results;
+            return $results;
+        });
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Requests\BalanceSheetRequest;
+use App\Domains\Reporting\Requests\CashFlowRequest;
 use App\Domains\Reporting\Requests\ProfitAndLossRequest;
 use App\Domains\Reporting\Services\AgingReportService;
 use App\Domains\Reporting\Services\ExportReportService;
@@ -188,12 +189,24 @@ class ReportController extends Controller
     //  Cash Flow
     // ──────────────────────────────────────────────────────────────
 
-    public function cashFlow(Request $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response
-    {
+    public function cashFlow(
+        CashFlowRequest $request,
+        ReportingService $reportingService,
+        CurrentOrganization $currentOrg,
+        FiscalYearService $fiscalYears,
+    ): Response {
         $this->authorize('viewAny', Account::class);
 
-        $from = $request->input('from', now()->startOfYear()->toDateString());
-        $to = $request->input('to', now()->toDateString());
+        $validated = $request->validated();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $from = $period !== null
+            ? $period->fromDate
+            : ($validated['from'] ?? now()->startOfYear()->toDateString());
+        $to = $period !== null
+            ? $period->toDate
+            : ($validated['to'] ?? now()->toDateString());
 
         $report = $reportingService->cashFlow($currentOrg->id(), $from, $to);
 
@@ -217,16 +230,25 @@ class ReportController extends Controller
     }
 
     public function exportCashFlow(
-        Request $request,
+        CashFlowRequest $request,
         ReportingService $reportingService,
         CurrentOrganization $currentOrg,
         ExportReportService $exporter,
+        FiscalYearService $fiscalYears,
         string $format,
     ): HttpResponse {
         $this->authorize('viewAny', Account::class);
 
-        $from = $request->input('from', now()->startOfYear()->toDateString());
-        $to = $request->input('to', now()->toDateString());
+        $validated = $request->validated();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $from = $period !== null
+            ? $period->fromDate
+            : ($validated['from'] ?? now()->startOfYear()->toDateString());
+        $to = $period !== null
+            ? $period->toDate
+            : ($validated['to'] ?? now()->toDateString());
 
         $report = $reportingService->cashFlow($currentOrg->id(), $from, $to);
         $org = $currentOrg->get();

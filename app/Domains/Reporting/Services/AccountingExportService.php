@@ -79,7 +79,8 @@ class AccountingExportService
             $this->buildInvoicesCsv($tmpDir, $orgId, $fromDate, $toDate);
             $this->buildExpensesCsv($tmpDir, $orgId, $fromDate, $toDate);
 
-            $zipLabel = Str::slug($period->label) ?: $legacyLabel;
+            $zipLabel = $period->fiscalYearId
+                ?? (Str::slug($period->label) ?: $legacyLabel);
             $zipFilename = "exports/accounting-{$orgId}-{$zipLabel}.zip";
             $zipPath = Storage::disk('local')->path($zipFilename);
 
