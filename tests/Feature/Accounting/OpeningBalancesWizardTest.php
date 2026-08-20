@@ -128,4 +128,26 @@ class OpeningBalancesWizardTest extends TestCase
         $this->assertSame('0.00', $bankLine->debit);
         $this->assertSame('500.00', $bankLine->credit);
     }
+
+    public function test_store_as_draft_creates_unposted_entry(): void
+    {
+        $response = $this->actAsOrg()->post('/accounting/opening-balances', [
+            'date' => '2026-01-01',
+            'is_posted' => false,
+            'balances' => [
+                ['account_id' => $this->bank->id, 'amount' => '10000.00'],
+                ['account_id' => $this->creditors->id, 'amount' => '4000.00'],
+            ],
+        ]);
+
+        $response->assertRedirect('/accounting/journal-entries');
+        $response->assertSessionHas('success');
+
+        $entry = JournalEntry::where('reference', 'OPENING-2026')->with('lines')->firstOrFail();
+        $this->assertFalse($entry->is_posted);
+        $this->assertSame('2026-01-01', $entry->date->toDateString());
+
+        // 2 entered + 1 contra
+        $this->assertCount(3, $entry->lines);
+    }
 }

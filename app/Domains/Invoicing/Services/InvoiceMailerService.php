@@ -13,8 +13,6 @@ use Illuminate\Support\Facades\Mail;
 
 /**
  * Sends invoice-related emails: initial invoice delivery and payment reminders.
- *
- * Consolidates SendInvoiceAction and SendInvoiceReminderAction logic.
  */
 class InvoiceMailerService
 {

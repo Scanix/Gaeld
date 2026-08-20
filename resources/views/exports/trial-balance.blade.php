@@ -20,7 +20,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>{{ $organizationName }}</h1>
+        <h1>{{ $organization->name }}</h1>
         <div class="date">{{ __('exports.trial_balance.as_of', ['date' => $asOfDate]) }}</div>
     </div>
 
@@ -55,7 +55,7 @@
     </table>
 
     <div class="footer">
-        {{ __('exports.common.generated_on') }} {{ now()->format('d.m.Y H:i') }} — {{ $organizationName }}
+        {{ __('exports.common.generated_on') }} {{ now()->format('d.m.Y H:i') }} — {{ $organization->name }}
     </div>
 </body>
 </html>

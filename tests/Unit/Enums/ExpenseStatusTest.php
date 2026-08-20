@@ -22,6 +22,11 @@ class ExpenseStatusTest extends TestCase
         $this->assertTrue(ExpenseStatus::Approved->canTransitionTo(ExpenseStatus::Posted));
     }
 
+    public function test_approved_can_transition_back_to_pending(): void
+    {
+        $this->assertTrue(ExpenseStatus::Approved->canTransitionTo(ExpenseStatus::Pending));
+    }
+
     public function test_posted_cannot_transition(): void
     {
         $this->assertEmpty(ExpenseStatus::Posted->allowedTransitions());
@@ -42,9 +47,9 @@ class ExpenseStatusTest extends TestCase
         $this->assertTrue(ExpenseStatus::Pending->isDeletable());
     }
 
-    public function test_approved_is_not_deletable(): void
+    public function test_approved_is_deletable(): void
     {
-        $this->assertFalse(ExpenseStatus::Approved->isDeletable());
+        $this->assertTrue(ExpenseStatus::Approved->isDeletable());
     }
 
     public function test_posted_is_not_deletable(): void

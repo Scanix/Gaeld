@@ -17,13 +17,14 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail, Eye, X } from 'lucide-vue-next'
+import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail, Eye, X, RotateCcw } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import HelpText from '@/Components/HelpText.vue'
 
 const props = defineProps({
   invoice: Object,
   canForceDelete: { type: Boolean, default: false },
+  canRevertToDraft: { type: Boolean, default: false },
   justificatifUrl: { type: String, default: null },
   bankAccounts: { type: Array, default: () => [] },
   creditNotes: { type: Array, default: () => [] },
@@ -39,10 +40,12 @@ const { formatCurrency, formatDate } = useFormatters()
 const showPaymentModal = ref(false)
 const showDeleteDialog = ref(false)
 const showCancelDialog = ref(false)
+const showRevertToDraftDialog = ref(false)
 const showPurgeDialog = ref(false)
 const showJustificatifPreview = ref(false)
 const deleting = ref(false)
 const cancelling = ref(false)
+const revertingToDraft = ref(false)
 const purging = ref(false)
 
 const creditNoteForm = useForm({})
@@ -71,8 +74,17 @@ const paymentForm = useForm({
 })
 
 const amountDue = computed(() => {
-  const paid = (props.invoice?.payments ?? []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0)
-  return Math.max(0, parseFloat(props.invoice?.total || 0) - paid)
+  return Math.max(0, parseFloat(props.invoice?.total || 0) - amountPaid.value)
+})
+
+const amountPaid = computed(() =>
+  (props.invoice?.payments ?? []).reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0),
+)
+
+const paymentProgress = computed(() => {
+  const total = parseFloat(props.invoice?.total || 0)
+
+  return total > 0 ? Math.min(100, Math.round((amountPaid.value / total) * 100)) : 0
 })
 
 const isOverdue = computed(() => {
@@ -85,12 +97,29 @@ function finalize() {
 }
 
 function recordPayment() {
+  const amount = parseFloat(paymentForm.amount)
+
+  if (!Number.isFinite(amount) || amount <= 0 || amount > amountDue.value) {
+    paymentForm.setError('amount', `${t('amount_due')}: ${formatCurrency(amountDue.value)}`)
+    return
+  }
+
   paymentForm.post(`/invoices/${props.invoice.id}/payment`, {
     onSuccess: () => {
       showPaymentModal.value = false
       paymentForm.reset()
     },
   })
+}
+
+function openPaymentModal() {
+  paymentForm.amount = amountDue.value.toFixed(2)
+  paymentForm.payment_date = new Date().toISOString().slice(0, 10)
+  paymentForm.payment_method = 'bank'
+  paymentForm.reference = ''
+  paymentForm.bank_account_code = ''
+  paymentForm.clearErrors()
+  showPaymentModal.value = true
 }
 
 function duplicate() {
@@ -114,6 +143,16 @@ function executeCancel() {
     onFinish: () => {
       cancelling.value = false
       showCancelDialog.value = false
+    },
+  })
+}
+
+function executeRevertToDraft() {
+  revertingToDraft.value = true
+  router.post(`/invoices/${props.invoice.id}/revert-to-draft`, {}, {
+    onFinish: () => {
+      revertingToDraft.value = false
+      showRevertToDraftDialog.value = false
     },
   })
 }
@@ -191,6 +230,9 @@ const bankAccountOptions = computed(() =>
             <Badge :variant="statusVariant[invoice?.status] ?? 'secondary'" class="mb-1">
               {{ t('invoice_status_' + invoice?.status) }}
             </Badge>
+            <Badge v-if="invoice?.archived_at" variant="secondary" class="mb-1 ml-1">
+              {{ t('archived') }}
+            </Badge>
             <p class="text-sm text-[hsl(var(--muted-foreground))]">
               {{ invoice?.customer?.name }} &middot; {{ t('issued') }} {{ formatDate(invoice?.issue_date) }} &middot; {{ t('due') }} {{ formatDate(invoice?.due_date) }}
             </p>
@@ -198,7 +240,7 @@ const bankAccountOptions = computed(() =>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <Button
-            v-if="invoice?.status === 'draft'"
+            v-if="invoice?.status === 'draft' && !invoice?.archived_at"
             as="a"
             :href="`/invoices/${invoice.id}/edit`"
             variant="outline"
@@ -208,7 +250,7 @@ const bankAccountOptions = computed(() =>
             <span class="hidden sm:inline">{{ t('edit') }}</span>
           </Button>
           <Button
-            v-if="invoice?.status === 'draft'"
+            v-if="invoice?.status === 'draft' && !invoice?.archived_at"
             variant="outline"
             size="sm"
             :disabled="finalizeForm.processing"
@@ -217,9 +259,9 @@ const bankAccountOptions = computed(() =>
             {{ t('finalize') }}
           </Button>
           <Button
-            v-if="invoice?.status === 'sent' || invoice?.status === 'overdue'"
+            v-if="(invoice?.status === 'sent' || invoice?.status === 'overdue') && !invoice?.archived_at"
             size="sm"
-            @click="showPaymentModal = true"
+            @click="openPaymentModal"
           >
             {{ t('record_payment') }}
           </Button>
@@ -243,7 +285,7 @@ const bankAccountOptions = computed(() =>
                 {{ t('duplicate') }}
               </button>
               <button
-                v-if="invoice?.status === 'sent'"
+                v-if="invoice?.status === 'sent' && !invoice?.archived_at"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
                 :disabled="sendForm.processing"
                 @click="sendInvoice(); close()"
@@ -252,7 +294,7 @@ const bankAccountOptions = computed(() =>
                 {{ t('send_invoice_email') }}
               </button>
               <button
-                v-if="isOverdue"
+                v-if="isOverdue && !invoice?.archived_at"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
                 :disabled="reminderForm.processing"
                 @click="sendReminder(); close()"
@@ -261,7 +303,7 @@ const bankAccountOptions = computed(() =>
                 {{ t('send_reminder') }}
               </button>
               <button
-                v-if="invoice?.type !== 'credit_note' && (invoice?.status === 'sent' || invoice?.status === 'paid')"
+                v-if="invoice?.type !== 'credit_note' && (invoice?.status === 'sent' || invoice?.status === 'paid') && !invoice?.archived_at"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
                 :disabled="creditNoteForm.processing"
                 @click="createCreditNote(); close()"
@@ -269,12 +311,20 @@ const bankAccountOptions = computed(() =>
                 <FileMinus class="h-4 w-4 shrink-0" />
                 {{ t('create_credit_note') }}
               </button>
+              <button
+                v-if="canRevertToDraft"
+                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+                @click="showRevertToDraftDialog = true; close()"
+              >
+                <RotateCcw class="h-4 w-4 shrink-0" />
+                {{ t('revert_to_draft') }}
+              </button>
               <div
-                v-if="(invoice?.status !== 'paid' && invoice?.status !== 'cancelled') || invoice?.status === 'draft'"
+                v-if="((invoice?.status !== 'paid' && invoice?.status !== 'cancelled') || invoice?.status === 'draft') && !invoice?.archived_at"
                 class="my-1 border-t border-[hsl(var(--border))]"
               />
               <button
-                v-if="invoice?.status !== 'paid' && invoice?.status !== 'cancelled'"
+                v-if="invoice?.status !== 'paid' && invoice?.status !== 'cancelled' && !invoice?.archived_at"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
                 @click="showCancelDialog = true; close()"
               >
@@ -282,7 +332,7 @@ const bankAccountOptions = computed(() =>
                 {{ t('cancel_invoice') }}
               </button>
               <button
-                v-if="invoice?.status === 'draft' || invoice?.status === 'cancelled'"
+                v-if="(invoice?.status === 'draft' || invoice?.status === 'cancelled') && !invoice?.archived_at"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
                 @click="showDeleteDialog = true; close()"
               >
@@ -314,7 +364,7 @@ const bankAccountOptions = computed(() =>
             </template>
           </DataTable>
           <div class="mt-4 flex justify-end">
-            <div class="w-48 space-y-1 text-sm">
+            <div class="w-full max-w-xs space-y-2 text-sm">
               <div v-if="parseFloat(invoice?.vat_amount) > 0" class="flex justify-between text-[hsl(var(--muted-foreground))]">
                 <span>{{ t('subtotal') }}</span>
                 <span class="tabular-nums">{{ formatCurrency(invoice?.subtotal) }}</span>
@@ -327,22 +377,33 @@ const bankAccountOptions = computed(() =>
                 <span>{{ t('total') }}</span>
                 <span class="text-xl tabular-nums">{{ formatCurrency(invoice?.total) }}</span>
               </div>
-              <p v-if="invoice?.payments?.length" class="text-right text-[hsl(var(--muted-foreground))]">
-                {{ t('amount_due') }} {{ formatCurrency(amountDue) }}
-              </p>
+              <div v-if="invoice?.payments?.length" class="space-y-2 border-t pt-2">
+                <div class="flex justify-between text-[hsl(var(--muted-foreground))]">
+                  <span>{{ t('amount') }}</span>
+                  <span class="tabular-nums">{{ formatCurrency(amountPaid) }}</span>
+                </div>
+                <div class="h-2 overflow-hidden rounded-full bg-[hsl(var(--muted))]" aria-hidden="true">
+                  <div class="h-full rounded-full bg-[hsl(var(--primary))] transition-all" :style="{ width: `${paymentProgress}%` }" />
+                </div>
+                <p class="text-right text-[hsl(var(--muted-foreground))]">
+                  {{ t('amount_due') }} {{ formatCurrency(amountDue) }}
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <!-- Payment History -->
-      <Card v-if="invoice?.payments?.length">
+      <Card v-if="invoice?.payments?.length || amountDue > 0">
         <CardHeader>
           <CardTitle>{{ t('payment_history') }}</CardTitle>
-          <CardDescription>{{ invoice.payments.length }} {{ t('payments_recorded') }}</CardDescription>
+          <CardDescription v-if="invoice?.payments?.length">{{ invoice.payments.length }} {{ t('payments_recorded') }}</CardDescription>
+          <CardDescription v-else>{{ t('amount_due') }} {{ formatCurrency(amountDue) }}</CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTable :columns="paymentColumns" :rows="invoice.payments" />
+          <DataTable v-if="invoice?.payments?.length" :columns="paymentColumns" :rows="invoice.payments" />
+          <p v-else class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('no_payments_recorded') }}</p>
         </CardContent>
       </Card>
 
@@ -450,6 +511,9 @@ const bankAccountOptions = computed(() =>
           id="payment-amount"
           v-model="paymentForm.amount"
           type="number"
+          min="0.01"
+          :max="amountDue"
+          step="0.01"
           :label="`${t('amount')} (${t('due')}: ${formatCurrency(amountDue)})`"
           :error="paymentForm.errors.amount"
           required
@@ -512,6 +576,17 @@ const bankAccountOptions = computed(() =>
       :processing="cancelling"
       @confirm="executeCancel"
       @cancel="showCancelDialog = false"
+    />
+
+    <!-- Revert to Draft Confirmation -->
+    <ConfirmDialog
+      :open="showRevertToDraftDialog"
+      :title="t('revert_to_draft')"
+      :message="t('revert_to_draft_confirm', { number: invoice?.number })"
+      :confirm-label="t('revert_to_draft')"
+      :processing="revertingToDraft"
+      @confirm="executeRevertToDraft"
+      @cancel="showRevertToDraftDialog = false"
     />
 
     <!-- Purge Confirmation -->

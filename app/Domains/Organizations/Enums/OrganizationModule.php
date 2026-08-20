@@ -43,7 +43,7 @@ enum OrganizationModule: string
                 'year_end_closing' => true,
                 'social_charges' => false,
                 'account_matching' => true,
-                'fiduciary_export' => false,
+                'fiduciary_export' => true,
                 'legal_archives' => false,
                 'assets' => false,
                 'tax_declaration' => false,

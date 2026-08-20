@@ -2,8 +2,8 @@
 
 namespace App\Domains\Invoicing\Jobs;
 
-use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Services\InvoiceMailerService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -20,7 +20,7 @@ class SendPaymentRemindersJob implements ShouldQueue
     /** Minimum days between automated reminders */
     private const COOLDOWN_DAYS = 7;
 
-    public function handle(SendInvoiceReminderAction $action): void
+    public function handle(InvoiceMailerService $mailerService): void
     {
         $overdueInvoices = Invoice::withoutGlobalScope('organization')
             ->overdue()
@@ -33,7 +33,7 @@ class SendPaymentRemindersJob implements ShouldQueue
 
         foreach ($overdueInvoices as $invoice) {
             try {
-                $action->execute($invoice);
+                $mailerService->sendReminder($invoice);
 
                 Log::info('SendPaymentRemindersJob: reminder sent', [
                     'invoice_id' => $invoice->id,

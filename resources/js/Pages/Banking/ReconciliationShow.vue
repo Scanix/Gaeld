@@ -16,6 +16,7 @@ import Combobox from '@/Components/UI/Combobox.vue'
 import FileUpload from '@/Components/UI/FileUpload.vue'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import PageHeader from '@/Components/UI/PageHeader.vue'
+import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { normalizeReconciliationShowContract } from '@/lib/inertiaContracts'
@@ -176,6 +177,24 @@ function confidenceColor(score) {
   if (score >= 100) return 'green'
   if (score >= 90) return 'yellow'
   return 'orange'
+}
+
+const unreconcileTarget = ref(null)
+const unreconciling = ref(false)
+
+function confirmUnreconcile(transaction) {
+  unreconcileTarget.value = transaction
+}
+
+function executeUnreconcile() {
+  if (!unreconcileTarget.value) return
+  unreconciling.value = true
+  router.post(`/reconciliation/transactions/${unreconcileTarget.value.id}/unreconcile`, {}, {
+    onFinish: () => {
+      unreconciling.value = false
+      unreconcileTarget.value = null
+    },
+  })
 }
 
 function confidenceLabel(score) {
@@ -492,6 +511,16 @@ const justificationMissingCount = computed(() => {
               >
                 {{ t('match') }}
               </Button>
+              <Button
+                v-if="tx.is_reconciled"
+                size="sm"
+                variant="outline"
+                :title="t('unreconcile')"
+                @click="confirmUnreconcile(tx)"
+              >
+                <RotateCcw class="mr-1 h-3 w-3" />
+                {{ t('unreconcile') }}
+              </Button>
             </div>
           </div>
 
@@ -720,5 +749,15 @@ const justificationMissingCount = computed(() => {
         </form>
       </div>
     </Modal>
+
+    <ConfirmDialog
+      :open="!!unreconcileTarget"
+      :title="t('unreconcile')"
+      :message="t('unreconcile_confirm')"
+      :confirm-label="t('unreconcile')"
+      :processing="unreconciling"
+      @confirm="executeUnreconcile"
+      @cancel="unreconcileTarget = null"
+    />
   </AppLayout>
 </template>

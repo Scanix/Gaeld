@@ -46,6 +46,8 @@ class PayrollRunController extends Controller
             'month' => ['required', 'integer', 'min:1', 'max:12'],
             'year' => ['required', 'integer', 'min:2000'],
             'post' => ['boolean'],
+            'employee_ids' => ['nullable', 'array'],
+            'employee_ids.*' => ['uuid'],
         ]);
 
         $slips = $action->execute(
@@ -53,6 +55,7 @@ class PayrollRunController extends Controller
             (int) $validated['month'],
             (int) $validated['year'],
             $validated['post'] ?? false,
+            $validated['employee_ids'] ?? [],
         );
 
         if ($request->wantsJson()) {

@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Dependencies:** updated Laravel 13, Inertia, Horizon, Stripe PHP 21,
+  Symfony, Vite, Tailwind, Storybook, Vue, and related locked dependencies.
+- **Accounting periods:** explicit fiscal-year identity now flows through
+  cash-flow reports, exports, archive PDFs, bundles, and archive lazy-loading;
+  legacy year URLs remain supported.
+
+### Fixed
+- **SaaS deployment:** EE now uses PSR-7 2.13 and current Stripe/Sentry/Symfony
+  dependencies, preventing the Guzzle `asciiToUpper()` runtime mismatch.
+- **Archive concurrency:** direct PDF generation now uses the same
+  organization-period lock contract as bulk archive generation.
+- **Year-end closing:** long fiscal years pass their explicit fiscal-year ID to
+  archive generation and log the resolved period boundaries.
+
+## [3.5.1] — 2026-08-07
+
+### Added
+- **UI: Storybook component catalog** — added Storybook 10 with Vue/Vite,
+  Tailwind v4 theme support, accessibility checks, and stories for the shared
+  Button, FormInput, Modal, and SearchableSelect components.
+- **Organizations: onboarding guard** — incomplete users are redirected to
+  the setup wizard before entering the dashboard.
+- **Organizations: expense category provisioning** — new organizations are
+  created with the default expense categories instead of waiting for a visit
+  to Settings.
+
+### Changed
+- **Invoicing: payment recording UX** — the payment form now pre-fills the
+  remaining balance, validates the amount client-side, shows paid/due totals
+  and progress, and provides an explicit empty payment-history state.
+- **Invoicing: line-item editor** — improved hierarchy and visual distinction
+  between item, discount, and note lines, with clearer desktop headings.
+- **Contacts: quick creation** — secondary contact fields are progressive and
+  country selection is searchable.
+- **Expenses: missing references** — an empty category reference state now
+  explains the issue and links to Settings instead of failing silently.
+
+### Fixed
+- **EE: Stripe payment-method synchronization** — checkout completion now
+  re-fetches the Stripe subscription, persists the customer subscription's
+  default PaymentMethod, and exposes the real payment-method state to Billing.
+- **EE: signup 500** — replaced the failing remote compromised-password check
+  with equivalent local password-strength requirements, avoiding a Guzzle
+  runtime incompatibility during registration.
+- **Billing: trial warning** — the payment-method banner is now based on
+  `has_payment_method`, not merely the presence of a Stripe customer.
+- **Onboarding: wizard rendering** — fixed Vue template ref unwrapping and
+  module prop references that caused the wizard to crash on staging.
+- **SaaS: unpaid access** — past-due, paused, canceled, and expired trial
+  subscriptions no longer retain access to protected routes.
+
+### Tests
+- Full suite passes with 1,242 tests and 4,436 assertions; 13 tests remain
+  skipped by design.
+- Added regression coverage for onboarding redirects, organization reference
+  provisioning, and the EE billing integration.
+- Validated the principal staging flow: signup, Stripe trial checkout, email
+  verification, onboarding wizard, invoicing, payments, expenses, and reports.
+
 ---
 
 ## [3.4.3] — 2026-06-01

@@ -131,7 +131,8 @@ class LedgerInvariantsTest extends TestCase
             ],
         ));
 
-        $this->ledgerService->reverseEntry($entry);
+        $reversal = $this->ledgerService->reverseEntry($entry);
+        $this->ledgerService->postDraft($reversal);
 
         $this->assertSame('0.00', $this->queryService->accountBalance($this->accountsA['bank']->id));
         $this->assertSame('0.00', $this->queryService->accountBalance($this->accountsA['revenue']->id));

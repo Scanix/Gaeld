@@ -56,7 +56,8 @@ class UserService
             'password' => Hash::make($newPassword),
         ]);
 
-        Log::info('Password changed', ['user_id' => $user->id]);
+        // Only the user id is logged here — never the credential itself.
+        Log::info('User credentials updated', ['user_id' => $user->id]);
     }
 
     // ──────────────────────────────────────────────────────────────

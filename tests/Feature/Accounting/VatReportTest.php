@@ -9,6 +9,7 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\VatReportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -295,5 +296,49 @@ class VatReportTest extends TestCase
             'from_date' => '2026-01-01',
             'to_date' => '2026-03-31',
         ]));
+    }
+
+    public function test_vat_report_marks_period_as_settled_after_posting(): void
+    {
+        $je1 = $this->createPostedJournalEntry('2026-01-15');
+        $this->createVatEntry($je1, VatEntryType::Output, 1000.00, 81.00);
+
+        app(PostVatSettlementAction::class)->execute($this->organization->id, '2026-01-01', '2026-03-31');
+
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get('/reports/vat?from_date=2026-01-01&to_date=2026-03-31');
+
+        $response->assertInertia(fn ($page) => $page->where('report.is_settled', true));
+    }
+
+    public function test_vat_settlement_can_be_reposted_after_a_reversal(): void
+    {
+        $je1 = $this->createPostedJournalEntry('2026-01-15');
+        $this->createVatEntry($je1, VatEntryType::Output, 1000.00, 81.00);
+
+        $action = app(PostVatSettlementAction::class);
+        $ledgerService = app(LedgerService::class);
+
+        $settlement = $action->execute($this->organization->id, '2026-01-01', '2026-03-31');
+
+        // Reversing the settlement should make the period appear un-settled again.
+        $reversal = $ledgerService->reverseEntry($settlement, 'Correcting a mistake');
+        $ledgerService->postDraft($reversal);
+
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get('/reports/vat?from_date=2026-01-01&to_date=2026-03-31');
+        $response->assertInertia(fn ($page) => $page->where('report.is_settled', false));
+
+        // Re-posting for the same period should succeed under a versioned reference
+        // instead of throwing a duplicate-reference error.
+        $repost = $action->execute($this->organization->id, '2026-01-01', '2026-03-31');
+        $this->assertSame('VAT-SETTLEMENT-2026-01-01-2026-03-31-v2', $repost->reference);
+
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get('/reports/vat?from_date=2026-01-01&to_date=2026-03-31');
+        $response->assertInertia(fn ($page) => $page->where('report.is_settled', true));
     }
 }

@@ -49,7 +49,7 @@ class CreateCreditNoteAction
 
             $lines = $invoice->lines->map(
                 fn ($line) => new InvoiceLineData(
-                    description: 'Avoir: '.$line->description,
+                    description: __('app.credit_note_line_prefix', ['description' => $line->description]),
                     quantity: $line->quantity,
                     unitPrice: Money::negate((string) $line->unit_price),
                     vatRateId: $line->vat_rate_id,
