@@ -4,6 +4,8 @@
 # Usage: ./gaeld setup [--demo]   Full first-time setup
 #        ./gaeld up               Start containers
 #        ./gaeld down             Stop containers
+#        ./gaeld doctor           Diagnose the running installation
+#        ./gaeld update            Apply migrations and rebuild caches
 #        ./gaeld artisan ...      Run artisan inside the container
 #        ./gaeld logs [service]   Tail container logs
 #        ./gaeld worker           Tail queue worker logs
@@ -126,6 +128,9 @@ cmd_setup() {
     printf "\n${BOLD}🏔  Gäld — Swiss Accounting Platform${RESET}\n"
     printf "${DIM}   Setting up development environment...${RESET}\n"
 
+    # Docker Desktop may still be starting when the command is invoked.
+    wait_for "Waiting for Docker Engine" 90 docker info
+
     # 1. Environment file
     step "Environment"
     if [ -f .env ]; then
@@ -224,6 +229,14 @@ cmd_artisan() {
     docker compose exec laravel.test php artisan "$@"
 }
 
+cmd_doctor() {
+    docker compose exec laravel.test php artisan gaeld:doctor "$@"
+}
+
+cmd_update() {
+    docker compose exec laravel.test php artisan gaeld:update "$@"
+}
+
 cmd_logs() {
     docker compose logs -f "${1:-laravel.test}"
 }
@@ -249,7 +262,9 @@ Usage: ./gaeld <command> [options]
 Commands:
   setup [--demo]     Full first-time setup (build, start, install)
   up                 Start all containers
-  down               Stop all containers
+    down               Stop all containers
+    doctor             Diagnose the running installation
+    update             Apply migrations and rebuild application caches
   restart [service]  Restart all or specific service
   artisan <cmd>      Run artisan command in the app container
   pnpm <cmd>         Run pnpm command in the app container
@@ -261,7 +276,9 @@ Commands:
 Examples:
   ./gaeld setup              Interactive first-time setup
   ./gaeld setup --demo       Non-interactive setup with demo data
-  ./gaeld artisan migrate    Run database migrations
+    ./gaeld artisan migrate    Run database migrations
+    ./gaeld doctor             Diagnose configuration and service health
+    ./gaeld update             Apply pending migrations and rebuild caches
   ./gaeld restart worker     Restart queue worker
   ./gaeld logs worker        Tail worker logs
   ./gaeld pnpm build         Run pnpm build inside the container
@@ -287,6 +304,8 @@ case "$command" in
     down)     cmd_down "$@" ;;
     restart)  cmd_restart "$@" ;;
     artisan)  cmd_artisan "$@" ;;
+    doctor)   cmd_doctor "$@" ;;
+    update)   cmd_update "$@" ;;
     composer) cmd_composer "$@" ;;
     pnpm)     cmd_pnpm "$@" ;;
     logs)     cmd_logs "$@" ;;

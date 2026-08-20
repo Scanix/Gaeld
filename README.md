@@ -43,6 +43,10 @@ Gäld covers the full accounting workflow for a small Swiss business:
 
 ### Docker (recommended)
 
+Install Docker Engine with Docker Compose v2 and start the Docker service
+before running setup. The command waits up to 90 seconds for Docker to become
+ready, but it does not install or launch Docker Desktop for you.
+
 ```bash
 ./gaeld setup
 ```
@@ -61,6 +65,8 @@ Other useful commands:
 
 ```bash
 ./gaeld artisan migrate    # Run migrations
+./gaeld doctor             # Diagnose configuration and service health
+./gaeld update             # Apply migrations and rebuild application caches
 ./gaeld logs               # Tail application logs
 ./gaeld worker             # Tail queue worker logs
 ./gaeld status             # Show container status

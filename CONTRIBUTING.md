@@ -36,6 +36,42 @@ Open an issue with the **feature request** label. Describe the use case and what
 
 For larger changes, please open an issue first so we can discuss the approach.
 
+### Public repository boundary
+
+This repository is the public Community Edition. Do not add credentials,
+private deployment files, or material that is not intended for the public
+release. Public CI checks the repository boundary; `.gitignore` is convenience
+only and must not be treated as a security mechanism.
+
+### New feature procedure
+
+1. Start from the latest public `develop`:
+
+	```bash
+	git checkout develop
+	git pull --ff-only origin develop
+	git checkout -b feature/short-name
+	```
+
+2. Keep the change appropriate for this public repository. Reusable product
+   behavior belongs here; private commercial integrations and deployment
+   configuration are maintained outside this public contribution workflow.
+
+3. For substantial behavior, use the Spec Kit flow and keep one feature spec
+  under `specs/`. For a small obvious fix, add focused PHPUnit coverage.
+
+4. Run the checks through Sail:
+
+	```bash
+	./vendor/bin/sail up -d
+	./vendor/bin/sail artisan test --compact
+	./vendor/bin/sail bin pint --dirty --format agent
+	./vendor/bin/sail bin phpstan analyse --memory-limit=2G
+	./vendor/bin/sail pnpm run build
+	```
+
+5. Open the pull request against public `develop`.
+
 ### Specification-driven development
 
 Gäld uses [GitHub Spec Kit](https://github.com/github/spec-kit) for new or

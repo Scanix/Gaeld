@@ -14,21 +14,35 @@
 git clone https://github.com/Scanix/Gaeld.git
 cd Gaeld
 
-# 2. Copy environment file
-cp .env.example .env
-
-# 3. Start the containers and wait until ready
-#    Build and start the application services.
-docker compose up -d --wait
-
-# 4. Run the installer
-./vendor/bin/sail artisan gaeld:install
+# 2. Start Docker Desktop or the Docker Engine
+# 3. Build, start, wait for, and install Gäld
+./gaeld setup
 
 # Or with demo data:
-./vendor/bin/sail artisan gaeld:install --demo
+./gaeld setup --demo
 ```
 
 Visit `http://localhost:8080` to access the application.
+
+### Troubleshooting and maintenance
+
+Run the diagnostic command from the repository root when login, redirects,
+database, cache, storage, or migrations behave unexpectedly:
+
+```bash
+./gaeld doctor
+```
+
+After pulling a newer release, update an existing installation with:
+
+```bash
+./gaeld update
+```
+
+`./gaeld setup` creates `.env` when needed, builds the image, starts the
+dependencies, waits for PostgreSQL, Redis, and the application health endpoint,
+then runs the installer. It waits for Docker for up to 90 seconds but does not
+install or launch Docker Desktop automatically.
 
 ### Running Tests
 

@@ -1,7 +1,7 @@
 # Public Release Runbook
 
-This runbook covers the public Community Edition release. The hosted SaaS and
-Enterprise Edition use a separate private repository and deployment process.
+This runbook covers releases of the public Community Edition for self-hosted
+installations.
 
 ## Release Gate
 
@@ -40,8 +40,6 @@ git pull --ff-only origin main
 git tag -a vX.Y.Z -m "Gäld vX.Y.Z"
 git push origin main --follow-tags
 ```
-
-Never push the private SaaS `production` branch to GitHub.
 
 ## Self-Hosted Deployment
 
