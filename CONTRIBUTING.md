@@ -75,31 +75,25 @@ preserving the project constitution and any local template customizations.
 
 ```bash
 ./vendor/bin/sail composer install
-pnpm install && pnpm build
+./vendor/bin/sail pnpm install
+./vendor/bin/sail pnpm run build
 cp .env.example .env
 ./vendor/bin/sail artisan key:generate
 ./vendor/bin/sail artisan gaeld:install --demo
-./vendor/bin/sail up
+./vendor/bin/sail up -d
 ```
 
-Or with Docker:
-
-```bash
-cp .env.example .env
-docker compose up -d
-./vendor/bin/sail artisan gaeld:install --demo
-```
+For manual installation and Docker alternatives, see [INSTALL.md](INSTALL.md).
 
 ---
 
 ## Code style
 
-We use [Laravel Pint](https://laravel.com/docs/pint) with the Laravel preset and [PHPStan](https://phpstan.org/) at level 5:
+We use [Laravel Pint](https://laravel.com/docs/pint) with the Laravel preset and [PHPStan](https://phpstan.org/) at level 7:
 
 ```bash
-./vendor/bin/sail composer format   # auto-fix code style
-./vendor/bin/sail composer lint     # check without fixing
-./vendor/bin/sail phpstan analyse
+./vendor/bin/sail bin pint --dirty --format agent
+./vendor/bin/sail bin phpstan analyse --memory-limit=2G
 ```
 
 ### General rules
@@ -112,12 +106,6 @@ We use [Laravel Pint](https://laravel.com/docs/pint) with the Laravel preset and
 ---
 
 ## Running tests
-
-```bash
-./vendor/bin/sail artisan test
-```
-
-Or with Docker/Sail:
 
 ```bash
 ./vendor/bin/sail artisan test

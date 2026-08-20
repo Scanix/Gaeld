@@ -13,9 +13,13 @@
 
 Proper double-entry bookkeeping, Swiss QR-Bill invoicing, VAT reporting, and bank reconciliation — built with Laravel and Vue, AGPL-3.0-or-later licensed, fully self-hostable.
 
-> First full production release: stability is now the default and breaking changes follow documented release notes.
+> Current public release: `v3.6.0`. Follow the versioned changelog and release runbook before upgrading a live instance.
 
-[Website](https://gaeld.ch) · [Documentation](https://docs.gaeld.ch) · [Hosted version](https://app.gaeld.ch)
+[Website](https://gaeld.ch) · [Documentation](https://docs.gaeld.ch) · [Hosted version](https://app.gaeld.ch) · [Release runbook](RELEASE.md)
+
+This repository contains the public Community Edition (CE). The hosted SaaS and
+Enterprise Edition (EE) plugin are maintained in private repositories and are
+not required for self-hosted CE installations.
 
 ---
 
@@ -51,17 +55,6 @@ Add `--demo` for a non-interactive setup with sample data:
 ./gaeld setup --demo
 ```
 
-<details>
-<summary>Manual Docker commands (equivalent)</summary>
-
-```bash
-cp .env.example .env
-docker compose up -d --wait
-./vendor/bin/sail artisan gaeld:install
-```
-
-</details>
-
 Visit `http://localhost:8080`. The install wizard walks you through creating your organisation and admin account.
 
 Other useful commands:
@@ -74,27 +67,8 @@ Other useful commands:
 ./gaeld down               # Stop everything
 ```
 
-### Manual
-
-```bash
-composer install
-pnpm install && pnpm run build
-cp .env.example .env
-php artisan key:generate
-# Edit .env with your DB credentials, then:
-php artisan gaeld:install
-php artisan serve
-```
-
-### Updating
-
-```bash
-php artisan gaeld:update      # manual install
-# or
-./vendor/bin/sail artisan gaeld:update   # Docker / Sail
-```
-
-Runs pending migrations, clears caches, and restarts the queue worker — safe to run on a live instance.
+For manual installation, upgrades, reverse-proxy configuration, and backup
+requirements, see [INSTALL.md](INSTALL.md).
 
 ---
 
@@ -103,6 +77,7 @@ Runs pending migrations, clears caches, and restarts the queue worker — safe t
 | Layer | Technology |
 |---|---|
 | Backend | Laravel 13 |
+| Runtime | PHP 8.4+, Node.js 22+, pnpm 11 |
 | Frontend | Inertia.js + Vue 3 |
 | Database | PostgreSQL |
 | Cache / Queue | Redis |
@@ -121,7 +96,7 @@ Contacts/       — customers and suppliers
 Expenses/       — expense recording and reporting
 Invoicing/      — invoices, payments, QR-Bill generation
 Organizations/  — multi-org support, tenant isolation
-Reporting/      — read-only financial projections (P&L, balance sheet)
+Reporting/      — read-only financial reports (P&L, balance sheet, cash flow)
 Users/          — authentication, profiles
 ```
 
@@ -166,7 +141,8 @@ Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING
 
 ```bash
 ./vendor/bin/sail artisan test                      # run the test suite
-./vendor/bin/sail pint                              # fix code style
+./vendor/bin/sail bin pint                         # fix code style
+./vendor/bin/sail bin phpstan analyse --memory-limit=2G
 ```
 
 Please keep pull requests focused and include tests for new behaviour.

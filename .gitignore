@@ -26,8 +26,14 @@ npm-debug.log
 yarn-error.log
 /.fleet
 /.idea
-/.vscode
+/.vscode/*
+!/.vscode/settings.json
+!/.vscode/tasks.json
+!/.vscode/extensions.json
 /.desloppify
+/.agents/
+skills-lock.json
+strix_runs/
 *Zone.Identifier
 .DS_Store
 /bootstrap/cache/packages.php

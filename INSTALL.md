@@ -12,13 +12,13 @@
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Scanix/Gaeld.git
-cd Gaeld/api
+cd Gaeld
 
 # 2. Copy environment file
 cp .env.example .env
 
 # 3. Start the containers and wait until ready
-#    (composer install, pnpm build, and key generation run automatically on first start)
+#    Build and start the application services.
 docker compose up -d --wait
 
 # 4. Run the installer
@@ -61,7 +61,7 @@ After seeding:
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Scanix/Gaeld.git
-cd Gaeld/api
+cd Gaeld
 
 # 2. Install PHP dependencies
 composer install
@@ -108,6 +108,9 @@ Key environment variables:
 | `DOCS_BASE_URL` | Documentation site URL | `http://localhost:3000` |
 | `PLUGINS_ENABLED` | Enable plugin system | `true` |
 | `TRUSTED_PROXIES` | Trusted reverse proxies (see below) | _(unset)_ |
+
+The public repository is the Community Edition. SaaS billing and Enterprise
+features require the private EE plugin and are not installed by this guide.
 
 ---
 
@@ -171,7 +174,7 @@ git pull
 composer install --no-dev --optimize-autoloader
 
 # 3. Rebuild frontend assets
-pnpm install
+pnpm install --frozen-lockfile
 pnpm run build
 
 # 4. Run migrations

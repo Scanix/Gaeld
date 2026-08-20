@@ -5,22 +5,16 @@
     "packageManager": "pnpm@11.20.0",
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
-        "storybook": "storybook dev -p 6006",
-        "build-storybook": "storybook build"
+        "build": "vite build"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^3.7.0",
         "@sentry/vite-plugin": "^5.4.0",
-        "@storybook/addon-a11y": "^10.5.9",
-        "@storybook/vue3": "10.5.9",
-        "@storybook/vue3-vite": "^10.5.9",
         "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-vue": "^6.0.8",
         "autoprefixer": "^10.5.4",
         "laravel-vite-plugin": "^3.2.0",
         "postcss": "^8.5.26",
-        "storybook": "^10.5.9",
         "tailwindcss": "^4.3.3",
         "vite": "^8.2.1"
     },

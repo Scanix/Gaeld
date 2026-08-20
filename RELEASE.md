@@ -1,82 +1,69 @@
-# Production Release Runbook
+# Public Release Runbook
 
-This runbook defines the release flow for Gäld first full production releases and follow-up releases.
+This runbook covers the public Community Edition release. The hosted SaaS and
+Enterprise Edition use a separate private repository and deployment process.
 
-## 1. Preconditions
+## Release Gate
 
-- Branch: `develop` is green and up to date.
-- CI: lint, static analysis, tests, and build all pass.
-- Changelog: release section is present with date and highlights.
-- Environment: production `.env` is provisioned from `.env.production.example`.
+Before tagging a release:
 
-## 2. Validate Release Candidate
+- `develop` is clean, reviewed, and green in CI.
+- `CHANGELOG.md` has a dated release section and upgrade notes.
+- The public README and INSTALL guide match the current commands and runtime.
+- Composer and pnpm audits report no known vulnerabilities.
+- Composer may report `laragear/webauthn` as abandoned in favor of
+  `laravel/passkeys`; this is a tracked migration item, not an unused code path.
+- The full test suite, PHPStan, Pint, and frontend build pass.
+- A backup and rollback plan exists for every self-hosted deployment.
 
-Run all release checks from the project root:
+Run the checks from the repository root:
 
 ```bash
 ./vendor/bin/sail up -d
-./vendor/bin/sail composer lint
-./vendor/bin/sail phpstan analyse --memory-limit=512M
-./vendor/bin/sail artisan test
-./vendor/bin/sail pnpm build
+./vendor/bin/sail composer audit --locked
+./vendor/bin/sail pnpm audit
+./vendor/bin/sail artisan test --compact
+./vendor/bin/sail bin pint --dirty --format agent
+./vendor/bin/sail bin phpstan analyse --memory-limit=2G
+./vendor/bin/sail pnpm run build
 ```
 
-Optional extended checks:
+## Promote And Tag
+
+1. Merge the reviewed release PR from `develop` into public `main`.
+2. Update the local refs and verify `main` contains the exact tested commit.
+3. Create an annotated semantic-version tag:
 
 ```bash
-./vendor/bin/sail artisan test tests/Security
-./vendor/bin/sail artisan test tests/Performance
+git checkout main
+git pull --ff-only origin main
+git tag -a vX.Y.Z -m "Gäld vX.Y.Z"
+git push origin main --follow-tags
 ```
 
-## 3. Prepare Deployment Configuration
+Never push the private SaaS `production` branch to GitHub.
 
-1. Copy deployment template:
+## Self-Hosted Deployment
 
-```bash
-cp deploy.php.example deploy.php
-```
-
-2. Set required environment variables on CI/server:
-
-- `DEPLOY_REPO`
-- `DEPLOY_HOST`
-- `DEPLOY_USER`
-- `DEPLOY_PATH`
-- `DEPLOY_BRANCH` (defaults to `develop`)
-
-3. Ensure server services exist and are reachable:
-
-- PHP-FPM (`php8.4-fpm`)
-- queue worker service (`gaeld-worker`)
-- Redis/PostgreSQL/MeiliSearch as configured
-
-## 4. Execute Deployment
+Self-hosters may copy [deploy.php.example](deploy.php.example) to `deploy.php`
+and configure `DEPLOY_REPO`, `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_PATH`, and
+`DEPLOY_BRANCH`. Keep `deploy.php` and server `.env` files out of Git.
 
 ```bash
 ./vendor/bin/sail composer install --no-interaction --prefer-dist --optimize-autoloader
 ./vendor/bin/sail dep deploy production
 ```
 
-## 5. Post-Deploy Checks
+Verify the health endpoint and one authenticated accounting workflow after the
+deployment. Restart the configured Horizon or queue service after publishing.
 
-```bash
-curl -fsSL https://app.gaeld.ch/up
-```
+## Rollback
 
-Then verify in app:
-
-- Login and organization switch
-- Invoice create/finalize/payment flow
-- Expense create/approve/post flow
-- Reconciliation import flow
-- Dashboard loads without server errors
-
-## 6. Rollback
-
-Use Deployer rollback if production checks fail:
+If the health check or accounting smoke test fails:
 
 ```bash
 ./vendor/bin/sail dep rollback production
 ```
 
-Then re-run health check and investigate logs.
+Then re-run the health check, inspect application logs, and record the failure
+before attempting another release.

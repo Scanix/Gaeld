@@ -5,11 +5,11 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.6.0] — 2026-08-20
 
 ### Changed
 - **Dependencies:** updated Laravel 13, Inertia, Horizon, Stripe PHP 21,
-  Symfony, Vite, Tailwind, Storybook, Vue, and related locked dependencies.
+  Symfony, Vite, Tailwind, Vue, and related locked dependencies.
 - **Accounting periods:** explicit fiscal-year identity now flows through
   cash-flow reports, exports, archive PDFs, bundles, and archive lazy-loading;
   legacy year URLs remain supported.
@@ -21,6 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   organization-period lock contract as bulk archive generation.
 - **Year-end closing:** long fiscal years pass their explicit fiscal-year ID to
   archive generation and log the resolved period boundaries.
+
+### Removed
+- **Dead frontend tooling:** removed the unshippable Storybook configuration
+  and stories that were absent from clean public clones.
+- **Dead WebAuthn helper:** removed the deprecated unreferenced browser helper;
+  active passkey flows use `@simplewebauthn/browser`.
+
+## [Unreleased]
+
+Future changes go here after the `v3.6.0` release.
 
 ## [3.5.1] — 2026-08-07
 
