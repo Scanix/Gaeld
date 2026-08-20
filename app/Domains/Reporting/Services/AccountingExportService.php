@@ -74,7 +74,7 @@ class AccountingExportService
             $this->buildJournalEntries($tmpDir, $orgId, $fromDate, $toDate);
             $this->buildTrialBalance($tmpDir, $orgId, $toDate);
             $this->buildProfitAndLoss($tmpDir, $org, $fromDate, $toDate);
-            $this->buildBalanceSheet($tmpDir, $org, $toDate);
+            $this->buildBalanceSheet($tmpDir, $org, $fromDate, $toDate);
             $this->buildVatReports($tmpDir, $org, $fromDate, $toDate);
             $this->buildInvoicesCsv($tmpDir, $orgId, $fromDate, $toDate);
             $this->buildExpensesCsv($tmpDir, $orgId, $fromDate, $toDate);
@@ -182,13 +182,14 @@ class AccountingExportService
         file_put_contents($tmpDir.'/profit-and-loss.pdf', $pdfContent);
     }
 
-    private function buildBalanceSheet(string $tmpDir, Organization $org, string $asOfDate): void
+    private function buildBalanceSheet(string $tmpDir, Organization $org, string $fromDate, string $asOfDate): void
     {
         $report = $this->reportingService->balanceSheet($org->id, $asOfDate);
 
         $pdfContent = Pdf::loadView('exports.balance-sheet', [
             'organization' => $org,
             'asOfDate' => $asOfDate,
+            'period' => ['from' => $fromDate, 'to' => $asOfDate],
             'assets' => $report['assets'],
             'liabilities' => $report['liabilities'],
             'equity' => $report['equity'],

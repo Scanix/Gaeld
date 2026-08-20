@@ -27,6 +27,7 @@ return [
     'balance_sheet' => [
         'title' => 'Bilancio',
         'as_of' => 'Bilancio al :date',
+        'period' => 'Bilancio — dal :from al :to',
         'assets' => 'Attivi',
         'total_assets' => 'Totale attivi',
         'liabilities' => 'Passivi',

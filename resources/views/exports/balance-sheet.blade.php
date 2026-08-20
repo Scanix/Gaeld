@@ -22,7 +22,7 @@
 <body>
     <div class="header">
         <h1>{{ $organization->name }}</h1>
-        <div class="date">{{ __('exports.balance_sheet.as_of', ['date' => $asOfDate]) }}</div>
+        <div class="date">{{ __('exports.balance_sheet.period', ['from' => $period['from'], 'to' => $period['to']]) }}</div>
     </div>
 
     <table>

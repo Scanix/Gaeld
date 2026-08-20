@@ -192,7 +192,7 @@ final class GenerateArchivePdfAction
     {
         return match ($documentType) {
             'pdf_pnl' => $this->renderProfitAndLoss($org, $fromDate, $toDate),
-            'pdf_balance_sheet' => $this->renderBalanceSheet($org, $toDate),
+            'pdf_balance_sheet' => $this->renderBalanceSheet($org, $fromDate, $toDate),
             'pdf_journal' => $this->renderJournal($org, $fromDate, $toDate),
             default => throw new \InvalidArgumentException("Unknown PDF artefact: {$documentType}"),
         };
@@ -213,13 +213,14 @@ final class GenerateArchivePdfAction
         ])->setPaper('A4', 'portrait')->output();
     }
 
-    private function renderBalanceSheet(Organization $org, string $asOfDate): string
+    private function renderBalanceSheet(Organization $org, string $fromDate, string $asOfDate): string
     {
         $report = $this->reportingService->balanceSheet($org->id, $asOfDate);
 
         return Pdf::loadView('exports.balance-sheet', [
             'organization' => $org,
             'asOfDate' => $asOfDate,
+            'period' => ['from' => $fromDate, 'to' => $asOfDate],
             'assets' => $report['assets'],
             'liabilities' => $report['liabilities'],
             'equity' => $report['equity'],

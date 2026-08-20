@@ -27,6 +27,7 @@ return [
     'balance_sheet' => [
         'title' => 'Bilan',
         'as_of' => 'Bilan au :date',
+        'period' => 'Bilan — du :from au :to',
         'assets' => 'Actifs',
         'total_assets' => 'Total actifs',
         'liabilities' => 'Passifs',

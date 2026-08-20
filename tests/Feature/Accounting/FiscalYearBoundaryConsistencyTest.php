@@ -88,6 +88,24 @@ class FiscalYearBoundaryConsistencyTest extends TestCase
             ->assertHeader('content-disposition', 'attachment; filename="cash-flow-2024-01-01-2025-06-30.csv"');
     }
 
+    public function test_balance_sheet_exposes_the_explicit_fiscal_year_period(): void
+    {
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+
+        $this->actAsOrg()
+            ->get(route('reports.balance-sheet', ['fiscal_year_id' => $fiscalYear->id]))
+            ->assertInertia(fn ($page) => $page
+                ->component('Reports/BalanceSheet')
+                ->where('report.period.from', '2024-01-01')
+                ->where('report.period.to', '2025-06-30')
+            );
+    }
+
     public function test_year_end_closing_checks_vat_periods_in_the_full_long_year(): void
     {
         $fiscalYear = FiscalYear::factory()->for($this->organization)->create([

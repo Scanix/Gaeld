@@ -27,6 +27,7 @@ return [
     'balance_sheet' => [
         'title' => 'Balance Sheet',
         'as_of' => 'Balance Sheet as of :date',
+        'period' => 'Balance Sheet — :from to :to',
         'assets' => 'Assets',
         'total_assets' => 'Total Assets',
         'liabilities' => 'Liabilities',

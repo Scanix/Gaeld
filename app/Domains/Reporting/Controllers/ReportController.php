@@ -13,6 +13,7 @@ use App\Domains\Reporting\Services\ExportReportService;
 use App\Domains\Reporting\Services\ReportingService;
 use App\Http\Controllers\Controller;
 use App\Support\Money;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -76,6 +77,12 @@ class ReportController extends Controller
             : ($validated['as_of_date'] ?? now()->toDateString());
 
         $report = $reportingService->balanceSheet($orgId, $asOfDate, $validated['compare_as_of_date'] ?? null);
+        $report['period'] = [
+            'from' => $period !== null
+                ? $period->fromDate
+                : Carbon::parse($asOfDate)->startOfYear()->toDateString(),
+            'to' => $asOfDate,
+        ];
 
         return Inertia::render('Reports/BalanceSheet', [
             'report' => $report,
@@ -178,6 +185,12 @@ class ReportController extends Controller
             pdfBuilder: fn () => $exporter->pdf()->download('exports.balance-sheet', [
                 'organization' => $org,
                 'asOfDate' => $asOfDate,
+                'period' => [
+                    'from' => $period !== null
+                        ? $period->fromDate
+                        : Carbon::parse($asOfDate)->startOfYear()->toDateString(),
+                    'to' => $asOfDate,
+                ],
                 'assets' => $report['assets'],
                 'liabilities' => $report['liabilities'],
                 'equity' => $report['equity'],
