@@ -90,15 +90,20 @@ task('deploy:horizon:restart', function () {
 
 task('deploy:ee:plugin', function () {
     $eeRepo = getenv('EE_REPO') ?: 'git@gitlab.nectoria.com:nectoria/products/gaeld/gaeld-ee.git';
+    $eeRef = getenv('DEPLOY_EE_REF') ?: 'v2.7.0';
+    $eeRefArg = escapeshellarg($eeRef);
     $cachePath = '{{deploy_path}}/shared/gaeld-ee';
     $pluginPath = '{{release_path}}/plugins/gaeld-ee';
 
-    // Clone or update cached EE repo in shared dir
+    // Clone or update the cached EE repository, then pin the release to an
+    // immutable tag or commit instead of deploying a moving branch head.
     if (test("[ -d {$cachePath} ]")) {
-        run("cd {$cachePath} && git fetch origin && git reset --hard origin/main");
+        run("cd {$cachePath} && git fetch --tags origin && git fetch origin {$eeRefArg} && git checkout --detach {$eeRefArg}");
     } else {
-        run("git clone {$eeRepo} {$cachePath}");
+        run("git clone --branch {$eeRefArg} --single-branch {$eeRepo} {$cachePath}");
     }
+
+    writeln('<info>EE release:</info> '.trim(run("git -C {$cachePath} describe --tags --always --dirty")));
 
     // Copy cached repo into the release
     run("cp -a {$cachePath} {$pluginPath}");
