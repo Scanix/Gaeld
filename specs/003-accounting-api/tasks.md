@@ -56,7 +56,7 @@ unbalanced or unknown-account payload.
 
 ### Tests First
 
-- [ ] T013 [P] [US1] Add feature tests for account lookup, draft creation, immediate posting, balanced-line validation, unknown/inactive account rejection, and resource shape in `tests/Feature/Api/JournalEntryApiTest.php`.
+- [ ] T013 [P] [US1] Add feature tests for account lookup, draft creation, immediate posting, balanced-line validation, amount precision, minimum line count, unknown/inactive account rejection, and resource shape in `tests/Feature/Api/JournalEntryApiTest.php`.
 - [ ] T014 [P] [US1] Add unit tests for organization-scoped account-code resolution and rejection of duplicate/ambiguous codes in `tests/Unit/Api/AccountCodeResolverTest.php`.
 
 ### Implementation
@@ -105,8 +105,8 @@ and verify no duplicate bank transactions are produced.
 
 ### Tests First
 
-- [ ] T031 [P] [US3] Add invoice and expense workflow tests for linked journal-entry UUID/status and retry behavior in `tests/Feature/Api/BusinessDocumentApiTest.php`.
-- [ ] T032 [P] [US3] Add CAMT.053 success, malformed-file, unknown-bank-account, duplicate-transaction, and retry tests in `tests/Feature/Api/BankImportApiTest.php`.
+- [ ] T031 [P] [US3] Add invoice and expense workflow tests for linked journal-entry UUID/status, atomic partial-failure handling, and retry behavior in `tests/Feature/Api/BusinessDocumentApiTest.php`.
+- [ ] T032 [P] [US3] Add CAMT.053 success, malformed-file, unknown-bank-account, atomic import failure, duplicate-transaction, and retry tests in `tests/Feature/Api/BankImportApiTest.php`.
 - [ ] T033 [P] [US3] Add cross-organization and ability tests for contacts, invoices, expenses, bank accounts, and imports in `tests/Security/Api/BusinessApiSecurityTest.php`.
 
 ### Implementation

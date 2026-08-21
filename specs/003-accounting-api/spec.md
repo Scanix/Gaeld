@@ -167,6 +167,9 @@ requiring a web session or direct database access.
   based lines, and an explicit draft or posted status.
 - **FR-007**: The system MUST validate that every journal entry is balanced and
   that each line has a valid account and a positive amount on exactly one side.
+  Requests MUST contain at least two lines and monetary values MUST use decimal
+  strings with no more than two fractional digits and the existing ledger
+  maximum.
 - **FR-008**: The system MUST reject journal entries dated in a closed fiscal
   year and MUST preserve the existing accounting-period rules.
 - **FR-009**: All journal mutations MUST use the existing accounting domain
@@ -193,7 +196,8 @@ requiring a web session or direct database access.
   different request payload and MUST prevent duplicate accounting effects when
   either the key or the documented fallback identifies a repeated request.
 - **FR-017**: The system MUST preserve accounting-reference uniqueness within an
-  organization and MUST return a structured conflict when it is violated.
+  organization and MUST return a structured conflict with a distinguishable
+  error code when it is violated.
 - **FR-018**: The system MUST return stable JSON error structures for
   authentication, authorization, not-found, validation, conflict, rate-limit,
   and domain-rule failures.
@@ -213,6 +217,9 @@ requiring a web session or direct database access.
 - **FR-025**: The API documentation MUST provide examples for authentication,
   account lookup, draft creation, immediate posting, publication, reversal,
   idempotent retry, business-document posting, and CAMT.053 import.
+- **FR-026**: Invoice, expense, payment, and CAMT.053 mutations MUST either
+  complete their domain side effects atomically or return a retryable failure
+  without leaving a partial accounting or import state.
 
 ### Out of Scope
 
@@ -288,3 +295,6 @@ requiring a web session or direct database access.
   by Gäld; automatic bank-provider synchronization is a separate feature.
 - The release must preserve existing API clients and web workflows unless a
   versioned breaking change is explicitly approved.
+- The first release's MVP consists of the journal-entry read and write
+  lifecycle in User Stories 1 and 2; the business-document and CAMT.053 API
+  harmonization in User Story 3 follows without changing the MVP contract.

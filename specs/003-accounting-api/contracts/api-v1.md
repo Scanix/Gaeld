@@ -22,6 +22,11 @@ the abilities assigned to the token.
 The unauthenticated root is `GET /api/v1/`. Protected routes use the existing
 Sanctum, organization-resolution, API feature, and rate-limit middleware.
 
+In the official Community Edition, API access is enabled by default for the
+installation. An administrator may disable the complete API surface with the
+documented installation-level feature flag; token abilities and organization
+membership remain mandatory even when the flag is enabled.
+
 ## Token Abilities
 
 The API reuses the existing permission values instead of introducing a second
@@ -40,6 +45,13 @@ permission vocabulary. Relevant values include:
 `GET /api/v1/meta/abilities` is the source of truth for abilities accepted by
 that installation.
 
+Journal-entry operations use the following existing abilities:
+
+- `accounting.view` for account and journal-entry reads;
+- `accounting.create` for creating drafts or posted entries;
+- `accounting.edit` for posting drafts and reversing posted entries;
+- `accounting.delete` for deleting unarchived drafts.
+
 ## Journal Entries
 
 ### List
@@ -49,7 +61,9 @@ GET /api/v1/journal-entries?status=posted&from=2026-01-01&to=2026-12-31&page=1&p
 ```
 
 Filters are optional and include `status` (`draft` or `posted`), inclusive date
-range (`from`, `to`), and `reference`. The response is paginated.
+range (`from`, `to`), and `reference`. The response is paginated with a
+maximum page size of 100. An empty result returns `data: []` with pagination
+metadata rather than a missing or null data property.
 
 ### Show
 
@@ -94,8 +108,9 @@ Idempotency-Key: logbook-entry-2026-00042
 
 `status` is required and must be either `draft` or `posted`. A request must
 contain at least two lines. Each line must have a positive amount on exactly one
-side. Debit and credit totals must be equal after server-side decimal
-validation.
+side. Monetary values are decimal strings with no more than two fractional
+digits and the existing ledger maximum. Debit and credit totals must be equal
+after server-side decimal validation.
 
 The account code is the primary integration identifier and is unique within the
 organization. The account UUID may be returned for reconciliation but is not
@@ -145,6 +160,10 @@ Invoice and expense responses expose their linked journal-entry UUID and status
 when their domain workflow has posted to the ledger. Business workflows remain
 the authoritative place for VAT, invoice, expense, payment, and rounding rules.
 
+Business-document and CAMT.053 mutations are atomic at the domain boundary: a
+failed request does not leave a partial document, ledger posting, or bank import
+that a retry could duplicate.
+
 CAMT.053 import is a separate banking contract. It validates the supported
 file format, scopes the target bank account to the token organization, and
 uses the file's transaction identifiers to make retries safe.
@@ -170,6 +189,7 @@ Validation and domain failures use:
 ```json
 {
   "message": "The journal entry is not balanced.",
+  "code": "journal_entry_unbalanced",
   "errors": {
     "lines": ["Debit and credit totals must be equal."]
   }
@@ -184,8 +204,9 @@ Status meanings:
 - `401`: missing, invalid, expired, or revoked token;
 - `403`: missing ability or organization access denied;
 - `404`: public resource not found in the token organization;
-- `409`: duplicate reference, idempotency payload conflict, or invalid state
-  transition caused by a concurrent request;
+- `409`: duplicate reference (`duplicate_reference`), idempotency payload
+  conflict (`idempotency_conflict`), or invalid state transition caused by a
+  concurrent request (`concurrent_transition`);
 - `422`: malformed or invalid business payload;
 - `429`: API rate limit reached, with the existing retry headers.
 
@@ -194,3 +215,17 @@ Status meanings:
 The prefix remains `/api/v1`. Existing routes and response fields remain
 backward-compatible. New fields are additive. A breaking change requires a
 new API version and an explicit changelog entry.
+
+## Terminology
+
+- **Source metadata**: the stable origin label for an API-created entry plus
+  the related external reference or Gäld business-document relationship when
+  one exists.
+- **External reference**: a caller-supplied identifier from the source system
+  that remains stable across retries and is not an internal Gäld database ID.
+- **Natural/accounting reference**: the journal or document reference already
+  used by Gäld to enforce organization-scoped uniqueness when no HTTP
+  idempotency key is supplied.
+- **Safe retry**: repeating the same mutation with the same organization,
+  route, key or fallback reference, and payload without creating a second
+  accounting or import effect.

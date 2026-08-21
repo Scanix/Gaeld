@@ -44,7 +44,8 @@ an existing API v1 surface.
 requests per minute. A single journal-entry read or mutation should target a
 sub-500 ms p95 response on the supported self-hosted baseline, excluding
 client network time and database contention. List endpoints must remain
-paginated and must not load an unbounded organization ledger into memory.
+paginated with a maximum page size of 100 and must not load an unbounded
+organization ledger into memory.
 
 **Constraints**: All ledger mutations go through `LedgerService`; account
 codes resolve only inside the token organization; archived and posted entries
@@ -167,6 +168,8 @@ Before implementation, confirm:
 	requests. Each line uses `account_code`, `debit`, `credit`, and an optional
 	description. The server maps codes to internal account IDs.
 - Require an explicit `status` value of `draft` or `posted` in create requests.
+- Require at least two lines and decimal strings with no more than two
+	fractional digits, bounded by the existing ledger amount maximum.
 - Accept an optional `Idempotency-Key` header. When absent, use an applicable
 	endpoint-specific external or accounting reference as the documented
 	fallback; creation endpoints without either a safe key or natural reference
@@ -179,6 +182,9 @@ Before implementation, confirm:
 	denied abilities or organization access, `404` for absent public resources,
 	`409` for duplicate/conflicting idempotency or reference operations, `422`
 	for validation/domain errors, and `429` for rate limiting.
+- Include a stable machine-readable error code so duplicate references,
+	idempotency conflicts, concurrent transitions, and validation failures are
+	distinguishable to clients.
 - Update `meta/abilities` to derive from the supported permission map rather
 	than maintain a stale hardcoded list. Reuse existing `accounting.*`,
 	`invoicing.*`, `expenses.*`, `banking.*`, and `contacts.*` permissions.
@@ -186,6 +192,8 @@ Before implementation, confirm:
 	their generated journal-entry relationship in resources. Treat CAMT.053 as a
 	separate bank-import contract and do not make it a generic journal-entry
 	endpoint.
+- Invoice, expense, payment, and CAMT.053 mutations must preserve domain
+	transaction atomicity so a failed retry cannot duplicate a partial effect.
 
 **Frontend states**: None for the new API. Existing web flows must retain their
 loading, validation, forbidden, archived, and success behavior because the
