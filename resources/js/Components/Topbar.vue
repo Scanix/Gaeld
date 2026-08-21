@@ -1,7 +1,7 @@
 <script setup>
 import { useForm, usePage, router, Link } from '@inertiajs/vue3'
-import { LogOut, User, HelpCircle, BookOpen, Menu, Sun, Moon, ShieldCheck } from 'lucide-vue-next'
-import { ref, computed } from 'vue'
+import { LogOut, User, HelpCircle, BookOpen, Menu, Sun, Moon } from 'lucide-vue-next'
+import { ref } from 'vue'
 import Button from './UI/Button.vue'
 import GlobalSearch from './GlobalSearch.vue'
 import NotificationBell from './NotificationBell.vue'
@@ -28,8 +28,6 @@ const logoutForm = useForm({})
 const showUserMenu = ref(false)
 
 const { isDark, toggleTheme } = useTheme()
-
-const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin)
 
 function logout() {
   logoutForm.post('/logout')
@@ -113,14 +111,6 @@ function logout() {
           >
             <User class="h-4 w-4" />
             {{ t('profile') }}
-          </Link>
-          <Link
-            v-if="isSaasAdmin"
-            href="/saas-admin"
-            class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]"
-          >
-            <ShieldCheck class="h-4 w-4" />
-            {{ t('saas_admin') }}
           </Link>
           <button
             class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--accent))]"
