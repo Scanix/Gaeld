@@ -42,15 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Future changes go here after the `v3.6.0` release.
 
-### Added
-- **EE SaaS Admin console:** introduced focused Overview, Organizations,
-  Billing, Health, Operations, Support, targeted Campaign, and Export
-  workflows with server-side filtering, explicit unavailable states, durable
-  audit records, signed downloads, and bounded worker lifecycles.
-- **SaaS Admin acceptance fixtures:** added the deterministic
-  `gaeld:saas-admin-fixtures --fresh` command for a 5,000-organization local
-  acceptance dataset.
-
 ## [3.5.1] — 2026-08-07
 
 ### Added
