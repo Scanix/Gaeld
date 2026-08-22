@@ -85,7 +85,7 @@ class HandleInertiaRequests extends Middleware
         }
 
         if ($session && ! $request->routeIs('saas-admin.support.stop')) {
-            $target = User::query()->find($session->targetUserId);
+            $target = User::query()->whereKey($session->targetUserId)->first();
             if ($target) {
                 Auth::setUser($target);
             }
