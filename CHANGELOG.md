@@ -7,12 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.6.0] — 2026-08-20
 
+### Added
+- **Community Edition REST API:** organization-scoped journal-entry,
+  contact, invoice, expense, and CAMT.053 integration workflows with bearer
+  tokens, account-code references, stable JSON resources, and idempotent
+  retries. API access is enabled by default and can be disabled with the
+  installation-level `FEATURE_API_ACCESS` kill switch.
+
 ### Changed
 - **Dependencies:** updated Laravel 13, Inertia, Horizon, Stripe PHP 21,
   Symfony, Vite, Tailwind, Vue, and related locked dependencies.
 - **Accounting periods:** explicit fiscal-year identity now flows through
   cash-flow reports, exports, archive PDFs, bundles, and archive lazy-loading;
   legacy year URLs remain supported.
+- **Plugin frontend boundary:** Community Edition builds no longer contain
+  SaaS Admin page sources; enabled plugins register their own frontend pages
+  through the manifest-driven Vite registry.
 
 ### Fixed
 - **SaaS deployment:** EE now uses PSR-7 2.13 and current Stripe/Sentry/Symfony
@@ -33,11 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Future changes go here after the `v3.6.0` release.
 
 ### Added
-- **Community Edition REST API:** added organization-scoped journal-entry,
-  contact, invoice, expense, and CAMT.053 integration workflows with bearer
-  tokens, account-code references, stable JSON resources, and idempotent
-  retries. API access is enabled by default and remains available through the
-  installation-level `FEATURE_API_ACCESS` kill switch.
 - **EE SaaS Admin console:** introduced focused Overview, Organizations,
   Billing, Health, Operations, Support, targeted Campaign, and Export
   workflows with server-side filtering, explicit unavailable states, durable
@@ -45,9 +50,6 @@ Future changes go here after the `v3.6.0` release.
 - **SaaS Admin acceptance fixtures:** added the deterministic
   `gaeld:saas-admin-fixtures --fresh` command for a 5,000-organization local
   acceptance dataset.
-- **Plugin frontend boundary:** EE pages and components now live under the EE
-  plugin and are included through a manifest-driven Vite registry; CE builds
-  omit plugin page assets when `VITE_PLUGINS_ENABLED=false`.
 
 ## [3.5.1] — 2026-08-07
 
