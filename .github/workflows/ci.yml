@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [develop, main]
+    tags: ['v*']
   pull_request:
     branches: [develop, main]
 
@@ -43,6 +44,16 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Enforce public CE boundary
+        run: |
+          forbidden=("plugins/gaeld-ee" "deploy.php" ".gitlab-ci.yml" "resources/js/Pages/SaasAdmin" "resources/js/Components/SaasAdmin")
+          for forbidden_path in "${forbidden[@]}"; do
+            if [ -e "$forbidden_path" ]; then
+              echo "Private SaaS/EE path must not be present in the public repository: $forbidden_path"
+              exit 1
+            fi
+          done
 
       - name: Secret scanning (Gitleaks)
         uses: gitleaks/gitleaks-action@v2.3.9

@@ -24,7 +24,7 @@ class GaeldReleaseCommand extends Command
             'FEATURE_SAAS' => 'false',
             'FEATURE_AUTOMATION' => 'false',
             'FEATURE_MULTI_CURRENCY' => 'false',
-            'FEATURE_API_ACCESS' => 'false',
+            'FEATURE_API_ACCESS' => 'true',
             'FEATURE_AUTO_RECONCILIATION' => 'false',
             'FEATURE_RULE_ENGINE' => 'false',
         ],

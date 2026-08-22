@@ -29,6 +29,7 @@ const maxWidthClass = computed(() => {
 const emit = defineEmits(['close'])
 
 const dialogRef = ref(null)
+const previouslyFocusedElement = ref(null)
 
 const FOCUSABLE_SELECTORS = [
   'a[href]',
@@ -63,6 +64,7 @@ function onKeydown(e) {
 
 watch(isOpen, (val) => {
   if (val) {
+    previouslyFocusedElement.value = document.activeElement
     document.addEventListener('keydown', onKeydown)
     document.body.style.overflow = 'hidden'
     nextTick(() => {
@@ -76,6 +78,7 @@ watch(isOpen, (val) => {
   } else {
     document.removeEventListener('keydown', onKeydown)
     document.body.style.overflow = ''
+    nextTick(() => previouslyFocusedElement.value?.focus())
   }
 })
 

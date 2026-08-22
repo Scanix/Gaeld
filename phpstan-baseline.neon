@@ -620,38 +620,14 @@ parameters:
 			path: app/Domains/Users/Services/DataExportService.php
 
 		-
-			message: '#^Method App\\Http\\Middleware\\Api\\TokenPermissionMap\:\:get\(\) should return array\<string, string\> but returns array\<string, array\<string, App\\Domains\\Organizations\\Enums\\Permission\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Http/Middleware/Api/TokenPermissionMap.php
-
-		-
-			message: '#^Offset string on string on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
 			message: '#^Parameter \#1 \$tokenType of method App\\Http\\Middleware\\EnsureApiOrganization\:\:registerTokenAbilityGate\(\) expects App\\Domains\\Api\\Enums\\TokenType, string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Http/Middleware/EnsureApiOrganization.php
 
 		-
-			message: '#^Strict comparison using \=\=\= between null and null will always evaluate to true\.$#'
-			identifier: identical.alwaysTrue
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
 			message: '#^Strict comparison using \=\=\= between string and App\\Domains\\Api\\Enums\\TokenType\:\:Organization will always evaluate to false\.$#'
 			identifier: identical.alwaysFalse
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
 			count: 1
 			path: app/Http/Middleware/EnsureApiOrganization.php
 

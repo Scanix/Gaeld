@@ -22,6 +22,7 @@ readonly class JournalEntryData
         public ?string $reference,
         public ?string $description,
         public array $lines,
+        public ?string $type = null,
     ) {}
 
     /** @param  array<string, mixed>  $data */
@@ -37,6 +38,7 @@ readonly class JournalEntryData
                 fn (array $line) => JournalLineData::fromArray($line),
                 $data['lines'],
             ),
+            type: $data['type'] ?? null,
         );
     }
 
@@ -48,6 +50,7 @@ readonly class JournalEntryData
             'reference' => $this->reference,
             'description' => $this->description,
             'lines' => array_map(fn (JournalLineData $line) => $line->toArray(), $this->lines),
+            'type' => $this->type,
         ];
     }
 }

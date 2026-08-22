@@ -4,6 +4,7 @@ namespace App\Domains\Api\Controllers;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Api\Resources\AccountResource;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -51,8 +52,9 @@ class AccountApiController extends Controller
      * @response 200 scenario="Success" {"data":{"id":"9c8f1b2a-3d4e-5f67-8901-abcdef123456","code":"1000","name":"Cash","type":"asset","parent_id":null,"is_active":true,"description":"Liquid funds"}}
      * @response 404 scenario="Not found" {"message":"Account not found."}
      */
-    public function show(Account $account): AccountResource
+    public function show(Account $account, CurrentOrganization $currentOrganization): AccountResource
     {
+        abort_unless($account->organization_id === $currentOrganization->id(), 404);
         $this->authorize('view', $account);
 
         return new AccountResource($account);

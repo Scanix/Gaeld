@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -93,16 +94,26 @@ class OrganizationController extends Controller
             ->with('success', __('app.organization_deleted'));
     }
 
-    public function switchOrganization(Request $request, Organization $organization): RedirectResponse
+    /**
+     * Resolve the target organization manually rather than via implicit route-model
+     * binding: binding runs in the global middleware stack before this route's
+     * 'verified' middleware, so a bound-vs-missing model produced a 403 (unverified)
+     * vs 404 (not found) differential that let anyone enumerate organization UUIDs.
+     * Looking it up here — after 'verified' has already gated the request — keeps
+     * unauthenticated/unverified users on a single response regardless of the ID.
+     */
+    public function switchOrganization(Request $request, string $organization): RedirectResponse
     {
-        $this->authorize('view', $organization);
+        $model = Str::isUuid($organization) ? Organization::find($organization) : null;
 
-        $request->user()->switchOrganization($organization);
+        abort_unless($model && $request->user()->can('view', $model), 404);
+
+        $request->user()->switchOrganization($model);
 
         // Regenerate session ID when privilege context changes (different org scope)
         $request->session()->regenerate();
 
         return redirect()->route('dashboard')
-            ->with('success', __('app.organization_switched', ['name' => $organization->name]));
+            ->with('success', __('app.organization_switched', ['name' => $model->name]));
     }
 }

@@ -1,0 +1,51 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "PHPUnit: all tests (Sail)",
+      "type": "shell",
+      "command": "${workspaceFolder}/vendor/bin/sail artisan test --compact",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "PHPUnit: current file (Sail)",
+      "type": "shell",
+      "command": "${workspaceFolder}/vendor/bin/sail artisan test --compact \"${relativeFile}\"",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "PHPUnit: coverage (Sail)",
+      "type": "shell",
+      "command": "${workspaceFolder}/vendor/bin/sail artisan test --compact --coverage-text",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    }
+  ]
+}

@@ -122,6 +122,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function resolveCurrentOrganization(): ?Organization
     {
+        $supportOrganizationId = session('saas_support_session.target_organization_id');
+        if ($supportOrganizationId) {
+            return Organization::query()->whereKey((string) $supportOrganizationId)->first();
+        }
+
         $sessionOrgId = session('current_organization_id');
 
         if ($sessionOrgId) {

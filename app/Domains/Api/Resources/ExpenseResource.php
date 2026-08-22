@@ -25,6 +25,7 @@ class ExpenseResource extends JsonResource
             'status' => $this->status->value,
             'currency' => $this->currency,
             'supplier_id' => $this->supplier?->uuid,
+            'journal_entry' => new JournalEntryResource($this->whenLoaded('journalEntry')),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
