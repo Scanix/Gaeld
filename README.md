@@ -124,8 +124,13 @@ FEATURE_BANK_SYNC=false
 FEATURE_AUTO_RECONCILIATION=false
 FEATURE_AUTOMATION=false
 FEATURE_MULTI_CURRENCY=false
-FEATURE_API_ACCESS=false
+FEATURE_API_ACCESS=true
 ```
+
+The Community Edition includes a versioned REST API at `/api/v1`. It supports
+organization-scoped bearer tokens, account and journal-entry operations,
+contacts, invoice and expense workflows, and CAMT.053 bank imports. See the
+public API documentation for request and response examples.
 
 ---
 

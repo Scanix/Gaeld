@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Future changes go here after the `v3.6.0` release.
 
 ### Added
+- **Community Edition REST API:** added organization-scoped journal-entry,
+  contact, invoice, expense, and CAMT.053 integration workflows with bearer
+  tokens, account-code references, stable JSON resources, and idempotent
+  retries. API access is enabled by default and remains available through the
+  installation-level `FEATURE_API_ACCESS` kill switch.
 - **EE SaaS Admin console:** introduced focused Overview, Organizations,
   Billing, Health, Operations, Support, targeted Campaign, and Export
   workflows with server-side filtering, explicit unavailable states, durable

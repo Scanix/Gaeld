@@ -3,6 +3,7 @@
 namespace App\Http\Middleware\Api;
 
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Api\Models\Webhook;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Contact;
@@ -20,7 +21,7 @@ use App\Domains\Organizations\Models\Organization;
 final class TokenPermissionMap
 {
     /**
-     * @return array<string, string>
+     * @return array<string, array<string, Permission>>
      */
     public static function get(): array
     {
@@ -38,6 +39,11 @@ final class TokenPermissionMap
                 'create' => Permission::InvoicingCreate,
                 'update' => Permission::InvoicingEdit,
                 'delete' => Permission::InvoicingDelete,
+                'finalize' => Permission::InvoicingFinalize,
+                'recordPayment' => Permission::InvoicingRecordPayment,
+                'send' => Permission::InvoicingEdit,
+                'cancel' => Permission::InvoicingEdit,
+                'creditNote' => Permission::InvoicingCreate,
             ],
             Expense::class => [
                 'viewAny' => Permission::ExpensesView,
@@ -45,14 +51,25 @@ final class TokenPermissionMap
                 'create' => Permission::ExpensesCreate,
                 'update' => Permission::ExpensesEdit,
                 'delete' => Permission::ExpensesDelete,
+                'approve' => Permission::ExpensesApprove,
             ],
             Account::class => [
                 'viewAny' => Permission::AccountingView,
                 'view' => Permission::AccountingView,
             ],
+            JournalEntry::class => [
+                'viewAny' => Permission::AccountingView,
+                'view' => Permission::AccountingView,
+                'create' => Permission::AccountingCreate,
+                'post' => Permission::AccountingEdit,
+                'reverse' => Permission::AccountingEdit,
+                'update' => Permission::AccountingEdit,
+                'delete' => Permission::AccountingDelete,
+            ],
             BankAccount::class => [
                 'viewAny' => Permission::BankingView,
                 'view' => Permission::BankingView,
+                'import' => Permission::BankingImport,
             ],
             Organization::class => [
                 'view' => Permission::OrganizationView,

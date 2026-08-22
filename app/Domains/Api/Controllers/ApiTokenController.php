@@ -8,6 +8,7 @@ use App\Domains\Api\Requests\StoreApiTokenRequest;
 use App\Domains\Api\Resources\ApiTokenResource;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\Api\TokenPermissionMap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -115,19 +116,18 @@ class ApiTokenController extends Controller
      */
     public function abilities(): JsonResponse
     {
+        $abilities = [];
+
+        foreach (TokenPermissionMap::get() as $modelAbilities) {
+            foreach ($modelAbilities as $permission) {
+                $abilities[$permission->value] = true;
+            }
+        }
+
+        ksort($abilities);
+
         return response()->json([
-            'data' => [
-                'customers:read',
-                'customers:write',
-                'invoices:read',
-                'invoices:write',
-                'expenses:read',
-                'expenses:write',
-                'accounts:read',
-                'bank-accounts:read',
-                'webhooks:read',
-                'webhooks:write',
-            ],
+            'data' => array_keys($abilities),
         ]);
     }
 

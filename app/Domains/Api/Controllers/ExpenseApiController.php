@@ -67,7 +67,7 @@ class ExpenseApiController extends Controller
     {
         $this->authorize('view', $expense);
 
-        return new ExpenseResource($expense);
+        return new ExpenseResource($expense->loadMissing('journalEntry'));
     }
 
     /**
@@ -149,7 +149,7 @@ class ExpenseApiController extends Controller
         $dto = UpdateExpenseData::fromArray($validated);
         $action->execute($expense, $dto);
 
-        return new ExpenseResource($expense->fresh());
+        return new ExpenseResource($expense->fresh(['journalEntry']));
     }
 
     /**
@@ -209,17 +209,17 @@ class ExpenseApiController extends Controller
         ApproveExpenseAction $action,
         DashboardService $dashboardService,
     ): ExpenseResource|JsonResponse {
-        $this->authorize('update', $expense);
+        $this->authorize('approve', $expense);
 
         try {
             $action->execute($expense);
         } catch (InvalidExpenseStateException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            return $this->apiError($e->getMessage(), 'invalid_expense_state', 422);
         }
 
         $dashboardService->flushCache($expense->organization_id);
 
-        return new ExpenseResource($expense->fresh());
+        return new ExpenseResource($expense->fresh(['journalEntry']));
     }
 
     /**
@@ -252,13 +252,21 @@ class ExpenseApiController extends Controller
                 $validated['bank_account_code'] ?? AccountCode::BANK_CASH,
             );
         } catch (InvalidExpenseStateException|ExpenseLedgerPostingException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            return $this->apiError($e->getMessage(), 'expense_ledger_posting_failed', 422);
         } catch (ModelNotFoundException) {
-            return response()->json(['message' => 'Account not found.'], 404);
+            return $this->apiError('Account not found.', 'account_not_found', 404);
         }
 
         $dashboardService->flushCache($expense->organization_id);
 
-        return new ExpenseResource($expense->fresh());
+        return new ExpenseResource($expense->fresh(['journalEntry']));
+    }
+
+    private function apiError(string $message, string $code, int $status): JsonResponse
+    {
+        return response()->json([
+            'message' => $message,
+            'code' => $code,
+        ], $status);
     }
 }

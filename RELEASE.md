@@ -54,6 +54,10 @@ and configure `DEPLOY_REPO`, `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_PATH`, and
 
 Verify the health endpoint and one authenticated accounting workflow after the
 deployment. Restart the configured Horizon or queue service after publishing.
+For releases containing the Community Edition API, also verify token creation,
+account-code journal posting, an idempotent retry, and a CAMT.053 import. The
+API can be disabled immediately with `FEATURE_API_ACCESS=false` if an
+integration issue requires rollback while preserving existing ledger data.
 
 ## Rollback
 

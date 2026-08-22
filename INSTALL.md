@@ -130,12 +130,15 @@ Key environment variables:
 | `QUEUE_CONNECTION` | Queue backend | `redis` |
 | `FEATURE_BANK_SYNC` | Enable bank sync | `false` |
 | `FEATURE_AUTOMATION` | Enable automation | `false` |
+| `FEATURE_API_ACCESS` | Enable the Community Edition REST API | `true` |
 | `DOCS_BASE_URL` | Documentation site URL | `http://localhost:3000` |
 | `PLUGINS_ENABLED` | Enable plugin system | `true` |
 | `TRUSTED_PROXIES` | Trusted reverse proxies (see below) | _(unset)_ |
 
 The public repository is the Community Edition. SaaS billing and Enterprise
 features require the private EE plugin and are not installed by this guide.
+The Community Edition REST API is enabled by default and can be disabled with
+`FEATURE_API_ACCESS=false` when an installation does not need external access.
 
 ---
 

@@ -78,7 +78,7 @@ class InvoiceApiController extends Controller
     {
         $this->authorize('view', $invoice);
 
-        $invoice->load(['customer', 'lines.vatRate', 'payments']);
+        $invoice->load(['customer', 'lines.vatRate', 'payments', 'journalEntry']);
 
         return new InvoiceResource($invoice);
     }
@@ -122,7 +122,7 @@ class InvoiceApiController extends Controller
             if ($newCount > $limit) {
                 Cache::decrement($monthlyKey);
 
-                return response()->json(['message' => __('app.invoice_monthly_limit_reached')], 429);
+                return $this->apiError(__('app.invoice_monthly_limit_reached'), 'invoice_monthly_limit_reached', 429);
             }
         }
 
@@ -263,10 +263,10 @@ class InvoiceApiController extends Controller
         try {
             $action->execute($invoice);
         } catch (InvalidInvoiceStateException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            return $this->apiError($e->getMessage(), 'invalid_invoice_state', 422);
         }
 
-        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments']));
+        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments', 'journalEntry']));
     }
 
     /**
@@ -286,10 +286,10 @@ class InvoiceApiController extends Controller
         try {
             $action->execute($invoice);
         } catch (InvalidInvoiceStateException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            return $this->apiError($e->getMessage(), 'invalid_invoice_state', 422);
         }
 
-        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments']));
+        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments', 'journalEntry']));
     }
 
     /**
@@ -320,12 +320,12 @@ class InvoiceApiController extends Controller
         try {
             $action->execute($invoice, $dto);
         } catch (InvalidInvoiceStateException|InvalidPaymentException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            return $this->apiError($e->getMessage(), 'invalid_payment', 422);
         } catch (ModelNotFoundException) {
-            return response()->json(['message' => 'Bank account not found.'], 404);
+            return $this->apiError('Bank account not found.', 'bank_account_not_found', 404);
         }
 
-        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments']));
+        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments', 'journalEntry']));
     }
 
     /**
@@ -345,10 +345,10 @@ class InvoiceApiController extends Controller
         try {
             $mailerService->sendInvoice($invoice->load('customer'));
         } catch (InvalidInvoiceStateException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            return $this->apiError($e->getMessage(), 'invalid_invoice_state', 422);
         }
 
-        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments']));
+        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments', 'journalEntry']));
     }
 
     /**
@@ -368,10 +368,10 @@ class InvoiceApiController extends Controller
         try {
             $mailerService->sendReminder($invoice);
         } catch (InvalidInvoiceStateException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            return $this->apiError($e->getMessage(), 'invalid_invoice_state', 422);
         }
 
-        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments']));
+        return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate', 'payments', 'journalEntry']));
     }
 
     /**
@@ -391,7 +391,7 @@ class InvoiceApiController extends Controller
         try {
             $creditNote = $action->execute($invoice);
         } catch (InvalidInvoiceStateException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            return $this->apiError($e->getMessage(), 'invalid_invoice_state', 422);
         }
 
         return (new InvoiceResource($creditNote->load(['customer', 'lines.vatRate'])))
@@ -482,5 +482,13 @@ class InvoiceApiController extends Controller
         }
 
         return -1;
+    }
+
+    private function apiError(string $message, string $code, int $status): JsonResponse
+    {
+        return response()->json([
+            'message' => $message,
+            'code' => $code,
+        ], $status);
     }
 }

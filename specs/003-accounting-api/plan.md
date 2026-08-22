@@ -89,6 +89,7 @@ app/Domains/Api/Requests/JournalEntryActionApiRequest.php
 app/Domains/Api/Resources/JournalEntryResource.php
 app/Domains/Api/Services/ApiIdempotencyService.php
 app/Domains/Api/Models/ApiIdempotencyKey.php
+app/Http/Middleware/Api/HandleApiIdempotency.php
 app/Http/Middleware/Api/TokenPermissionMap.php     # policy-to-token ability map
 app/Domains/Accounting/DTOs/JournalEntryData.php   # internal account-id DTO
 app/Domains/Accounting/Services/LedgerService.php  # sole ledger write boundary
@@ -103,7 +104,7 @@ app/Domains/Api/Controllers/AccountApiController.php
 app/Support/ConfigFeatureResolver.php
 config/features.php
 app/Console/Commands/GaeldReleaseCommand.php
-database/migrations/2026_08_21_000000_create_api_idempotency_keys_table.php
+database/migrations/2026_08_21_231033_create_api_idempotency_keys_table.php
 contract/api-contract.json
 ```
 

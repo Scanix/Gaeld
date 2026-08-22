@@ -147,6 +147,19 @@ immutable and must be reversed through the lifecycle endpoint.
 
 ## Existing Business Workflows
 
+### Contacts and Customers
+
+Contacts are available through both `/contacts` and the backward-compatible
+`/customers` alias:
+
+- `GET /api/v1/contacts` and `GET /api/v1/customers` list organization contacts
+  with `search`, `type`, `page`, and `per_page` filters;
+- `GET`, `POST`, `PUT`, and `DELETE` are available for the corresponding
+  public UUID resource, subject to contact abilities and organization scope.
+
+The contact UUID returned by these endpoints is the value used as
+`customer_id` when creating an invoice.
+
 The existing v1 resources remain supported:
 
 - `invoices`: CRUD, finalize, cancel, record payment, send, reminder, credit
@@ -168,12 +181,26 @@ CAMT.053 import is a separate banking contract. It validates the supported
 file format, scopes the target bank account to the token organization, and
 uses the file's transaction identifiers to make retries safe.
 
+```http
+POST /api/v1/bank-accounts/{bankAccount}/imports/camt053
+Idempotency-Key: postfinance-2026-08-21
+Content-Type: multipart/form-data
+```
+
+The multipart field is `camt_file`. The response contains the import UUID,
+bank-account UUID, detected format, statement identifier, and number of newly
+created transactions. Re-importing the same statement with a different key
+returns an import with zero new transactions.
+
 ## Idempotency
 
 `Idempotency-Key` is optional but recommended for every mutating request. When
 it is omitted, an endpoint may use a documented natural or accounting reference
-as its fallback. A create operation without either a safe key or a natural
-reference must fail clearly rather than promise retry safety.
+as its fallback. Existing business-resource mutations without a natural
+reference use a deterministic fingerprint of the complete request payload or
+uploaded file as that safe fallback. Journal-entry mutations without a key or
+reference remain rejected because they must expose an explicit accounting
+identity.
 
 For a repeated key with the same method, route, organization, and payload hash,
 the server returns the original status and response body. Reusing a key with a
