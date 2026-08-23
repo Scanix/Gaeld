@@ -10,8 +10,8 @@ itself.
 Every production release records both immutable refs before deployment:
 
 ```text
-CE_VERSION=v3.6.0
-EE_VERSION=<approved-private-ee-tag>
+CE_VERSION=v3.6.1
+EE_VERSION=v2.8.0
 ```
 
 `CE_VERSION` is the public release tag shared by GitHub and GitLab CE.
@@ -51,6 +51,28 @@ vendor/bin/sail pnpm run build
 vendor/bin/sail php -r 'json_decode(file_get_contents("contract/api-contract.json"), true, 512, JSON_THROW_ON_ERROR);'
 git diff --check
 ```
+
+The default `phpunit.xml` intentionally runs CE with plugins and throttling
+disabled. To exercise the conditional EE tests and the two skipped test paths,
+use the dedicated configuration added for the remediation candidate:
+
+```bash
+vendor/bin/sail php vendor/bin/phpunit --configuration phpunit.ee.xml \
+  --testsuite "Enterprise Edition" --no-coverage
+vendor/bin/sail php vendor/bin/phpunit --configuration phpunit.ee.xml \
+  tests/Feature/Billing/RegistrationTest.php \
+  tests/Security/Billing/StripeWebhookSecurityTest.php \
+  tests/Security/Authorization/VerticalPrivilegeTest.php \
+  tests/Security/Api/WebhookSsrfTest.php \
+  tests/Security/Auth/AuthBypassTest.php --no-coverage
+vendor/bin/sail php vendor/bin/phpunit --configuration phpunit.ee.xml \
+  tests/Feature/Api/ApiContractTest.php --filter=rate_limit_headers --no-coverage
+```
+
+Do not combine the CE and EE suites: `CeInertiaCompatibilityTest` must fail
+when EE is loaded because it proves the CE runtime does not resolve EE services.
+Run the normal `vendor/bin/sail artisan test --compact` separately for the CE
+baseline, then run the EE configuration above for the private surface.
 
 Run these commands from a clean checkout or worktree. Do not use `git clean`
 to remove files from a worktree that contains unreviewed work; inspect and
@@ -112,7 +134,7 @@ and fixture afterward.
 2. Fetch both remotes and verify that the release tag does not already exist:
 
 ```bash
-CE_VERSION=v3.6.0
+CE_VERSION=v3.6.1
 git fetch --prune origin --tags
 git fetch --prune gitlab --tags
 git switch main

@@ -102,7 +102,9 @@ class ExpenseService
 
             // Apply Swiss 5-centime rounding for CHF expenses (regular invoices only),
             // adjusting the bank credit (gross) and posting the rounding difference.
-            if (! $isCreditNote && strtoupper($expense->currency) === 'CHF') {
+            if (! $isCreditNote
+                && strtoupper($expense->currency) === 'CHF'
+                && strtolower((string) $expense->payment_method) === 'cash') {
                 $adj = SwissRounding::adjustment(Money::of($grossAmount));
 
                 if ($adj) {
