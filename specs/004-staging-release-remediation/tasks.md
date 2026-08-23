@@ -69,11 +69,11 @@ avoidable reconciliation contract warnings.
 **Goal**: Remove the Maska warning and make Settings usable at 375px without
 horizontal page overflow.
 
-- [ ] T025 [P] [US3] Locate all Maska directives/components and add a focused browser or component regression check in `resources/js` and the nearest existing frontend test surface.
-- [ ] T026 [P] [US3] Add a mobile layout assertion or documented Playwright check for Settings tabs at 375px in `resources/js/Pages/Settings/ApiTokens.vue` and the owning Settings page.
+- [x] T025 [P] [US3] Locate all Maska directives/components and add a focused browser or component regression check in `resources/js` and the nearest existing frontend test surface.
+- [x] T026 [P] [US3] Add a mobile layout assertion or documented Playwright check for Settings tabs at 375px in `resources/js/Pages/Settings/ApiTokens.vue` and the owning Settings page.
 - [x] T027 [US3] Update the Maska component/directive usage to expose the required API without changing field validation in the affected `resources/js` components.
 - [x] T028 [US3] Make Settings tabs responsive and keyboard-navigable at narrow widths in the owning Settings Vue page/component.
-- [ ] T029 [US3] Run the CE frontend build and targeted browser/contract checks through `vendor/bin/sail pnpm run build`.
+- [x] T029 [US3] Run the CE frontend build and targeted browser/contract checks through `vendor/bin/sail pnpm run build`.
 
 ## Phase 6: CE/EE Release Coordination
 
