@@ -7,6 +7,7 @@ use App\Domains\Api\Models\PersonalAccessToken;
 use App\Domains\Api\Requests\StoreOrgTokenRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\Api\TokenPermissionMap;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 
@@ -62,7 +63,7 @@ class OrgTokenController extends Controller
      * Creates a new organisation-scoped API token. The plain-text token is returned only once.
      *
      * @bodyParam name string required A descriptive name for the token. Example: Production Key
-     * @bodyParam abilities string[] Token abilities. Use `*` for full access. Example: ["*"]
+     * @bodyParam abilities string[] List of canonical token abilities (permissions). Use `*` for full access. Example: ["accounting.view","invoicing.create"]
      * @bodyParam expires_in_days integer Number of days until the token expires (1-365). Example: 365
      *
      * @response 201 scenario="Created" {"token":"2|xyz789...","name":"Production Key","type":"organization","abilities":["*"],"expires_at":null}
@@ -75,9 +76,10 @@ class OrgTokenController extends Controller
 
         $validated = $request->validated();
 
-        $abilities = $validated['abilities'] ?? ['*'];
+        $abilities = TokenPermissionMap::normalize($validated['abilities'] ?? []);
+        $abilities = $abilities === [] ? ['*'] : $abilities;
         $expiresAt = isset($validated['expires_in_days'])
-            ? now()->addDays($validated['expires_in_days'])
+            ? now()->addDays((int) $validated['expires_in_days'])
             : null;
 
         // Create the token on the current user (as creator), but mark it as an org token

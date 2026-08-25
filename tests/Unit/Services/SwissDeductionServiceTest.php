@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use App\Domains\Payroll\Models\DeductionRate;
 use App\Domains\Payroll\Services\SwissDeductionService;
 use Tests\TestCase;
 
@@ -102,5 +103,28 @@ class SwissDeductionServiceTest extends TestCase
         // Should use defaults — same as no rates
         $this->assertSame('530.00', $result['avs_employee']);
         $this->assertSame('8560.00', $result['net_salary']);
+    }
+
+    public function test_custom_active_rates_are_used_for_employee_and_employer_totals(): void
+    {
+        $rates = collect([
+            ['code' => 'avs_employee', 'rate' => '4.5000', 'type' => 'employee'],
+            ['code' => 'avs_employer', 'rate' => '4.5000', 'type' => 'employer'],
+            ['code' => 'ac_employee', 'rate' => '0.8000', 'type' => 'employee'],
+            ['code' => 'ac_employer', 'rate' => '0.8000', 'type' => 'employer'],
+            ['code' => 'aanp_employee', 'rate' => '0.5000', 'type' => 'employee'],
+            ['code' => 'lpp_employee', 'rate' => '6.0000', 'type' => 'employee'],
+            ['code' => 'lpp_employer', 'rate' => '6.0000', 'type' => 'employer'],
+        ])->map(fn (array $rate): DeductionRate => new DeductionRate([
+            ...$rate,
+            'name' => $rate['code'],
+            'is_active' => true,
+        ]));
+
+        $result = $this->service->calculateDeductions('10000.00', $rates);
+
+        $this->assertSame('1180.00', $result['total_employee']);
+        $this->assertSame('1130.00', $result['total_employer']);
+        $this->assertSame('8820.00', $result['net_salary']);
     }
 }

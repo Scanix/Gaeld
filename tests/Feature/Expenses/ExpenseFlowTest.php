@@ -47,6 +47,13 @@ class ExpenseFlowTest extends TestCase
             'name' => 'Input VAT',
             'type' => AccountType::Asset->value,
         ]);
+
+        Account::create([
+            'organization_id' => $this->org->id,
+            'code' => '3900',
+            'name' => 'Rounding Difference',
+            'type' => AccountType::Revenue->value,
+        ]);
     }
 
     private function createExpense(array $overrides = []): Expense
@@ -139,6 +146,33 @@ class ExpenseFlowTest extends TestCase
         $this->assertEquals('56.70', $vatLine->debit);
         // CHF Swiss-rounding may snap 756.70 to 756.70 (already a multiple of 0.05); just assert >700
         $this->assertEquals('756.70', $creditLine->credit);
+    }
+
+    public function test_non_cash_chf_expense_credits_exact_gross_amount(): void
+    {
+        $vatRate = VatRate::create([
+            'organization_id' => $this->org->id,
+            'name' => 'Standard',
+            'rate' => 8.10,
+            'code' => 'NORMAL',
+            'is_default' => true,
+        ]);
+
+        $expense = $this->createExpense([
+            'amount' => 120.00,
+            'vat_amount' => 9.72,
+            'vat_rate_id' => $vatRate->id,
+            'payment_method' => 'other',
+        ]);
+        $expense = (new ApproveExpenseAction)->execute($expense);
+        $expense = app(PostExpenseAction::class)->execute($expense, '6530');
+
+        $lines = $expense->journalEntry->lines;
+        $bankLine = $lines->firstWhere('account_id', Account::where('code', '1020')->value('id'));
+
+        $this->assertSame('129.72', $bankLine->credit);
+        $this->assertCount(3, $lines);
+        $this->assertFalse($lines->contains(fn ($line) => $line->account_id === Account::where('code', '3900')->value('id')));
     }
 
     public function test_cannot_post_already_posted_expense(): void

@@ -87,6 +87,38 @@ class PayrollFlowTest extends TestCase
     }
 
     #[Test]
+    public function payroll_preview_matches_the_generated_salary_slip(): void
+    {
+        $preview = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->postJson(route('payroll.run.preview'), [
+                'employee_ids' => [$this->employee->id],
+                'month' => 3,
+                'year' => 2026,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.0.employee_id', $this->employee->id)
+            ->json('data.0');
+
+        $this->assertDatabaseCount('salary_slips', 0);
+
+        $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->postJson(route('payroll.run.generate'), [
+                'employee_ids' => [$this->employee->id],
+                'month' => 3,
+                'year' => 2026,
+            ])
+            ->assertOk();
+
+        $slip = SalarySlip::query()->where('employee_id', $this->employee->id)->firstOrFail();
+
+        $this->assertSame($slip->gross_salary, $preview['gross_salary']);
+        $this->assertSame($slip->net_salary, $preview['net_salary']);
+        $this->assertSame($slip->deductions, $preview['deductions']);
+    }
+
+    #[Test]
     public function it_posts_salary_slip_to_ledger_with_balanced_entry(): void
     {
         $calculator = app(PayrollCalculator::class);

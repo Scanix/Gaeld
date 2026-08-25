@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -40,6 +40,32 @@ const tabs = [
   { key: 'expenses', label: 'settings_expenses' },
   { key: 'modules', label: 'settings_modules' },
 ]
+const tabButtons = ref([])
+
+function setTabRef(element, index) {
+  if (element) tabButtons.value[index] = element
+}
+
+function focusTab(index) {
+  activeTab.value = tabs[index].key
+  nextTick(() => tabButtons.value[index]?.focus())
+}
+
+function handleTabKey(event, index) {
+  if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+    event.preventDefault()
+    focusTab((index + 1) % tabs.length)
+  } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+    event.preventDefault()
+    focusTab((index - 1 + tabs.length) % tabs.length)
+  } else if (event.key === 'Home') {
+    event.preventDefault()
+    focusTab(0)
+  } else if (event.key === 'End') {
+    event.preventDefault()
+    focusTab(tabs.length - 1)
+  }
+}
 
 // --- General form ---
 const initialName = props.organization.name || ''
@@ -266,22 +292,24 @@ const businessTypeOptions = [
   <AppLayout :title="t('organization_settings')" help-page="user-management">
     <div class="max-w-3xl space-y-6">
       <!-- Tabs -->
-      <div role="tablist" aria-label="Settings" class="flex gap-1 rounded-lg bg-[hsl(var(--muted))] p-1">
+      <div role="tablist" aria-label="Settings" class="grid grid-cols-2 gap-1 rounded-lg bg-[hsl(var(--muted))] p-1 sm:flex">
         <button
-          v-for="tab in tabs"
+          v-for="(tab, index) in tabs"
           :key="tab.key"
           role="tab"
           :id="`tab-${tab.key}`"
           :aria-selected="activeTab === tab.key"
           :aria-controls="`tabpanel-${tab.key}`"
           :tabindex="activeTab === tab.key ? 0 : -1"
+          :ref="element => setTabRef(element, index)"
           :class="[
-            'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+            'min-w-0 rounded-md px-3 py-2 text-sm font-medium transition-colors sm:flex-1',
             activeTab === tab.key
               ? 'bg-[hsl(var(--background))] text-[hsl(var(--foreground))] shadow-sm'
               : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
           ]"
           @click="activeTab = tab.key"
+          @keydown="handleTabKey($event, index)"
         >
           {{ t(tab.label) }}
         </button>
