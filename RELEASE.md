@@ -10,7 +10,7 @@ itself.
 Every production release records both immutable refs before deployment:
 
 ```text
-CE_VERSION=v3.6.1
+CE_VERSION=v3.6.2
 EE_VERSION=v2.8.0
 ```
 
@@ -134,7 +134,7 @@ and fixture afterward.
 2. Fetch both remotes and verify that the release tag does not already exist:
 
 ```bash
-CE_VERSION=v3.6.1
+CE_VERSION=v3.6.2
 git fetch --prune origin --tags
 git fetch --prune gitlab --tags
 git switch main

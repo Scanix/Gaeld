@@ -38,6 +38,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dead WebAuthn helper:** removed the deprecated unreferenced browser helper;
   active passkey flows use `@simplewebauthn/browser`.
 
+## [3.6.2] — 2026-08-25
+
+### Fixed
+- **Onboarding banking:** first bank accounts are linked to the organization’s
+  `1020` ledger account so balances, expense payments, and reconciliation use
+  the same account.
+- **Expense VAT UX:** the VAT amount is calculated from the selected rate in
+  the form and shown read-only, while server-side VAT calculation remains
+  authoritative.
+- **Cash Flow:** the Inertia controller now preserves the calculated report
+  contract instead of remapping it to obsolete balance and section keys.
+
 ## [Unreleased]
 
 ### Fixed

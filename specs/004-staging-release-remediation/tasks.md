@@ -84,7 +84,7 @@ keeping proprietary code out of CE.
 - [x] T031 [P] [US4] Update the private EE manifest and changelog to approved v2.8.0 in `plugins/gaeld-ee/plugin.json` and the private EE release documentation.
 - [x] T032 [US4] Run the CE checks, public boundary check, API contract parse, and clean CE build from Sail.
 - [ ] T033 [US4] Run private EE tests, static analysis, and frontend build from `plugins/gaeld-ee`.
-- [ ] T034 [US4] Redeploy the corrected CE/EE pair to staging with immutable refs and repeat the focused API, finance, onboarding, and responsive smoke tests.
+- [x] T034 [US4] Redeploy the corrected CE/EE pair to staging with immutable refs and repeat the focused API, finance, onboarding, and responsive smoke tests.
 - [ ] T035 [US4] Complete the remaining multi-user, archive, long-year close, second-year, and reopen scenarios only after P1 financial/API gates pass, recording results in `docs/qa/two-year-e2e-20260823.md`.
 - [x] T036 [US4] Run full CE PHPUnit, Pint, PHPStan, and frontend build checks and verify no production branch or tag changed.
 
