@@ -16,6 +16,30 @@
     "organization_resolution": "Resolved from token's organization_id column. Personal tokens also verify user membership. Organization tokens bypass policy checks.",
     "data_isolation": "BelongsToOrganization trait adds global scope filtering all queries by organization_id automatically."
   },
+  "token_abilities": {
+    "canonical": [
+      "accounting.view", "accounting.create", "accounting.edit", "accounting.delete",
+      "contacts.view", "contacts.create", "contacts.edit", "contacts.delete",
+      "invoicing.view", "invoicing.create", "invoicing.edit", "invoicing.delete", "invoicing.finalize", "invoicing.record-payment",
+      "expenses.view", "expenses.create", "expenses.edit", "expenses.approve", "expenses.delete",
+      "banking.view", "banking.import",
+      "organization.view", "organization.edit", "organization.delete", "organization.manage-users", "organization.view-audit-log"
+    ],
+    "wildcard": "*",
+    "empty_selection": "An omitted or empty abilities array creates a wildcard token.",
+    "legacy_aliases": {
+      "customers:read": ["contacts.view"],
+      "customers:write": ["contacts.create", "contacts.edit", "contacts.delete"],
+      "invoices:read": ["invoicing.view"],
+      "invoices:write": ["invoicing.create", "invoicing.edit", "invoicing.delete"],
+      "expenses:read": ["expenses.view"],
+      "expenses:write": ["expenses.create", "expenses.edit", "expenses.delete"],
+      "accounts:read": ["accounting.view"],
+      "bank-accounts:read": ["banking.view"],
+      "webhooks:read": ["organization.edit"],
+      "webhooks:write": ["organization.edit"]
+    }
+  },
 
   "route_aliases": [
     { "route_name": "api.contacts.index", "path": "/api/v1/contacts", "alias_of": "api.customers.index" },
@@ -140,7 +164,7 @@
         "validation_class": "StoreApiTokenRequest",
         "body": {
           "name": { "type": "string", "required": true, "max": 255 },
-          "abilities": { "type": "array of string", "required": false, "default": ["*"], "values": "Permission enum values" },
+          "abilities": { "type": "array of string", "required": false, "default": ["*"], "values": "Canonical permissions, wildcard, or documented legacy aliases" },
           "expires_in_days": { "type": "integer|null", "required": false, "min": 1, "max": 365 }
         }
       },
@@ -203,7 +227,7 @@
         "validation_class": "StoreOrgTokenRequest",
         "body": {
           "name": { "type": "string", "required": true, "max": 255 },
-          "abilities": { "type": "array of string", "required": false, "default": ["*"], "values": "'*' or Permission enum values" },
+          "abilities": { "type": "array of string", "required": false, "default": ["*"], "values": "Canonical permissions, wildcard, or documented legacy aliases" },
           "expires_in_days": { "type": "integer|null", "required": false, "min": 1, "max": 365 }
         }
       },

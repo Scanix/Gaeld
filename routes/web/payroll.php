@@ -16,4 +16,5 @@ Route::delete('/payroll/salary-slips/{slip}', [SalarySlipController::class, 'des
 Route::get('/payroll/salary-slips/{slip}/pdf', [SalarySlipController::class, 'downloadPdf'])->name('payroll.salarySlips.pdf');
 
 Route::get('/payroll/run', [PayrollRunController::class, 'index'])->name('payroll.run');
+Route::post('/payroll/run/preview', [PayrollRunController::class, 'preview'])->name('payroll.run.preview');
 Route::post('/payroll/run', [PayrollRunController::class, 'generate'])->name('payroll.run.generate');
