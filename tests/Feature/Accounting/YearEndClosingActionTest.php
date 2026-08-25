@@ -267,6 +267,11 @@ class YearEndClosingActionTest extends TestCase
             'reference' => 'YE-LONG-SELECTED',
             'type' => 'year_end_closing',
         ]);
+        $this->assertDatabaseHas('journal_entries', [
+            'organization_id' => $this->organization->id,
+            'reference' => 'OPENING-2025',
+            'date' => '2025-07-01',
+        ]);
         $this->assertSame(FiscalYearStatus::Closed, $fiscalYear->refresh()->status);
     }
 

@@ -155,7 +155,7 @@ class YearEndClosingAction
             }
 
             $this->archiving->archiveFiscalYear($orgId, $year, $fiscalYear?->id);
-            $this->openingBalances->execute($orgId, $year);
+            $this->openingBalances->execute($orgId, $year, $fiscalYear);
         });
 
         Log::info('Year-end closing completed', [

@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Services\LedgerQueryService;
@@ -29,13 +30,19 @@ class GenerateOpeningBalancesAction
 
     /**
      * @param  string  $orgId  Organization UUID
-     * @param  int  $closedYear  The year that was just closed (e.g. 2025)
+     * @param  int  $closedYear  The calendar year that was just closed (e.g. 2025)
+     * @param  FiscalYear|null  $closedFiscalYear  The explicit fiscal period when available
      */
-    public function execute(string $orgId, int $closedYear): ?JournalEntry
+    public function execute(string $orgId, int $closedYear, ?FiscalYear $closedFiscalYear = null): ?JournalEntry
     {
-        $nextYear = $closedYear + 1;
-        $openingDate = sprintf('%d-01-01', $nextYear);
-        $asOfDate = sprintf('%d-12-31', $closedYear);
+        $openingDate = $closedFiscalYear?->end_date
+            ->copy()
+            ->addDay()
+            ->toDateString()
+            ?? sprintf('%d-01-01', $closedYear + 1);
+        $nextYear = (int) substr($openingDate, 0, 4);
+        $asOfDate = $closedFiscalYear?->end_date->toDateString()
+            ?? sprintf('%d-12-31', $closedYear);
 
         $balanceSheetTypes = [
             AccountType::Asset->value,
