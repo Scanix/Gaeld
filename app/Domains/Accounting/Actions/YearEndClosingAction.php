@@ -145,7 +145,7 @@ class YearEndClosingAction
                 lines: $lines,
             );
 
-            $journalEntry = $this->ledger->postEntry($orgId, $entry);
+            $journalEntry = $this->ledger->postEntry($orgId, $entry, $fiscalYear?->id);
             $journalEntry->update(['type' => 'year_end_closing']);
 
             $org->closeFiscalYear($year);

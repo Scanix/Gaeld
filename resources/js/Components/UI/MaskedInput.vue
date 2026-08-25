@@ -1,6 +1,6 @@
 <script>
 const MASKS = {
-  iban: { mask: 'AA## #### #### #### #### #', eager: true },
+  iban: { mask: '@@## #### #### #### #### #', eager: true },
   phone: { mask: '+## ## ### ## ##' },
   postal: { mask: '####' },
 }

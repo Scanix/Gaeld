@@ -54,6 +54,19 @@ class MemberManagementTest extends TestCase
 
     // --- Invite Member ---
 
+    public function test_owner_can_manage_users_on_organization_page(): void
+    {
+        $response = $this->actingAs($this->owner)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get("/organizations/{$this->organization->id}");
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('canManageUsers', true)
+            ->where('canAddMember', true)
+        );
+    }
+
     public function test_owner_can_invite_member(): void
     {
         Notification::fake();

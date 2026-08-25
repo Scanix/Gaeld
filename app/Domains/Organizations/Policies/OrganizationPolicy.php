@@ -6,6 +6,7 @@ use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use App\Support\Policies\BasePolicy;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Authorization policy for organization-level operations (settings, members, billing).
@@ -43,6 +44,8 @@ class OrganizationPolicy extends BasePolicy
 
     public function manageUsers(User $user, Organization $organization): bool
     {
+        app(PermissionRegistrar::class)->setPermissionsTeamId($organization->id);
+
         return $this->userBelongsToOrg($user, $organization)
             && $user->hasPermissionTo(Permission::OrganizationManageUsers);
     }

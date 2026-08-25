@@ -33,18 +33,18 @@ class InvoicePdfRenderer
 
     private const LOGO_WIDTH = 28;
 
-    private const RIGHT_BLOCK_X = 120;
+    private const ORGANIZATION_X = 15;
 
-    private const RIGHT_BLOCK_W = 75;
+    private const ORGANIZATION_W = 85;
 
     // Swiss letter standard SN 010130 / DIN 5008 address window:
     //   - left edge: 20 mm, top edge: 45 mm, width: 85 mm, height: 45 mm
     // We inset the text a little so it sits comfortably inside the window.
-    private const CUSTOMER_X = 20;
+    private const CUSTOMER_X = 120;
 
     private const CUSTOMER_Y = 50;
 
-    private const CUSTOMER_W = 85;
+    private const CUSTOMER_W = 75;
 
     // Push the invoice title below the address window (45 mm + 45 mm = 90 mm).
     private const TITLE_Y = 100;
@@ -135,10 +135,11 @@ class InvoicePdfRenderer
             $tcpdf->Image($logoFullPath, self::LOGO_X, self::LOGO_Y, self::LOGO_WIDTH);
         }
 
-        // Organization info (top right)
+        // Organization info (top left, sender position on Swiss business letters)
         $tcpdf->SetFont('Helvetica', 'B', 10);
-        $tcpdf->SetXY(self::RIGHT_BLOCK_X, 15);
-        $tcpdf->Cell(self::RIGHT_BLOCK_W, 5, $organization->legal_name ?? $organization->name, 0, 1, 'R');
+        $organizationY = $logoFullPath && file_exists($logoFullPath) ? 30 : 15;
+        $tcpdf->SetXY(self::ORGANIZATION_X, $organizationY);
+        $tcpdf->Cell(self::ORGANIZATION_W, 5, $organization->legal_name ?? $organization->name, 0, 1, 'L');
 
         $tcpdf->SetFont('Helvetica', '', 8);
         $orgAddress = array_filter([
@@ -147,25 +148,24 @@ class InvoicePdfRenderer
             $organization->canton ? ($organization->country ?? 'CH').' — '.$organization->canton : ($organization->country ?? 'CH'),
         ]);
         foreach ($orgAddress as $line) {
-            $tcpdf->SetX(self::RIGHT_BLOCK_X);
-            $tcpdf->Cell(self::RIGHT_BLOCK_W, 4, $line, 0, 1, 'R');
+            $tcpdf->SetX(self::ORGANIZATION_X);
+            $tcpdf->Cell(self::ORGANIZATION_W, 4, $line, 0, 1, 'L');
         }
         if ($organization->vat_number) {
-            $tcpdf->SetX(self::RIGHT_BLOCK_X);
+            $tcpdf->SetX(self::ORGANIZATION_X);
             $tcpdf->SetFont('Helvetica', '', 7);
             $tcpdf->SetTextColor(...self::MUTED_RGB);
-            $tcpdf->Cell(self::RIGHT_BLOCK_W, 4, $this->t('pdf_vat_number').': '.$organization->vat_number, 0, 1, 'R');
+            $tcpdf->Cell(self::ORGANIZATION_W, 4, $this->t('pdf_vat_number').': '.$organization->vat_number, 0, 1, 'L');
             $tcpdf->SetTextColor(0, 0, 0);
         }
 
-        // Customer info — placed inside the Swiss SN 010130 / DIN 5008 address
-        // window so the letter fits a standard C5/C6 window envelope when folded
-        // in three (see renderFoldMarks() for the matching fold ticks).
+        // Customer info — placed in the right-hand Swiss SN 010130 / DIN 5008
+        // address window; the sender remains on the left.
         $customer = $invoice->customer;
         if ($customer) {
             $tcpdf->SetXY(self::CUSTOMER_X, self::CUSTOMER_Y);
             $tcpdf->SetFont('Helvetica', 'B', 10);
-            $tcpdf->Cell(self::CUSTOMER_W, 5, $customer->name, 0, 1);
+            $tcpdf->Cell(self::CUSTOMER_W, 5, $customer->name, 0, 1, 'L');
 
             $tcpdf->SetFont('Helvetica', '', 9);
             $customerAddress = array_filter([
@@ -175,13 +175,13 @@ class InvoicePdfRenderer
             ]);
             foreach ($customerAddress as $line) {
                 $tcpdf->SetX(self::CUSTOMER_X);
-                $tcpdf->Cell(self::CUSTOMER_W, 4, $line, 0, 1);
+                $tcpdf->Cell(self::CUSTOMER_W, 4, $line, 0, 1, 'L');
             }
             if ($customer->vat_number) {
                 $tcpdf->SetFont('Helvetica', '', 7);
                 $tcpdf->SetTextColor(...self::MUTED_RGB);
                 $tcpdf->SetX(self::CUSTOMER_X);
-                $tcpdf->Cell(self::CUSTOMER_W, 4, $this->t('pdf_vat_number').': '.$customer->vat_number, 0, 1);
+                $tcpdf->Cell(self::CUSTOMER_W, 4, $this->t('pdf_vat_number').': '.$customer->vat_number, 0, 1, 'L');
                 $tcpdf->SetTextColor(0, 0, 0);
             }
         }

@@ -238,6 +238,38 @@ class YearEndClosingActionTest extends TestCase
         $this->assertSame(FiscalYearStatus::Operative, $fiscalYear->refresh()->status);
     }
 
+    public function test_long_fiscal_year_uses_selected_fiscal_year_when_legacy_year_is_closed(): void
+    {
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+
+        $this->organization->closeFiscalYear(2025);
+
+        $bank = Account::where('organization_id', $this->organization->id)->where('code', '1020')->first();
+        $revenue = Account::where('organization_id', $this->organization->id)->where('code', '3000')->first();
+        $this->postJournalEntry('2025-05-01', [
+            $this->journalLine($bank, '100.00', '0', 'Long fiscal year revenue'),
+            $this->journalLine($revenue, '0', '100.00', 'Long fiscal year revenue'),
+        ], 'YE-LONG-REVENUE');
+
+        $validated = $this->validated(year: 2024, reference: 'YE-LONG-SELECTED');
+        $validated['fiscal_year_id'] = $fiscalYear->id;
+        $validated['closing_date'] = '2025-06-30';
+
+        app(YearEndClosingAction::class)->execute($this->organization, $validated, $this->user);
+
+        $this->assertDatabaseHas('journal_entries', [
+            'organization_id' => $this->organization->id,
+            'reference' => 'YE-LONG-SELECTED',
+            'type' => 'year_end_closing',
+        ]);
+        $this->assertSame(FiscalYearStatus::Closed, $fiscalYear->refresh()->status);
+    }
+
     public function test_closing_rolls_back_entirely_when_opening_balances_step_fails(): void
     {
         $orgId = $this->organization->id;

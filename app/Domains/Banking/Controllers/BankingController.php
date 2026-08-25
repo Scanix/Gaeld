@@ -107,6 +107,7 @@ class BankingController extends Controller
         }
 
         $this->enforceSingleDefaultInvoicing($bankAccount);
+        BankAccountQuery::forgetSelectCache($currentOrg->id());
 
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', __('app.bank_account_created'));
@@ -123,6 +124,7 @@ class BankingController extends Controller
         }
 
         $this->enforceSingleDefaultInvoicing($bankAccount);
+        BankAccountQuery::forgetSelectCache($bankAccount->organization_id);
 
         return redirect()->route('banking.show', $bankAccount)
             ->with('success', __('app.bank_account_updated'));
@@ -132,7 +134,9 @@ class BankingController extends Controller
     {
         $this->authorize('delete', $bankAccount);
 
+        $organizationId = $bankAccount->organization_id;
         $bankAccount->delete();
+        BankAccountQuery::forgetSelectCache($organizationId);
 
         return redirect()->route('banking.index')
             ->with('success', __('app.bank_account_deleted'));

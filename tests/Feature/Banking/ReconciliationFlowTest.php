@@ -9,6 +9,7 @@ use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\CamtFormat;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
+use App\Domains\Banking\Queries\BankAccountQuery;
 use App\Domains\Banking\Services\BankImportService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
@@ -67,6 +68,26 @@ class ReconciliationFlowTest extends TestCase
     // ──────────────────────────────────────────────────────────────
     //  CAMT Import Tests
     // ──────────────────────────────────────────────────────────────
+
+    public function test_bank_account_select_cache_can_be_refreshed_after_account_creation(): void
+    {
+        BankAccountQuery::forgetSelectCache($this->organization->id);
+
+        $this->assertCount(1, BankAccountQuery::forSelect());
+
+        BankAccount::create([
+            'organization_id' => $this->organization->id,
+            'account_id' => $this->accounts['bank']->id,
+            'name' => 'Second Account',
+            'iban' => 'CH5604835012345678009',
+            'currency' => 'CHF',
+            'is_active' => true,
+        ]);
+
+        BankAccountQuery::forgetSelectCache($this->organization->id);
+
+        $this->assertCount(2, BankAccountQuery::forSelect());
+    }
 
     public function test_import_camt053_creates_transactions(): void
     {
