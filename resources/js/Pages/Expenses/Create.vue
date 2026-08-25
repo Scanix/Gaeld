@@ -87,6 +87,25 @@ const vatOptions = [
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
 ]
 
+const selectedVatRate = computed(() =>
+  props.vatRates.find(rate => String(rate.id) === String(form.vat_rate_id))
+)
+
+const calculatedVatAmount = computed(() => {
+  const amount = Number(form.amount)
+  const rate = Number(selectedVatRate.value?.rate)
+
+  if (!Number.isFinite(amount) || !Number.isFinite(rate)) {
+    return '0.00'
+  }
+
+  return ((amount * rate) / 100).toFixed(2)
+})
+
+watch([() => form.amount, () => form.vat_rate_id], () => {
+  form.vat_amount = calculatedVatAmount.value
+}, { immediate: true })
+
 const paymentMethodOptions = [
   { value: 'cash', label: t('payment_cash') },
   { value: 'card', label: t('payment_card') },
@@ -236,10 +255,11 @@ function onSupplierCreated(supplier) {
             </div>
             <FormInput
               id="vat_amount"
-              v-model="form.vat_amount"
+              :model-value="calculatedVatAmount"
               type="number"
               :label="t('vat_amount')"
               :error="form.errors.vat_amount"
+              readonly
             />
           </div>
 

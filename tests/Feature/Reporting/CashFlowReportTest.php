@@ -151,6 +151,25 @@ class CashFlowReportTest extends TestCase
         $response->assertInertia(fn ($page) => $page->component('Reports/CashFlow'));
     }
 
+    public function test_cash_flow_route_preserves_the_calculated_report_contract(): void
+    {
+        $this->postJournalEntry('2026-02-15', [
+            $this->journalLine($this->bankAccount, '1000.00', '0.00'),
+            $this->journalLine($this->revenueAccount, '0.00', '1000.00'),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get(route('reports.cash-flow', ['from' => '2026-01-01', 'to' => '2026-03-31']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('report.operating.total', '1000.00')
+            ->where('report.beginning_cash', '0.00')
+            ->where('report.ending_cash', '1000.00')
+            ->missing('report.beginning_balance')
+            ->missing('report.ending_balance'));
+    }
+
     public function test_cash_flow_export_pdf_returns_correct_content_type(): void
     {
         $response = $this->actingAs($this->user)

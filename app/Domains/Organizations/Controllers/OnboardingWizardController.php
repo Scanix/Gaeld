@@ -2,7 +2,9 @@
 
 namespace App\Domains\Organizations\Controllers;
 
+use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\DTOs\FiscalYearData;
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Banking\DTOs\CreateBankAccountData;
@@ -98,11 +100,17 @@ class OnboardingWizardController extends Controller
                 }
 
                 if (! empty($data['bank_account_name'])) {
+                    $bankLedgerAccountId = Account::query()
+                        ->where('organization_id', $org->id)
+                        ->where('code', AccountCode::BANK_CASH)
+                        ->value('id');
+
                     BankAccount::create(CreateBankAccountData::fromArray([
                         'organization_id' => $org->id,
                         'name' => $data['bank_account_name'],
                         'bank_name' => $data['bank_name'] ?? null,
                         'iban' => $data['iban'] ?? null,
+                        'account_id' => $bankLedgerAccountId,
                         'currency' => $org->currency ?? 'CHF',
                     ])->toArray());
                 }
