@@ -4,6 +4,7 @@ namespace Tests\Feature\Banking;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\CamtFormat;
 use App\Domains\Banking\Models\BankAccount;
@@ -195,6 +196,52 @@ class ReconciliationFlowTest extends TestCase
 
         // Bank balance should decrease
         $this->assertEquals('9800.00', $result->bankAccount->balance);
+    }
+
+    public function test_reconcile_vat_expense_uses_net_amount_for_ledger_and_gross_for_bank(): void
+    {
+        $vatAccount = Account::create([
+            'organization_id' => $this->organization->id,
+            'code' => '1170',
+            'name' => 'Input VAT',
+            'type' => AccountType::Asset->value,
+        ]);
+        $vatRate = VatRate::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Standard',
+            'rate' => 8.10,
+            'code' => 'NORMAL',
+            'is_default' => true,
+        ]);
+        $expense = Expense::create([
+            'organization_id' => $this->organization->id,
+            'category' => 'Software',
+            'description' => 'VAT subscription',
+            'amount' => '120.00',
+            'vat_amount' => '9.72',
+            'vat_rate_id' => $vatRate->id,
+            'date' => '2026-03-12',
+            'vendor' => 'Software vendor',
+            'status' => ExpenseStatus::Posted,
+            'currency' => 'CHF',
+            'payment_method' => 'bank_transfer',
+        ]);
+        $transaction = BankTransaction::create([
+            'bank_account_id' => $this->bankAccount->id,
+            'date' => '2026-03-12',
+            'description' => 'VAT subscription payment',
+            'amount' => '129.72',
+            'type' => BankTransactionType::Debit,
+            'reference' => 'EXP-VAT',
+        ]);
+
+        $result = app(ReconciliationService::class)->reconcileWithExpense($transaction, $expense, '6530');
+        $lines = $result->journalEntry->lines;
+
+        $this->assertSame('120.00', $lines->firstWhere('account_id', $this->accounts['software']->id)->debit);
+        $this->assertSame('9.72', $lines->firstWhere('account_id', $vatAccount->id)->debit);
+        $this->assertSame('129.72', $lines->firstWhere('account_id', $this->accounts['bank']->id)->credit);
+        $this->assertSame('9870.28', $result->bankAccount->balance);
     }
 
     public function test_cannot_reconcile_already_reconciled_transaction(): void
@@ -410,6 +457,22 @@ class ReconciliationFlowTest extends TestCase
         $response = $this->actingAs($this->user)->get("/reconciliation/{$this->bankAccount->uuid}");
 
         $response->assertStatus(200);
+    }
+
+    public function test_reconciliation_show_exposes_the_frontend_contract_for_empty_state(): void
+    {
+        $this->actingAs($this->user)
+            ->get("/reconciliation/{$this->bankAccount->uuid}")
+            ->assertInertia(fn ($page) => $page
+                ->component('Banking/ReconciliationShow')
+                ->has('bankAccount')
+                ->has('transactions.data', 0)
+                ->has('suggestions')
+                ->has('personalSuggestions')
+                ->where('filter', 'unreconciled')
+                ->has('openInvoices')
+                ->has('openExpenses')
+                ->has('pageFeatures.auto_reconciliation'));
     }
 
     public function test_auto_reconcile_route_blocked_in_ce(): void

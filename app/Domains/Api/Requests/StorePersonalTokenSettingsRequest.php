@@ -2,6 +2,7 @@
 
 namespace App\Domains\Api\Requests;
 
+use App\Http\Middleware\Api\TokenPermissionMap;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,18 +22,6 @@ class StorePersonalTokenSettingsRequest extends FormRequest
     /** @return array<int, string> */
     private static function allowedAbilities(): array
     {
-        return [
-            'customers:read',
-            'customers:write',
-            'invoices:read',
-            'invoices:write',
-            'expenses:read',
-            'expenses:write',
-            'accounts:read',
-            'bank-accounts:read',
-            'webhooks:read',
-            'webhooks:write',
-            '*',
-        ];
+        return TokenPermissionMap::acceptedAbilities();
     }
 }

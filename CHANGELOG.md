@@ -40,7 +40,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Future changes go here after the `v3.6.0` release.
+### Fixed
+- **API tokens:** canonical abilities, legacy ability compatibility, wildcard
+  handling, organization scoping, and integer expiration values now agree
+  between token settings and `/api/v1` authorization.
+- **Expenses:** non-cash CHF payments credit the exact gross amount; Swiss
+  five-cent rounding remains limited to explicit cash payments.
+- **Payroll:** the run preview now uses the same server-side calculator as
+  generated salary slips.
+- **Reporting:** Cash Flow renders the backend operating, investing, and
+  financing contract with the correct cash balances and subtotals.
+- **Reconciliation and mobile UI:** empty suggestion maps serialize as JSON
+  objects, masked inputs use the Maska v3 API, and Settings tabs fit narrow
+  screens.
 
 ## [3.5.1] — 2026-08-07
 

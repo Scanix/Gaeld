@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Contacts\Enums\ContactType;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Enums\ExpenseStatus;
@@ -207,6 +208,72 @@ class BusinessDocumentApiTest extends SecurityTestCase
             ]);
         $replay->assertOk();
         $this->assertSame($response->json('data.journal_entry.id'), $replay->json('data.journal_entry.id'));
+    }
+
+    public function test_api_expense_posts_exact_gross_amount_without_rounding_residual(): void
+    {
+        Account::create([
+            'organization_id' => $this->orgA->id,
+            'code' => '1020',
+            'name' => 'Bank',
+            'type' => AccountType::Asset->value,
+        ]);
+        Account::create([
+            'organization_id' => $this->orgA->id,
+            'code' => '6500',
+            'name' => 'Office supplies',
+            'type' => AccountType::Expense->value,
+        ]);
+        Account::create([
+            'organization_id' => $this->orgA->id,
+            'code' => '1170',
+            'name' => 'Input VAT',
+            'type' => AccountType::Asset->value,
+        ]);
+        Account::create([
+            'organization_id' => $this->orgA->id,
+            'code' => '3900',
+            'name' => 'Rounding Difference',
+            'type' => AccountType::Revenue->value,
+        ]);
+        $vatRate = VatRate::create([
+            'organization_id' => $this->orgA->id,
+            'name' => 'Standard',
+            'rate' => 8.10,
+            'code' => 'NORMAL',
+            'is_default' => true,
+        ]);
+
+        $expense = $this->withToken($this->tokenA)
+            ->postJson('/api/v1/expenses', [
+                'category' => 'Office supplies',
+                'description' => 'Exact gross API expense',
+                'amount' => '120.00',
+                'vat_rate_id' => $vatRate->uuid,
+                'date' => '2026-08-21',
+                'vendor' => 'Supplier AG',
+                'currency' => 'CHF',
+                'payment_method' => 'other',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.vat_amount', '9.72')
+            ->json('data.id');
+
+        $this->withToken($this->tokenA)
+            ->postJson("/api/v1/expenses/{$expense}/approve")
+            ->assertOk();
+
+        $response = $this->withToken($this->tokenA)
+            ->postJson("/api/v1/expenses/{$expense}/post-to-ledger", [
+                'expense_account_code' => '6500',
+                'bank_account_code' => '1020',
+            ])
+            ->assertOk();
+
+        $lines = collect($response->json('data.journal_entry.lines'));
+
+        $this->assertSame('129.72', $lines->firstWhere('account_code', '1020')['credit']);
+        $this->assertFalse($lines->contains(fn (array $line): bool => $line['account_code'] === '3900'));
     }
 
     public function test_malformed_camt053_is_rejected_without_an_import_record(): void

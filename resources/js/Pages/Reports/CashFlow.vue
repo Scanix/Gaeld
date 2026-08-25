@@ -36,9 +36,8 @@ function toggle(section) {
   openSections.value[section] = !openSections.value[section]
 }
 
-function sectionTotal(rows) {
-  if (!rows?.length) return 0
-  return rows.reduce((s, r) => s + (r.amount ?? 0), 0)
+function sectionTotal(section) {
+  return section?.total ?? '0.00'
 }
 </script>
 
@@ -78,7 +77,7 @@ function sectionTotal(rows) {
             <table class="w-full text-sm">
               <tbody>
                 <tr
-                  v-for="row in report.operating"
+                  v-for="row in report.operating?.adjustments ?? []"
                   :key="row.label"
                   class="border-b last:border-0"
                 >
@@ -116,7 +115,7 @@ function sectionTotal(rows) {
             <table class="w-full text-sm">
               <tbody>
                 <tr
-                  v-for="row in report.investing"
+                  v-for="row in report.investing?.items ?? []"
                   :key="row.label"
                   class="border-b last:border-0"
                 >
@@ -154,7 +153,7 @@ function sectionTotal(rows) {
             <table class="w-full text-sm">
               <tbody>
                 <tr
-                  v-for="row in report.financing"
+                  v-for="row in report.financing?.items ?? []"
                   :key="row.label"
                   class="border-b last:border-0"
                 >
@@ -183,7 +182,7 @@ function sectionTotal(rows) {
             <div class="space-y-2 text-sm">
               <div class="flex justify-between">
                 <span class="text-[hsl(var(--muted-foreground))]">{{ t('cf_beginning_balance') }}</span>
-                <span class="tabular-nums font-medium">{{ formatCurrency(report.beginning_balance) }}</span>
+                <span class="tabular-nums font-medium">{{ formatCurrency(report.beginning_cash) }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-[hsl(var(--muted-foreground))]">{{ t('cf_net_change') }}</span>
@@ -196,7 +195,7 @@ function sectionTotal(rows) {
               </div>
               <div class="flex justify-between border-t pt-2 text-base font-bold">
                 <span>{{ t('cf_ending_balance') }}</span>
-                <span class="tabular-nums">{{ formatCurrency(report.ending_balance) }}</span>
+                <span class="tabular-nums">{{ formatCurrency(report.ending_cash) }}</span>
               </div>
             </div>
           </CardContent>
