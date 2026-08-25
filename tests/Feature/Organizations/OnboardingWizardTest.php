@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Organizations;
 
+use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Banking\Models\BankAccount;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -106,6 +108,12 @@ class OnboardingWizardTest extends TestCase
     public function test_store_creates_bank_account_when_name_provided(): void
     {
         $this->user->update(['onboarding_completed_at' => null]);
+        $bankAccount = Account::create([
+            'organization_id' => $this->organization->id,
+            'code' => '1020',
+            'name' => 'Bank',
+            'type' => AccountType::Asset->value,
+        ]);
 
         $this->actAsOrg()->post(route('onboarding.wizard.store'), [
             'bank_account_name' => 'Main CHF Account',
@@ -116,6 +124,7 @@ class OnboardingWizardTest extends TestCase
         $this->assertDatabaseHas((new BankAccount)->getTable(), [
             'organization_id' => $this->organization->id,
             'name' => 'Main CHF Account',
+            'account_id' => $bankAccount->id,
         ]);
     }
 

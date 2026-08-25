@@ -13,6 +13,7 @@ const props = defineProps({
   error: String,
   hint: String,
   required: Boolean,
+  readonly: Boolean,
   placeholder: String,
   autocomplete: String,
   class: String,
@@ -53,6 +54,7 @@ function togglePasswordVisibility() {
         :type="effectiveType"
         :value="modelValue"
         :required="required"
+        :readonly="readonly"
         :placeholder="placeholder"
         :autocomplete="autocomplete"
         :aria-describedby="error ? id + '-error' : undefined"
