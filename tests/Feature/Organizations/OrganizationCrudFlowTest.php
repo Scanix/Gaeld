@@ -114,6 +114,27 @@ class OrganizationCrudFlowTest extends TestCase
         $this->assertSame('Created Org SA', $organization->legal_name);
     }
 
+    public function test_owner_can_create_another_organization_with_a_chart_template(): void
+    {
+        $response = $this->actingAs($this->owner)
+            ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+            ->post('/organizations', [
+                'name' => 'Created Swiss SME Org',
+                'currency' => 'CHF',
+                'locale' => 'en',
+                'chart_of_accounts' => 'swiss_sme',
+                'business_type' => 'sme',
+            ]);
+
+        $organization = Organization::where('name', 'Created Swiss SME Org')->firstOrFail();
+
+        $response->assertRedirect(route('organizations.show', $organization));
+        $this->assertDatabaseHas('accounts', [
+            'organization_id' => $organization->id,
+            'code' => '1020',
+        ]);
+    }
+
     public function test_owner_can_delete_organization_and_it_is_removed_from_db(): void
     {
         $orgToDelete = Organization::create(['name' => 'To Delete', 'currency' => 'CHF']);
