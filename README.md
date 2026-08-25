@@ -134,6 +134,14 @@ organization-scoped bearer tokens, account and journal-entry operations,
 contacts, invoice and expense workflows, and CAMT.053 bank imports. See the
 public API documentation for request and response examples.
 
+API tokens use the canonical abilities listed by `GET /api/v1/meta/abilities`,
+such as `accounting.view`, `invoicing.create`, and `banking.import`. The
+wildcard `*` grants all mapped API operations; omitting `abilities` or sending
+an empty array has the same effect. Older resource names such as
+`accounts:read` remain accepted and are normalized to their canonical
+permissions. Token expiration accepts 1 to 365 days and is stored as an exact
+expiration timestamp.
+
 ---
 
 ## Plugin system

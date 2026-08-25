@@ -38,6 +38,35 @@ class PayrollRunController extends Controller
         ]);
     }
 
+    public function preview(Request $request, CurrentOrganization $currentOrg, GeneratePayrollRunAction $action): JsonResponse
+    {
+        $this->authorize('viewAny', Employee::class);
+
+        $validated = $request->validate([
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+            'year' => ['required', 'integer', 'min:2000'],
+            'employee_ids' => ['nullable', 'array'],
+            'employee_ids.*' => ['uuid'],
+        ]);
+
+        $slips = $action->preview(
+            $currentOrg->id(),
+            (int) $validated['month'],
+            (int) $validated['year'],
+            $validated['employee_ids'] ?? [],
+        );
+
+        return response()->json([
+            'data' => $slips->map(fn ($slip): array => [
+                'id' => $slip->id,
+                'employee_id' => $slip->employee_id,
+                'gross_salary' => $slip->gross_salary,
+                'net_salary' => $slip->net_salary,
+                'deductions' => $slip->deductions,
+            ])->values(),
+        ]);
+    }
+
     public function generate(Request $request, CurrentOrganization $currentOrg, GeneratePayrollRunAction $action): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Employee::class);

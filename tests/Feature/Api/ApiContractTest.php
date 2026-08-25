@@ -58,6 +58,26 @@ class ApiContractTest extends SecurityTestCase
         $this->assertDatabaseCount('api_idempotency_keys', 0);
     }
 
+    public function test_legacy_token_ability_is_accepted_and_normalized(): void
+    {
+        $response = $this->withToken($this->tokenA)->postJson('/api/v1/tokens', [
+            'name' => 'Legacy account token',
+            'abilities' => ['accounts:read'],
+        ]);
+
+        $response->assertCreated()->assertJsonPath('abilities.0', 'accounting.view');
+    }
+
+    public function test_legacy_organization_token_ability_is_accepted_and_normalized(): void
+    {
+        $response = $this->withToken($this->tokenA)->postJson('/api/v1/org-tokens', [
+            'name' => 'Legacy organization token',
+            'abilities' => ['accounts:read'],
+        ]);
+
+        $response->assertCreated()->assertJsonPath('abilities.0', 'accounting.view');
+    }
+
     public function test_contact_aliases_are_available_and_abilities_match_the_live_map(): void
     {
         $this->withToken($this->tokenA)->getJson('/api/v1/contacts')->assertOk();

@@ -24,15 +24,7 @@ class GeneratePayrollRunAction
      */
     public function execute(string $orgId, int $month, int $year, bool $shouldPost = false, array $employeeIds = []): Collection
     {
-        $query = Employee::query()
-            ->where('organization_id', $orgId)
-            ->where('is_active', true);
-
-        if (! empty($employeeIds)) {
-            $query->whereIn('id', $employeeIds);
-        }
-
-        $employees = $query->get();
+        $employees = $this->employees($orgId, $employeeIds);
 
         $slips = collect();
         foreach ($employees as $employee) {
@@ -60,5 +52,31 @@ class GeneratePayrollRunAction
         }
 
         return $slips;
+    }
+
+    /**
+     * Calculate a payroll preview without persisting salary slips.
+     *
+     * @param  array<int, string>  $employeeIds
+     * @return Collection<int, SalarySlip>
+     */
+    public function preview(string $orgId, int $month, int $year, array $employeeIds = []): Collection
+    {
+        return $this->employees($orgId, $employeeIds)
+            ->map(fn (Employee $employee): SalarySlip => $this->calculator->calculate($employee, $month, $year))
+            ->values();
+    }
+
+    /**
+     * @param  array<int, string>  $employeeIds
+     * @return Collection<int, Employee>
+     */
+    private function employees(string $orgId, array $employeeIds): Collection
+    {
+        return Employee::query()
+            ->where('organization_id', $orgId)
+            ->where('is_active', true)
+            ->when($employeeIds !== [], fn ($query) => $query->whereIn('id', $employeeIds))
+            ->get();
     }
 }

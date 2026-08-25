@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useForm, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -40,6 +39,7 @@ const year = ref(
 const preview = ref([])
 const generatedSlipIds = ref([])
 const generating = ref(false)
+const previewing = ref(false)
 const posting = ref(false)
 
 const { isClosed: isYearClosed, closedYear } = useClosedFiscalYear(() => parseInt(year.value, 10))
@@ -85,22 +85,54 @@ function toggleAll() {
 }
 
 async function goToPreview() {
-  // Compute preview client-side from selected employees
-  preview.value = props.employees
-    .filter(e => selectedEmployeeIds.value.includes(e.id))
-    .map(e => {
-      const salary = Number(e.gross_salary) || 0
+  previewing.value = true
+  errorMessage.value = ''
+
+  try {
+    const response = await fetch('/payroll/run/preview', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+      },
+      body: JSON.stringify({
+        employee_ids: selectedEmployeeIds.value,
+        month: month.value,
+        year: year.value,
+      }),
+    })
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      errorMessage.value = err.message || t('payroll_generate_error')
+      return
+    }
+
+    const data = await response.json()
+    const employeesById = new Map(props.employees.map(employee => [employee.id, employee]))
+
+    preview.value = (data.data ?? []).map(slip => {
+      const employee = employeesById.get(slip.employee_id) ?? {}
+      const deductions = slip.deductions ?? {}
+
       return {
-        ...e,
-        gross_salary: e.gross_salary,
-        avs: (salary * 0.053).toFixed(2),
-        ac: (salary * 0.011).toFixed(2),
-        aanp: (salary * 0.008).toFixed(2),
-        lpp: (salary * 0.05).toFixed(2),
-        net: (salary * (1 - 0.053 - 0.011 - 0.008 - 0.05)).toFixed(2),
+        ...employee,
+        id: slip.employee_id,
+        gross_salary: slip.gross_salary,
+        avs: deductions.avs_employee ?? '0.00',
+        ac: deductions.ac_employee ?? '0.00',
+        aanp: deductions.aanp_employee ?? '0.00',
+        lpp: deductions.lpp_employee ?? '0.00',
+        net: slip.net_salary,
       }
     })
-  step.value = 2
+    step.value = 2
+  } catch {
+    errorMessage.value = t('payroll_generate_error')
+  } finally {
+    previewing.value = false
+  }
 }
 
 async function generateSlips() {
@@ -238,7 +270,7 @@ async function postSlips() {
         </div>
 
         <div class="flex justify-end">
-          <Button :disabled="!selectedEmployeeIds.length" @click="goToPreview">
+          <Button :disabled="!selectedEmployeeIds.length || previewing" @click="goToPreview">
             {{ t('preview') }}
             <ChevronRight class="ml-2 h-4 w-4" />
           </Button>

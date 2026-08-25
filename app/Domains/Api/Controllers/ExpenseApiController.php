@@ -259,7 +259,7 @@ class ExpenseApiController extends Controller
 
         $dashboardService->flushCache($expense->organization_id);
 
-        return new ExpenseResource($expense->fresh(['journalEntry']));
+        return new ExpenseResource($expense->fresh(['journalEntry.lines.account']));
     }
 
     private function apiError(string $message, string $code, int $status): JsonResponse

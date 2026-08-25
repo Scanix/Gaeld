@@ -102,7 +102,7 @@ class ReconciliationController extends Controller
 
         $suggestions = $unreconciledOnPage->isNotEmpty()
             ? $this->suggestionService->generateSuggestionsForTransactions($unreconciledOnPage)
-            : [];
+            : (object) [];
 
         // For mixed-use accounts, check which unreconciled transactions
         // match known personal counterparty patterns

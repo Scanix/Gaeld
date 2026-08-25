@@ -93,7 +93,7 @@ function gaeldPluginFrontendPages(frontends) {
 
 export default defineConfig(({ mode }) => {
   const environment = { ...loadEnv(mode, process.cwd(), ''), ...process.env }
-  const frontends = discoverPluginFrontends(__dirname, environment)
+  const frontends = discoverPluginFrontends(import.meta.dirname, environment)
   const aliases = Object.fromEntries(frontends.map((frontend) => [frontend.alias, frontend.root]))
 
   return {
@@ -130,7 +130,7 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': resolve(__dirname, 'resources/js'),
+        '@': resolve(import.meta.dirname, 'resources/js'),
         ...aliases,
       },
     },

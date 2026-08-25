@@ -40,7 +40,7 @@ const maskaOptions = MASKS[props.mask]
       <span v-if="required" class="text-[hsl(var(--destructive))]">*</span>
     </label>
     <input
-      v-maska:[maskaOptions]
+      v-maska="maskaOptions"
       :id="id"
       type="text"
       :value="modelValue"
