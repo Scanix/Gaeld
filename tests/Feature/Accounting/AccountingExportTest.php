@@ -81,7 +81,8 @@ class AccountingExportTest extends TestCase
         Queue::assertPushed(GenerateAccountingExportJob::class, function (GenerateAccountingExportJob $job) {
             return $job->orgId === $this->org->id
                 && $job->fiscalYear === '2025'
-                && $job->userId === (string) $this->user->id;
+                && $job->userId === (string) $this->user->id
+                && $job->queue === 'exports';
         });
     }
 
@@ -223,10 +224,13 @@ class AccountingExportTest extends TestCase
         $csvContent = $zip->getFromName('chart-of-accounts.csv');
         $zip->close();
 
+        $this->assertNotFalse($csvContent);
+
         // Strip BOM
         $csvContent = ltrim($csvContent, "\xEF\xBB\xBF");
         $firstLine = strtok($csvContent, "\n");
 
+        $this->assertNotFalse($firstLine);
         $this->assertStringContainsString('Code', $firstLine);
         $this->assertStringContainsString('Name', $firstLine);
         $this->assertStringContainsString('Type', $firstLine);
