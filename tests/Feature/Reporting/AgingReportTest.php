@@ -10,6 +10,7 @@ use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Reporting\Services\AgingReportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -103,6 +104,29 @@ class AgingReportTest extends TestCase
     public function test_invoices_issued_after_as_of_date_are_excluded(): void
     {
         $this->createInvoice('2026-08-01', '2026-09-01');
+
+        $service = app(AgingReportService::class);
+        $report = $service->generate($this->organization->id, 'receivables', '2026-03-20');
+
+        $this->assertSame('0.00', $report['grand_total']);
+        $this->assertSame([], $report['rows']);
+    }
+
+    public function test_old_aging_cache_entries_are_not_reused_after_date_filter_change(): void
+    {
+        $this->createInvoice('2026-08-01', '2026-09-01');
+
+        Cache::tags(["org:{$this->organization->id}:reports"])->put(
+            "aging:{$this->organization->id}:receivables:2026-03-20",
+            [
+                'type' => 'receivables',
+                'as_of_date' => '2026-03-20',
+                'brackets' => ['current' => ['items' => [], 'total' => '0.00']],
+                'rows' => [['document_number' => 'INV-FUTURE']],
+                'grand_total' => '250.00',
+            ],
+            now()->addMinutes(30),
+        );
 
         $service = app(AgingReportService::class);
         $report = $service->generate($this->organization->id, 'receivables', '2026-03-20');

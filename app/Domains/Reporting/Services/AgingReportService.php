@@ -32,7 +32,7 @@ class AgingReportService
         $asOf = $asOfDate ? Carbon::parse($asOfDate) : Carbon::now();
         $asOfString = $asOf->toDateString();
 
-        $cacheKey = "aging:{$orgId}:{$type}:{$asOfString}";
+        $cacheKey = "aging:v2:{$orgId}:{$type}:{$asOfString}";
         $orgTag = "org:{$orgId}:reports";
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($orgId, $type, $asOf, $asOfString) {
