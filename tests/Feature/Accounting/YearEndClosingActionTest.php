@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Accounting;
 
+use App\Domains\Accounting\Actions\GenerateOpeningBalancesAction;
 use App\Domains\Accounting\Actions\YearEndClosingAction;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
@@ -328,6 +329,53 @@ class YearEndClosingActionTest extends TestCase
         $this->assertSame(1, JournalEntry::where('organization_id', $this->organization->id)
             ->where('reference', 'OPENING-2025')
             ->count());
+    }
+
+    public function test_repeating_opening_restatement_without_new_changes_is_idempotent(): void
+    {
+        $longYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Expired,
+        ]);
+        $closedNextYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => '2025-2026',
+            'start_date' => '2025-07-01',
+            'end_date' => '2026-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+        $openYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => '2026-2027',
+            'start_date' => '2026-07-01',
+            'end_date' => '2027-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+
+        $bank = Account::where('organization_id', $this->organization->id)->where('code', '1020')->first();
+        $opening = Account::where('organization_id', $this->organization->id)->where('code', AccountCode::OPENING_BALANCE)->first();
+
+        $this->postJournalEntry('2025-07-01', [
+            $this->journalLine($bank, '100.00', '0'),
+            $this->journalLine($opening, '0', '100.00'),
+        ], 'OPENING-2025');
+        $closedNextYear->update(['status' => FiscalYearStatus::Closed]);
+        $this->postJournalEntry('2025-06-15', [
+            $this->journalLine($bank, '0', '10.00'),
+            $this->journalLine($opening, '10.00', '0'),
+        ], 'REOPEN-ADJUSTMENT');
+
+        $action = app(GenerateOpeningBalancesAction::class);
+        $firstRestatement = $action->execute($this->organization->id, 2024, $longYear);
+        $secondRestatement = $action->execute($this->organization->id, 2024, $longYear);
+
+        $this->assertNotNull($firstRestatement);
+        $this->assertNull($secondRestatement);
+        $this->assertSame(1, JournalEntry::where('organization_id', $this->organization->id)
+            ->where('reference', 'like', 'OPENING-RESTATEMENT-2026%')
+            ->count());
+        $this->assertSame('2026-07-01', $firstRestatement->date->toDateString());
+        $this->assertTrue($openYear->isOperative());
     }
 
     public function test_closing_rolls_back_entirely_when_opening_balances_step_fails(): void

@@ -183,8 +183,15 @@ class GenerateOpeningBalancesAction
         /** @var array<string, string> $effectiveBalances */
         $effectiveBalances = [];
         $accountsById = collect($accounts)->keyBy(fn (Account $account): string => (string) $account->id);
+        $existingRestatements = JournalEntry::query()
+            ->where('organization_id', $orgId)
+            ->where('is_posted', true)
+            ->where('reference', 'like', 'OPENING-RESTATEMENT-%')
+            ->with('lines')
+            ->get();
+        $allOpeningEntries = collect($existingOpeningEntries)->concat($existingRestatements);
 
-        foreach ($existingOpeningEntries as $openingEntry) {
+        foreach ($allOpeningEntries as $openingEntry) {
             foreach ($openingEntry->lines as $line) {
                 $accountId = (string) $line->account_id;
                 $account = $accountsById->get($accountId);
@@ -207,6 +214,10 @@ class GenerateOpeningBalancesAction
 
         foreach ($accounts as $account) {
             $accountId = (string) $account->id;
+            if ($account->code === AccountCode::OPENING_BALANCE) {
+                continue;
+            }
+
             $accountKey = 'account:'.$accountId;
             $delta = Money::subtract(
                 $desiredBalances[$accountKey] ?? '0',
