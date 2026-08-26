@@ -6,10 +6,12 @@ use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\PostPayrollAction;
 use App\Domains\Payroll\Actions\UnpostPayrollAction;
+use App\Domains\Payroll\Controllers\Concerns\EnsuresPayrollWritable;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Payroll\Services\PayrollCalculator;
 use App\Http\Controllers\Controller;
+use App\Support\FeatureFlag;
 use App\Support\PdfExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,6 +25,8 @@ use Inertia\Response;
  */
 class SalarySlipController extends Controller
 {
+    use EnsuresPayrollWritable;
+
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', SalarySlip::class);
@@ -71,6 +75,7 @@ class SalarySlipController extends Controller
                 'month' => $month ?? '',
             ],
             'ownOnly' => $ownOnly,
+            'payrollWritable' => FeatureFlag::enabledForOrg('payroll', $currentOrg->get()),
         ]);
     }
 
@@ -91,6 +96,7 @@ class SalarySlipController extends Controller
 
     public function generate(Request $request, PayrollCalculator $calculator): RedirectResponse
     {
+        $this->ensurePayrollWritable(app(CurrentOrganization::class)->get());
         $this->authorize('create', Employee::class);
 
         $validated = $request->validate([
@@ -109,6 +115,7 @@ class SalarySlipController extends Controller
 
     public function post(Request $request, SalarySlip $slip, PostPayrollAction $action): RedirectResponse|JsonResponse
     {
+        $this->ensurePayrollWritable($slip->organization);
         $this->authorize('update', $slip);
 
         if ($slip->isPosted()) {
@@ -131,6 +138,7 @@ class SalarySlipController extends Controller
 
     public function unpost(Request $request, SalarySlip $slip, UnpostPayrollAction $action): RedirectResponse|JsonResponse
     {
+        $this->ensurePayrollWritable($slip->organization);
         $this->authorize('update', $slip);
 
         if (! $slip->isPosted()) {
@@ -153,6 +161,7 @@ class SalarySlipController extends Controller
 
     public function destroy(SalarySlip $slip): RedirectResponse
     {
+        $this->ensurePayrollWritable($slip->organization);
         $this->authorize('delete', $slip);
 
         if ($slip->isPosted()) {

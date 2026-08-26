@@ -17,6 +17,7 @@ const { intlMonthName, formatCurrency } = useFormatters()
 const props = defineProps({
   slips: Object,
   ownOnly: { type: Boolean, default: false },
+  payrollWritable: { type: Boolean, default: true },
   query: {
     type: Object,
     default: () => ({ month: '', year: '' }),

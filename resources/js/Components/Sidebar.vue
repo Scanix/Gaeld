@@ -188,6 +188,8 @@ const navigation = computed(() => {
           { key: 'withholding_tax', href: '/payroll/withholding-tax' },
         ] : []),
       ]},
+    ] : can('payroll.view') ? [
+      { key: 'salary_slips', href: '/payroll/salary-slips', icon: Briefcase },
     ] : []),
     ...(!isFreelancer ? [
       { key: 'organization', href: '/organizations', icon: Building2 },

@@ -1010,6 +1010,7 @@ return [
     'role_employee' => 'Employee',
     'employee_invitation_requires_matching_employee' => 'Create exactly one unlinked employee with this email before inviting an employee.',
     'employee_already_linked' => 'This employee record is already linked to another user.',
+    'payroll_plan_upgrade_required' => 'Your current plan keeps payroll data read-only. Upgrade to Business to run or modify payroll.',
     'role_accountant' => 'Accountant',
     'role_viewer' => 'Viewer',
     'invited_by' => 'Invited by',

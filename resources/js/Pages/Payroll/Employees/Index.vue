@@ -16,6 +16,7 @@ const { formatCurrency } = useFormatters()
 
 const props = defineProps({
   employees: Object,
+  payrollWritable: { type: Boolean, default: true },
   query: {
     type: Object,
     default: () => ({ sort: 'last_name', direction: 'asc', search: '' }),
@@ -59,7 +60,7 @@ const columns = computed(() => [
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('manage_employees') }}
       </p>
-      <Button as="a" href="/payroll/employees/create">
+      <Button v-if="payrollWritable" as="a" href="/payroll/employees/create">
         <Plus class="mr-2 h-4 w-4" />
         {{ t('new_employee') }}
       </Button>
@@ -95,16 +96,16 @@ const columns = computed(() => [
           <Button as="a" :href="`/payroll/employees/${row.id}`" variant="ghost" size="icon" :title="t('view')">
             <Eye class="h-4 w-4" />
           </Button>
-          <Button as="a" :href="`/payroll/employees/${row.id}/edit`" variant="ghost" size="icon" :title="t('edit')">
+          <Button v-if="payrollWritable" as="a" :href="`/payroll/employees/${row.id}/edit`" variant="ghost" size="icon" :title="t('edit')">
             <Pencil class="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" :title="t('delete')" @click="confirmDelete(row)">
+          <Button v-if="payrollWritable" variant="ghost" size="icon" :title="t('delete')" @click="confirmDelete(row)">
             <Trash2 class="h-4 w-4" />
           </Button>
         </div>
       </template>
       <template #empty>
-        <EmptyState :icon="UserPlus" :title="t('no_employees_yet')" :description="t('no_employees_yet_desc')" :action-label="t('new_employee')" action-href="/payroll/employees/create" />
+        <EmptyState :icon="UserPlus" :title="t('no_employees_yet')" :description="t('no_employees_yet_desc')" :action-label="payrollWritable ? t('new_employee') : null" :action-href="payrollWritable ? '/payroll/employees/create' : null" />
       </template>
     </DataTable>
 

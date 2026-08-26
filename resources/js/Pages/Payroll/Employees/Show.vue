@@ -20,6 +20,7 @@ const { formatDate, formatCurrency } = useFormatters()
 
 const props = defineProps({
   employee: Object,
+  payrollWritable: { type: Boolean, default: true },
   salarySlips: { type: Array, default: () => [] },
 })
 
@@ -51,7 +52,7 @@ const salaryColumns = computed(() => [
               <Badge :variant="employee.status === 'active' ? 'default' : 'secondary'">
                 {{ t('employee_status_' + employee.status) }}
               </Badge>
-              <Button variant="outline" size="sm" as="a" :href="`/payroll/employees/${employee.id}/edit`">
+              <Button v-if="payrollWritable" variant="outline" size="sm" as="a" :href="`/payroll/employees/${employee.id}/edit`">
                 <Pencil class="mr-2 h-4 w-4" />
                 {{ t('edit') }}
               </Button>
@@ -93,7 +94,7 @@ const salaryColumns = computed(() => [
           <Button as="a" href="/payroll/salary-slips" class="w-full" variant="outline">
             {{ t('view_salary_slips') }}
           </Button>
-          <Button as="a" href="/payroll/run" class="w-full">
+          <Button v-if="payrollWritable" as="a" href="/payroll/run" class="w-full">
             {{ t('run_payroll') }}
           </Button>
         </CardContent>

@@ -945,6 +945,7 @@ return [
     'role_employee' => 'Mitarbeiter',
     'employee_invitation_requires_matching_employee' => 'Erstellen Sie genau einen nicht verknüpften Mitarbeiter mit dieser E-Mail-Adresse, bevor Sie ihn einladen.',
     'employee_already_linked' => 'Dieser Mitarbeiterdatensatz ist bereits mit einem anderen Benutzer verknüpft.',
+    'payroll_plan_upgrade_required' => 'Ihr aktueller Plan hält Lohndaten schreibgeschützt. Wechseln Sie zu Business, um Lohnläufe auszuführen oder zu ändern.',
     'role_accountant' => 'Buchhalter',
     'role_viewer' => 'Betrachter',
     'invited_by' => 'Eingeladen von',

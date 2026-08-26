@@ -944,6 +944,7 @@ return [
     'role_employee' => 'Employé',
     'employee_invitation_requires_matching_employee' => 'Créez exactement un employé non lié avec cette adresse e-mail avant de l’inviter.',
     'employee_already_linked' => 'Ce dossier employé est déjà lié à un autre utilisateur.',
+    'payroll_plan_upgrade_required' => 'Votre plan actuel conserve les données de paie en lecture seule. Passez à Business pour exécuter ou modifier la paie.',
     'role_accountant' => 'Comptable',
     'role_viewer' => 'Lecteur',
     'invited_by' => 'Invité par',
