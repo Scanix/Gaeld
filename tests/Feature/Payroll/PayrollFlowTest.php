@@ -3,7 +3,9 @@
 namespace Tests\Feature\Payroll;
 
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Payroll\Actions\PostPayrollAction;
 use App\Domains\Payroll\Models\Employee;
@@ -81,6 +83,7 @@ class PayrollFlowTest extends TestCase
         $this->assertSame('6000.00', $slip->gross_salary);
         $this->assertSame('5136.00', $slip->net_salary);
 
+        /** @var array{avs_employee: string, total_employee: string} $deductions */
         $deductions = $slip->deductions;
         $this->assertSame('318.00', $deductions['avs_employee']);
         $this->assertSame('864.00', $deductions['total_employee']);
@@ -134,6 +137,31 @@ class PayrollFlowTest extends TestCase
         $journalEntry = JournalEntry::find($postedSlip->journal_entry_id);
         $this->assertTrue($journalEntry->is_posted);
         $this->assertTrue($journalEntry->isBalanced());
+    }
+
+    #[Test]
+    public function it_posts_payroll_after_a_closed_long_fiscal_year(): void
+    {
+        FiscalYear::factory()->for($this->org)->create([
+            'name' => '2024-2025 Long Year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Closed,
+        ]);
+        FiscalYear::factory()->for($this->org)->create([
+            'name' => '2025-2026',
+            'start_date' => '2025-07-01',
+            'end_date' => '2026-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+
+        $slip = app(PayrollCalculator::class)->calculate($this->employee, 7, 2025);
+        $slip->save();
+
+        $postedSlip = app(PostPayrollAction::class)->execute($slip);
+
+        $this->assertNotNull($postedSlip->journal_entry_id);
+        $this->assertTrue(JournalEntry::findOrFail($postedSlip->journal_entry_id)->is_posted);
     }
 
     #[Test]

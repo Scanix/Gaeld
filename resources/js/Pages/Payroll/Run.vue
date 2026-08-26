@@ -42,7 +42,16 @@ const generating = ref(false)
 const previewing = ref(false)
 const posting = ref(false)
 
-const { isClosed: isYearClosed, closedYear } = useClosedFiscalYear(() => parseInt(year.value, 10))
+const payrollPeriodEnd = computed(() => {
+  const periodYear = Number.parseInt(year.value, 10)
+  const periodMonth = Number.parseInt(month.value, 10)
+
+  if (!Number.isFinite(periodYear) || !Number.isFinite(periodMonth)) return null
+
+  return new Date(Date.UTC(periodYear, periodMonth, 0)).toISOString().slice(0, 10)
+})
+
+const { isClosed: isYearClosed, closedYear } = useClosedFiscalYear(payrollPeriodEnd)
 const errorMessage = ref('')
 
 const monthOptions = computed(() =>
