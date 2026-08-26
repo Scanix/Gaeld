@@ -5,6 +5,7 @@ namespace Tests\Feature\Accounting;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -56,6 +57,24 @@ class OpeningBalancesWizardTest extends TestCase
             ->component('Accounting/OpeningBalances')
             // 3 balance-sheet accounts (bank, debtors, creditors); 9000 + P&L are excluded
             ->has('accounts', 3));
+    }
+
+    public function test_wizard_uses_first_fiscal_year_start_as_default_date(): void
+    {
+        FiscalYear::create([
+            'organization_id' => $this->organization->id,
+            'name' => '2024-2025 Long Year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => 'operative',
+        ]);
+
+        $response = $this->actAsOrg()->get('/accounting/opening-balances');
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Accounting/OpeningBalances')
+            ->where('defaultDate', '2024-01-01'));
     }
 
     public function test_store_records_balanced_opening_entry_with_contra(): void

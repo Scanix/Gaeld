@@ -35,6 +35,12 @@ class OpeningBalancesController extends Controller
         $this->authorize('create', JournalEntry::class);
 
         $org = $currentOrg->get();
+        $fiscalYearStart = $org->fiscalYears()
+            ->orderBy('start_date')
+            ->value('start_date');
+        $defaultDate = $fiscalYearStart !== null
+            ? Carbon::parse($fiscalYearStart)->toDateString()
+            : sprintf('%d-01-01', now()->year);
 
         $balanceSheetTypes = [
             AccountType::Asset->value,
@@ -81,7 +87,7 @@ class OpeningBalancesController extends Controller
 
         return Inertia::render('Accounting/OpeningBalances', [
             'accounts' => $accounts,
-            'defaultDate' => sprintf('%d-01-01', now()->year),
+            'defaultDate' => $defaultDate,
             'existingOpening' => $existingOpening,
             'isStartingFresh' => $org->setup_mode === 'fresh',
             'equityAccounts' => $equityAccounts,
