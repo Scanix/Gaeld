@@ -14,6 +14,7 @@ use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -29,8 +30,9 @@ class VatReportController extends Controller
     {
         $this->authorize('viewAny', Account::class);
 
-        $from = $request->input('from_date', $request->input('from', now()->startOfQuarter()->toDateString()));
-        $to = $request->input('to_date', $request->input('to', now()->endOfQuarter()->toDateString()));
+        $period = $this->resolvePeriod($request);
+        $from = $period['from'];
+        $to = $period['to'];
 
         $report = $service->generate($currentOrg->id(), $from, $to);
 
@@ -64,6 +66,32 @@ class VatReportController extends Controller
         return Inertia::render('Reports/VatReport', [
             'report' => $report,
         ]);
+    }
+
+    /**
+     * @return array{from: string, to: string}
+     */
+    private function resolvePeriod(Request $request): array
+    {
+        $from = $request->string('from_date')->toString() ?: $request->string('from')->toString();
+        $to = $request->string('to_date')->toString() ?: $request->string('to')->toString();
+        $period = $request->string('period')->toString();
+
+        if (($from === '' || $to === '') && preg_match('/^Q([1-4])\s+(\d{4})$/', trim($period), $matches) === 1) {
+            $quarterStart = Carbon::create(
+                (int) $matches[2],
+                (((int) $matches[1] - 1) * 3) + 1,
+                1,
+            );
+
+            $from = $from !== '' ? $from : $quarterStart->copy()->startOfQuarter()->toDateString();
+            $to = $to !== '' ? $to : $quarterStart->copy()->endOfQuarter()->toDateString();
+        }
+
+        return [
+            'from' => $from !== '' ? $from : now()->startOfQuarter()->toDateString(),
+            'to' => $to !== '' ? $to : now()->endOfQuarter()->toDateString(),
+        ];
     }
 
     public function exportVatReport(

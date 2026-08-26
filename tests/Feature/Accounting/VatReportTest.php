@@ -218,6 +218,19 @@ class VatReportTest extends TestCase
         $response->assertInertia(fn ($page) => $page->component('Reports/VatReport'));
     }
 
+    public function test_vat_report_resolves_quarter_period_query(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get(route('reports.vat', ['period' => 'Q1 2024', 'year' => 2024]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Reports/VatReport')
+            ->where('report.period.from', '2024-01-01')
+            ->where('report.period.to', '2024-03-31'));
+    }
+
     public function test_vat_report_export_pdf_returns_correct_content_type(): void
     {
         $response = $this->actingAs($this->user)
