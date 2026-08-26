@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Organizations;
 
+use App\Domains\Expenses\Enums\ReceiptScanStatus;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Expenses\Models\ReceiptScan;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Enums\Role;
 use App\Domains\Organizations\Services\InvitationService;
@@ -12,6 +14,7 @@ use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -113,7 +116,7 @@ class EmployeeSelfServiceAccessTest extends TestCase
     public function test_employee_sees_only_own_posted_salary_slips(): void
     {
         $ownPosted = $this->salarySlip($this->employee, posted: true);
-        $this->salarySlip($this->employee, posted: false, month: 2);
+        $ownDraft = $this->salarySlip($this->employee, posted: false, month: 2);
         $colleague = Employee::factory()->create(['organization_id' => $this->organization->id]);
         $colleagueSlip = $this->salarySlip($colleague, posted: true, month: 3);
 
@@ -124,6 +127,7 @@ class EmployeeSelfServiceAccessTest extends TestCase
         $this->assertSame([$ownPosted->id], array_column($slips, 'id'));
 
         $this->asEmployee()->get(route('payroll.salarySlips.show', $ownPosted))->assertOk();
+        $this->asEmployee()->get(route('payroll.salarySlips.show', $ownDraft))->assertForbidden();
         $this->asEmployee()->get(route('payroll.salarySlips.show', $colleagueSlip))->assertForbidden();
     }
 
@@ -149,6 +153,10 @@ class EmployeeSelfServiceAccessTest extends TestCase
         $this->assertFalse($props['canUpdate']);
         $this->assertFalse($props['canDelete']);
         $this->assertFalse($props['canApprove']);
+        $this->assertArrayNotHasKey('journal_entry_id', $props['expense']);
+        $this->assertArrayNotHasKey('expense_account_code', $props['expense']);
+        $this->assertArrayNotHasKey('bank_account_code', $props['expense']);
+        $this->assertArrayNotHasKey('supplier', $props['expense']);
         $this->asEmployee()->get(route('expenses.show', $other))->assertForbidden();
     }
 
@@ -186,6 +194,23 @@ class EmployeeSelfServiceAccessTest extends TestCase
         ]);
     }
 
+    public function test_employee_sees_only_own_receipt_scans(): void
+    {
+        $own = $this->scanFor($this->employeeUser);
+        $other = $this->scanFor($this->user);
+
+        $response = $this->asEmployee()->get(route('expenses.receipt-scans.index'));
+
+        $response->assertOk();
+        $scans = $response->viewData('page')['props']['scans'];
+        $this->assertSame([$own->scan_id], array_column($scans, 'scan_id'));
+
+        $this->asEmployee()->delete(route('expenses.receipt-scans.destroy', $other->scan_id))
+            ->assertNotFound();
+        $this->asEmployee()->get(route('expenses.scan-receipt.status', $other->scan_id))
+            ->assertNotFound();
+    }
+
     public function test_employee_is_denied_global_financial_and_settings_routes(): void
     {
         $this->asEmployee()->get('/reports/profit-and-loss')->assertForbidden();
@@ -218,6 +243,18 @@ class EmployeeSelfServiceAccessTest extends TestCase
             'net_salary' => '4300.00',
             'deductions' => [],
             'posted_at' => $posted ? now() : null,
+        ]);
+    }
+
+    private function scanFor(User $user): ReceiptScan
+    {
+        return ReceiptScan::create([
+            'organization_id' => $this->organization->id,
+            'user_id' => $user->id,
+            'scan_id' => Str::uuid()->toString(),
+            'receipt_path' => 'receipts/'.$this->organization->id.'/'.Str::random(8).'.pdf',
+            'status' => ReceiptScanStatus::Pending->value,
+            'expires_at' => now()->addDay(),
         ]);
     }
 }

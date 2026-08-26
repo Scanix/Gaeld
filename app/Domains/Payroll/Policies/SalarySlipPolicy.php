@@ -29,6 +29,7 @@ class SalarySlipPolicy extends BasePolicy
 
         return $user->hasPermissionTo(Permission::PayrollView)
             || ($user->hasPermissionTo(Permission::PayrollSalarySlipsViewOwn)
+                && $salarySlip->posted_at !== null
                 && $salarySlip->employee()->where('user_id', $user->id)->exists());
     }
 

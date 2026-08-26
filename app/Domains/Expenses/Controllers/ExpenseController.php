@@ -141,8 +141,20 @@ class ExpenseController extends Controller
     {
         $this->authorize('view', $expense);
 
+        $ownOnly = $request->user()->hasPermissionTo(Permission::ExpensesViewOwn)
+            && ! $request->user()->hasPermissionTo(Permission::ExpensesView);
+
+        $expenseData = $ownOnly
+            ? $expense->load('vatRate')->makeHidden([
+                'journal_entry_id',
+                'expense_account_code',
+                'bank_account_code',
+                'supplier_id',
+            ])
+            : $expense->load(['vatRate', 'supplier', 'journalEntry.lines.account']);
+
         return Inertia::render('Expenses/Show', [
-            'expense' => $expense->load(['vatRate', 'supplier', 'journalEntry.lines.account']),
+            'expense' => $expenseData,
             'receiptUrl' => $expense->receipt_path ? route('expenses.receipt.download', $expense) : null,
             'canUpdate' => $request->user()->can('update', $expense),
             'canDelete' => $request->user()->can('delete', $expense),

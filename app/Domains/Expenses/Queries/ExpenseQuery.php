@@ -18,10 +18,11 @@ class ExpenseQuery
      */
     public static function list(Request $request, int $perPage = 20): LengthAwarePaginator
     {
-        $query = Expense::query()->with('supplier');
+        $selfService = $request->user()->hasPermissionTo(Permission::ExpensesViewOwn)
+            && ! $request->user()->hasPermissionTo(Permission::ExpensesView);
+        $query = Expense::query()->when(! $selfService, fn ($query) => $query->with('supplier'));
 
-        if ($request->user()->hasPermissionTo(Permission::ExpensesViewOwn)
-            && ! $request->user()->hasPermissionTo(Permission::ExpensesView)) {
+        if ($selfService) {
             $query->where('user_id', $request->user()->id);
         }
 
