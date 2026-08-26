@@ -275,6 +275,61 @@ class YearEndClosingActionTest extends TestCase
         $this->assertSame(FiscalYearStatus::Closed, $fiscalYear->refresh()->status);
     }
 
+    public function test_reclosing_long_fiscal_year_restates_opening_delta_in_the_next_open_year(): void
+    {
+        $longYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => 'Migration year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => FiscalYearStatus::Expired,
+        ]);
+        $closedNextYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => '2025-2026',
+            'start_date' => '2025-07-01',
+            'end_date' => '2026-06-30',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+        $openYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => '2026-2027',
+            'start_date' => '2026-07-01',
+            'end_date' => '2027-06-30',
+            'status' => FiscalYearStatus::Planned,
+        ]);
+
+        $bank = Account::where('organization_id', $this->organization->id)->where('code', '1020')->first();
+        $expense = Account::where('organization_id', $this->organization->id)->where('code', '6000')->first();
+        $opening = Account::where('organization_id', $this->organization->id)->where('code', AccountCode::OPENING_BALANCE)->first();
+
+        $this->postJournalEntry('2025-07-01', [
+            $this->journalLine($bank, '100.00', '0'),
+            $this->journalLine($opening, '0', '100.00'),
+        ], 'OPENING-2025');
+        $closedNextYear->update(['status' => FiscalYearStatus::Closed]);
+        $this->postJournalEntry('2025-06-15', [
+            $this->journalLine($expense, '10.00', '0'),
+            $this->journalLine($bank, '0', '10.00'),
+        ], 'REOPEN-ADJUSTMENT');
+
+        $validated = $this->validated(year: 2024, reference: 'YE-LONG-RESTATED');
+        $validated['fiscal_year_id'] = $longYear->id;
+        $validated['closing_date'] = '2025-06-30';
+
+        app(YearEndClosingAction::class)->execute($this->organization, $validated, $this->user);
+
+        $this->assertSame(FiscalYearStatus::Closed, $longYear->refresh()->status);
+        $this->assertSame(FiscalYearStatus::Closed, $closedNextYear->refresh()->status);
+        $this->assertSame(FiscalYearStatus::Operative, $openYear->refresh()->status);
+        $this->assertDatabaseHas('journal_entries', [
+            'organization_id' => $this->organization->id,
+            'reference' => 'OPENING-RESTATEMENT-2026',
+            'date' => '2026-07-01',
+            'is_posted' => true,
+        ]);
+        $this->assertSame(1, JournalEntry::where('organization_id', $this->organization->id)
+            ->where('reference', 'OPENING-2025')
+            ->count());
+    }
+
     public function test_closing_rolls_back_entirely_when_opening_balances_step_fails(): void
     {
         $orgId = $this->organization->id;
