@@ -145,6 +145,10 @@ class EmployeeSelfServiceAccessTest extends TestCase
         $this->assertSame([$own->id], array_column($expenses, 'id'));
 
         $this->asEmployee()->get(route('expenses.show', $own))->assertOk();
+        $props = $this->asEmployee()->get(route('expenses.show', $own))->viewData('page')['props'];
+        $this->assertFalse($props['canUpdate']);
+        $this->assertFalse($props['canDelete']);
+        $this->assertFalse($props['canApprove']);
         $this->asEmployee()->get(route('expenses.show', $other))->assertForbidden();
     }
 
