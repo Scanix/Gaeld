@@ -85,6 +85,7 @@ return [
     'subscription_status_canceled' => 'Gekündigt',
     'subscription_status_paused' => 'Pausiert',
     'feature_bank_import' => 'Bankimport',
+    'feature_payroll' => 'Lohnbuchhaltung',
     'feature_auto_reconciliation' => 'Automatischer Abgleich',
     'feature_bank_sync' => 'Live-Banksynchronisation',
     'feature_automation' => 'Automatisierungsregeln',

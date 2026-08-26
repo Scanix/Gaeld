@@ -77,6 +77,7 @@ return [
     'subscription_status_canceled' => 'Canceled',
     'subscription_status_paused' => 'Paused',
     'feature_bank_import' => 'Bank import',
+    'feature_payroll' => 'Payroll',
     'feature_auto_reconciliation' => 'Auto-reconciliation',
     'feature_bank_sync' => 'Live bank sync',
     'feature_automation' => 'Automation rules',

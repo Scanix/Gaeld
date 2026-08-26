@@ -77,6 +77,7 @@ return [
     'subscription_status_canceled' => 'Résilié',
     'subscription_status_paused' => 'En pause',
     'feature_bank_import' => 'Import bancaire',
+    'feature_payroll' => 'Paie',
     'feature_auto_reconciliation' => 'Réconciliation automatique',
     'feature_bank_sync' => 'Synchronisation bancaire en direct',
     'feature_automation' => 'Règles d\'automatisation',
