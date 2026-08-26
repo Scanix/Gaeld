@@ -68,7 +68,8 @@ class EmployeeSelfServiceAccessTest extends TestCase
     public function test_employee_invitation_links_the_matching_payroll_record(): void
     {
         Notification::fake();
-        $invitedUser = User::factory()->create(['email' => 'invited-employee@example.test']);
+        User::factory()->create(['email' => 'invited-employee@example.test']);
+        $invitedUser = User::query()->where('email', 'invited-employee@example.test')->firstOrFail();
         $payrollRecord = Employee::factory()->create([
             'organization_id' => $this->organization->id,
             'email' => $invitedUser->email,
