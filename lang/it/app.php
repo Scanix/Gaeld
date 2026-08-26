@@ -907,6 +907,7 @@ return [
     'role_member' => 'Membro',
     'role_employee' => 'Dipendente',
     'employee_invitation_requires_matching_employee' => 'Crea esattamente un dipendente non collegato con questo indirizzo e-mail prima di invitarlo.',
+    'employee_already_linked' => 'Questo record dipendente è già collegato a un altro utente.',
     'role_accountant' => 'Ragioniere',
     'role_viewer' => 'Visualizzatore',
     'invited_by' => 'Invitato da',

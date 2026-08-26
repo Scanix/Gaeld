@@ -85,6 +85,31 @@ class EmployeeSelfServiceAccessTest extends TestCase
         $this->assertSame(Role::Employee->value, $this->organization->users()->find($invitedUser->id)?->pivot->role);
     }
 
+    public function test_existing_member_can_be_linked_to_an_explicit_payroll_record(): void
+    {
+        $member = User::factory()->create(['email' => 'member-account@example.test']);
+        $payrollRecord = Employee::factory()->create([
+            'organization_id' => $this->organization->id,
+            'email' => 'different-payroll-email@example.test',
+        ]);
+        app(OrganizationService::class)->addMember(
+            $this->organization,
+            $member,
+            Role::Member->value,
+        );
+
+        app(OrganizationService::class)->changeMemberRole(
+            $this->organization,
+            $member,
+            Role::Employee,
+            $payrollRecord,
+        );
+
+        $this->assertSame($member->id, $payrollRecord->refresh()->user_id);
+        $this->assertTrue($member->hasPermissionTo(Permission::PayrollSalarySlipsViewOwn));
+        $this->assertFalse($member->hasPermissionTo(Permission::ReportingView));
+    }
+
     public function test_employee_sees_only_own_posted_salary_slips(): void
     {
         $ownPosted = $this->salarySlip($this->employee, posted: true);

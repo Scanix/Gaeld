@@ -110,7 +110,7 @@ class OrganizationService
     /**
      * Change a member's role within an organization.
      */
-    public function changeMemberRole(Organization $organization, User $user, Role $role): void
+    public function changeMemberRole(Organization $organization, User $user, Role $role, ?Employee $employee = null): void
     {
         // Prevent removing the last owner
         if ($this->isLastOwner($organization, $user)) {
@@ -121,7 +121,7 @@ class OrganizationService
 
         $organization->users()->updateExistingPivot($user->id, ['role' => $role->value]);
         $this->assignSpatieRole($user, $organization, $role);
-        $this->syncEmployeeLink($organization, $user, $role);
+        $this->syncEmployeeLink($organization, $user, $role, $employee);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -151,7 +151,7 @@ class OrganizationService
         $user->syncRoles([$role->value]);
     }
 
-    private function syncEmployeeLink(Organization $organization, User $user, Role $role): void
+    private function syncEmployeeLink(Organization $organization, User $user, Role $role, ?Employee $selectedEmployee = null): void
     {
         if ($role !== Role::Employee) {
             Employee::query()
@@ -162,13 +162,19 @@ class OrganizationService
             return;
         }
 
-        $employee = Employee::query()
+        $employee = $selectedEmployee ?? Employee::query()
             ->where('organization_id', $organization->id)
             ->whereRaw('LOWER(email) = ?', [mb_strtolower($user->email)])
             ->where(function ($query) use ($user): void {
                 $query->whereNull('user_id')->orWhere('user_id', $user->id);
             })
             ->sole();
+
+        if ($employee->organization_id !== $organization->id || $employee->user_id !== null) {
+            throw ValidationException::withMessages([
+                'employee_id' => [__('app.employee_already_linked')],
+            ]);
+        }
 
         $employee->update(['user_id' => $user->id]);
     }

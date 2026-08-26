@@ -20,6 +20,7 @@ const props = defineProps({
   invitations: { type: Array, default: () => [] },
   canManageUsers: { type: Boolean, default: false },
   canAddMember: { type: Boolean, default: true },
+  availableEmployees: { type: Array, default: () => [] },
 })
 
 const page = usePage()
@@ -85,10 +86,29 @@ const userColumns = computed(() => {
 })
 
 // --- Role Change ---
+const employeeRoleTarget = ref(null)
+const employeeRoleForm = useForm({ employee_id: '' })
+
 function changeRole(user, newRole) {
+  if (newRole === 'employee') {
+    employeeRoleTarget.value = user
+    employeeRoleForm.employee_id = ''
+    return
+  }
+
   router.post(`/organizations/${props.organization.id}/members/${user.id}/role`, {
     role: newRole,
   }, { preserveScroll: true })
+}
+
+function assignEmployeeRole() {
+  employeeRoleForm.transform(data => ({ ...data, role: 'employee' })).post(
+    `/organizations/${props.organization.id}/members/${employeeRoleTarget.value.id}/role`,
+    {
+      preserveScroll: true,
+      onSuccess: () => { employeeRoleTarget.value = null },
+    },
+  )
 }
 
 // --- Remove Member ---
@@ -322,6 +342,24 @@ function canChangeUserRole(user) {
         <div class="flex justify-end gap-3">
           <Button variant="outline" @click="showInviteModal = false">{{ t('cancel') }}</Button>
           <Button type="submit" :disabled="inviteForm.processing">{{ t('invite_member') }}</Button>
+        </div>
+      </form>
+    </Modal>
+
+    <!-- Remove Member Confirmation -->
+    <Modal :show="!!employeeRoleTarget" @close="employeeRoleTarget = null" :title="t('role_employee')">
+      <form class="space-y-6" @submit.prevent="assignEmployeeRole">
+        <FormSelect
+          id="employee_record"
+          v-model="employeeRoleForm.employee_id"
+          :label="t('employee')"
+          :options="availableEmployees"
+          :error="employeeRoleForm.errors.employee_id"
+          required
+        />
+        <div class="flex justify-end gap-3">
+          <Button type="button" variant="outline" @click="employeeRoleTarget = null">{{ t('cancel') }}</Button>
+          <Button type="submit" :disabled="employeeRoleForm.processing">{{ t('save') }}</Button>
         </div>
       </form>
     </Modal>
