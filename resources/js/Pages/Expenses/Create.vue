@@ -67,6 +67,18 @@ const { forceClear } = useUnsavedChanges(computed(() => form.isDirty))
 
 function submit() {
   forceClear.value = true
+  form.transform(data => {
+    if (!props.selfService) return data
+
+    const {
+      supplier_id,
+      expense_account_code,
+      bank_account_code,
+      ...selfServiceData
+    } = data
+
+    return selfServiceData
+  })
   form.post('/expenses', {
     forceFormData: true,
     onError: () => { forceClear.value = false },
