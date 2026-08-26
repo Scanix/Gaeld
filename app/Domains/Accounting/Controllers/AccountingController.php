@@ -295,7 +295,9 @@ class AccountingController extends Controller
             $rows = array_map(fn ($row) => [
                 $row['account_code'],
                 $row['account_name'],
-                $row['account_type'],
+                $row['account_type'] instanceof AccountType
+                    ? $row['account_type']->value
+                    : $row['account_type'],
                 $row['debit'],
                 $row['credit'],
             ], $balances);

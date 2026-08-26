@@ -90,6 +90,7 @@ class ReportExportTest extends TestCase
 
         $response->assertOk();
         $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString('Revenue', $response->streamedContent());
     }
 
     public function test_export_journal_entries_csv(): void
