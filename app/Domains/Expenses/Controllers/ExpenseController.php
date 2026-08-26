@@ -64,6 +64,9 @@ class ExpenseController extends Controller
     {
         $this->authorize('create', Expense::class);
 
+        $selfService = $request->user()->hasPermissionTo(Permission::ExpensesViewOwn)
+            && ! $request->user()->hasPermissionTo(Permission::ExpensesView);
+
         $ocrData = null;
         if ($request->filled('scan_id')) {
             $scan = ReceiptScan::where('scan_id', $request->input('scan_id'))
@@ -81,11 +84,12 @@ class ExpenseController extends Controller
 
         return Inertia::render('Expenses/Create', [
             'vatRates' => VatRateQuery::active(),
-            'suppliers' => ContactQuery::forSelect(),
+            'suppliers' => $selfService ? [] : ContactQuery::forSelect(),
             'categories' => ExpenseCategoryQuery::forSelect(),
-            'expenseAccounts' => AccountQuery::forSelect(AccountType::Expense),
-            'bankAccounts' => BankAccountQuery::forSelect(),
+            'expenseAccounts' => $selfService ? [] : AccountQuery::forSelect(AccountType::Expense),
+            'bankAccounts' => $selfService ? [] : BankAccountQuery::forSelect(),
             'ocrData' => $ocrData,
+            'selfService' => $selfService,
         ]);
     }
 

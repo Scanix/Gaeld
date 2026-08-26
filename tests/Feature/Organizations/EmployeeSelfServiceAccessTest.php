@@ -148,6 +148,40 @@ class EmployeeSelfServiceAccessTest extends TestCase
         $this->asEmployee()->get(route('expenses.show', $other))->assertForbidden();
     }
 
+    public function test_employee_expense_form_hides_and_rejects_accounting_fields(): void
+    {
+        $props = $this->asEmployee()->get(route('expenses.create'))
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertTrue($props['selfService']);
+        $this->assertSame([], $props['suppliers']);
+        $this->assertSame([], $props['expenseAccounts']);
+        $this->assertSame([], $props['bankAccounts']);
+
+        $this->asEmployee()->post(route('expenses.store'), [
+            'category' => 'Travel',
+            'amount' => '45.00',
+            'date' => '2026-08-26',
+            'supplier_id' => fake()->uuid(),
+            'expense_account_code' => '6000',
+            'bank_account_code' => '1020',
+        ])->assertSessionHasErrors(['supplier_id', 'expense_account_code', 'bank_account_code']);
+
+        $this->asEmployee()->post(route('expenses.store'), [
+            'category' => 'Travel',
+            'description' => 'Employee transport',
+            'amount' => '45.00',
+            'date' => '2026-08-26',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('expenses', [
+            'organization_id' => $this->organization->id,
+            'user_id' => $this->employeeUser->id,
+            'description' => 'Employee transport',
+        ]);
+    }
+
     public function test_employee_is_denied_global_financial_and_settings_routes(): void
     {
         $this->asEmployee()->get('/reports/profit-and-loss')->assertForbidden();
