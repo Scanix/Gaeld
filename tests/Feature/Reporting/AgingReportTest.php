@@ -100,6 +100,17 @@ class AgingReportTest extends TestCase
         $this->assertEquals(0, $report['brackets']['current']['items'][0]['days_overdue']);
     }
 
+    public function test_invoices_issued_after_as_of_date_are_excluded(): void
+    {
+        $this->createInvoice('2026-08-01', '2026-09-01');
+
+        $service = app(AgingReportService::class);
+        $report = $service->generate($this->organization->id, 'receivables', '2026-03-20');
+
+        $this->assertSame('0.00', $report['grand_total']);
+        $this->assertSame([], $report['rows']);
+    }
+
     public function test_1_30_bucket_contains_invoices_1_to_30_days_overdue(): void
     {
         // 15 days overdue: due 2026-03-05, asOf 2026-03-20
