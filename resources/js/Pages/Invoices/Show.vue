@@ -24,6 +24,8 @@ import HelpText from '@/Components/HelpText.vue'
 const props = defineProps({
   invoice: Object,
   canForceDelete: { type: Boolean, default: false },
+  canRecordPayment: { type: Boolean, default: false },
+  canSend: { type: Boolean, default: false },
   canRevertToDraft: { type: Boolean, default: false },
   justificatifUrl: { type: String, default: null },
   bankAccounts: { type: Array, default: () => [] },
@@ -259,7 +261,7 @@ const bankAccountOptions = computed(() =>
             {{ t('finalize') }}
           </Button>
           <Button
-            v-if="(invoice?.status === 'sent' || invoice?.status === 'overdue') && !invoice?.archived_at"
+            v-if="canRecordPayment"
             size="sm"
             @click="openPaymentModal"
           >
@@ -285,7 +287,7 @@ const bankAccountOptions = computed(() =>
                 {{ t('duplicate') }}
               </button>
               <button
-                v-if="invoice?.status === 'sent' && !invoice?.archived_at"
+                v-if="canSend"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
                 :disabled="sendForm.processing"
                 @click="sendInvoice(); close()"
