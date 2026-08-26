@@ -219,6 +219,9 @@ class AccountingExportTest extends TestCase
         $service = app(AccountingExportService::class);
         $zipPath = $service->generateExport($this->org->id, '2025');
 
+        $this->assertSame(0770, fileperms(dirname($zipPath)) & 0777);
+        $this->assertSame(0660, fileperms($zipPath) & 0777);
+
         $zip = new \ZipArchive;
         $zip->open($zipPath);
         $csvContent = $zip->getFromName('chart-of-accounts.csv');
