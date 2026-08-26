@@ -71,7 +71,7 @@ const salaryColumns = computed(() => [
             </div>
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('start_date') }}</p>
-              <p class="font-medium">{{ formatDate(employee.start_date) }}</p>
+              <p class="font-medium">{{ formatDate(employee.entry_date) }}</p>
             </div>
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('gross_salary') }}</p>

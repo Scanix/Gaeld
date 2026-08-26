@@ -50,6 +50,7 @@ class PayrollCrudHttpTest extends TestCase
             'organization_id' => $this->org->id,
             'first_name' => 'Max',
             'last_name' => 'Muster',
+            'entry_date' => '2026-01-01',
         ]);
     }
 
@@ -77,6 +78,7 @@ class PayrollCrudHttpTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('Payroll/Employees/Show')
                 ->has('employee')
+                ->where('employee.entry_date', $employee->entry_date->toJSON())
             );
     }
 
