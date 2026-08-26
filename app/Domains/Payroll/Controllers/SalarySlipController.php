@@ -2,6 +2,7 @@
 
 namespace App\Domains\Payroll\Controllers;
 
+use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\PostPayrollAction;
 use App\Domains\Payroll\Actions\UnpostPayrollAction;
@@ -24,7 +25,7 @@ class SalarySlipController extends Controller
 {
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
-        $this->authorize('viewAny', Employee::class);
+        $this->authorize('viewAny', SalarySlip::class);
 
         $year = $request->input('year');
         $month = $request->input('month');
@@ -34,6 +35,14 @@ class SalarySlipController extends Controller
             ->with('employee')
             ->orderByDesc('period_year')
             ->orderByDesc('period_month');
+
+        $ownOnly = $request->user()->hasPermissionTo(Permission::PayrollSalarySlipsViewOwn)
+            && ! $request->user()->hasPermissionTo(Permission::PayrollView);
+
+        if ($ownOnly) {
+            $query->whereNotNull('posted_at')
+                ->whereHas('employee', fn ($employeeQuery) => $employeeQuery->where('user_id', $request->user()->id));
+        }
 
         if ($year) {
             $query->where('period_year', (int) $year);
@@ -47,6 +56,9 @@ class SalarySlipController extends Controller
         $defaultYear = $year;
         if (! $defaultYear) {
             $latestSlip = SalarySlip::where('organization_id', $currentOrg->id())
+                ->when($ownOnly, fn ($latestQuery) => $latestQuery
+                    ->whereNotNull('posted_at')
+                    ->whereHas('employee', fn ($employeeQuery) => $employeeQuery->where('user_id', $request->user()->id)))
                 ->orderByDesc('period_year')
                 ->first();
             $defaultYear = $latestSlip ? (string) $latestSlip->period_year : (string) now()->year;
@@ -58,6 +70,7 @@ class SalarySlipController extends Controller
                 'year' => $defaultYear,
                 'month' => $month ?? '',
             ],
+            'ownOnly' => $ownOnly,
         ]);
     }
 
@@ -65,8 +78,14 @@ class SalarySlipController extends Controller
     {
         $this->authorize('view', $slip);
 
+        $ownOnly = request()->user()->hasPermissionTo(Permission::PayrollSalarySlipsViewOwn)
+            && ! request()->user()->hasPermissionTo(Permission::PayrollView);
+
         return Inertia::render('Payroll/SalarySlips/Show', [
-            'slip' => $slip->load(['employee', 'journalEntry.lines.account']),
+            'slip' => $ownOnly
+                ? $slip->load('employee')->makeHidden(['journal_entry_id'])
+                : $slip->load(['employee', 'journalEntry.lines.account']),
+            'canManage' => ! $ownOnly,
         ]);
     }
 

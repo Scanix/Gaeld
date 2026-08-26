@@ -83,8 +83,17 @@ function isExpanded(item) {
 }
 
 const businessType = computed(() => currentOrg.value?.business_type)
+const currentRole = computed(() => organizations.value.find(org => org.id === currentOrg.value?.id)?.role)
 
 const navigation = computed(() => {
+  if (currentRole.value === 'employee') {
+    return [
+      { key: 'expenses', href: '/expenses', icon: Receipt },
+      { key: 'salary_slips', href: '/payroll/salary-slips', icon: Briefcase },
+      { key: 'profile', href: '/profile', icon: Users },
+    ]
+  }
+
   const bt = businessType.value
   const isFidu = bt === 'fiduciary'
   const isFreelancer = bt === 'freelancer'
@@ -200,7 +209,9 @@ const navigation = computed(() => {
 })
 
 const billingNav = computed(() =>
-  features.value.saas ? [{ key: 'billing', href: '/billing', icon: CreditCard }] : []
+  features.value.saas && currentRole.value !== 'employee'
+    ? [{ key: 'billing', href: '/billing', icon: CreditCard }]
+    : []
 )
 
 function isActive(href) {

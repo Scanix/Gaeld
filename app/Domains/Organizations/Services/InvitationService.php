@@ -6,6 +6,7 @@ use App\Domains\Organizations\Enums\Role;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Models\OrganizationInvitation;
 use App\Domains\Organizations\Notifications\InvitationNotification;
+use App\Domains\Payroll\Models\Employee;
 use App\Domains\Users\Models\User;
 use App\Support\FeatureFlag;
 use Illuminate\Support\Facades\Notification;
@@ -28,6 +29,20 @@ class InvitationService
 
     public function invite(Organization $organization, string $email, Role $role, User $inviter): OrganizationInvitation
     {
+        if ($role === Role::Employee) {
+            $matchingEmployees = Employee::query()
+                ->where('organization_id', $organization->id)
+                ->whereRaw('LOWER(email) = ?', [mb_strtolower($email)])
+                ->whereNull('user_id')
+                ->count();
+
+            if ($matchingEmployees !== 1) {
+                throw ValidationException::withMessages([
+                    'email' => [__('app.employee_invitation_requires_matching_employee')],
+                ]);
+            }
+        }
+
         // Check if user is already a member
         if ($organization->users()->where('email', $email)->exists()) {
             throw ValidationException::withMessages([

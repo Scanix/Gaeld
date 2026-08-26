@@ -3,6 +3,7 @@
 namespace App\Domains\Payroll\Models;
 
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Users\Models\User;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Database\Factories\Domains\Payroll\Models\EmployeeFactory;
@@ -45,6 +46,7 @@ class Employee extends Model
 
     protected $fillable = [
         'organization_id',
+        'user_id',
         'first_name',
         'last_name',
         'email',
@@ -77,6 +79,12 @@ class Employee extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /** @return HasMany<SalarySlip, $this> */

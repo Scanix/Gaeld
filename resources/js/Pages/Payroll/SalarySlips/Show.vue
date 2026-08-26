@@ -18,6 +18,7 @@ const { formatCurrency } = useFormatters()
 
 const props = defineProps({
   slip: Object,
+  canManage: { type: Boolean, default: true },
 })
 
 const postForm = useForm({})
@@ -71,9 +72,10 @@ function deductionRow(label, employee, employer) {
             <div>
               <CardTitle>{{ t('salary_slip') }} — {{ slip.month_label }}</CardTitle>
               <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
-                <Link :href="`/payroll/employees/${slip.employee_id}`" class="hover:underline">
+                <Link v-if="canManage" :href="`/payroll/employees/${slip.employee_id}`" class="hover:underline">
                   {{ slip.employee_name }}
                 </Link>
+                <span v-else>{{ slip.employee_name }}</span>
               </p>
             </div>
             <Badge :variant="slip.status === 'posted' ? 'default' : 'secondary'">
@@ -138,7 +140,7 @@ function deductionRow(label, employee, employer) {
       <!-- Actions -->
       <div class="flex flex-wrap gap-3">
         <Button
-          v-if="slip.status !== 'posted'"
+          v-if="canManage && slip.status !== 'posted'"
           size="sm"
           :disabled="postForm.processing"
           @click="postToLedger"
@@ -146,7 +148,7 @@ function deductionRow(label, employee, employer) {
           {{ t('post_to_ledger') }}
         </Button>
         <Button
-          v-if="slip.status === 'posted'"
+          v-if="canManage && slip.status === 'posted'"
           variant="outline"
           size="sm"
           @click="showUnpostDialog = true"
@@ -154,7 +156,7 @@ function deductionRow(label, employee, employer) {
           {{ t('unpost') }}
         </Button>
         <Button
-          v-if="slip.status !== 'posted'"
+          v-if="canManage && slip.status !== 'posted'"
           variant="outline"
           size="sm"
           class="text-[hsl(var(--destructive))]"
@@ -167,7 +169,7 @@ function deductionRow(label, employee, employer) {
         </Button>
         <p v-if="slip.status === 'posted'" class="flex items-center text-sm text-green-700 dark:text-green-400">
           {{ t('slip_posted_to_ledger') }}
-          <span v-if="slip.journal_entry_id" class="ml-2">
+          <span v-if="canManage && slip.journal_entry_id" class="ml-2">
             (<Link :href="`/accounting/journal-entries/${slip.journal_entry_id}`" class="hover:underline">#{{ slip.journal_entry_id }}</Link>)
           </span>
         </p>

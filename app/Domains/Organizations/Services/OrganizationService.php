@@ -10,6 +10,7 @@ use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Enums\Role;
 use App\Domains\Organizations\Events\MemberRemoved;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Payroll\Models\Employee;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -90,6 +91,7 @@ class OrganizationService
 
         $spatieRole = Role::tryFrom($role) ?? Role::Member;
         $this->assignSpatieRole($user, $organization, $spatieRole);
+        $this->syncEmployeeLink($organization, $user, $spatieRole);
     }
 
     /**
@@ -119,6 +121,7 @@ class OrganizationService
 
         $organization->users()->updateExistingPivot($user->id, ['role' => $role->value]);
         $this->assignSpatieRole($user, $organization, $role);
+        $this->syncEmployeeLink($organization, $user, $role);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -146,5 +149,27 @@ class OrganizationService
     {
         app()[PermissionRegistrar::class]->setPermissionsTeamId($organization->id);
         $user->syncRoles([$role->value]);
+    }
+
+    private function syncEmployeeLink(Organization $organization, User $user, Role $role): void
+    {
+        if ($role !== Role::Employee) {
+            Employee::query()
+                ->where('organization_id', $organization->id)
+                ->where('user_id', $user->id)
+                ->update(['user_id' => null]);
+
+            return;
+        }
+
+        $employee = Employee::query()
+            ->where('organization_id', $organization->id)
+            ->whereRaw('LOWER(email) = ?', [mb_strtolower($user->email)])
+            ->where(function ($query) use ($user): void {
+                $query->whereNull('user_id')->orWhere('user_id', $user->id);
+            })
+            ->sole();
+
+        $employee->update(['user_id' => $user->id]);
     }
 }

@@ -1007,6 +1007,8 @@ return [
     'role_owner' => 'Owner',
     'role_admin' => 'Admin',
     'role_member' => 'Member',
+    'role_employee' => 'Employee',
+    'employee_invitation_requires_matching_employee' => 'Create exactly one unlinked employee with this email before inviting an employee.',
     'role_accountant' => 'Accountant',
     'role_viewer' => 'Viewer',
     'invited_by' => 'Invited by',

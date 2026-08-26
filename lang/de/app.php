@@ -942,6 +942,8 @@ return [
     'role_owner' => 'Eigentümer',
     'role_admin' => 'Admin',
     'role_member' => 'Mitglied',
+    'role_employee' => 'Mitarbeiter',
+    'employee_invitation_requires_matching_employee' => 'Erstellen Sie genau einen nicht verknüpften Mitarbeiter mit dieser E-Mail-Adresse, bevor Sie ihn einladen.',
     'role_accountant' => 'Buchhalter',
     'role_viewer' => 'Betrachter',
     'invited_by' => 'Eingeladen von',

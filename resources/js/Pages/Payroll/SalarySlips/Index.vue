@@ -16,6 +16,7 @@ const { intlMonthName, formatCurrency } = useFormatters()
 
 const props = defineProps({
   slips: Object,
+  ownOnly: { type: Boolean, default: false },
   query: {
     type: Object,
     default: () => ({ month: '', year: '' }),
@@ -80,9 +81,10 @@ const columns = computed(() => [
     >
       <template #cell-period="{ row }">{{ row.month_label }}</template>
       <template #cell-employee="{ row }">
-        <Link :href="`/payroll/employees/${row.employee_id}`" class="hover:underline">
+        <Link v-if="!ownOnly" :href="`/payroll/employees/${row.employee_id}`" class="hover:underline">
           {{ row.employee_name }}
         </Link>
+        <span v-else>{{ row.employee_name }}</span>
       </template>
       <template #cell-gross_salary="{ row }">
         <span class="font-mono">{{ formatCurrency(row.gross_salary) }}</span>

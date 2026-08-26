@@ -15,13 +15,17 @@ class ExpensePolicy extends BasePolicy
     public function viewAny(User $user): bool
     {
         return $this->hasCurrentOrganization($user)
-            && $user->hasPermissionTo(Permission::ExpensesView);
+            && $user->hasAnyPermission([Permission::ExpensesView, Permission::ExpensesViewOwn]);
     }
 
     public function view(User $user, Expense $expense): bool
     {
-        return $this->belongsToOrganization($user, $expense)
-            && $user->hasPermissionTo(Permission::ExpensesView);
+        if (! $this->belongsToOrganization($user, $expense)) {
+            return false;
+        }
+
+        return $user->hasPermissionTo(Permission::ExpensesView)
+            || ($user->hasPermissionTo(Permission::ExpensesViewOwn) && $expense->user_id === $user->id);
     }
 
     public function create(User $user): bool

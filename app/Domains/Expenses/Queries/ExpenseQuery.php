@@ -4,6 +4,7 @@ namespace App\Domains\Expenses\Queries;
 
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Organizations\Enums\Permission;
 use App\Support\DTOs\SummaryResult;
 use App\Support\QueryBuilder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -17,7 +18,14 @@ class ExpenseQuery
      */
     public static function list(Request $request, int $perPage = 20): LengthAwarePaginator
     {
-        return QueryBuilder::for(Expense::query()->with('supplier'), $request)
+        $query = Expense::query()->with('supplier');
+
+        if ($request->user()->hasPermissionTo(Permission::ExpensesViewOwn)
+            && ! $request->user()->hasPermissionTo(Permission::ExpensesView)) {
+            $query->where('user_id', $request->user()->id);
+        }
+
+        return QueryBuilder::for($query, $request)
             ->allowedSorts(['date', 'amount', 'category', 'vendor', 'status'], 'date', 'desc')
             ->allowedFilters(['status', 'category'])
             ->searchable(['description', 'vendor', 'category'])
