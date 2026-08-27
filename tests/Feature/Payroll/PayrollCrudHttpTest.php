@@ -139,6 +139,30 @@ class PayrollCrudHttpTest extends TestCase
         ]);
     }
 
+    public function test_employee_update_without_thirteenth_salary_field_preserves_existing_setting(): void
+    {
+        $employee = Employee::create([
+            'organization_id' => $this->org->id,
+            'first_name' => 'Thirteen',
+            'last_name' => 'Preserved',
+            'entry_date' => '2026-01-01',
+            'gross_salary' => '5000.00',
+            'has_thirteenth_salary' => true,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->user)
+            ->put("/payroll/employees/{$employee->id}", [
+                'first_name' => 'Updated',
+                'last_name' => 'Preserved',
+                'entry_date' => '2026-01-01',
+                'gross_salary' => '5500.00',
+            ])
+            ->assertRedirect();
+
+        $this->assertTrue($employee->fresh()->has_thirteenth_salary);
+    }
+
     public function test_employee_destroy_deletes_record(): void
     {
         $employee = Employee::create([

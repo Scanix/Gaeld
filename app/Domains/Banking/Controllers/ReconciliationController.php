@@ -2,6 +2,8 @@
 
 namespace App\Domains\Banking\Controllers;
 
+use App\Domains\Accounting\Constants\AccountCode;
+use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Banking\Actions\UnreconcileTransactionAction;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\NotReconciledException;
@@ -22,10 +24,12 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use App\Support\Exceptions\FeatureDisabledException;
 use App\Support\FeatureFlag;
+use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -148,6 +152,7 @@ class ReconciliationController extends Controller
             'filter' => $filter,
             'openInvoices' => $openInvoices,
             'openExpenses' => $openExpenses,
+            'vatSettlements' => $this->availableVatSettlements($bankAccount->organization_id),
             'pageFeatures' => [
                 'auto_reconciliation' => FeatureFlag::enabled('auto_reconciliation'),
             ],
@@ -260,6 +265,32 @@ class ReconciliationController extends Controller
             ->with('success', __('app.transaction_reconciled'));
     }
 
+    public function reconcileVat(Request $request, BankTransaction $transaction, CurrentOrganization $currentOrg): RedirectResponse
+    {
+        $transaction->loadMissing('bankAccount');
+        $bankAccount = $transaction->getRelation('bankAccount');
+        if (! $bankAccount instanceof BankAccount || $bankAccount->organization_id !== $currentOrg->id()) {
+            abort(404);
+        }
+
+        $this->authorize('update', $bankAccount);
+        $validated = $request->validate([
+            'vat_settlement_id' => ['required', 'uuid'],
+        ]);
+        $settlement = JournalEntry::query()
+            ->where('organization_id', $currentOrg->id())
+            ->whereKey($validated['vat_settlement_id'])
+            ->firstOrFail();
+
+        try {
+            $this->reconciliationService->reconcileWithVatSettlement($transaction, $settlement);
+        } catch (AlreadyReconciledException|UnlinkedBankAccountException|ReconciliationFailedException $e) {
+            return $this->backWithError($e);
+        }
+
+        return redirect()->back()->with('success', __('app.vat_payment_reconciled'));
+    }
+
     /**
      * Confirm a match: reconcile + record payment in one click.
      */
@@ -367,5 +398,67 @@ class ReconciliationController extends Controller
             ->with('success', __('app.transactions_marked_personal', [
                 'count' => $result['reconciled'],
             ]));
+    }
+
+    /**
+     * @return array<int, array{id: string, reference: string, amount: string, direction: string}>
+     */
+    private function availableVatSettlements(string $organizationId): array
+    {
+        $settlements = JournalEntry::query()
+            ->where('organization_id', $organizationId)
+            ->where('is_posted', true)
+            ->where('type', 'vat_settlement')
+            ->with('lines.account')
+            ->orderByDesc('date')
+            ->get();
+        $matchedIds = BankTransaction::query()
+            ->whereHas('bankAccount', fn ($query) => $query->where('organization_id', $organizationId))
+            ->whereNotNull('vat_settlement_journal_entry_id')
+            ->pluck('vat_settlement_journal_entry_id')
+            ->map(fn ($id): string => (string) $id)
+            ->all();
+        $reversedReferences = JournalEntry::query()
+            ->where('organization_id', $organizationId)
+            ->where('is_posted', true)
+            ->whereIn('reference', $settlements->map(fn ($settlement): string => 'REV-'.$settlement->reference)->all())
+            ->pluck('reference')
+            ->all();
+
+        return $settlements
+            ->reject(fn (JournalEntry $settlement): bool => in_array((string) $settlement->id, $matchedIds, true)
+                || in_array('REV-'.$settlement->reference, $reversedReferences, true))
+            ->map(function (JournalEntry $settlement): ?array {
+                $line = $settlement->lines->first(
+                    fn ($line): bool => $line->account?->code === AccountCode::VAT_PAYABLE_AFC,
+                );
+
+                if (! $line) {
+                    return null;
+                }
+
+                if (Money::isPositive((string) $line->credit)) {
+                    return [
+                        'id' => (string) $settlement->id,
+                        'reference' => (string) $settlement->reference,
+                        'amount' => (string) $line->credit,
+                        'direction' => 'debit',
+                    ];
+                }
+
+                if (Money::isPositive((string) $line->debit)) {
+                    return [
+                        'id' => (string) $settlement->id,
+                        'reference' => (string) $settlement->reference,
+                        'amount' => (string) $line->debit,
+                        'direction' => 'credit',
+                    ];
+                }
+
+                return null;
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 }

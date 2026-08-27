@@ -31,6 +31,7 @@ use Illuminate\Support\Carbon;
  * @property string $gross_salary
  * @property bool $is_active
  * @property bool $is_source_tax_subject
+ * @property bool $has_thirteenth_salary
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -43,6 +44,10 @@ class Employee extends Model
 
     // ahv_number is hidden from array/JSON serialization; access explicitly only.
     protected $hidden = ['ahv_number'];
+
+    protected $attributes = [
+        'has_thirteenth_salary' => false,
+    ];
 
     protected $fillable = [
         'organization_id',
@@ -57,6 +62,10 @@ class Employee extends Model
         'gross_salary',
         'is_active',
         'is_source_tax_subject',
+        'has_thirteenth_salary',
+        'source_tax_canton',
+        'source_tax_tariff',
+        'source_tax_municipality_code',
     ];
 
     protected function casts(): array
@@ -67,6 +76,7 @@ class Employee extends Model
             'gross_salary' => 'decimal:2',
             'is_active' => 'boolean',
             'is_source_tax_subject' => 'boolean',
+            'has_thirteenth_salary' => 'boolean',
             // ahv_number is encrypted at rest using Laravel's Encrypter (APP_KEY).
             // Stored ciphertext is never interpretable without the application key.
             'ahv_number' => 'encrypted',

@@ -4,6 +4,7 @@ namespace App\Domains\Reporting\Controllers;
 
 use App\Domains\Accounting\Actions\PostVatSettlementAction;
 use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
+use App\Domains\Accounting\Exceptions\VatPeriodLockedException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\VatReportService;
@@ -145,9 +146,16 @@ class VatReportController extends Controller
         $validated = $request->validated();
 
         try {
-            $action->execute($currentOrg->id(), $validated['from_date'], $validated['to_date']);
+            $action->execute(
+                $currentOrg->id(),
+                $validated['from_date'],
+                $validated['to_date'],
+                $request->user()->id,
+            );
         } catch (DuplicateReferenceException) {
             return $this->backWithError(__('app.vat_settlement_already_posted'));
+        } catch (VatPeriodLockedException $exception) {
+            return $this->backWithError($exception);
         }
 
         return redirect()->route('reports.vat', [

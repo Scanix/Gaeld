@@ -2,6 +2,7 @@
 
 namespace App\Domains\Payroll\Actions;
 
+use App\Domains\Payroll\Contracts\SourceTaxServiceInterface;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Payroll\Services\PayrollCalculator;
@@ -16,15 +17,18 @@ class GeneratePayrollRunAction
     public function __construct(
         private PayrollCalculator $calculator,
         private PostPayrollAction $postAction,
+        private SourceTaxServiceInterface $sourceTax,
     ) {}
 
     /**
      * @param  array<int, string>  $employeeIds  Optional subset of employee UUIDs to process. Empty array = all active employees.
+     * @param  array<int, array{employee_id: string, unpaid_leave_days?: int|string, reimbursement_amount?: string|int|float}>  $adjustments
      * @return Collection<int, SalarySlip>
      */
-    public function execute(string $orgId, int $month, int $year, bool $shouldPost = false, array $employeeIds = []): Collection
+    public function execute(string $orgId, int $month, int $year, bool $shouldPost = false, array $employeeIds = [], array $adjustments = []): Collection
     {
         $employees = $this->employees($orgId, $employeeIds);
+        $adjustmentsByEmployee = collect($adjustments)->keyBy('employee_id');
 
         $slips = collect();
         foreach ($employees as $employee) {
@@ -37,9 +41,17 @@ class GeneratePayrollRunAction
                 continue;
             }
 
-            $slip = DB::transaction(function () use ($employee, $month, $year, $shouldPost): SalarySlip {
-                $slip = $this->calculator->calculate($employee, $month, $year);
+            $adjustment = $adjustmentsByEmployee->get($employee->id, []);
+            $slip = DB::transaction(function () use ($employee, $month, $year, $shouldPost, $adjustment): SalarySlip {
+                $slip = $this->calculator->calculate(
+                    $employee,
+                    $month,
+                    $year,
+                    (int) ($adjustment['unpaid_leave_days'] ?? 0),
+                    (string) ($adjustment['reimbursement_amount'] ?? '0.00'),
+                );
                 $slip->save();
+                $this->sourceTax->applyToSlip($slip, $employee);
 
                 if ($shouldPost) {
                     $this->postAction->execute($slip);
@@ -58,12 +70,25 @@ class GeneratePayrollRunAction
      * Calculate a payroll preview without persisting salary slips.
      *
      * @param  array<int, string>  $employeeIds
+     * @param  array<int, array{employee_id: string, unpaid_leave_days?: int|string, reimbursement_amount?: string|int|float}>  $adjustments
      * @return Collection<int, SalarySlip>
      */
-    public function preview(string $orgId, int $month, int $year, array $employeeIds = []): Collection
+    public function preview(string $orgId, int $month, int $year, array $employeeIds = [], array $adjustments = []): Collection
     {
+        $adjustmentsByEmployee = collect($adjustments)->keyBy('employee_id');
+
         return $this->employees($orgId, $employeeIds)
-            ->map(fn (Employee $employee): SalarySlip => $this->calculator->calculate($employee, $month, $year))
+            ->map(function (Employee $employee) use ($adjustmentsByEmployee, $month, $year): SalarySlip {
+                $adjustment = $adjustmentsByEmployee->get($employee->id, []);
+
+                return $this->calculator->calculate(
+                    $employee,
+                    $month,
+                    $year,
+                    (int) ($adjustment['unpaid_leave_days'] ?? 0),
+                    (string) ($adjustment['reimbursement_amount'] ?? '0.00'),
+                );
+            })
             ->values();
     }
 

@@ -1,8 +1,11 @@
+@php
+    $employeeData = $employeeData ?? $slip->employeeDocumentData();
+@endphp
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>{{ __('exports.salary_slip.title') }} — {{ $slip->employee->fullName() }}</title>
+    <title>{{ __('exports.salary_slip.title') }} — {{ $employeeData['first_name'] }} {{ $employeeData['last_name'] }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 20mm; }
@@ -35,9 +38,9 @@
     <div class="section">
         <div class="section-title">{{ __('exports.salary_slip.employee') }}</div>
         <table class="employee-info">
-            <tr><td style="width:30%;">{{ __('exports.salary_slip.name') }}</td><td>{{ $slip->employee->fullName() }}</td></tr>
-            @if($slip->employee->ahv_number)
-                <tr><td>{{ __('exports.salary_slip.ahv_number') }}</td><td>{{ $slip->employee->ahv_number }}</td></tr>
+            <tr><td style="width:30%;">{{ __('exports.salary_slip.name') }}</td><td>{{ $employeeData['first_name'] }} {{ $employeeData['last_name'] }}</td></tr>
+                @if($employeeData['ahv_number'])
+                    <tr><td>{{ __('exports.salary_slip.ahv_number') }}</td><td>{{ $employeeData['ahv_number'] }}</td></tr>
             @endif
         </table>
     </div>
@@ -45,12 +48,32 @@
     <div class="section">
         <div class="section-title">{{ __('exports.salary_slip.salary') }}</div>
         <table>
+            @if(isset($slip->adjustments['base_salary']) && bccomp($slip->adjustments['base_salary'], $slip->gross_salary, 2) !== 0)
+                <tr><td>{{ __('exports.salary_slip.base_salary') }}</td><td class="right">{{ number_format((float) $slip->adjustments['base_salary'], 2, '.', "'") }}</td></tr>
+            @endif
+            @if(isset($slip->adjustments['thirteenth_salary']) && bccomp($slip->adjustments['thirteenth_salary'], '0', 2) > 0)
+                <tr><td>{{ __('exports.salary_slip.thirteenth_salary') }}</td><td class="right">{{ number_format((float) $slip->adjustments['thirteenth_salary'], 2, '.', "'") }}</td></tr>
+            @endif
+            @if(isset($slip->adjustments['unpaid_leave_amount']) && bccomp($slip->adjustments['unpaid_leave_amount'], '0', 2) > 0)
+                <tr><td>{{ __('exports.salary_slip.unpaid_leave') }}</td><td class="right">-{{ number_format((float) $slip->adjustments['unpaid_leave_amount'], 2, '.', "'") }}</td></tr>
+            @endif
             <tr>
                 <td>{{ __('exports.salary_slip.gross_salary') }}</td>
                 <td class="right">{{ number_format((float) $slip->gross_salary, 2, '.', "'") }}</td>
             </tr>
         </table>
     </div>
+
+    @if(isset($slip->adjustments['reimbursement_amount']) && bccomp($slip->adjustments['reimbursement_amount'], '0', 2) > 0)
+        <div class="section">
+            <table>
+                <tr>
+                    <td>{{ __('exports.salary_slip.expense_reimbursement') }}</td>
+                    <td class="right">{{ number_format((float) $slip->adjustments['reimbursement_amount'], 2, '.', "'") }}</td>
+                </tr>
+            </table>
+        </div>
+    @endif
 
     <div class="section">
         <div class="section-title">{{ __('exports.salary_slip.employee_deductions') }}</div>
@@ -67,6 +90,10 @@
             @endif
             @if(isset($deductions['lpp_employee']) && bccomp($deductions['lpp_employee'], '0', 2) > 0)
                 <tr><td>{{ __('exports.salary_slip.pension_lpp') }}</td><td class="right">-{{ number_format((float) $deductions['lpp_employee'], 2, '.', "'") }}</td></tr>
+            @endif
+            @php $sourceTax = $deductions['source_tax'] ?? $slip->source_tax_amount ?? '0.00'; @endphp
+            @if(bccomp((string) $sourceTax, '0', 2) > 0)
+                <tr><td>{{ __('exports.salary_slip.source_tax') }}</td><td class="right">-{{ number_format((float) $sourceTax, 2, '.', "'") }}</td></tr>
             @endif
             <tr class="total-row">
                 <td>{{ __('exports.salary_slip.total_deductions') }}</td>

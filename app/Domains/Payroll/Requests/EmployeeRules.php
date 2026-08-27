@@ -22,6 +22,7 @@ trait EmployeeRules
             'gross_salary' => ['required', 'numeric', 'min:0'],
             'is_active' => ['boolean'],
             'is_source_tax_subject' => ['boolean'],
+            'has_thirteenth_salary' => ['boolean'],
         ];
     }
 }

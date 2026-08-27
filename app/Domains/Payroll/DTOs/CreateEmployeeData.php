@@ -25,6 +25,7 @@ readonly class CreateEmployeeData
         public ?string $exitDate = null,
         public bool $isActive = true,
         public bool $isSourceTaxSubject = false,
+        public bool $hasThirteenthSalary = false,
     ) {}
 
     /** @param  array<string, mixed>  $data */
@@ -44,6 +45,7 @@ readonly class CreateEmployeeData
             exitDate: $data['exit_date'] ?? null,
             isActive: $data['is_active'] ?? true,
             isSourceTaxSubject: $data['is_source_tax_subject'] ?? false,
+            hasThirteenthSalary: $data['has_thirteenth_salary'] ?? false,
         );
     }
 }

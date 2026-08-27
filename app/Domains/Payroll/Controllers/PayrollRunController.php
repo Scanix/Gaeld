@@ -6,6 +6,7 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\GeneratePayrollRunAction;
 use App\Domains\Payroll\Controllers\Concerns\EnsuresPayrollWritable;
 use App\Domains\Payroll\Models\Employee;
+use App\Domains\Payroll\Requests\PayrollAdjustmentRules;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -52,6 +53,7 @@ class PayrollRunController extends Controller
             'year' => ['required', 'integer', 'min:2000'],
             'employee_ids' => ['nullable', 'array'],
             'employee_ids.*' => ['uuid'],
+            ...PayrollAdjustmentRules::for($request),
         ]);
 
         $slips = $action->preview(
@@ -59,6 +61,7 @@ class PayrollRunController extends Controller
             (int) $validated['month'],
             (int) $validated['year'],
             $validated['employee_ids'] ?? [],
+            $validated['adjustments'] ?? [],
         );
 
         return response()->json([
@@ -83,6 +86,7 @@ class PayrollRunController extends Controller
             'post' => ['boolean'],
             'employee_ids' => ['nullable', 'array'],
             'employee_ids.*' => ['uuid'],
+            ...PayrollAdjustmentRules::for($request),
         ]);
 
         $slips = $action->execute(
@@ -91,6 +95,7 @@ class PayrollRunController extends Controller
             (int) $validated['year'],
             $validated['post'] ?? false,
             $validated['employee_ids'] ?? [],
+            $validated['adjustments'] ?? [],
         );
 
         if ($request->wantsJson()) {

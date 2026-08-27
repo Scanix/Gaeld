@@ -36,6 +36,7 @@ const form = useForm({
   is_active: props.employee.is_active ?? true,
   is_source_tax_subject: props.employee.is_source_tax_subject ?? false,
   iban: props.employee.iban ?? '',
+  has_thirteenth_salary: props.employee.has_thirteenth_salary ?? false,
 })
 
 function submit() {
@@ -139,6 +140,17 @@ function submit() {
               :options="statusOptions"
               :error="form.errors.is_active"
             />
+            <label class="flex items-start gap-2 text-sm sm:col-span-2">
+              <input
+                v-model="form.has_thirteenth_salary"
+                type="checkbox"
+                class="mt-0.5 h-4 w-4 accent-[hsl(var(--primary))]"
+              />
+              <span>
+                <span class="block font-medium">{{ t('has_thirteenth_salary') }}</span>
+                <span class="block text-xs text-[hsl(var(--muted-foreground))]">{{ t('has_thirteenth_salary_desc') }}</span>
+              </span>
+            </label>
           </div>
 
           <!-- Bank account -->

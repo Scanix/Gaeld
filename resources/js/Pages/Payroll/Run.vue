@@ -25,6 +25,12 @@ const props = defineProps({
 // Step state: 1=Select, 2=Preview, 3=Generate, 4=Post
 const step = ref(1)
 const selectedEmployeeIds = ref([])
+const adjustments = ref(Object.fromEntries(
+  props.employees.map(employee => [employee.id, {
+    unpaid_leave_days: 0,
+    reimbursement_amount: '0.00',
+  }])
+))
 const month = ref(String(((new Date().getMonth() + 11) % 12) + 1))
 const year = ref(
   // Default to last month's year (handles January → previous year).
@@ -93,6 +99,22 @@ function toggleAll() {
   }
 }
 
+function adjustmentFor(employeeId) {
+  return adjustments.value[employeeId]
+}
+
+function adjustmentPayload() {
+  return selectedEmployeeIds.value.map(employeeId => {
+    const adjustment = adjustmentFor(employeeId)
+
+    return {
+      employee_id: employeeId,
+      unpaid_leave_days: Number(adjustment?.unpaid_leave_days) || 0,
+      reimbursement_amount: adjustment?.reimbursement_amount || '0.00',
+    }
+  })
+}
+
 async function goToPreview() {
   previewing.value = true
   errorMessage.value = ''
@@ -109,6 +131,7 @@ async function goToPreview() {
         employee_ids: selectedEmployeeIds.value,
         month: month.value,
         year: year.value,
+        adjustments: adjustmentPayload(),
       }),
     })
 
@@ -133,6 +156,10 @@ async function goToPreview() {
         ac: deductions.ac_employee ?? '0.00',
         aanp: deductions.aanp_employee ?? '0.00',
         lpp: deductions.lpp_employee ?? '0.00',
+        base_salary: deductions.base_salary ?? slip.gross_salary,
+        thirteenth_salary: deductions.thirteenth_salary ?? '0.00',
+        unpaid_leave_amount: deductions.unpaid_leave_amount ?? '0.00',
+        reimbursement_amount: deductions.reimbursement_amount ?? '0.00',
         net: slip.net_salary,
       }
     })
@@ -155,7 +182,12 @@ async function generateSlips() {
         'Accept': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
       },
-      body: JSON.stringify({ employee_ids: selectedEmployeeIds.value, month: month.value, year: year.value }),
+      body: JSON.stringify({
+        employee_ids: selectedEmployeeIds.value,
+        month: month.value,
+        year: year.value,
+        adjustments: adjustmentPayload(),
+      }),
     })
     if (!response.ok) {
       const err = await response.json().catch(() => ({}))
@@ -278,6 +310,40 @@ async function postSlips() {
           </div>
         </div>
 
+        <div v-if="selectedEmployeeIds.length" class="space-y-3 border-t border-[hsl(var(--border))] pt-5">
+          <div>
+            <p class="text-sm font-medium">{{ t('payroll_adjustments') }}</p>
+            <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('payroll_adjustments_desc') }}</p>
+          </div>
+          <div
+            v-for="emp in employees.filter(employee => selectedEmployeeIds.includes(employee.id))"
+            :key="emp.id"
+            class="grid grid-cols-1 gap-3 rounded-lg border border-[hsl(var(--border))] p-3 sm:grid-cols-[1fr_10rem_10rem] sm:items-end"
+          >
+            <p class="text-sm font-medium">{{ emp.first_name }} {{ emp.last_name }}</p>
+            <label class="text-xs text-[hsl(var(--muted-foreground))]">
+              {{ t('unpaid_leave_days') }}
+              <input
+                v-model.number="adjustmentFor(emp.id).unpaid_leave_days"
+                type="number"
+                min="0"
+                max="31"
+                class="mt-1 flex h-9 w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-2 text-sm text-[hsl(var(--foreground))]"
+              />
+            </label>
+            <label class="text-xs text-[hsl(var(--muted-foreground))]">
+              {{ t('reimbursement_amount') }}
+              <input
+                v-model="adjustmentFor(emp.id).reimbursement_amount"
+                type="number"
+                min="0"
+                step="0.01"
+                class="mt-1 flex h-9 w-full rounded-md border border-[hsl(var(--input))] bg-transparent px-2 text-sm text-[hsl(var(--foreground))]"
+              />
+            </label>
+          </div>
+        </div>
+
         <div class="flex justify-end">
           <Button :disabled="!selectedEmployeeIds.length || previewing" @click="goToPreview">
             {{ t('preview') }}
@@ -299,6 +365,9 @@ async function postSlips() {
               <tr class="border-b border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]">
                 <th class="pb-2 text-left font-medium">{{ t('employee') }}</th>
                 <th class="pb-2 text-right font-medium">{{ t('gross_salary') }}</th>
+                <th class="pb-2 text-right font-medium">{{ t('thirteenth_salary') }}</th>
+                <th class="pb-2 text-right font-medium">{{ t('unpaid_leave') }}</th>
+                <th class="pb-2 text-right font-medium">{{ t('expense_reimbursement') }}</th>
                 <th class="pb-2 text-right font-medium">AVS</th>
                 <th class="pb-2 text-right font-medium">AC</th>
                 <th class="pb-2 text-right font-medium">AANP</th>
@@ -310,6 +379,9 @@ async function postSlips() {
               <tr v-for="emp in preview" :key="emp.id">
                 <td class="py-2.5">{{ emp.first_name }} {{ emp.last_name }}</td>
                 <td class="py-2.5 text-right font-mono">{{ formatCurrency(emp.gross_salary) }}</td>
+                <td class="py-2.5 text-right font-mono">{{ formatCurrency(emp.thirteenth_salary) }}</td>
+                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.unpaid_leave_amount) }}</td>
+                <td class="py-2.5 text-right font-mono text-green-700 dark:text-green-400">{{ formatCurrency(emp.reimbursement_amount) }}</td>
                 <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.avs) }}</td>
                 <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.ac) }}</td>
                 <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.aanp) }}</td>

@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Organizations;
 
+use App\Domains\Organizations\Models\FiscalYearChangeRequest;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 use Tests\Traits\WithActiveSubscription;
 use Tests\Traits\WithOrganizationPermissions;
@@ -231,5 +233,166 @@ class OrganizationCrudFlowTest extends TestCase
             'id' => $this->primaryOrganization->id,
             'name' => 'Member Attempt',
         ]);
+    }
+
+    public function test_owner_can_request_a_fiscal_year_change_without_changing_the_current_setting(): void
+    {
+        $response = $this->actingAs($this->owner)
+            ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+            ->post('/settings/fiscal-year-change-request', [
+                'requested_start' => '04-01',
+            ]);
+
+        $response->assertRedirect(route('settings'));
+        $this->assertSame('01-01', $this->primaryOrganization->fresh()->fiscal_year_start);
+        $this->assertDatabaseHas('fiscal_year_change_requests', [
+            'organization_id' => $this->primaryOrganization->id,
+            'current_start' => '01-01',
+            'requested_start' => '04-01',
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_member_cannot_request_a_fiscal_year_change(): void
+    {
+        $this->actingAs($this->member)
+            ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+            ->post('/settings/fiscal-year-change-request', [
+                'requested_start' => '04-01',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('fiscal_year_change_requests', 0);
+    }
+
+    public function test_repeated_fiscal_year_change_request_updates_the_pending_request(): void
+    {
+        $this->actingAs($this->owner)
+            ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+            ->post('/settings/fiscal-year-change-request', ['requested_start' => '04-01'])
+            ->assertRedirect();
+
+        $this->actingAs($this->owner)
+            ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+            ->post('/settings/fiscal-year-change-request', ['requested_start' => '07-01'])
+            ->assertRedirect();
+
+        $this->assertDatabaseCount('fiscal_year_change_requests', 1);
+        $this->assertDatabaseHas('fiscal_year_change_requests', [
+            'requested_start' => '07-01',
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_fiscal_year_change_rejects_impossible_calendar_dates(): void
+    {
+        $this->actingAs($this->owner)
+            ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+            ->post('/settings/fiscal-year-change-request', [
+                'requested_start' => '02-31',
+            ])
+            ->assertSessionHasErrors('requested_start');
+
+        $this->assertDatabaseCount('fiscal_year_change_requests', 0);
+    }
+
+    public function test_fiscal_year_change_effective_year_uses_the_requested_start_date(): void
+    {
+        Carbon::setTestNow('2026-08-27');
+        $this->primaryOrganization->update(['fiscal_year_start' => '10-01']);
+
+        try {
+            $this->actingAs($this->owner)
+                ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+                ->post('/settings/fiscal-year-change-request', [
+                    'requested_start' => '04-01',
+                ])
+                ->assertRedirect();
+        } finally {
+            Carbon::setTestNow();
+        }
+
+        $this->assertDatabaseHas('fiscal_year_change_requests', [
+            'effective_year' => 2027,
+        ]);
+    }
+
+    public function test_owner_can_approve_and_apply_a_fiscal_year_change_at_its_effective_date(): void
+    {
+        Carbon::setTestNow('2026-08-27');
+        $this->primaryOrganization->update(['fiscal_year_start' => '10-01']);
+
+        try {
+            $this->actingAs($this->owner)
+                ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+                ->post('/settings/fiscal-year-change-request', ['requested_start' => '04-01'])
+                ->assertRedirect();
+
+            $request = FiscalYearChangeRequest::query()->firstOrFail();
+
+            $this->actingAs($this->owner)
+                ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+                ->post(route('settings.fiscal-year-change.approve', $request))
+                ->assertRedirect(route('settings'));
+
+            $this->assertSame('approved', $request->fresh()->status->value);
+            $this->assertSame('10-01', $this->primaryOrganization->fresh()->fiscal_year_start);
+
+            $this->actingAs($this->owner)
+                ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+                ->post(route('settings.fiscal-year-change.apply', $request))
+                ->assertSessionHasErrors('fiscal_year_change');
+
+            Carbon::setTestNow('2027-04-01');
+
+            $this->actingAs($this->owner)
+                ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+                ->post(route('settings.fiscal-year-change.apply', $request))
+                ->assertRedirect(route('settings'));
+        } finally {
+            Carbon::setTestNow();
+        }
+
+        $this->assertSame('applied', $request->fresh()->status->value);
+        $this->assertSame('04-01', $this->primaryOrganization->fresh()->fiscal_year_start);
+    }
+
+    public function test_member_cannot_approve_a_fiscal_year_change(): void
+    {
+        $request = FiscalYearChangeRequest::create([
+            'organization_id' => $this->primaryOrganization->id,
+            'requested_by_user_id' => $this->owner->id,
+            'current_start' => '01-01',
+            'requested_start' => '04-01',
+            'effective_year' => 2027,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($this->member)
+            ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+            ->post(route('settings.fiscal-year-change.approve', $request))
+            ->assertForbidden();
+
+        $this->assertSame('pending', $request->fresh()->status->value);
+    }
+
+    public function test_owner_can_reject_a_fiscal_year_change_without_changing_the_setting(): void
+    {
+        $request = FiscalYearChangeRequest::create([
+            'organization_id' => $this->primaryOrganization->id,
+            'requested_by_user_id' => $this->owner->id,
+            'current_start' => '01-01',
+            'requested_start' => '04-01',
+            'effective_year' => 2027,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($this->owner)
+            ->withSession(['current_organization_id' => $this->primaryOrganization->id])
+            ->post(route('settings.fiscal-year-change.reject', $request))
+            ->assertRedirect(route('settings'));
+
+        $this->assertSame('rejected', $request->fresh()->status->value);
+        $this->assertSame('01-01', $this->primaryOrganization->fresh()->fiscal_year_start);
     }
 }

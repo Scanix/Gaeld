@@ -22,23 +22,27 @@ class UpdateInvoiceAction
             throw new InvalidInvoiceStateException('Only draft invoices can be updated.');
         }
 
-        $customerSnapshot = $data->customerId === null
-            ? null
-            : Contact::withoutGlobalScope('organization')
-                ->where('organization_id', $invoice->organization_id)
-                ->findOrFail($data->customerId)
-                ->toInvoiceSnapshot();
-
-        $invoice->update([
+        $invoiceData = [
             'customer_id' => $data->customerId,
-            'customer_snapshot' => $customerSnapshot,
             'number' => $data->number,
             'issue_date' => $data->issueDate,
             'due_date' => $data->dueDate,
             'currency' => $data->currency,
             'notes' => $data->notes,
             'payment_terms' => $data->paymentTerms,
-        ]);
+        ];
+
+        $organizationId = $invoice->getAttribute('organization_id');
+        if (is_string($organizationId) && $organizationId !== '') {
+            $invoiceData['customer_snapshot'] = $data->customerId === null
+                ? null
+                : Contact::withoutGlobalScope('organization')
+                    ->where('organization_id', $organizationId)
+                    ->findOrFail($data->customerId)
+                    ->toInvoiceSnapshot();
+        }
+
+        $invoice->update($invoiceData);
 
         $this->syncInvoiceLines->replace($invoice, $data->lines);
 

@@ -188,7 +188,7 @@ class LedgerService
                 reference: $reversalReference,
                 description: $description ?? 'Reversal of '.$original->reference,
                 lines: $lines,
-                type: $type,
+                type: $type ?? 'reversal',
             ));
 
             JournalEntryReversed::dispatch($reversalEntry, $original);
@@ -353,8 +353,11 @@ class LedgerService
      *
      * @throws FiscalYearClosedException
      */
-    private function guardClosedFiscalYear(string $organizationId, string $date, ?string $fiscalYearId = null): void
-    {
+    private function guardClosedFiscalYear(
+        string $organizationId,
+        string $date,
+        ?string $fiscalYearId = null,
+    ): void {
         $timestamp = strtotime($date);
         $isoDate = $timestamp !== false ? date('Y-m-d', $timestamp) : date('Y-m-d');
         $year = $timestamp !== false ? (int) date('Y', $timestamp) : (int) date('Y');

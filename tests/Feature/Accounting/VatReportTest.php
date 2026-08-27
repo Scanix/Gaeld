@@ -3,8 +3,11 @@
 namespace Tests\Feature\Accounting;
 
 use App\Domains\Accounting\Actions\PostVatSettlementAction;
+use App\Domains\Accounting\DTOs\JournalEntryData;
+use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Enums\VatEntryType;
+use App\Domains\Accounting\Exceptions\VatPeriodLockedException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatEntry;
@@ -353,5 +356,86 @@ class VatReportTest extends TestCase
             ->withSession(['current_organization_id' => $this->organization->id])
             ->get('/reports/vat?from_date=2026-01-01&to_date=2026-03-31');
         $response->assertInertia(fn ($page) => $page->where('report.is_settled', true));
+    }
+
+    public function test_settled_vat_period_blocks_new_vat_entries_but_allows_other_ledger_entries(): void
+    {
+        $je = $this->createPostedJournalEntry('2026-01-15');
+        $this->createVatEntry($je, VatEntryType::Output, 1000.00, 81.00);
+
+        app(PostVatSettlementAction::class)->execute($this->organization->id, '2026-01-01', '2026-03-31');
+
+        $entry = app(LedgerService::class)->postEntry($this->organization->id, new JournalEntryData(
+            date: '2026-02-10',
+            reference: 'VAT-LOCKED-ENTRY',
+            description: 'Entry inside settled VAT period',
+            lines: [
+                new JournalLineData((string) Account::where('code', '1020')->firstOrFail()->id, '100.00', '0.00', 'Bank'),
+                new JournalLineData((string) Account::where('code', '3000')->firstOrFail()->id, '0.00', '100.00', 'Revenue'),
+            ],
+        ));
+
+        $this->assertTrue($entry->is_posted);
+        $this->expectException(VatPeriodLockedException::class);
+        VatEntry::create([
+            'journal_entry_id' => $entry->id,
+            'vat_rate_id' => $this->vatRate->id,
+            'base_amount' => 100.00,
+            'vat_amount' => 8.10,
+            'type' => VatEntryType::Output,
+        ]);
+    }
+
+    public function test_reversing_a_vat_settlement_unlocks_its_period(): void
+    {
+        $je = $this->createPostedJournalEntry('2026-01-15');
+        $this->createVatEntry($je, VatEntryType::Output, 1000.00, 81.00);
+
+        $settlement = app(PostVatSettlementAction::class)->execute(
+            $this->organization->id,
+            '2026-01-01',
+            '2026-03-31',
+        );
+        $ledger = app(LedgerService::class);
+        $reversal = $ledger->reverseEntry($settlement, 'Correcting the VAT settlement');
+        $ledger->postDraft($reversal);
+
+        $entry = $ledger->postEntry($this->organization->id, new JournalEntryData(
+            date: '2026-02-10',
+            reference: 'VAT-UNLOCKED-ENTRY',
+            description: 'Corrected entry inside reopened VAT period',
+            lines: [
+                new JournalLineData((string) Account::where('code', '1020')->firstOrFail()->id, '100.00', '0.00', 'Bank'),
+                new JournalLineData((string) Account::where('code', '3000')->firstOrFail()->id, '0.00', '100.00', 'Revenue'),
+            ],
+        ));
+
+        $this->assertTrue($entry->is_posted);
+    }
+
+    public function test_http_settlement_reports_a_locked_period_without_creating_an_entry(): void
+    {
+        $je = $this->createPostedJournalEntry('2026-01-15');
+        $this->createVatEntry($je, VatEntryType::Output, 1000.00, 81.00);
+
+        app(PostVatSettlementAction::class)->execute(
+            $this->organization->id,
+            '2026-01-01',
+            '2026-03-31',
+        );
+
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->post(route('reports.vat.settlement'), [
+                'from_date' => '2026-01-01',
+                'to_date' => '2026-03-31',
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error', __('app.vat_period_locked'));
+        $this->assertSame(1, JournalEntry::query()
+            ->where('organization_id', $this->organization->id)
+            ->where('type', 'vat_settlement')
+            ->count());
     }
 }

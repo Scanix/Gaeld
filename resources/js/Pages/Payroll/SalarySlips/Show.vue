@@ -102,6 +102,30 @@ function deductionRow(label, employee, employer) {
               </tr>
             </thead>
             <tbody class="divide-y divide-[hsl(var(--border))]">
+              <tr v-if="slip.adjustments?.base_salary && Number(slip.adjustments.base_salary) !== Number(slip.gross_salary)" class="text-[hsl(var(--muted-foreground))]">
+                <td class="py-2">{{ t('base_salary') }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.base_salary) }}</td>
+                <td class="py-2 text-right">—</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.base_salary) }}</td>
+              </tr>
+              <tr v-if="Number(slip.adjustments?.thirteenth_salary) > 0" class="text-green-700 dark:text-green-400">
+                <td class="py-2">{{ t('thirteenth_salary') }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.thirteenth_salary) }}</td>
+                <td class="py-2 text-right">—</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.thirteenth_salary) }}</td>
+              </tr>
+              <tr v-if="Number(slip.adjustments?.unpaid_leave_amount) > 0" class="text-red-700 dark:text-red-400">
+                <td class="py-2">{{ t('unpaid_leave') }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(-slip.adjustments.unpaid_leave_amount) }}</td>
+                <td class="py-2 text-right">—</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(-slip.adjustments.unpaid_leave_amount) }}</td>
+              </tr>
+              <tr v-if="Number(slip.adjustments?.reimbursement_amount) > 0" class="text-green-700 dark:text-green-400">
+                <td class="py-2">{{ t('expense_reimbursement') }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.reimbursement_amount) }}</td>
+                <td class="py-2 text-right">—</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.reimbursement_amount) }}</td>
+              </tr>
               <!-- Gross salary -->
               <tr class="font-medium">
                 <td class="py-2.5">{{ t('gross_salary') }}</td>

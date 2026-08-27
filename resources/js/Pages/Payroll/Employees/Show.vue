@@ -13,7 +13,7 @@ import EmptyState from '@/Components/UI/EmptyState.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { computed } from 'vue'
-import { Pencil } from 'lucide-vue-next'
+import { FileText, Pencil } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 const { formatDate, formatCurrency } = useFormatters()
@@ -22,6 +22,7 @@ const props = defineProps({
   employee: Object,
   payrollWritable: { type: Boolean, default: true },
   salarySlips: { type: Array, default: () => [] },
+  certificateYears: { type: Array, default: () => [] },
 })
 
 
@@ -96,6 +97,17 @@ const salaryColumns = computed(() => [
           </Button>
           <Button v-if="payrollWritable" as="a" href="/payroll/run" class="w-full">
             {{ t('run_payroll') }}
+          </Button>
+          <Button
+            v-for="certificateYear in certificateYears"
+            :key="certificateYear"
+            as="a"
+            variant="outline"
+            class="w-full"
+            :href="`/payroll/employees/${employee.id}/salary-certificate/${certificateYear}`"
+          >
+            <FileText class="mr-2 h-4 w-4" />
+            {{ t('download_salary_certificate', { year: certificateYear }) }}
           </Button>
         </CardContent>
       </Card>

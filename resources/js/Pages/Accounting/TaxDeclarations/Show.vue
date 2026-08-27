@@ -15,6 +15,7 @@ import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 
 const props = defineProps({
   declaration: Object,
+  canManage: { type: Boolean, default: false },
 })
 
 const { t } = useTranslations()
@@ -97,7 +98,7 @@ function dataRows() {
         <CardContent>
           <DataTable :columns="dataColumns" :rows="dataRows()" />
 
-          <div v-if="declaration.status === 'draft'" class="mt-6 flex justify-end">
+          <div v-if="canManage && declaration.status === 'draft'" class="mt-6 flex justify-end">
             <Button @click="finalize">
               <Lock class="mr-1 h-4 w-4" /> {{ t('finalize') }}
             </Button>

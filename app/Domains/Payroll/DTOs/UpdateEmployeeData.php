@@ -10,7 +10,9 @@ use App\Support\ValidatesFromArray;
  */
 readonly class UpdateEmployeeData
 {
-    use MapsToSnakeCase;
+    use MapsToSnakeCase {
+        toArray as private toSnakeCaseArray;
+    }
     use ValidatesFromArray;
 
     public function __construct(
@@ -24,6 +26,7 @@ readonly class UpdateEmployeeData
         public ?string $exitDate = null,
         public bool $isActive = true,
         public bool $isSourceTaxSubject = false,
+        public ?bool $hasThirteenthSalary = null,
     ) {}
 
     /** @param  array<string, mixed>  $data */
@@ -42,6 +45,21 @@ readonly class UpdateEmployeeData
             exitDate: $data['exit_date'] ?? null,
             isActive: $data['is_active'] ?? true,
             isSourceTaxSubject: $data['is_source_tax_subject'] ?? false,
+            hasThirteenthSalary: array_key_exists('has_thirteenth_salary', $data)
+                ? (bool) $data['has_thirteenth_salary']
+                : null,
         );
+    }
+
+    /** @return array<string, mixed> */
+    public function toArray(): array
+    {
+        $data = $this->toSnakeCaseArray();
+
+        if ($this->hasThirteenthSalary === null) {
+            unset($data['has_thirteenth_salary']);
+        }
+
+        return $data;
     }
 }

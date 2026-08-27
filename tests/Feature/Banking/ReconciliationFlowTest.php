@@ -4,9 +4,12 @@ namespace Tests\Feature\Banking;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\CamtFormat;
+use App\Domains\Banking\Exceptions\ReconciliationFailedException;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Queries\BankAccountQuery;
@@ -18,6 +21,7 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Mockery\MockInterface;
@@ -52,6 +56,10 @@ class ReconciliationFlowTest extends TestCase
         $this->accounts['software'] = Account::create([
             'organization_id' => $this->organization->id,
             'code' => '6530', 'name' => 'Software and Subscriptions', 'type' => AccountType::Expense->value,
+        ]);
+        $this->accounts['vat_payable'] = Account::create([
+            'organization_id' => $this->organization->id,
+            'code' => '2201', 'name' => 'VAT Payable', 'type' => AccountType::Liability->value,
         ]);
 
         $this->bankAccount = BankAccount::create([
@@ -217,6 +225,120 @@ class ReconciliationFlowTest extends TestCase
 
         // Bank balance should decrease
         $this->assertEquals('9800.00', $result->bankAccount->balance);
+    }
+
+    public function test_reconcile_transaction_with_vat_payment(): void
+    {
+        $journalEntry = JournalEntry::create([
+            'organization_id' => $this->organization->id,
+            'date' => '2026-03-31',
+            'reference' => 'VAT-SETTLEMENT-2026-Q1',
+            'description' => 'VAT settlement',
+            'is_posted' => true,
+            'type' => 'vat_settlement',
+        ]);
+        TransactionLine::create([
+            'journal_entry_id' => $journalEntry->id,
+            'account_id' => $this->accounts['bank']->id,
+            'debit' => 100.00,
+            'credit' => 0,
+        ]);
+        TransactionLine::create([
+            'journal_entry_id' => $journalEntry->id,
+            'account_id' => $this->accounts['vat_payable']->id,
+            'debit' => 0,
+            'credit' => 100.00,
+        ]);
+
+        $transaction = BankTransaction::create([
+            'bank_account_id' => $this->bankAccount->id,
+            'date' => '2026-04-10',
+            'description' => 'VAT payment to AFC',
+            'amount' => 100.00,
+            'type' => BankTransactionType::Debit,
+            'reference' => 'VAT-PAYMENT-001',
+        ]);
+
+        $result = app(ReconciliationService::class)->reconcileWithVatSettlement($transaction, $journalEntry);
+
+        $this->assertTrue($result->is_reconciled);
+        $this->assertSame($journalEntry->id, $result->vat_settlement_journal_entry_id);
+        $this->assertTrue($result->journalEntry->isBalanced());
+        $this->assertSame(
+            $this->accounts['vat_payable']->id,
+            $result->journalEntry->lines->first(fn ($line) => $line->debit === '100.00')->account_id,
+        );
+    }
+
+    public function test_vat_payment_with_an_excess_amount_is_rejected(): void
+    {
+        $journalEntry = JournalEntry::create([
+            'organization_id' => $this->organization->id,
+            'date' => '2026-03-31',
+            'reference' => 'VAT-SETTLEMENT-2026-Q1',
+            'description' => 'VAT settlement',
+            'is_posted' => true,
+            'type' => 'vat_settlement',
+        ]);
+        TransactionLine::create([
+            'journal_entry_id' => $journalEntry->id,
+            'account_id' => $this->accounts['bank']->id,
+            'debit' => 100.00,
+            'credit' => 0,
+        ]);
+        TransactionLine::create([
+            'journal_entry_id' => $journalEntry->id,
+            'account_id' => $this->accounts['vat_payable']->id,
+            'debit' => 0,
+            'credit' => 100.00,
+        ]);
+
+        $transaction = BankTransaction::create([
+            'bank_account_id' => $this->bankAccount->id,
+            'date' => '2026-04-10',
+            'description' => 'VAT payment to AFC',
+            'amount' => 100.01,
+            'type' => BankTransactionType::Debit,
+            'reference' => 'VAT-PAYMENT-002',
+        ]);
+
+        $this->expectException(ReconciliationFailedException::class);
+        app(ReconciliationService::class)->reconcileWithVatSettlement($transaction, $journalEntry);
+    }
+
+    public function test_vat_route_hides_a_foreign_transaction(): void
+    {
+        $otherOrganization = Organization::create(['name' => 'Other VAT Org', 'currency' => 'CHF']);
+        $otherAccount = Account::create([
+            'organization_id' => $otherOrganization->id,
+            'code' => '1020',
+            'name' => 'Other bank',
+            'type' => AccountType::Asset->value,
+        ]);
+        $otherBankAccount = BankAccount::create([
+            'organization_id' => $otherOrganization->id,
+            'account_id' => $otherAccount->id,
+            'name' => 'Other account',
+            'iban' => 'CH9300762011623852957',
+            'bank_name' => 'Other bank',
+            'currency' => 'CHF',
+            'balance' => 0,
+        ]);
+        $transaction = BankTransaction::create([
+            'bank_account_id' => $otherBankAccount->id,
+            'date' => '2026-04-10',
+            'description' => 'Foreign VAT payment',
+            'amount' => 100.00,
+            'type' => BankTransactionType::Debit,
+            'reference' => 'VAT-FOREIGN-001',
+        ]);
+
+        $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->post(route('reconciliation.vat', $transaction), [
+                'vat_settlement_id' => 'missing-settlement-id',
+            ])
+            ->assertNotFound();
     }
 
     public function test_reconcile_vat_expense_uses_net_amount_for_ledger_and_gross_for_bank(): void

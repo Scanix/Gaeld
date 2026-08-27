@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Payroll\Contracts\SourceTaxServiceInterface;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Support\Money;
 use Carbon\Carbon;
@@ -19,10 +20,16 @@ class PostPayrollAction
     public function __construct(
         private LedgerService $ledger,
         private LedgerQueryService $ledgerQuery,
+        private SendSalarySlipEmailAction $sendEmail,
+        private SourceTaxServiceInterface $sourceTax,
     ) {}
 
     public function execute(SalarySlip $slip): SalarySlip
     {
+        if ($slip->source_tax_base === null) {
+            $this->sourceTax->applyToSlip($slip, $slip->employee);
+        }
+
         $deductions = $slip->deductions;
         $orgId = $slip->organization_id;
 
@@ -84,6 +91,17 @@ class PostPayrollAction
             description: "Net salary paid: {$employee->fullName()}",
         );
 
+        $reimbursementAmount = (string) ($deductions['reimbursement_amount'] ?? '0.00');
+        if (Money::isPositive($reimbursementAmount)) {
+            $reimbursementAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::GENERAL_EXPENSE);
+            $lines[] = new JournalLineData(
+                accountId: (string) $reimbursementAccount->id,
+                debit: $reimbursementAmount,
+                credit: '0',
+                description: "Expense reimbursement: {$employee->fullName()}",
+            );
+        }
+
         // Credit: AVS/AI/APG payable
         if (Money::isPositive($avsTotal)) {
             $lines[] = new JournalLineData(
@@ -138,6 +156,9 @@ class PostPayrollAction
             'posted_at' => now(),
         ]);
 
-        return $slip->fresh();
+        $postedSlip = $slip->fresh();
+        $this->sendEmail->execute($postedSlip);
+
+        return $postedSlip;
     }
 }

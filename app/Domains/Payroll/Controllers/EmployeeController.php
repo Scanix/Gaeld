@@ -63,8 +63,18 @@ class EmployeeController extends Controller
     {
         $this->authorize('view', $employee);
 
+        $employee->load(['salarySlips' => fn ($query) => $query->with('employee')]);
+        $salarySlips = $employee->salarySlips;
+
         return Inertia::render('Payroll/Employees/Show', [
-            'employee' => $employee->load(['salarySlips' => fn ($q) => $q->with('employee')]),
+            'employee' => $employee,
+            'salarySlips' => $salarySlips,
+            'certificateYears' => $salarySlips
+                ->whereNotNull('posted_at')
+                ->pluck('period_year')
+                ->unique()
+                ->sortDesc()
+                ->values(),
             'payrollWritable' => FeatureFlag::enabledForOrg('payroll', $employee->organization),
         ]);
     }
