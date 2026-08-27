@@ -221,7 +221,10 @@ function generateArchive(period) {
               class="flex items-center justify-between py-3 first:pt-0 last:pb-0"
             >
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium">{{ archive.document_type }}</p>
+                <p class="text-sm font-medium">
+                  {{ archive.document_type }}
+                  <span v-if="archive.version > 1">v{{ archive.version }}</span>
+                </p>
                 <p class="text-xs text-[hsl(var(--muted-foreground))]">
                   {{ t('archived') }}: {{ formatDate(archive.archived_at) }}
                   · {{ t('archive_expires_at') }}: {{ formatDate(archive.expires_at) }}

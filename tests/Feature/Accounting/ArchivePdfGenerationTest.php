@@ -44,6 +44,7 @@ class ArchivePdfGenerationTest extends TestCase
             $this->assertNotNull($archive, "Missing archive row for {$documentType}");
             $this->assertSame(64, strlen($archive->checksum_sha256));
             $this->assertSame("pdf-{$year}", $archive->document_id);
+            $this->assertSame(1, $archive->version);
             $this->assertTrue(Storage::exists($archive->storage_path), "PDF not written for {$documentType}");
 
             $content = Storage::get($archive->storage_path);
@@ -105,6 +106,65 @@ class ArchivePdfGenerationTest extends TestCase
         foreach ($results as $r) {
             $this->assertTrue($r['regenerated'], "Expected {$r['type']} to be regenerated with force");
         }
+    }
+
+    public function test_forced_regeneration_keeps_the_previous_pdf_version(): void
+    {
+        $year = 2024;
+        $action = app(GenerateArchivePdfAction::class);
+
+        $action->execute($this->organization->id, $year);
+        $original = LegalArchive::query()
+            ->where('organization_id', $this->organization->id)
+            ->where('document_type', 'pdf_pnl')
+            ->where('version', 1)
+            ->firstOrFail();
+
+        $action->execute($this->organization->id, $year, force: true);
+
+        $versions = LegalArchive::query()
+            ->where('organization_id', $this->organization->id)
+            ->where('document_type', 'pdf_pnl')
+            ->orderBy('version')
+            ->get();
+        $latest = $versions->last();
+
+        $this->assertCount(2, $versions);
+        $this->assertSame(1, $original->version);
+        $this->assertSame(2, $latest->version);
+        $this->assertNotSame($original->storage_path, $latest->storage_path);
+        $this->assertTrue(Storage::exists($original->storage_path));
+        $this->assertTrue(Storage::exists($latest->storage_path));
+    }
+
+    public function test_bundle_contains_only_the_latest_pdf_versions(): void
+    {
+        $year = 2024;
+        $action = app(GenerateArchivePdfAction::class);
+
+        $action->execute($this->organization->id, $year);
+        $action->execute($this->organization->id, $year, force: true);
+
+        $response = $this->actAsOrg()->get("/accounting/archives/year/{$year}/bundle");
+        $response->assertOk();
+
+        $tmp = tempnam(sys_get_temp_dir(), 'bundle-version-test-');
+        file_put_contents($tmp, $response->streamedContent() ?: $response->getContent());
+
+        $zip = new \ZipArchive;
+        $this->assertTrue($zip->open($tmp) === true);
+        $entries = [];
+        for ($index = 0; $index < $zip->numFiles; $index++) {
+            $entries[] = $zip->getNameIndex($index);
+        }
+        $zip->close();
+        @unlink($tmp);
+
+        $this->assertSame([
+            'balance-sheet-2024-v2.pdf',
+            'journal-2024-v2.pdf',
+            'pnl-2024-v2.pdf',
+        ], $entries);
     }
 
     public function test_download_pdf_endpoint_returns_pdf_response(): void
@@ -187,8 +247,7 @@ class ArchivePdfGenerationTest extends TestCase
             ->first();
 
         // Corrupt the file on disk (simulates storage bit-rot / accidental overwrite).
-        // recoverFile() will regenerate from source data, verify the checksum
-        // matches the one stored at sealing time, and restore the file.
+        // Recovery must append a new version and preserve the old evidence.
         Storage::put($original->storage_path, 'tampered');
 
         $response = $this->actAsOrg()
@@ -196,7 +255,14 @@ class ArchivePdfGenerationTest extends TestCase
 
         $response->assertRedirect();
 
-        $content = Storage::get($original->storage_path);
-        $this->assertStringStartsWith('%PDF-', $content);
+        $latest = LegalArchive::query()
+            ->where('organization_id', $this->organization->id)
+            ->where('document_type', 'pdf_pnl')
+            ->orderByDesc('version')
+            ->firstOrFail();
+
+        $this->assertSame(2, $latest->version);
+        $this->assertSame('tampered', Storage::get($original->storage_path));
+        $this->assertStringStartsWith('%PDF-', Storage::get($latest->storage_path));
     }
 }
