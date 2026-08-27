@@ -28,13 +28,17 @@ const statusOptions = [
 const sourceTaxCantons = ['AG', 'AI', 'AR', 'BE', 'BL', 'BS', 'FR', 'GE', 'GL', 'GR', 'JU', 'LU', 'NE', 'NW', 'OW', 'SG', 'SH', 'SO', 'SZ', 'TG', 'TI', 'UR', 'VD', 'VS', 'ZG', 'ZH']
 const sourceTaxTariffs = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
+function dateInputValue(value) {
+  return value ? String(value).slice(0, 10) : ''
+}
+
 const form = useForm({
   first_name: props.employee.first_name ?? '',
   last_name: props.employee.last_name ?? '',
   ahv_number: props.employee.ahv_number ?? '',
   email: props.employee.email ?? '',
-  entry_date: props.employee.entry_date ?? '',
-  exit_date: props.employee.exit_date ?? '',
+  entry_date: dateInputValue(props.employee.entry_date),
+  exit_date: dateInputValue(props.employee.exit_date),
   gross_salary: props.employee.gross_salary ?? '',
   is_active: props.employee.is_active ?? true,
   is_source_tax_subject: props.employee.is_source_tax_subject ?? false,
