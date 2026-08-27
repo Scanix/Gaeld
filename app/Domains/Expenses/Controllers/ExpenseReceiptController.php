@@ -74,7 +74,9 @@ class ExpenseReceiptController extends Controller
         $limit = $this->resolveOcrDailyLimit($currentOrg);
 
         if ($limit !== -1 && (int) Cache::get($dailyKey, 0) >= $limit) {
-            return response()->json(['message' => __('app.ocr_daily_limit_reached')], 429);
+            return response()->json([
+                'message' => __('app.ocr_daily_limit_reached', ['limit' => $limit]),
+            ], 429);
         }
 
         $receiptPath = $this->uploadService->store($request->file('receipt'), "receipts/{$orgId}");
