@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -9,6 +10,7 @@ return new class extends Migration
     {
         foreach (DB::table('organizations')->pluck('id') as $organizationId) {
             DB::table('accounts')->insertOrIgnore([
+                'uuid' => (string) Str::uuid(),
                 'organization_id' => $organizationId,
                 'code' => '2273',
                 'name' => 'Withholding Tax Payable',
