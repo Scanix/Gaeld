@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Actions;
 
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceType;
@@ -53,9 +54,17 @@ class CreateInvoiceAction
     private function createWithNumber(CreateInvoiceData $data, string $number): Invoice
     {
         return DB::transaction(function () use ($data, $number) {
+            $customerSnapshot = $data->customerId === null
+                ? null
+                : Contact::withoutGlobalScope('organization')
+                    ->where('organization_id', $data->organizationId)
+                    ->findOrFail($data->customerId)
+                    ->toInvoiceSnapshot();
+
             $invoice = Invoice::create([
                 'organization_id' => $data->organizationId,
                 'customer_id' => $data->customerId,
+                'customer_snapshot' => $customerSnapshot,
                 'number' => $number,
                 'status' => InvoiceStatus::Draft,
                 'type' => InvoiceType::Invoice,

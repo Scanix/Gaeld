@@ -162,26 +162,31 @@ class InvoicePdfRenderer
         // Customer info — placed in the right-hand Swiss SN 010130 / DIN 5008
         // address window; the sender remains on the left.
         $customer = $invoice->customer;
-        if ($customer) {
+        $customerDetails = $invoice->customer_snapshot;
+        if ($customerDetails === null && $customer !== null) {
+            $customerDetails = $customer->toInvoiceSnapshot();
+        }
+
+        if ($customerDetails !== null) {
             $tcpdf->SetXY(self::CUSTOMER_X, self::CUSTOMER_Y);
             $tcpdf->SetFont('Helvetica', 'B', 10);
-            $tcpdf->Cell(self::CUSTOMER_W, 5, $customer->name, 0, 1, 'L');
+            $tcpdf->Cell(self::CUSTOMER_W, 5, $customerDetails['name'], 0, 1, 'L');
 
             $tcpdf->SetFont('Helvetica', '', 9);
             $customerAddress = array_filter([
-                $customer->address,
-                trim(($customer->postal_code ?? '').' '.($customer->city ?? '')),
-                $customer->country ?? 'CH',
+                $customerDetails['address'],
+                trim(($customerDetails['postal_code'] ?? '').' '.($customerDetails['city'] ?? '')),
+                $customerDetails['country'],
             ]);
             foreach ($customerAddress as $line) {
                 $tcpdf->SetX(self::CUSTOMER_X);
                 $tcpdf->Cell(self::CUSTOMER_W, 4, $line, 0, 1, 'L');
             }
-            if ($customer->vat_number) {
+            if ($customerDetails['vat_number']) {
                 $tcpdf->SetFont('Helvetica', '', 7);
                 $tcpdf->SetTextColor(...self::MUTED_RGB);
                 $tcpdf->SetX(self::CUSTOMER_X);
-                $tcpdf->Cell(self::CUSTOMER_W, 4, $this->t('pdf_vat_number').': '.$customer->vat_number, 0, 1, 'L');
+                $tcpdf->Cell(self::CUSTOMER_W, 4, $this->t('pdf_vat_number').': '.$customerDetails['vat_number'], 0, 1, 'L');
                 $tcpdf->SetTextColor(0, 0, 0);
             }
         }

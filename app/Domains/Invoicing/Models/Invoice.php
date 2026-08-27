@@ -33,6 +33,7 @@ use Laravel\Scout\Searchable;
  * @property string|null $number
  * @property InvoiceStatus $status
  * @property InvoiceType $type
+ * @property array{name: string, email: string|null, address: string|null, postal_code: string|null, city: string|null, country: string, vat_number: string|null}|null $customer_snapshot
  * @property Carbon $issue_date
  * @property Carbon $due_date
  * @property string $subtotal
@@ -71,6 +72,7 @@ class Invoice extends Model
     protected $fillable = [
         'organization_id',
         'customer_id',
+        'customer_snapshot',
         'journal_entry_id',
         'number',
         'status',
@@ -103,6 +105,7 @@ class Invoice extends Model
             'total' => 'decimal:2',
             'status' => InvoiceStatus::class,
             'type' => InvoiceType::class,
+            'customer_snapshot' => 'array',
             'reminder_count' => 'integer',
             'last_reminded_at' => 'datetime',
             'archived_at' => 'datetime',

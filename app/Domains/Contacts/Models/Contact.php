@@ -116,6 +116,22 @@ class Contact extends Model
         return $this->morphMany(ContactPerson::class, 'contactable');
     }
 
+    /**
+     * @return array{name: string, email: string|null, address: string|null, postal_code: string|null, city: string|null, country: string, vat_number: string|null}
+     */
+    public function toInvoiceSnapshot(): array
+    {
+        return [
+            'name' => $this->name,
+            'email' => $this->email,
+            'address' => $this->address,
+            'postal_code' => $this->postal_code,
+            'city' => $this->city,
+            'country' => $this->country ?? 'CH',
+            'vat_number' => $this->vat_number,
+        ];
+    }
+
     // ──────────────────────────────────────────────────────────────
     //  Scout
     // ──────────────────────────────────────────────────────────────

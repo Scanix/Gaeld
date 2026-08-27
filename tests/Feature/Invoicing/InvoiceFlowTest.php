@@ -79,6 +79,10 @@ class InvoiceFlowTest extends TestCase
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @param  array<int, array<string, mixed>>  $lines
+     */
     private function createInvoice(array $overrides = [], array $lines = []): Invoice
     {
         $action = app(CreateInvoiceAction::class);
@@ -140,6 +144,30 @@ class InvoiceFlowTest extends TestCase
         $this->assertEquals(InvoiceStatus::Paid, $invoice->status);
         $this->assertEquals((float) $invoice->total, (float) $payment->amount);
         $this->assertNotNull($payment->journal_entry_id);
+    }
+
+    public function test_invoice_keeps_customer_snapshot_after_contact_address_changes(): void
+    {
+        $this->customer->update([
+            'address' => 'Old Street 1',
+            'postal_code' => '1000',
+            'city' => 'Lausanne',
+            'country' => 'CH',
+        ]);
+
+        $invoice = $this->createInvoice();
+
+        $this->customer->update([
+            'address' => 'New Street 9',
+            'postal_code' => '8000',
+            'city' => 'Zürich',
+        ]);
+
+        $invoice->refresh();
+
+        $this->assertSame('Old Street 1', $invoice->customer_snapshot['address']);
+        $this->assertSame('1000', $invoice->customer_snapshot['postal_code']);
+        $this->assertSame('Lausanne', $invoice->customer_snapshot['city']);
     }
 
     public function test_partial_payment_flow(): void

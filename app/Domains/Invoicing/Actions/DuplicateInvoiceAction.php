@@ -24,6 +24,7 @@ class DuplicateInvoiceAction
             $newInvoice = Invoice::create([
                 'organization_id' => $invoice->organization_id,
                 'customer_id' => $invoice->customer_id,
+                'customer_snapshot' => $invoice->customer_snapshot,
                 'number' => $this->numberGenerator->next($invoice->organization_id),
                 'status' => InvoiceStatus::Draft,
                 'issue_date' => now()->toDateString(),
