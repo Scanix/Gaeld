@@ -183,7 +183,9 @@ const navigation = computed(() => {
       { key: 'payroll', href: '/payroll/employees', icon: Briefcase, children: [
         { key: 'employees', href: '/payroll/employees' },
         { key: 'salary_slips', href: '/payroll/salary-slips' },
-        { key: 'run_payroll', href: '/payroll/run' },
+        ...(can('payroll.create') ? [
+          { key: 'run_payroll', href: '/payroll/run' },
+        ] : []),
         ...(features.value.withholding_tax ? [
           { key: 'withholding_tax', href: '/payroll/withholding-tax' },
         ] : []),
