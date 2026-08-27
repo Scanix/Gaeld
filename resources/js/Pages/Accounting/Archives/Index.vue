@@ -32,6 +32,10 @@ defineProps({
     type: Array,
     default: () => [],
   },
+  canManage: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const expandedYears = ref({})
@@ -132,7 +136,7 @@ function generateArchive(period) {
             >
               {{ year.start_date }} – {{ year.end_date }}
             </p>
-            <div v-if="year.total_count === 0">
+            <div v-if="year.total_count === 0 && canManage">
               <Button
                 size="sm"
                 type="button"
@@ -186,6 +190,7 @@ function generateArchive(period) {
               </Button>
             </a>
             <Button
+              v-if="canManage"
               variant="ghost"
               size="sm"
               type="button"

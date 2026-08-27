@@ -38,7 +38,7 @@ class LegalArchiveController extends Controller
         private readonly FiscalYearService $fiscalYears,
     ) {}
 
-    public function index(CurrentOrganization $currentOrg): Response
+    public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', LegalArchive::class);
 
@@ -99,6 +99,7 @@ class LegalArchiveController extends Controller
 
         return Inertia::render('Accounting/Archives/Index', [
             'years' => $years,
+            'canManage' => $request->user()->can('create', LegalArchive::class),
         ]);
     }
 
@@ -276,7 +277,7 @@ class LegalArchiveController extends Controller
      */
     public function regeneratePdfs(int $year, Request $request, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): RedirectResponse
     {
-        $this->authorize('viewAny', LegalArchive::class);
+        $this->authorize('create', LegalArchive::class);
 
         $period = $this->resolveRequestedPeriod($request, $currentOrg, $year);
         $archives = $this->periodQuery($period)
