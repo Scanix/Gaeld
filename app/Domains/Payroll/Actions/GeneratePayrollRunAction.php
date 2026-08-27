@@ -2,7 +2,6 @@
 
 namespace App\Domains\Payroll\Actions;
 
-use App\Domains\Payroll\Contracts\SourceTaxServiceInterface;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Payroll\Services\PayrollCalculator;
@@ -17,7 +16,6 @@ class GeneratePayrollRunAction
     public function __construct(
         private PayrollCalculator $calculator,
         private PostPayrollAction $postAction,
-        private SourceTaxServiceInterface $sourceTax,
     ) {}
 
     /**
@@ -51,7 +49,6 @@ class GeneratePayrollRunAction
                     (string) ($adjustment['reimbursement_amount'] ?? '0.00'),
                 );
                 $slip->save();
-                $this->sourceTax->applyToSlip($slip, $employee);
 
                 if ($shouldPost) {
                     $this->postAction->execute($slip);

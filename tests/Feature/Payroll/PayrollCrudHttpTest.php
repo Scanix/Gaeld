@@ -28,6 +28,16 @@ class PayrollCrudHttpTest extends TestCase
                 ->where('payrollWritable', true));
     }
 
+    public function test_payroll_run_hides_source_tax_in_ce(): void
+    {
+        $this->actingAs($this->user)
+            ->get('/payroll/run')
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->component('Payroll/Run')
+                ->where('withholdingTaxEnabled', false));
+    }
+
     public function test_viewer_can_view_employees_without_payroll_write_controls(): void
     {
         $viewer = User::factory()->create(['onboarding_completed_at' => now()]);

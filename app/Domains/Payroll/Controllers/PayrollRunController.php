@@ -8,6 +8,7 @@ use App\Domains\Payroll\Controllers\Concerns\EnsuresPayrollWritable;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Requests\PayrollAdjustmentRules;
 use App\Http\Controllers\Controller;
+use App\Support\FeatureFlag;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class PayrollRunController extends Controller
         return Inertia::render('Payroll/Run', [
             'employees' => $employees,
             'fiscalYears' => $fiscalYears,
+            'withholdingTaxEnabled' => FeatureFlag::enabledForOrg('withholding_tax', $currentOrg->get()),
         ]);
     }
 

@@ -9,6 +9,7 @@ use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Payroll\Actions\GenerateSalaryCertificateAction;
 use App\Domains\Payroll\Actions\PostPayrollAction;
+use App\Domains\Payroll\Contracts\SourceTaxServiceInterface;
 use App\Domains\Payroll\Jobs\SendSalarySlipEmailJob;
 use App\Domains\Payroll\Mail\SalarySlipReadyMail;
 use App\Domains\Payroll\Models\Employee;
@@ -16,6 +17,7 @@ use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Payroll\Services\PayrollCalculator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
@@ -41,6 +43,7 @@ class PayrollFlowTest extends TestCase
             ['code' => '2270', 'name' => 'AVS Payable', 'type' => AccountType::Liability->value],
             ['code' => '2271', 'name' => 'AC Payable', 'type' => AccountType::Liability->value],
             ['code' => '2272', 'name' => 'LPP Payable', 'type' => AccountType::Liability->value],
+            ['code' => '2273', 'name' => 'Withholding Tax Payable', 'type' => AccountType::Liability->value],
         ] as $account) {
             Account::create(array_merge($account, ['organization_id' => $this->org->id]));
         }
@@ -176,6 +179,33 @@ class PayrollFlowTest extends TestCase
         $this->assertSame($slip->gross_salary, $preview['gross_salary']);
         $this->assertSame($slip->net_salary, $preview['net_salary']);
         $this->assertSame($slip->deductions, $preview['deductions']);
+    }
+
+    #[Test]
+    public function payroll_preview_includes_source_tax_in_the_net_salary(): void
+    {
+        $sourceTax = Mockery::mock(SourceTaxServiceInterface::class);
+        $sourceTax->shouldReceive('applyToSlip')->once()->andReturnUsing(
+            function (SalarySlip $slip, Employee $employee): void {
+                $slip->forceFill([
+                    'source_tax_base' => '6000.00',
+                    'source_tax_rate' => '8.500000',
+                    'source_tax_amount' => '510.00',
+                ]);
+            },
+        );
+        $this->app->instance(SourceTaxServiceInterface::class, $sourceTax);
+
+        $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->postJson(route('payroll.run.preview'), [
+                'employee_ids' => [$this->employee->id],
+                'month' => 3,
+                'year' => 2026,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.0.deductions.source_tax', '510.00')
+            ->assertJsonPath('data.0.net_salary', '4626.00');
     }
 
     #[Test]

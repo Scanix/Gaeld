@@ -20,6 +20,7 @@ const { intlMonthName, formatCurrency } = useFormatters()
 const props = defineProps({
   employees: { type: Array, default: () => [] },
   fiscalYears: { type: Array, default: () => [] },
+  withholdingTaxEnabled: { type: Boolean, default: false },
 })
 
 // Step state: 1=Select, 2=Preview, 3=Generate, 4=Post
@@ -160,6 +161,7 @@ async function goToPreview() {
         thirteenth_salary: deductions.thirteenth_salary ?? '0.00',
         unpaid_leave_amount: deductions.unpaid_leave_amount ?? '0.00',
         reimbursement_amount: deductions.reimbursement_amount ?? '0.00',
+        source_tax: deductions.source_tax ?? '0.00',
         net: slip.net_salary,
       }
     })
@@ -372,6 +374,7 @@ async function postSlips() {
                 <th class="pb-2 text-right font-medium">AC</th>
                 <th class="pb-2 text-right font-medium">AANP</th>
                 <th class="pb-2 text-right font-medium">LPP</th>
+                <th v-if="withholdingTaxEnabled" class="pb-2 text-right font-medium">{{ t('withholding_tax') }}</th>
                 <th class="pb-2 text-right font-medium">{{ t('net_salary') }}</th>
               </tr>
             </thead>
@@ -386,6 +389,7 @@ async function postSlips() {
                 <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.ac) }}</td>
                 <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.aanp) }}</td>
                 <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.lpp) }}</td>
+                <td v-if="withholdingTaxEnabled" class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.source_tax) }}</td>
                 <td class="py-2.5 text-right font-mono font-bold text-green-700 dark:text-green-400">{{ formatCurrency(emp.net) }}</td>
               </tr>
             </tbody>

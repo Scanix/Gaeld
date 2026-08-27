@@ -2,6 +2,7 @@
 
 namespace App\Domains\Payroll\Services;
 
+use App\Domains\Payroll\Contracts\SourceTaxServiceInterface;
 use App\Domains\Payroll\Models\DeductionRate;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
@@ -17,6 +18,7 @@ class PayrollCalculator
 {
     public function __construct(
         private SwissDeductionService $deductionService,
+        private SourceTaxServiceInterface $sourceTax,
     ) {}
 
     // ──────────────────────────────────────────────────────────────
@@ -72,7 +74,7 @@ class PayrollCalculator
         $deductions['reimbursement_amount'] = $reimbursementAmount;
         $deductions['net_salary'] = Money::add($deductions['net_salary'], $reimbursementAmount);
 
-        return new SalarySlip([
+        $slip = new SalarySlip([
             'employee_id' => $employee->id,
             'organization_id' => $employee->organization_id,
             'period_month' => $month,
@@ -97,6 +99,18 @@ class PayrollCalculator
                 'ahv_number_encrypted' => true,
             ],
         ]);
+
+        $this->sourceTax->applyToSlip($slip, $employee);
+        $sourceTaxAmount = Money::normalize((string) ($slip->source_tax_amount ?? '0.00'));
+        $deductions['source_tax'] = $sourceTaxAmount;
+        $deductions['net_salary'] = Money::subtract($deductions['net_salary'], $sourceTaxAmount);
+
+        $slip->forceFill([
+            'net_salary' => $deductions['net_salary'],
+            'deductions' => $deductions,
+        ]);
+
+        return $slip;
     }
 
     // ──────────────────────────────────────────────────────────────

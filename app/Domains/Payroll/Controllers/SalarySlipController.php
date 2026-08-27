@@ -6,7 +6,6 @@ use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\PostPayrollAction;
 use App\Domains\Payroll\Actions\UnpostPayrollAction;
-use App\Domains\Payroll\Contracts\SourceTaxServiceInterface;
 use App\Domains\Payroll\Controllers\Concerns\EnsuresPayrollWritable;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
@@ -99,7 +98,6 @@ class SalarySlipController extends Controller
     public function generate(
         Request $request,
         PayrollCalculator $calculator,
-        SourceTaxServiceInterface $sourceTax,
     ): RedirectResponse {
         $this->ensurePayrollWritable(app(CurrentOrganization::class)->get());
         $this->authorize('create', Employee::class);
@@ -121,7 +119,6 @@ class SalarySlipController extends Controller
             (string) ($validated['reimbursement_amount'] ?? '0.00'),
         );
         $slip->save();
-        $sourceTax->applyToSlip($slip, $employee);
 
         return redirect()->route('payroll.salarySlips.show', $slip)
             ->with('success', __('app.salary_slip_generated'));

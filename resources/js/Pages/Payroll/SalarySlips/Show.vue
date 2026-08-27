@@ -145,6 +145,12 @@ function deductionRow(label, employee, employer) {
                 <td class="py-2 text-right font-mono">{{ formatCurrency(-d.employer) }}</td>
                 <td class="py-2 text-right font-mono">{{ formatCurrency(-d.total) }}</td>
               </tr>
+              <tr v-if="Number(slip.deductions?.source_tax) > 0" class="text-red-700 dark:text-red-400">
+                <td class="py-2">{{ t('withholding_tax') }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(-slip.deductions.source_tax) }}</td>
+                <td class="py-2 text-right">—</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(-slip.deductions.source_tax) }}</td>
+              </tr>
             </tbody>
             <tfoot>
               <tr class="border-t-2 border-[hsl(var(--border))] font-bold text-[hsl(var(--foreground))]">
