@@ -3,6 +3,7 @@
 namespace Tests\Feature\Payroll;
 
 use App\Domains\Payroll\Models\Employee;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
@@ -22,7 +23,36 @@ class PayrollCrudHttpTest extends TestCase
         $this->actingAs($this->user)
             ->get('/payroll/employees')
             ->assertStatus(200)
-            ->assertInertia(fn ($page) => $page->component('Payroll/Employees/Index'));
+            ->assertInertia(fn ($page) => $page
+                ->component('Payroll/Employees/Index')
+                ->where('payrollWritable', true));
+    }
+
+    public function test_viewer_can_view_employees_without_payroll_write_controls(): void
+    {
+        $viewer = User::factory()->create(['onboarding_completed_at' => now()]);
+        $this->organization->users()->attach($viewer->id, ['role' => 'viewer']);
+        $this->assignOrganizationRole($viewer, $this->organization, 'viewer');
+
+        $this->actingAs($viewer)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get('/payroll/employees')
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->component('Payroll/Employees/Index')
+                ->where('payrollWritable', false));
+    }
+
+    public function test_viewer_cannot_open_employee_creation_page(): void
+    {
+        $viewer = User::factory()->create(['onboarding_completed_at' => now()]);
+        $this->organization->users()->attach($viewer->id, ['role' => 'viewer']);
+        $this->assignOrganizationRole($viewer, $this->organization, 'viewer');
+
+        $this->actingAs($viewer)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get('/payroll/employees/create')
+            ->assertForbidden();
     }
 
     public function test_employee_create_page_renders(): void

@@ -32,7 +32,8 @@ class EmployeeController extends Controller
 
         return Inertia::render('Payroll/Employees/Index', [
             'employees' => EmployeeQuery::list($request),
-            'payrollWritable' => FeatureFlag::enabledForOrg('payroll', $currentOrg->get()),
+            'payrollWritable' => FeatureFlag::enabledForOrg('payroll', $currentOrg->get())
+                && $request->user()->can('create', Employee::class),
         ]);
     }
 
