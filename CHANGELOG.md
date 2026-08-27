@@ -72,6 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   start change on its effective date without mutating the current period early.
 - **VAT:** settled periods are locked at the VAT-entry boundary and exact bank
   matching uses the posted settlement reference, amount, and direction.
+- **Accounting navigation:** salary-slip journal links now open an authorized
+  read-only detail page instead of a missing GET endpoint.
 
 ## [3.5.1] — 2026-08-07
 

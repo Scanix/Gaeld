@@ -99,6 +99,15 @@ class AccountingController extends Controller
         ]);
     }
 
+    public function showJournalEntry(JournalEntry $journalEntry): Response
+    {
+        $this->authorize('view', $journalEntry);
+
+        return Inertia::render('Accounting/JournalEntryShow', [
+            'entry' => $journalEntry->load('lines.account'),
+        ]);
+    }
+
     public function createJournalEntry(CurrentOrganization $currentOrg): Response
     {
         $this->authorize('create', JournalEntry::class);
