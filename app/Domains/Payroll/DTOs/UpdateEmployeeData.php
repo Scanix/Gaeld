@@ -27,6 +27,10 @@ readonly class UpdateEmployeeData
         public bool $isActive = true,
         public bool $isSourceTaxSubject = false,
         public ?bool $hasThirteenthSalary = null,
+        public ?string $sourceTaxCanton = null,
+        public ?string $sourceTaxTariff = null,
+        public ?string $sourceTaxMunicipalityCode = null,
+        private bool $sourceTaxFieldsProvided = false,
     ) {}
 
     /** @param  array<string, mixed>  $data */
@@ -48,6 +52,16 @@ readonly class UpdateEmployeeData
             hasThirteenthSalary: array_key_exists('has_thirteenth_salary', $data)
                 ? (bool) $data['has_thirteenth_salary']
                 : null,
+            sourceTaxCanton: array_key_exists('source_tax_canton', $data) && $data['source_tax_canton'] !== null
+                ? strtoupper((string) $data['source_tax_canton'])
+                : null,
+            sourceTaxTariff: array_key_exists('source_tax_tariff', $data) && $data['source_tax_tariff'] !== null
+                ? strtoupper((string) $data['source_tax_tariff'])
+                : null,
+            sourceTaxMunicipalityCode: $data['source_tax_municipality_code'] ?? null,
+            sourceTaxFieldsProvided: array_key_exists('source_tax_canton', $data)
+                || array_key_exists('source_tax_tariff', $data)
+                || array_key_exists('source_tax_municipality_code', $data),
         );
     }
 
@@ -58,6 +72,11 @@ readonly class UpdateEmployeeData
 
         if ($this->hasThirteenthSalary === null) {
             unset($data['has_thirteenth_salary']);
+        }
+
+        unset($data['source_tax_fields_provided']);
+        if (! $this->sourceTaxFieldsProvided) {
+            unset($data['source_tax_canton'], $data['source_tax_tariff'], $data['source_tax_municipality_code']);
         }
 
         return $data;

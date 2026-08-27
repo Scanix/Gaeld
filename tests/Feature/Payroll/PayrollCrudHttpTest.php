@@ -60,7 +60,9 @@ class PayrollCrudHttpTest extends TestCase
         $this->actingAs($this->user)
             ->get('/payroll/employees/create')
             ->assertStatus(200)
-            ->assertInertia(fn ($page) => $page->component('Payroll/Employees/Create'));
+            ->assertInertia(fn ($page) => $page
+                ->component('Payroll/Employees/Create')
+                ->where('withholdingTaxEnabled', false));
     }
 
     public function test_employee_store_creates_record(): void

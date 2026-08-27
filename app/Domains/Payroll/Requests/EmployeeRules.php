@@ -2,6 +2,8 @@
 
 namespace App\Domains\Payroll\Requests;
 
+use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Support\FeatureFlag;
 use App\Support\Rules\Iban;
 
 trait EmployeeRules
@@ -11,7 +13,7 @@ trait EmployeeRules
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -24,5 +26,20 @@ trait EmployeeRules
             'is_source_tax_subject' => ['boolean'],
             'has_thirteenth_salary' => ['boolean'],
         ];
+
+        $currentOrganization = app(CurrentOrganization::class);
+        $withholdingTaxEnabled = $currentOrganization->isBound()
+            ? FeatureFlag::enabledForOrg('withholding_tax', $currentOrganization->get())
+            : FeatureFlag::enabled('withholding_tax');
+
+        if ($withholdingTaxEnabled) {
+            $rules += [
+                'source_tax_canton' => ['nullable', 'string', 'size:2', 'regex:/^[A-Z]{2}$/'],
+                'source_tax_tariff' => ['nullable', 'string', 'size:1', 'in:A,B,C,D,E,F,G,H'],
+                'source_tax_municipality_code' => ['nullable', 'string', 'max:10'],
+            ];
+        }
+
+        return $rules;
     }
 }

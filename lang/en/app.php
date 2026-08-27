@@ -1651,6 +1651,9 @@ return [
     'withholding_tax_tariff_deleted' => 'Tariff deleted.',
     'source_tax_canton' => 'Source Tax Canton',
     'source_tax_tariff' => 'Tariff Code',
+    'source_tax_subject' => 'Subject to source tax',
+    'source_tax_subject_desc' => 'Apply the configured cantonal withholding tax tariff to this employee.',
+    'source_tax_municipality_code' => 'Municipality code',
     'feature_withholding_tax' => 'Withholding Tax (IS)',
 
     // Tax declaration (déclaration d'impôts)

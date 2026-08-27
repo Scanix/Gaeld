@@ -1559,6 +1559,9 @@ return [
     'withholding_tax_tariff_deleted' => 'Barème supprimé.',
     'source_tax_canton' => 'Canton IS',
     'source_tax_tariff' => 'Code barème',
+    'source_tax_subject' => 'Assujetti à l’impôt à la source',
+    'source_tax_subject_desc' => 'Appliquez le barème cantonal configuré à cet employé.',
+    'source_tax_municipality_code' => 'Code commune',
     'feature_withholding_tax' => 'Impôt à la source (IS)',
 
     // Déclaration d'impôts

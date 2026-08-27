@@ -42,7 +42,9 @@ class EmployeeController extends Controller
         $this->ensurePayrollWritable($currentOrg->get());
         $this->authorize('create', Employee::class);
 
-        return Inertia::render('Payroll/Employees/Create');
+        return Inertia::render('Payroll/Employees/Create', [
+            'withholdingTaxEnabled' => FeatureFlag::enabledForOrg('withholding_tax', $currentOrg->get()),
+        ]);
     }
 
     public function store(StoreEmployeeRequest $request, CurrentOrganization $currentOrg, CreateEmployeeAction $action): RedirectResponse
@@ -86,6 +88,7 @@ class EmployeeController extends Controller
 
         return Inertia::render('Payroll/Employees/Edit', [
             'employee' => $employee,
+            'withholdingTaxEnabled' => FeatureFlag::enabledForOrg('withholding_tax', $employee->organization),
         ]);
     }
 
