@@ -4,6 +4,7 @@ namespace App\Domains\Accounting\Actions;
 
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
@@ -47,6 +48,7 @@ class YearEndClosingAction
         $year = (int) $validated['year'];
 
         $fiscalYear = $this->resolveFiscalYear($orgId, $year, $validated['fiscal_year_id'] ?? null);
+        $preservePreviousArchiveVersion = $fiscalYear?->status === FiscalYearStatus::Expired;
 
         if ($fiscalYear !== null) {
             $year = (int) $fiscalYear->start_date->year;
@@ -102,6 +104,7 @@ class YearEndClosingAction
             $fiscalYear,
             $actingUser,
             $closingReference,
+            $preservePreviousArchiveVersion,
             &$nextYearCreated,
         ): void {
             $lines = [];
@@ -157,7 +160,12 @@ class YearEndClosingAction
                 $nextYearCreated = $this->fiscalYears->close($fiscalYear, $actingUser);
             }
 
-            $this->archiving->archiveFiscalYear($orgId, $year, $fiscalYear?->id);
+            $this->archiving->archiveFiscalYear(
+                $orgId,
+                $year,
+                $fiscalYear?->id,
+                preservePreviousVersion: $preservePreviousArchiveVersion,
+            );
             $this->openingBalances->execute($orgId, $year, $fiscalYear);
         });
 

@@ -68,9 +68,17 @@ class LegalArchivingService
         }
         $checksum = hash('sha256', $payload);
 
-        $relativePath = "archives/{$orgId}/{$periodKey}/{$documentType}/{$id}.json";
+        $latest = LegalArchive::query()
+            ->where('organization_id', $orgId)
+            ->where('document_type', $documentType)
+            ->where('document_id', $id)
+            ->orderByDesc('version')
+            ->first();
+        $version = ($latest === null ? 0 : $latest->version) + 1;
+        $filename = $id.($version > 1 ? "-v{$version}" : '').'.json';
+        $relativePath = "archives/{$orgId}/{$periodKey}/{$documentType}/{$filename}";
 
-        // Append-only: do not overwrite an existing archive
+        // Append-only: do not overwrite an existing archive.
         if (! Storage::exists($relativePath)) {
             Storage::put($relativePath, $payload);
         }
@@ -90,14 +98,13 @@ class LegalArchivingService
             $archiveValues['fiscal_year_id'] = $period->fiscalYearId;
         }
 
-        return LegalArchive::updateOrCreate(
-            [
-                'organization_id' => $orgId,
-                'document_type' => $documentType,
-                'document_id' => $id,
-            ],
-            $archiveValues,
-        );
+        return LegalArchive::create([
+            'organization_id' => $orgId,
+            'document_type' => $documentType,
+            'document_id' => $id,
+            'version' => $version,
+            ...$archiveValues,
+        ]);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -133,8 +140,12 @@ class LegalArchivingService
      *
      * Called automatically from YearEndClosingAction and via the CLI command.
      */
-    public function archiveFiscalYear(string $orgId, string|int $year, ?string $fiscalYearId = null): void
-    {
+    public function archiveFiscalYear(
+        string $orgId,
+        string|int $year,
+        ?string $fiscalYearId = null,
+        bool $preservePreviousVersion = false,
+    ): void {
         $organization = Organization::findOrFail($orgId);
         $period = $this->fiscalYears->resolvePeriod(
             $organization,
@@ -149,25 +160,34 @@ class LegalArchivingService
         $lock->block(10);
 
         try {
-            Invoice::where('organization_id', $orgId)
-                ->whereBetween('issue_date', [$period->fromDate, $period->toDate])
-                ->whereNull('archived_at')
+            $invoices = Invoice::where('organization_id', $orgId)
+                ->whereBetween('issue_date', [$period->fromDate, $period->toDate]);
+            if (! $preservePreviousVersion) {
+                $invoices->whereNull('archived_at');
+            }
+            $invoices
                 ->each(function (Invoice $doc) use ($period): void {
                     $this->archiveDocument($doc, 'invoice', $period);
                     $doc->update(['archived_at' => now()]);
                 });
 
-            Expense::where('organization_id', $orgId)
-                ->whereBetween('date', [$period->fromDate, $period->toDate])
-                ->whereNull('archived_at')
+            $expenses = Expense::where('organization_id', $orgId)
+                ->whereBetween('date', [$period->fromDate, $period->toDate]);
+            if (! $preservePreviousVersion) {
+                $expenses->whereNull('archived_at');
+            }
+            $expenses
                 ->each(function (Expense $doc) use ($period): void {
                     $this->archiveDocument($doc, 'expense', $period);
                     $doc->update(['archived_at' => now()]);
                 });
 
-            JournalEntry::where('organization_id', $orgId)
-                ->whereBetween('date', [$period->fromDate, $period->toDate])
-                ->whereNull('archived_at')
+            $journalEntries = JournalEntry::where('organization_id', $orgId)
+                ->whereBetween('date', [$period->fromDate, $period->toDate]);
+            if (! $preservePreviousVersion) {
+                $journalEntries->whereNull('archived_at');
+            }
+            $journalEntries
                 ->each(function (JournalEntry $doc) use ($period): void {
                     $this->archiveDocument($doc, 'journal_entry', $period);
                     $doc->update(['archived_at' => now()]);
@@ -176,10 +196,13 @@ class LegalArchivingService
             $startKey = (int) Carbon::parse($period->fromDate)->format('Ym');
             $endKey = (int) Carbon::parse($period->toDate)->format('Ym');
 
-            SalarySlip::with('employee')
+            $salarySlips = SalarySlip::with('employee')
                 ->where('organization_id', $orgId)
-                ->whereRaw('(period_year * 100 + period_month) between ? and ?', [$startKey, $endKey])
-                ->whereNull('archived_at')
+                ->whereRaw('(period_year * 100 + period_month) between ? and ?', [$startKey, $endKey]);
+            if (! $preservePreviousVersion) {
+                $salarySlips->whereNull('archived_at');
+            }
+            $salarySlips
                 ->each(function (SalarySlip $doc) use ($period): void {
                     $this->archiveDocument($doc, 'salary_slip', $period);
                     $doc->update(['archived_at' => now()]);
@@ -187,7 +210,12 @@ class LegalArchivingService
 
             if ($this->pdfAction !== null) {
                 try {
-                    $this->pdfAction->execute($orgId, $period->label, $period->fiscalYearId);
+                    $this->pdfAction->execute(
+                        $orgId,
+                        $period->label,
+                        $period->fiscalYearId,
+                        $preservePreviousVersion,
+                    );
                 } catch (\Throwable $e) {
                     Log::warning('Failed to generate archive PDFs', [
                         'organization_id' => $orgId,
