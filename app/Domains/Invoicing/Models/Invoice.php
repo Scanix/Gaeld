@@ -192,13 +192,13 @@ class Invoice extends Model
      */
     public function scopeOverdue(Builder $query): Builder
     {
-        return $query->where('status', InvoiceStatus::Sent)
+        return $query->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
             ->where('due_date', '<', now()->toDateString());
     }
 
     public function isOverdue(): bool
     {
-        return $this->status === InvoiceStatus::Sent
+        return in_array($this->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue], true)
             && $this->due_date->isBefore(now()->startOfDay());
     }
 
