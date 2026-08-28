@@ -59,7 +59,7 @@ const trialDaysLeft = computed(() => {
 const showTrialBanner = computed(() => trialDaysLeft.value !== null && trialDaysLeft.value <= 7)
 const showPastDueBanner = computed(() => subscription.value?.status === 'past_due')
 const showGracePeriodBanner = computed(() => {
-  if (subscription.value?.status !== 'canceled' || !subscription.value?.ends_at) return false
+  if (!['active', 'canceled'].includes(subscription.value?.status) || !subscription.value?.ends_at) return false
   return new Date(subscription.value.ends_at) > new Date()
 })
 const showPausedBanner = computed(() => subscription.value?.status === 'paused')
