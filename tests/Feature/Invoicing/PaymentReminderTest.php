@@ -35,13 +35,25 @@ class PaymentReminderTest extends TestCase
                 'total' => '1250.00',
             ]);
 
+        $archivedCustomer = Contact::factory()
+            ->for($this->organization)
+            ->create(['email' => 'billing@archived-reminder.test']);
+        $archivedInvoice = Invoice::factory()
+            ->for($this->organization)
+            ->for($archivedCustomer, 'customer')
+            ->overdue()
+            ->create([
+                'number' => 'INV-REMINDER-ARCHIVED',
+                'archived_at' => now(),
+            ]);
+
         $this->artisan('invoices:mark-overdue')
             ->assertExitCode(0);
 
         $invoice->refresh();
         $this->assertSame(InvoiceStatus::Overdue, $invoice->status);
         $this->assertTrue($invoice->isOverdue());
-        $this->assertCount(1, Invoice::overdue()->get());
+        $this->assertCount(2, Invoice::overdue()->get());
 
         app()->call([app(SendPaymentRemindersJob::class), 'handle']);
 
@@ -51,7 +63,9 @@ class PaymentReminderTest extends TestCase
         Mail::assertSent(InvoiceReminderMail::class, function (InvoiceReminderMail $mail) use ($invoice): bool {
             return $mail->invoice->is($invoice);
         });
+        Mail::assertSent(InvoiceReminderMail::class, 1);
 
         $this->assertSame(InvoiceStatus::Overdue, $invoice->status);
+        $this->assertSame(0, $archivedInvoice->fresh()->reminder_count);
     }
 }
