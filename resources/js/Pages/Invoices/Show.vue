@@ -91,7 +91,8 @@ const paymentProgress = computed(() => {
 
 const isOverdue = computed(() => {
   if (!props.invoice?.due_date) return false
-  return props.invoice.status === 'sent' && new Date(props.invoice.due_date) < new Date()
+  return ['sent', 'overdue'].includes(props.invoice.status)
+    && new Date(props.invoice.due_date) < new Date()
 })
 
 function finalize() {
