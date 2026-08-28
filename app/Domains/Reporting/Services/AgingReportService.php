@@ -50,6 +50,7 @@ class AgingReportService
 
             foreach ($items as $item) {
                 $key = $this->bracket($item['days_overdue']);
+                $item['bracket'] = $key;
                 $brackets[$key]['items'][] = $item;
                 $brackets[$key]['total'] = Money::add($brackets[$key]['total'], (string) $item['amount']);
             }

@@ -145,6 +145,7 @@ class AgingReportTest extends TestCase
 
         $this->assertCount(1, $report['brackets']['1_30']['items']);
         $this->assertEquals(15, $report['brackets']['1_30']['items'][0]['days_overdue']);
+        $this->assertSame('1_30', $report['brackets']['1_30']['items'][0]['bracket']);
     }
 
     public function test_31_60_bucket_contains_invoices_31_to_60_days_overdue(): void
