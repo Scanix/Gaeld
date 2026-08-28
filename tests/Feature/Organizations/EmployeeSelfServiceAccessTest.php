@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Organizations;
 
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Enums\ReceiptScanStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Models\ReceiptScan;
@@ -159,6 +160,24 @@ class EmployeeSelfServiceAccessTest extends TestCase
         $this->assertArrayNotHasKey('bank_account_code', $props['expense']);
         $this->assertArrayNotHasKey('supplier', $props['expense']);
         $this->asEmployee()->get(route('expenses.show', $other))->assertForbidden();
+    }
+
+    public function test_employee_expense_list_does_not_lazy_load_hidden_supplier_relation(): void
+    {
+        $supplier = Contact::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Hidden Supplier AG',
+        ]);
+        Expense::factory()->create([
+            'organization_id' => $this->organization->id,
+            'user_id' => $this->employeeUser->id,
+            'supplier_id' => $supplier->id,
+            'vendor' => null,
+        ]);
+
+        $this->asEmployee()
+            ->get(route('expenses.index'))
+            ->assertOk();
     }
 
     public function test_employee_expense_form_hides_and_rejects_accounting_fields(): void
