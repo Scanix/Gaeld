@@ -54,11 +54,10 @@ class LegalArchiveVersioningTest extends TestCase
             ],
         ));
 
-        $service = new LegalArchivingService(
-            app(FiscalYearService::class),
-            app(GenerateArchivePdfAction::class),
-        );
+        $pdfAction = app(GenerateArchivePdfAction::class);
+        $service = new LegalArchivingService(app(FiscalYearService::class), $pdfAction);
         $service->archiveFiscalYear($this->organization->id, '2024', $fiscalYear->id);
+        $pdfAction->execute($this->organization->id, '2024', $fiscalYear->id);
 
         $firstJson = LegalArchive::withoutGlobalScopes()
             ->where('organization_id', $this->organization->id)

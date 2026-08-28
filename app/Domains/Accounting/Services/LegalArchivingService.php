@@ -26,7 +26,7 @@ class LegalArchivingService
 
     public function __construct(
         private readonly FiscalYearService $fiscalYears,
-        private readonly ?GenerateArchivePdfAction $pdfAction = null,
+        private readonly GenerateArchivePdfAction $pdfAction,
     ) {}
 
     // ──────────────────────────────────────────────────────────────
@@ -208,7 +208,7 @@ class LegalArchivingService
                     $doc->update(['archived_at' => now()]);
                 });
 
-            if ($this->pdfAction !== null) {
+            if ($preservePreviousVersion) {
                 try {
                     $this->pdfAction->execute(
                         $orgId,
