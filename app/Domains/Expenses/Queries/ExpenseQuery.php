@@ -34,7 +34,9 @@ class ExpenseQuery
             ->paginate($perPage)
             ->withQueryString()
             ->through(function ($expense) {
-                if (empty($expense->vendor) && $expense->supplier) {
+                if (empty($expense->vendor)
+                    && $expense->relationLoaded('supplier')
+                    && $expense->supplier) {
                     $expense->vendor = $expense->supplier->name;
                 }
 
