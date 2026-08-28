@@ -87,7 +87,7 @@ class OrganizationCrudFlowTest extends TestCase
         $forbidden->assertForbidden();
     }
 
-    public function test_owner_can_create_another_organization_and_is_attached_as_owner(): void
+    public function test_owner_can_create_another_organization_and_make_it_current(): void
     {
         $response = $this->actingAs($this->owner)
             ->withSession(['current_organization_id' => $this->primaryOrganization->id])
@@ -113,6 +113,7 @@ class OrganizationCrudFlowTest extends TestCase
             'user_id' => $this->owner->id,
             'role' => 'owner',
         ]);
+        $response->assertSessionHas('current_organization_id', $organization->id);
         $this->assertSame('Created Org SA', $organization->legal_name);
     }
 

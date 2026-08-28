@@ -82,6 +82,8 @@ class OrganizationController extends Controller
             return $org;
         });
 
+        $request->user()->switchOrganization($org);
+
         return redirect()->route('organizations.show', $org)
             ->with('success', __('app.organization_created'));
     }
