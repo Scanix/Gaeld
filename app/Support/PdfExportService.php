@@ -12,6 +12,8 @@ class PdfExportService
 {
     private const LARGE_REPORT_MEMORY_LIMIT = '512M';
 
+    private const LARGE_REPORT_TIME_LIMIT = 120;
+
     public function __construct(
         private string $paperSize = 'A4',
         private string $orientation = 'portrait',
@@ -49,6 +51,8 @@ class PdfExportService
 
     private function ensureMemoryLimit(): void
     {
+        set_time_limit(self::LARGE_REPORT_TIME_LIMIT);
+
         $currentLimit = (string) ini_get('memory_limit');
 
         if ($currentLimit === '' || $currentLimit === '-1') {
