@@ -105,4 +105,77 @@ class RecloseYearEndClosingTest extends TestCase
         $this->assertSame(['BOUCL-2024', 'BOUCL-2024-v2'], $references);
         $this->assertTrue($fiscalYear->fresh()->isClosed());
     }
+
+    public function test_reclosing_does_not_duplicate_an_existing_closed_successor(): void
+    {
+        $fiscalYear = FiscalYear::factory()->for($this->organization)->create([
+            'name' => '2024',
+            'start_date' => '2024-01-01',
+            'end_date' => '2024-12-31',
+            'status' => FiscalYearStatus::Operative,
+        ]);
+        $successor = FiscalYear::factory()->for($this->organization)->create([
+            'name' => '2025',
+            'start_date' => '2025-01-01',
+            'end_date' => '2025-12-31',
+            'status' => FiscalYearStatus::Planned,
+        ]);
+        FiscalYear::factory()->for($this->organization)->create([
+            'name' => '2026',
+            'start_date' => '2026-01-01',
+            'end_date' => '2026-12-31',
+            'status' => FiscalYearStatus::Planned,
+        ]);
+
+        $bank = Account::where('organization_id', $this->organization->id)
+            ->where('code', '1020')
+            ->firstOrFail();
+        $revenue = Account::where('organization_id', $this->organization->id)
+            ->where('code', '3000')
+            ->firstOrFail();
+        $expense = Account::where('organization_id', $this->organization->id)
+            ->where('code', '6500')
+            ->firstOrFail();
+
+        $this->postJournalEntry('2024-06-01', [
+            $this->journalLine($bank, '100.00', '0.00'),
+            $this->journalLine($revenue, '0.00', '100.00'),
+        ], 'REVENUE-2024');
+
+        $validated = [
+            'year' => 2024,
+            'fiscal_year_id' => $fiscalYear->id,
+            'closing_date' => '2024-12-31',
+            'reference' => 'BOUCL-2024',
+            'result_account_code' => '9000',
+        ];
+
+        app(YearEndClosingAction::class)->execute($this->organization, $validated, $this->user);
+        $successor->update(['status' => FiscalYearStatus::Closed]);
+
+        app(ReopenFiscalYearAction::class)->execute(
+            $this->organization,
+            ['year' => 2024, 'fiscal_year_id' => $fiscalYear->id],
+            $this->user,
+        );
+
+        $this->postJournalEntry('2024-12-15', [
+            $this->journalLine($expense, '50.00', '0.00'),
+            $this->journalLine($bank, '0.00', '50.00'),
+        ], 'REOPEN-ADJUSTMENT');
+
+        app(YearEndClosingAction::class)->execute($this->organization, $validated, $this->user);
+
+        $this->assertSame(1, FiscalYear::query()
+            ->where('organization_id', $this->organization->id)
+            ->whereDate('start_date', '2025-01-01')
+            ->whereDate('end_date', '2025-12-31')
+            ->count());
+        $this->assertTrue($successor->fresh()->isClosed());
+        $this->assertDatabaseHas('journal_entries', [
+            'organization_id' => $this->organization->id,
+            'reference' => 'BOUCL-2024-v2',
+            'type' => 'year_end_closing',
+        ]);
+    }
 }
