@@ -28,8 +28,12 @@ const OUTPUT_DIR = process.env.QA_OUTPUT_DIR || 'storage/app/qa'
 const RUN_ID = process.env.QA_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
 const RUN_ENABLED = process.env.QA_RUN === '1'
 const CAPTURE_SCREENSHOTS = process.env.QA_CAPTURE_SCREENSHOTS !== '0'
+const CREATE_ACCOUNT = process.env.QA_CREATE_ACCOUNT === '1'
+const CLEANUP_ORGANIZATION = process.env.QA_CLEANUP_ORGANIZATION === '1'
 const EMAIL = process.env.QA_EMAIL
 const PASSWORD = process.env.QA_PASSWORD
+const ACCOUNT_NAME = process.env.QA_ACCOUNT_NAME || `Gäld QA ${RUN_ID}`
+const MAILPIT_URL = process.env.QA_MAILPIT_URL
 const PROTECTED_ORGANIZATION = process.env.QA_PROTECTED_ORGANIZATION || 'Helvetia Full E2E Sarl'
 
 const phasePaths = {
@@ -58,8 +62,11 @@ function assertSafeConfiguration() {
   if (PROTECTED_ORGANIZATION.trim().length < 8) {
     throw new Error('QA_PROTECTED_ORGANIZATION must identify the protected tenant')
   }
-  if (RUN_ENABLED && (!EMAIL || !PASSWORD)) {
+  if (RUN_ENABLED && !CREATE_ACCOUNT && (!EMAIL || !PASSWORD)) {
     throw new Error('QA_EMAIL and QA_PASSWORD are required when QA_RUN=1')
+  }
+  if (CLEANUP_ORGANIZATION && !CREATE_ACCOUNT) {
+    throw new Error('QA_CLEANUP_ORGANIZATION requires QA_CREATE_ACCOUNT=1')
   }
 }
 
@@ -138,6 +145,58 @@ async function login(page) {
   return { httpStatus: response.status(), url: page.url() }
 }
 
+async function createAccount(page) {
+  const email = `gaeld-qa-${RUN_ID}@example.test`
+  const password = `Qa-${RUN_ID.replace(/[^a-zA-Z0-9]/g, '')}-Aa1!`
+
+  await page.goto(`${BASE_URL}/signup`, { waitUntil: 'networkidle' })
+  const cookieButton = page.getByRole('button', { name: /Accept|Accepter|Agree|J'accepte/ })
+  if (await cookieButton.count()) await cookieButton.first().click()
+  await page.getByRole('button', { name: /^Free/ }).click()
+  await page.locator('#signup-name').fill(ACCOUNT_NAME)
+  await page.locator('#signup-org-name').fill(`${ACCOUNT_NAME} Organization`)
+  await page.locator('#signup-email').fill(email)
+  await page.locator('#signup-password').fill(password)
+  await page.locator('#signup-password-confirmation').fill(password)
+  await page.locator('input[type="checkbox"]').last().check()
+  const submitResponse = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/signup'), { timeout: 30000 })
+  await page.getByRole('button', { name: /Create free account|Créer un compte gratuit/ }).click()
+  const response = await submitResponse
+  await page.waitForLoadState('networkidle')
+
+  return {
+    httpStatus: response.status(),
+    email,
+    password,
+    url: page.url(),
+    needsVerification: page.url().includes('/email/verify'),
+  }
+}
+
+async function verifyAccountFromMailpit(page, email) {
+  if (!MAILPIT_URL) return { status: 'skip', reason: 'QA_MAILPIT_URL is not configured' }
+
+  const deadline = Date.now() + 30000
+  let verificationUrl = null
+  while (!verificationUrl && Date.now() < deadline) {
+    const messagesResponse = await fetch(`${MAILPIT_URL}/api/v1/messages?limit=100`)
+    if (!messagesResponse.ok) throw new Error(`Mailpit returned HTTP ${messagesResponse.status}`)
+    const messages = await messagesResponse.json()
+    const message = messages.messages?.find(item => item.To?.some(recipient => recipient.Address === email))
+    if (message) {
+      const detailResponse = await fetch(`${MAILPIT_URL}/api/v1/message/${message.ID}`)
+      if (!detailResponse.ok) throw new Error(`Mailpit message returned HTTP ${detailResponse.status}`)
+      const detail = await detailResponse.json()
+      verificationUrl = detail.Text?.match(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/email/verify/[^\\s<]+`))?.[0] || null
+    }
+    if (!verificationUrl) await new Promise(resolve => setTimeout(resolve, 1000))
+  }
+  if (!verificationUrl) return { status: 'fail', reason: 'Verification email was not found in Mailpit' }
+
+  const response = await page.goto(verificationUrl, { waitUntil: 'networkidle' })
+  return { status: response?.status() === 302 || response?.status() === 200 ? 'pass' : 'fail', httpStatus: response?.status() ?? null }
+}
+
 async function responsiveCheck(page) {
   const checks = []
   for (const width of [375, 768, 1440]) {
@@ -204,6 +263,7 @@ async function main() {
     startedAt: new Date().toISOString(),
     baseUrl: BASE_URL,
     mode: RUN_ENABLED ? 'staging-safe-smoke' : 'dry-run',
+    accountMode: CREATE_ACCOUNT ? 'ephemeral-signup' : 'existing-account',
     protectedOrganization: '[redacted]',
     results: [],
     consoleErrors: [],
@@ -221,8 +281,20 @@ async function main() {
     const screenshotDirectory = `${OUTPUT_DIR}/screenshots-${RUN_ID}`
     await mkdir(screenshotDirectory, { recursive: true })
     try {
-      const auth = await login(page)
-      report.results.push(result(0, 'authenticated login', auth.httpStatus === 302 ? 'pass' : 'fail', auth))
+      const auth = CREATE_ACCOUNT ? await createAccount(page) : await login(page)
+      report.results.push(result(0, CREATE_ACCOUNT ? 'ephemeral account signup' : 'authenticated login', auth.httpStatus === 302 ? 'pass' : 'fail', {
+        httpStatus: auth.httpStatus,
+        url: auth.url,
+        needsVerification: auth.needsVerification || false,
+      }))
+      if (CREATE_ACCOUNT && auth.needsVerification) {
+        const verification = await verifyAccountFromMailpit(page, auth.email)
+        report.results.push(result(0, 'email verification', verification.status, verification))
+        if (verification.status === 'pass') {
+          const relogin = await login(page)
+          report.results.push(result(0, 'login after verification', relogin.httpStatus === 302 ? 'pass' : 'fail', relogin))
+        }
+      }
 
       for (const [phase, paths] of Object.entries(phasePaths)) {
         for (const path of paths) {

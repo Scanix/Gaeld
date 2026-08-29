@@ -49,6 +49,20 @@ QA_BROWSER_PATH='/path/to/chromium' \
 pnpm run qa:staging
 ```
 
+When `QA_CREATE_ACCOUNT=1`, configure `QA_MAILPIT_URL` to the staging Mailpit
+API (usually an SSH tunnel such as `http://127.0.0.1:18026`). The runner finds
+the verification message sent to its generated address and follows only the
+signed verification URL for that same address.
+
+Set `QA_CREATE_ACCOUNT=1` to use a fresh account and organization for the
+run. The account email is generated from the run ID and is never stored in the
+report. This currently covers the real signup submission; email verification
+requires a `QA_MAILPIT_URL` adapter and is reported as skipped until that
+adapter is configured. Do not enable organization cleanup until the run has
+been reviewed: the application currently exposes organization deletion but no
+user-account deletion route, so full cleanup requires a separately audited
+staging CLI adapter.
+
 The runner writes to `storage/app/qa/`:
 
 - `staging-qa-<run-id>.json`: complete machine-readable evidence;
