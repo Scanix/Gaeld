@@ -239,7 +239,7 @@ function skip() {
       <Moon v-else class="h-4 w-4" />
     </button>
   </div>
-  <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--background))] p-8">
+  <div class="flex min-h-screen items-center justify-center overflow-x-hidden bg-[hsl(var(--background))] p-4 sm:p-8">
     <Card class="w-full max-w-2xl">
       <CardHeader>
         <CardTitle class="text-3xl">{{ t('onboarding_welcome_title') }}</CardTitle>
@@ -247,7 +247,7 @@ function skip() {
 
         <!-- Stepper indicator -->
         <nav aria-label="Onboarding progress" class="mt-6">
-          <ol class="flex items-center gap-2">
+          <ol class="flex flex-wrap items-center gap-2">
             <li
               v-for="(step, i) in steps"
               :key="step.key"

@@ -135,6 +135,8 @@ async function checkPage(page, path, screenshotDirectory) {
 
 async function login(page) {
   await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle' })
+  if (!page.url().endsWith('/login')) return { httpStatus: 302, url: page.url() }
+
   await page.locator('#email').fill(EMAIL)
   await page.locator('#password').fill(PASSWORD)
   const responsePromise = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/login'))
@@ -154,7 +156,7 @@ async function createAccount(page) {
   if (await cookieButton.count()) await cookieButton.first().click()
   await page.getByRole('button', { name: /^Free/ }).click()
   await page.locator('#signup-name').fill(ACCOUNT_NAME)
-  await page.locator('#signup-org-name').fill(`${ACCOUNT_NAME} Organization`)
+  await page.locator('#signup-org-name').fill(`${ACCOUNT_NAME} ${RUN_ID} Organization`)
   await page.locator('#signup-email').fill(email)
   await page.locator('#signup-password').fill(password)
   await page.locator('#signup-password-confirmation').fill(password)
@@ -162,6 +164,7 @@ async function createAccount(page) {
   const submitResponse = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/signup'), { timeout: 30000 })
   await page.getByRole('button', { name: /Create free account|Créer un compte gratuit/ }).click()
   const response = await submitResponse
+  await page.waitForURL(url => !url.toString().endsWith('/signup'), { timeout: 30000 })
   await page.waitForLoadState('networkidle')
 
   return {
@@ -296,20 +299,26 @@ async function main() {
         }
       }
 
-      for (const [phase, paths] of Object.entries(phasePaths)) {
-        for (const path of paths) {
-          try {
-            const checked = await checkPage(page, path, screenshotDirectory)
-            const status = checked.httpStatus === 200 ? 'pass' : 'fail'
-            report.results.push(result(Number(phase), `GET ${path}`, status, checked))
-          } catch (error) {
-            report.results.push(result(Number(phase), `GET ${path}`, 'fail', { error: error.message }))
-          }
-        }
+      if (CREATE_ACCOUNT && page.url().includes('/email/verify')) {
+        report.results.push(result(0, 'authenticated account access', 'fail', { error: 'Account remained unverified after Mailpit verification' }))
       }
 
-      const responsive = await responsiveCheck(page)
-      report.results.push(result(10, 'responsive overflow', responsive.every(check => !check.overflow) ? 'pass' : 'fail', { checks: responsive }))
+      if (!CREATE_ACCOUNT || !page.url().includes('/email/verify')) {
+        for (const [phase, paths] of Object.entries(phasePaths)) {
+          for (const path of paths) {
+            try {
+              const checked = await checkPage(page, path, screenshotDirectory)
+              const status = checked.httpStatus === 200 ? 'pass' : 'fail'
+              report.results.push(result(Number(phase), `GET ${path}`, status, checked))
+            } catch (error) {
+              report.results.push(result(Number(phase), `GET ${path}`, 'fail', { error: error.message }))
+            }
+          }
+        }
+
+        const responsive = await responsiveCheck(page)
+        report.results.push(result(10, 'responsive overflow', responsive.every(check => !check.overflow) ? 'pass' : 'fail', { checks: responsive }))
+      }
     } finally {
       report.consoleErrors = consoleErrors
       report.requestFailures = requestFailures
