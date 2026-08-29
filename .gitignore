@@ -71,3 +71,4 @@ docker/systemd/gaeld-worker.service
 /coverage
 /storage/app/qa/
 /.env.qa
+/scripts/qa/.env.qa

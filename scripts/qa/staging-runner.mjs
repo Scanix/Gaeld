@@ -1,5 +1,27 @@
-import { access, mkdir, writeFile } from 'node:fs/promises'
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { chromium } from '@playwright/test'
+
+async function loadQaEnvironment() {
+  try {
+    const contents = await readFile('scripts/qa/.env.qa', 'utf8')
+    for (const line of contents.split(/\r?\n/)) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#') || !trimmed.includes('=')) continue
+
+      const separator = trimmed.indexOf('=')
+      const key = trimmed.slice(0, separator).trim()
+      let value = trimmed.slice(separator + 1).trim()
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1)
+      }
+      if (process.env[key] === undefined) process.env[key] = value
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error
+  }
+}
+
+await loadQaEnvironment()
 
 const BASE_URL = process.env.QA_BASE_URL || 'https://staging.home.nectoria.com'
 const OUTPUT_DIR = process.env.QA_OUTPUT_DIR || 'storage/app/qa'
