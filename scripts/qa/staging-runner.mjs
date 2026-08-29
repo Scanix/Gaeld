@@ -17,9 +17,9 @@ const phasePaths = {
   3: ['/payroll/employees', '/payroll/salary-slips'],
   4: ['/reports/vat', '/reconciliation'],
   5: ['/organizations', '/settings'],
-  6: ['/reports/year-end', '/legal-archives'],
-  7: ['/settings/fiscal-years', '/reports/profit-and-loss'],
-  8: ['/legal-archives', '/reports/profit-and-loss'],
+  6: ['/accounting/year-end-closing', '/accounting/archives'],
+  7: ['/accounting/fiscal-years', '/reports/profit-and-loss'],
+  8: ['/accounting/archives', '/reports/profit-and-loss'],
   9: ['/billing'],
   10: ['/dashboard', '/reports/profit-and-loss', '/reports/balance-sheet', '/reports/aging'],
 }
@@ -94,7 +94,7 @@ async function checkPage(page, path, screenshotDirectory) {
 
   return {
     path,
-    status: response?.status() ?? null,
+    httpStatus: response?.status() ?? null,
     url: page.url(),
     title: await page.title(),
     heading: await page.locator('h1,h2,h3').first().textContent().catch(() => null),
@@ -113,7 +113,7 @@ async function login(page) {
   const response = await responsePromise
   await page.waitForURL(url => !url.toString().endsWith('/login'), { timeout: 30000 })
 
-  return { status: response.status(), url: page.url() }
+  return { httpStatus: response.status(), url: page.url() }
 }
 
 async function responsiveCheck(page) {
@@ -200,13 +200,13 @@ async function main() {
     await mkdir(screenshotDirectory, { recursive: true })
     try {
       const auth = await login(page)
-      report.results.push(result(0, 'authenticated login', auth.status === 302 ? 'pass' : 'fail', auth))
+      report.results.push(result(0, 'authenticated login', auth.httpStatus === 302 ? 'pass' : 'fail', auth))
 
       for (const [phase, paths] of Object.entries(phasePaths)) {
         for (const path of paths) {
           try {
             const checked = await checkPage(page, path, screenshotDirectory)
-            const status = checked.status === 200 || (path === '/reconciliation' && [302, 404].includes(checked.status)) ? 'pass' : 'fail'
+            const status = checked.httpStatus === 200 ? 'pass' : 'fail'
             report.results.push(result(Number(phase), `GET ${path}`, status, checked))
           } catch (error) {
             report.results.push(result(Number(phase), `GET ${path}`, 'fail', { error: error.message }))

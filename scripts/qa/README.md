@@ -37,6 +37,9 @@ vendor/bin/sail pnpm run qa:staging
 Use a dedicated staging account. Keep credentials in the shell environment or
 an ignored local file; they are never written to the generated artifacts.
 
+Copy `scripts/qa/.env.qa.example` to `.env.qa` and replace the placeholder
+values locally, or export the variables directly.
+
 ```sh
 QA_RUN=1 \
 QA_EMAIL='qa-user@example.test' \
