@@ -69,3 +69,4 @@ docker/systemd/gaeld-worker.service
 .pnpm-store/
 
 /coverage
+/storage/app/qa/
