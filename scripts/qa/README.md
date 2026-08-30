@@ -75,8 +75,10 @@ The runner writes to `storage/app/qa/`:
 - `screenshots-<run-id>/`: page captures when `QA_CAPTURE_SCREENSHOTS` is not
   `0`.
 
-The current implementation covers the safe authenticated navigation and
-responsive checks for phases 0 through 10. Destructive workflows, tenant
-creation, Stripe Test Clocks, CLI fixture preparation, and cleanup belong in
-explicit phase adapters and are intentionally not enabled by the base smoke
-runner.
+The current implementation covers the staging-safe UI workflows for phases 0
+through 10, including ephemeral signup, Mailpit verification, onboarding,
+opening-balance validation, contacts, invoices, expenses, payroll, VAT,
+fiscal-year changes, multi-persona permissions, year-end reopen/reclose,
+Stripe Test Clocks, accessibility and responsive checks. Tenant creation and
+cleanup are enabled only when `QA_CREATE_ACCOUNT=1`; the cleanup is restricted
+to the generated QA namespace on `build-remote`.
