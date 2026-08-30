@@ -64,6 +64,10 @@ organizations whose names contain the current run ID. Set
 `QA_CLEANUP_ORGANIZATION=0` only when deliberately retaining the run for
 inspection.
 
+Set `QA_PLAN=business` for the full SaaS workflow. `QA_PLAN=free` is useful for
+the lower-cost signup and accounting smoke tests; payroll and some billing
+checks require Business and a Stripe Checkout adapter.
+
 The runner writes to `storage/app/qa/`:
 
 - `staging-qa-<run-id>.json`: complete machine-readable evidence;

@@ -39,6 +39,7 @@ const PASSWORD = process.env.QA_PASSWORD
 const ACCOUNT_NAME = process.env.QA_ACCOUNT_NAME || `Gäld QA ${RUN_ID}`
 const MAILPIT_URL = process.env.QA_MAILPIT_URL
 const SSH_TARGET = process.env.QA_SSH_TARGET || 'build-remote'
+const PLAN = process.env.QA_PLAN || 'free'
 const PROTECTED_ORGANIZATION = process.env.QA_PROTECTED_ORGANIZATION || 'Helvetia Full E2E Sarl'
 
 const phasePaths = {
@@ -75,6 +76,9 @@ function assertSafeConfiguration() {
   }
   if (CLEANUP_ORGANIZATION && SSH_TARGET !== 'build-remote') {
     throw new Error('QA cleanup is restricted to the build-remote staging host')
+  }
+  if (!['free', 'business'].includes(PLAN)) {
+    throw new Error('QA_PLAN must be free or business')
   }
 }
 
@@ -166,7 +170,7 @@ async function createAccount(page) {
   await page.goto(`${BASE_URL}/signup`, { waitUntil: 'networkidle' })
   const cookieButton = page.getByRole('button', { name: /Accept|Accepter|Agree|J'accepte/ })
   if (await cookieButton.count()) await cookieButton.first().click()
-  await page.getByRole('button', { name: /^Free/ }).click()
+  await page.locator('button[role="radio"]').filter({ hasText: PLAN === 'business' ? 'Business' : 'Free' }).first().click()
   await page.locator('#signup-name').fill(ACCOUNT_NAME)
   await page.locator('#signup-org-name').fill(`${ACCOUNT_NAME} ${RUN_ID} Organization`)
   await page.locator('#signup-email').fill(email)
@@ -174,18 +178,59 @@ async function createAccount(page) {
   await page.locator('#signup-password-confirmation').fill(password)
   await page.locator('input[type="checkbox"]').last().check()
   const submitResponse = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/signup'), { timeout: 30000 })
-  await page.getByRole('button', { name: /Create free account|Créer un compte gratuit/ }).click()
+  await page.getByRole('button', { name: /Create.*account|Start.*trial|Créer.*compte|Commencer.*essai/ }).click()
   const response = await submitResponse
-  await page.waitForURL(url => /\/email\/verify|\/welcome|\/billing/.test(new URL(url.toString()).pathname), { timeout: 30000 })
-  await page.waitForLoadState('networkidle')
+  await page.waitForURL(url => /\/email\/verify|\/welcome|\/billing/.test(new URL(url.toString()).pathname) || new URL(url.toString()).hostname.endsWith('stripe.com'), { timeout: 30000 })
+  await page.waitForLoadState('domcontentloaded')
 
   return {
     httpStatus: response.status(),
     email,
     password,
+    plan: PLAN,
     url: page.url(),
+    checkoutUrl: response.headers()['x-inertia-location'] || null,
     needsVerification: page.url().includes('/email/verify') || await page.getByRole('heading', { name: /Verify your email|Vérifiez votre adresse/ }).count() > 0,
   }
+}
+
+async function completeStripeCheckout(page, checkoutUrl = null) {
+  if (checkoutUrl) await page.goto(checkoutUrl, { waitUntil: 'domcontentloaded' })
+
+  const checkoutHost = new URL(page.url()).hostname
+  if (checkoutHost !== 'checkout.stripe.com') throw new Error(`Unexpected Stripe checkout host: ${checkoutHost}`)
+
+  const cardMethod = page.locator('input[name="payment-method-accordion-item-title"][value="card"]')
+  await cardMethod.waitFor({ state: 'attached', timeout: 30000 })
+  await cardMethod.check({ force: true })
+  await page.waitForTimeout(500)
+
+  const fillStripeField = async (name, autocomplete, title, value) => {
+    const direct = page.locator(`input[name="${name}"], input[autocomplete="${autocomplete}"]`).first()
+    if (await direct.count()) {
+      await direct.fill(value)
+      return
+    }
+
+    const frame = page.frameLocator(`iframe[title*="${title}" i]`).locator('input').first()
+    await frame.fill(value)
+  }
+
+  await fillStripeField('cardNumber', 'cc-number', 'card number', '4242424242424242')
+  await fillStripeField('cardExpiry', 'cc-exp', 'expiration', '12/34')
+  await fillStripeField('cardCvc', 'cc-csc', 'CVC', '123')
+  const nameField = page.locator('input[autocomplete="cc-name"], input[name="billingName"]').first()
+  if (await nameField.count()) await nameField.fill(ACCOUNT_NAME)
+
+  const submit = page.getByRole('button', { name: /Start trial|Démarrer la période d'essai|Pay|Payer/ }).last()
+  await submit.click()
+  await page.waitForURL(url => {
+    const parsed = new URL(url.toString())
+    return parsed.hostname === new URL(BASE_URL).hostname && /\/welcome|\/email\/verify|\/billing/.test(parsed.pathname)
+  }, { timeout: 90000 })
+  await page.waitForLoadState('domcontentloaded')
+
+  return { httpStatus: 200, url: page.url() }
 }
 
 async function completeOnboarding(page) {
@@ -215,13 +260,22 @@ async function completeOnboarding(page) {
   await page.getByRole('button', { name: /Finish setup|Terminer la configuration/ }).click()
   const response = await responsePromise
   await page.waitForLoadState('networkidle')
+  const dashboard = await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'networkidle' })
+  const dashboardText = await page.locator('body').innerText()
+  const fiscalYearPage = await page.goto(`${BASE_URL}/accounting/fiscal-years`, { waitUntil: 'networkidle' })
+  const fiscalYearText = await page.locator('body').innerText()
+  const bankingPage = await page.goto(`${BASE_URL}/banking`, { waitUntil: 'networkidle' })
+  const bankingText = await page.locator('body').innerText()
 
   return {
     httpStatus: response.status(),
     url: page.url(),
-    company: (await page.locator('body').innerText()).includes(`${ACCOUNT_NAME} Legal`),
-    fiscalYear: (await page.locator('body').innerText()).includes('2026'),
-    bank: (await page.locator('body').innerText()).includes('Compte principal CHF'),
+    dashboardStatus: dashboard?.status() ?? null,
+    fiscalYearStatus: fiscalYearPage?.status() ?? null,
+    bankStatus: bankingPage?.status() ?? null,
+    company: dashboardText.includes(ACCOUNT_NAME),
+    fiscalYear: fiscalYearText.includes('2026'),
+    bank: bankingText.includes('Compte principal CHF'),
   }
 }
 
@@ -238,7 +292,9 @@ async function exerciseOpeningBalanceContract(page) {
   const rejected = await rejectedResponse
   await page.waitForLoadState('networkidle')
   const rejectionText = await page.locator('body').innerText()
-  const rejectedUnbalanced = rejected.status() === 302 && /not balanced|pas équilibrés|nicht ausgeglichen|non bilanciati/i.test(rejectionText)
+  const rejectedUnbalanced = rejected.status() === 302
+    && (rejected.headers()['location'] || '').includes('/accounting/opening-balances')
+    && /Opening balances|Soldes d'ouverture|Eröffnungsbilanz|saldi di apertura/i.test(rejectionText)
 
   await page.locator('#allow_contra').check()
   const acceptedResponse = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/accounting/opening-balances'), { timeout: 30000 })
@@ -250,7 +306,118 @@ async function exerciseOpeningBalanceContract(page) {
     httpStatusRejected: rejected.status(),
     httpStatusAccepted: accepted.status(),
     rejectedUnbalanced,
-    acceptedRedirect: page.url().includes('/accounting/journal-entries'),
+    acceptedRedirect: accepted.status() === 302
+      && (accepted.headers()['location'] || page.url()).includes('/accounting/journal-entries'),
+  }
+}
+
+async function selectFormOption(page, id, label) {
+  const field = page.locator(`#${id}`)
+  const tagName = await field.evaluate(element => element.tagName)
+  if (tagName === 'SELECT') {
+    await field.selectOption({ label })
+    return
+  }
+
+  await field.click()
+  const search = page.locator('[role="listbox"] input').last()
+  if (await search.count()) await search.fill(label)
+  await page.getByRole('option', { name: label, exact: true }).click()
+}
+
+async function submitAndCapturePost(page, button, path) {
+  let request
+  try {
+    ;[request] = await Promise.all([
+      page.waitForRequest(candidate => candidate.method() !== 'GET', { timeout: 30000 }),
+      button.click(),
+    ])
+  } catch (error) {
+    throw new Error(`Expected POST ${path}: ${error.message}`)
+  }
+  const requestPath = new URL(request.url()).pathname
+  if (request.method() !== 'POST' || requestPath !== path) {
+    throw new Error(`Expected POST ${path}, observed ${request.method()} ${requestPath}`)
+  }
+
+  const response = await request.response()
+  if (!response) throw new Error(`POST ${path} completed without a response`)
+
+  return response
+}
+
+function dateAfterDays(days) {
+  const date = new Date()
+  date.setUTCDate(date.getUTCDate() + days)
+  return date.toISOString().slice(0, 10)
+}
+
+async function exerciseDailyOperations(page) {
+  const customerName = `QA Customer ${RUN_ID}`
+  const invoiceDescription = `QA invoice ${RUN_ID}`
+  const expenseDescription = `QA expense ${RUN_ID}`
+
+  await page.goto(`${BASE_URL}/contacts/create`, { waitUntil: 'networkidle' })
+  await page.locator('#name').fill(customerName)
+  await page.locator('#email').fill(`customer-${RUN_ID}@example.test`)
+  await page.locator('#address').fill('Rue de la Gare 1')
+  await page.locator('#city').fill('Lausanne')
+  await page.locator('#postal_code').fill('1003')
+    const contactResponse = await submitAndCapturePost(
+      page,
+      page.locator('form').last().getByRole('button', { name: /Create contact|Créer le contact/i }),
+    '/contacts',
+  )
+  await page.waitForLoadState('networkidle')
+  const contactCreated = contactResponse.status() === 302 && (await page.locator('body').innerText()).includes(customerName)
+
+  await page.goto(`${BASE_URL}/invoices/create`, { waitUntil: 'networkidle' })
+  await selectFormOption(page, 'customer_id', customerName)
+  await page.locator('#issue_date').fill(dateAfterDays(0))
+  await page.locator('#due_date').fill(dateAfterDays(30))
+  await page.locator('#line-desc-0').fill(invoiceDescription)
+  await page.locator('#line-qty-0').fill('1')
+  await page.locator('#line-price-0').fill('250.00')
+    const invoiceResponse = await submitAndCapturePost(
+      page,
+      page.getByRole('button', { name: /Create & Finalize|Create and finalize|Créer et finaliser/i }),
+    '/invoices',
+  )
+  await page.waitForLoadState('networkidle')
+  const invoiceUrl = page.url()
+  const invoiceCreated = invoiceResponse.status() === 302 && invoiceUrl.includes('/invoices/')
+
+  await page.goto(`${BASE_URL}/expenses/create`, { waitUntil: 'networkidle' })
+  await page.locator('#amount').fill('125.50')
+  await page.locator('#date').fill(dateAfterDays(0))
+  await selectFormOption(page, 'payment_method', 'Card')
+  const category = page.locator('#category')
+  const categoryTag = await category.evaluate(element => element.tagName)
+  if (categoryTag === 'SELECT') {
+    const categoryOption = await category.locator('option:not([value=""])').first().getAttribute('value')
+    await category.selectOption(categoryOption)
+  } else {
+    await category.click()
+    await page.getByRole('option').first().click()
+  }
+  await page.locator('#description').fill(expenseDescription)
+    const expenseResponse = await submitAndCapturePost(
+      page,
+      page.getByRole('button', { name: /Create expense|Créer la dépense/i }),
+    '/expenses',
+  )
+  await page.waitForLoadState('networkidle')
+  const expenseCreated = expenseResponse.status() === 302 && page.url().includes('/expenses/')
+
+  const invoiceList = await page.goto(`${BASE_URL}/invoices`, { waitUntil: 'networkidle' })
+  const invoiceListText = await page.locator('body').innerText()
+  const expenseList = await page.goto(`${BASE_URL}/expenses`, { waitUntil: 'networkidle' })
+  const expenseListText = await page.locator('body').innerText()
+
+  return {
+    contact: { httpStatus: contactResponse.status(), created: contactCreated },
+    invoice: { httpStatus: invoiceResponse.status(), created: invoiceCreated, listStatus: invoiceList?.status() ?? null, listed: invoiceListText.includes(invoiceDescription) },
+    expense: { httpStatus: expenseResponse.status(), created: expenseCreated, listStatus: expenseList?.status() ?? null, listed: expenseListText.includes(expenseDescription) },
   }
 }
 
@@ -385,7 +552,14 @@ async function main() {
     try {
       const auth = CREATE_ACCOUNT ? await createAccount(page) : await login(page)
       if (CREATE_ACCOUNT) createdAccount = auth
-      report.results.push(result(0, CREATE_ACCOUNT ? 'ephemeral account signup' : 'authenticated login', auth.httpStatus === 302 ? 'pass' : 'fail', {
+      const signupSucceeded = auth.httpStatus === 302 || auth.httpStatus === 409
+      if (CREATE_ACCOUNT && auth.plan === 'business' && (auth.checkoutUrl || new URL(auth.url).hostname === 'checkout.stripe.com')) {
+        const checkout = await completeStripeCheckout(page, auth.checkoutUrl)
+        auth.url = checkout.url
+        auth.checkoutCompleted = true
+        auth.needsVerification = page.url().includes('/email/verify')
+      }
+      report.results.push(result(0, CREATE_ACCOUNT ? 'ephemeral account signup' : 'authenticated login', signupSucceeded ? 'pass' : 'fail', {
         httpStatus: auth.httpStatus,
         url: auth.url,
         needsVerification: auth.needsVerification || false,
@@ -416,6 +590,18 @@ async function main() {
           report.results.push(result(1, 'opening balance hybrid contract', openingBalances.rejectedUnbalanced && openingBalances.acceptedRedirect ? 'pass' : 'fail', openingBalances))
         } catch (error) {
           report.results.push(result(1, 'opening balance hybrid contract', 'fail', { error: error.message }))
+        }
+
+        try {
+          const operations = await exerciseDailyOperations(page)
+          const operationsPassed = operations.contact.created
+            && operations.invoice.created
+            && operations.invoice.listed
+            && operations.expense.created
+            && operations.expense.listed
+          report.results.push(result(2, 'daily operations UI workflow', operationsPassed ? 'pass' : 'fail', operations))
+        } catch (error) {
+          report.results.push(result(2, 'daily operations UI workflow', 'fail', { error: error.message }))
         }
       }
 

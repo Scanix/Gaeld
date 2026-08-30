@@ -3,6 +3,7 @@
 namespace App\Domains\Organizations\Services;
 
 use App\Domains\Accounting\Services\ChartTemplateService;
+use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Organizations\Models\Organization;
 use Database\Seeders\SwissVatRatesSeeder;
 
@@ -24,6 +25,7 @@ class OrganizationSetupService
     {
         $this->chartTemplateService->seedTemplate($organization, $templateKey);
         $this->chartTemplateService->ensureSystemAccounts($organization);
+        $this->ensureDefaultExpenseCategories($organization);
 
         if ($this->chartTemplateService->templateSeedsVatRates($templateKey)) {
             $this->vatRatesSeeder->run($organization);
@@ -36,5 +38,21 @@ class OrganizationSetupService
     public function ensureSystemAccounts(Organization $organization): void
     {
         $this->chartTemplateService->ensureSystemAccounts($organization);
+    }
+
+    private function ensureDefaultExpenseCategories(Organization $organization): void
+    {
+        foreach (ExpenseCategory::DEFAULT_CATEGORIES as $sortOrder => $name) {
+            ExpenseCategory::firstOrCreate(
+                [
+                    'organization_id' => $organization->id,
+                    'name' => $name,
+                ],
+                [
+                    'is_default' => true,
+                    'sort_order' => $sortOrder,
+                ],
+            );
+        }
     }
 }
