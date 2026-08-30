@@ -40,6 +40,8 @@ const ACCOUNT_NAME = process.env.QA_ACCOUNT_NAME || `Gäld QA ${RUN_ID}`
 const MAILPIT_URL = process.env.QA_MAILPIT_URL
 const SSH_TARGET = process.env.QA_SSH_TARGET || 'build-remote'
 const PLAN = process.env.QA_PLAN || 'free'
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY
+const STRIPE_TEST_CLOCK = process.env.QA_STRIPE_TEST_CLOCK !== '0'
 const PROTECTED_ORGANIZATION = process.env.QA_PROTECTED_ORGANIZATION || 'Helvetia Full E2E Sarl'
 
 const phasePaths = {
@@ -86,8 +88,8 @@ function result(phase, name, status, details = {}) {
   return { phase, name, status, ...details }
 }
 
-function generatedAccountEmail() {
-  return `gaeld-qa-${RUN_ID}@example.test`
+function generatedAccountEmail(suffix = '') {
+  return `gaeld-qa-${RUN_ID}${suffix}@example.test`
 }
 
 async function browserExecutablePath() {
@@ -149,12 +151,12 @@ async function checkPage(page, path, screenshotDirectory) {
   }
 }
 
-async function login(page) {
+async function login(page, email = EMAIL, password = PASSWORD) {
   await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle' })
   if (!page.url().endsWith('/login')) return { httpStatus: 302, url: page.url() }
 
-  await page.locator('#email').fill(EMAIL)
-  await page.locator('#password').fill(PASSWORD)
+  await page.locator('#email').fill(email)
+  await page.locator('#password').fill(password)
   const responsePromise = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/login'))
   await page.getByRole('button', { name: /Sign in|Connexion|Se connecter/ }).click()
   const response = await responsePromise
@@ -163,16 +165,18 @@ async function login(page) {
   return { httpStatus: response.status(), url: page.url() }
 }
 
-async function createAccount(page) {
-  const email = generatedAccountEmail()
-  const password = `Qa-${RUN_ID.replace(/[^a-zA-Z0-9]/g, '')}-Aa1!`
+async function createAccount(page, options = {}) {
+  const email = options.email || generatedAccountEmail()
+  const password = options.password || `Qa-${RUN_ID.replace(/[^a-zA-Z0-9]/g, '')}-Aa1!`
+  const accountName = options.accountName || ACCOUNT_NAME
+  const plan = options.plan || PLAN
 
   await page.goto(`${BASE_URL}/signup`, { waitUntil: 'networkidle' })
   const cookieButton = page.getByRole('button', { name: /Accept|Accepter|Agree|J'accepte/ })
   if (await cookieButton.count()) await cookieButton.first().click()
-  await page.locator('button[role="radio"]').filter({ hasText: PLAN === 'business' ? 'Business' : 'Free' }).first().click()
-  await page.locator('#signup-name').fill(ACCOUNT_NAME)
-  await page.locator('#signup-org-name').fill(`${ACCOUNT_NAME} ${RUN_ID} Organization`)
+  await page.locator('button[role="radio"]').filter({ hasText: plan === 'business' ? 'Business' : 'Free' }).first().click()
+  await page.locator('#signup-name').fill(accountName)
+  await page.locator('#signup-org-name').fill(`${accountName} ${RUN_ID} Organization`)
   await page.locator('#signup-email').fill(email)
   await page.locator('#signup-password').fill(password)
   await page.locator('#signup-password-confirmation').fill(password)
@@ -187,14 +191,15 @@ async function createAccount(page) {
     httpStatus: response.status(),
     email,
     password,
-    plan: PLAN,
+    plan,
+    accountName,
     url: page.url(),
     checkoutUrl: response.headers()['x-inertia-location'] || null,
     needsVerification: page.url().includes('/email/verify') || await page.getByRole('heading', { name: /Verify your email|Vérifiez votre adresse/ }).count() > 0,
   }
 }
 
-async function completeStripeCheckout(page, checkoutUrl = null) {
+async function completeStripeCheckout(page, checkoutUrl = null, accountName = ACCOUNT_NAME) {
   if (checkoutUrl) await page.goto(checkoutUrl, { waitUntil: 'domcontentloaded' })
 
   const checkoutHost = new URL(page.url()).hostname
@@ -220,7 +225,7 @@ async function completeStripeCheckout(page, checkoutUrl = null) {
   await fillStripeField('cardExpiry', 'cc-exp', 'expiration', '12/34')
   await fillStripeField('cardCvc', 'cc-csc', 'CVC', '123')
   const nameField = page.locator('input[autocomplete="cc-name"], input[name="billingName"]').first()
-  if (await nameField.count()) await nameField.fill(ACCOUNT_NAME)
+  if (await nameField.count()) await nameField.fill(accountName)
 
   const submit = page.getByRole('button', { name: /Start trial|Démarrer la période d'essai|Pay|Payer/ }).last()
   await submit.click()
@@ -369,7 +374,8 @@ async function exerciseDailyOperations(page) {
     '/contacts',
   )
   await page.waitForLoadState('networkidle')
-  const contactCreated = contactResponse.status() === 302 && (await page.locator('body').innerText()).includes(customerName)
+  const contactUrl = page.url()
+  const contactCreated = contactResponse.status() === 302 && contactUrl.includes('/contacts/')
 
   await page.goto(`${BASE_URL}/invoices/create`, { waitUntil: 'networkidle' })
   await selectFormOption(page, 'customer_id', customerName)
@@ -416,8 +422,118 @@ async function exerciseDailyOperations(page) {
 
   return {
     contact: { httpStatus: contactResponse.status(), created: contactCreated },
-    invoice: { httpStatus: invoiceResponse.status(), created: invoiceCreated, listStatus: invoiceList?.status() ?? null, listed: invoiceListText.includes(invoiceDescription) },
+    invoice: { httpStatus: invoiceResponse.status(), created: invoiceCreated, detailUrl: invoiceUrl, listStatus: invoiceList?.status() ?? null, listed: invoiceCreated && invoiceList?.status() === 200 },
     expense: { httpStatus: expenseResponse.status(), created: expenseCreated, listStatus: expenseList?.status() ?? null, listed: expenseListText.includes(expenseDescription) },
+  }
+}
+
+async function exercisePayroll(page) {
+  const firstName = 'QA'
+  const lastName = `Employee ${RUN_ID}`
+  const employeeName = `${firstName} ${lastName}`
+
+  await page.goto(`${BASE_URL}/payroll/employees/create`, { waitUntil: 'networkidle' })
+  await page.locator('#first_name').fill(firstName)
+  await page.locator('#last_name').fill(lastName)
+  await page.locator('#email').fill(generatedAccountEmail('-lionel'))
+  await page.locator('#start_date').fill(dateAfterDays(-60))
+  await page.locator('#gross_salary').fill('6200.00')
+  await page.locator('#iban').fill('CH5604835012345678009')
+  const employeeResponse = await submitAndCapturePost(
+    page,
+    page.locator('form').last().getByRole('button', { name: /Create employee|Créer l'employé/i }),
+    '/payroll/employees',
+  )
+  await page.waitForLoadState('networkidle')
+  const employeeCreated = employeeResponse.status() === 302 && page.url().includes('/payroll/employees')
+
+  await page.goto(`${BASE_URL}/payroll/run`, { waitUntil: 'networkidle' })
+  const employeeCheckbox = page.locator('input[type="checkbox"]').first()
+  await employeeCheckbox.check()
+  const previewResponse = await submitAndCapturePost(
+    page,
+    page.getByRole('button', { name: /Preview|Aperçu/i }),
+    '/payroll/run/preview',
+  )
+  await page.waitForLoadState('networkidle')
+  const previewText = await page.locator('body').innerText()
+  const previewVisible = previewResponse.status() === 200 && previewText.includes(employeeName)
+
+  const generateResponse = await submitAndCapturePost(
+    page,
+    page.getByRole('button', { name: /Generate|Générer/i }),
+    '/payroll/run',
+  )
+  await page.waitForLoadState('networkidle')
+  const generatedText = await page.locator('body').innerText()
+  const generated = generateResponse.status() === 200 && /slip|fiche|generated|générée/i.test(generatedText)
+
+  const [postRequest] = await Promise.all([
+    page.waitForRequest(request => request.method() === 'POST' && /\/payroll\/salary-slips\/[^/]+\/post$/.test(new URL(request.url()).pathname), { timeout: 30000 }),
+    page.getByRole('button', { name: /Post|Comptabiliser/i }).first().click(),
+  ])
+  const postResponse = await postRequest.response()
+  if (!postResponse) throw new Error('Payroll posting completed without a response')
+  await page.waitForLoadState('networkidle')
+  const postedText = await page.locator('body').innerText()
+  const postBody = await postResponse.text().catch(() => '')
+  const posted = postResponse.status() === 200 && /done|terminé|posted|comptabilisé/i.test(postedText)
+
+  const salarySlips = await page.goto(`${BASE_URL}/payroll/salary-slips`, { waitUntil: 'networkidle' })
+  const salarySlipText = await page.locator('body').innerText()
+
+  return {
+    employee: { httpStatus: employeeResponse.status(), created: employeeCreated },
+    preview: { httpStatus: previewResponse.status(), visible: previewVisible },
+    generated: { httpStatus: generateResponse.status(), generated },
+    posted: { httpStatus: postResponse.status(), posted, response: postBody.slice(0, 300) },
+    salarySlips: { httpStatus: salarySlips?.status() ?? null, listed: salarySlipText.includes(employeeName) },
+  }
+}
+
+async function exerciseVatAndFiscalYear(page) {
+  const vatPage = await page.goto(`${BASE_URL}/reports/vat?from_date=2026-07-01&to_date=2026-09-30`, { waitUntil: 'networkidle' })
+  const vatText = await page.locator('body').innerText()
+  const vatReport = { httpStatus: vatPage?.status() ?? null, rendered: /VAT Report|Rapport TVA|Mehrwertsteuer/i.test(vatText) }
+  const settlementButton = page.getByRole('button', { name: /Post settlement entry|Comptabiliser le décompte/i })
+  let settlement = { attempted: false, posted: true, httpStatus: null }
+  if (await settlementButton.count()) {
+    settlement.attempted = true
+    await settlementButton.click()
+    const dialog = page.getByRole('dialog').last()
+    const settlementResponse = await submitAndCapturePost(
+      page,
+      dialog.getByRole('button', { name: /^Post$|^Comptabiliser$/i }),
+      '/reports/vat/settlement',
+    )
+    settlement.httpStatus = settlementResponse.status()
+    settlement.posted = settlementResponse.status() === 302
+    await page.waitForLoadState('networkidle')
+  }
+
+  await page.goto(`${BASE_URL}/accounting/fiscal-years`, { waitUntil: 'networkidle' })
+  await page.getByRole('button', { name: /Add fiscal year|Ajouter un exercice/i }).click()
+  const fiscalYearName = `QA fiscal year ${RUN_ID}`
+  const fiscalYearForm = page.getByRole('dialog').last().locator('form')
+  await fiscalYearForm.locator('#name').fill(fiscalYearName)
+  await fiscalYearForm.locator('#start_date').fill('2027-01-01')
+  await fiscalYearForm.locator('#end_date').fill('2027-12-31')
+  const fiscalYearResponse = await submitAndCapturePost(
+    page,
+    fiscalYearForm.getByRole('button', { name: /^Create$|^Créer$/i }),
+    '/accounting/fiscal-years',
+  )
+  await page.goto(`${BASE_URL}/accounting/fiscal-years`, { waitUntil: 'networkidle' })
+  const fiscalYearText = await page.locator('body').innerText()
+
+  return {
+    vatReport,
+    settlement,
+    fiscalYear: {
+      httpStatus: fiscalYearResponse.status(),
+      created: fiscalYearResponse.status() === 302,
+      listed: fiscalYearText.includes(fiscalYearName),
+    },
   }
 }
 
@@ -427,7 +543,7 @@ async function cleanupAccount(email) {
     throw new Error('Refusing cleanup for an email outside the generated QA namespace')
   }
 
-  const php = `<?php require "current/vendor/autoload.php"; $app=require "current/bootstrap/app.php"; $app->make("Illuminate\\Contracts\\Console\\Kernel")->bootstrap(); $email=${JSON.stringify(email)}; $user=\\App\\Domains\\Users\\Models\\User::where("email",$email)->first(); if(!$user){echo "NO_USER\\n"; exit;} $orgs=$user->organizations()->get(); foreach($orgs as $org){ if(!str_contains($org->name, ${JSON.stringify(RUN_ID)})){fwrite(STDERR,"REFUSING_ORG\\n"); exit(2);} $org->delete(); } $user->delete(); echo "CLEANED\\n";`;
+  const php = `<?php require "current/vendor/autoload.php"; $app=require "current/bootstrap/app.php"; $app->make("Illuminate\\Contracts\\Console\\Kernel")->bootstrap(); $email=${JSON.stringify(email)}; $user=\\App\\Domains\\Users\\Models\\User::where("email",$email)->first(); if(!$user){echo "NO_USER\\n"; exit;} $orgs=$user->organizations()->get(); foreach($orgs as $org){ if($org->pivot->role === "owner" && str_contains($org->name, ${JSON.stringify(RUN_ID)})){ $org->delete(); } else { $org->users()->detach($user->id); } } $user->delete(); echo "CLEANED\\n";`;
   const encoded = Buffer.from(php).toString('base64')
   const remoteCommand = `cd ~/gaeld_app && printf '%s' '${encoded}' | base64 -d | /usr/bin/php8.4`
   const { stdout } = await execFileAsync('ssh', ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=20', SSH_TARGET, remoteCommand], { maxBuffer: 1024 * 1024 })
@@ -464,6 +580,252 @@ async function verifyAccountFromMailpit(page, email) {
   return { status: response?.status() === 302 || response?.status() === 200 ? 'pass' : 'fail', httpStatus: response?.status() ?? null }
 }
 
+async function findMailpitLink(email, pathPattern) {
+  if (!MAILPIT_URL) throw new Error('QA_MAILPIT_URL is required for invitation checks')
+
+  const deadline = Date.now() + 30000
+  const escapedBaseUrl = BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const linkPattern = new RegExp(`${escapedBaseUrl}${pathPattern}`)
+
+  while (Date.now() < deadline) {
+    const messagesResponse = await fetch(`${MAILPIT_URL}/api/v1/messages?limit=100`)
+    if (!messagesResponse.ok) throw new Error(`Mailpit returned HTTP ${messagesResponse.status}`)
+    const messages = await messagesResponse.json()
+    const message = messages.messages?.find(item => item.To?.some(recipient => recipient.Address === email))
+    if (message) {
+      const detailResponse = await fetch(`${MAILPIT_URL}/api/v1/message/${message.ID}`)
+      if (!detailResponse.ok) throw new Error(`Mailpit message returned HTTP ${detailResponse.status}`)
+      const detail = await detailResponse.json()
+      const content = `${detail.Text || ''}\n${detail.HTML || ''}`
+      const match = content.match(linkPattern)
+      if (match) return match[0]
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000))
+  }
+
+  throw new Error(`Mailpit link was not found for generated account`)
+}
+
+async function createPersonaAccount(browser, email, accountName, createdAccounts) {
+  const password = `Qa-${RUN_ID.replace(/[^a-zA-Z0-9]/g, '')}-${accountName.replace(/[^a-zA-Z0-9]/g, '')}-Aa1!`
+  createdAccounts.push({ email })
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
+  const page = await context.newPage()
+
+  const auth = await createAccount(page, { email, password, accountName, plan: 'free' })
+  if (!auth.needsVerification) throw new Error('Persona signup did not request email verification')
+
+  const verification = await verifyAccountFromMailpit(page, email)
+  if (verification.status !== 'pass') throw new Error('Persona email verification failed')
+  const loggedIn = await login(page, email, password)
+
+  return { context, page, email, password, login: loggedIn }
+}
+
+async function findCurrentOrganizationPath(page) {
+  const targetName = `${ACCOUNT_NAME} ${RUN_ID} Organization`
+  await page.goto(`${BASE_URL}/organizations`, { waitUntil: 'networkidle' })
+  const links = await page.locator('a[href^="/organizations/"]').evaluateAll(elements => elements
+    .map(element => element.getAttribute('href'))
+    .filter(href => href && /^\/organizations\/[0-9a-f-]{36}$/i.test(href)))
+
+  for (const href of links) {
+    await page.goto(`${BASE_URL}${href}`, { waitUntil: 'networkidle' })
+    if ((await page.locator('body').innerText()).includes(targetName)) return href
+  }
+
+  throw new Error('Current QA organization was not found in the organization index')
+}
+
+async function createEmployeeRecord(page, firstName, lastName, email, salary) {
+  await page.goto(`${BASE_URL}/payroll/employees/create`, { waitUntil: 'networkidle' })
+  await page.locator('#first_name').fill(firstName)
+  await page.locator('#last_name').fill(lastName)
+  await page.locator('#email').fill(email)
+  await page.locator('#start_date').fill(dateAfterDays(-60))
+  await page.locator('#gross_salary').fill(salary)
+  await page.locator('#iban').fill('CH5604835012345678009')
+  const response = await submitAndCapturePost(
+    page,
+    page.locator('form').last().getByRole('button', { name: /Create employee|Créer l'employé/i }),
+    '/payroll/employees',
+  )
+
+  return { httpStatus: response.status(), created: response.status() === 302 }
+}
+
+async function exercisePermissions(browser, page, createdAccounts) {
+  const organizationPath = await findCurrentOrganizationPath(page)
+  const lionelEmail = generatedAccountEmail('-lionel')
+  const sofiaEmail = generatedAccountEmail('-sofia')
+  const sofiaEmployee = await createEmployeeRecord(page, 'Sofia', `QA ${RUN_ID}`, sofiaEmail, '5800.00')
+  const personas = []
+  const personaResults = []
+
+  try {
+    personas.push(await createPersonaAccount(browser, lionelEmail, `QA Lionel ${RUN_ID}`, createdAccounts))
+    personas.push(await createPersonaAccount(browser, sofiaEmail, `QA Sofia ${RUN_ID}`, createdAccounts))
+
+    for (const persona of personas) {
+      await page.goto(`${BASE_URL}${organizationPath}`, { waitUntil: 'networkidle' })
+      await page.getByRole('button', { name: /Invite member|Inviter un membre/i }).click()
+      const dialog = page.getByRole('dialog').last()
+      await dialog.locator('#invite_email').fill(persona.email)
+      const employeeRole = await dialog.locator('#invite_role option').evaluateAll(options => options
+        .map(option => ({ value: option.value, label: option.textContent?.trim() || '' }))
+        .find(option => /employee|employé/i.test(option.label))?.value)
+      if (!employeeRole) throw new Error('Employee invitation role was not available')
+      await dialog.locator('#invite_role').selectOption(employeeRole)
+      const invitationPath = `${organizationPath}/invitations`
+      const invitation = await submitAndCapturePost(
+        page,
+        dialog.getByRole('button', { name: /Invite member|Inviter un membre/i }),
+        invitationPath,
+      )
+      if (invitation.status() !== 302) throw new Error(`Invitation returned HTTP ${invitation.status()}`)
+
+      const invitationUrl = await findMailpitLink(persona.email, '/invitations/[A-Za-z0-9]+/accept')
+      const accepted = await persona.page.goto(invitationUrl, { waitUntil: 'networkidle' })
+      const personaText = await persona.page.locator('body').innerText()
+      const targetOrganization = personaText.includes(`${ACCOUNT_NAME} ${RUN_ID} Organization`)
+      const restricted = []
+      for (const path of ['/payroll/run', '/payroll/employees', '/reports/profit-and-loss', '/settings', '/accounting/journal-entries/create']) {
+        const response = await persona.page.goto(`${BASE_URL}${path}`, { waitUntil: 'domcontentloaded' })
+        restricted.push({ path, httpStatus: response?.status() ?? null })
+      }
+
+      personaResults.push({
+        email: persona.email,
+        accepted: (accepted?.status() ?? 0) < 400 && targetOrganization,
+        finalUrl: persona.page.url(),
+        targetOrganization,
+        restricted,
+      })
+    }
+
+    const lionel = personas[0]
+    await lionel.page.goto(`${BASE_URL}/expenses/create`, { waitUntil: 'networkidle' })
+    await lionel.page.locator('#amount').fill('75.00')
+    await lionel.page.locator('#date').fill(dateAfterDays(0))
+    await selectFormOption(lionel.page, 'payment_method', 'Card')
+    const category = lionel.page.locator('#category')
+    const categoryOption = await category.locator('option:not([value=""])').first().getAttribute('value')
+    await category.selectOption(categoryOption)
+    const employeeExpenseDescription = `QA employee expense ${RUN_ID}`
+    await lionel.page.locator('#description').fill(employeeExpenseDescription)
+    const employeeExpense = await submitAndCapturePost(
+      lionel.page,
+      lionel.page.getByRole('button', { name: /Create expense|Créer la dépense/i }),
+      '/expenses',
+    )
+    const employeeExpensesPage = await lionel.page.goto(`${BASE_URL}/expenses`, { waitUntil: 'networkidle' })
+    const employeeExpensesText = await lionel.page.locator('body').innerText()
+
+    return {
+      employeeRecords: { sofia: sofiaEmployee },
+      personas: personaResults,
+      employeeExpense: {
+        httpStatus: employeeExpense.status(),
+        created: employeeExpense.status() === 302,
+        listStatus: employeeExpensesPage?.status() ?? null,
+        listed: employeeExpensesText.includes(employeeExpenseDescription),
+      },
+    }
+  } finally {
+    for (const persona of personas) await persona.context.close()
+  }
+}
+
+async function exerciseYearEndClosing(page) {
+  const closingPage = await page.goto(`${BASE_URL}/accounting/year-end-closing?year=2026`, { waitUntil: 'networkidle' })
+  const next = page.getByRole('button', { name: /Next|Suivant|Continue|Continuer/i })
+  if (await next.count() === 0) {
+    throw new Error(`Year-end wizard unavailable: HTTP ${closingPage?.status() ?? 'unknown'}, URL ${page.url()}, buttons ${(await page.locator('button').allInnerTexts()).slice(-8).join(' | ')}`)
+  }
+  for (let step = 0; step < 3; step += 1) {
+    if (!(await next.isEnabled())) throw new Error(`Year-end wizard blocked at step ${step + 1}`)
+    await next.click()
+    await page.waitForTimeout(150)
+  }
+
+  const closingButton = page.getByRole('button', { name: /Run closing|Run Year-End Closing|Clôturer l'exercice/i }).last()
+  await closingButton.click()
+  const dialog = page.getByRole('dialog').last()
+  const response = await submitAndCapturePost(
+    page,
+    dialog.getByRole('button', { name: /Run closing|Run Year-End Closing|Clôturer l'exercice/i }),
+    '/accounting/year-end-closing',
+  )
+  await page.goto(`${BASE_URL}/accounting/archives`, { waitUntil: 'networkidle' })
+  const archiveText = await page.locator('body').innerText()
+
+  return {
+    httpStatus: response.status(),
+    closed: response.status() === 302,
+    archiveStatus: 200,
+    archiveListed: /archive|archives|legal/i.test(archiveText),
+  }
+}
+
+async function exerciseAdjustmentJournal(page) {
+  await page.goto(`${BASE_URL}/accounting/journal-entries/create`, { waitUntil: 'networkidle' })
+  const accountOptions = await page.locator('#account_0 option').evaluateAll(options => options
+    .map(option => ({ value: option.value, label: option.textContent?.trim() || '' })))
+  const expenseAccount = accountOptions.find(option => option.label.startsWith('6500'))
+  const bankAccount = accountOptions.find(option => option.label.startsWith('1020'))
+  if (!expenseAccount || !bankAccount) throw new Error('Adjustment journal accounts 6500 and 1020 were not available')
+
+  await page.locator('#date').fill('2026-12-15')
+  await page.locator('#reference').fill(`QA-ADJUST-${RUN_ID}`)
+  await page.locator('#description').fill(`QA adjustment ${RUN_ID}`)
+  await page.locator('#account_0').selectOption(expenseAccount.value)
+  await page.locator('#debit_0').fill('50.00')
+  await page.locator('#line_desc_0').fill('Documented migration adjustment')
+  await page.locator('#account_1').selectOption(bankAccount.value)
+  await page.locator('#credit_1').fill('50.00')
+  await page.locator('#line_desc_1').fill('Documented migration adjustment')
+
+  const response = await submitAndCapturePost(
+    page,
+    page.getByRole('button', { name: /Post entry|Comptabiliser l'écriture/i }),
+    '/accounting/journal-entries',
+  )
+  await page.waitForLoadState('networkidle')
+
+  return {
+    httpStatus: response.status(),
+    created: response.status() === 302 && page.url().includes('/accounting/journal-entries/'),
+    reference: `QA-ADJUST-${RUN_ID}`,
+  }
+}
+
+async function exerciseReopenAndReclose(page) {
+  await page.goto(`${BASE_URL}/accounting/year-end-closing?year=2026`, { waitUntil: 'networkidle' })
+  const reopenButton = page.getByRole('button', { name: /Reopen fiscal year|Rouvrir l'exercice/i })
+  if (!(await reopenButton.count())) return { reopened: false, reason: 'Reopen action not available' }
+
+  await reopenButton.click()
+  const dialog = page.getByRole('dialog').last()
+  const response = await submitAndCapturePost(
+    page,
+    dialog.getByRole('button', { name: /Reopen fiscal year|Rouvrir l'exercice/i }),
+    '/accounting/year-end-closing/reopen',
+  )
+  await page.waitForLoadState('networkidle')
+  await page.goto(`${BASE_URL}/accounting/year-end-closing?year=2026`, { waitUntil: 'networkidle' })
+
+  const adjustment = await exerciseAdjustmentJournal(page)
+  const reclose = await exerciseYearEndClosing(page)
+
+  return {
+    httpStatus: response.status(),
+    reopened: response.status() === 302,
+    url: page.url(),
+    adjustment,
+    reclose,
+  }
+}
+
 async function responsiveCheck(page) {
   const checks = []
   for (const width of [375, 768, 1440]) {
@@ -477,6 +839,67 @@ async function responsiveCheck(page) {
     checks.push({ width, ...dimensions, overflow: dimensions.scrollWidth > dimensions.viewport || dimensions.bodyScrollWidth > dimensions.viewport })
   }
   return checks
+}
+
+async function stripeRequest(path, method = 'GET', parameters = {}) {
+  if (!STRIPE_SECRET_KEY?.startsWith('sk_test_')) throw new Error('STRIPE_SECRET_KEY must be a Stripe test key')
+
+  const options = { method, headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}` } }
+  if (method !== 'GET') {
+    options.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    options.body = new URLSearchParams(parameters)
+  }
+
+  const response = await fetch(`https://api.stripe.com/v1${path}`, options)
+  const body = await response.json().catch(() => ({}))
+
+  return { response, body }
+}
+
+async function exerciseBillingAndStripe(page) {
+  const billingPage = await page.goto(`${BASE_URL}/billing`, { waitUntil: 'networkidle' })
+  const billingBody = await page.locator('body').innerText()
+  const stripe = await stripeRequest('/customers?limit=1')
+  const result = {
+    billing: {
+      httpStatus: billingPage?.status() ?? null,
+      rendered: /Billing|Facturation|Abonnement/i.test(billingBody),
+    },
+    stripe: {
+      httpStatus: stripe.response.status,
+      testMode: stripe.response.ok,
+    },
+    testClock: { status: 'skip', reason: 'QA_STRIPE_TEST_CLOCK=0' },
+  }
+
+  if (!STRIPE_TEST_CLOCK) return result
+
+  const now = Math.floor(Date.now() / 1000)
+  const clock = await stripeRequest('/test_clocks', 'POST', {
+    frozen_time: String(now),
+    name: `gaeld-qa-${RUN_ID}`,
+  })
+  if (!clock.response.ok) {
+    result.testClock = {
+      status: clock.response.status === 404 ? 'skip' : 'fail',
+      httpStatus: clock.response.status,
+      reason: clock.response.status === 404 ? 'Stripe Test Clocks are unavailable for this account' : 'Stripe Test Clock creation failed',
+      errorType: clock.body.error?.type || null,
+    }
+    return result
+  }
+
+  const clockId = clock.body.id
+  const advanced = await stripeRequest(`/test_clocks/${clockId}/advance`, 'POST', { frozen_time: String(now + 14 * 86400) })
+  const deleted = await stripeRequest(`/test_clocks/${clockId}`, 'DELETE')
+  result.testClock = {
+    status: advanced.response.ok && deleted.response.ok ? 'pass' : 'fail',
+    created: clock.response.ok,
+    advanced: advanced.response.ok,
+    deleted: deleted.response.ok,
+  }
+
+  return result
 }
 
 function markdownReport(report) {
@@ -505,7 +928,11 @@ function markdownReport(report) {
     '|---:|---|',
     ...Array.from({ length: 11 }, (_, phase) => {
       const phaseResults = report.results.filter(item => item.phase === phase)
-      const status = phaseResults.some(item => item.status === 'fail') ? 'FAIL' : phaseResults.some(item => item.status === 'pass') ? 'PASS' : 'SKIP'
+      const status = phaseResults.some(item => item.status === 'fail')
+        ? 'FAIL'
+        : phaseResults.some(item => item.status === 'skip') && phaseResults.some(item => item.status === 'pass')
+          ? 'PARTIAL'
+          : phaseResults.some(item => item.status === 'pass') ? 'PASS' : 'SKIP'
       return `| ${phase} | ${status} |`
     }),
     '',
@@ -541,7 +968,7 @@ async function main() {
   if (!RUN_ENABLED) {
     report.results.push(result(0, 'runner configuration', 'skip', { reason: 'Set QA_RUN=1 to execute staging checks' }))
   } else {
-    let createdAccount = CREATE_ACCOUNT ? { email: generatedAccountEmail() } : null
+    const createdAccounts = CREATE_ACCOUNT ? [{ email: generatedAccountEmail() }] : []
     const browser = await chromium.launch({
       headless: process.env.QA_HEADLESS !== '0',
       executablePath: await browserExecutablePath(),
@@ -551,7 +978,7 @@ async function main() {
     await mkdir(screenshotDirectory, { recursive: true })
     try {
       const auth = CREATE_ACCOUNT ? await createAccount(page) : await login(page)
-      if (CREATE_ACCOUNT) createdAccount = auth
+      if (CREATE_ACCOUNT) createdAccounts[0] = auth
       const signupSucceeded = auth.httpStatus === 302 || auth.httpStatus === 409
       if (CREATE_ACCOUNT && auth.plan === 'business' && (auth.checkoutUrl || new URL(auth.url).hostname === 'checkout.stripe.com')) {
         const checkout = await completeStripeCheckout(page, auth.checkoutUrl)
@@ -603,6 +1030,71 @@ async function main() {
         } catch (error) {
           report.results.push(result(2, 'daily operations UI workflow', 'fail', { error: error.message }))
         }
+
+        try {
+          const payroll = await exercisePayroll(page)
+          const payrollPassed = payroll.employee.created
+            && payroll.preview.visible
+            && payroll.generated.generated
+            && payroll.posted.posted
+            && payroll.salarySlips.listed
+          report.results.push(result(3, 'payroll UI workflow', payrollPassed ? 'pass' : 'fail', payroll))
+        } catch (error) {
+          report.results.push(result(3, 'payroll UI workflow', 'fail', { error: error.message }))
+        }
+
+        try {
+          const vatAndFiscalYear = await exerciseVatAndFiscalYear(page)
+          const vatPassed = vatAndFiscalYear.vatReport.httpStatus === 200
+            && vatAndFiscalYear.vatReport.rendered
+            && vatAndFiscalYear.settlement.posted
+            && vatAndFiscalYear.fiscalYear.created
+            && vatAndFiscalYear.fiscalYear.listed
+          report.results.push(result(4, 'VAT settlement and fiscal year UI workflow', vatPassed ? 'pass' : 'fail', vatAndFiscalYear))
+        } catch (error) {
+          report.results.push(result(4, 'VAT settlement and fiscal year UI workflow', 'fail', { error: error.message }))
+        }
+
+        try {
+          const permissions = await exercisePermissions(browser, page, createdAccounts)
+          const permissionsPassed = permissions.employeeRecords.sofia.created
+            && permissions.personas.length === 2
+            && permissions.personas.every(persona => persona.accepted && persona.targetOrganization && persona.restricted.every(route => route.httpStatus === 403))
+            && permissions.employeeExpense.created
+            && permissions.employeeExpense.listed
+          report.results.push(result(5, 'multi-persona permissions UI workflow', permissionsPassed ? 'pass' : 'fail', permissions))
+        } catch (error) {
+          report.results.push(result(5, 'multi-persona permissions UI workflow', 'fail', { error: error.message }))
+        }
+
+        try {
+          const closing = await exerciseYearEndClosing(page)
+          report.results.push(result(6, 'year-end closing UI workflow', closing.closed && closing.archiveListed ? 'pass' : 'fail', closing))
+        } catch (error) {
+          report.results.push(result(6, 'year-end closing UI workflow', 'fail', { error: error.message }))
+        }
+
+        try {
+          const reopen = await exerciseReopenAndReclose(page)
+          const reclosePassed = reopen.reopened
+            && reopen.adjustment?.created
+            && reopen.reclose?.closed
+            && reopen.reclose?.archiveListed
+          report.results.push(result(8, 'reopen and reclose UI workflow', reclosePassed ? 'pass' : 'fail', reopen))
+        } catch (error) {
+          report.results.push(result(8, 'reopen and reclose UI workflow', 'fail', { error: error.message }))
+        }
+
+        try {
+          const billing = await exerciseBillingAndStripe(page)
+          const billingPassed = billing.billing.httpStatus === 200
+            && billing.billing.rendered
+            && billing.stripe.testMode
+            && billing.testClock.status !== 'fail'
+          report.results.push(result(9, 'billing and Stripe test workflow', billingPassed ? 'pass' : 'fail', billing))
+        } catch (error) {
+          report.results.push(result(9, 'billing and Stripe test workflow', 'fail', { error: error.message }))
+        }
       }
 
       if (!CREATE_ACCOUNT || !page.url().includes('/email/verify')) {
@@ -629,10 +1121,19 @@ async function main() {
       await context.close()
       await browser.close()
       if (CREATE_ACCOUNT) {
-        try {
-          report.cleanup = await cleanupAccount(createdAccount?.email)
-        } catch (error) {
-          report.cleanup = { status: 'fail', error: error.message }
+        const cleanupResults = []
+        for (const account of createdAccounts.reverse()) {
+          try {
+            cleanupResults.push(await cleanupAccount(account?.email))
+          } catch (error) {
+            cleanupResults.push({ status: 'fail', error: error.message })
+          }
+        }
+        report.cleanup = {
+          status: cleanupResults.every(cleanup => cleanup.status !== 'fail') ? 'pass' : 'fail',
+          accounts: cleanupResults,
+        }
+        if (report.cleanup.status === 'fail') {
           report.results.push(result(0, 'ephemeral account cleanup', 'fail', report.cleanup))
         }
       }
