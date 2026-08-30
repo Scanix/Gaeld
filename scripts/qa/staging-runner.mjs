@@ -537,6 +537,59 @@ async function exerciseVatAndFiscalYear(page) {
   }
 }
 
+async function exerciseFiscalYearChangeRequest(page) {
+  await page.goto(`${BASE_URL}/settings`, { waitUntil: 'networkidle' })
+  const fiscalYearStart = page.locator('#fiscal_year_start')
+  if (!(await fiscalYearStart.count())) return { status: 'skip', reason: 'Fiscal year start control unavailable' }
+
+  const currentStart = await fiscalYearStart.inputValue()
+  const requestedStart = currentStart === '01-01' ? '07-01' : '01-01'
+  await fiscalYearStart.selectOption(requestedStart)
+  const reason = page.locator('#fiscal_year_change_reason')
+  await reason.fill(`QA fiscal year change ${RUN_ID}`)
+  const requestButton = page.getByRole('button', { name: /Request fiscal year change|Request change for next fiscal year|Demander le changement d'exercice/i })
+  if (!(await requestButton.count())) return { status: 'skip', reason: 'Fiscal year change request action unavailable' }
+
+  const response = await submitAndCapturePost(page, requestButton, '/settings/fiscal-year-change-request')
+  await page.waitForLoadState('networkidle')
+  const body = await page.locator('body').innerText()
+
+  return {
+    status: response.status() === 302 && /pending|en attente|ausstehend|in attesa/i.test(body) ? 'pass' : 'fail',
+    httpStatus: response.status(),
+    requestedStart,
+  }
+}
+
+async function exerciseAccessibilityAndExports(page) {
+  const checks = []
+  for (const path of ['/dashboard', '/contacts', '/invoices', '/expenses', '/reports/profit-and-loss']) {
+    await page.goto(`${BASE_URL}${path}`, { waitUntil: 'networkidle' })
+    const unlabeled = await page.locator('input,select,textarea').evaluateAll(elements => elements.filter(element => {
+      if (element.type === 'hidden') return false
+      const id = element.id
+      return !element.getAttribute('aria-label') && !(id && document.querySelector(`label[for="${id}"]`))
+    }).length)
+    const iconButtonsWithoutLabel = await page.locator('button').evaluateAll(buttons => buttons.filter(button => {
+      const text = button.textContent?.trim() || ''
+      return !text && !button.getAttribute('aria-label') && !button.getAttribute('title')
+    }).length)
+    const dimensions = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth }))
+    checks.push({ path, unlabeled, iconButtonsWithoutLabel, overflow: dimensions.scrollWidth > dimensions.viewport })
+  }
+
+  await page.goto(`${BASE_URL}/reports/profit-and-loss`, { waitUntil: 'networkidle' })
+  const exportLinks = await page.locator('a[href*="/export"],button').evaluateAll(elements => elements
+    .map(element => ({ text: element.textContent?.trim() || '', href: element.getAttribute('href') }))
+    .filter(element => element.href?.includes('/export') || /export|exporter/i.test(element.text)))
+
+  return {
+    checks,
+    exportsAvailable: exportLinks.length > 0,
+    passed: checks.every(check => check.unlabeled === 0 && check.iconButtonsWithoutLabel === 0 && !check.overflow) && exportLinks.length > 0,
+  }
+}
+
 async function cleanupAccount(email) {
   if (!CLEANUP_ORGANIZATION) return { status: 'skip', reason: 'QA_CLEANUP_ORGANIZATION=0' }
   if (!email || !email.startsWith('gaeld-qa-') || !email.endsWith('@example.test')) {
@@ -875,7 +928,7 @@ async function exerciseBillingAndStripe(page) {
   if (!STRIPE_TEST_CLOCK) return result
 
   const now = Math.floor(Date.now() / 1000)
-  const clock = await stripeRequest('/test_clocks', 'POST', {
+  const clock = await stripeRequest('/test_helpers/test_clocks', 'POST', {
     frozen_time: String(now),
     name: `gaeld-qa-${RUN_ID}`,
   })
@@ -890,12 +943,19 @@ async function exerciseBillingAndStripe(page) {
   }
 
   const clockId = clock.body.id
-  const advanced = await stripeRequest(`/test_clocks/${clockId}/advance`, 'POST', { frozen_time: String(now + 14 * 86400) })
-  const deleted = await stripeRequest(`/test_clocks/${clockId}`, 'DELETE')
+  const advanced = await stripeRequest(`/test_helpers/test_clocks/${clockId}/advance`, 'POST', { frozen_time: String(now + 14 * 86400) })
+  let clockReady = false
+  for (let attempt = 0; attempt < 30 && !clockReady; attempt += 1) {
+    const current = await stripeRequest(`/test_helpers/test_clocks/${clockId}`)
+    clockReady = current.response.ok && current.body.status === 'ready'
+    if (!clockReady) await new Promise(resolve => setTimeout(resolve, 1000))
+  }
+  const deleted = await stripeRequest(`/test_helpers/test_clocks/${clockId}`, 'DELETE')
   result.testClock = {
-    status: advanced.response.ok && deleted.response.ok ? 'pass' : 'fail',
+    status: advanced.response.ok && clockReady && deleted.response.ok ? 'pass' : 'fail',
     created: clock.response.ok,
     advanced: advanced.response.ok,
+    ready: clockReady,
     deleted: deleted.response.ok,
   }
 
@@ -1056,6 +1116,13 @@ async function main() {
         }
 
         try {
+          const fiscalYearChange = await exerciseFiscalYearChangeRequest(page)
+          report.results.push(result(7, 'fiscal year change request UI workflow', fiscalYearChange.status, fiscalYearChange))
+        } catch (error) {
+          report.results.push(result(7, 'fiscal year change request UI workflow', 'fail', { error: error.message }))
+        }
+
+        try {
           const permissions = await exercisePermissions(browser, page, createdAccounts)
           const permissionsPassed = permissions.employeeRecords.sofia.created
             && permissions.personas.length === 2
@@ -1112,6 +1179,13 @@ async function main() {
 
         const responsive = await responsiveCheck(page)
         report.results.push(result(10, 'responsive overflow', responsive.every(check => !check.overflow) ? 'pass' : 'fail', { checks: responsive }))
+
+        try {
+          const accessibility = await exerciseAccessibilityAndExports(page)
+          report.results.push(result(10, 'accessibility and exports UI checks', accessibility.passed ? 'pass' : 'fail', accessibility))
+        } catch (error) {
+          report.results.push(result(10, 'accessibility and exports UI checks', 'fail', { error: error.message }))
+        }
       }
     } catch (error) {
       report.results.push(result(0, 'runner execution', 'fail', { error: error.message }))
