@@ -58,10 +58,11 @@ Set `QA_CREATE_ACCOUNT=1` to use a fresh account and organization for the
 run. The account email is generated from the run ID and is never stored in the
 report. This currently covers the real signup submission; email verification
 requires a `QA_MAILPIT_URL` adapter and is reported as skipped until that
-adapter is configured. Do not enable organization cleanup until the run has
-been reviewed: the application currently exposes organization deletion but no
-user-account deletion route, so full cleanup requires a separately audited
-staging CLI adapter.
+adapter is configured. Cleanup is enabled by default for ephemeral runs and is
+restricted to `build-remote`; it deletes only the generated QA user and
+organizations whose names contain the current run ID. Set
+`QA_CLEANUP_ORGANIZATION=0` only when deliberately retaining the run for
+inspection.
 
 The runner writes to `storage/app/qa/`:
 

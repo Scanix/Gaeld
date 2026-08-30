@@ -104,6 +104,7 @@ class OpeningBalancesController extends Controller
 
         $validated = $request->validated();
         $isPosted = (bool) $request->boolean('is_posted', true);
+        $allowContra = (bool) $request->boolean('allow_contra', false);
 
         try {
             $entry = $action->execute(
@@ -113,6 +114,7 @@ class OpeningBalancesController extends Controller
                 reference: $validated['reference'] ?? null,
                 description: $validated['description'] ?? null,
                 isPosted: $isPosted,
+                allowContra: $allowContra,
             );
         } catch (\Throwable $e) {
             return $this->backWithError($e);

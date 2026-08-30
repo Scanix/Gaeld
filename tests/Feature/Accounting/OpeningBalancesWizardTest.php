@@ -86,6 +86,7 @@ class OpeningBalancesWizardTest extends TestCase
                 ['account_id' => $this->debtors->id, 'amount' => '2500.00'],
                 ['account_id' => $this->creditors->id, 'amount' => '4000.00'],
             ],
+            'allow_contra' => true,
         ]);
 
         $response->assertRedirect('/accounting/journal-entries');
@@ -118,6 +119,21 @@ class OpeningBalancesWizardTest extends TestCase
         $this->assertSame('8500.00', $contra->credit);
     }
 
+    public function test_store_rejects_unbalanced_opening_entry_without_explicit_contra_permission(): void
+    {
+        $response = $this->actAsOrg()->from('/accounting/opening-balances')->post('/accounting/opening-balances', [
+            'date' => '2026-01-01',
+            'balances' => [
+                ['account_id' => $this->bank->id, 'amount' => '10000.00'],
+                ['account_id' => $this->creditors->id, 'amount' => '4000.00'],
+            ],
+        ]);
+
+        $response->assertRedirect('/accounting/opening-balances');
+        $response->assertSessionHas('error', __('app.opening_balances_unbalanced'));
+        $this->assertDatabaseMissing('journal_entries', ['reference' => 'OPENING-2026']);
+    }
+
     public function test_store_skips_empty_rows_and_errors_when_all_zero(): void
     {
         $response = $this->actAsOrg()->from('/accounting/opening-balances')->post('/accounting/opening-balances', [
@@ -140,6 +156,7 @@ class OpeningBalancesWizardTest extends TestCase
             'balances' => [
                 ['account_id' => $this->bank->id, 'amount' => '-500.00'],
             ],
+            'allow_contra' => true,
         ]);
 
         $entry = JournalEntry::where('reference', 'OPENING-2026')->with('lines')->firstOrFail();
@@ -157,6 +174,7 @@ class OpeningBalancesWizardTest extends TestCase
                 ['account_id' => $this->bank->id, 'amount' => '10000.00'],
                 ['account_id' => $this->creditors->id, 'amount' => '4000.00'],
             ],
+            'allow_contra' => true,
         ]);
 
         $response->assertRedirect('/accounting/journal-entries');

@@ -1,5 +1,9 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import { chromium } from '@playwright/test'
+
+const execFileAsync = promisify(execFile)
 
 async function loadQaEnvironment() {
   try {
@@ -29,11 +33,12 @@ const RUN_ID = process.env.QA_RUN_ID || new Date().toISOString().replace(/[:.]/g
 const RUN_ENABLED = process.env.QA_RUN === '1'
 const CAPTURE_SCREENSHOTS = process.env.QA_CAPTURE_SCREENSHOTS !== '0'
 const CREATE_ACCOUNT = process.env.QA_CREATE_ACCOUNT === '1'
-const CLEANUP_ORGANIZATION = process.env.QA_CLEANUP_ORGANIZATION === '1'
+const CLEANUP_ORGANIZATION = process.env.QA_CLEANUP_ORGANIZATION !== '0'
 const EMAIL = process.env.QA_EMAIL
 const PASSWORD = process.env.QA_PASSWORD
 const ACCOUNT_NAME = process.env.QA_ACCOUNT_NAME || `Gäld QA ${RUN_ID}`
 const MAILPIT_URL = process.env.QA_MAILPIT_URL
+const SSH_TARGET = process.env.QA_SSH_TARGET || 'build-remote'
 const PROTECTED_ORGANIZATION = process.env.QA_PROTECTED_ORGANIZATION || 'Helvetia Full E2E Sarl'
 
 const phasePaths = {
@@ -68,10 +73,17 @@ function assertSafeConfiguration() {
   if (CLEANUP_ORGANIZATION && !CREATE_ACCOUNT) {
     throw new Error('QA_CLEANUP_ORGANIZATION requires QA_CREATE_ACCOUNT=1')
   }
+  if (CLEANUP_ORGANIZATION && SSH_TARGET !== 'build-remote') {
+    throw new Error('QA cleanup is restricted to the build-remote staging host')
+  }
 }
 
 function result(phase, name, status, details = {}) {
   return { phase, name, status, ...details }
+}
+
+function generatedAccountEmail() {
+  return `gaeld-qa-${RUN_ID}@example.test`
 }
 
 async function browserExecutablePath() {
@@ -148,7 +160,7 @@ async function login(page) {
 }
 
 async function createAccount(page) {
-  const email = `gaeld-qa-${RUN_ID}@example.test`
+  const email = generatedAccountEmail()
   const password = `Qa-${RUN_ID.replace(/[^a-zA-Z0-9]/g, '')}-Aa1!`
 
   await page.goto(`${BASE_URL}/signup`, { waitUntil: 'networkidle' })
@@ -164,7 +176,7 @@ async function createAccount(page) {
   const submitResponse = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/signup'), { timeout: 30000 })
   await page.getByRole('button', { name: /Create free account|Créer un compte gratuit/ }).click()
   const response = await submitResponse
-  await page.waitForURL(url => !url.toString().endsWith('/signup'), { timeout: 30000 })
+  await page.waitForURL(url => /\/email\/verify|\/welcome|\/billing/.test(new URL(url.toString()).pathname), { timeout: 30000 })
   await page.waitForLoadState('networkidle')
 
   return {
@@ -172,8 +184,93 @@ async function createAccount(page) {
     email,
     password,
     url: page.url(),
-    needsVerification: page.url().includes('/email/verify'),
+    needsVerification: page.url().includes('/email/verify') || await page.getByRole('heading', { name: /Verify your email|Vérifiez votre adresse/ }).count() > 0,
   }
+}
+
+async function completeOnboarding(page) {
+  if (!page.url().includes('/welcome')) {
+    await page.goto(`${BASE_URL}/welcome`, { waitUntil: 'networkidle' })
+  }
+
+  await page.getByRole('button', { name: /SME \/ Agency|PME \/ Agence/ }).click()
+  await page.getByRole('button', { name: /^Next$|^Suivant$/ }).click()
+  await page.locator('#legal_name').fill(`${ACCOUNT_NAME} Legal`)
+  await page.locator('#address').fill('Rue du Lac 12')
+  await page.locator('#city').fill('Lausanne')
+  await page.locator('#postal_code').fill('1003')
+  await page.locator('#canton').selectOption('VD')
+  await page.locator('#vat_number').fill('CHE-123.456.789 MWST')
+  await page.getByRole('button', { name: /^Next$|^Suivant$/ }).click()
+  await page.locator('fieldset').nth(2).locator('input[type="checkbox"]').check()
+  await page.locator('#fiscal_year_name').fill('2026')
+  await page.locator('#fiscal_year_start').fill('2026-01-01')
+  await page.locator('#fiscal_year_end').fill('2026-12-31')
+  await page.getByRole('button', { name: /^Next$|^Suivant$/ }).click()
+  await page.locator('fieldset').nth(3).locator('input[type="checkbox"]').check()
+  await page.locator('#bank_account_name').fill('Compte principal CHF')
+  await page.locator('#bank_name').fill('PostFinance')
+  await page.locator('#iban').fill('CH9300762011623852957')
+  const responsePromise = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/welcome'), { timeout: 30000 })
+  await page.getByRole('button', { name: /Finish setup|Terminer la configuration/ }).click()
+  const response = await responsePromise
+  await page.waitForLoadState('networkidle')
+
+  return {
+    httpStatus: response.status(),
+    url: page.url(),
+    company: (await page.locator('body').innerText()).includes(`${ACCOUNT_NAME} Legal`),
+    fiscalYear: (await page.locator('body').innerText()).includes('2026'),
+    bank: (await page.locator('body').innerText()).includes('Compte principal CHF'),
+  }
+}
+
+async function exerciseOpeningBalanceContract(page) {
+  await page.goto(`${BASE_URL}/accounting/opening-balances`, { waitUntil: 'networkidle' })
+  const balanceInputs = page.locator('input[id^="balance_"]')
+  const inputCount = await balanceInputs.count()
+  if (inputCount === 0) throw new Error('Opening balances page exposed no balance inputs')
+
+  await balanceInputs.first().fill('100.00')
+  const form = page.locator('form').first()
+  const rejectedResponse = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/accounting/opening-balances'), { timeout: 30000 })
+  await form.getByRole('button', { name: /Record opening balances|Enregistrer les soldes/ }).click()
+  const rejected = await rejectedResponse
+  await page.waitForLoadState('networkidle')
+  const rejectionText = await page.locator('body').innerText()
+  const rejectedUnbalanced = rejected.status() === 302 && /not balanced|pas équilibrés|nicht ausgeglichen|non bilanciati/i.test(rejectionText)
+
+  await page.locator('#allow_contra').check()
+  const acceptedResponse = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/accounting/opening-balances'), { timeout: 30000 })
+  await form.getByRole('button', { name: /Record opening balances|Enregistrer les soldes/ }).click()
+  const accepted = await acceptedResponse
+  await page.waitForLoadState('networkidle')
+
+  return {
+    httpStatusRejected: rejected.status(),
+    httpStatusAccepted: accepted.status(),
+    rejectedUnbalanced,
+    acceptedRedirect: page.url().includes('/accounting/journal-entries'),
+  }
+}
+
+async function cleanupAccount(email) {
+  if (!CLEANUP_ORGANIZATION) return { status: 'skip', reason: 'QA_CLEANUP_ORGANIZATION=0' }
+  if (!email || !email.startsWith('gaeld-qa-') || !email.endsWith('@example.test')) {
+    throw new Error('Refusing cleanup for an email outside the generated QA namespace')
+  }
+
+  const php = `<?php require "current/vendor/autoload.php"; $app=require "current/bootstrap/app.php"; $app->make("Illuminate\\Contracts\\Console\\Kernel")->bootstrap(); $email=${JSON.stringify(email)}; $user=\\App\\Domains\\Users\\Models\\User::where("email",$email)->first(); if(!$user){echo "NO_USER\\n"; exit;} $orgs=$user->organizations()->get(); foreach($orgs as $org){ if(!str_contains($org->name, ${JSON.stringify(RUN_ID)})){fwrite(STDERR,"REFUSING_ORG\\n"); exit(2);} $org->delete(); } $user->delete(); echo "CLEANED\\n";`;
+  const encoded = Buffer.from(php).toString('base64')
+  const remoteCommand = `cd ~/gaeld_app && printf '%s' '${encoded}' | base64 -d | /usr/bin/php8.4`
+  const { stdout } = await execFileAsync('ssh', ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=20', SSH_TARGET, remoteCommand], { maxBuffer: 1024 * 1024 })
+  const output = stdout.trim()
+
+  if (output !== 'CLEANED' && output !== 'NO_USER') {
+    throw new Error(`Unexpected cleanup result: ${output}`)
+  }
+
+  return { status: output === 'CLEANED' ? 'pass' : 'skip', result: output }
 }
 
 async function verifyAccountFromMailpit(page, email) {
@@ -271,11 +368,13 @@ async function main() {
     results: [],
     consoleErrors: [],
     requestFailures: [],
+    cleanup: null,
   }
 
   if (!RUN_ENABLED) {
     report.results.push(result(0, 'runner configuration', 'skip', { reason: 'Set QA_RUN=1 to execute staging checks' }))
   } else {
+    let createdAccount = CREATE_ACCOUNT ? { email: generatedAccountEmail() } : null
     const browser = await chromium.launch({
       headless: process.env.QA_HEADLESS !== '0',
       executablePath: await browserExecutablePath(),
@@ -285,6 +384,7 @@ async function main() {
     await mkdir(screenshotDirectory, { recursive: true })
     try {
       const auth = CREATE_ACCOUNT ? await createAccount(page) : await login(page)
+      if (CREATE_ACCOUNT) createdAccount = auth
       report.results.push(result(0, CREATE_ACCOUNT ? 'ephemeral account signup' : 'authenticated login', auth.httpStatus === 302 ? 'pass' : 'fail', {
         httpStatus: auth.httpStatus,
         url: auth.url,
@@ -303,6 +403,22 @@ async function main() {
         report.results.push(result(0, 'authenticated account access', 'fail', { error: 'Account remained unverified after Mailpit verification' }))
       }
 
+      if (CREATE_ACCOUNT && !page.url().includes('/email/verify')) {
+        try {
+          const onboarding = await completeOnboarding(page)
+          report.results.push(result(0, 'onboarding wizard', onboarding.company && onboarding.fiscalYear && onboarding.bank ? 'pass' : 'fail', onboarding))
+        } catch (error) {
+          report.results.push(result(0, 'onboarding wizard', 'fail', { error: error.message }))
+        }
+
+        try {
+          const openingBalances = await exerciseOpeningBalanceContract(page)
+          report.results.push(result(1, 'opening balance hybrid contract', openingBalances.rejectedUnbalanced && openingBalances.acceptedRedirect ? 'pass' : 'fail', openingBalances))
+        } catch (error) {
+          report.results.push(result(1, 'opening balance hybrid contract', 'fail', { error: error.message }))
+        }
+      }
+
       if (!CREATE_ACCOUNT || !page.url().includes('/email/verify')) {
         for (const [phase, paths] of Object.entries(phasePaths)) {
           for (const path of paths) {
@@ -319,11 +435,21 @@ async function main() {
         const responsive = await responsiveCheck(page)
         report.results.push(result(10, 'responsive overflow', responsive.every(check => !check.overflow) ? 'pass' : 'fail', { checks: responsive }))
       }
+    } catch (error) {
+      report.results.push(result(0, 'runner execution', 'fail', { error: error.message }))
     } finally {
       report.consoleErrors = consoleErrors
       report.requestFailures = requestFailures
       await context.close()
       await browser.close()
+      if (CREATE_ACCOUNT) {
+        try {
+          report.cleanup = await cleanupAccount(createdAccount?.email)
+        } catch (error) {
+          report.cleanup = { status: 'fail', error: error.message }
+          report.results.push(result(0, 'ephemeral account cleanup', 'fail', report.cleanup))
+        }
+      }
     }
   }
 
