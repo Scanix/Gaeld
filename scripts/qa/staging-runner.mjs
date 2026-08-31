@@ -1221,8 +1221,13 @@ async function findReconciliationAccountPath(page) {
 }
 
 async function importCamtForReplay(page, bankPath, filename, xml) {
-  await page.goto(`${BASE_URL}${bankPath}?filter=unreconciled`, { waitUntil: 'networkidle' })
-  await page.getByRole('button', { name: /Import bank statement|Importer un relevé/i }).click()
+  const reconciliationPage = await page.goto(`${BASE_URL}${bankPath}?filter=unreconciled`, { waitUntil: 'networkidle' })
+  const importButton = page.getByRole('button', { name: /Import bank statement|Importer un relevé/i }).last()
+  if (!(await importButton.count())) {
+    const body = await page.locator('body').innerText().catch(() => '')
+    throw new Error(`CAMT import action unavailable (HTTP ${reconciliationPage?.status() ?? 'unknown'}, URL ${page.url()}, path ${bankPath}, body ${body.slice(-700)})`)
+  }
+  await importButton.click()
   const dialog = page.getByRole('dialog').last()
   await dialog.locator('input[type="file"]').setInputFiles({
     name: filename,
