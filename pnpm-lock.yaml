@@ -16,8 +16,8 @@ importers:
         specifier: ^13.3.0
         version: 13.3.0
       axios:
-        specifier: ^1.19.0
-        version: 1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+        specifier: ^1.20.0
+        version: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       chart.js:
         specifier: ^4.5.1
         version: 4.5.1
@@ -51,7 +51,7 @@ importers:
     devDependencies:
       '@inertiajs/vue3':
         specifier: ^3.7.0
-        version: 3.7.0(axios@1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(vue@3.5.41(typescript@5.9.3))
+        version: 3.7.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(vue@3.5.41(typescript@5.9.3))
       '@sentry/vite-plugin':
         specifier: ^5.4.0
         version: 5.4.0(supports-color@7.2.0)
@@ -657,8 +657,8 @@ packages:
     peerDependencies:
       postcss: ^8.1.0
 
-  axios@1.19.0:
-    resolution: {integrity: sha512-ht/iuYZXEjFxLH/Hkezgd7m6JKlHHXEUSneaDz8uZe1Gj5QZtCnpyDsckvAiEnT89OEbCLmnte4R4sn7P0EKFw==}
+  axios@1.20.0:
+    resolution: {integrity: sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==}
 
   balanced-match@4.0.4:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
@@ -1458,19 +1458,19 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@inertiajs/core@3.7.0(axios@1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))':
+  '@inertiajs/core@3.7.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       es-toolkit: 1.51.0
-      laravel-precognition: 2.0.0(axios@1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))
+      laravel-precognition: 2.0.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))
     optionalDependencies:
-      axios: 1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+      axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
 
-  '@inertiajs/vue3@3.7.0(axios@1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(vue@3.5.41(typescript@5.9.3))':
+  '@inertiajs/vue3@3.7.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(vue@3.5.41(typescript@5.9.3))':
     dependencies:
-      '@inertiajs/core': 3.7.0(axios@1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))
+      '@inertiajs/core': 3.7.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))
       es-toolkit: 1.51.0
-      laravel-precognition: 2.0.0(axios@1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))
+      laravel-precognition: 2.0.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))
       vue: 3.5.41(typescript@5.9.3)
     transitivePeerDependencies:
       - axios
@@ -1764,7 +1764,7 @@ snapshots:
       postcss: 8.5.26
       postcss-value-parser: 4.2.0
 
-  axios@1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
+  axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
     dependencies:
       follow-redirects: 1.16.0(debug@4.4.3(supports-color@7.2.0))
       form-data: 4.0.6
@@ -1981,11 +1981,11 @@ snapshots:
 
   json5@2.2.3: {}
 
-  laravel-precognition@2.0.0(axios@1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)):
+  laravel-precognition@2.0.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)):
     dependencies:
       es-toolkit: 1.51.0
     optionalDependencies:
-      axios: 1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+      axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
 
   laravel-vite-plugin@3.2.0(vite@8.2.2(esbuild@0.28.2)(jiti@2.7.0)):
     dependencies:
