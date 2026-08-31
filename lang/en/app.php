@@ -1722,7 +1722,7 @@ return [
     'settings_default_invoice_notes' => 'Default Invoice Notes',
     'settings_default_invoice_notes_placeholder' => 'e.g. Thank you for your business.',
     'qr_iban' => 'QR-IBAN',
-    'qr_iban_required' => 'A QR-IBAN must be configured in Organization settings before generating a QR-bill.',
+    'qr_iban_required' => 'An IBAN or QR-IBAN must be configured on a default invoicing bank account before generating a QR-bill.',
     'qr_iban_placeholder' => 'CH56 0483 5012 3456 7800 9',
     'qr_iban_moved_title' => 'QR-IBAN has moved',
     'qr_iban_moved_help' => 'The QR-IBAN is now managed in your bank account settings.',

@@ -76,6 +76,12 @@ exports, nine salary certificates, and the signed Stripe webhook lifecycle.
 This mode also requires `STRIPE_WEBHOOK_SECRET`, matching the staging endpoint;
 the value is read locally and never written to artifacts.
 
+Set `QA_FULL=1` in addition to `QA_EXHAUSTIVE=1` for the literal high-volume
+playbook replay: 8 invoices, 15 expenses and 5 invoice emails per month,
+multiple CAMT transactions per statement, a 15-line paper opening balance, and
+a historical summary entry. It runs only on disposable staging tenants and can
+take substantially longer than the functional exhaustive mode.
+
 The runner writes to `storage/app/qa/`:
 
 - `staging-qa-<run-id>.json`: complete machine-readable evidence;

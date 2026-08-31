@@ -151,6 +151,8 @@ class InvoiceController extends Controller
     {
         $this->authorize('view', $invoice);
 
+        $defaultBankAccount = $invoice->organization->defaultInvoicingBankAccount();
+
         return Inertia::render('Invoices/Show', [
             'invoice' => $invoice->load(['customer', 'lines.vatRate', 'journalEntry.lines.account', 'payments.journalEntry']),
             'canForceDelete' => $request->user()->can('forceDelete', $invoice),
@@ -159,7 +161,7 @@ class InvoiceController extends Controller
             'justificatifUrl' => $invoice->justificatif_path
                 ? route('invoices.justificatif.download', $invoice)
                 : null,
-            'hasQrIban' => ! empty($invoice->organization->qr_iban ?? null),
+            'hasQrIban' => ! empty($invoice->qr_iban ?: $defaultBankAccount?->qr_iban ?: $defaultBankAccount?->iban),
             'bankAccounts' => BankAccount::query()
                 ->where('is_active', true)
                 ->select('id', 'account_id', 'name', 'iban', 'currency')

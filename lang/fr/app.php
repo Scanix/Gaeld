@@ -1632,7 +1632,7 @@ return [
     'qr_iban' => 'QR-IBAN',
     'qr_iban_moved_title' => 'Le QR-IBAN a été déplacé',
     'qr_iban_moved_help' => 'Le QR-IBAN est maintenant géré dans les paramètres de votre compte bancaire.',
-    'qr_iban_required' => 'Un QR-IBAN doit être configuré dans les paramètres de l’organisation avant de générer une QR-facture.',
+    'qr_iban_required' => 'Un IBAN ou un QR-IBAN doit être configuré sur un compte bancaire de facturation par défaut avant de générer une QR-facture.',
     'qr_iban_placeholder' => 'CH56 0483 5012 3456 7800 9',
     'vat_number_placeholder' => 'CHE-123.456.789',
     'payment_terms_placeholder' => '30',
