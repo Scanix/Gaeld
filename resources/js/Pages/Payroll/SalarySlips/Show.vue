@@ -64,7 +64,7 @@ function deductionRow(label, employee, employer) {
       class="mb-4"
     />
 
-    <div class="max-w-2xl space-y-6">
+    <div class="max-w-3xl space-y-6">
       <!-- Header card -->
       <Card>
         <CardHeader>
@@ -92,21 +92,21 @@ function deductionRow(label, employee, employer) {
         </CardHeader>
         <CardContent>
           <div class="overflow-x-auto">
-          <table class="w-full text-sm">
+          <table class="min-w-[42rem] w-full text-sm">
             <thead>
               <tr class="border-b border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]">
-                <th class="pb-2 text-left font-medium">{{ t('item') }}</th>
-                <th class="pb-2 text-right font-medium">{{ t('employee_share') }}</th>
-                <th class="pb-2 text-right font-medium">{{ t('employer_share') }}</th>
-                <th class="pb-2 text-right font-medium">{{ t('total') }}</th>
+                <th class="min-w-[13rem] whitespace-nowrap pb-2 text-left font-medium">{{ t('item') }}</th>
+                <th class="min-w-[8rem] whitespace-nowrap pb-2 text-right font-medium">{{ t('employee_share') }}</th>
+                <th class="min-w-[8rem] whitespace-nowrap pb-2 text-right font-medium">{{ t('employer_share') }}</th>
+                <th class="min-w-[8rem] whitespace-nowrap pb-2 text-right font-medium">{{ t('total') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[hsl(var(--border))]">
               <tr v-if="slip.adjustments?.base_salary && Number(slip.adjustments.base_salary) !== Number(slip.gross_salary)" class="text-[hsl(var(--muted-foreground))]">
                 <td class="py-2">{{ t('base_salary') }}</td>
-                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.base_salary) }}</td>
-                <td class="py-2 text-right">—</td>
-                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.base_salary) }}</td>
+                <td class="whitespace-nowrap py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.base_salary) }}</td>
+                <td class="whitespace-nowrap py-2 text-right">—</td>
+                <td class="whitespace-nowrap py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.base_salary) }}</td>
               </tr>
               <tr v-if="Number(slip.adjustments?.thirteenth_salary) > 0" class="text-green-700 dark:text-green-400">
                 <td class="py-2">{{ t('thirteenth_salary') }}</td>

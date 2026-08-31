@@ -116,4 +116,27 @@ class InvoicePdfRendererTest extends TestCase
         $this->assertNotContains('New Street 9', $tcpdf->cells);
         $this->assertNotContains('8000 Zürich', $tcpdf->cells);
     }
+
+    public function test_renders_a_light_gald_copyright_footer(): void
+    {
+        $tcpdf = new class extends TCPDF
+        {
+            /** @var array<int, string> */
+            public array $cells = [];
+
+            public function Cell($w, $h = 0, $txt = '', $border = 0, $ln = 0, $align = '', $fill = false, $link = '', $stretch = 0, $ignore_min_height = false, $calign = 'T', $valign = 'M'): void
+            {
+                $this->cells[] = (string) $txt;
+
+                parent::Cell($w, $h, $txt, $border, $ln, $align, $fill, $link, $stretch, $ignore_min_height, $calign, $valign);
+            }
+        };
+        $tcpdf->setPrintHeader(false);
+        $tcpdf->setPrintFooter(false);
+        $tcpdf->AddPage();
+
+        app(InvoicePdfRenderer::class)->renderFooter($tcpdf);
+
+        $this->assertContains('© '.now()->year.' Gäld', $tcpdf->cells);
+    }
 }

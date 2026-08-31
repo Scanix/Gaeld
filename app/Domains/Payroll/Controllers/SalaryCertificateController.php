@@ -22,7 +22,7 @@ final class SalaryCertificateController extends Controller
 
         return $pdf->download(
             'exports.salary-certificate',
-            ['certificate' => $certificate],
+            ['certificate' => $certificate, 'organization' => $employee->organization],
             "salary-certificate-{$employee->last_name}-{$year}.pdf",
         );
     }

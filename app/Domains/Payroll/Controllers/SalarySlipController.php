@@ -190,10 +190,11 @@ class SalarySlipController extends Controller
         $this->authorize('view', $slip);
 
         $employeeData = $slip->employeeDocumentData();
+        $slip->loadMissing('organization');
 
         return $pdf->download(
             'exports.salary-slip',
-            ['slip' => $slip, 'employeeData' => $employeeData],
+            ['slip' => $slip, 'employeeData' => $employeeData, 'organization' => $slip->organization],
             "salary-slip-{$employeeData['last_name']}-{$slip->period_year}-{$slip->period_month}.pdf",
         );
     }

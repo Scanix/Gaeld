@@ -3,30 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ __('exports.salary_certificate.title') }} — {{ $certificate['employee']->fullName() }}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 20mm; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 8mm; border-bottom: 2px solid #2563eb; padding-bottom: 4mm; }
-        .header h1 { font-size: 16pt; color: #2563eb; }
-        .period { font-size: 12pt; color: #4b5563; text-align: right; }
-        .notice { margin-bottom: 7mm; padding: 3mm; border: 1px solid #f59e0b; color: #92400e; font-size: 9pt; }
-        .section { margin-bottom: 6mm; }
-        .section-title { font-size: 11pt; font-weight: 700; color: #2563eb; border-bottom: 1px solid #e5e7eb; padding-bottom: 1mm; margin-bottom: 2mm; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }
-        th, td { padding: 2mm 3mm; text-align: left; }
-        th { font-weight: 600; color: #6b7280; font-size: 9pt; }
-        td { font-size: 10pt; }
-        .right { text-align: right; }
-        .total-row { font-weight: 700; border-top: 2px solid #2563eb; }
-        .net-row { font-size: 12pt; font-weight: 700; color: #2563eb; border-top: 3px double #2563eb; }
-        .footer { margin-top: 10mm; font-size: 8pt; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 3mm; }
-    </style>
+    @include('exports._styles')
 </head>
 <body>
-    <div class="header">
-        <h1>{{ __('exports.salary_certificate.title') }}</h1>
-        <div class="period">{{ $certificate['year'] }}</div>
-    </div>
+    @include('exports._header', [
+        'docTitle' => __('exports.salary_certificate.title'),
+        'docPeriod' => (string) $certificate['year'],
+        'docRef' => $certificate['employee']->fullName(),
+    ])
 
     <div class="notice">{{ __('exports.salary_certificate.disclaimer') }}</div>
 
@@ -69,6 +53,6 @@
         </table>
     </div>
 
-    <div class="footer">{{ __('exports.common.generated_by') }} &mdash; {{ now()->format('d.m.Y H:i') }}</div>
+    @include('exports._footer')
 </body>
 </html>

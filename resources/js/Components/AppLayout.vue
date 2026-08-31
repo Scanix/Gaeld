@@ -108,9 +108,9 @@ const supportSession = computed(() => page.props.supportSession ?? null)
 
       <!-- Early Beta Banner -->
       <Banner v-if="!betaDismissed" color="amber" :dismissable="true" @dismiss="dismissBeta">
-        <span class="inline-flex items-center gap-1.5">
+        <span class="inline-flex max-w-full flex-wrap items-center justify-center gap-1.5 text-center">
           <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-          <strong>{{ tl('early_beta') }}</strong> — {{ tl('early_beta_notice') }}
+          <strong class="whitespace-nowrap">{{ tl('early_beta') }}</strong> — {{ tl('early_beta_notice') }}
         </span>
         <a href="https://github.com/gaeld/gaeld-app" target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-amber-900 whitespace-nowrap">{{ tl('follow_on_github') }}</a>
       </Banner>

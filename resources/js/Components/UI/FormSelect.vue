@@ -14,6 +14,7 @@ defineProps({
   required: Boolean,
   placeholder: String,
   class: String,
+  labelClass: String,
 })
 
 defineEmits(['update:modelValue'])
@@ -24,7 +25,7 @@ defineEmits(['update:modelValue'])
     <label
       v-if="label"
       :for="id"
-      class="text-sm font-medium leading-none"
+      :class="['text-sm font-medium leading-none', labelClass]"
     >
       {{ label }}
       <span v-if="required" class="text-[hsl(var(--destructive))]">*</span>

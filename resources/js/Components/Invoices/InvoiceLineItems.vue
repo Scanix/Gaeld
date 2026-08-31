@@ -183,7 +183,7 @@ defineExpose({ subtotal, vatTotal, total })
       </div>
       <span class="shrink-0 text-xs tabular-nums text-[hsl(var(--muted-foreground))]">{{ lines.length }} {{ t('line_items') }}</span>
     </div>
-    <div class="mb-2 hidden grid-cols-[minmax(8rem,1.15fr)_minmax(0,2.4fr)_minmax(5rem,.8fr)_minmax(8rem,1.1fr)_minmax(8rem,1.25fr)_minmax(7rem,1fr)_auto] gap-3 px-4 text-xs font-medium text-[hsl(var(--muted-foreground))] sm:grid">
+    <div class="mb-2 hidden grid-cols-[minmax(8rem,1.15fr)_minmax(0,2.4fr)_minmax(5rem,.8fr)_minmax(8rem,1.1fr)_minmax(8rem,1.25fr)_minmax(7rem,1fr)_auto] gap-3 px-4 text-xs font-medium text-[hsl(var(--muted-foreground))] xl:grid">
       <span>{{ t('type') }}</span>
       <span>{{ t('description') }}</span>
       <span>{{ t('qty') }}</span>
@@ -197,15 +197,16 @@ defineExpose({ subtotal, vatTotal, total })
         v-for="(line, i) in lines"
         :key="i"
         :class="[
-          'grid grid-cols-1 gap-4 p-4 sm:grid-cols-[minmax(8rem,1.15fr)_minmax(0,2.4fr)_minmax(5rem,.8fr)_minmax(8rem,1.1fr)_minmax(8rem,1.25fr)_minmax(7rem,1fr)_auto] sm:items-end sm:gap-3',
+          'grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 xl:grid-cols-[minmax(8rem,1.15fr)_minmax(0,2.4fr)_minmax(5rem,.8fr)_minmax(8rem,1.1fr)_minmax(8rem,1.25fr)_minmax(7rem,1fr)_auto] sm:items-end sm:gap-3',
           line.type === 'discount' ? 'bg-[hsl(var(--destructive)/0.04)]' : line.type === 'text' ? 'bg-[hsl(var(--muted)/0.35)]' : 'bg-[hsl(var(--card))]',
         ]"
       >
-        <div class="min-w-0">
+        <div class="min-w-0 sm:col-span-1 xl:col-span-1">
           <FormSelect
             :id="`line-type-${i}`"
             v-model="line.type"
             :label="t('type')"
+            label-class="xl:sr-only"
             :options="lineTypeOptions"
           />
           <FormSelect
@@ -213,48 +214,53 @@ defineExpose({ subtotal, vatTotal, total })
             :id="`line-discount-type-${i}`"
             v-model="line.discount_type"
             :label="t('discount_mode')"
+            label-class="xl:sr-only"
             :options="discountTypeOptions"
             class="mt-3"
           />
         </div>
-        <div class="min-w-0" :class="line.type === 'text' ? 'sm:col-span-4' : ''">
+        <div class="min-w-0 sm:col-span-2" :class="line.type === 'text' ? 'xl:col-span-4' : 'xl:col-span-1'">
           <FormTextarea
             :id="`line-desc-${i}`"
             v-model="line.description"
             :label="t('description')"
+            label-class="xl:sr-only"
             :error="errors[`lines.${i}.description`]"
             :rows="2"
             required
           />
         </div>
         <template v-if="line.type !== 'text'">
-          <div class="min-w-0">
+          <div class="min-w-0 sm:col-span-1 xl:col-span-1">
             <FormInput
               :id="`line-qty-${i}`"
               v-model="line.quantity"
               type="number"
               :label="t('qty')"
+              label-class="xl:sr-only"
               :error="errors[`lines.${i}.quantity`]"
               :readonly="line.type === 'discount' && line.discount_type === 'percentage'"
               required
             />
           </div>
-          <div class="min-w-0">
+          <div class="min-w-0 sm:col-span-1 xl:col-span-1">
             <FormInput
               :id="`line-price-${i}`"
               v-model="line.unit_price"
               type="number"
               :label="line.type === 'discount' ? (line.discount_type === 'percentage' ? t('discount_percentage') : t('line_type_discount')) : t('unit_price')"
+              label-class="xl:sr-only"
               :error="errors[`lines.${i}.unit_price`]"
               :hint="line.type === 'item' ? t('negative_price_hint') : undefined"
               required
             />
           </div>
-          <div class="relative min-w-0">
+          <div class="relative min-w-0 sm:col-span-1 xl:col-span-1">
             <FormSelect
               :id="`line-vat-${i}`"
               v-model="line.vat_rate_id"
               :label="t('vat')"
+              label-class="xl:sr-only"
               :options="vatOptions"
             />
             <div class="absolute right-0 top-0">
@@ -263,14 +269,14 @@ defineExpose({ subtotal, vatTotal, total })
               </Tooltip>
             </div>
           </div>
-          <div class="text-right text-sm font-medium tabular-nums sm:pb-2">
+          <div class="text-right text-sm font-medium tabular-nums sm:col-span-1 sm:pb-2 xl:col-span-1">
             {{ formattedLineAmount(line) }}
           </div>
         </template>
-        <div v-else class="hidden text-right text-sm text-[hsl(var(--muted-foreground))] sm:block sm:pb-2">
+        <div v-else class="hidden text-right text-sm text-[hsl(var(--muted-foreground))] sm:col-span-2 sm:block sm:pb-2 xl:col-span-1">
           {{ formattedLineAmount(line) }}
         </div>
-        <div class="flex items-end justify-end gap-1 sm:pb-2">
+        <div class="flex items-end justify-end gap-1 sm:col-span-2 sm:pb-2 xl:col-span-1">
           <Button
             type="button"
             variant="ghost"

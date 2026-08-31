@@ -45,11 +45,11 @@ function applyFilter() {
 }
 
 const columns = computed(() => [
-  { key: 'period', label: t('period') },
-  { key: 'employee', label: t('employee') },
-  { key: 'gross_salary', label: t('gross_salary'), class: 'text-right' },
-  { key: 'net_salary', label: t('net_salary'), class: 'text-right' },
-  { key: 'status', label: t('status') },
+  { key: 'period', label: t('period'), minWidth: 140 },
+  { key: 'employee', label: t('employee'), minWidth: 180 },
+  { key: 'gross_salary', label: t('gross_salary'), class: 'text-right whitespace-nowrap', minWidth: 140 },
+  { key: 'net_salary', label: t('net_salary'), class: 'text-right whitespace-nowrap', minWidth: 140 },
+  { key: 'status', label: t('status'), minWidth: 110 },
   { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 </script>

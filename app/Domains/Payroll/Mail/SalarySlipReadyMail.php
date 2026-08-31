@@ -43,10 +43,12 @@ class SalarySlipReadyMail extends Mailable
     {
         $slip = $this->slip;
         $employeeData = $slip->employeeDocumentData();
+        $slip->loadMissing('organization');
 
         $pdf = Pdf::loadView('exports.salary-slip', [
             'slip' => $slip,
             'employeeData' => $employeeData,
+            'organization' => $slip->organization,
         ])
             ->setPaper('A4', 'portrait')
             ->output();

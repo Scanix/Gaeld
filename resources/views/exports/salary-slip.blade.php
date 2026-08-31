@@ -6,34 +6,14 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ __('exports.salary_slip.title') }} — {{ $employeeData['first_name'] }} {{ $employeeData['last_name'] }}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 20mm; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 8mm; border-bottom: 2px solid #2563eb; padding-bottom: 4mm; }
-        .header h1 { font-size: 16pt; color: #2563eb; }
-        .period { font-size: 12pt; color: #4b5563; text-align: right; }
-        .section { margin-bottom: 6mm; }
-        .section-title { font-size: 11pt; font-weight: 700; color: #2563eb; border-bottom: 1px solid #e5e7eb; padding-bottom: 1mm; margin-bottom: 2mm; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }
-        th, td { padding: 2mm 3mm; text-align: left; }
-        th { font-weight: 600; color: #6b7280; font-size: 9pt; }
-        td { font-size: 10pt; }
-        .right { text-align: right; }
-        .total-row { font-weight: 700; border-top: 2px solid #2563eb; }
-        .net-row { font-size: 12pt; font-weight: 700; color: #2563eb; border-top: 3px double #2563eb; }
-        .employee-info td { padding: 1mm 3mm; }
-        .footer { margin-top: 10mm; font-size: 8pt; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 3mm; }
-    </style>
+    @include('exports._styles')
 </head>
 <body>
-    <div class="header">
-        <div>
-            <h1>{{ __('exports.salary_slip.title') }}</h1>
-        </div>
-        <div class="period">
-            {{ str_pad($slip->period_month, 2, '0', STR_PAD_LEFT) }}/{{ $slip->period_year }}
-        </div>
-    </div>
+    @include('exports._header', [
+        'docTitle' => __('exports.salary_slip.title'),
+        'docPeriod' => str_pad($slip->period_month, 2, '0', STR_PAD_LEFT).'/'.$slip->period_year,
+        'docRef' => $employeeData['first_name'].' '.$employeeData['last_name'],
+    ])
 
     <div class="section">
         <div class="section-title">{{ __('exports.salary_slip.employee') }}</div>
@@ -130,8 +110,6 @@
         </table>
     </div>
 
-    <div class="footer">
-        {{ __('exports.common.generated_by') }} &mdash; {{ now()->format('d.m.Y H:i') }}
-    </div>
+    @include('exports._footer')
 </body>
 </html>

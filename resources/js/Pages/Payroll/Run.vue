@@ -362,35 +362,35 @@ async function postSlips() {
       </CardHeader>
       <CardContent>
         <div class="overflow-x-auto">
-          <table class="w-full text-sm">
+          <table class="min-w-[980px] w-full text-sm">
             <thead>
               <tr class="border-b border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]">
-                <th class="pb-2 text-left font-medium">{{ t('employee') }}</th>
-                <th class="pb-2 text-right font-medium">{{ t('gross_salary') }}</th>
-                <th class="pb-2 text-right font-medium">{{ t('thirteenth_salary') }}</th>
-                <th class="pb-2 text-right font-medium">{{ t('unpaid_leave') }}</th>
-                <th class="pb-2 text-right font-medium">{{ t('expense_reimbursement') }}</th>
-                <th class="pb-2 text-right font-medium">AVS</th>
-                <th class="pb-2 text-right font-medium">AC</th>
-                <th class="pb-2 text-right font-medium">AANP</th>
-                <th class="pb-2 text-right font-medium">LPP</th>
-                <th v-if="withholdingTaxEnabled" class="pb-2 text-right font-medium">{{ t('withholding_tax') }}</th>
-                <th class="pb-2 text-right font-medium">{{ t('net_salary') }}</th>
+                <th class="min-w-[10rem] whitespace-nowrap px-3 pb-2 text-left font-medium">{{ t('employee') }}</th>
+                <th class="min-w-[8rem] whitespace-nowrap px-3 pb-2 text-right font-medium">{{ t('gross_salary') }}</th>
+                <th class="min-w-[8rem] whitespace-nowrap px-3 pb-2 text-right font-medium">{{ t('thirteenth_salary') }}</th>
+                <th class="min-w-[10rem] whitespace-nowrap px-3 pb-2 text-right font-medium">{{ t('unpaid_leave') }}</th>
+                <th class="min-w-[13rem] whitespace-nowrap px-3 pb-2 text-right font-medium">{{ t('expense_reimbursement') }}</th>
+                <th class="min-w-[6rem] whitespace-nowrap px-3 pb-2 text-right font-medium">AVS</th>
+                <th class="min-w-[6rem] whitespace-nowrap px-3 pb-2 text-right font-medium">AC</th>
+                <th class="min-w-[6rem] whitespace-nowrap px-3 pb-2 text-right font-medium">AANP</th>
+                <th class="min-w-[6rem] whitespace-nowrap px-3 pb-2 text-right font-medium">LPP</th>
+                <th v-if="withholdingTaxEnabled" class="min-w-[8rem] whitespace-nowrap px-3 pb-2 text-right font-medium">{{ t('withholding_tax') }}</th>
+                <th class="min-w-[8rem] whitespace-nowrap px-3 pb-2 text-right font-medium">{{ t('net_salary') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[hsl(var(--border))]">
               <tr v-for="emp in preview" :key="emp.id">
-                <td class="py-2.5">{{ emp.first_name }} {{ emp.last_name }}</td>
-                <td class="py-2.5 text-right font-mono">{{ formatCurrency(emp.gross_salary) }}</td>
-                <td class="py-2.5 text-right font-mono">{{ formatCurrency(emp.thirteenth_salary) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.unpaid_leave_amount) }}</td>
-                <td class="py-2.5 text-right font-mono text-green-700 dark:text-green-400">{{ formatCurrency(emp.reimbursement_amount) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.avs) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.ac) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.aanp) }}</td>
-                <td class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.lpp) }}</td>
-                <td v-if="withholdingTaxEnabled" class="py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.source_tax) }}</td>
-                <td class="py-2.5 text-right font-mono font-bold text-green-700 dark:text-green-400">{{ formatCurrency(emp.net) }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5">{{ emp.first_name }} {{ emp.last_name }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono">{{ formatCurrency(emp.gross_salary) }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono">{{ formatCurrency(emp.thirteenth_salary) }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.unpaid_leave_amount) }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-green-700 dark:text-green-400">{{ formatCurrency(emp.reimbursement_amount) }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.avs) }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.ac) }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.aanp) }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.lpp) }}</td>
+                <td v-if="withholdingTaxEnabled" class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-red-600">{{ formatCurrency(-emp.source_tax) }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono font-bold text-green-700 dark:text-green-400">{{ formatCurrency(emp.net) }}</td>
               </tr>
             </tbody>
           </table>
