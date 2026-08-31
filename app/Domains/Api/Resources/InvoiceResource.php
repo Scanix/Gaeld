@@ -33,6 +33,7 @@ class InvoiceResource extends JsonResource
             'amount_due' => $this->amountDue(),
             'lines' => InvoiceLineResource::collection($this->whenLoaded('lines')),
             'payments' => InvoicePaymentResource::collection($this->whenLoaded('payments')),
+            'journal_entry' => new JournalEntryResource($this->whenLoaded('journalEntry')),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

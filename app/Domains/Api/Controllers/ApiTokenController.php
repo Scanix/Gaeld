@@ -8,6 +8,7 @@ use App\Domains\Api\Requests\StoreApiTokenRequest;
 use App\Domains\Api\Resources\ApiTokenResource;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\Api\TokenPermissionMap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -28,7 +29,7 @@ class ApiTokenController extends Controller
      *
      * Returns all personal API tokens for the authenticated user in the current organisation.
      *
-     * @response 200 scenario="Success" {"data":[{"id":"9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b","name":"CI Token","abilities":["invoices:read"],"last_used_at":"2025-03-01T12:00:00.000000Z","expires_at":"2025-12-31T23:59:59.000000Z","created_at":"2025-01-15T10:00:00.000000Z"}]}
+     * @response 200 scenario="Success" {"data":[{"id":"9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b","name":"CI Token","abilities":["invoicing.view"],"last_used_at":"2025-03-01T12:00:00.000000Z","expires_at":"2025-12-31T23:59:59.000000Z","created_at":"2025-01-15T10:00:00.000000Z"}]}
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -47,19 +48,20 @@ class ApiTokenController extends Controller
      * Creates a new personal API token. The plain-text token is returned only once in the response.
      *
      * @bodyParam name string required A descriptive name for the token. Example: CI Token
-     * @bodyParam abilities string[] List of token abilities (permissions). Use `*` for all. Example: ["invoices:read","customers:read"]
+     * @bodyParam abilities string[] List of canonical token abilities (permissions). Use `*` for all. Example: ["invoicing.view","contacts.view"]
      * @bodyParam expires_in_days integer Number of days until the token expires (1-365). Example: 90
      *
-     * @response 201 scenario="Created" {"token":"1|abc123def456...","name":"CI Token","type":"personal","abilities":["invoices:read","customers:read"],"expires_at":"2025-04-15T10:00:00.000000Z"}
+     * @response 201 scenario="Created" {"token":"1|abc123def456...","name":"CI Token","type":"personal","abilities":["invoicing.view","contacts.view"],"expires_at":"2025-04-15T10:00:00.000000Z"}
      * @response 422 scenario="Validation error" {"message":"The name field is required.","errors":{"name":["The name field is required."]}}
      */
     public function store(StoreApiTokenRequest $request, CurrentOrganization $currentOrg): JsonResponse
     {
         $validated = $request->validated();
 
-        $abilities = $validated['abilities'] ?? ['*'];
+        $abilities = TokenPermissionMap::normalize($validated['abilities'] ?? []);
+        $abilities = $abilities === [] ? ['*'] : $abilities;
         $expiresAt = isset($validated['expires_in_days'])
-            ? now()->addDays($validated['expires_in_days'])
+            ? now()->addDays((int) $validated['expires_in_days'])
             : null;
 
         $token = $request->user()->createToken(
@@ -87,7 +89,7 @@ class ApiTokenController extends Controller
      *
      * Permanently deletes a personal API token.
      *
-     * @urlParam tokenUuid string required The token UUID. Example: 9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b
+     * @urlParam tokenUuid string required The token UUID. Example: <token-uuid>
      *
      * @response 204 scenario="Revoked"
      * @response 404 scenario="Not found" {"message":"Token not found."}
@@ -111,23 +113,12 @@ class ApiTokenController extends Controller
      *
      * Returns all possible token abilities (permissions) that can be assigned to a token.
      *
-     * @response 200 scenario="Success" {"data":["customers:read","customers:write","invoices:read","invoices:write","expenses:read","expenses:write","accounts:read","bank-accounts:read","webhooks:read","webhooks:write"]}
+     * @response 200 scenario="Success" {"data":["accounting.view","accounting.create","accounting.edit","accounting.delete","contacts.view","contacts.create","contacts.edit","contacts.delete","invoicing.view","invoicing.create","invoicing.edit","invoicing.delete","invoicing.finalize","invoicing.record-payment","expenses.view","expenses.create","expenses.edit","expenses.approve","expenses.delete","banking.view","banking.import","organization.view","organization.edit","organization.delete","organization.manage-users","organization.view-audit-log"]}
      */
     public function abilities(): JsonResponse
     {
         return response()->json([
-            'data' => [
-                'customers:read',
-                'customers:write',
-                'invoices:read',
-                'invoices:write',
-                'expenses:read',
-                'expenses:write',
-                'accounts:read',
-                'bank-accounts:read',
-                'webhooks:read',
-                'webhooks:write',
-            ],
+            'data' => TokenPermissionMap::abilities(),
         ]);
     }
 

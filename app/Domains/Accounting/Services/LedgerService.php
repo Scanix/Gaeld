@@ -19,6 +19,7 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Money;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -83,6 +84,7 @@ class LedgerService
     {
         $this->validateBalance($entry->lines);
         $this->validateAccounts($organizationId, $entry->lines);
+        $this->throwIfDuplicateReference($organizationId, $entry->reference);
 
         $journalEntry = $this->persistEntry($organizationId, $entry, false);
 
@@ -99,48 +101,100 @@ class LedgerService
      */
     public function postDraft(JournalEntry $journalEntry): JournalEntry
     {
-        if ($journalEntry->is_posted) {
-            throw new AlreadyPostedException('Journal entry is already posted.');
-        }
+        return DB::transaction(function () use ($journalEntry): JournalEntry {
+            $lockedEntry = JournalEntry::query()
+                ->whereKey($journalEntry->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $lockedEntry->load('lines.account');
 
-        if (! $journalEntry->isBalanced()) {
-            throw new UnbalancedEntryException('Journal entry is not balanced.');
-        }
+            if ($lockedEntry->is_posted) {
+                throw new AlreadyPostedException('Journal entry is already posted.');
+            }
 
-        $journalEntry->update(['is_posted' => true]);
+            $this->guardClosedFiscalYear($lockedEntry->organization_id, $lockedEntry->date->toDateString());
 
-        JournalDraftPosted::dispatch($journalEntry);
+            if (! $lockedEntry->isBalanced()) {
+                throw new UnbalancedEntryException('Journal entry is not balanced.');
+            }
 
-        return $journalEntry;
+            $lockedEntry->update(['is_posted' => true]);
+            $this->flushCache($lockedEntry->organization_id);
+            JournalDraftPosted::dispatch($lockedEntry);
+
+            return $lockedEntry->fresh(['lines.account']);
+        });
     }
 
     /**
-     * Reverse a posted journal entry by creating a contra entry.
+     * Delete an unposted journal entry and its lines.
      *
-     * Swaps debit ↔ credit on every line and posts a new entry
-     * with a REV- reference prefix.
+     * @throws AlreadyPostedException When the entry is already posted
+     * @throws InvalidEntryDataException When the entry is archived
+     */
+    public function deleteDraft(JournalEntry $journalEntry): void
+    {
+        if ($journalEntry->archived_at !== null) {
+            throw new InvalidEntryDataException('Archived journal entries cannot be deleted.');
+        }
+
+        if ($journalEntry->is_posted) {
+            throw new AlreadyPostedException('Posted journal entries cannot be deleted.');
+        }
+
+        DB::transaction(function () use ($journalEntry): void {
+            $journalEntry->lines()->delete();
+            $journalEntry->delete();
+        });
+    }
+
+    /**
+     * Reverse a posted journal entry by creating a contra entry draft.
+     *
+     * Swaps debit ↔ credit on every line and creates a DRAFT entry
+     * with a REV- reference prefix. User must explicitly post the draft
+     * to finalize the reversal.
      *
      * @throws DuplicateReferenceException if this entry has already been reversed
      */
-    public function reverseEntry(JournalEntry $journalEntry, ?string $description = null): JournalEntry
-    {
-        $lines = $journalEntry->lines->map(fn (TransactionLine $line) => new JournalLineData(
-            accountId: (string) $line->account_id,
-            debit: (string) $line->credit,
-            credit: (string) $line->debit,
-            description: 'Reversal: '.($line->description ?? ''),
-        ))->all();
+    public function reverseEntry(
+        JournalEntry $journalEntry,
+        ?string $description = null,
+        ?string $type = null,
+    ): JournalEntry {
+        return DB::transaction(function () use ($journalEntry, $description, $type): JournalEntry {
+            $original = JournalEntry::query()
+                ->whereKey($journalEntry->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $original->load('lines.account');
 
-        $reversalEntry = $this->postEntry($journalEntry->organization_id, new JournalEntryData(
-            date: now()->toDateString(),
-            reference: self::REFERENCE_PREFIX_REVERSAL.$journalEntry->reference,
-            description: $description ?? 'Reversal of '.$journalEntry->reference,
-            lines: $lines,
-        ));
+            if (! $original->is_posted) {
+                throw new InvalidEntryDataException('Only posted journal entries can be reversed.');
+            }
 
-        JournalEntryReversed::dispatch($reversalEntry, $journalEntry);
+            $reversalReference = self::REFERENCE_PREFIX_REVERSAL.$original->reference;
+            $this->throwIfDuplicateReference($original->organization_id, $reversalReference);
 
-        return $reversalEntry;
+            $lines = $original->lines->map(fn (TransactionLine $line) => new JournalLineData(
+                accountId: (string) $line->account_id,
+                debit: (string) $line->credit,
+                credit: (string) $line->debit,
+                description: 'Reversal: '.($line->description ?? ''),
+            ))->all();
+
+            $reversalEntry = $this->createDraft($original->organization_id, new JournalEntryData(
+                date: now()->toDateString(),
+                reference: $reversalReference,
+                description: $description ?? 'Reversal of '.$original->reference,
+                lines: $lines,
+                type: $type,
+            ));
+
+            JournalEntryReversed::dispatch($reversalEntry, $original);
+
+            return $reversalEntry;
+        });
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -186,11 +240,11 @@ class LedgerService
     }
 
     /**
-     * Guard against posting duplicate references within the same organization.
+     * Guard against duplicate references within the same organization.
      *
      * Null references are always allowed (e.g. bank imports without ref).
      *
-     * @throws DuplicateReferenceException When a posted entry with the same reference exists
+     * @throws DuplicateReferenceException When an entry (posted or draft) with the same reference exists
      */
     private function throwIfDuplicateReference(string $organizationId, ?string $reference): void
     {
@@ -198,7 +252,7 @@ class LedgerService
             return;
         }
 
-        if ($this->queryService->isDuplicateReference($organizationId, $reference)) {
+        if ($this->queryService->isDuplicateReferenceAny($organizationId, $reference)) {
             throw new DuplicateReferenceException(
                 "A posted journal entry with reference '{$reference}' already exists in this organization."
             );
@@ -211,32 +265,50 @@ class LedgerService
 
     private function persistEntry(string $organizationId, JournalEntryData $entry, bool $isPosted): JournalEntry
     {
-        return DB::transaction(function () use ($organizationId, $entry, $isPosted) {
-            $journalEntry = JournalEntry::create([
-                'organization_id' => $organizationId,
-                'date' => $entry->date,
-                'reference' => $entry->reference,
-                'description' => $entry->description,
-                'is_posted' => $isPosted,
-            ]);
-
-            foreach ($entry->lines as $line) {
-                TransactionLine::create([
-                    'journal_entry_id' => $journalEntry->id,
-                    'account_id' => $line->accountId,
-                    'debit' => $line->debit,
-                    'credit' => $line->credit,
-                    'description' => $line->description,
+        try {
+            return DB::transaction(function () use ($organizationId, $entry, $isPosted) {
+                $journalEntry = JournalEntry::create([
+                    'organization_id' => $organizationId,
+                    'date' => $entry->date,
+                    'reference' => $entry->reference,
+                    'description' => $entry->description,
+                    'is_posted' => $isPosted,
+                    'type' => $entry->type,
                 ]);
+
+                foreach ($entry->lines as $line) {
+                    TransactionLine::create([
+                        'journal_entry_id' => $journalEntry->id,
+                        'account_id' => $line->accountId,
+                        'debit' => $line->debit,
+                        'credit' => $line->credit,
+                        'description' => $line->description,
+                    ]);
+                }
+
+                if ($isPosted) {
+                    $this->flushCache($organizationId);
+                }
+
+                return $journalEntry->load('lines.account');
+            });
+        } catch (QueryException $exception) {
+            if ($this->isJournalReferenceConflict($exception)) {
+                throw new DuplicateReferenceException(
+                    "A journal entry with reference '{$entry->reference}' already exists in this organization.",
+                    0,
+                    $exception,
+                );
             }
 
-            // Flush cached balances so reports reflect the new entry immediately
-            if ($isPosted) {
-                $this->flushCache($organizationId);
-            }
+            throw $exception;
+        }
+    }
 
-            return $journalEntry->load('lines.account');
-        });
+    private function isJournalReferenceConflict(QueryException $exception): bool
+    {
+        return ($exception->errorInfo[0] ?? null) === '23505'
+            && str_contains($exception->getMessage(), 'journal_entries_organization_reference_unique');
     }
 
     /**

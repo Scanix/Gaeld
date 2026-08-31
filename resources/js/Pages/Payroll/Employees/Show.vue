@@ -65,16 +65,8 @@ const salaryColumns = computed(() => [
               <p class="font-medium">{{ employee.email ?? '—' }}</p>
             </div>
             <div>
-              <p class="text-[hsl(var(--muted-foreground))]">{{ t('phone') }}</p>
-              <p class="font-medium">{{ employee.phone ?? '—' }}</p>
-            </div>
-            <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('ahv_number') }}</p>
-              <p class="font-medium font-mono tracking-wider">{{ employee.ahv_number }}</p>
-            </div>
-            <div>
-              <p class="text-[hsl(var(--muted-foreground))]">{{ t('position') }}</p>
-              <p class="font-medium">{{ employee.position ?? '—' }}</p>
+              <p class="font-medium font-mono tracking-wider">{{ employee.ahv_number ?? '—' }}</p>
             </div>
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('start_date') }}</p>

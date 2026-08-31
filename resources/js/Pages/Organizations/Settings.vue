@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -22,6 +22,8 @@ const props = defineProps({
   organization: Object,
   hasLogo: Boolean,
   expenseCategories: { type: Array, default: () => [] },
+  catalogItems: { type: Array, default: () => [] },
+  vatRates: { type: Array, default: () => [] },
   modules: { type: Array, default: () => [] },
   modulePresets: { type: Object, default: () => ({}) },
 })
@@ -38,6 +40,32 @@ const tabs = [
   { key: 'expenses', label: 'settings_expenses' },
   { key: 'modules', label: 'settings_modules' },
 ]
+const tabButtons = ref([])
+
+function setTabRef(element, index) {
+  if (element) tabButtons.value[index] = element
+}
+
+function focusTab(index) {
+  activeTab.value = tabs[index].key
+  nextTick(() => tabButtons.value[index]?.focus())
+}
+
+function handleTabKey(event, index) {
+  if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+    event.preventDefault()
+    focusTab((index + 1) % tabs.length)
+  } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+    event.preventDefault()
+    focusTab((index - 1 + tabs.length) % tabs.length)
+  } else if (event.key === 'Home') {
+    event.preventDefault()
+    focusTab(0)
+  } else if (event.key === 'End') {
+    event.preventDefault()
+    focusTab(tabs.length - 1)
+  }
+}
 
 // --- General form ---
 const initialName = props.organization.name || ''
@@ -178,6 +206,44 @@ function removeCategory() {
   })
 }
 
+// --- Invoice catalog items ---
+const newCatalogItem = ref({ name: '', default_unit_price: '', default_vat_rate_id: '' })
+const addingCatalogItem = ref(false)
+const catalogItemToDelete = ref(null)
+
+function vatRateLabel(vatRateId) {
+  const rate = props.vatRates.find(v => String(v.id) === String(vatRateId))
+  return rate ? `${rate.name} (${rate.rate}%)` : ''
+}
+
+function addCatalogItem() {
+  if (!newCatalogItem.value.name.trim()) return
+  addingCatalogItem.value = true
+  router.post('/invoices/catalog-items', {
+    name: newCatalogItem.value.name.trim(),
+    default_unit_price: newCatalogItem.value.default_unit_price || null,
+    default_vat_rate_id: newCatalogItem.value.default_vat_rate_id || null,
+  }, {
+    preserveScroll: true,
+    onFinish: () => {
+      newCatalogItem.value = { name: '', default_unit_price: '', default_vat_rate_id: '' }
+      addingCatalogItem.value = false
+    },
+  })
+}
+
+function confirmRemoveCatalogItem(item) {
+  catalogItemToDelete.value = item
+}
+
+function removeCatalogItem() {
+  if (!catalogItemToDelete.value) return
+  router.delete(`/invoices/catalog-items/${catalogItemToDelete.value.id}`, {
+    preserveScroll: true,
+    onFinish: () => { catalogItemToDelete.value = null },
+  })
+}
+
 const localeOptions = [
   { value: 'en', label: t('locale_en') },
   { value: 'fr', label: t('locale_fr') },
@@ -206,9 +272,10 @@ const countryList = countryOptions(t)
 
 // 12 fiscal year start choices, formatted MM-DD as stored on the org.
 const fiscalYearStartOptions = (() => {
+  const uiLocale = page.props.locale || 'en'
   const result = []
   for (let i = 0; i < 12; i++) {
-    const monthName = new Date(2000, i, 1).toLocaleString(undefined, { month: 'long' })
+    const monthName = new Date(2000, i, 1).toLocaleString(uiLocale, { month: 'long' })
     result.push({ value: `${String(i + 1).padStart(2, '0')}-01`, label: `1 ${monthName}` })
   }
   return result
@@ -225,22 +292,24 @@ const businessTypeOptions = [
   <AppLayout :title="t('organization_settings')" help-page="user-management">
     <div class="max-w-3xl space-y-6">
       <!-- Tabs -->
-      <div role="tablist" aria-label="Settings" class="flex gap-1 rounded-lg bg-[hsl(var(--muted))] p-1">
+      <div role="tablist" aria-label="Settings" class="grid grid-cols-2 gap-1 rounded-lg bg-[hsl(var(--muted))] p-1 sm:flex">
         <button
-          v-for="tab in tabs"
+          v-for="(tab, index) in tabs"
           :key="tab.key"
           role="tab"
           :id="`tab-${tab.key}`"
           :aria-selected="activeTab === tab.key"
           :aria-controls="`tabpanel-${tab.key}`"
           :tabindex="activeTab === tab.key ? 0 : -1"
+          :ref="element => setTabRef(element, index)"
           :class="[
-            'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+            'min-w-0 rounded-md px-3 py-2 text-sm font-medium transition-colors sm:flex-1',
             activeTab === tab.key
               ? 'bg-[hsl(var(--background))] text-[hsl(var(--foreground))] shadow-sm'
               : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
           ]"
           @click="activeTab = tab.key"
+          @keydown="handleTabKey($event, index)"
         >
           {{ t(tab.label) }}
         </button>
@@ -479,6 +548,66 @@ const businessTypeOptions = [
             </form>
           </CardContent>
         </Card>
+
+        <!-- Catalog items -->
+        <Card class="mt-6">
+          <CardHeader>
+            <CardTitle>{{ t('settings_catalog_items_title') }}</CardTitle>
+            <CardDescription>{{ t('settings_catalog_items_desc') }}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul class="divide-y divide-[hsl(var(--border))]">
+              <li
+                v-for="item in catalogItems"
+                :key="item.id"
+                class="flex items-center justify-between gap-3 py-2"
+              >
+                <div class="min-w-0">
+                  <p class="truncate text-sm">{{ item.name }}</p>
+                  <p class="truncate text-xs text-[hsl(var(--muted-foreground))]">
+                    <span v-if="item.default_unit_price">{{ item.default_unit_price }}</span>
+                    <span v-if="item.default_unit_price && vatRateLabel(item.default_vat_rate_id)"> · </span>
+                    <span v-if="vatRateLabel(item.default_vat_rate_id)">{{ vatRateLabel(item.default_vat_rate_id) }}</span>
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  :aria-label="t('delete') + ' ' + item.name"
+                  class="h-8 w-8 shrink-0 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))]"
+                  @click="confirmRemoveCatalogItem(item)"
+                >
+                  <Trash2 class="h-4 w-4" />
+                </Button>
+              </li>
+            </ul>
+            <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-4">
+              <FormInput
+                id="new_catalog_item_name"
+                v-model="newCatalogItem.name"
+                :placeholder="t('settings_catalog_item_name_placeholder')"
+                class="sm:col-span-2"
+              />
+              <FormInput
+                id="new_catalog_item_price"
+                v-model="newCatalogItem.default_unit_price"
+                type="number"
+                :placeholder="t('unit_price')"
+              />
+              <FormSelect
+                id="new_catalog_item_vat"
+                v-model="newCatalogItem.default_vat_rate_id"
+                :options="[{ value: '', label: t('no_vat') }, ...vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` }))]"
+              />
+            </div>
+            <div class="mt-2 flex justify-end">
+              <Button :disabled="addingCatalogItem || !newCatalogItem.name.trim()" @click="addCatalogItem">
+                <Plus class="mr-1 h-4 w-4" />
+                {{ t('add') }}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <!-- Communications Tab -->
@@ -624,6 +753,15 @@ const businessTypeOptions = [
       :confirm-label="t('delete')"
       @confirm="removeCategory"
       @cancel="categoryToDelete = null"
+    />
+
+    <ConfirmDialog
+      :open="!!catalogItemToDelete"
+      :title="t('delete')"
+      :message="t('are_you_sure')"
+      :confirm-label="t('delete')"
+      @confirm="removeCatalogItem"
+      @cancel="catalogItemToDelete = null"
     />
   </AppLayout>
 </template>

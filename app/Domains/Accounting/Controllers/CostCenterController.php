@@ -8,26 +8,24 @@ use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Requests\StoreCostCenterRequest;
 use App\Domains\Accounting\Requests\UpdateCostCenterRequest;
 use App\Domains\Accounting\Support\AccountDisplayName;
-use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Reporting\Services\ExportReportService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class CostCenterController extends Controller
 {
-    public function index(CurrentOrganization $currentOrg): Response
+    public function index(): Response
     {
         $this->authorize('viewAny', Account::class);
 
         $centers = CostCenter::query()
-            ->with(['children' => fn ($query) => $query
-                ->where('organization_id', $currentOrg->id())
-                ->orderBy('code')])
-            ->where('organization_id', $currentOrg->id())
+            ->with(['children' => fn ($query) => $query->orderBy('code')])
             ->whereNull('parent_id')
             ->orderBy('code')
             ->get();
@@ -55,13 +53,9 @@ class CostCenterController extends Controller
         return back()->with('success', __('app.saved'));
     }
 
-    public function update(UpdateCostCenterRequest $request, CostCenter $costCenter, CurrentOrganization $currentOrg): RedirectResponse
+    public function update(UpdateCostCenterRequest $request, CostCenter $costCenter): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermissionTo(Permission::AccountingEdit), 403);
-
-        if ($costCenter->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        $this->authorize('update', $costCenter);
 
         $validated = $request->validated();
 
@@ -80,13 +74,9 @@ class CostCenterController extends Controller
         return back()->with('success', __('app.saved'));
     }
 
-    public function destroy(Request $request, CostCenter $costCenter, CurrentOrganization $currentOrg): RedirectResponse
+    public function destroy(CostCenter $costCenter): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermissionTo(Permission::AccountingDelete), 403);
-
-        if ($costCenter->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
+        $this->authorize('delete', $costCenter);
 
         if ($costCenter->children()->exists()) {
             return back()->withErrors(['cost_center' => __('app.cannot_delete_with_children')]);
@@ -113,16 +103,84 @@ class CostCenterController extends Controller
         $to = $request->input('to', now()->toDateString());
         $costCenterId = $request->input('cost_center_id');
 
+        $report = $this->buildAnalyticalReport($currentOrg->id(), $from, $to, $costCenterId);
+
+        $costCenters = CostCenter::query()
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get(['id', 'code', 'name']);
+
+        return Inertia::render('Reports/AnalyticalReport', [
+            'report' => $report,
+            'costCenters' => $costCenters,
+            'filters' => [
+                'from' => $from,
+                'to' => $to,
+                'cost_center_id' => $costCenterId,
+            ],
+        ]);
+    }
+
+    public function exportAnalyticalReport(
+        Request $request,
+        CurrentOrganization $currentOrg,
+        ExportReportService $exporter,
+        string $format,
+    ): HttpResponse {
+        $this->authorize('viewAny', Account::class);
+
+        $from = $request->input('from', now()->startOfYear()->toDateString());
+        $to = $request->input('to', now()->toDateString());
+        $costCenterId = $request->input('cost_center_id');
+
+        $report = $this->buildAnalyticalReport($currentOrg->id(), $from, $to, $costCenterId);
+        $org = $currentOrg->get();
+
+        return $exporter->export(
+            $format,
+            csvBuilder: function () use ($exporter, $report, $from, $to) {
+                $headers = ['Code', 'Account', 'Amount'];
+                $rows = [];
+                $rows[] = ['', '--- Revenue ---', ''];
+                foreach ($report['revenue'] as $account) {
+                    $rows[] = [$account['code'], $account['name'], $account['balance']];
+                }
+                $rows[] = ['', 'Total Revenue', $report['total_revenue']];
+                $rows[] = ['', '--- Expenses ---', ''];
+                foreach ($report['expenses'] as $account) {
+                    $rows[] = [$account['code'], $account['name'], $account['balance']];
+                }
+                $rows[] = ['', 'Total Expenses', $report['total_expenses']];
+                $rows[] = ['', 'Net Profit', $report['net_profit']];
+
+                return $exporter->csv()->export($headers, $rows, "analytical-report-{$from}-{$to}.csv");
+            },
+            pdfBuilder: fn () => $exporter->pdf()->download('exports.analytical-report', [
+                'organization' => $org,
+                'period' => ['from' => $from, 'to' => $to],
+                'revenue' => $report['revenue'],
+                'expenses' => $report['expenses'],
+                'totalRevenue' => $report['total_revenue'],
+                'totalExpenses' => $report['total_expenses'],
+                'netProfit' => $report['net_profit'],
+            ], "analytical-report-{$from}-{$to}.pdf"),
+        );
+    }
+
+    /**
+     * @return array{revenue: array<int, array{code: string, name: string, balance: float}>, expenses: array<int, array{code: string, name: string, balance: float}>, total_revenue: float, total_expenses: float, net_profit: float}
+     */
+    private function buildAnalyticalReport(string $organizationId, string $from, string $to, mixed $costCenterId): array
+    {
         $baseQuery = TransactionLine::query()
             ->join('accounts', 'accounts.id', '=', 'transaction_lines.account_id')
             ->join('journal_entries', 'journal_entries.id', '=', 'transaction_lines.journal_entry_id')
-            ->where('journal_entries.organization_id', $currentOrg->id())
+            ->where('journal_entries.organization_id', $organizationId)
             ->where('journal_entries.is_posted', true)
             ->whereBetween('journal_entries.date', [$from, $to]);
 
         if ($costCenterId) {
             $centerExists = CostCenter::query()
-                ->where('organization_id', $currentOrg->id())
                 ->whereKey((int) $costCenterId)
                 ->exists();
             abort_unless($centerExists, 404);
@@ -168,26 +226,12 @@ class CostCenterController extends Controller
             }
         }
 
-        $costCenters = CostCenter::query()
-            ->where('organization_id', $currentOrg->id())
-            ->where('is_active', true)
-            ->orderBy('code')
-            ->get(['id', 'code', 'name']);
-
-        return Inertia::render('Reports/AnalyticalReport', [
-            'report' => [
-                'revenue' => $revenue,
-                'expenses' => $expenses,
-                'total_revenue' => $totalRevenue,
-                'total_expenses' => $totalExpenses,
-                'net_profit' => $totalRevenue - $totalExpenses,
-            ],
-            'costCenters' => $costCenters,
-            'filters' => [
-                'from' => $from,
-                'to' => $to,
-                'cost_center_id' => $costCenterId,
-            ],
-        ]);
+        return [
+            'revenue' => $revenue,
+            'expenses' => $expenses,
+            'total_revenue' => $totalRevenue,
+            'total_expenses' => $totalExpenses,
+            'net_profit' => $totalRevenue - $totalExpenses,
+        ];
     }
 }

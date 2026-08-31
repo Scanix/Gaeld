@@ -19,6 +19,7 @@ import ToastContainer from '@/Components/ToastContainer.vue'
 import ErrorBoundary from '@/Components/ErrorBoundary.vue'
 import OfflineBanner from '@/Components/OfflineBanner.vue'
 import Banner from '@/Components/UI/Banner.vue'
+import SupportSessionBanner from '@/Components/SupportSessionBanner.vue'
 import { useHelp } from '@/lib/useHelp'
 import { useToast } from '@/lib/useToast'
 
@@ -62,8 +63,8 @@ const showGracePeriodBanner = computed(() => {
   return new Date(subscription.value.ends_at) > new Date()
 })
 const showPausedBanner = computed(() => subscription.value?.status === 'paused')
-const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
 const systemMessage = computed(() => page.props.systemMessage ?? null)
+const supportSession = computed(() => page.props.supportSession ?? null)
 </script>
 
 <template>
@@ -97,14 +98,13 @@ const systemMessage = computed(() => page.props.systemMessage ?? null)
       <!-- Offline banner -->
       <OfflineBanner />
 
-      <!-- SaaS Admin Banner -->
-      <Banner v-if="isSaasAdmin" color="red" role="alert">
-        <span class="inline-flex items-center gap-1.5">
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-          {{ tl('saas_admin_warning') }}
-        </span>
-        <Link href="/saas-admin" class="underline underline-offset-2 hover:text-red-100 whitespace-nowrap">{{ tl('admin_dashboard') }}</Link>
-      </Banner>
+      <SupportSessionBanner
+        v-if="supportSession"
+        :session="supportSession"
+        :stop-url="supportSession.stop_url"
+        :label="supportSession.banner_label"
+        :stop-label="supportSession.stop_label"
+      />
 
       <!-- Early Beta Banner -->
       <Banner v-if="!betaDismissed" color="amber" :dismissable="true" @dismiss="dismissBeta">

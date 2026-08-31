@@ -10,13 +10,26 @@ const props = defineProps({
   open: Boolean,
   show: Boolean,
   title: String,
+  size: { type: String, default: 'md' }, // 'sm', 'md', 'lg', 'xl', '2xl'
 })
 
 const isOpen = computed(() => props.open || props.show)
 
+const maxWidthClass = computed(() => {
+  const sizes = {
+    sm: 'max-w-sm',
+    md: 'max-w-lg',
+    lg: 'max-w-2xl',
+    xl: 'max-w-4xl',
+    '2xl': 'max-w-6xl',
+  }
+  return sizes[props.size] || sizes.md
+})
+
 const emit = defineEmits(['close'])
 
 const dialogRef = ref(null)
+const previouslyFocusedElement = ref(null)
 
 const FOCUSABLE_SELECTORS = [
   'a[href]',
@@ -51,6 +64,7 @@ function onKeydown(e) {
 
 watch(isOpen, (val) => {
   if (val) {
+    previouslyFocusedElement.value = document.activeElement
     document.addEventListener('keydown', onKeydown)
     document.body.style.overflow = 'hidden'
     nextTick(() => {
@@ -64,6 +78,7 @@ watch(isOpen, (val) => {
   } else {
     document.removeEventListener('keydown', onKeydown)
     document.body.style.overflow = ''
+    nextTick(() => previouslyFocusedElement.value?.focus())
   }
 })
 
@@ -84,7 +99,7 @@ onBeforeUnmount(() => {
           aria-modal="true"
           aria-labelledby="modal-title"
           tabindex="-1"
-          class="relative z-50 mx-4 flex max-h-[90dvh] w-full max-w-lg flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] shadow-lg outline-none sm:mx-auto"
+          :class="['relative z-50 mx-4 flex max-h-[90dvh] w-full flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] shadow-lg outline-none sm:mx-auto', maxWidthClass]"
         >
           <div class="flex shrink-0 items-center justify-between border-b border-[hsl(var(--border))] px-4 py-4 sm:px-6">
             <h2 id="modal-title" class="text-lg font-semibold">{{ title }}</h2>

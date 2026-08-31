@@ -2,27 +2,25 @@
 
 namespace App\Domains\Accounting\Controllers;
 
+use App\Domains\Accounting\Enums\TaxDeclarationStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\TaxDeclaration;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Requests\StoreTaxDeclarationRequest;
-use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TaxDeclarationController extends Controller
 {
-    public function index(CurrentOrganization $currentOrg): Response
+    public function index(): Response
     {
         $this->authorize('viewAny', Account::class);
 
         $declarations = TaxDeclaration::query()
-            ->where('organization_id', $currentOrg->id())
             ->orderByDesc('fiscal_year')
             ->orderBy('canton')
             ->get();
@@ -46,12 +44,12 @@ class TaxDeclarationController extends Controller
                 'canton' => $validated['canton'],
             ],
             [
-                'status' => 'draft',
+                'status' => TaxDeclarationStatus::Draft,
                 'data' => $this->buildSummaryData($currentOrg->id(), $validated['fiscal_year']),
             ],
         );
 
-        if ($declaration->status === 'draft' && empty($declaration->data)) {
+        if ($declaration->status === TaxDeclarationStatus::Draft && empty($declaration->data)) {
             $declaration->update([
                 'data' => $this->buildSummaryData($currentOrg->id(), $validated['fiscal_year']),
             ]);
@@ -63,13 +61,9 @@ class TaxDeclarationController extends Controller
 
     public function show(TaxDeclaration $taxDeclaration, CurrentOrganization $currentOrg): Response
     {
-        $this->authorize('viewAny', Account::class);
+        $this->authorize('view', $taxDeclaration);
 
-        if ($taxDeclaration->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
-
-        if ($taxDeclaration->status === 'draft') {
+        if ($taxDeclaration->status === TaxDeclarationStatus::Draft) {
             $taxDeclaration->update([
                 'data' => $this->buildSummaryData($currentOrg->id(), $taxDeclaration->fiscal_year),
             ]);
@@ -81,17 +75,13 @@ class TaxDeclarationController extends Controller
         ]);
     }
 
-    public function finalize(Request $request, TaxDeclaration $taxDeclaration, CurrentOrganization $currentOrg): RedirectResponse
+    public function finalize(TaxDeclaration $taxDeclaration, CurrentOrganization $currentOrg): RedirectResponse
     {
-        abort_unless($request->user()?->hasPermissionTo(Permission::AccountingEdit), 403);
+        $this->authorize('update', $taxDeclaration);
 
-        if ($taxDeclaration->organization_id !== $currentOrg->id()) {
-            abort(404);
-        }
-
-        if ($taxDeclaration->status === 'draft') {
+        if ($taxDeclaration->status === TaxDeclarationStatus::Draft) {
             $taxDeclaration->update([
-                'status' => 'finalized',
+                'status' => TaxDeclarationStatus::Finalized,
                 'finalized_at' => now(),
                 'data' => $this->buildSummaryData($currentOrg->id(), $taxDeclaration->fiscal_year),
             ]);

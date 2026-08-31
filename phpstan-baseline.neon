@@ -187,9 +187,15 @@ parameters:
 			path: app/Domains/Contacts/Queries/ContactQuery.php
 
 		-
+			message: '#^Method App\\Domains\\Contacts\\Queries\\ContactQuery\:\:trashed\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Contacts\\Models\\Contact\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/Contacts/Queries/ContactQuery.php
+
+		-
 			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Contacts\\Models\\Contact\> given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 2
 			path: app/Domains/Contacts/Queries/ContactQuery.php
 
 		-
@@ -289,12 +295,6 @@ parameters:
 			path: app/Domains/Expenses/Search/ExpenseSearchProvider.php
 
 		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|false given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Expenses/Services/TesseractOcrService.php
-
-		-
 			message: '#^Unsafe usage of new static\(\)\.$#'
 			identifier: new.static
 			count: 1
@@ -324,11 +324,6 @@ parameters:
 			count: 1
 			path: app/Domains/Invoicing/Queries/InvoiceQuery.php
 
-		-
-			message: '#^Access to an undefined property \(object\|string\)\:\:\$organization_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Invoicing/Requests/UpdateInvoiceRequest.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
@@ -625,38 +620,14 @@ parameters:
 			path: app/Domains/Users/Services/DataExportService.php
 
 		-
-			message: '#^Method App\\Http\\Middleware\\Api\\TokenPermissionMap\:\:get\(\) should return array\<string, string\> but returns array\<string, array\<string, App\\Domains\\Organizations\\Enums\\Permission\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Http/Middleware/Api/TokenPermissionMap.php
-
-		-
-			message: '#^Offset string on string on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
 			message: '#^Parameter \#1 \$tokenType of method App\\Http\\Middleware\\EnsureApiOrganization\:\:registerTokenAbilityGate\(\) expects App\\Domains\\Api\\Enums\\TokenType, string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Http/Middleware/EnsureApiOrganization.php
 
 		-
-			message: '#^Strict comparison using \=\=\= between null and null will always evaluate to true\.$#'
-			identifier: identical.alwaysTrue
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
 			message: '#^Strict comparison using \=\=\= between string and App\\Domains\\Api\\Enums\\TokenType\:\:Organization will always evaluate to false\.$#'
 			identifier: identical.alwaysFalse
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
 			count: 1
 			path: app/Http/Middleware/EnsureApiOrganization.php
 
@@ -733,12 +704,6 @@ parameters:
 			path: app/Support/Policies/BasePolicy.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\ConnectionInterface\:\:getDriverName\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Support/QueryBuilder.php
-
-		-
 			message: '#^Call to an undefined static method Illuminate\\Database\\Eloquent\\Model\:\:search\(\)\.$#'
 			identifier: staticMethod.notFound
 			count: 1
@@ -768,8 +733,3 @@ parameters:
 			count: 1
 			path: app/Support/QueryBuilder.php
 
-		-
-			message: '#^Method App\\Support\\Services\\FileUploadService\:\:store\(\) should return string but returns string\|false\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Support/Services/FileUploadService.php

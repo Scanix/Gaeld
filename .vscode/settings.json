@@ -1,0 +1,6 @@
+{
+  "phpunit.command": "${workspaceFolder}/vendor/bin/sail artisan test --compact ${phpunitargs}",
+  "phpunit.saveBeforeTest": true,
+  "phpunit.output.preset": "collision",
+  "phpunit.clearDebugOutputOnRun": true
+}

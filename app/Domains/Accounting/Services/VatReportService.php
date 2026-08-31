@@ -42,6 +42,7 @@ class VatReportService
         $orgTag = "org:{$orgId}:reports";
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($orgId, $fromDate, $toDate) {
+
             // Load all VatEntries for this org + period via the JournalEntry relationship
             $entries = VatEntry::with('vatRate')
                 ->whereHas('journalEntry', function ($q) use ($orgId, $fromDate, $toDate) {
@@ -136,5 +137,19 @@ class VatReportService
                 'vat_payable' => $netVat,              // chiffre 510 (same as net for standard method)
             ];
         });
+    }
+
+    /**
+     * Generate a fresh (non-cached) VAT report by flushing the specific cache entry first.
+     *
+     * Use this when accurate real-time data is required (e.g. before posting a settlement).
+     *
+     * @return array<string, mixed>
+     */
+    public function generateFresh(string $orgId, string $fromDate, string $toDate): array
+    {
+        Cache::tags(["org:{$orgId}:reports"])->forget("vat_report:{$orgId}:{$fromDate}:{$toDate}");
+
+        return $this->generate($orgId, $fromDate, $toDate);
     }
 }

@@ -5,12 +5,11 @@ namespace Tests\Feature\Invoicing;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
-use App\Domains\Invoicing\Actions\SendInvoiceAction;
-use App\Domains\Invoicing\Actions\SendInvoiceReminderAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Services\InvoiceMailerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -72,8 +71,8 @@ class QrInvoiceValidationFlashTest extends TestCase
             ->for($customer, 'customer')
             ->create(['status' => InvoiceStatus::Sent]);
 
-        $this->mock(SendInvoiceAction::class, function (MockInterface $mock): void {
-            $mock->shouldReceive('execute')
+        $this->mock(InvoiceMailerService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('sendInvoice')
                 ->once()
                 ->andThrow(new QrBillValidationException(['Creditor account is invalid.']));
         });
@@ -100,8 +99,8 @@ class QrInvoiceValidationFlashTest extends TestCase
             ->for($customer, 'customer')
             ->create(['status' => InvoiceStatus::Sent]);
 
-        $this->mock(SendInvoiceReminderAction::class, function (MockInterface $mock): void {
-            $mock->shouldReceive('execute')
+        $this->mock(InvoiceMailerService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('sendReminder')
                 ->once()
                 ->andThrow(new InvalidInvoiceStateException(''));
         });

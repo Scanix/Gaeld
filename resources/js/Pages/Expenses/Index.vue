@@ -158,7 +158,7 @@ const statusFilters = computed(() => [
             <Pencil class="h-4 w-4" />
           </Button>
           <Button
-            v-if="row.status === 'pending'"
+            v-if="row.status === 'pending' || row.status === 'approved'"
             variant="ghost"
             size="icon"
             :aria-label="t('delete')"

@@ -23,7 +23,7 @@ enum InvoiceStatus: string
     {
         return match ($this) {
             self::Draft => [self::Sent, self::Cancelled],
-            self::Sent => [self::Paid, self::Overdue, self::Cancelled],
+            self::Sent => [self::Paid, self::Overdue, self::Cancelled, self::Draft],
             self::Overdue => [self::Paid, self::Cancelled],
             self::Paid, self::Cancelled => [],
         };

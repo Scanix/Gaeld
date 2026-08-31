@@ -8,6 +8,7 @@ use App\Domains\Users\Models\User;
 use App\Support\FeatureFlag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
@@ -24,6 +25,7 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
+        $this->denyPrivilegedSupportRequests($request);
         $user = $request->user();
 
         if ($user && $user->locale) {
@@ -51,8 +53,45 @@ class HandleInertiaRequests extends Middleware
             'systemMessage' => FeatureFlag::isSaas()
                 ? Cache::get('saas:system_message')
                 : null,
+            'supportSession' => $this->resolveSupportSession($request),
             'hcaptchaSiteKey' => (string) config('services.hcaptcha.site_key', ''),
         ]);
+    }
+
+    private function denyPrivilegedSupportRequests(Request $request): void
+    {
+        $supportSession = $request->session()->get('saas_support_session');
+        if (! is_array($supportSession) || $request->routeIs('saas-admin.support.stop')) {
+            return;
+        }
+
+        if ($request->is('saas-admin') || $request->is('saas-admin/*') || $request->is('security/*') || $request->is('billing*') || $request->is('profile*') || $request->is('two-factor-challenge*')) {
+            abort(403, trans('app.saas_admin_support_privileged_denied'));
+        }
+    }
+
+    /** @return array<string, mixed>|null */
+    private function resolveSupportSession(Request $request): ?array
+    {
+        if (! FeatureFlag::isSaas() || ! app()->bound('Plugins\\GaeldEE\\Domains\\SaasAdmin\\Services\\SupportSessionService')) {
+            return null;
+        }
+
+        $session = app('Plugins\\GaeldEE\\Domains\\SaasAdmin\\Services\\SupportSessionService')->current($request);
+        if ($session?->expiresAt->isPast()) {
+            app('Plugins\\GaeldEE\\Domains\\SaasAdmin\\Services\\SupportSessionService')->expire($request);
+
+            return null;
+        }
+
+        if ($session && ! $request->routeIs('saas-admin.support.stop')) {
+            $target = User::query()->whereKey($session->targetUserId)->first();
+            if ($target) {
+                Auth::setUser($target);
+            }
+        }
+
+        return $session?->toArray();
     }
 
     /**
@@ -121,9 +160,6 @@ class HandleInertiaRequests extends Middleware
                     'name' => $org->name,
                     'role' => $org->pivot->role,
                 ]),
-            'is_saas_admin' => fn () => FeatureFlag::isSaas()
-                && config('ee.saas_admin_email')
-                && $user->email === config('ee.saas_admin_email'),
             'ocr_quota' => fn () => $this->resolveOcrQuota($user),
             'invoice_quota' => fn () => $this->resolveInvoiceMonthlyQuota($user),
             'notifications_unread_count' => fn () => $user->unreadNotifications()->count(),
@@ -150,10 +186,10 @@ class HandleInertiaRequests extends Middleware
         }
 
         return [
-            'status' => $sub->status,
-            'plan_slug' => $sub->plan?->slug,
-            'trial_ends_at' => $sub->trial_ends_at?->toDateString(),
-            'ends_at' => $sub->ends_at?->toDateString(),
+            'status' => $sub->getStatus(),
+            'plan_slug' => $sub->getPlan()?->slug,
+            'trial_ends_at' => $sub->getTrialEndsAt()?->format('Y-m-d'),
+            'ends_at' => $sub->getEndsAt()?->format('Y-m-d'),
         ];
     }
 
@@ -174,7 +210,7 @@ class HandleInertiaRequests extends Middleware
 
         $limit = config('services.ocr.daily_limit', 3);
         if (FeatureFlag::isSaas()) {
-            $plan = $org->activeSubscription?->plan;
+            $plan = $org->activeSubscription?->getPlan();
             if ($plan && isset($plan->max_ocr_scans_per_day)) {
                 $limit = (int) $plan->max_ocr_scans_per_day;
             }
@@ -200,7 +236,7 @@ class HandleInertiaRequests extends Middleware
 
         $limit = -1;
         if (FeatureFlag::isSaas()) {
-            $plan = $org->activeSubscription?->plan;
+            $plan = $org->activeSubscription?->getPlan();
             if ($plan && isset($plan->max_invoices_per_month)) {
                 $limit = (int) $plan->max_invoices_per_month;
             }

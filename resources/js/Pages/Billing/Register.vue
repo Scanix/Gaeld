@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
-import { CheckCircle2, Zap } from 'lucide-vue-next'
+import { CheckCircle2, Zap, User, Building2, Calculator, Sparkles, ArrowRightLeft } from 'lucide-vue-next'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import Button from '@/Components/UI/Button.vue'
@@ -36,8 +36,21 @@ const form = useForm({
   plan_id: selectedPlan,
   accepted_privacy: false,
   chart_of_accounts: 'swiss_sme',
+  business_type: 'sme',
+  setup_mode: 'fresh',
   'h-captcha-response': '',
 })
+
+const businessTypes = [
+  { value: 'freelancer', icon: User, label: () => t('business_type_freelancer'), desc: () => t('business_type_freelancer_desc') },
+  { value: 'sme', icon: Building2, label: () => t('business_type_sme'), desc: () => t('business_type_sme_desc') },
+  { value: 'fiduciary', icon: Calculator, label: () => t('business_type_fiduciary'), desc: () => t('business_type_fiduciary_desc') },
+]
+
+const setupModes = [
+  { value: 'fresh', icon: Sparkles, label: () => t('setup_mode_fresh'), desc: () => t('setup_mode_fresh_desc') },
+  { value: 'migrating', icon: ArrowRightLeft, label: () => t('setup_mode_migrating'), desc: () => t('setup_mode_migrating_desc') },
+]
 
 function submit() {
   form.plan_id = selectedPlan.value
@@ -120,41 +133,94 @@ function submit() {
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('full_name') }}</label>
+              <label for="signup-name" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('full_name') }}</label>
               <input
+                id="signup-name"
                 v-model="form.name"
                 type="text"
+                autocomplete="name"
                 required
+                :aria-describedby="form.errors.name ? 'signup-name-error' : undefined"
+                :aria-invalid="form.errors.name ? 'true' : undefined"
                 class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
-              <p v-if="form.errors.name" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.name }}</p>
+              <p v-if="form.errors.name" id="signup-name-error" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.name }}</p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('company_name') }}</label>
+              <label for="signup-org-name" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('company_name') }}</label>
               <input
+                id="signup-org-name"
                 v-model="form.org_name"
                 type="text"
+                autocomplete="organization"
                 required
+                :aria-describedby="form.errors.org_name ? 'signup-org-name-error' : undefined"
+                :aria-invalid="form.errors.org_name ? 'true' : undefined"
                 class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
-              <p v-if="form.errors.org_name" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.org_name }}</p>
+              <p v-if="form.errors.org_name" id="signup-org-name-error" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.org_name }}</p>
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('email') }}</label>
+            <label for="signup-email" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('email') }}</label>
             <input
+              id="signup-email"
               v-model="form.email"
               type="email"
+              autocomplete="email"
               required
+              :aria-describedby="form.errors.email ? 'signup-email-error' : undefined"
+              :aria-invalid="form.errors.email ? 'true' : undefined"
               class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
             />
-            <p v-if="form.errors.email" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.email }}</p>
+            <p v-if="form.errors.email" id="signup-email-error" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.email }}</p>
+          </div>
+
+          <!-- Business type -->
+          <div>
+            <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-2">{{ t('business_type') }}</label>
+            <div class="grid grid-cols-3 gap-3">
+              <button
+                v-for="bt in businessTypes"
+                :key="bt.value"
+                type="button"
+                class="flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]"
+                :class="form.business_type === bt.value ? 'border-[hsl(var(--primary))] bg-[hsl(var(--accent))]' : 'border-[hsl(var(--border))]'"
+                @click="form.business_type = bt.value"
+              >
+                <component :is="bt.icon" class="h-6 w-6" :class="form.business_type === bt.value ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]'" />
+                <span class="text-xs font-semibold">{{ bt.label() }}</span>
+                <span class="text-xs text-[hsl(var(--muted-foreground))] hidden sm:block">{{ bt.desc() }}</span>
+              </button>
+            </div>
+            <p v-if="form.errors.business_type" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.business_type }}</p>
+          </div>
+
+          <!-- Setup mode -->
+          <div>
+            <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-2">{{ t('step_setup_mode') }}</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                v-for="mode in setupModes"
+                :key="mode.value"
+                type="button"
+                class="flex flex-col items-start gap-2 rounded-xl border-2 p-4 text-left transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]"
+                :class="form.setup_mode === mode.value ? 'border-[hsl(var(--primary))] bg-[hsl(var(--accent))]' : 'border-[hsl(var(--border))]'"
+                @click="form.setup_mode = mode.value"
+              >
+                <component :is="mode.icon" class="h-5 w-5" :class="form.setup_mode === mode.value ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]'" />
+                <span class="text-xs font-semibold">{{ mode.label() }}</span>
+                <span class="text-xs text-[hsl(var(--muted-foreground))]">{{ mode.desc() }}</span>
+              </button>
+            </div>
+            <p v-if="form.errors.setup_mode" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.setup_mode }}</p>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('chart_of_accounts') }}</label>
+            <label for="signup-chart-of-accounts" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('chart_of_accounts') }}</label>
             <select
+              id="signup-chart-of-accounts"
               v-model="form.chart_of_accounts"
               class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
             >
@@ -167,20 +233,26 @@ function submit() {
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('password') }}</label>
+              <label for="signup-password" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('password') }}</label>
               <input
+                id="signup-password"
                 v-model="form.password"
                 type="password"
+                autocomplete="new-password"
                 required
+                :aria-describedby="form.errors.password ? 'signup-password-error' : undefined"
+                :aria-invalid="form.errors.password ? 'true' : undefined"
                 class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
-              <p v-if="form.errors.password" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.password }}</p>
+              <p v-if="form.errors.password" id="signup-password-error" class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ form.errors.password }}</p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('confirm_password') }}</label>
+              <label for="signup-password-confirmation" class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">{{ t('confirm_password') }}</label>
               <input
+                id="signup-password-confirmation"
                 v-model="form.password_confirmation"
                 type="password"
+                autocomplete="new-password"
                 required
                 class="block w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-base sm:text-sm text-[hsl(var(--foreground))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
               />
@@ -222,7 +294,7 @@ function submit() {
           </Button>
 
           <p class="text-center text-xs text-[hsl(var(--muted-foreground))]">
-            {{ t('signup_disclaimer') }}
+            {{ t(selectedPlanIsFree ? 'signup_disclaimer_free' : 'signup_disclaimer') }}
           </p>
         </form>
       </div>

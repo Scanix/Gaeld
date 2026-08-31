@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Invoicing\Controllers\InvoiceCatalogItemController;
 use App\Domains\Invoicing\Controllers\InvoiceCommunicationController;
 use App\Domains\Invoicing\Controllers\InvoiceController;
 use App\Domains\Invoicing\Controllers\InvoiceDocumentController;
@@ -13,9 +14,15 @@ Route::resource('invoices/recurring', RecurringInvoiceController::class)->names(
 Route::post('/invoices/recurring/{recurring}/pause', [RecurringInvoiceController::class, 'pause'])->name('invoices.recurring.pause');
 Route::post('/invoices/recurring/{recurring}/resume', [RecurringInvoiceController::class, 'resume'])->name('invoices.recurring.resume');
 
+// Catalog items must also be registered before the invoices resource for the same reason.
+Route::get('/invoices/catalog-items', [InvoiceCatalogItemController::class, 'index'])->name('invoices.catalog-items.index');
+Route::post('/invoices/catalog-items', [InvoiceCatalogItemController::class, 'store'])->name('invoices.catalog-items.store');
+Route::delete('/invoices/catalog-items/{catalogItem}', [InvoiceCatalogItemController::class, 'destroy'])->name('invoices.catalog-items.destroy');
+
 Route::resource('invoices', InvoiceController::class);
 Route::post('/invoices/{invoice}/finalize', [InvoiceLifecycleController::class, 'finalize'])->name('invoices.finalize');
 Route::post('/invoices/{invoice}/cancel', [InvoiceLifecycleController::class, 'cancel'])->name('invoices.cancel');
+Route::post('/invoices/{invoice}/revert-to-draft', [InvoiceLifecycleController::class, 'revertToDraft'])->name('invoices.revertToDraft');
 Route::post('/invoices/{invoice}/payment', [InvoiceLifecycleController::class, 'recordPayment'])->name('invoices.payment');
 Route::post('/invoices/{invoice}/duplicate', [InvoiceLifecycleController::class, 'duplicate'])->name('invoices.duplicate');
 Route::post('/invoices/{invoice}/credit-note', [InvoiceLifecycleController::class, 'creditNote'])->name('invoices.creditNote');

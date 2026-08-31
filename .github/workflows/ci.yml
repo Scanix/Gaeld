@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [develop, main]
+    tags: ['v*']
   pull_request:
     branches: [develop, main]
 
@@ -40,12 +41,22 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
+      - name: Enforce public CE boundary
+        run: |
+          forbidden=("plugins/gaeld-ee" "deploy.php" ".gitlab-ci.yml" "resources/js/Pages/SaasAdmin" "resources/js/Components/SaasAdmin")
+          for forbidden_path in "${forbidden[@]}"; do
+            if [ -e "$forbidden_path" ]; then
+              echo "Private SaaS/EE path must not be present in the public repository: $forbidden_path"
+              exit 1
+            fi
+          done
+
       - name: Secret scanning (Gitleaks)
-        uses: gitleaks/gitleaks-action@v2.3.9
+        uses: gitleaks/gitleaks-action@v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -57,7 +68,7 @@ jobs:
           coverage: pcov
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
@@ -73,12 +84,12 @@ jobs:
         run: php artisan key:generate
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
 
       - name: Install pnpm
-        run: corepack enable && corepack prepare pnpm@latest --activate
+        run: corepack enable && corepack prepare pnpm@11.20.0 --activate
 
       - name: Install NPM dependencies
         run: pnpm install

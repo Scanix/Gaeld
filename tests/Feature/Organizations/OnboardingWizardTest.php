@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Organizations;
 
+use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Banking\Models\BankAccount;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,6 +20,7 @@ class OnboardingWizardTest extends TestCase
         parent::setUp();
 
         $this->setUpOrganization(['email_verified_at' => now()]);
+        $this->user->update(['onboarding_completed_at' => null]);
     }
 
     public function test_wizard_renders_for_user_who_has_not_completed_onboarding(): void
@@ -42,6 +45,15 @@ class OnboardingWizardTest extends TestCase
         $response = $this->actAsOrg()->get(route('onboarding.wizard'));
 
         $response->assertRedirect(route('dashboard'));
+    }
+
+    public function test_dashboard_redirects_to_wizard_when_onboarding_is_incomplete(): void
+    {
+        $this->user->update(['onboarding_completed_at' => null]);
+
+        $response = $this->actAsOrg()->get(route('dashboard'));
+
+        $response->assertRedirect(route('onboarding.wizard'));
     }
 
     public function test_store_persists_company_details_and_enabled_modules_and_sets_flag(): void
@@ -96,6 +108,12 @@ class OnboardingWizardTest extends TestCase
     public function test_store_creates_bank_account_when_name_provided(): void
     {
         $this->user->update(['onboarding_completed_at' => null]);
+        $bankAccount = Account::create([
+            'organization_id' => $this->organization->id,
+            'code' => '1020',
+            'name' => 'Bank',
+            'type' => AccountType::Asset->value,
+        ]);
 
         $this->actAsOrg()->post(route('onboarding.wizard.store'), [
             'bank_account_name' => 'Main CHF Account',
@@ -106,6 +124,7 @@ class OnboardingWizardTest extends TestCase
         $this->assertDatabaseHas((new BankAccount)->getTable(), [
             'organization_id' => $this->organization->id,
             'name' => 'Main CHF Account',
+            'account_id' => $bankAccount->id,
         ]);
     }
 

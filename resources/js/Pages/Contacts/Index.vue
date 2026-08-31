@@ -54,10 +54,15 @@ const countryFilters = useCountryFilters({ t, query: queryState })
       <p class="text-sm text-[hsl(var(--muted-foreground))]">
         {{ t('manage_contacts') }}
       </p>
-      <Button as="a" href="/contacts/create">
-        <Plus class="mr-2 h-4 w-4" />
-        {{ t('new_contact') }}
-      </Button>
+      <div class="flex flex-wrap gap-2">
+        <Button as="a" href="/contacts/trashed" variant="outline">
+          {{ t('view_trashed_contacts') }}
+        </Button>
+        <Button as="a" href="/contacts/create">
+          <Plus class="mr-2 h-4 w-4" />
+          {{ t('new_contact') }}
+        </Button>
+      </div>
     </div>
 
     <DataTable

@@ -49,5 +49,6 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="SCOUT_DRIVER" value="null"/>
         <env name="TRUSTED_PROXIES" value="*"/>
+        <env name="PLUGINS_ENABLED" value="false"/>
     </php>
 </phpunit>

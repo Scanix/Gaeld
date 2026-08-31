@@ -4,6 +4,8 @@
 # Usage: ./gaeld setup [--demo]   Full first-time setup
 #        ./gaeld up               Start containers
 #        ./gaeld down             Stop containers
+#        ./gaeld doctor           Diagnose the running installation
+#        ./gaeld update            Apply migrations and rebuild caches
 #        ./gaeld artisan ...      Run artisan inside the container
 #        ./gaeld logs [service]   Tail container logs
 #        ./gaeld worker           Tail queue worker logs
@@ -34,45 +36,53 @@ warn() {
 }
 
 fail() {
-    printf "  ${RED}✖${RESET} %s\n" "$1"
-    exit 1
+    local message=$1
+    local exit_code=${2:-1}
+
+    printf "  ${RED}✖${RESET} %s\n" "$message"
+    exit "$exit_code"
 }
 
-spin() {
-    local pid=$1 label=$2
-    local frames='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
-    local i=0
-    while kill -0 "$pid" 2>/dev/null; do
-        printf "\r  ${DIM}%s${RESET} %s" "${frames:i%10:1}" "$label"
-        i=$((i + 1))
-        sleep 0.1
-    done
-    wait "$pid"
-    return $?
-}
-
-run_with_spinner() {
+run_step() {
     local label=$1
     shift
-    local logfile
-    logfile=$(mktemp)
 
-    "$@" > "$logfile" 2>&1 &
-    local pid=$!
-
-    spin "$pid" "$label"
-    local rc=$?
-
-    if [ $rc -eq 0 ]; then
-        printf "\r  ${GREEN}✔${RESET} %s\n" "$label"
+    printf "  ${BLUE}▸${RESET} ${BOLD}%s${RESET}\n" "$label"
+    if "$@"; then
+        ok "$label"
     else
-        printf "\r  ${RED}✖${RESET} %s\n" "$label"
-        echo ""
-        cat "$logfile"
-        rm -f "$logfile"
-        exit $rc
+        local rc=$?
+        fail "$label failed with exit code ${rc}" "$rc"
     fi
-    rm -f "$logfile"
+}
+
+require_docker() {
+    if ! command -v docker > /dev/null 2>&1; then
+        fail "Docker CLI is not installed. Install Docker Desktop or Docker Engine and retry."
+    fi
+
+    local context
+    local docker_error
+    context=$(docker context show 2>/dev/null || printf "unknown")
+    if docker_error=$(docker info 2>&1); then
+        ok "Docker Engine is ready (${context})"
+        return 0
+    fi
+
+    if [[ "$docker_error" == *"permission denied"* ]]; then
+        printf "  ${RED}✖${RESET} Docker socket access denied for context '${context}'.\n"
+        printf "    Add your Linux user to the docker group, then start a new session:\n"
+        printf "    sudo usermod -aG docker \"$USER\" && newgrp docker\n"
+        printf "    Verify with: docker info\n"
+        exit 1
+    fi
+
+    printf "  ${RED}✖${RESET} Docker Engine is unavailable for context '${context}'.\n"
+    printf "%s\n" "$docker_error" | tail -n 3 | while IFS= read -r line; do
+        printf "    %s\n" "$line"
+    done
+    printf "    Start Docker, select the correct context, and verify with: docker info\n"
+    exit 1
 }
 
 wait_for() {
@@ -126,6 +136,10 @@ cmd_setup() {
     printf "\n${BOLD}🏔  Gäld — Swiss Accounting Platform${RESET}\n"
     printf "${DIM}   Setting up development environment...${RESET}\n"
 
+    # Fail early with an actionable message instead of hiding a Docker problem
+    # behind a retry loop.
+    require_docker
+
     # 1. Environment file
     step "Environment"
     if [ -f .env ]; then
@@ -140,13 +154,13 @@ cmd_setup() {
     if docker image inspect gaeld-sail/app > /dev/null 2>&1; then
         ok "Image gaeld-sail/app already built"
     else
-        run_with_spinner "Building gaeld-sail/app (first time — takes a few minutes)" \
-            docker compose build laravel.test
+        run_step "Building gaeld-sail/app (first time — takes a few minutes)" \
+            docker compose build --progress=plain laravel.test
     fi
 
     # 3. Start containers
     step "Starting services"
-    run_with_spinner "PostgreSQL, Redis, Meilisearch, Mailpit" \
+    run_step "Starting PostgreSQL, Redis, Meilisearch, and Mailpit" \
         docker compose up -d pgsql redis meilisearch mailpit
 
     # Wait for DB + Redis health (retry loops — containers need time to initialize)
@@ -157,7 +171,7 @@ cmd_setup() {
         docker compose exec -T redis redis-cli ping
 
     # Start app + worker (depend on healthy services)
-    run_with_spinner "Starting web server and queue worker" \
+    run_step "Starting web server and queue worker" \
         docker compose up -d laravel.test worker
 
     # Wait for app health
@@ -224,6 +238,14 @@ cmd_artisan() {
     docker compose exec laravel.test php artisan "$@"
 }
 
+cmd_doctor() {
+    docker compose exec laravel.test php artisan gaeld:doctor "$@"
+}
+
+cmd_update() {
+    docker compose exec laravel.test php artisan gaeld:update "$@"
+}
+
 cmd_logs() {
     docker compose logs -f "${1:-laravel.test}"
 }
@@ -240,33 +262,36 @@ cmd_status() {
 }
 
 cmd_help() {
-    cat <<'EOF'
-
-🏔  Gäld CLI
-
-Usage: ./gaeld <command> [options]
-
-Commands:
-  setup [--demo]     Full first-time setup (build, start, install)
-  up                 Start all containers
-  down               Stop all containers
-  restart [service]  Restart all or specific service
-  artisan <cmd>      Run artisan command in the app container
-  pnpm <cmd>         Run pnpm command in the app container
-  logs [service]     Tail logs (default: laravel.test)
-  worker             Tail queue worker logs
-  status             Show container status
-  help               Show this help message
-
-Examples:
-  ./gaeld setup              Interactive first-time setup
-  ./gaeld setup --demo       Non-interactive setup with demo data
-  ./gaeld artisan migrate    Run database migrations
-  ./gaeld restart worker     Restart queue worker
-  ./gaeld logs worker        Tail worker logs
-  ./gaeld pnpm build         Run pnpm build inside the container
-
-EOF
+        printf '%s\n' \
+            '' \
+            '🏔  Gäld CLI' \
+            '' \
+            'Usage: ./gaeld <command> [options]' \
+            '' \
+            'Commands:' \
+            '  setup [--demo]     Full first-time setup (build, start, install)' \
+            '  up                 Start all containers' \
+            '  down               Stop all containers' \
+            '  doctor             Diagnose the running installation' \
+            '  update             Apply migrations and rebuild application caches' \
+            '  restart [service]  Restart all or specific service' \
+            '  artisan <cmd>      Run artisan command in the app container' \
+            '  pnpm <cmd>         Run pnpm command in the app container' \
+            '  logs [service]     Tail logs (default: laravel.test)' \
+            '  worker             Tail queue worker logs' \
+            '  status             Show container status' \
+            '  help               Show this help message' \
+            '' \
+            'Examples:' \
+            '  ./gaeld setup              Interactive first-time setup' \
+            '  ./gaeld setup --demo       Non-interactive setup with demo data' \
+            '  ./gaeld artisan migrate    Run database migrations' \
+            '  ./gaeld doctor             Diagnose configuration and service health' \
+            '  ./gaeld update             Apply pending migrations and rebuild caches' \
+            '  ./gaeld restart worker     Restart queue worker' \
+            '  ./gaeld logs worker        Tail worker logs' \
+            '  ./gaeld pnpm build         Run pnpm build inside the container' \
+            ''
 }
 
 # ── Main ────────────────────────────────────────────────────
@@ -287,6 +312,8 @@ case "$command" in
     down)     cmd_down "$@" ;;
     restart)  cmd_restart "$@" ;;
     artisan)  cmd_artisan "$@" ;;
+    doctor)   cmd_doctor "$@" ;;
+    update)   cmd_update "$@" ;;
     composer) cmd_composer "$@" ;;
     pnpm)     cmd_pnpm "$@" ;;
     logs)     cmd_logs "$@" ;;

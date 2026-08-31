@@ -66,6 +66,19 @@ class SessionSecurityTest extends SecurityTestCase
         $this->get('/')->assertRedirectContains('/login');
     }
 
+    public function test_get_logout_fallback_script_has_the_csp_nonce(): void
+    {
+        $response = $this->actingAs($this->ownerA)->get('/logout');
+
+        $response->assertOk();
+        $nonce = $response->headers->get('Content-Security-Policy');
+
+        $this->assertNotNull($nonce);
+        preg_match("/nonce-([^']+)/", $nonce, $matches);
+        $this->assertNotEmpty($matches[1] ?? null);
+        $response->assertSee('nonce="'.$matches[1].'"', false);
+    }
+
     // ──────────────────────────────────────────────────────────────
     //  CSRF — state-changing web routes must reject missing token
     // ──────────────────────────────────────────────────────────────

@@ -3,14 +3,16 @@
 namespace App\Domains\Reporting\Controllers;
 
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Requests\BalanceSheetRequest;
+use App\Domains\Reporting\Requests\CashFlowRequest;
 use App\Domains\Reporting\Requests\ProfitAndLossRequest;
 use App\Domains\Reporting\Services\AgingReportService;
 use App\Domains\Reporting\Services\ExportReportService;
 use App\Domains\Reporting\Services\ReportingService;
 use App\Http\Controllers\Controller;
-use App\Support\Money;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,15 +23,26 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
  */
 class ReportController extends Controller
 {
-    public function profitAndLoss(ProfitAndLossRequest $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response
-    {
+    public function profitAndLoss(
+        ProfitAndLossRequest $request,
+        ReportingService $reportingService,
+        CurrentOrganization $currentOrg,
+        FiscalYearService $fiscalYears,
+    ): Response {
         $this->authorize('viewAny', Account::class);
 
         $validated = $request->validated();
 
         $orgId = $currentOrg->id();
-        $from = $validated['from'] ?? now()->startOfYear()->toDateString();
-        $to = $validated['to'] ?? now()->toDateString();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $from = $period !== null
+            ? $period->fromDate
+            : ($validated['from'] ?? now()->startOfYear()->toDateString());
+        $to = $period !== null
+            ? $period->toDate
+            : ($validated['to'] ?? now()->toDateString());
 
         $report = $reportingService->profitAndLoss(
             $orgId,
@@ -44,16 +57,31 @@ class ReportController extends Controller
         ]);
     }
 
-    public function balanceSheet(BalanceSheetRequest $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response
-    {
+    public function balanceSheet(
+        BalanceSheetRequest $request,
+        ReportingService $reportingService,
+        CurrentOrganization $currentOrg,
+        FiscalYearService $fiscalYears,
+    ): Response {
         $this->authorize('viewAny', Account::class);
 
         $validated = $request->validated();
 
         $orgId = $currentOrg->id();
-        $asOfDate = $validated['as_of_date'] ?? now()->toDateString();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $asOfDate = $period !== null
+            ? $period->toDate
+            : ($validated['as_of_date'] ?? now()->toDateString());
 
-        $report = $reportingService->balanceSheet($orgId, $asOfDate);
+        $report = $reportingService->balanceSheet($orgId, $asOfDate, $validated['compare_as_of_date'] ?? null);
+        $report['period'] = [
+            'from' => $period !== null
+                ? $period->fromDate
+                : Carbon::parse($asOfDate)->startOfYear()->toDateString(),
+            'to' => $asOfDate,
+        ];
 
         return Inertia::render('Reports/BalanceSheet', [
             'report' => $report,
@@ -65,17 +93,25 @@ class ReportController extends Controller
         ReportingService $reportingService,
         CurrentOrganization $currentOrg,
         ExportReportService $exporter,
+        FiscalYearService $fiscalYears,
         string $format,
     ): HttpResponse {
         $this->authorize('viewAny', Account::class);
 
         $validated = $request->validated();
         $orgId = $currentOrg->id();
-        $from = $validated['from'] ?? now()->startOfYear()->toDateString();
-        $to = $validated['to'] ?? now()->toDateString();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $from = $period !== null
+            ? $period->fromDate
+            : ($validated['from'] ?? now()->startOfYear()->toDateString());
+        $to = $period !== null
+            ? $period->toDate
+            : ($validated['to'] ?? now()->toDateString());
 
         $report = $reportingService->profitAndLoss($orgId, $from, $to);
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
 
         return $exporter->export(
             $format,
@@ -97,7 +133,7 @@ class ReportController extends Controller
                 return $exporter->csv()->export($headers, $rows, "profit-and-loss-{$from}-{$to}.csv");
             },
             pdfBuilder: fn () => $exporter->pdf()->download('exports.profit-and-loss', [
-                'organizationName' => $orgName,
+                'organization' => $org,
                 'period' => ['from' => $from, 'to' => $to],
                 'revenue' => $report['revenue'],
                 'expenses' => $report['expenses'],
@@ -113,16 +149,22 @@ class ReportController extends Controller
         ReportingService $reportingService,
         CurrentOrganization $currentOrg,
         ExportReportService $exporter,
+        FiscalYearService $fiscalYears,
         string $format,
     ): HttpResponse {
         $this->authorize('viewAny', Account::class);
 
         $validated = $request->validated();
         $orgId = $currentOrg->id();
-        $asOfDate = $validated['as_of_date'] ?? now()->toDateString();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $asOfDate = $period !== null
+            ? $period->toDate
+            : ($validated['as_of_date'] ?? now()->toDateString());
 
-        $report = $reportingService->balanceSheet($orgId, $asOfDate);
-        $orgName = $currentOrg->get()->name;
+        $report = $reportingService->balanceSheet($orgId, $asOfDate, $validated['compare_as_of_date'] ?? null);
+        $org = $currentOrg->get();
 
         return $exporter->export(
             $format,
@@ -140,8 +182,14 @@ class ReportController extends Controller
                 return $exporter->csv()->export($headers, $rows, "balance-sheet-{$asOfDate}.csv");
             },
             pdfBuilder: fn () => $exporter->pdf()->download('exports.balance-sheet', [
-                'organizationName' => $orgName,
+                'organization' => $org,
                 'asOfDate' => $asOfDate,
+                'period' => [
+                    'from' => $period !== null
+                        ? $period->fromDate
+                        : Carbon::parse($asOfDate)->startOfYear()->toDateString(),
+                    'to' => $asOfDate,
+                ],
                 'assets' => $report['assets'],
                 'liabilities' => $report['liabilities'],
                 'equity' => $report['equity'],
@@ -153,48 +201,55 @@ class ReportController extends Controller
     //  Cash Flow
     // ──────────────────────────────────────────────────────────────
 
-    public function cashFlow(Request $request, ReportingService $reportingService, CurrentOrganization $currentOrg): Response
-    {
+    public function cashFlow(
+        CashFlowRequest $request,
+        ReportingService $reportingService,
+        CurrentOrganization $currentOrg,
+        FiscalYearService $fiscalYears,
+    ): Response {
         $this->authorize('viewAny', Account::class);
 
-        $from = $request->input('from', now()->startOfYear()->toDateString());
-        $to = $request->input('to', now()->toDateString());
+        $validated = $request->validated();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $from = $period !== null
+            ? $period->fromDate
+            : ($validated['from'] ?? now()->startOfYear()->toDateString());
+        $to = $period !== null
+            ? $period->toDate
+            : ($validated['to'] ?? now()->toDateString());
 
         $report = $reportingService->cashFlow($currentOrg->id(), $from, $to);
 
-        // Transform to the shape the Vue component expects
-        $operating = $report['operating']['adjustments'] ?? [];
-        if (isset($report['net_income']) && ! Money::isZero($report['net_income'])) {
-            array_unshift($operating, ['label' => 'Net Income', 'amount' => $report['net_income']]);
-        }
-
         return Inertia::render('Reports/CashFlow', [
-            'report' => [
-                'period' => $report['period'],
-                'operating' => $operating,
-                'investing' => $report['investing']['items'] ?? [],
-                'financing' => $report['financing']['items'] ?? [],
-                'net_change' => $report['net_change'] ?? '0.00',
-                'beginning_balance' => $report['beginning_cash'] ?? '0.00',
-                'ending_balance' => $report['ending_cash'] ?? '0.00',
-            ],
+            'report' => $report,
         ]);
     }
 
     public function exportCashFlow(
-        Request $request,
+        CashFlowRequest $request,
         ReportingService $reportingService,
         CurrentOrganization $currentOrg,
         ExportReportService $exporter,
+        FiscalYearService $fiscalYears,
         string $format,
     ): HttpResponse {
         $this->authorize('viewAny', Account::class);
 
-        $from = $request->input('from', now()->startOfYear()->toDateString());
-        $to = $request->input('to', now()->toDateString());
+        $validated = $request->validated();
+        $period = $validated['fiscal_year_id'] ?? null
+            ? $fiscalYears->resolvePeriod($currentOrg->get(), $validated['fiscal_year_id'])
+            : null;
+        $from = $period !== null
+            ? $period->fromDate
+            : ($validated['from'] ?? now()->startOfYear()->toDateString());
+        $to = $period !== null
+            ? $period->toDate
+            : ($validated['to'] ?? now()->toDateString());
 
         $report = $reportingService->cashFlow($currentOrg->id(), $from, $to);
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
 
         return $exporter->export(
             $format,
@@ -222,7 +277,7 @@ class ReportController extends Controller
                 return $exporter->csv()->export($headers, $rows, "cash-flow-{$from}-{$to}.csv");
             },
             pdfBuilder: fn () => $exporter->pdf()->download('exports.cash-flow', [
-                'organizationName' => $orgName,
+                'organization' => $org,
                 'period' => ['from' => $from, 'to' => $to],
                 'report' => $report,
             ], "cash-flow-{$from}-{$to}.pdf"),
@@ -265,7 +320,7 @@ class ReportController extends Controller
         $asOfDate = $request->input('as_of_date');
 
         $report = $service->generate($currentOrg->id(), $type, $asOfDate);
-        $orgName = $currentOrg->get()->name;
+        $org = $currentOrg->get();
 
         return $exporter->export(
             $format,
@@ -300,7 +355,7 @@ class ReportController extends Controller
                 return $exporter->csv()->export($headers, $rows, "aging-{$type}.csv");
             },
             pdfBuilder: fn () => $exporter->pdf()->download('exports.aging', [
-                'organizationName' => $orgName,
+                'organization' => $org,
                 'report' => $report,
             ], "aging-{$type}.pdf"),
         );

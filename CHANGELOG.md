@@ -5,7 +5,111 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.0] — 2026-08-20
+
+### Added
+- **Community Edition REST API:** organization-scoped journal-entry,
+  contact, invoice, expense, and CAMT.053 integration workflows with bearer
+  tokens, account-code references, stable JSON resources, and idempotent
+  retries. API access is enabled by default and can be disabled with the
+  installation-level `FEATURE_API_ACCESS` kill switch.
+
+### Changed
+- **Dependencies:** updated Laravel 13, Inertia, Horizon, Stripe PHP 21,
+  Symfony, Vite, Tailwind, Vue, and related locked dependencies.
+- **Accounting periods:** explicit fiscal-year identity now flows through
+  cash-flow reports, exports, archive PDFs, bundles, and archive lazy-loading;
+  legacy year URLs remain supported.
+- **Plugin frontend boundary:** Community Edition builds no longer contain
+  SaaS Admin page sources; enabled plugins register their own frontend pages
+  through the manifest-driven Vite registry.
+
+### Fixed
+- **SaaS deployment:** EE now uses PSR-7 2.13 and current Stripe/Sentry/Symfony
+  dependencies, preventing the Guzzle `asciiToUpper()` runtime mismatch.
+- **Archive concurrency:** direct PDF generation now uses the same
+  organization-period lock contract as bulk archive generation.
+- **Year-end closing:** long fiscal years pass their explicit fiscal-year ID to
+  archive generation and log the resolved period boundaries.
+
+### Removed
+- **Dead frontend tooling:** removed the unshippable Storybook configuration
+  and stories that were absent from clean public clones.
+- **Dead WebAuthn helper:** removed the deprecated unreferenced browser helper;
+  active passkey flows use `@simplewebauthn/browser`.
+
+## [3.6.2] — 2026-08-25
+
+### Fixed
+- **Onboarding banking:** first bank accounts are linked to the organization’s
+  `1020` ledger account so balances, expense payments, and reconciliation use
+  the same account.
+- **Expense VAT UX:** the VAT amount is calculated from the selected rate in
+  the form and shown read-only, while server-side VAT calculation remains
+  authoritative.
+- **Cash Flow:** the Inertia controller now preserves the calculated report
+  contract instead of remapping it to obsolete balance and section keys.
+
 ## [Unreleased]
+
+### Fixed
+- **API tokens:** canonical abilities, legacy ability compatibility, wildcard
+  handling, organization scoping, and integer expiration values now agree
+  between token settings and `/api/v1` authorization.
+- **Expenses:** non-cash CHF payments credit the exact gross amount; Swiss
+  five-cent rounding remains limited to explicit cash payments.
+- **Payroll:** the run preview now uses the same server-side calculator as
+  generated salary slips.
+- **Reporting:** Cash Flow renders the backend operating, investing, and
+  financing contract with the correct cash balances and subtotals.
+- **Reconciliation and mobile UI:** empty suggestion maps serialize as JSON
+  objects, masked inputs use the Maska v3 API, and Settings tabs fit narrow
+  screens.
+
+## [3.5.1] — 2026-08-07
+
+### Added
+- **UI: Storybook component catalog** — added Storybook 10 with Vue/Vite,
+  Tailwind v4 theme support, accessibility checks, and stories for the shared
+  Button, FormInput, Modal, and SearchableSelect components.
+- **Organizations: onboarding guard** — incomplete users are redirected to
+  the setup wizard before entering the dashboard.
+- **Organizations: expense category provisioning** — new organizations are
+  created with the default expense categories instead of waiting for a visit
+  to Settings.
+
+### Changed
+- **Invoicing: payment recording UX** — the payment form now pre-fills the
+  remaining balance, validates the amount client-side, shows paid/due totals
+  and progress, and provides an explicit empty payment-history state.
+- **Invoicing: line-item editor** — improved hierarchy and visual distinction
+  between item, discount, and note lines, with clearer desktop headings.
+- **Contacts: quick creation** — secondary contact fields are progressive and
+  country selection is searchable.
+- **Expenses: missing references** — an empty category reference state now
+  explains the issue and links to Settings instead of failing silently.
+
+### Fixed
+- **EE: Stripe payment-method synchronization** — checkout completion now
+  re-fetches the Stripe subscription, persists the customer subscription's
+  default PaymentMethod, and exposes the real payment-method state to Billing.
+- **EE: signup 500** — replaced the failing remote compromised-password check
+  with equivalent local password-strength requirements, avoiding a Guzzle
+  runtime incompatibility during registration.
+- **Billing: trial warning** — the payment-method banner is now based on
+  `has_payment_method`, not merely the presence of a Stripe customer.
+- **Onboarding: wizard rendering** — fixed Vue template ref unwrapping and
+  module prop references that caused the wizard to crash on staging.
+- **SaaS: unpaid access** — past-due, paused, canceled, and expired trial
+  subscriptions no longer retain access to protected routes.
+
+### Tests
+- Full suite passes with 1,242 tests and 4,436 assertions; 13 tests remain
+  skipped by design.
+- Added regression coverage for onboarding redirects, organization reference
+  provisioning, and the EE billing integration.
+- Validated the principal staging flow: signup, Stripe trial checkout, email
+  verification, onboarding wizard, invoicing, payments, expenses, and reports.
 
 ---
 

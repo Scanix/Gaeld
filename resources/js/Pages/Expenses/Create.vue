@@ -87,6 +87,25 @@ const vatOptions = [
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
 ]
 
+const selectedVatRate = computed(() =>
+  props.vatRates.find(rate => String(rate.id) === String(form.vat_rate_id))
+)
+
+const calculatedVatAmount = computed(() => {
+  const amount = Number(form.amount)
+  const rate = Number(selectedVatRate.value?.rate)
+
+  if (!Number.isFinite(amount) || !Number.isFinite(rate)) {
+    return '0.00'
+  }
+
+  return ((amount * rate) / 100).toFixed(2)
+})
+
+watch([() => form.amount, () => form.vat_rate_id], () => {
+  form.vat_amount = calculatedVatAmount.value
+}, { immediate: true })
+
 const paymentMethodOptions = [
   { value: 'cash', label: t('payment_cash') },
   { value: 'card', label: t('payment_card') },
@@ -146,6 +165,10 @@ function onSupplierCreated(supplier) {
       <CardContent>
         <Alert v-if="ocrData?.amount || ocrData?.date || ocrData?.vendor" variant="info" class="mb-4">
           {{ t('ocr_prefilled_notice') }}
+        </Alert>
+        <Alert v-if="categories.length === 0" variant="warning" class="mb-4">
+          {{ t('expense_categories_unavailable') }}
+          <a href="/settings?tab=expenses" class="ml-1 font-medium underline underline-offset-2">{{ t('open_settings') }}</a>
         </Alert>
         <form class="space-y-6" @submit.prevent="submit">
           <input v-if="form.receipt_path" type="hidden" name="receipt_path" :value="form.receipt_path">
@@ -232,10 +255,11 @@ function onSupplierCreated(supplier) {
             </div>
             <FormInput
               id="vat_amount"
-              v-model="form.vat_amount"
+              :model-value="calculatedVatAmount"
               type="number"
               :label="t('vat_amount')"
               :error="form.errors.vat_amount"
+              readonly
             />
           </div>
 
@@ -280,7 +304,7 @@ function onSupplierCreated(supplier) {
 
           <div class="flex flex-wrap justify-end gap-3">
             <Button as="a" href="/expenses" variant="outline">{{ t('cancel') }}</Button>
-            <Button type="submit" :disabled="form.processing || isDateClosed" :title="isDateClosed ? t('fiscal_year_closed_action_disabled') : undefined">{{ t('create_expense') }}</Button>
+            <Button type="submit" :disabled="form.processing || isDateClosed || categories.length === 0" :title="isDateClosed ? t('fiscal_year_closed_action_disabled') : undefined">{{ t('create_expense') }}</Button>
           </div>
         </form>
       </CardContent>

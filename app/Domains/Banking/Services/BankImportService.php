@@ -86,6 +86,7 @@ class BankImportService
                     'is_reconciled' => false,
                 ]);
 
+                $existingHashes->put($hash, 1);
                 $count++;
             }
 
@@ -193,6 +194,7 @@ class BankImportService
                     'is_reconciled' => false,
                 ]);
 
+                $existingHashes->put($hash, 1);
                 $count++;
             }
 

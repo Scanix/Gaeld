@@ -87,6 +87,38 @@ class PayrollFlowTest extends TestCase
     }
 
     #[Test]
+    public function payroll_preview_matches_the_generated_salary_slip(): void
+    {
+        $preview = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->postJson(route('payroll.run.preview'), [
+                'employee_ids' => [$this->employee->id],
+                'month' => 3,
+                'year' => 2026,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.0.employee_id', $this->employee->id)
+            ->json('data.0');
+
+        $this->assertDatabaseCount('salary_slips', 0);
+
+        $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->postJson(route('payroll.run.generate'), [
+                'employee_ids' => [$this->employee->id],
+                'month' => 3,
+                'year' => 2026,
+            ])
+            ->assertOk();
+
+        $slip = SalarySlip::query()->where('employee_id', $this->employee->id)->firstOrFail();
+
+        $this->assertSame($slip->gross_salary, $preview['gross_salary']);
+        $this->assertSame($slip->net_salary, $preview['net_salary']);
+        $this->assertSame($slip->deductions, $preview['deductions']);
+    }
+
+    #[Test]
     public function it_posts_salary_slip_to_ledger_with_balanced_entry(): void
     {
         $calculator = app(PayrollCalculator::class);
@@ -145,5 +177,26 @@ class PayrollFlowTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame(2, SalarySlip::where('period_month', 4)->where('period_year', 2026)->count());
+    }
+
+    /**
+     * Regression test: SalarySlipController used to authorize every action
+     * against $slip->employee (EmployeePolicy), which has no archived_at
+     * guard, so the archived-record rule embedded in SalarySlipPolicy was
+     * dead code from the HTTP layer's perspective. It's now authorized
+     * against the SalarySlip itself.
+     */
+    #[Test]
+    public function archived_salary_slip_cannot_be_posted_via_route(): void
+    {
+        $calculator = app(PayrollCalculator::class);
+        $slip = $calculator->calculate($this->employee, 3, 2026);
+        $slip->archived_at = now();
+        $slip->save();
+
+        $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->post(route('payroll.salarySlips.post', $slip))
+            ->assertForbidden();
     }
 }

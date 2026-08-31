@@ -12,23 +12,48 @@
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Scanix/Gaeld.git
-cd Gaeld/api
+cd Gaeld
 
-# 2. Copy environment file
-cp .env.example .env
-
-# 3. Start the containers and wait until ready
-#    (composer install, pnpm build, and key generation run automatically on first start)
-docker compose up -d --wait
-
-# 4. Run the installer
-./vendor/bin/sail artisan gaeld:install
+# 2. Start Docker Desktop or the Docker Engine
+# 3. Build, start, wait for, and install Gäld
+./gaeld setup
 
 # Or with demo data:
-./vendor/bin/sail artisan gaeld:install --demo
+./gaeld setup --demo
 ```
 
 Visit `http://localhost:8080` to access the application.
+
+### Troubleshooting and maintenance
+
+Run the diagnostic command from the repository root when login, redirects,
+database, cache, storage, or migrations behave unexpectedly:
+
+```bash
+./gaeld doctor
+```
+
+After pulling a newer release, update an existing installation with:
+
+```bash
+./gaeld update
+```
+
+`./gaeld setup` creates `.env` when needed, builds the image, starts the
+dependencies, waits for PostgreSQL, Redis, and the application health endpoint,
+then runs the installer. Docker must already be running: setup checks the
+selected Docker context immediately and exits with an actionable error when the
+engine is unavailable. It does not install or launch Docker Desktop
+automatically.
+
+On Linux, if `docker info` reports `permission denied`, grant the current user
+access to the Docker socket and start a new session:
+
+```bash
+sudo usermod -aG docker "$USER"
+newgrp docker
+docker info
+```
 
 ### Running Tests
 
@@ -61,7 +86,7 @@ After seeding:
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Scanix/Gaeld.git
-cd Gaeld/api
+cd Gaeld
 
 # 2. Install PHP dependencies
 composer install
@@ -105,9 +130,15 @@ Key environment variables:
 | `QUEUE_CONNECTION` | Queue backend | `redis` |
 | `FEATURE_BANK_SYNC` | Enable bank sync | `false` |
 | `FEATURE_AUTOMATION` | Enable automation | `false` |
+| `FEATURE_API_ACCESS` | Enable the Community Edition REST API | `true` |
 | `DOCS_BASE_URL` | Documentation site URL | `http://localhost:3000` |
 | `PLUGINS_ENABLED` | Enable plugin system | `true` |
 | `TRUSTED_PROXIES` | Trusted reverse proxies (see below) | _(unset)_ |
+
+The public repository is the Community Edition. SaaS billing and Enterprise
+features require the private EE plugin and are not installed by this guide.
+The Community Edition REST API is enabled by default and can be disabled with
+`FEATURE_API_ACCESS=false` when an installation does not need external access.
 
 ---
 
@@ -171,7 +202,7 @@ git pull
 composer install --no-dev --optimize-autoloader
 
 # 3. Rebuild frontend assets
-pnpm install
+pnpm install --frozen-lockfile
 pnpm run build
 
 # 4. Run migrations

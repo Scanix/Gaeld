@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Security">
+            <directory>tests/Security</directory>
+        </testsuite>
+        <testsuite name="Enterprise Edition">
+            <directory>plugins/gaeld-ee/tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <coverage>
+        <report>
+            <clover outputFile="coverage/clover.xml"/>
+            <html outputDirectory="coverage/html"/>
+        </report>
+    </coverage>
+
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+        <exclude>
+            <directory>app/Providers</directory>
+        </exclude>
+    </source>
+
+    <php>
+        <ini name="memory_limit" value="512M"/>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_HOST" value="pgsql"/>
+        <env name="DB_PORT" value="5432"/>
+        <env name="DB_DATABASE" value="testing"/>
+        <env name="DB_USERNAME" value="gaeld"/>
+        <env name="DB_PASSWORD" value="password"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="SCOUT_DRIVER" value="null"/>
+        <env name="TRUSTED_PROXIES" value="*"/>
+        <env name="PLUGINS_ENABLED" value="true"/>
+        <env name="DISABLE_THROTTLE" value="false" force="true"/>
+    </php>
+</phpunit>
