@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RCLONE_REMOTE="${RCLONE_REMOTE:-onedrive:00-Backup/nectoria}"
+RCLONE_REMOTE="${RCLONE_REMOTE:?RCLONE_REMOTE must be set to the backup destination}"
 BACKUP_DIR="${BACKUP_DIR:-/data/backups}"
 LOG="${LOG:-$BACKUP_DIR/logs/backup.log}"
 RCLONE_LOG="${RCLONE_LOG:-$BACKUP_DIR/logs/rclone.log}"
