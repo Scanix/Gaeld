@@ -1176,13 +1176,17 @@ async function sendInvoiceCommunicationForReplay(page, invoiceId, reminder = fal
   const request = await requestPromise
   const response = await request.response()
   const showResponse = await showResponsePromise
+  const showPayload = showResponse
+    ? await showResponse.json().catch(() => ({}))
+    : {}
   await page.waitForSelector('[role="status"]', { state: 'visible', timeout: 5000 }).catch(() => null)
 
   const requestPath = new URL(request.url()).pathname
   const expectedPath = invoiceId ? `/invoices/${invoiceId}${suffix}` : null
   const body = await page.locator('body').innerText().catch(() => '')
   const toast = await page.locator('[role="status"]').allTextContents().catch(() => [])
-  const renderedText = `${body}\n${toast.join('\n')}`
+  const flash = showPayload.props?.flash || {}
+  const renderedText = `${body}\n${toast.join('\n')}\n${Object.values(flash).join('\n')}`
   const successMessage = reminder
     ? /Payment reminder sent|Reminder sent|Rappel envoyé|Mahnung gesendet|Sollecito inviato/i
     : /Invoice sent|Facture envoyée|Rechnung gesendet|Fattura inviata/i
@@ -1194,6 +1198,7 @@ async function sendInvoiceCommunicationForReplay(page, invoiceId, reminder = fal
     requestPath,
     matchedInvoice: expectedPath === null || requestPath === expectedPath,
     successMessageVisible: successMessage.test(renderedText),
+    flash,
     bodySample: renderedText.slice(-400),
   }
 }
