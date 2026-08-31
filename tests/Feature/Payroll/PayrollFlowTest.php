@@ -7,6 +7,7 @@ use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Payroll\Actions\GeneratePayrollRunAction;
 use App\Domains\Payroll\Actions\GenerateSalaryCertificateAction;
 use App\Domains\Payroll\Actions\PostPayrollAction;
 use App\Domains\Payroll\Contracts\SourceTaxServiceInterface;
@@ -386,6 +387,32 @@ class PayrollFlowTest extends TestCase
         $this->assertSame('0.00', $beforeEntry->gross_salary);
         $this->assertSame('0.00', $afterExit->gross_salary);
         $this->assertSame('3200.00', $entryMonth->gross_salary);
+    }
+
+    #[Test]
+    public function it_skips_employees_outside_the_payroll_period(): void
+    {
+        $employee = Employee::create([
+            'organization_id' => $this->org->id,
+            'first_name' => 'Sofia',
+            'last_name' => 'Future',
+            'entry_date' => '2024-09-01',
+            'gross_salary' => '5800.00',
+            'is_active' => true,
+        ]);
+
+        $action = app(GeneratePayrollRunAction::class);
+
+        $preview = $action->preview($this->org->id, 7, 2024, [$employee->id]);
+        $slips = $action->execute($this->org->id, 7, 2024, true, [$employee->id]);
+
+        $this->assertCount(0, $preview);
+        $this->assertCount(0, $slips);
+        $this->assertDatabaseMissing('salary_slips', [
+            'employee_id' => $employee->id,
+            'period_month' => 7,
+            'period_year' => 2024,
+        ]);
     }
 
     #[Test]

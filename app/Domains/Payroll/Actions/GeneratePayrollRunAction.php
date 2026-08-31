@@ -5,6 +5,7 @@ namespace App\Domains\Payroll\Actions;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Domains\Payroll\Services\PayrollCalculator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +26,7 @@ class GeneratePayrollRunAction
      */
     public function execute(string $orgId, int $month, int $year, bool $shouldPost = false, array $employeeIds = [], array $adjustments = []): Collection
     {
-        $employees = $this->employees($orgId, $employeeIds);
+        $employees = $this->employees($orgId, $month, $year, $employeeIds);
         $adjustmentsByEmployee = collect($adjustments)->keyBy('employee_id');
 
         $slips = collect();
@@ -74,7 +75,7 @@ class GeneratePayrollRunAction
     {
         $adjustmentsByEmployee = collect($adjustments)->keyBy('employee_id');
 
-        return $this->employees($orgId, $employeeIds)
+        return $this->employees($orgId, $month, $year, $employeeIds)
             ->map(function (Employee $employee) use ($adjustmentsByEmployee, $month, $year): SalarySlip {
                 $adjustment = $adjustmentsByEmployee->get($employee->id, []);
 
@@ -93,11 +94,19 @@ class GeneratePayrollRunAction
      * @param  array<int, string>  $employeeIds
      * @return Collection<int, Employee>
      */
-    private function employees(string $orgId, array $employeeIds): Collection
+    private function employees(string $orgId, int $month, int $year, array $employeeIds): Collection
     {
+        $periodStart = Carbon::create($year, $month, 1);
+        $periodEnd = $periodStart->copy()->endOfMonth();
+
         return Employee::query()
             ->where('organization_id', $orgId)
             ->where('is_active', true)
+            ->whereDate('entry_date', '<=', $periodEnd)
+            ->where(function ($query) use ($periodStart): void {
+                $query->whereNull('exit_date')
+                    ->orWhereDate('exit_date', '>=', $periodStart);
+            })
             ->when($employeeIds !== [], fn ($query) => $query->whereIn('id', $employeeIds))
             ->get();
     }

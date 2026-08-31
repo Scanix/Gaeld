@@ -1123,7 +1123,14 @@ async function createContactForReplay(page, contact) {
 async function createInvoiceForReplay(page, customerName, period, index, taxTreatment = 'standard') {
   await page.goto(`${BASE_URL}/invoices/create`, { waitUntil: 'networkidle' })
   await selectFormOption(page, 'customer_id', customerName)
+  const numberReload = page.waitForResponse(response => {
+    const url = new URL(response.url())
+    return response.request().method() === 'GET'
+      && url.pathname === '/invoices/create'
+      && url.searchParams.get('for_year') === String(period.year)
+  }, { timeout: 15000 }).catch(() => null)
   await page.locator('#issue_date').fill(period.date)
+  await numberReload
   await page.locator('#due_date').fill(period.end)
   await page.locator('#line-desc-0').fill(`QA 24M invoice ${RUN_ID} ${index + 1}`)
   await page.locator('#line-qty-0').fill('1')
@@ -1150,6 +1157,7 @@ async function createInvoiceForReplay(page, customerName, period, index, taxTrea
       number: body.match(/INV-\d{4}-\d+/)?.[0] || null,
       total: taxTreatment === 'reverse_charge' ? '250.00' : '270.25',
       state,
+      taxTreatmentVisible: taxTreatment === 'standard' || /EU reverse charge|Autoliquidation UE|EU-Reverse-Charge|Reverse charge UE/i.test(body),
     }
   } catch (error) {
     const state = await submitButton.evaluate(button => ({
@@ -1257,6 +1265,22 @@ async function runPayrollMonthForReplay(page, period) {
   const generate = await submitAndCapturePost(page, page.getByRole('button', { name: /Generate|Générer/i }), '/payroll/run')
   if (generate.status() !== 200) return { previewStatus: preview.status(), generateStatus: generate.status(), generated: false, posted: false }
   await page.waitForLoadState('networkidle')
+  const generatedPayload = await generate.json().catch(() => ({}))
+  const expectedPostCount = Array.isArray(generatedPayload.slip_ids)
+    ? generatedPayload.slip_ids.length
+    : employeeCount
+
+  if (expectedPostCount === 0) {
+    return {
+      previewStatus: preview.status(),
+      generateStatus: generate.status(),
+      generated: true,
+      posted: true,
+      postedCount: 0,
+      expectedPostCount,
+      postDetails: [],
+    }
+  }
 
   const postResponses = []
   const postDetailPromises = []
@@ -1267,7 +1291,7 @@ async function runPayrollMonthForReplay(page, period) {
     if (response.request().method() === 'POST' && /\/payroll\/salary-slips\/.+\/post$/.test(pathname)) {
       postResponses.push(response.status())
       postDetailPromises.push(response.text().then(body => ({ status: response.status(), body: body.slice(0, 500) })))
-      if (postResponses.length === employeeCount) resolvePostCompletion()
+      if (postResponses.length === expectedPostCount) resolvePostCompletion()
     }
   }
   page.on('response', responseListener)
@@ -1278,9 +1302,9 @@ async function runPayrollMonthForReplay(page, period) {
   ])
   page.off('response', responseListener)
 
-  if (postResponses.length !== employeeCount) {
+  if (postResponses.length !== expectedPostCount) {
     const body = await page.locator('body').innerText().catch(() => '')
-    throw new Error(`Payroll posting incomplete for ${period.start}: expected ${employeeCount} POSTs, received ${postResponses.length}; body ${body.slice(-500)}`)
+    throw new Error(`Payroll posting incomplete for ${period.start}: expected ${expectedPostCount} POSTs, received ${postResponses.length}; body ${body.slice(-500)}`)
   }
   const postDetails = await Promise.all(postDetailPromises)
 
@@ -1288,10 +1312,43 @@ async function runPayrollMonthForReplay(page, period) {
     previewStatus: preview.status(),
     generateStatus: generate.status(),
     generated: true,
-    posted: postResponses.length === employeeCount && postResponses.every(status => status === 200),
+    posted: postResponses.length === expectedPostCount && postResponses.every(status => status === 200),
     postedCount: postResponses.length,
+    expectedPostCount,
     postDetails,
   }
+}
+
+async function reconcileImportedInvoiceForReplay(page, bankPath, reference, invoiceNumber) {
+  await page.goto(`${BASE_URL}${bankPath}?filter=unreconciled`, { waitUntil: 'networkidle' })
+  const referenceLabel = page.getByText(`Ref: ${reference}`, { exact: true })
+  if (!(await referenceLabel.count())) return false
+
+  const transactionRow = referenceLabel.locator('xpath=ancestor::div[contains(@class, "items-start")][1]')
+  const matchButton = transactionRow.getByRole('button', { name: /^Match$|^Associer$|^Zuordnen$/i })
+  if (!(await matchButton.count())) return false
+  await matchButton.click()
+
+  const dialog = page.getByRole('dialog').last()
+  const invoiceCombobox = dialog.locator('button[aria-haspopup="listbox"]').first()
+  await invoiceCombobox.click()
+  const search = page.locator('[role="listbox"] input').last()
+  await search.fill(invoiceNumber)
+  const option = page.getByRole('option').filter({ hasText: invoiceNumber }).first()
+  if (!(await option.count())) return false
+  await option.click()
+
+  const submitButton = dialog.getByRole('button', { name: /^Reconcile$|^Rapprocher$|^Abgleichen$/i })
+  const requestPromise = page.waitForRequest(request => {
+    const pathname = new URL(request.url()).pathname
+    return request.method() === 'POST' && pathname.endsWith('/invoice')
+  }, { timeout: 30000 })
+  await submitButton.click()
+  const request = await requestPromise
+  const response = await request.response()
+  await page.waitForLoadState('networkidle')
+
+  return response?.status() === 302
 }
 
 async function exerciseSalaryCertificates(page, employeeIds, years) {
@@ -1433,6 +1490,7 @@ async function exerciseExhaustiveUiReplay(page, accountName) {
   const monthly = []
   let firstInvoice = null
   let firstXml = null
+  let matched = false
 
   for (const [index, period] of months.entries()) {
     const taxTreatment = index === 11 ? 'reverse_charge' : 'standard'
@@ -1451,6 +1509,7 @@ async function exerciseExhaustiveUiReplay(page, accountName) {
     if (index === 0) {
       firstInvoice = invoice
       firstXml = xml
+      if (invoice.number) matched = await reconcileImportedInvoiceForReplay(page, bankPath, invoice.number, invoice.number)
       const notification = await importCamtForReplay(
         page,
         bankPath,
@@ -1471,25 +1530,13 @@ async function exerciseExhaustiveUiReplay(page, accountName) {
 
   const beforeDuplicate = await (async () => {
     await page.goto(`${BASE_URL}${bankPath}?filter=all`, { waitUntil: 'networkidle' })
-    return page.locator('button').filter({ hasText: /Match|Associer|Zuordnen/i }).count()
+    return page.getByText(/^Ref:/).count()
   })()
   const duplicate = await importCamtForReplay(page, bankPath, `qa-${RUN_ID}-duplicate.xml`, firstXml)
   const afterDuplicate = await (async () => {
     await page.goto(`${BASE_URL}${bankPath}?filter=all`, { waitUntil: 'networkidle' })
-    return page.locator('button').filter({ hasText: /Match|Associer|Zuordnen/i }).count()
+    return page.getByText(/^Ref:/).count()
   })()
-
-  let matched = false
-  if (firstInvoice?.number) {
-    const suggestion = page.locator('button').filter({ hasText: firstInvoice.number }).first()
-    if (await suggestion.count()) {
-      const matchResponse = page.waitForResponse(response => response.request().method() === 'POST' && /\/reconciliation\/(transactions|matches)\//.test(new URL(response.url()).pathname))
-      await suggestion.click()
-      const response = await matchResponse
-      matched = response.status() === 302
-      await page.waitForLoadState('networkidle')
-    }
-  }
 
   const reportPaths = []
   for (const [index, period] of months.entries()) {
@@ -1530,7 +1577,7 @@ async function exerciseExhaustiveUiReplay(page, accountName) {
     closing: { first: firstClose, second: secondClose },
     exports,
     passed: months.length === 24
-      && monthly.every(item => item.invoice.created && item.expense.created && item.imported.imported && item.payroll.posted)
+      && monthly.every(item => item.invoice.created && item.invoice.number && item.invoice.taxTreatmentVisible && item.expense.created && item.imported.imported && item.payroll.posted)
       && fiscalYear.created
       && contactResults.every(contact => contact.created)
       && certificates.passed
