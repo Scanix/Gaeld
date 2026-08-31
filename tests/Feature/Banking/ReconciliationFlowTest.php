@@ -11,9 +11,11 @@ use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\CamtFormat;
 use App\Domains\Banking\Exceptions\ReconciliationFailedException;
 use App\Domains\Banking\Models\BankAccount;
+use App\Domains\Banking\Models\BankMatch;
 use App\Domains\Banking\Models\BankTransaction;
 use App\Domains\Banking\Queries\BankAccountQuery;
 use App\Domains\Banking\Services\BankImportService;
+use App\Domains\Banking\Services\MatchingService;
 use App\Domains\Banking\Services\ReconciliationService;
 use App\Domains\Banking\Services\SuggestionService;
 use App\Domains\Contacts\Models\Contact;
@@ -141,6 +143,48 @@ class ReconciliationFlowTest extends TestCase
 
         // Total transactions should still be 3
         $this->assertEquals(3, BankTransaction::where('bank_account_id', $this->bankAccount->id)->count());
+    }
+
+    public function test_matching_is_idempotent_when_a_confirmed_candidate_is_reprocessed(): void
+    {
+        $customer = Contact::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Recurring Customer AG',
+        ]);
+        $invoice = Invoice::create([
+            'organization_id' => $this->organization->id,
+            'customer_id' => $customer->id,
+            'number' => 'INV-MATCH-001',
+            'status' => InvoiceStatus::Sent,
+            'issue_date' => '2026-03-01',
+            'due_date' => '2026-03-31',
+            'subtotal' => '100.00',
+            'vat_amount' => '0.00',
+            'total' => '100.00',
+            'currency' => 'CHF',
+        ]);
+        $transaction = BankTransaction::create([
+            'bank_account_id' => $this->bankAccount->id,
+            'date' => '2026-03-10',
+            'description' => 'Payment for INV-MATCH-001',
+            'amount' => '100.00',
+            'type' => BankTransactionType::Credit,
+            'reference' => 'INV-MATCH-001',
+            'debtor_name' => 'Recurring Customer AG',
+        ]);
+
+        $service = app(MatchingService::class);
+        $matches = $service->findAndStoreMatches($transaction);
+        $matches->firstOrFail()->update(['is_confirmed' => true]);
+
+        $service->findAndStoreMatches($transaction->fresh());
+
+        $this->assertSame(1, BankMatch::where('bank_transaction_id', $transaction->id)->count());
+        $this->assertDatabaseHas('bank_matches', [
+            'bank_transaction_id' => $transaction->id,
+            'invoice_id' => $invoice->id,
+            'is_confirmed' => true,
+        ]);
     }
 
     // ──────────────────────────────────────────────────────────────
