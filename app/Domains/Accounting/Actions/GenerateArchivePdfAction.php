@@ -298,11 +298,17 @@ final class GenerateArchivePdfAction
                     'lines.account' => fn ($query) => $query->select(['id', 'code', 'name']),
                 ]);
 
+                $html = '';
                 foreach ($entries as $entry) {
-                    $pdf->writeHTML($this->journalEntryHtml($entry), true, false, true, false, '');
+                    $html .= $this->journalEntryHtml($entry);
+                }
+
+                if ($html !== '') {
+                    $pdf->writeHTML($html, true, false, true, false, '');
                 }
 
                 unset($entries);
+                unset($html);
                 gc_collect_cycles();
             });
 

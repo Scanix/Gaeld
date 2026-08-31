@@ -34,7 +34,7 @@ class ArchivePdfLargeJournalTest extends TestCase
             'type' => AccountType::Revenue->value,
         ]);
 
-        for ($index = 1; $index <= 150; $index++) {
+        for ($index = 1; $index <= 1000; $index++) {
             $entry = JournalEntry::create([
                 'organization_id' => $this->organization->id,
                 'date' => sprintf('2024-%02d-01', (($index - 1) % 12) + 1),
