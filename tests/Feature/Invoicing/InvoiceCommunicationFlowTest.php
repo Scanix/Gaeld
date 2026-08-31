@@ -35,7 +35,6 @@ class InvoiceCommunicationFlowTest extends TestCase
             'name' => 'Operating account',
             'iban' => 'CH9300762011623852957',
             'currency' => 'CHF',
-            'is_default_for_invoicing' => true,
             'is_active' => true,
         ]);
         $customer = Contact::factory()->for($this->organization)->create([
@@ -95,7 +94,6 @@ class InvoiceCommunicationFlowTest extends TestCase
             'name' => 'Operating account',
             'iban' => 'CH9300762011623852957',
             'currency' => 'CHF',
-            'is_default_for_invoicing' => true,
             'is_active' => true,
         ]);
         $customer = Contact::factory()->for($this->organization)->create([

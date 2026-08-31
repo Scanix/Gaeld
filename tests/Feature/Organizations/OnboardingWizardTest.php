@@ -142,6 +142,7 @@ class OnboardingWizardTest extends TestCase
             'organization_id' => $this->organization->id,
             'name' => 'Main CHF Account',
             'account_id' => $bankAccount->id,
+            'is_default_for_invoicing' => true,
         ]);
     }
 
