@@ -1159,6 +1159,11 @@ async function sendInvoiceCommunicationForReplay(page, invoiceId, reminder = fal
   if (!(await button.count())) return { status: 'fail', sent: false, reason: 'Invoice communication action unavailable' }
 
   const suffix = reminder ? '/reminder' : '/send'
+  const showResponsePromise = page.waitForResponse(response => {
+    const pathname = new URL(response.url()).pathname
+    return response.request().method() === 'GET'
+      && (!invoiceId || pathname === `/invoices/${invoiceId}`)
+  }, { timeout: 30000 }).catch(() => null)
   const requestPromise = page.waitForRequest(request => {
     const pathname = new URL(request.url()).pathname
     return request.method() === 'POST' && /\/invoices\/[^/]+\/(send|reminder)$/.test(pathname) && pathname.endsWith(suffix)
@@ -1170,7 +1175,8 @@ async function sendInvoiceCommunicationForReplay(page, invoiceId, reminder = fal
   }
   const request = await requestPromise
   const response = await request.response()
-  await page.waitForLoadState('networkidle')
+  const showResponse = await showResponsePromise
+  await page.waitForSelector('[role="status"]', { state: 'visible', timeout: 5000 }).catch(() => null)
 
   const requestPath = new URL(request.url()).pathname
   const expectedPath = invoiceId ? `/invoices/${invoiceId}${suffix}` : null
@@ -1183,6 +1189,7 @@ async function sendInvoiceCommunicationForReplay(page, invoiceId, reminder = fal
 
   return {
     status: response?.status() ?? null,
+    showStatus: showResponse?.status() ?? null,
     sent: response?.status() === 302 && successMessage.test(renderedText),
     requestPath,
     matchedInvoice: expectedPath === null || requestPath === expectedPath,
@@ -1660,14 +1667,14 @@ async function exerciseExhaustiveUiReplay(page, accountName, fullVolume = false)
         taxTreatment,
         vatRate,
       )
-      if (!invoice.created) throw new Error(`Invoice creation failed for ${period.start} #${invoiceIndex + 1}`)
+      if (!invoice.created) throw new Error(`Invoice creation failed for ${period.start} #${invoiceIndex + 1}: ${JSON.stringify(invoice)}`)
       if (invoiceIndex < communicationsPerMonth) {
         invoice.communication = await sendInvoiceCommunicationForReplay(page, invoice.id, false)
-        if (!invoice.communication.sent) throw new Error(`Invoice email failed for ${period.start} #${invoiceIndex + 1}`)
+        if (!invoice.communication.sent) throw new Error(`Invoice email failed for ${period.start} #${invoiceIndex + 1}: ${JSON.stringify(invoice.communication)}`)
       }
       if (index === 0 && invoiceIndex === 0 && fullVolume) {
         invoice.reminder = await sendInvoiceCommunicationForReplay(page, invoice.id, true)
-        if (!invoice.reminder.sent) throw new Error(`Invoice reminder failed for ${period.start}`)
+        if (!invoice.reminder.sent) throw new Error(`Invoice reminder failed for ${period.start}: ${JSON.stringify(invoice.reminder)}`)
       }
       invoices.push(invoice)
     }
