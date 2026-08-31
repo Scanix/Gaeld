@@ -442,6 +442,7 @@ class InvoiceApiController extends Controller
             'payment_terms' => array_key_exists('payment_terms', $validated)
                 ? $validated['payment_terms']
                 : $invoice->payment_terms,
+            'tax_treatment' => $validated['tax_treatment'] ?? $invoice->tax_treatment->value,
             'lines' => $validated['lines'] ?? $this->serializeExistingLines($invoice),
         ];
     }

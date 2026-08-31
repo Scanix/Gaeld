@@ -11,6 +11,7 @@ use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
+use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
@@ -80,6 +81,7 @@ class InvoiceController extends Controller
             'defaultNotes' => $currentOrg->get()->default_invoice_notes ?? '',
             'defaultPaymentTermsDays' => $currentOrg->get()->default_payment_terms_days,
             'defaultVatRateId' => optional(VatRateQuery::active()->firstWhere('is_default', true))->id,
+            'taxTreatments' => InvoiceTaxTreatment::options(),
         ]);
     }
 
@@ -187,6 +189,7 @@ class InvoiceController extends Controller
                 ? route('invoices.justificatif.download', $invoice)
                 : null,
             'defaultVatRateId' => optional(VatRateQuery::active()->firstWhere('is_default', true))->id,
+            'taxTreatments' => InvoiceTaxTreatment::options(),
         ]);
     }
 

@@ -43,7 +43,7 @@ class OrganizationSetupService
     private function ensureDefaultExpenseCategories(Organization $organization): void
     {
         foreach (ExpenseCategory::DEFAULT_CATEGORIES as $sortOrder => $name) {
-            ExpenseCategory::firstOrCreate(
+            ExpenseCategory::withoutGlobalScopes()->firstOrCreate(
                 [
                     'organization_id' => $organization->id,
                     'name' => $name,

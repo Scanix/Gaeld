@@ -16,11 +16,13 @@ use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -112,7 +114,56 @@ class InvoiceFlowTest extends TestCase
                     'vat_rate_id' => $this->vatRate->id,
                 ]]
             ),
+            taxTreatment: InvoiceTaxTreatment::tryFrom($data['tax_treatment'] ?? 'standard')
+                ?? InvoiceTaxTreatment::Standard,
         ));
+    }
+
+    public function test_reverse_charge_requires_an_eu_vat_customer_and_excludes_swiss_vat(): void
+    {
+        $this->customer->update([
+            'country' => 'DE',
+            'vat_number' => 'DE123456789',
+        ]);
+
+        $invoice = $this->createInvoice(['tax_treatment' => 'reverse_charge']);
+
+        $this->assertSame(InvoiceTaxTreatment::ReverseCharge, $invoice->tax_treatment);
+        $this->assertSame('0.00', $invoice->vat_amount);
+        $this->assertNull($invoice->lines->first()->vat_rate_id);
+        $this->assertSame('1500.00', $invoice->total);
+
+        $posted = app(FinalizeInvoiceAction::class)->execute($invoice);
+
+        $this->assertTrue($posted->journalEntry->isBalanced());
+        $this->assertFalse($posted->journalEntry->lines->load('account')->contains(
+            fn ($line) => $line->account?->code === '2200',
+        ));
+        $this->assertDatabaseCount('vat_entries', 0);
+    }
+
+    public function test_reverse_charge_rejects_a_non_eu_customer_or_missing_vat_number(): void
+    {
+        $this->customer->update(['country' => 'CH', 'vat_number' => null]);
+
+        $this->expectException(ValidationException::class);
+
+        $this->createInvoice(['tax_treatment' => 'reverse_charge']);
+    }
+
+    public function test_duplicate_preserves_reverse_charge_treatment(): void
+    {
+        $this->customer->update([
+            'country' => 'DE',
+            'vat_number' => 'DE123456789',
+        ]);
+
+        $invoice = $this->createInvoice(['tax_treatment' => 'reverse_charge']);
+        $duplicate = app(DuplicateInvoiceAction::class)->execute($invoice);
+
+        $this->assertSame(InvoiceTaxTreatment::ReverseCharge, $duplicate->tax_treatment);
+        $this->assertSame('0.00', $duplicate->vat_amount);
+        $this->assertNull($duplicate->lines->first()->vat_rate_id);
     }
 
     public function test_complete_invoice_flow(): void

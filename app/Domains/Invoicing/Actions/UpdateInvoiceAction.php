@@ -4,6 +4,7 @@ namespace App\Domains\Invoicing\Actions;
 
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
+use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 
@@ -33,18 +34,29 @@ class UpdateInvoiceAction
         ];
 
         $organizationId = $invoice->getAttribute('organization_id');
+        $storedTaxTreatment = $invoice->getRawOriginal('tax_treatment');
+        if ($data->taxTreatment !== InvoiceTaxTreatment::Standard
+            || ($storedTaxTreatment !== null && $storedTaxTreatment !== InvoiceTaxTreatment::Standard->value)) {
+            $invoiceData['tax_treatment'] = $data->taxTreatment;
+        }
+
         if (is_string($organizationId) && $organizationId !== '') {
-            $invoiceData['customer_snapshot'] = $data->customerId === null
+            $customer = $data->customerId === null
                 ? null
                 : Contact::withoutGlobalScope('organization')
                     ->where('organization_id', $organizationId)
-                    ->findOrFail($data->customerId)
-                    ->toInvoiceSnapshot();
+                    ->findOrFail($data->customerId);
+            $data->taxTreatment->validateCustomer($customer);
+            $invoiceData['customer_snapshot'] = $customer?->toInvoiceSnapshot();
         }
 
         $invoice->update($invoiceData);
 
-        $this->syncInvoiceLines->replace($invoice, $data->lines);
+        if ($data->taxTreatment->appliesSwissVat()) {
+            $this->syncInvoiceLines->replace($invoice, $data->lines);
+        } else {
+            $this->syncInvoiceLines->replace($invoice, $data->lines, false);
+        }
 
         $invoice->recalculate();
 

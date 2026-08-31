@@ -54,12 +54,13 @@ class CreateInvoiceAction
     private function createWithNumber(CreateInvoiceData $data, string $number): Invoice
     {
         return DB::transaction(function () use ($data, $number) {
-            $customerSnapshot = $data->customerId === null
+            $customer = $data->customerId === null
                 ? null
                 : Contact::withoutGlobalScope('organization')
                     ->where('organization_id', $data->organizationId)
-                    ->findOrFail($data->customerId)
-                    ->toInvoiceSnapshot();
+                    ->findOrFail($data->customerId);
+            $data->taxTreatment->validateCustomer($customer);
+            $customerSnapshot = $customer?->toInvoiceSnapshot();
 
             $invoice = Invoice::create([
                 'organization_id' => $data->organizationId,
@@ -67,6 +68,7 @@ class CreateInvoiceAction
                 'customer_snapshot' => $customerSnapshot,
                 'number' => $number,
                 'status' => InvoiceStatus::Draft,
+                'tax_treatment' => $data->taxTreatment,
                 'type' => InvoiceType::Invoice,
                 'issue_date' => $data->issueDate,
                 'due_date' => $data->dueDate,
@@ -78,7 +80,7 @@ class CreateInvoiceAction
                 'payment_terms' => $data->paymentTerms,
             ]);
 
-            $this->syncInvoiceLines->create($invoice, $data->lines);
+            $this->syncInvoiceLines->create($invoice, $data->lines, $data->taxTreatment->appliesSwissVat());
 
             $invoice->recalculate();
 

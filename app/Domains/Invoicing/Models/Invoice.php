@@ -5,6 +5,7 @@ namespace App\Domains\Invoicing\Models;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Money;
@@ -32,6 +33,7 @@ use Laravel\Scout\Searchable;
  * @property string $id
  * @property string|null $number
  * @property InvoiceStatus $status
+ * @property InvoiceTaxTreatment $tax_treatment
  * @property InvoiceType $type
  * @property array{name: string, email: string|null, address: string|null, postal_code: string|null, city: string|null, country: string, vat_number: string|null}|null $customer_snapshot
  * @property Carbon $issue_date
@@ -69,6 +71,10 @@ class Invoice extends Model
      */
     protected $with = ['customer'];
 
+    protected $attributes = [
+        'tax_treatment' => InvoiceTaxTreatment::Standard->value,
+    ];
+
     protected $fillable = [
         'organization_id',
         'customer_id',
@@ -76,6 +82,7 @@ class Invoice extends Model
         'journal_entry_id',
         'number',
         'status',
+        'tax_treatment',
         'type',
         'related_invoice_id',
         'issue_date',
@@ -104,6 +111,7 @@ class Invoice extends Model
             'vat_amount' => 'decimal:2',
             'total' => 'decimal:2',
             'status' => InvoiceStatus::class,
+            'tax_treatment' => InvoiceTaxTreatment::class,
             'type' => InvoiceType::class,
             'customer_snapshot' => 'array',
             'reminder_count' => 'integer',

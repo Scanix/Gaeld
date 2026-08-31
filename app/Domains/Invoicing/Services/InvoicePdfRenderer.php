@@ -3,6 +3,7 @@
 namespace App\Domains\Invoicing\Services;
 
 use App\Domains\Invoicing\Enums\InvoiceLineType;
+use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
@@ -216,6 +217,11 @@ class InvoicePdfRenderer
         if ($invoice->qr_reference) {
             $tcpdf->SetFont('Helvetica', '', 8);
             $tcpdf->Cell(0, 4, $this->t('pdf_reference').': '.$invoice->qr_reference, 0, 1);
+        }
+
+        if (($invoice->tax_treatment ?? InvoiceTaxTreatment::Standard) === InvoiceTaxTreatment::ReverseCharge) {
+            $tcpdf->SetFont('Helvetica', 'B', 8);
+            $tcpdf->Cell(0, 4, $this->t('pdf_reverse_charge'), 0, 1);
         }
 
         $tcpdf->SetTextColor(0, 0, 0);

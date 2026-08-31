@@ -16,7 +16,7 @@ class SyncInvoiceLinesAction
     /**
      * @param  array<int, InvoiceLineData>  $lines
      */
-    public function create(Invoice $invoice, array $lines): void
+    public function create(Invoice $invoice, array $lines, bool $applyVat = true): void
     {
         // First pass: create and calculate all non-percentage-discount lines
         $createdLines = [];
@@ -28,7 +28,7 @@ class SyncInvoiceLinesAction
                 'description' => $lineData->description,
                 'quantity' => $lineData->quantity,
                 'unit_price' => $lineData->unitPrice,
-                'vat_rate_id' => $lineData->vatRateId,
+                'vat_rate_id' => $applyVat ? $lineData->vatRateId : null,
                 'sort_order' => $lineData->sortOrder ?? $index,
             ]);
 
@@ -49,7 +49,7 @@ class SyncInvoiceLinesAction
         foreach ($createdLines as $line) {
             if ($line->type === InvoiceLineType::Discount && $line->discount_type === 'percentage') {
                 $line->amount = Money::percentage($itemSubtotal, (string) $line->unit_price);
-                $vatRate = $line->vatRate;
+                $vatRate = $applyVat ? $line->vatRate : null;
                 if ($vatRate) {
                     $line->vat_amount = Money::percentage($line->amount, (string) $vatRate->rate);
                 } else {
@@ -63,9 +63,9 @@ class SyncInvoiceLinesAction
     /**
      * @param  array<int, InvoiceLineData>  $lines
      */
-    public function replace(Invoice $invoice, array $lines): void
+    public function replace(Invoice $invoice, array $lines, bool $applyVat = true): void
     {
         $invoice->lines()->delete();
-        $this->create($invoice, $lines);
+        $this->create($invoice, $lines, $applyVat);
     }
 }

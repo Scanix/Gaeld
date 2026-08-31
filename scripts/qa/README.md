@@ -68,6 +68,14 @@ Set `QA_PLAN=business` for the full SaaS workflow. `QA_PLAN=free` is useful for
 the lower-cost signup and accounting smoke tests; payroll and some billing
 checks require Business and a Stripe Checkout adapter.
 
+Set `QA_EXHAUSTIVE=1` with `QA_CREATE_ACCOUNT=1` and `QA_PLAN=business` to run
+the dedicated 24-month campaign. It creates a second disposable tenant,
+replays 24 months of invoices, expenses, payroll, CAMT.053/CAMT.054 imports,
+seven monthly report views, eight VAT settlements, both year-end closures, 14
+exports, nine salary certificates, and the signed Stripe webhook lifecycle.
+This mode also requires `STRIPE_WEBHOOK_SECRET`, matching the staging endpoint;
+the value is read locally and never written to artifacts.
+
 The runner writes to `storage/app/qa/`:
 
 - `staging-qa-<run-id>.json`: complete machine-readable evidence;

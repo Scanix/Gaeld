@@ -17,6 +17,7 @@ const props = defineProps({
   errors: { type: Object, default: () => ({}) },
   currency: { type: String, default: 'CHF' },
   defaultVatRateId: { type: [String, Number], default: null },
+  taxTreatment: { type: String, default: 'standard' },
 })
 
 const { t } = useTranslations()
@@ -25,6 +26,11 @@ const { formatCurrency } = useFormatters()
 // The parent always passes a reactive array (e.g. Inertia's useForm data), so
 // we mutate it in place rather than emitting update:modelValue for every change.
 const lines = computed(() => props.modelValue)
+
+watch(() => props.taxTreatment, (taxTreatment) => {
+  if (taxTreatment !== 'reverse_charge') return
+  lines.value.forEach(line => { line.vat_rate_id = '' })
+}, { immediate: true })
 
 function emptyLine(type = 'item') {
   return {
@@ -94,7 +100,9 @@ const vatRateMap = computed(() => {
 
 const vatOptions = computed(() => [
   { value: '', label: t('no_vat') },
-  ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
+  ...(props.taxTreatment === 'reverse_charge'
+    ? []
+    : props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` }))),
 ])
 
 const lineTypeOptions = computed(() => [

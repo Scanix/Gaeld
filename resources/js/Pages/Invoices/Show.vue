@@ -236,6 +236,9 @@ const bankAccountOptions = computed(() =>
             <Badge v-if="invoice?.archived_at" variant="secondary" class="mb-1 ml-1">
               {{ t('archived') }}
             </Badge>
+            <Badge v-if="invoice?.tax_treatment === 'reverse_charge'" variant="outline" class="mb-1 ml-1">
+              {{ t('invoice_tax_treatment_reverse_charge') }}
+            </Badge>
             <p class="text-sm text-[hsl(var(--muted-foreground))]">
               {{ invoice?.customer?.name }} &middot; {{ t('issued') }} {{ formatDate(invoice?.issue_date) }} &middot; {{ t('due') }} {{ formatDate(invoice?.due_date) }}
             </p>

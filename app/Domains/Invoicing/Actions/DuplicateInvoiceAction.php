@@ -4,6 +4,7 @@ namespace App\Domains\Invoicing\Actions;
 
 use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +28,7 @@ class DuplicateInvoiceAction
                 'customer_snapshot' => $invoice->customer_snapshot,
                 'number' => $this->numberGenerator->next($invoice->organization_id),
                 'status' => InvoiceStatus::Draft,
+                'tax_treatment' => $invoice->tax_treatment ?? InvoiceTaxTreatment::Standard,
                 'issue_date' => now()->toDateString(),
                 'due_date' => now()->addDays(30)->toDateString(),
                 'currency' => $invoice->currency,
@@ -45,7 +47,7 @@ class DuplicateInvoiceAction
                     vatRateId: $line->vat_rate_id,
                     sortOrder: $line->sort_order,
                 )
-            )->all());
+            )->all(), ($invoice->tax_treatment ?? InvoiceTaxTreatment::Standard)->appliesSwissVat());
 
             $newInvoice->recalculate();
 

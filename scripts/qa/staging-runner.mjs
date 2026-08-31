@@ -1,5 +1,6 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
+import { createHmac } from 'node:crypto'
 import { promisify } from 'node:util'
 import { chromium } from '@playwright/test'
 
@@ -33,6 +34,7 @@ const RUN_ID = process.env.QA_RUN_ID || new Date().toISOString().replace(/[:.]/g
 const RUN_ENABLED = process.env.QA_RUN === '1'
 const CAPTURE_SCREENSHOTS = process.env.QA_CAPTURE_SCREENSHOTS !== '0'
 const CREATE_ACCOUNT = process.env.QA_CREATE_ACCOUNT === '1'
+const EXHAUSTIVE = process.env.QA_EXHAUSTIVE === '1'
 const CLEANUP_ORGANIZATION = process.env.QA_CLEANUP_ORGANIZATION !== '0'
 const EMAIL = process.env.QA_EMAIL
 const PASSWORD = process.env.QA_PASSWORD
@@ -41,6 +43,7 @@ const MAILPIT_URL = process.env.QA_MAILPIT_URL
 const SSH_TARGET = process.env.QA_SSH_TARGET || 'build-remote'
 const PLAN = process.env.QA_PLAN || 'free'
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
 const STRIPE_TEST_CLOCK = process.env.QA_STRIPE_TEST_CLOCK !== '0'
 const STRIPE_PRICE_ID = process.env.QA_STRIPE_PRICE_ID
 const PROTECTED_ORGANIZATION = process.env.QA_PROTECTED_ORGANIZATION || 'Helvetia Full E2E Sarl'
@@ -79,6 +82,15 @@ function assertSafeConfiguration() {
   }
   if (CLEANUP_ORGANIZATION && SSH_TARGET !== 'build-remote') {
     throw new Error('QA cleanup is restricted to the build-remote staging host')
+  }
+  if (EXHAUSTIVE && !CREATE_ACCOUNT) {
+    throw new Error('QA_EXHAUSTIVE requires QA_CREATE_ACCOUNT=1')
+  }
+  if (EXHAUSTIVE && PLAN !== 'business') {
+    throw new Error('QA_EXHAUSTIVE requires QA_PLAN=business')
+  }
+  if (EXHAUSTIVE && !STRIPE_WEBHOOK_SECRET) {
+    throw new Error('QA_EXHAUSTIVE requires STRIPE_WEBHOOK_SECRET')
   }
   if (!['free', 'business'].includes(PLAN)) {
     throw new Error('QA_PLAN must be free or business')
@@ -256,14 +268,14 @@ async function completeStripeCheckout(page, checkoutUrl = null, accountName = AC
   return { httpStatus: 200, url: page.url() }
 }
 
-async function completeOnboarding(page) {
+async function completeOnboarding(page, accountName = ACCOUNT_NAME, longYear = false) {
   if (!page.url().includes('/welcome')) {
     await page.goto(`${BASE_URL}/welcome`, { waitUntil: 'networkidle' })
   }
 
   await page.getByRole('button', { name: /SME \/ Agency|PME \/ Agence/ }).click()
   await page.getByRole('button', { name: /^Next$|^Suivant$/ }).click()
-  await page.locator('#legal_name').fill(`${ACCOUNT_NAME} Legal`)
+  await page.locator('#legal_name').fill(`${accountName} Legal`)
   await page.locator('#address').fill('Rue du Lac 12')
   await page.locator('#city').fill('Lausanne')
   await page.locator('#postal_code').fill('1003')
@@ -271,9 +283,9 @@ async function completeOnboarding(page) {
   await page.locator('#vat_number').fill('CHE-123.456.789 MWST')
   await page.getByRole('button', { name: /^Next$|^Suivant$/ }).click()
   await page.locator('fieldset').nth(2).locator('input[type="checkbox"]').check()
-  await page.locator('#fiscal_year_name').fill('2026')
-  await page.locator('#fiscal_year_start').fill('2026-01-01')
-  await page.locator('#fiscal_year_end').fill('2026-12-31')
+  await page.locator('#fiscal_year_name').fill(longYear ? `${accountName} Migration Year` : '2026')
+  await page.locator('#fiscal_year_start').fill(longYear ? '2024-01-01' : '2026-01-01')
+  await page.locator('#fiscal_year_end').fill(longYear ? '2025-06-30' : '2026-12-31')
   await page.getByRole('button', { name: /^Next$|^Suivant$/ }).click()
   await page.locator('fieldset').nth(3).locator('input[type="checkbox"]').check()
   await page.locator('#bank_account_name').fill('Compte principal CHF')
@@ -296,8 +308,8 @@ async function completeOnboarding(page) {
     dashboardStatus: dashboard?.status() ?? null,
     fiscalYearStatus: fiscalYearPage?.status() ?? null,
     bankStatus: bankingPage?.status() ?? null,
-    company: dashboardText.includes(ACCOUNT_NAME),
-    fiscalYear: fiscalYearText.includes('2026'),
+    company: dashboardText.includes(accountName),
+    fiscalYear: fiscalYearText.includes(longYear ? 'Migration Year' : '2026'),
     bank: bankingText.includes('Compte principal CHF'),
   }
 }
@@ -616,7 +628,7 @@ async function cleanupAccount(email) {
     throw new Error('Refusing cleanup for an email outside the generated QA namespace')
   }
 
-  const php = `<?php require "current/vendor/autoload.php"; $app=require "current/bootstrap/app.php"; $app->make("Illuminate\\Contracts\\Console\\Kernel")->bootstrap(); $email=${JSON.stringify(email)}; $user=\\App\\Domains\\Users\\Models\\User::where("email",$email)->first(); if(!$user){echo "NO_USER\\n"; exit;} $orgs=$user->organizations()->get(); foreach($orgs as $org){ if($org->pivot->role === "owner" && str_contains($org->name, ${JSON.stringify(RUN_ID)})){ $org->delete(); } else { $org->users()->detach($user->id); } } $user->delete(); echo "CLEANED\\n";`;
+  const php = `<?php require "current/vendor/autoload.php"; $app=require "current/bootstrap/app.php"; $app->make("Illuminate\\Contracts\\Console\\Kernel")->bootstrap(); $email=${JSON.stringify(email)}; $runId=${JSON.stringify(RUN_ID)}; $user=\\App\\Domains\\Users\\Models\\User::where("email",$email)->first(); if(!$user){echo "NO_USER\\n"; exit;} $orgs=$user->organizations()->get(); if($orgs->contains(fn($org) => !str_contains($org->name, $runId))){echo "UNEXPECTED_MEMBERSHIP\\n"; exit;} foreach($orgs as $org){ if($org->pivot->role === "owner"){ $org->delete(); } else { $org->users()->detach($user->id); } } $user->delete(); echo "CLEANED\\n";`;
   const encoded = Buffer.from(php).toString('base64')
   const remoteCommand = `cd ~/gaeld_app && printf '%s' '${encoded}' | base64 -d | /usr/bin/php8.4`
   const { stdout } = await execFileAsync('ssh', ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=20', SSH_TARGET, remoteCommand], { maxBuffer: 1024 * 1024 })
@@ -710,12 +722,12 @@ async function findCurrentOrganizationPath(page) {
   throw new Error('Current QA organization was not found in the organization index')
 }
 
-async function createEmployeeRecord(page, firstName, lastName, email, salary) {
+async function createEmployeeRecord(page, firstName, lastName, email, salary, entryDate = dateAfterDays(-60)) {
   await page.goto(`${BASE_URL}/payroll/employees/create`, { waitUntil: 'networkidle' })
   await page.locator('#first_name').fill(firstName)
   await page.locator('#last_name').fill(lastName)
   await page.locator('#email').fill(email)
-  await page.locator('#start_date').fill(dateAfterDays(-60))
+  await page.locator('#start_date').fill(entryDate)
   await page.locator('#gross_salary').fill(salary)
   await page.locator('#iban').fill('CH5604835012345678009')
   const response = await submitAndCapturePost(
@@ -809,8 +821,8 @@ async function exercisePermissions(browser, page, createdAccounts) {
   }
 }
 
-async function exerciseYearEndClosing(page) {
-  const closingPage = await page.goto(`${BASE_URL}/accounting/year-end-closing?year=2026`, { waitUntil: 'networkidle' })
+async function exerciseYearEndClosing(page, year = 2026) {
+  const closingPage = await page.goto(`${BASE_URL}/accounting/year-end-closing?year=${year}`, { waitUntil: 'networkidle' })
   const next = page.getByRole('button', { name: /Next|Suivant|Continue|Continuer/i })
   if (await next.count() === 0) {
     throw new Error(`Year-end wizard unavailable: HTTP ${closingPage?.status() ?? 'unknown'}, URL ${page.url()}, buttons ${(await page.locator('button').allInnerTexts()).slice(-8).join(' | ')}`)
@@ -1027,6 +1039,600 @@ async function exerciseBillingAndStripe(page) {
   return result
 }
 
+function exhaustiveMonths() {
+  return Array.from({ length: 24 }, (_, index) => {
+    const monthIndex = 6 + index
+    const year = 2024 + Math.floor(monthIndex / 12)
+    const month = (monthIndex % 12) + 1
+    const monthValue = String(month).padStart(2, '0')
+
+    return {
+      year,
+      month,
+      start: `${year}-${monthValue}-01`,
+      end: new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10),
+      date: `${year}-${monthValue}-15`,
+    }
+  })
+}
+
+function xmlEscape(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;')
+}
+
+function buildCamtXml(format, { date, statementId, reference, amount, party }) {
+  const isNotification = format === 'camt054'
+  const root = isNotification ? 'BkToCstmrDbtCdtNtfctn' : 'BkToCstmrStmt'
+  const statement = isNotification ? 'Ntfctn' : 'Stmt'
+  const identifier = isNotification ? 'NOTIF' : 'STMT'
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.${isNotification ? '054' : '053'}.001.02">
+  <${root}>
+    <${statement}>
+      <Id>${xmlEscape(statementId || `${identifier}-${RUN_ID}`)}</Id>
+      <CreDtTm>${date}T10:00:00+01:00</CreDtTm>
+      <Acct><Id><IBAN>CH9300762011623852957</IBAN></Id></Acct>
+      <Ntry>
+        <Amt Ccy="CHF">${xmlEscape(amount)}</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <BookgDt><Dt>${date}</Dt></BookgDt>
+        <ValDt><Dt>${date}</Dt></ValDt>
+        <NtryDtls><TxDtls>
+          <Refs><EndToEndId>${xmlEscape(reference)}</EndToEndId></Refs>
+          <Amt Ccy="CHF">${xmlEscape(amount)}</Amt>
+          <RltdPties><Dbtr><Nm>${xmlEscape(party)}</Nm></Dbtr></RltdPties>
+          <RmtInf><Ustrd>${xmlEscape(reference)}</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+      </Ntry>
+    </${statement}>
+  </${root}>
+</Document>`
+}
+
+async function createContactForReplay(page, contact) {
+  await page.goto(`${BASE_URL}/contacts/create`, { waitUntil: 'networkidle' })
+  await page.locator('#type').selectOption(contact.type || 'organization')
+  await page.locator('#name').fill(contact.name)
+  await page.locator('#email').fill(contact.email || `${contact.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}@example.test`)
+  await page.locator('#address').fill(contact.address || 'Rue du Lac 12')
+  await page.locator('#city').fill(contact.city || 'Lausanne')
+  await page.locator('#postal_code').fill(contact.postalCode || '1003')
+  await page.locator('#country').selectOption(contact.country || 'CH')
+  if (contact.vatNumber) await page.locator('#vat_number').fill(contact.vatNumber)
+  if (contact.defaultExpenseCategory) await page.locator('#default_expense_category').fill(contact.defaultExpenseCategory)
+
+  const response = await submitAndCapturePost(
+    page,
+    page.getByRole('button', { name: /Create contact|Créer le contact/i }),
+    '/contacts',
+  )
+  await page.waitForLoadState('networkidle')
+
+  return { status: response.status(), created: response.status() === 302 && page.url().includes('/contacts/') }
+}
+
+async function createInvoiceForReplay(page, customerName, period, index, taxTreatment = 'standard') {
+  await page.goto(`${BASE_URL}/invoices/create`, { waitUntil: 'networkidle' })
+  await selectFormOption(page, 'customer_id', customerName)
+  await page.locator('#issue_date').fill(period.date)
+  await page.locator('#due_date').fill(period.end)
+  await page.locator('#line-desc-0').fill(`QA 24M invoice ${RUN_ID} ${index + 1}`)
+  await page.locator('#line-qty-0').fill('1')
+  await page.locator('#line-price-0').fill('250.00')
+  await page.locator('#tax_treatment').selectOption(taxTreatment)
+
+  const response = await submitAndCapturePost(
+    page,
+    page.getByRole('button', { name: /Create & Finalize|Create and finalize|Créer et finaliser/i }),
+    '/invoices',
+  )
+  await page.waitForLoadState('networkidle')
+  const body = await page.locator('body').innerText()
+  const number = body.match(/INV-\d{4}-\d+/)?.[0] || null
+
+  return {
+    status: response.status(),
+    created: response.status() === 302 && page.url().includes('/invoices/'),
+    number,
+    total: taxTreatment === 'reverse_charge' ? '250.00' : '270.25',
+  }
+}
+
+async function createExpenseForReplay(page, supplierName, period, index, attachReceipt = false) {
+  await page.goto(`${BASE_URL}/expenses/create`, { waitUntil: 'networkidle' })
+  if (supplierName) await selectFormOption(page, 'supplier_id', supplierName)
+  await page.locator('#amount').fill('125.50')
+  await page.locator('#date').fill(period.date)
+  await page.locator('#payment_method').selectOption({ label: 'Card' })
+  const category = page.locator('#category')
+  const categoryValue = await category.locator('option:not([value=""])').first().getAttribute('value')
+  if (categoryValue) await category.selectOption(categoryValue)
+  await page.locator('#description').fill(`QA 24M expense ${RUN_ID} ${index + 1}`)
+  if (attachReceipt) {
+    await page.locator('input[type="file"]').last().setInputFiles({
+      name: `qa-receipt-${RUN_ID}.pdf`,
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4\n% QA receipt\n'),
+    })
+  }
+
+  const response = await submitAndCapturePost(
+    page,
+    page.getByRole('button', { name: /Create expense|Créer la dépense/i }),
+    '/expenses',
+  )
+  await page.waitForLoadState('networkidle')
+
+  return { status: response.status(), created: response.status() === 302 && page.url().includes('/expenses/') }
+}
+
+async function createFiscalYearForReplay(page, name, start, end) {
+  await page.goto(`${BASE_URL}/accounting/fiscal-years`, { waitUntil: 'networkidle' })
+  const addButton = page.getByRole('button', { name: /Add fiscal year|Ajouter un exercice/i })
+  if (!(await addButton.count())) throw new Error('Fiscal year creation action is unavailable')
+  await addButton.click()
+  const form = page.getByRole('dialog').last().locator('form')
+  await form.locator('#name').fill(name)
+  await form.locator('#start_date').fill(start)
+  await form.locator('#end_date').fill(end)
+  const response = await submitAndCapturePost(
+    page,
+    form.getByRole('button', { name: /^Create$|^Créer$/i }),
+    '/accounting/fiscal-years',
+  )
+  await page.waitForLoadState('networkidle')
+
+  return { status: response.status(), created: response.status() === 302 }
+}
+
+async function findReconciliationAccountPath(page) {
+  await page.goto(`${BASE_URL}/reconciliation`, { waitUntil: 'networkidle' })
+  const href = await page.locator('a[href^="/reconciliation/"]').first().getAttribute('href')
+  if (!href) throw new Error('No bank account was available for CAMT reconciliation')
+
+  return href
+}
+
+async function importCamtForReplay(page, bankPath, filename, xml) {
+  await page.goto(`${BASE_URL}${bankPath}?filter=unreconciled`, { waitUntil: 'networkidle' })
+  await page.getByRole('button', { name: /Import bank statement|Importer un relevé/i }).click()
+  const dialog = page.getByRole('dialog').last()
+  await dialog.locator('input[type="file"]').setInputFiles({
+    name: filename,
+    mimeType: 'application/xml',
+    buffer: Buffer.from(xml),
+  })
+  const response = await submitAndCapturePost(
+    page,
+    dialog.getByRole('button', { name: /^Import$|^Importer$/i }),
+    `${bankPath}/import`,
+  )
+  await page.waitForLoadState('networkidle')
+
+  return { status: response.status(), imported: response.status() === 302 }
+}
+
+async function runPayrollMonthForReplay(page, period) {
+  await page.goto(`${BASE_URL}/payroll/run`, { waitUntil: 'networkidle' })
+  await page.locator('#month').selectOption(String(period.month))
+  await page.locator('#year').selectOption(String(period.year))
+  const employeeInputs = page.locator('input[type="checkbox"]')
+  const employeeCount = await employeeInputs.count()
+  for (let index = 0; index < employeeCount; index += 1) await employeeInputs.nth(index).check()
+  const preview = await submitAndCapturePost(page, page.getByRole('button', { name: /Preview|Aperçu/i }), '/payroll/run/preview')
+  if (preview.status() !== 200) return { previewStatus: preview.status(), generated: false, posted: false }
+  await page.waitForLoadState('networkidle')
+  const generate = await submitAndCapturePost(page, page.getByRole('button', { name: /Generate|Générer/i }), '/payroll/run')
+  if (generate.status() !== 200) return { previewStatus: preview.status(), generateStatus: generate.status(), generated: false, posted: false }
+  await page.waitForLoadState('networkidle')
+
+  const postResponses = []
+  const responseListener = response => {
+    const pathname = new URL(response.url()).pathname
+    if (response.request().method() === 'POST' && /\/payroll\/salary-slips\/.+\/post$/.test(pathname)) {
+      postResponses.push(response.status())
+    }
+  }
+  page.on('response', responseListener)
+  await page.getByRole('button', { name: /Post|Comptabiliser/i }).first().click()
+  await page.locator('h2').filter({ hasText: /done|terminé|completed|complet/i }).waitFor({ timeout: 30000 })
+  page.off('response', responseListener)
+
+  return {
+    previewStatus: preview.status(),
+    generateStatus: generate.status(),
+    generated: true,
+    posted: postResponses.length === employeeCount && postResponses.every(status => status === 200),
+    postedCount: postResponses.length,
+  }
+}
+
+async function exerciseSalaryCertificates(page, employeeIds, years) {
+  const certificates = []
+  for (const employeeId of employeeIds) {
+    for (const year of years) {
+      const response = await page.request.get(`${BASE_URL}/payroll/employees/${employeeId}/salary-certificate/${year}`)
+      const contentType = response.headers()['content-type'] || ''
+      const body = await response.body()
+      certificates.push({ employeeId, year, status: response.status(), contentType, pdf: body.subarray(0, 4).toString() === '%PDF' })
+    }
+  }
+
+  return {
+    certificates,
+    passed: certificates.length === employeeIds.length * years.length
+      && certificates.every(certificate => certificate.status === 200 && certificate.contentType.includes('application/pdf') && certificate.pdf),
+  }
+}
+
+async function findEmployeeIdsForReplay(page) {
+  await page.goto(`${BASE_URL}/payroll/employees`, { waitUntil: 'networkidle' })
+  const links = await page.locator('a[href^="/payroll/employees/"]').evaluateAll(elements => elements
+    .map(element => element.getAttribute('href'))
+    .filter(href => href && /^\/payroll\/employees\/[0-9a-f-]{36}$/i.test(href)))
+
+  return [...new Set(links.map(href => href.split('/').pop()))]
+}
+
+async function monthlyReportPaths(period) {
+  const range = `from_date=${period.start}&to_date=${period.end}`
+  return [
+    `/reports/profit-and-loss?${range}`,
+    `/reports/balance-sheet?as_of_date=${period.end}`,
+    `/accounting/trial-balance?as_of_date=${period.end}`,
+    `/accounting/journal-entries?${range}`,
+    `/reports/cash-flow?${range}`,
+    `/reports/aging?type=receivables&as_of_date=${period.end}`,
+    `/reports/aging?type=payables&as_of_date=${period.end}`,
+  ]
+}
+
+function exhaustiveVatPeriods() {
+  return [
+    ['2024-07-01', '2024-09-30'],
+    ['2024-10-01', '2024-12-31'],
+    ['2025-01-01', '2025-03-31'],
+    ['2025-04-01', '2025-06-30'],
+    ['2025-07-01', '2025-09-30'],
+    ['2025-10-01', '2025-12-31'],
+    ['2026-01-01', '2026-03-31'],
+    ['2026-04-01', '2026-06-30'],
+  ]
+}
+
+async function settleVatPeriodsForReplay(page) {
+  const settlements = []
+  for (const [from, to] of exhaustiveVatPeriods()) {
+    await page.goto(`${BASE_URL}/reports/vat?from_date=${from}&to_date=${to}`, { waitUntil: 'networkidle' })
+    const button = page.getByRole('button', { name: /Post settlement entry|Comptabiliser le décompte/i })
+    if (!(await button.count())) {
+      settlements.push({ from, to, status: 'fail', reason: 'VAT settlement action was unavailable' })
+      continue
+    }
+    await button.click()
+    const dialog = page.getByRole('dialog').last()
+    const response = await submitAndCapturePost(page, dialog.getByRole('button', { name: /^Post$|^Comptabiliser$/i }), '/reports/vat/settlement')
+    settlements.push({ from, to, status: response.status() === 302 ? 'pass' : 'fail', httpStatus: response.status() })
+    await page.waitForLoadState('networkidle')
+  }
+
+  return { settlements, passed: settlements.length === 8 && settlements.every(settlement => settlement.status === 'pass') }
+}
+
+async function exerciseExhaustiveExports(page) {
+  const from = '2024-07-01'
+  const to = '2026-06-30'
+  const asOf = to
+  const exportPaths = [
+    `/reports/profit-and-loss/export/pdf?from_date=${from}&to_date=${to}`,
+    `/reports/profit-and-loss/export/csv?from_date=${from}&to_date=${to}`,
+    `/reports/balance-sheet/export/pdf?as_of_date=${asOf}`,
+    `/reports/balance-sheet/export/csv?as_of_date=${asOf}`,
+    `/accounting/trial-balance/export/pdf?as_of_date=${asOf}`,
+    `/accounting/trial-balance/export/csv?as_of_date=${asOf}`,
+    `/accounting/journal-entries/export/pdf?from_date=${from}&to_date=${to}`,
+    `/accounting/journal-entries/export/csv?from_date=${from}&to_date=${to}`,
+    `/reports/cash-flow/export/pdf?from_date=${from}&to_date=${to}`,
+    `/reports/cash-flow/export/csv?from_date=${from}&to_date=${to}`,
+    `/reports/aging/export/pdf?type=receivables&as_of_date=${asOf}`,
+    `/reports/aging/export/csv?type=receivables&as_of_date=${asOf}`,
+    `/reports/aging/export/pdf?type=payables&as_of_date=${asOf}`,
+    `/reports/aging/export/csv?type=payables&as_of_date=${asOf}`,
+  ]
+  const exports = []
+  for (const path of exportPaths) {
+    const response = await page.request.get(`${BASE_URL}${path}`)
+    const contentType = response.headers()['content-type'] || ''
+    const body = await response.body()
+    const pathname = new URL(path, BASE_URL).pathname
+    const pdf = pathname.endsWith('/pdf') && body.subarray(0, 4).toString() === '%PDF'
+    const csv = pathname.endsWith('/csv') && contentType.includes('text/csv')
+    exports.push({ path, status: response.status(), contentType, validPayload: pdf || csv })
+  }
+
+  const archiveResponse = await page.request.get(`${BASE_URL}/accounting/archives/year/2025/bundle`)
+  const archiveBody = await archiveResponse.body()
+  const archive = {
+    status: archiveResponse.status(),
+    contentType: archiveResponse.headers()['content-type'] || '',
+    zip: archiveBody.subarray(0, 2).toString() === 'PK',
+  }
+
+  return {
+    exports,
+    archive,
+    passed: exports.length === 14
+      && exports.every(item => item.status === 200 && item.validPayload)
+      && archive.status === 200
+      && archive.zip,
+  }
+}
+
+async function exerciseExhaustiveUiReplay(page, accountName) {
+  const customerName = `QA ACME ${RUN_ID}`
+  const euCustomerName = `QA EU Customer ${RUN_ID}`
+  const supplierName = `QA Supplier ${RUN_ID}`
+  const months = exhaustiveMonths()
+  const contacts = [
+    { name: customerName, country: 'CH', vatNumber: 'CHE-987.654.321 MWST' },
+    { name: euCustomerName, country: 'DE', vatNumber: 'DE123456789', city: 'Berlin', postalCode: '10115' },
+    { name: supplierName, country: 'CH', defaultExpenseCategory: 'Office Supplies' },
+  ]
+  const contactResults = []
+  for (const contact of contacts) contactResults.push(await createContactForReplay(page, contact))
+
+  const fiscalYear = await createFiscalYearForReplay(page, `${accountName} Year 2`, '2025-07-01', '2026-06-30')
+  const bankPath = await findReconciliationAccountPath(page)
+  const monthly = []
+  let firstInvoice = null
+  let firstXml = null
+
+  for (const [index, period] of months.entries()) {
+    const taxTreatment = index === 11 ? 'reverse_charge' : 'standard'
+    const invoice = await createInvoiceForReplay(page, taxTreatment === 'reverse_charge' ? euCustomerName : customerName, period, index, taxTreatment)
+    const expense = await createExpenseForReplay(page, supplierName, period, index, index === 0)
+    const reference = `QA-CAMT-${RUN_ID}-${index + 1}`
+    const xml = buildCamtXml('camt053', {
+      date: period.date,
+      statementId: `STMT-${RUN_ID}-${index + 1}`,
+      reference: index === 0 && invoice.number ? invoice.number : reference,
+      amount: index === 0 ? invoice.total : '1.00',
+      party: taxTreatment === 'reverse_charge' ? euCustomerName : customerName,
+    })
+    const imported = await importCamtForReplay(page, bankPath, `qa-${RUN_ID}-${index + 1}.xml`, xml)
+    monthly.push({ period: period.start.slice(0, 7), invoice, expense, imported })
+    if (index === 0) {
+      firstInvoice = invoice
+      firstXml = xml
+      const notification = await importCamtForReplay(
+        page,
+        bankPath,
+        `qa-${RUN_ID}-notification.xml`,
+        buildCamtXml('camt054', {
+          date: period.date,
+          statementId: `NOTIF-${RUN_ID}`,
+          reference: `QA-CAMT054-${RUN_ID}`,
+          amount: '1.01',
+          party: supplierName,
+        }),
+      )
+      monthly[monthly.length - 1].camt054 = notification
+    }
+    const payroll = await runPayrollMonthForReplay(page, period)
+    monthly[monthly.length - 1].payroll = payroll
+  }
+
+  const beforeDuplicate = await (async () => {
+    await page.goto(`${BASE_URL}${bankPath}?filter=all`, { waitUntil: 'networkidle' })
+    return page.locator('button').filter({ hasText: /Match|Associer|Zuordnen/i }).count()
+  })()
+  const duplicate = await importCamtForReplay(page, bankPath, `qa-${RUN_ID}-duplicate.xml`, firstXml)
+  const afterDuplicate = await (async () => {
+    await page.goto(`${BASE_URL}${bankPath}?filter=all`, { waitUntil: 'networkidle' })
+    return page.locator('button').filter({ hasText: /Match|Associer|Zuordnen/i }).count()
+  })()
+
+  let matched = false
+  if (firstInvoice?.number) {
+    const suggestion = page.locator('button').filter({ hasText: firstInvoice.number }).first()
+    if (await suggestion.count()) {
+      const matchResponse = page.waitForResponse(response => response.request().method() === 'POST' && /\/reconciliation\/(transactions|matches)\//.test(new URL(response.url()).pathname))
+      await suggestion.click()
+      const response = await matchResponse
+      matched = response.status() === 302
+      await page.waitForLoadState('networkidle')
+    }
+  }
+
+  const reportPaths = []
+  for (const [index, period] of months.entries()) {
+    for (const path of await monthlyReportPaths(period)) {
+      const response = await page.goto(`${BASE_URL}${path}`, { waitUntil: 'networkidle' })
+      reportPaths.push({ period: period.start.slice(0, 7), path, status: response?.status() ?? null })
+      if (CAPTURE_SCREENSHOTS && (index === 0 || index === months.length - 1)) {
+        await page.screenshot({ path: `${OUTPUT_DIR}/screenshots-${RUN_ID}/exhaustive-${period.start.slice(0, 7)}-${path.split('?')[0].replace(/[^a-z0-9]+/gi, '-')}.png`, fullPage: true })
+      }
+    }
+  }
+
+  const employeeIds = await findEmployeeIdsForReplay(page)
+  const certificates = await exerciseSalaryCertificates(page, employeeIds, [2024, 2025, 2026])
+  const settlements = await settleVatPeriodsForReplay(page)
+  const firstClose = await exerciseYearEndClosing(page, 2024)
+  const secondClose = await exerciseYearEndClosing(page, 2025)
+  const exports = await exerciseExhaustiveExports(page)
+
+  return {
+    months: monthly,
+    contacts: contactResults,
+    fiscalYear,
+    camt: {
+      camt053Imports: monthly.filter(item => item.imported.imported).length,
+      camt054Imported: monthly[0]?.camt054?.imported === true,
+      duplicateImportAccepted: duplicate.imported,
+      transactionCountStableAfterDuplicate: beforeDuplicate === afterDuplicate,
+      matched,
+    },
+    reports: {
+      checked: reportPaths.length,
+      expected: months.length * 7,
+      passed: reportPaths.length === months.length * 7 && reportPaths.every(report => report.status === 200),
+    },
+    certificates,
+    settlements,
+    closing: { first: firstClose, second: secondClose },
+    exports,
+    passed: months.length === 24
+      && monthly.every(item => item.invoice.created && item.expense.created && item.imported.imported && item.payroll.posted)
+      && fiscalYear.created
+      && contactResults.every(contact => contact.created)
+      && certificates.passed
+      && reportPaths.length === months.length * 7
+      && reportPaths.every(report => report.status === 200)
+      && monthly[0]?.camt054?.imported
+      && beforeDuplicate === afterDuplicate
+      && matched
+      && settlements.passed
+      && firstClose.closed
+      && secondClose.closed
+      && exports.passed,
+  }
+}
+
+async function createExhaustiveTenant(browser, createdAccounts) {
+  const accountName = `${ACCOUNT_NAME} Exhaustive`
+  const email = generatedAccountEmail('-exhaustive')
+  const { context, page, consoleErrors, requestFailures } = await createContext(browser)
+
+  try {
+    const auth = await createAccount(page, { email, accountName, plan: 'business' })
+    createdAccounts.push(auth)
+    if (auth.checkoutUrl || new URL(auth.url).hostname === 'checkout.stripe.com') {
+      await completeStripeCheckout(page, auth.checkoutUrl, accountName)
+    }
+    if (auth.needsVerification || page.url().includes('/email/verify')) {
+      const verification = await verifyAccountFromMailpit(page, email)
+      if (verification.status !== 'pass') throw new Error('Exhaustive tenant email verification failed')
+      await login(page, email, auth.password)
+    }
+    if (page.url().includes('/email/verify')) throw new Error('Exhaustive tenant remained unverified')
+
+    const onboarding = await completeOnboarding(page, accountName, true)
+    if (!onboarding.company || !onboarding.fiscalYear || !onboarding.bank) throw new Error('Exhaustive tenant onboarding did not complete')
+
+    const openingBalances = await exerciseOpeningBalanceContract(page)
+    if (!openingBalances.rejectedUnbalanced || !openingBalances.acceptedRedirect) throw new Error('Exhaustive tenant opening balance contract failed')
+
+    const employees = [
+      await createEmployeeRecord(page, 'Claire', `QA ${RUN_ID}`, generatedAccountEmail('-claire'), '9500.00', '2024-07-01'),
+      await createEmployeeRecord(page, 'Lionel', `QA ${RUN_ID}`, generatedAccountEmail('-lionel-exhaustive'), '6200.00', '2024-07-01'),
+      await createEmployeeRecord(page, 'Sofia', `QA ${RUN_ID}`, generatedAccountEmail('-sofia-exhaustive'), '5800.00', '2024-09-01'),
+    ]
+    if (!employees.every(employee => employee.created)) throw new Error('Exhaustive tenant employee setup failed')
+
+    const replay = await exerciseExhaustiveUiReplay(page, accountName)
+    return {
+      account: { email, accountName },
+      diagnostics: { consoleErrors, requestFailures },
+      onboarding,
+      openingBalances,
+      employees,
+      replay,
+    }
+  } finally {
+    await context.close()
+  }
+}
+
+async function stripeWebhookRequest(payload) {
+  if (!STRIPE_WEBHOOK_SECRET) throw new Error('STRIPE_WEBHOOK_SECRET is required for exhaustive Stripe webhook checks')
+  const body = JSON.stringify(payload)
+  const timestamp = Math.floor(Date.now() / 1000)
+  const signature = createHmac('sha256', STRIPE_WEBHOOK_SECRET)
+    .update(`${timestamp}.${body}`)
+    .digest('hex')
+  const response = await fetch(`${BASE_URL}/stripe/webhook`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'Stripe-Signature': `t=${timestamp},v1=${signature}`,
+    },
+    body,
+  })
+  return { status: response.status, body: await response.json().catch(() => ({})) }
+}
+
+async function exerciseStripeWebhookLifecycle(accountEmail) {
+  if (!STRIPE_WEBHOOK_SECRET) return { status: 'skip', reason: 'STRIPE_WEBHOOK_SECRET is not configured' }
+
+  const customers = await stripeRequest(`/customers?email=${encodeURIComponent(accountEmail)}&limit=1`)
+  const customer = customers.body.data?.[0]
+  if (!customer) return { status: 'fail', reason: 'Stripe customer for exhaustive tenant was not found' }
+  const subscriptions = await stripeRequest(`/subscriptions?customer=${encodeURIComponent(customer.id)}&limit=1`)
+  const subscription = subscriptions.body.data?.[0]
+  if (!subscription) return { status: 'fail', reason: 'Stripe subscription for exhaustive tenant was not found' }
+
+  const baseObject = {
+    id: subscription.id,
+    customer: customer.id,
+    status: subscription.status,
+    trial_end: subscription.trial_end,
+    canceled_at: subscription.canceled_at,
+    cancel_at: subscription.cancel_at,
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    default_payment_method: subscription.default_payment_method,
+    metadata: subscription.metadata || {},
+  }
+  const event = (id, type, object) => ({ id, object: 'event', type, data: { object } })
+  let results = []
+  let unknown = null
+  let externalCleanup = { subscription: false, customer: false }
+  try {
+    results.push({ event: 'checkout.session.completed', result: await stripeWebhookRequest(event(`qa-${RUN_ID}-checkout-completed`, 'checkout.session.completed', {
+      mode: 'subscription',
+      subscription: subscription.id,
+      customer: customer.id,
+      metadata: subscription.metadata || {},
+    })) })
+    results.push({ event: 'subscription.created', result: await stripeWebhookRequest(event(`qa-${RUN_ID}-subscription-created`, 'customer.subscription.created', baseObject)) })
+    results.push({ event: 'subscription.updated', result: await stripeWebhookRequest(event(`qa-${RUN_ID}-subscription-updated`, 'customer.subscription.updated', baseObject)) })
+    results.push({ event: 'invoice.payment_failed', result: await stripeWebhookRequest(event(`qa-${RUN_ID}-payment-failed`, 'invoice.payment_failed', { id: `in_${RUN_ID}`, subscription: subscription.id })) })
+    results.push({ event: 'invoice.paid', result: await stripeWebhookRequest(event(`qa-${RUN_ID}-invoice-paid`, 'invoice.paid', { id: `in_paid_${RUN_ID}`, subscription: subscription.id })) })
+    results.push({ event: 'subscription.deleted', result: await stripeWebhookRequest(event(`qa-${RUN_ID}-subscription-deleted`, 'customer.subscription.deleted', { id: subscription.id })) })
+    const duplicatePayload = event(`qa-${RUN_ID}-subscription-updated`, 'customer.subscription.updated', baseObject)
+    results.push({ event: 'duplicate', result: await stripeWebhookRequest(duplicatePayload) })
+    unknown = await stripeWebhookRequest(event(`qa-${RUN_ID}-unknown`, 'customer.unknown_event', { id: `unknown_${RUN_ID}` }))
+  } finally {
+    const deletedSubscription = await stripeRequest(`/subscriptions/${subscription.id}`, 'DELETE')
+    const deletedCustomer = await stripeRequest(`/customers/${customer.id}`, 'DELETE')
+    externalCleanup = {
+      subscription: deletedSubscription.response.ok,
+      customer: deletedCustomer.response.ok,
+    }
+  }
+
+  return {
+    status: results.length === 7
+      && results.every(item => item.result.status === 200)
+      && unknown?.status === 200
+      && externalCleanup.subscription
+      && externalCleanup.customer ? 'pass' : 'fail',
+    customerId: customer.id,
+    subscriptionId: subscription.id,
+    events: results,
+    unknown,
+    duplicateHandled: results.at(-1)?.result.body?.status === 'already_processed',
+    externalCleanup,
+  }
+}
+
 function markdownReport(report) {
   const failures = report.results.filter(item => item.status === 'fail')
   const skipped = report.results.filter(item => item.status === 'skip')
@@ -1081,7 +1687,7 @@ async function main() {
     runId: RUN_ID,
     startedAt: new Date().toISOString(),
     baseUrl: BASE_URL,
-    mode: RUN_ENABLED ? 'staging-safe-smoke' : 'dry-run',
+    mode: RUN_ENABLED ? (EXHAUSTIVE ? 'staging-exhaustive' : 'staging-safe-smoke') : 'dry-run',
     accountMode: CREATE_ACCOUNT ? 'ephemeral-signup' : 'existing-account',
     protectedOrganization: '[redacted]',
     results: [],
@@ -1100,6 +1706,8 @@ async function main() {
       executablePath: await browserExecutablePath(),
     })
     const { context, page, consoleErrors, requestFailures } = await createContext(browser)
+    const additionalConsoleErrors = []
+    const additionalRequestFailures = []
     const screenshotDirectory = `${OUTPUT_DIR}/screenshots-${RUN_ID}`
     await mkdir(screenshotDirectory, { recursive: true })
     try {
@@ -1228,6 +1836,19 @@ async function main() {
         } catch (error) {
           report.results.push(result(9, 'billing and Stripe test workflow', 'fail', { error: error.message }))
         }
+
+        if (EXHAUSTIVE) {
+          try {
+            const exhaustive = await createExhaustiveTenant(browser, createdAccounts)
+            additionalConsoleErrors.push(...exhaustive.diagnostics.consoleErrors)
+            additionalRequestFailures.push(...exhaustive.diagnostics.requestFailures)
+            report.results.push(result(0, 'exhaustive 24-month UI replay', exhaustive.replay.passed ? 'pass' : 'fail', exhaustive))
+            const webhook = await exerciseStripeWebhookLifecycle(exhaustive.account.email)
+            report.results.push(result(9, 'Stripe webhook lifecycle', webhook.status === 'pass' ? 'pass' : 'fail', webhook))
+          } catch (error) {
+            report.results.push(result(10, 'exhaustive staging campaign', 'fail', { error: error.message }))
+          }
+        }
       }
 
       if (!CREATE_ACCOUNT || !page.url().includes('/email/verify')) {
@@ -1256,7 +1877,10 @@ async function main() {
     } catch (error) {
       report.results.push(result(0, 'runner execution', 'fail', { error: error.message }))
     } finally {
-      const diagnostics = diagnosticClassification(consoleErrors, requestFailures)
+      const diagnostics = diagnosticClassification(
+        [...consoleErrors, ...additionalConsoleErrors],
+        [...requestFailures, ...additionalRequestFailures],
+      )
       report.consoleErrors = diagnostics.actionableConsoleErrors
       report.requestFailures = diagnostics.actionableRequestFailures
       report.expectedDiagnostics = {
