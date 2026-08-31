@@ -3,6 +3,7 @@
 namespace Tests\Feature\Billing;
 
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Expenses\Models\ExpenseCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -79,6 +80,10 @@ class RegistrationTest extends TestCase
                 ->where('is_system', true)
                 ->exists(),
             'Expected at least one system account to be seeded.',
+        );
+        $this->assertSame(
+            count(ExpenseCategory::DEFAULT_CATEGORIES),
+            ExpenseCategory::where('organization_id', $subscription->organization_id)->count(),
         );
     }
 

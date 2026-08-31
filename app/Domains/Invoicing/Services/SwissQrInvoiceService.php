@@ -58,11 +58,12 @@ class SwissQrInvoiceService
 
         $qrBill = QrBill::create();
 
-        $this->setCreditorInfo($qrBill, $invoice, $organization);
+        $iban = $this->resolvePaymentIban($invoice, $organization);
+
+        $this->setCreditorInfo($qrBill, $organization, $iban);
         $this->setDebtorInfo($qrBill, $invoice);
         $this->setPaymentAmount($qrBill, $invoice);
 
-        $iban = $invoice->qr_iban ?? $organization->qr_iban ?? '';
         $this->setPaymentReference($qrBill, $invoice, $iban);
 
         $qrBill->setAdditionalInformation(
@@ -125,7 +126,14 @@ class SwissQrInvoiceService
         return $iid >= 30000 && $iid <= 31999;
     }
 
-    private function setCreditorInfo(QrBill $qrBill, Invoice $invoice, Organization $organization): void
+    private function resolvePaymentIban(Invoice $invoice, Organization $organization): string
+    {
+        $bankAccount = $organization->defaultInvoicingBankAccount();
+
+        return (string) ($invoice->qr_iban ?: $bankAccount?->qr_iban ?: $bankAccount?->iban ?: '');
+    }
+
+    private function setCreditorInfo(QrBill $qrBill, Organization $organization, string $iban): void
     {
         $creditorAddress = StructuredAddress::createWithStreet(
             $organization->legal_name ?? $organization->name,
@@ -138,7 +146,6 @@ class SwissQrInvoiceService
 
         $qrBill->setCreditor($creditorAddress);
 
-        $iban = $invoice->qr_iban ?? $organization->qr_iban ?? '';
         $qrBill->setCreditorInformation(
             CreditorInformation::create($iban),
         );
@@ -147,17 +154,22 @@ class SwissQrInvoiceService
     private function setDebtorInfo(QrBill $qrBill, Invoice $invoice): void
     {
         $customer = $invoice->customer;
-        if (! $customer) {
+        $customerDetails = $invoice->customer_snapshot;
+        if ($customerDetails === null && $customer !== null) {
+            $customerDetails = $customer->toInvoiceSnapshot();
+        }
+
+        if ($customerDetails === null) {
             return;
         }
 
         $debtorAddress = StructuredAddress::createWithStreet(
-            $customer->name,
-            $customer->address ?? '',
+            $customerDetails['name'],
+            $customerDetails['address'] ?? '',
             null,
-            $customer->postal_code ?? '',
-            $customer->city ?? '',
-            $customer->country ?? self::DEFAULT_COUNTRY,
+            $customerDetails['postal_code'] ?? '',
+            $customerDetails['city'] ?? '',
+            $customerDetails['country'],
         );
 
         $qrBill->setUltimateDebtor($debtorAddress);

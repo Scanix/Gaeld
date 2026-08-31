@@ -104,7 +104,7 @@ class ChartTemplateService
             // Use firstOrCreate keyed on (organization_id, code) so the seeder is
             // idempotent and safe against double form submissions or retries that
             // would otherwise trigger accounts_organization_id_code_unique.
-            Account::firstOrCreate(
+            Account::withoutGlobalScopes()->firstOrCreate(
                 [
                     'organization_id' => $organization->id,
                     'code' => $def->code,
@@ -159,7 +159,7 @@ class ChartTemplateService
         foreach ($systemAccounts as $account) {
             // firstOrCreate replaces the previous pluck-then-check pattern, which
             // was racy under concurrent organization creation requests.
-            Account::firstOrCreate(
+            Account::withoutGlobalScopes()->firstOrCreate(
                 [
                     'organization_id' => $organization->id,
                     'code' => $account['code'],

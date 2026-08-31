@@ -4,6 +4,7 @@ namespace Tests\Feature\Accounting;
 
 use App\Domains\Accounting\Models\LegalArchive;
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -34,6 +35,7 @@ class LegalArchiveIndexTest extends TestCase
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
             ->component('Accounting/Archives/Index')
+            ->where('canManage', true)
             ->has('years', 2)
             ->where('years.0.fiscal_year', 2025)
             ->where('years.0.total_count', 1)
@@ -42,6 +44,28 @@ class LegalArchiveIndexTest extends TestCase
             ->where('years.1.total_count', 2)
             ->where('years.1.verified_count', 1)
         );
+    }
+
+    public function test_viewer_can_browse_archives_but_cannot_regenerate_pdfs(): void
+    {
+        $this->makeArchive(2024);
+
+        $viewer = User::factory()->create(['onboarding_completed_at' => now()]);
+        $this->organization->users()->attach($viewer->id, ['role' => 'viewer']);
+        $this->assignOrganizationRole($viewer, $this->organization, 'viewer');
+
+        $this->actingAs($viewer)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get('/accounting/archives')
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->component('Accounting/Archives/Index')
+                ->where('canManage', false));
+
+        $this->actingAs($viewer)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->post('/accounting/archives/year/2024/regenerate-pdfs')
+            ->assertForbidden();
     }
 
     public function test_for_year_returns_items_for_that_year_only(): void

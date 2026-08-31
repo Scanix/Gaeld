@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Models;
 
 use App\Domains\Accounting\Enums\VatEntryType;
+use App\Domains\Accounting\Services\VatPeriodLockService;
 use App\Support\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -42,6 +43,23 @@ class VatEntry extends Model
             'vat_amount' => 'decimal:2',
             'type' => VatEntryType::class,
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (VatEntry $vatEntry): void {
+            app(VatPeriodLockService::class)->assertUnlockedForJournalEntry((string) $vatEntry->journal_entry_id);
+        });
+
+        static::updating(function (VatEntry $vatEntry): void {
+            app(VatPeriodLockService::class)->assertUnlockedForJournalEntry(
+                (string) ($vatEntry->journal_entry_id ?: $vatEntry->getOriginal('journal_entry_id')),
+            );
+        });
+
+        static::deleting(function (VatEntry $vatEntry): void {
+            app(VatPeriodLockService::class)->assertUnlockedForJournalEntry((string) $vatEntry->journal_entry_id);
+        });
     }
 
     /** @return BelongsTo<JournalEntry, $this> */

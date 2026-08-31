@@ -4,6 +4,7 @@ namespace Tests\Feature\Organizations;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -58,6 +59,10 @@ class OrganizationSetupFlowTest extends TestCase
         ]);
         $this->assertGreaterThan(0, Account::where('organization_id', $organization->id)->count());
         $this->assertGreaterThan(0, VatRate::where('organization_id', $organization->id)->count());
+        $this->assertSame(
+            count(ExpenseCategory::DEFAULT_CATEGORIES),
+            ExpenseCategory::where('organization_id', $organization->id)->count(),
+        );
     }
 
     public function test_verified_user_onboarding_creates_org_sets_session_and_seeds_defaults(): void

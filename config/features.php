@@ -29,13 +29,15 @@ return [
     'assets' => env('FEATURE_ASSETS', true),
     'payroll' => env('FEATURE_PAYROLL', true),
 
+    // Integration features available in Community and SaaS editions
+    'api_access' => env('FEATURE_API_ACCESS', true),
+
     // EE features (disabled by default)
     'auto_reconciliation' => env('FEATURE_AUTO_RECONCILIATION', false),
     'bank_sync' => env('FEATURE_BANK_SYNC', false),
     'saas' => env('FEATURE_SAAS', false),
     'automation' => env('FEATURE_AUTOMATION', false),
     'multi_currency' => env('FEATURE_MULTI_CURRENCY', false),
-    'api_access' => env('FEATURE_API_ACCESS', false),
     'rule_engine' => env('FEATURE_RULE_ENGINE', false),
     'advanced_permissions' => env('FEATURE_ADVANCED_PERMISSIONS', false),
     'analytical' => env('FEATURE_ANALYTICAL', false),

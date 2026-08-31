@@ -137,6 +137,29 @@ class AdvancedAccountingModulesTest extends TestCase
             );
     }
 
+    public function test_finalized_tax_declaration_does_not_block_unrelated_ledger_posting(): void
+    {
+        $this->actAsOrg()->post('/accounting/tax-declarations', [
+            'fiscal_year' => 2026,
+            'canton' => 'vd',
+        ])->assertRedirect();
+
+        $declaration = TaxDeclaration::query()->firstOrFail();
+        $this->actAsOrg()->post('/accounting/tax-declarations/'.$declaration->id.'/finalize')
+            ->assertRedirect();
+
+        $this->postJournalEntry('2026-06-30', [
+            $this->journalLine($this->bankAccount, '100.00', '0.00', 'Late receipt'),
+            $this->journalLine($this->revenueAccount, '0.00', '100.00', 'Late revenue'),
+        ], 'TD-LOCKED');
+
+        $this->assertDatabaseHas('journal_entries', [
+            'organization_id' => $this->organization->id,
+            'reference' => 'TD-LOCKED',
+            'is_posted' => true,
+        ]);
+    }
+
     public function test_cost_centers_crud_and_analytical_report_filtering(): void
     {
         $this->actAsOrg()->post('/accounting/cost-centers', [

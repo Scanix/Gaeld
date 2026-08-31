@@ -5,6 +5,7 @@ namespace App\Domains\Organizations\Controllers;
 use App\Domains\Organizations\Enums\Role;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\OrganizationService;
+use App\Domains\Payroll\Models\Employee;
 use App\Domains\Users\Models\User;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
@@ -34,6 +35,7 @@ class MemberController extends Controller
 
         $validated = $request->validate([
             'role' => ['required', new Enum(Role::class)],
+            'employee_id' => ['nullable', 'required_if:role,employee', 'uuid'],
         ]);
 
         $role = Role::from($validated['role']);
@@ -49,7 +51,11 @@ class MemberController extends Controller
             }
         }
 
-        $this->organizationService->changeMemberRole($organization, $user, $role);
+        $employee = isset($validated['employee_id'])
+            ? Employee::query()->whereNull('user_id')->whereKey($validated['employee_id'])->firstOrFail()
+            : null;
+
+        $this->organizationService->changeMemberRole($organization, $user, $role, $employee);
 
         return redirect()->route('organizations.show', $organization)
             ->with('success', __('app.role_updated'));

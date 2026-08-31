@@ -9,6 +9,10 @@ import { ref, computed, watch, onBeforeUnmount, onMounted } from 'vue'
 const { t } = useTranslations()
 const isMobile = useMediaQuery('(max-width: 639px)')
 
+function cssLength(value) {
+  return typeof value === 'number' ? `${value}px` : value
+}
+
 const props = defineProps({
   columns: {
     type: Array,
@@ -78,6 +82,10 @@ const props = defineProps({
   expandable: {
     type: Boolean,
     default: false,
+  },
+  tableMinWidth: {
+    type: [String, Number],
+    default: null,
   },
 })
 
@@ -331,7 +339,7 @@ function exportCsv() {
       </div>
 
       <!-- Desktop table view -->
-      <table v-else class="w-full text-sm">
+      <table v-else class="min-w-full text-sm" :style="tableMinWidth ? { minWidth: cssLength(tableMinWidth) } : undefined">
         <thead>
           <tr class="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/50">
             <th v-if="selectable" scope="col" class="w-10 px-4 py-3">
@@ -344,10 +352,11 @@ function exportCsv() {
               scope="col"
               :aria-sort="col.sortable ? (sort === col.key ? (direction === 'asc' ? 'ascending' : 'descending') : 'none') : undefined"
               :class="[
-                'px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]',
+                'whitespace-nowrap px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]',
                 col.class,
                 col.sortable ? 'cursor-pointer select-none hover:text-[hsl(var(--foreground))]' : '',
               ]"
+              :style="col.minWidth ? { minWidth: cssLength(col.minWidth) } : undefined"
               @click="handleSort(col)"
             >
               <span class="inline-flex items-center gap-1">
@@ -375,6 +384,7 @@ function exportCsv() {
                 v-for="col in visibleColumns"
                 :key="col.key"
                 :class="['px-4 py-3', col.class]"
+                :style="col.minWidth ? { minWidth: cssLength(col.minWidth) } : undefined"
               >
                 <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
                   <Link v-if="rowLink" :href="rowLink(row)" class="hover:underline">

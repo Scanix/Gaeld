@@ -2,29 +2,35 @@
 
 namespace App\Domains\Payroll\Controllers;
 
+use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\PostPayrollAction;
 use App\Domains\Payroll\Actions\UnpostPayrollAction;
+use App\Domains\Payroll\Controllers\Concerns\EnsuresPayrollWritable;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
+use App\Domains\Payroll\Requests\PayrollAdjustmentRules;
 use App\Domains\Payroll\Services\PayrollCalculator;
 use App\Http\Controllers\Controller;
+use App\Support\FeatureFlag;
 use App\Support\PdfExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
  * Salary slip viewing, posting, and PDF download.
  */
 class SalarySlipController extends Controller
 {
+    use EnsuresPayrollWritable;
+
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
-        $this->authorize('viewAny', Employee::class);
+        $this->authorize('viewAny', SalarySlip::class);
 
         $year = $request->input('year');
         $month = $request->input('month');
@@ -34,6 +40,14 @@ class SalarySlipController extends Controller
             ->with('employee')
             ->orderByDesc('period_year')
             ->orderByDesc('period_month');
+
+        $ownOnly = $request->user()->hasPermissionTo(Permission::PayrollSalarySlipsViewOwn)
+            && ! $request->user()->hasPermissionTo(Permission::PayrollView);
+
+        if ($ownOnly) {
+            $query->whereNotNull('posted_at')
+                ->whereHas('employee', fn ($employeeQuery) => $employeeQuery->where('user_id', $request->user()->id));
+        }
 
         if ($year) {
             $query->where('period_year', (int) $year);
@@ -47,6 +61,9 @@ class SalarySlipController extends Controller
         $defaultYear = $year;
         if (! $defaultYear) {
             $latestSlip = SalarySlip::where('organization_id', $currentOrg->id())
+                ->when($ownOnly, fn ($latestQuery) => $latestQuery
+                    ->whereNotNull('posted_at')
+                    ->whereHas('employee', fn ($employeeQuery) => $employeeQuery->where('user_id', $request->user()->id)))
                 ->orderByDesc('period_year')
                 ->first();
             $defaultYear = $latestSlip ? (string) $latestSlip->period_year : (string) now()->year;
@@ -58,6 +75,8 @@ class SalarySlipController extends Controller
                 'year' => $defaultYear,
                 'month' => $month ?? '',
             ],
+            'ownOnly' => $ownOnly,
+            'payrollWritable' => FeatureFlag::enabledForOrg('payroll', $currentOrg->get()),
         ]);
     }
 
@@ -65,23 +84,40 @@ class SalarySlipController extends Controller
     {
         $this->authorize('view', $slip);
 
+        $ownOnly = request()->user()->hasPermissionTo(Permission::PayrollSalarySlipsViewOwn)
+            && ! request()->user()->hasPermissionTo(Permission::PayrollView);
+
         return Inertia::render('Payroll/SalarySlips/Show', [
-            'slip' => $slip->load(['employee', 'journalEntry.lines.account']),
+            'slip' => $ownOnly
+                ? $slip->load('employee')->makeHidden(['journal_entry_id'])
+                : $slip->load(['employee', 'journalEntry.lines.account']),
+            'canManage' => ! $ownOnly,
         ]);
     }
 
-    public function generate(Request $request, PayrollCalculator $calculator): RedirectResponse
-    {
+    public function generate(
+        Request $request,
+        PayrollCalculator $calculator,
+    ): RedirectResponse {
+        $this->ensurePayrollWritable(app(CurrentOrganization::class)->get());
         $this->authorize('create', Employee::class);
 
         $validated = $request->validate([
             'employee_id' => ['required', 'exists:employees,id'],
             'month' => ['required', 'integer', 'min:1', 'max:12'],
             'year' => ['required', 'integer', 'min:2000'],
+            'unpaid_leave_days' => PayrollAdjustmentRules::unpaidLeaveDays($request),
+            'reimbursement_amount' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
         ]);
 
-        $employee = Employee::findOrFail($validated['employee_id']);
-        $slip = $calculator->calculate($employee, (int) $validated['month'], (int) $validated['year']);
+        $employee = Employee::query()->whereKey($validated['employee_id'])->firstOrFail();
+        $slip = $calculator->calculate(
+            $employee,
+            (int) $validated['month'],
+            (int) $validated['year'],
+            (int) ($validated['unpaid_leave_days'] ?? 0),
+            (string) ($validated['reimbursement_amount'] ?? '0.00'),
+        );
         $slip->save();
 
         return redirect()->route('payroll.salarySlips.show', $slip)
@@ -90,6 +126,7 @@ class SalarySlipController extends Controller
 
     public function post(Request $request, SalarySlip $slip, PostPayrollAction $action): RedirectResponse|JsonResponse
     {
+        $this->ensurePayrollWritable($slip->organization);
         $this->authorize('update', $slip);
 
         if ($slip->isPosted()) {
@@ -112,6 +149,7 @@ class SalarySlipController extends Controller
 
     public function unpost(Request $request, SalarySlip $slip, UnpostPayrollAction $action): RedirectResponse|JsonResponse
     {
+        $this->ensurePayrollWritable($slip->organization);
         $this->authorize('update', $slip);
 
         if (! $slip->isPosted()) {
@@ -134,6 +172,7 @@ class SalarySlipController extends Controller
 
     public function destroy(SalarySlip $slip): RedirectResponse
     {
+        $this->ensurePayrollWritable($slip->organization);
         $this->authorize('delete', $slip);
 
         if ($slip->isPosted()) {
@@ -150,12 +189,13 @@ class SalarySlipController extends Controller
     {
         $this->authorize('view', $slip);
 
-        $slip->load('employee');
+        $employeeData = $slip->employeeDocumentData();
+        $slip->loadMissing('organization');
 
         return $pdf->download(
             'exports.salary-slip',
-            ['slip' => $slip],
-            "salary-slip-{$slip->employee->last_name}-{$slip->period_year}-{$slip->period_month}.pdf",
+            ['slip' => $slip, 'employeeData' => $employeeData, 'organization' => $slip->organization],
+            "salary-slip-{$employeeData['last_name']}-{$slip->period_year}-{$slip->period_month}.pdf",
         );
     }
 }

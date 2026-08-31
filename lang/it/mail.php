@@ -52,4 +52,9 @@ return [
     'invoice_due_date_label' => 'Scadenza',
     'invoice_closing' => 'Contattaci se hai domande.',
     'invoice_regards' => 'Cordiali saluti',
+    'salary_slip_subject' => 'Il suo cedolino paga per :period',
+    'salary_slip_greeting' => 'Buongiorno :name,',
+    'salary_slip_body' => 'Il suo cedolino paga per :period è allegato a questa e-mail.',
+    'salary_slip_attachment' => 'Conservi questo documento per i suoi archivi.',
+    'salary_slip_regards' => 'Cordiali saluti',
 ];

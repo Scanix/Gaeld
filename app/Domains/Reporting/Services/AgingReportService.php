@@ -32,7 +32,7 @@ class AgingReportService
         $asOf = $asOfDate ? Carbon::parse($asOfDate) : Carbon::now();
         $asOfString = $asOf->toDateString();
 
-        $cacheKey = "aging:{$orgId}:{$type}:{$asOfString}";
+        $cacheKey = "aging:v3:{$orgId}:{$type}:{$asOfString}";
         $orgTag = "org:{$orgId}:reports";
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($orgId, $type, $asOf, $asOfString) {
@@ -50,6 +50,7 @@ class AgingReportService
 
             foreach ($items as $item) {
                 $key = $this->bracket($item['days_overdue']);
+                $item['bracket'] = $key;
                 $brackets[$key]['items'][] = $item;
                 $brackets[$key]['total'] = Money::add($brackets[$key]['total'], (string) $item['amount']);
             }
@@ -108,6 +109,7 @@ class AgingReportService
         $invoices = Invoice::withoutGlobalScope('organization')
             ->where('organization_id', $orgId)
             ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
+            ->where('issue_date', '<=', $asOf->toDateString())
             ->where('due_date', '<=', $asOf->toDateString())
             ->with('customer')
             ->get();
@@ -116,6 +118,7 @@ class AgingReportService
         $notYetDue = Invoice::withoutGlobalScope('organization')
             ->where('organization_id', $orgId)
             ->where('status', InvoiceStatus::Sent->value)
+            ->where('issue_date', '<=', $asOf->toDateString())
             ->where('due_date', '>', $asOf->toDateString())
             ->with('customer')
             ->get();

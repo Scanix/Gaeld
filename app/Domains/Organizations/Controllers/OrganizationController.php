@@ -8,10 +8,12 @@ use App\Domains\Organizations\Requests\StoreOrganizationRequest;
 use App\Domains\Organizations\Services\InvitationService;
 use App\Domains\Organizations\Services\OrganizationService;
 use App\Domains\Organizations\Services\OrganizationSetupService;
+use App\Domains\Payroll\Models\Employee;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -51,6 +53,15 @@ class OrganizationController extends Controller
                 : [],
             'canManageUsers' => $canManageUsers,
             'canAddMember' => $canManageUsers && $invitationService->canAddMember($organization),
+            'availableEmployees' => $canManageUsers
+                ? Employee::query()->whereNull('user_id')->orderBy('last_name')->orderBy('first_name')
+                    ->get(['id', 'first_name', 'last_name', 'email'])
+                    ->map(fn (Employee $employee): array => [
+                        'value' => $employee->id,
+                        'label' => $employee->fullName(),
+                        'email' => $employee->email,
+                    ])
+                : [],
         ]);
     }
 
@@ -70,6 +81,8 @@ class OrganizationController extends Controller
 
             return $org;
         });
+
+        $request->user()->switchOrganization($org);
 
         return redirect()->route('organizations.show', $org)
             ->with('success', __('app.organization_created'));
@@ -93,16 +106,26 @@ class OrganizationController extends Controller
             ->with('success', __('app.organization_deleted'));
     }
 
-    public function switchOrganization(Request $request, Organization $organization): RedirectResponse
+    /**
+     * Resolve the target organization manually rather than via implicit route-model
+     * binding: binding runs in the global middleware stack before this route's
+     * 'verified' middleware, so a bound-vs-missing model produced a 403 (unverified)
+     * vs 404 (not found) differential that let anyone enumerate organization UUIDs.
+     * Looking it up here — after 'verified' has already gated the request — keeps
+     * unauthenticated/unverified users on a single response regardless of the ID.
+     */
+    public function switchOrganization(Request $request, string $organization): RedirectResponse
     {
-        $this->authorize('view', $organization);
+        $model = Str::isUuid($organization) ? Organization::find($organization) : null;
 
-        $request->user()->switchOrganization($organization);
+        abort_unless($model && $request->user()->can('view', $model), 404);
+
+        $request->user()->switchOrganization($model);
 
         // Regenerate session ID when privilege context changes (different org scope)
         $request->session()->regenerate();
 
         return redirect()->route('dashboard')
-            ->with('success', __('app.organization_switched', ['name' => $organization->name]));
+            ->with('success', __('app.organization_switched', ['name' => $model->name]));
     }
 }

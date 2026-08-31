@@ -22,8 +22,8 @@ use Illuminate\Support\Carbon;
  *
  * The amount per row is signed and expressed on the account's natural
  * side: positive means a normal balance (debit for assets/expenses,
- * credit for liabilities/equity/revenue). Any imbalance is plugged into
- * the opening-balance account (9000).
+ * credit for liabilities/equity/revenue). An imbalance requires explicit
+ * permission before it is plugged into the opening-balance account (9000).
  */
 class RecordOpeningBalancesAction
 {
@@ -42,6 +42,7 @@ class RecordOpeningBalancesAction
         ?string $reference = null,
         ?string $description = null,
         bool $isPosted = true,
+        bool $allowContra = false,
     ): ?JournalEntry {
         $year = Carbon::parse($date)->year;
 
@@ -98,8 +99,11 @@ class RecordOpeningBalancesAction
             return null;
         }
 
-        // Balance via the opening-balance (9000) account.
         $diff = Money::subtract($totalDebit, $totalCredit);
+
+        if (! Money::isZero($diff) && ! $allowContra) {
+            throw new \DomainException(__('app.opening_balances_unbalanced'));
+        }
 
         if (Money::isPositive($diff)) {
             $lines[] = new JournalLineData(

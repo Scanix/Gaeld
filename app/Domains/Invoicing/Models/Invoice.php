@@ -5,6 +5,7 @@ namespace App\Domains\Invoicing\Models;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Money;
@@ -32,7 +33,9 @@ use Laravel\Scout\Searchable;
  * @property string $id
  * @property string|null $number
  * @property InvoiceStatus $status
+ * @property InvoiceTaxTreatment $tax_treatment
  * @property InvoiceType $type
+ * @property array{name: string, email: string|null, address: string|null, postal_code: string|null, city: string|null, country: string, vat_number: string|null}|null $customer_snapshot
  * @property Carbon $issue_date
  * @property Carbon $due_date
  * @property string $subtotal
@@ -68,12 +71,18 @@ class Invoice extends Model
      */
     protected $with = ['customer'];
 
+    protected $attributes = [
+        'tax_treatment' => InvoiceTaxTreatment::Standard->value,
+    ];
+
     protected $fillable = [
         'organization_id',
         'customer_id',
+        'customer_snapshot',
         'journal_entry_id',
         'number',
         'status',
+        'tax_treatment',
         'type',
         'related_invoice_id',
         'issue_date',
@@ -102,7 +111,9 @@ class Invoice extends Model
             'vat_amount' => 'decimal:2',
             'total' => 'decimal:2',
             'status' => InvoiceStatus::class,
+            'tax_treatment' => InvoiceTaxTreatment::class,
             'type' => InvoiceType::class,
+            'customer_snapshot' => 'array',
             'reminder_count' => 'integer',
             'last_reminded_at' => 'datetime',
             'archived_at' => 'datetime',
@@ -189,13 +200,13 @@ class Invoice extends Model
      */
     public function scopeOverdue(Builder $query): Builder
     {
-        return $query->where('status', InvoiceStatus::Sent)
+        return $query->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])
             ->where('due_date', '<', now()->toDateString());
     }
 
     public function isOverdue(): bool
     {
-        return $this->status === InvoiceStatus::Sent
+        return in_array($this->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue], true)
             && $this->due_date->isBefore(now()->startOfDay());
     }
 

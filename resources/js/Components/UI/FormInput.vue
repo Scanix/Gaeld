@@ -13,9 +13,11 @@ const props = defineProps({
   error: String,
   hint: String,
   required: Boolean,
+  readonly: Boolean,
   placeholder: String,
   autocomplete: String,
   class: String,
+  labelClass: String,
 })
 
 defineEmits(['update:modelValue'])
@@ -42,7 +44,7 @@ function togglePasswordVisibility() {
     <label
       v-if="label"
       :for="id"
-      class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+      :class="['text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70', labelClass]"
     >
       {{ label }}
       <span v-if="required" class="text-[hsl(var(--destructive))]">*</span>
@@ -53,6 +55,7 @@ function togglePasswordVisibility() {
         :type="effectiveType"
         :value="modelValue"
         :required="required"
+        :readonly="readonly"
         :placeholder="placeholder"
         :autocomplete="autocomplete"
         :aria-describedby="error ? id + '-error' : undefined"

@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Payroll\Contracts\SourceTaxServiceInterface;
 use App\Domains\Payroll\Models\SalarySlip;
 use App\Support\Money;
 use Carbon\Carbon;
@@ -19,10 +20,14 @@ class PostPayrollAction
     public function __construct(
         private LedgerService $ledger,
         private LedgerQueryService $ledgerQuery,
+        private SendSalarySlipEmailAction $sendEmail,
+        private SourceTaxServiceInterface $sourceTax,
     ) {}
 
     public function execute(SalarySlip $slip): SalarySlip
     {
+        $this->ensureSourceTaxApplied($slip);
+
         $deductions = $slip->deductions;
         $orgId = $slip->organization_id;
 
@@ -54,6 +59,7 @@ class PostPayrollAction
             $deductions['lpp_employee'] ?? '0',
             $deductions['lpp_employer'] ?? '0',
         );
+        $sourceTaxAmount = Money::normalize((string) ($deductions['source_tax'] ?? $slip->source_tax_amount ?? '0.00'));
 
         $lines = [];
 
@@ -83,6 +89,17 @@ class PostPayrollAction
             credit: $slip->net_salary,
             description: "Net salary paid: {$employee->fullName()}",
         );
+
+        $reimbursementAmount = (string) ($deductions['reimbursement_amount'] ?? '0.00');
+        if (Money::isPositive($reimbursementAmount)) {
+            $reimbursementAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::GENERAL_EXPENSE);
+            $lines[] = new JournalLineData(
+                accountId: (string) $reimbursementAccount->id,
+                debit: $reimbursementAmount,
+                credit: '0',
+                description: "Expense reimbursement: {$employee->fullName()}",
+            );
+        }
 
         // Credit: AVS/AI/APG payable
         if (Money::isPositive($avsTotal)) {
@@ -114,6 +131,16 @@ class PostPayrollAction
             );
         }
 
+        if (Money::isPositive($sourceTaxAmount)) {
+            $sourceTaxAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::WITHHOLDING_TAX_PAYABLE);
+            $lines[] = new JournalLineData(
+                accountId: (string) $sourceTaxAccount->id,
+                debit: '0',
+                credit: $sourceTaxAmount,
+                description: 'Withholding tax payable',
+            );
+        }
+
         // Build a human-friendly reference: PAY-<INITIALS>-<YYYY>-<MM>.
         // Falls back to a short employee-id slug when initials are unavailable.
         $initials = collect((array) preg_split('/\s+/', trim((string) $employee->fullName())))
@@ -138,6 +165,37 @@ class PostPayrollAction
             'posted_at' => now(),
         ]);
 
-        return $slip->fresh();
+        $postedSlip = $slip->fresh();
+        $this->sendEmail->execute($postedSlip);
+
+        return $postedSlip;
+    }
+
+    private function ensureSourceTaxApplied(SalarySlip $slip): void
+    {
+        if ($slip->source_tax_base === null) {
+            $this->sourceTax->applyToSlip($slip, $slip->employee);
+        }
+
+        if ($slip->source_tax_base === null) {
+            return;
+        }
+
+        $deductions = $slip->deductions;
+        if (array_key_exists('source_tax', $deductions)) {
+            return;
+        }
+
+        $sourceTaxAmount = Money::normalize((string) ($slip->source_tax_amount ?? '0.00'));
+        $deductions['source_tax'] = $sourceTaxAmount;
+        $deductions['net_salary'] = Money::subtract($slip->net_salary, $sourceTaxAmount);
+        $slip->forceFill([
+            'net_salary' => $deductions['net_salary'],
+            'deductions' => $deductions,
+        ]);
+
+        if ($slip->exists) {
+            $slip->saveQuietly();
+        }
     }
 }

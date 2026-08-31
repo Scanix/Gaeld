@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -26,6 +26,7 @@ const props = defineProps({
   vatRates: { type: Array, default: () => [] },
   modules: { type: Array, default: () => [] },
   modulePresets: { type: Object, default: () => ({}) },
+  pendingFiscalYearChange: { type: Object, default: null },
 })
 
 const { t } = useTranslations()
@@ -40,9 +41,36 @@ const tabs = [
   { key: 'expenses', label: 'settings_expenses' },
   { key: 'modules', label: 'settings_modules' },
 ]
+const tabButtons = ref([])
+
+function setTabRef(element, index) {
+  if (element) tabButtons.value[index] = element
+}
+
+function focusTab(index) {
+  activeTab.value = tabs[index].key
+  nextTick(() => tabButtons.value[index]?.focus())
+}
+
+function handleTabKey(event, index) {
+  if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+    event.preventDefault()
+    focusTab((index + 1) % tabs.length)
+  } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+    event.preventDefault()
+    focusTab((index - 1 + tabs.length) % tabs.length)
+  } else if (event.key === 'Home') {
+    event.preventDefault()
+    focusTab(0)
+  } else if (event.key === 'End') {
+    event.preventDefault()
+    focusTab(tabs.length - 1)
+  }
+}
 
 // --- General form ---
 const initialName = props.organization.name || ''
+const initialFiscalYearStart = props.organization.fiscal_year_start || '01-01'
 const generalForm = useForm({
   name: props.organization.name || '',
   legal_name: props.organization.legal_name || '',
@@ -60,6 +88,14 @@ const generalForm = useForm({
   default_payment_terms_days: props.organization.default_payment_terms_days ?? 30,
 })
 
+const fiscalYearRequestForm = useForm({
+  requested_start: initialFiscalYearStart,
+  reason: '',
+})
+const pendingFiscalYearChangeState = ref(props.pendingFiscalYearChange)
+const fiscalYearReviewing = ref(false)
+const fiscalYearStartChanged = computed(() => generalForm.fiscal_year_start !== initialFiscalYearStart)
+
 // Auto-sync legal_name when name changes, if legal_name still matches the original name
 watch(() => generalForm.name, (newName) => {
   if (generalForm.legal_name === initialName || generalForm.legal_name === '') {
@@ -69,6 +105,34 @@ watch(() => generalForm.name, (newName) => {
 
 function submitGeneral() {
   generalForm.put('/settings/general', { preserveScroll: true })
+}
+
+function requestFiscalYearChange() {
+  const requestedStart = generalForm.fiscal_year_start
+  fiscalYearRequestForm.requested_start = requestedStart
+  fiscalYearRequestForm.post('/settings/fiscal-year-change-request', {
+    preserveScroll: true,
+    onSuccess: (pageResponse) => {
+      pendingFiscalYearChangeState.value = pageResponse.props.pendingFiscalYearChange
+      fiscalYearRequestForm.reason = ''
+      generalForm.fiscal_year_start = initialFiscalYearStart
+    },
+  })
+}
+
+function reviewFiscalYearChange(action) {
+  if (!pendingFiscalYearChangeState.value?.id) return
+
+  fiscalYearReviewing.value = true
+  router.post(`/settings/fiscal-year-change-requests/${pendingFiscalYearChangeState.value.id}/${action}`, {}, {
+    preserveScroll: true,
+    onSuccess: (pageResponse) => {
+      pendingFiscalYearChangeState.value = pageResponse.props.pendingFiscalYearChange
+    },
+    onFinish: () => {
+      fiscalYearReviewing.value = false
+    },
+  })
 }
 
 // --- Invoice form ---
@@ -266,22 +330,24 @@ const businessTypeOptions = [
   <AppLayout :title="t('organization_settings')" help-page="user-management">
     <div class="max-w-3xl space-y-6">
       <!-- Tabs -->
-      <div role="tablist" aria-label="Settings" class="flex gap-1 rounded-lg bg-[hsl(var(--muted))] p-1">
+      <div role="tablist" aria-label="Settings" class="grid grid-cols-2 gap-1 rounded-lg bg-[hsl(var(--muted))] p-1 sm:flex">
         <button
-          v-for="tab in tabs"
+          v-for="(tab, index) in tabs"
           :key="tab.key"
           role="tab"
           :id="`tab-${tab.key}`"
           :aria-selected="activeTab === tab.key"
           :aria-controls="`tabpanel-${tab.key}`"
           :tabindex="activeTab === tab.key ? 0 : -1"
+          :ref="element => setTabRef(element, index)"
           :class="[
-            'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+            'min-w-0 rounded-md px-3 py-2 text-sm font-medium transition-colors sm:flex-1',
             activeTab === tab.key
               ? 'bg-[hsl(var(--background))] text-[hsl(var(--foreground))] shadow-sm'
               : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
           ]"
           @click="activeTab = tab.key"
+          @keydown="handleTabKey($event, index)"
         >
           {{ t(tab.label) }}
         </button>
@@ -357,6 +423,69 @@ const businessTypeOptions = [
                   :options="fiscalYearStartOptions"
                   :error="generalForm.errors.fiscal_year_start"
                 />
+                <div v-if="fiscalYearStartChanged" class="sm:col-span-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                  <p>{{ t('fiscal_year_change_warning') }}</p>
+                  <FormTextarea
+                    id="fiscal_year_change_reason"
+                    v-model="fiscalYearRequestForm.reason"
+                    :label="t('fiscal_year_change_reason')"
+                    :error="fiscalYearRequestForm.errors.reason"
+                    class="mt-3"
+                    rows="3"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    class="mt-2"
+                    :disabled="fiscalYearRequestForm.processing"
+                    @click="requestFiscalYearChange"
+                  >
+                    {{ t('request_fiscal_year_change') }}
+                  </Button>
+                </div>
+                <div v-else-if="pendingFiscalYearChangeState" class="sm:col-span-3 rounded-md border border-blue-300 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
+                  <p v-if="pendingFiscalYearChangeState.status === 'approved'">
+                    {{ t('fiscal_year_change_approved_notice', { start: pendingFiscalYearChangeState.requested_start, year: pendingFiscalYearChangeState.effective_year }) }}
+                  </p>
+                  <p v-else>
+                    {{ t('fiscal_year_change_pending', { start: pendingFiscalYearChangeState.requested_start, year: pendingFiscalYearChangeState.effective_year }) }}
+                  </p>
+                  <p v-if="page.props.errors?.fiscal_year_change" class="mt-2 text-[hsl(var(--destructive))]">
+                    {{ page.props.errors.fiscal_year_change }}
+                  </p>
+                  <div v-if="pendingFiscalYearChangeState.status === 'pending'" class="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      :disabled="fiscalYearReviewing"
+                      :loading="fiscalYearReviewing"
+                      @click="reviewFiscalYearChange('approve')"
+                    >
+                      {{ t('fiscal_year_change_approve') }}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      :disabled="fiscalYearReviewing"
+                      @click="reviewFiscalYearChange('reject')"
+                    >
+                      {{ t('fiscal_year_change_reject') }}
+                    </Button>
+                  </div>
+                  <div v-else-if="pendingFiscalYearChangeState.status === 'approved'" class="mt-3">
+                    <Button
+                      type="button"
+                      size="sm"
+                      :disabled="fiscalYearReviewing"
+                      :loading="fiscalYearReviewing"
+                      @click="reviewFiscalYearChange('apply')"
+                    >
+                      {{ t('fiscal_year_change_apply') }}
+                    </Button>
+                  </div>
+                </div>
                 <FormSelect
                   id="business_type"
                   v-model="generalForm.business_type"

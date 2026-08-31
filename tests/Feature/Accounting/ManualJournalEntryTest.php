@@ -5,6 +5,7 @@ namespace Tests\Feature\Accounting;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -46,6 +47,37 @@ class ManualJournalEntryTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->component('Accounting/JournalEntryCreate')
             ->has('accounts', 2));
+    }
+
+    public function test_show_renders_a_journal_entry_with_its_lines(): void
+    {
+        $entry = JournalEntry::create([
+            'organization_id' => $this->organization->id,
+            'date' => '2026-03-15',
+            'reference' => 'JE-SHOW-1',
+            'description' => 'Visible journal entry',
+            'is_posted' => true,
+        ]);
+        TransactionLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id' => $this->bank->id,
+            'debit' => '250.00',
+            'credit' => '0.00',
+        ]);
+        TransactionLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id' => $this->revenue->id,
+            'debit' => '0.00',
+            'credit' => '250.00',
+        ]);
+
+        $this->actAsOrg()
+            ->get(route('accounting.journal-entries.show', $entry))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Accounting/JournalEntryShow')
+                ->where('entry.reference', 'JE-SHOW-1')
+                ->has('entry.lines', 2));
     }
 
     public function test_store_posts_a_balanced_entry(): void

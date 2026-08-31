@@ -16,6 +16,8 @@ const { intlMonthName, formatCurrency } = useFormatters()
 
 const props = defineProps({
   slips: Object,
+  ownOnly: { type: Boolean, default: false },
+  payrollWritable: { type: Boolean, default: true },
   query: {
     type: Object,
     default: () => ({ month: '', year: '' }),
@@ -43,11 +45,11 @@ function applyFilter() {
 }
 
 const columns = computed(() => [
-  { key: 'period', label: t('period') },
-  { key: 'employee', label: t('employee') },
-  { key: 'gross_salary', label: t('gross_salary'), class: 'text-right' },
-  { key: 'net_salary', label: t('net_salary'), class: 'text-right' },
-  { key: 'status', label: t('status') },
+  { key: 'period', label: t('period'), minWidth: 140 },
+  { key: 'employee', label: t('employee'), minWidth: 180 },
+  { key: 'gross_salary', label: t('gross_salary'), class: 'text-right whitespace-nowrap', minWidth: 140 },
+  { key: 'net_salary', label: t('net_salary'), class: 'text-right whitespace-nowrap', minWidth: 140 },
+  { key: 'status', label: t('status'), minWidth: 110 },
   { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 </script>
@@ -80,9 +82,10 @@ const columns = computed(() => [
     >
       <template #cell-period="{ row }">{{ row.month_label }}</template>
       <template #cell-employee="{ row }">
-        <Link :href="`/payroll/employees/${row.employee_id}`" class="hover:underline">
+        <Link v-if="!ownOnly" :href="`/payroll/employees/${row.employee_id}`" class="hover:underline">
           {{ row.employee_name }}
         </Link>
+        <span v-else>{{ row.employee_name }}</span>
       </template>
       <template #cell-gross_salary="{ row }">
         <span class="font-mono">{{ formatCurrency(row.gross_salary) }}</span>

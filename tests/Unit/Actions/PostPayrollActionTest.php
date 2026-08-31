@@ -8,6 +8,8 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Payroll\Actions\PostPayrollAction;
+use App\Domains\Payroll\Actions\SendSalarySlipEmailAction;
+use App\Domains\Payroll\Contracts\SourceTaxServiceInterface;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Payroll\Models\SalarySlip;
 use Mockery;
@@ -28,7 +30,11 @@ class PostPayrollActionTest extends TestCase
 
         $this->ledger = Mockery::mock(LedgerService::class);
         $this->ledgerQuery = Mockery::mock(LedgerQueryService::class);
-        $this->action = new PostPayrollAction($this->ledger, $this->ledgerQuery);
+        $sendEmail = Mockery::mock(SendSalarySlipEmailAction::class);
+        $sendEmail->shouldReceive('execute')->zeroOrMoreTimes();
+        $sourceTax = Mockery::mock(SourceTaxServiceInterface::class);
+        $sourceTax->shouldReceive('applyToSlip')->zeroOrMoreTimes();
+        $this->action = new PostPayrollAction($this->ledger, $this->ledgerQuery, $sendEmail, $sourceTax);
     }
 
     public function test_posts_salary_slip_with_no_deductions(): void

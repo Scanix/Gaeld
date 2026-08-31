@@ -16,10 +16,17 @@ import { HelpCircle } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 
+const props = defineProps({
+  withholdingTaxEnabled: { type: Boolean, default: false },
+})
+
 const statusOptions = [
   { value: 'active', label: t('employee_status_active') },
   { value: 'inactive', label: t('employee_status_inactive') },
 ]
+
+const sourceTaxCantons = ['AG', 'AI', 'AR', 'BE', 'BL', 'BS', 'FR', 'GE', 'GL', 'GR', 'JU', 'LU', 'NE', 'NW', 'OW', 'SG', 'SH', 'SO', 'SZ', 'TG', 'TI', 'UR', 'VD', 'VS', 'ZG', 'ZH']
+const sourceTaxTariffs = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
 const form = useForm({
   first_name: '',
@@ -30,6 +37,11 @@ const form = useForm({
   gross_salary: '',
   status: 'active',
   iban: '',
+  is_source_tax_subject: false,
+  source_tax_canton: '',
+  source_tax_tariff: '',
+  source_tax_municipality_code: '',
+  has_thirteenth_salary: false,
 })
 
 function submit() {
@@ -42,6 +54,11 @@ function submit() {
     entry_date: data.start_date,
     gross_salary: data.gross_salary,
     is_active: data.status === 'active',
+    is_source_tax_subject: data.is_source_tax_subject,
+    source_tax_canton: data.source_tax_canton || null,
+    source_tax_tariff: data.source_tax_tariff || null,
+    source_tax_municipality_code: data.source_tax_municipality_code || null,
+    has_thirteenth_salary: data.has_thirteenth_salary,
   })).post('/payroll/employees')
 }
 </script>
@@ -135,6 +152,54 @@ function submit() {
               :options="statusOptions"
               :error="form.errors.status"
             />
+            <label class="flex items-start gap-2 text-sm sm:col-span-2">
+              <input
+                v-model="form.has_thirteenth_salary"
+                type="checkbox"
+                class="mt-0.5 h-4 w-4 accent-[hsl(var(--primary))]"
+              />
+              <span>
+                <span class="block font-medium">{{ t('has_thirteenth_salary') }}</span>
+                <span class="block text-xs text-[hsl(var(--muted-foreground))]">{{ t('has_thirteenth_salary_desc') }}</span>
+              </span>
+            </label>
+            <div v-if="props.withholdingTaxEnabled" class="space-y-4 rounded-md border border-[hsl(var(--border))] p-4 sm:col-span-2">
+              <label class="flex items-start gap-2 text-sm">
+                <input
+                  v-model="form.is_source_tax_subject"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 accent-[hsl(var(--primary))]"
+                />
+                <span>
+                  <span class="block font-medium">{{ t('source_tax_subject') }}</span>
+                  <span class="block text-xs text-[hsl(var(--muted-foreground))]">{{ t('source_tax_subject_desc') }}</span>
+                </span>
+              </label>
+              <div v-if="form.is_source_tax_subject" class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <FormSelect
+                  id="source_tax_canton"
+                  v-model="form.source_tax_canton"
+                  :label="t('source_tax_canton')"
+                  :options="sourceTaxCantons"
+                  :placeholder="t('select')"
+                  :error="form.errors.source_tax_canton"
+                />
+                <FormSelect
+                  id="source_tax_tariff"
+                  v-model="form.source_tax_tariff"
+                  :label="t('source_tax_tariff')"
+                  :options="sourceTaxTariffs"
+                  :placeholder="t('select')"
+                  :error="form.errors.source_tax_tariff"
+                />
+                <FormInput
+                  id="source_tax_municipality_code"
+                  v-model="form.source_tax_municipality_code"
+                  :label="t('source_tax_municipality_code')"
+                  :error="form.errors.source_tax_municipality_code"
+                />
+              </div>
+            </div>
           </div>
 
           <!-- Bank account -->

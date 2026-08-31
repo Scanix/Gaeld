@@ -2,6 +2,8 @@
 
 namespace Tests\Security\Api;
 
+use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Api\Enums\TokenType;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Models\Invoice;
@@ -59,6 +61,48 @@ class ApiTokenSecurityTest extends SecurityTestCase
         $this->withToken('invalid-token-string')
             ->getJson('/api/v1/invoices')
             ->assertUnauthorized();
+    }
+
+    public function test_personal_token_without_accounting_view_cannot_list_accounts(): void
+    {
+        app(CurrentOrganization::class)->set($this->orgA);
+        Account::create([
+            'organization_id' => $this->orgA->id,
+            'code' => '1020',
+            'name' => 'Bank',
+            'type' => AccountType::Asset->value,
+        ]);
+
+        $result = $this->ownerA->createToken('contacts-only', ['contacts.view']);
+        $result->accessToken->update([
+            'organization_id' => $this->orgA->id,
+            'type' => TokenType::Personal,
+        ]);
+
+        $this->withToken($result->plainTextToken)
+            ->getJson('/api/v1/accounts')
+            ->assertForbidden();
+    }
+
+    public function test_organization_wildcard_token_can_list_accounts(): void
+    {
+        app(CurrentOrganization::class)->set($this->orgA);
+        Account::create([
+            'organization_id' => $this->orgA->id,
+            'code' => '1020',
+            'name' => 'Bank',
+            'type' => AccountType::Asset->value,
+        ]);
+
+        $result = $this->ownerA->createToken('organization-wildcard', ['*']);
+        $result->accessToken->update([
+            'organization_id' => $this->orgA->id,
+            'type' => TokenType::Organization,
+        ]);
+
+        $this->withToken($result->plainTextToken)
+            ->getJson('/api/v1/accounts')
+            ->assertOk();
     }
 
     // ──────────────────────────────────────────────────────────────

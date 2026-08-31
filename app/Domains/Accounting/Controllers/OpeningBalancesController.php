@@ -35,6 +35,12 @@ class OpeningBalancesController extends Controller
         $this->authorize('create', JournalEntry::class);
 
         $org = $currentOrg->get();
+        $fiscalYearStart = $org->fiscalYears()
+            ->orderBy('start_date')
+            ->value('start_date');
+        $defaultDate = $fiscalYearStart !== null
+            ? Carbon::parse($fiscalYearStart)->toDateString()
+            : sprintf('%d-01-01', now()->year);
 
         $balanceSheetTypes = [
             AccountType::Asset->value,
@@ -81,7 +87,7 @@ class OpeningBalancesController extends Controller
 
         return Inertia::render('Accounting/OpeningBalances', [
             'accounts' => $accounts,
-            'defaultDate' => sprintf('%d-01-01', now()->year),
+            'defaultDate' => $defaultDate,
             'existingOpening' => $existingOpening,
             'isStartingFresh' => $org->setup_mode === 'fresh',
             'equityAccounts' => $equityAccounts,
@@ -98,6 +104,7 @@ class OpeningBalancesController extends Controller
 
         $validated = $request->validated();
         $isPosted = (bool) $request->boolean('is_posted', true);
+        $allowContra = (bool) $request->boolean('allow_contra', false);
 
         try {
             $entry = $action->execute(
@@ -107,6 +114,7 @@ class OpeningBalancesController extends Controller
                 reference: $validated['reference'] ?? null,
                 description: $validated['description'] ?? null,
                 isPosted: $isPosted,
+                allowContra: $allowContra,
             );
         } catch (\Throwable $e) {
             return $this->backWithError($e);

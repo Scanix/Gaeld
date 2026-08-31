@@ -149,49 +149,50 @@ const vatOptions = computed(() => [
               <div
                 v-for="(line, i) in form.lines"
                 :key="i"
-                class="grid grid-cols-1 gap-3 rounded-lg border border-[hsl(var(--border))] p-3 sm:grid-cols-12 sm:items-end sm:gap-2"
+                class="grid grid-cols-1 gap-4 rounded-lg border border-[hsl(var(--border))] p-4 sm:grid-cols-2 sm:items-end sm:gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(6rem,.7fr)_minmax(9rem,1fr)_minmax(9rem,1fr)_auto]"
               >
-                <div class="sm:col-span-4">
+                <div class="min-w-0 sm:col-span-2 xl:col-span-1">
                   <FormInput
                     :id="`line-desc-${i}`"
                     v-model="line.description"
                     :label="t('description')"
+                    label-class="xl:sr-only"
                     :error="form.errors[`lines.${i}.description`]"
                     required
                   />
                 </div>
-                <div class="grid grid-cols-2 gap-3 sm:contents">
-                  <div class="sm:col-span-2">
+                <div class="min-w-0 sm:col-span-1 xl:col-span-1">
                     <FormInput
                       :id="`line-qty-${i}`"
                       v-model="line.quantity"
                       type="number"
                       :label="t('qty')"
+                      label-class="xl:sr-only"
                       :error="form.errors[`lines.${i}.quantity`]"
                       required
                     />
-                  </div>
-                  <div class="sm:col-span-2">
+                </div>
+                <div class="min-w-0 sm:col-span-1 xl:col-span-1">
                     <FormInput
                       :id="`line-price-${i}`"
                       v-model="line.unit_price"
                       type="number"
                       :label="t('unit_price')"
+                      label-class="xl:sr-only"
                       :error="form.errors[`lines.${i}.unit_price`]"
                       required
                     />
-                  </div>
                 </div>
-                <div class="flex items-end gap-3 sm:contents">
-                  <div class="flex-1 sm:col-span-3">
+                <div class="min-w-0 sm:col-span-1 xl:col-span-1">
                     <FormSelect
                       :id="`line-vat-${i}`"
                       v-model="line.vat_rate_id"
                       :label="t('vat')"
+                      label-class="xl:sr-only"
                       :options="vatOptions"
                     />
-                  </div>
-                  <div class="flex justify-end pb-2 sm:col-span-1">
+                </div>
+                <div class="flex items-end justify-end sm:col-span-1 xl:col-span-1">
                     <Button
                       type="button"
                       variant="ghost"
@@ -201,7 +202,6 @@ const vatOptions = computed(() => [
                     >
                       <Trash2 class="h-4 w-4" />
                     </Button>
-                  </div>
                 </div>
               </div>
             </div>

@@ -12,6 +12,12 @@ use Illuminate\Support\Facades\Cache;
 
 class BankAccountQuery
 {
+    public static function forgetSelectCache(string $organizationId): void
+    {
+        Cache::tags(["org:{$organizationId}:banking"])
+            ->forget("bank_accounts_select:{$organizationId}");
+    }
+
     /**
      * @return LengthAwarePaginator<int, BankAccount>
      */

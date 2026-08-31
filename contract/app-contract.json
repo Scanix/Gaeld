@@ -50,7 +50,6 @@
     "auth.role": "string",
     "auth.permissions": "string[]",
     "auth.organizations": [{"id": "uuid", "name": "string", "role": "string"}],
-    "auth.is_saas_admin": "boolean",
     "auth.subscription": {"status": "string", "plan_slug": "string", "trial_ends_at": "datetime|null", "ends_at": "datetime|null"},
     "locale": "string (en|fr|de|it)",
     "translations": "object (lazy)",
@@ -333,7 +332,7 @@
       "consolidation": {"path": "/accounting/consolidation", "feature_gate": "consolidation", "page": "Accounting/Consolidation/*"},
       "withholding_tax": {"path": "/payroll/withholding-tax", "feature_gate": "withholding_tax", "page": "Payroll/WithholdingTax/*"},
       "billing": {"path": "/billing", "feature_gate": "saas", "page": "Billing/*"},
-      "saas_admin": {"path": "/saas-admin", "feature_gate": "saas", "page": "SaasAdmin/*"},
+      "saas_admin": {"path": "/saas-admin", "feature_gate": "saas", "page": "SaasAdmin/*", "routes": ["saas-admin.index", "saas-admin.organizations.index", "saas-admin.billing.index", "saas-admin.billing", "saas-admin.health", "saas-admin.operations", "saas-admin.support.start", "saas-admin.support.stop", "saas-admin.campaigns.store", "saas-admin.campaigns.send", "saas-admin.exports.store", "saas-admin.exports.download"], "shared_props": ["auth.support_session", "supportSession"]},
       "analytical_report": {"path": "/accounting/analytical-report", "feature_gate": "analytical", "page": "Reports/AnalyticalReport"}
     }
   },

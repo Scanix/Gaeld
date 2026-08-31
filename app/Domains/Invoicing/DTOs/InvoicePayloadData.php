@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\DTOs;
 
+use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Support\ValidatesFromArray;
 
 /**
@@ -26,6 +27,7 @@ abstract readonly class InvoicePayloadData
         public ?string $notes,
         public ?string $paymentTerms,
         public array $lines,
+        public InvoiceTaxTreatment $taxTreatment = InvoiceTaxTreatment::Standard,
     ) {}
 
     /** @param  array<string, mixed>  $data */
@@ -43,6 +45,8 @@ abstract readonly class InvoicePayloadData
             notes: $data['notes'] ?? null,
             paymentTerms: $data['payment_terms'] ?? null,
             lines: array_map(fn (array $line) => InvoiceLineData::fromArray($line), $data['lines']),
+            taxTreatment: InvoiceTaxTreatment::tryFrom($data['tax_treatment'] ?? InvoiceTaxTreatment::Standard->value)
+                ?? InvoiceTaxTreatment::Standard,
         );
     }
 
@@ -59,6 +63,7 @@ abstract readonly class InvoicePayloadData
             'notes' => $this->notes,
             'payment_terms' => $this->paymentTerms,
             'lines' => array_map(fn (InvoiceLineData $line) => $line->toArray(), $this->lines),
+            'tax_treatment' => $this->taxTreatment->value,
         ];
     }
 }

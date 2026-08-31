@@ -5,6 +5,7 @@ namespace Tests\Feature\Accounting;
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -58,6 +59,24 @@ class OpeningBalancesWizardTest extends TestCase
             ->has('accounts', 3));
     }
 
+    public function test_wizard_uses_first_fiscal_year_start_as_default_date(): void
+    {
+        FiscalYear::create([
+            'organization_id' => $this->organization->id,
+            'name' => '2024-2025 Long Year',
+            'start_date' => '2024-01-01',
+            'end_date' => '2025-06-30',
+            'status' => 'operative',
+        ]);
+
+        $response = $this->actAsOrg()->get('/accounting/opening-balances');
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Accounting/OpeningBalances')
+            ->where('defaultDate', '2024-01-01'));
+    }
+
     public function test_store_records_balanced_opening_entry_with_contra(): void
     {
         $response = $this->actAsOrg()->post('/accounting/opening-balances', [
@@ -67,6 +86,7 @@ class OpeningBalancesWizardTest extends TestCase
                 ['account_id' => $this->debtors->id, 'amount' => '2500.00'],
                 ['account_id' => $this->creditors->id, 'amount' => '4000.00'],
             ],
+            'allow_contra' => true,
         ]);
 
         $response->assertRedirect('/accounting/journal-entries');
@@ -99,6 +119,21 @@ class OpeningBalancesWizardTest extends TestCase
         $this->assertSame('8500.00', $contra->credit);
     }
 
+    public function test_store_rejects_unbalanced_opening_entry_without_explicit_contra_permission(): void
+    {
+        $response = $this->actAsOrg()->from('/accounting/opening-balances')->post('/accounting/opening-balances', [
+            'date' => '2026-01-01',
+            'balances' => [
+                ['account_id' => $this->bank->id, 'amount' => '10000.00'],
+                ['account_id' => $this->creditors->id, 'amount' => '4000.00'],
+            ],
+        ]);
+
+        $response->assertRedirect('/accounting/opening-balances');
+        $response->assertSessionHas('error', __('app.opening_balances_unbalanced'));
+        $this->assertDatabaseMissing('journal_entries', ['reference' => 'OPENING-2026']);
+    }
+
     public function test_store_skips_empty_rows_and_errors_when_all_zero(): void
     {
         $response = $this->actAsOrg()->from('/accounting/opening-balances')->post('/accounting/opening-balances', [
@@ -121,6 +156,7 @@ class OpeningBalancesWizardTest extends TestCase
             'balances' => [
                 ['account_id' => $this->bank->id, 'amount' => '-500.00'],
             ],
+            'allow_contra' => true,
         ]);
 
         $entry = JournalEntry::where('reference', 'OPENING-2026')->with('lines')->firstOrFail();
@@ -138,6 +174,7 @@ class OpeningBalancesWizardTest extends TestCase
                 ['account_id' => $this->bank->id, 'amount' => '10000.00'],
                 ['account_id' => $this->creditors->id, 'amount' => '4000.00'],
             ],
+            'allow_contra' => true,
         ]);
 
         $response->assertRedirect('/accounting/journal-entries');

@@ -39,6 +39,7 @@ const selectedYear = ref(props.year)
 const showConfirm  = ref(false)
 const showReopenConfirm = ref(false)
 const processing   = ref(false)
+const closingErrors = ref({})
 
 const form = useForm({
   fiscal_year_id:      props.fiscalYearId,
@@ -109,6 +110,26 @@ function runClosing() {
       showConfirm.value = false
     },
   })
+}
+
+function openClosingConfirm() {
+  closingErrors.value = {}
+
+  const requiredFields = [
+    ['closing_date', form.closing_date],
+    ['reference', form.reference],
+    ['result_account_code', form.result_account_code],
+  ]
+
+  for (const [field, value] of requiredFields) {
+    if (!String(value ?? '').trim()) {
+      closingErrors.value[field] = t('field_required')
+    }
+  }
+
+  if (Object.keys(closingErrors.value).length === 0) {
+    showConfirm.value = true
+  }
 }
 
 function runReopen() {
@@ -345,14 +366,14 @@ function daysOverdueLabel(n) {
                 v-model="form.closing_date"
                 type="date"
                 :label="t('closing_date')"
-                :error="form.errors.closing_date"
+                :error="closingErrors.closing_date || form.errors.closing_date"
                 required
               />
               <FormInput
                 id="reference"
                 v-model="form.reference"
                 :label="t('closing_reference')"
-                :error="form.errors.reference"
+                :error="closingErrors.reference || form.errors.reference"
                 placeholder="BOUCL-2025"
                 required
               />
@@ -361,7 +382,7 @@ function daysOverdueLabel(n) {
                   id="result_account_code"
                   v-model="form.result_account_code"
                   :label="t('result_account_code')"
-                  :error="form.errors.result_account_code"
+                  :error="closingErrors.result_account_code || form.errors.result_account_code"
                   placeholder="9000"
                   required
                 />
@@ -375,7 +396,7 @@ function daysOverdueLabel(n) {
               <Button
                 variant="destructive"
                 :disabled="form.processing"
-                @click="showConfirm = true"
+                @click="openClosingConfirm"
               >
                 {{ t('run_closing') }}
               </Button>

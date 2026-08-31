@@ -34,6 +34,7 @@ const props = defineProps({
   defaultNotes: { type: String, default: '' },
   defaultPaymentTermsDays: { type: Number, default: null },
   defaultVatRateId: { type: [String, Number], default: null },
+  taxTreatments: { type: Array, default: () => [] },
 })
 
 const { t } = useTranslations()
@@ -48,6 +49,7 @@ const form = useForm({
   currency: 'CHF',
   notes: props.defaultNotes,
   payment_terms: '',
+  tax_treatment: 'standard',
   lines: [{ type: 'item', discount_type: 'flat', description: '', quantity: 1, unit_price: 0, vat_rate_id: props.defaultVatRateId ? String(props.defaultVatRateId) : '' }],
   justificatif: null,
   finalize: false,
@@ -61,10 +63,12 @@ watch(() => form.issue_date, (val) => {
   const y = new Date(val).getFullYear()
   if (Number.isNaN(y) || y === lastReloadedYear) return
   lastReloadedYear = y
+  forceClear.value = true
   router.reload({
     only: ['suggestedNumber'],
     data: { for_year: y },
     preserveState: true,
+    onFinish: () => { forceClear.value = false },
   })
 })
 
@@ -175,16 +179,20 @@ function onDueDateManualEdit() {
 
     <ClosedYearBanner v-if="isIssueDateClosed" :year="closedYear" />
 
-    <Card class="max-w-5xl">
-      <CardHeader>
+    <Card class="max-w-6xl overflow-hidden">
+      <CardHeader class="border-b bg-[hsl(var(--muted)/0.18)]">
         <CardTitle>{{ t('new_invoice') }}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <form class="space-y-6" @submit.prevent="submit">
+      <CardContent class="space-y-8 p-4 sm:p-6 lg:p-8">
+        <form class="space-y-8" @submit.prevent="submit">
           <!-- Invoice Details -->
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('invoice_details') }}</h3>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="space-y-1">
+          <section class="space-y-4" aria-labelledby="invoice-details-heading">
+            <div>
+              <h3 id="invoice-details-heading" class="text-base font-semibold text-[hsl(var(--foreground))]">{{ t('invoice_details') }}</h3>
+              <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{{ t('required_to_finalize') }}</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="lg:col-span-2">
               <div class="flex items-end gap-2">
                 <SearchableSelect
                   id="customer_id"
@@ -193,6 +201,7 @@ function onDueDateManualEdit() {
                   :options="clientOptions"
                   :placeholder="t('select_client')"
                   :error="form.errors.customer_id || clientErrors.customer_id"
+                  :required="form.finalize"
                   class="flex-1"
                   @blur="validateField('customer_id', form.customer_id)"
                 />
@@ -207,11 +216,10 @@ function onDueDateManualEdit() {
                   <Plus class="h-4 w-4" />
                 </Button>
               </div>
-              <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('required_to_finalize') }}</p>
             </div>
-            <div class="space-y-2">
+            <div class="lg:col-span-2">
               <label class="text-sm font-medium leading-none">{{ t('invoice_number') }}</label>
-              <div class="flex h-11 sm:h-9 w-full items-center rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--muted))] px-3 py-1 text-base sm:text-sm text-[hsl(var(--muted-foreground))] select-none">
+              <div class="mt-2 flex h-11 w-full items-center rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--muted))] px-3 py-1 text-base text-[hsl(var(--muted-foreground))] select-none sm:h-9 sm:text-sm">
                 {{ suggestedNumber || '\u2026' }}
               </div>
             </div>
@@ -231,6 +239,7 @@ function onDueDateManualEdit() {
               :label="t('due_date')"
               :error="form.errors.due_date || clientErrors.due_date"
               :hint="t('required_to_finalize')"
+              :required="form.finalize"
               @blur="onDueDateManualEdit"
               @change="onDueDateManualEdit"
             />
@@ -241,10 +250,22 @@ function onDueDateManualEdit() {
               :options="currencyOptions(t)"
               :error="form.errors.currency"
             />
+              <div class="lg:col-span-2">
+                <FormSelect
+                  id="tax_treatment"
+                  v-model="form.tax_treatment"
+                  :label="t('invoice_tax_treatment')"
+                  :options="taxTreatments"
+                  :error="form.errors.tax_treatment"
+                />
+                <p v-if="form.tax_treatment === 'reverse_charge'" class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                  {{ t('invoice_reverse_charge_hint') }}
+                </p>
+              </div>
           </div>
+          </section>
 
           <!-- Line items -->
-          <hr class="border-[hsl(var(--border))]" />
           <InvoiceLineItems
             v-model="form.lines"
             :vat-rates="vatRates"
@@ -252,19 +273,21 @@ function onDueDateManualEdit() {
             :errors="form.errors"
             :currency="form.currency"
             :default-vat-rate-id="defaultVatRateId"
+            :tax-treatment="form.tax_treatment"
           />
 
           <!-- Notes & Terms -->
-          <hr class="border-[hsl(var(--border))]" />
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('notes_and_terms') }}</h3>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormTextarea
-              id="notes"
-              v-model="form.notes"
-              :label="t('notes')"
-            />
-            <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('notes_printed_hint') }}</p>
+          <section class="space-y-4" aria-labelledby="notes-terms-heading">
             <div>
+              <h3 id="notes-terms-heading" class="text-base font-semibold text-[hsl(var(--foreground))]">{{ t('notes_and_terms') }}</h3>
+            </div>
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-[minmax(0,1.5fr)_minmax(16rem,1fr)] sm:items-start">
+              <FormTextarea
+                id="notes"
+                v-model="form.notes"
+                :label="t('notes')"
+              />
+              <div>
               <FormInput
                 id="payment_terms"
                 v-model="form.payment_terms"
@@ -274,25 +297,29 @@ function onDueDateManualEdit() {
                 placeholder="30"
               />
               <p class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{{ t('payment_terms_hint') }}</p>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <FileUpload
-            size="compact"
-            :label="t('justificatif')"
-            :error="form.errors.justificatif"
-            @change="onJustificatifChange"
-          />
+          <section class="space-y-3" aria-labelledby="supporting-document-heading">
+            <h3 id="supporting-document-heading" class="text-base font-semibold text-[hsl(var(--foreground))]">{{ t('justificatif') }}</h3>
+            <FileUpload
+              size="compact"
+              :label="t('justificatif')"
+              :error="form.errors.justificatif"
+              @change="onJustificatifChange"
+            />
+          </section>
 
-          <div class="flex flex-wrap justify-end gap-3">
-            <Button as="a" href="/invoices" variant="outline">{{ t('cancel') }}</Button>
-            <Button type="button" variant="outline" @click="showPreview = true">
+          <div class="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+            <Button as="a" href="/invoices" variant="outline" class="w-full sm:w-auto">{{ t('cancel') }}</Button>
+            <Button type="button" variant="outline" class="w-full sm:w-auto" @click="showPreview = true">
               {{ t('invoice_preview') }}
             </Button>
-            <Button type="button" variant="outline" :disabled="form.processing || isIssueDateClosed" :loading="form.processing && form.finalize" :title="isIssueDateClosed ? t('fiscal_year_closed_action_disabled') : undefined" @click="submitAndFinalize">
+            <Button type="button" variant="outline" class="w-full sm:w-auto" :disabled="form.processing || isIssueDateClosed" :loading="form.processing && form.finalize" :title="isIssueDateClosed ? t('fiscal_year_closed_action_disabled') : undefined" @click="submitAndFinalize">
               {{ t('create_and_finalize') }}
             </Button>
-            <Button type="submit" :disabled="form.processing" :loading="form.processing && !form.finalize">{{ t('create_invoice') }}</Button>
+            <Button type="submit" class="w-full sm:w-auto" :disabled="form.processing" :loading="form.processing && !form.finalize">{{ t('create_invoice') }}</Button>
           </div>
         </form>
       </CardContent>

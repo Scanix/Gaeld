@@ -38,7 +38,7 @@ class LegalArchiveController extends Controller
         private readonly FiscalYearService $fiscalYears,
     ) {}
 
-    public function index(CurrentOrganization $currentOrg): Response
+    public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', LegalArchive::class);
 
@@ -99,6 +99,7 @@ class LegalArchiveController extends Controller
 
         return Inertia::render('Accounting/Archives/Index', [
             'years' => $years,
+            'canManage' => $request->user()->can('create', LegalArchive::class),
         ]);
     }
 
@@ -115,6 +116,7 @@ class LegalArchiveController extends Controller
                 'id' => $a->id,
                 'document_type' => $a->document_type,
                 'document_id' => $a->document_id,
+                'version' => $a->version,
                 'archived_at' => $a->archived_at->toIso8601String(),
                 'expires_at' => $a->expires_at->toIso8601String(),
                 'verified_at' => $a->verified_at?->toIso8601String(),
@@ -209,6 +211,7 @@ class LegalArchiveController extends Controller
         $archive = $this->periodQuery($period)
             ->where('document_type', $documentType)
             ->where('document_id', $documentId)
+            ->orderByDesc('version')
             ->first();
 
         if ($archive !== null && Storage::exists($archive->storage_path)) {
@@ -225,7 +228,7 @@ class LegalArchiveController extends Controller
             // Recover by regenerating; checksum is also updated because DomPDF
             // is non-deterministic. The JSON companion archives remain the
             // deterministic integrity anchor for the underlying accounting data.
-            $pdfAction->recoverFile($archive);
+            $archive = $pdfAction->recoverFile($archive);
         }
 
         return redirect(URL::temporarySignedRoute(
@@ -247,7 +250,10 @@ class LegalArchiveController extends Controller
 
         $archives = $this->periodQuery($period)
             ->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])
-            ->get();
+            ->where('document_id', $this->pdfDocumentId($period))
+            ->get()
+            ->groupBy('document_type')
+            ->map(fn ($versions) => $versions->sortByDesc('version')->first());
 
         $tmpPath = tempnam(sys_get_temp_dir(), 'archive-bundle-').'.zip';
         $zip = new \ZipArchive;
@@ -276,12 +282,15 @@ class LegalArchiveController extends Controller
      */
     public function regeneratePdfs(int $year, Request $request, CurrentOrganization $currentOrg, GenerateArchivePdfAction $pdfAction): RedirectResponse
     {
-        $this->authorize('viewAny', LegalArchive::class);
+        $this->authorize('create', LegalArchive::class);
 
         $period = $this->resolveRequestedPeriod($request, $currentOrg, $year);
         $archives = $this->periodQuery($period)
             ->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])
+            ->where('document_id', $this->pdfDocumentId($period))
             ->get()
+            ->groupBy('document_type')
+            ->map(fn ($versions) => $versions->sortByDesc('version')->first())
             ->keyBy('document_type');
 
         if ($archives->isEmpty()) {

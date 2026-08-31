@@ -27,15 +27,35 @@ final class InvoicePdfStyle
 
     public const COL_TOTAL_WIDTH = self::COL_DESCRIPTION + self::COL_QUANTITY + self::COL_UNIT_PRICE + self::COL_VAT + self::COL_AMOUNT; // 180
 
-    // X positions
-    public const ORG_INFO_X = 120;
+    // X and Y positions
+    public const ORGANIZATION_X = 15;
 
-    public const ORG_INFO_WIDTH = 75;
+    public const ORGANIZATION_WIDTH = 85;
 
-    // Y positions
-    public const CUSTOMER_INFO_Y = 45;
+    public const CUSTOMER_X = 120;
 
-    public const INVOICE_TITLE_Y = 80;
+    public const CUSTOMER_INFO_Y = 50;
+
+    public const CUSTOMER_WIDTH = 75;
+
+    public const INVOICE_TITLE_Y = 100;
+
+    public const FOLD_MARK_X = 5;
+
+    public const FOLD_MARK_LENGTH = 3;
+
+    public const FOLD_MARK_TOP_Y = 105;
+
+    public const PUNCH_MARK_Y = 148.5;
+
+    public const FOLD_MARK_BOTTOM_Y = 210;
+
+    public const TOTALS_LABEL_WIDTH = 155;
+
+    // Legacy aliases kept for callers using the original style names.
+    public const ORG_INFO_X = self::CUSTOMER_X;
+
+    public const ORG_INFO_WIDTH = self::CUSTOMER_WIDTH;
 
     // Font sizes
     public const FONT_ORG_NAME = 10;
@@ -71,12 +91,18 @@ final class InvoicePdfStyle
 
     public const COLOR_FILL = [245, 245, 245];
 
+    public const COLOR_RULE = [211, 220, 214];
+
+    public const COLOR_ACCENT = [31, 76, 53];
+
+    public const COLOR_LIGHT = [150, 160, 153];
+
     // Logo
-    public const LOGO_X = 150;
+    public const LOGO_X = 15;
 
     public const LOGO_Y = 15;
 
-    public const LOGO_WIDTH = 30;
+    public const LOGO_WIDTH = 28;
 
     // Language mapping for QR bill
     public const QR_LANGUAGE_MAP = ['en' => 'en', 'de' => 'de', 'fr' => 'fr', 'it' => 'it'];

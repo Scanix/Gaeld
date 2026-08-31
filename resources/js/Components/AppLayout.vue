@@ -19,6 +19,7 @@ import ToastContainer from '@/Components/ToastContainer.vue'
 import ErrorBoundary from '@/Components/ErrorBoundary.vue'
 import OfflineBanner from '@/Components/OfflineBanner.vue'
 import Banner from '@/Components/UI/Banner.vue'
+import SupportSessionBanner from '@/Components/SupportSessionBanner.vue'
 import { useHelp } from '@/lib/useHelp'
 import { useToast } from '@/lib/useToast'
 
@@ -58,12 +59,12 @@ const trialDaysLeft = computed(() => {
 const showTrialBanner = computed(() => trialDaysLeft.value !== null && trialDaysLeft.value <= 7)
 const showPastDueBanner = computed(() => subscription.value?.status === 'past_due')
 const showGracePeriodBanner = computed(() => {
-  if (subscription.value?.status !== 'canceled' || !subscription.value?.ends_at) return false
+  if (!['active', 'canceled'].includes(subscription.value?.status) || !subscription.value?.ends_at) return false
   return new Date(subscription.value.ends_at) > new Date()
 })
 const showPausedBanner = computed(() => subscription.value?.status === 'paused')
-const isSaasAdmin = computed(() => page.props.auth?.is_saas_admin === true)
 const systemMessage = computed(() => page.props.systemMessage ?? null)
+const supportSession = computed(() => page.props.supportSession ?? null)
 </script>
 
 <template>
@@ -97,20 +98,19 @@ const systemMessage = computed(() => page.props.systemMessage ?? null)
       <!-- Offline banner -->
       <OfflineBanner />
 
-      <!-- SaaS Admin Banner -->
-      <Banner v-if="isSaasAdmin" color="red" role="alert">
-        <span class="inline-flex items-center gap-1.5">
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-          {{ tl('saas_admin_warning') }}
-        </span>
-        <Link href="/saas-admin" class="underline underline-offset-2 hover:text-red-100 whitespace-nowrap">{{ tl('admin_dashboard') }}</Link>
-      </Banner>
+      <SupportSessionBanner
+        v-if="supportSession"
+        :session="supportSession"
+        :stop-url="supportSession.stop_url"
+        :label="supportSession.banner_label"
+        :stop-label="supportSession.stop_label"
+      />
 
       <!-- Early Beta Banner -->
       <Banner v-if="!betaDismissed" color="amber" :dismissable="true" @dismiss="dismissBeta">
-        <span class="inline-flex items-center gap-1.5">
+        <span class="inline-flex max-w-full flex-wrap items-center justify-center gap-1.5 text-center">
           <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-          <strong>{{ tl('early_beta') }}</strong> — {{ tl('early_beta_notice') }}
+          <strong class="whitespace-nowrap">{{ tl('early_beta') }}</strong> — {{ tl('early_beta_notice') }}
         </span>
         <a href="https://github.com/gaeld/gaeld-app" target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-amber-900 whitespace-nowrap">{{ tl('follow_on_github') }}</a>
       </Banner>

@@ -185,11 +185,19 @@ class MatchingService
             ->where('is_confirmed', false)
             ->delete();
 
-        return $matches->map(fn ($match) => BankMatch::create([
-            'bank_transaction_id' => $transaction->id,
-            'invoice_id' => $match['invoice_id'],
-            'confidence' => $match['confidence'],
-            'match_type' => $match['match_type'],
-        ]));
+        return $matches
+            ->sortByDesc('confidence')
+            ->unique('invoice_id')
+            ->values()
+            ->map(fn ($match) => BankMatch::firstOrCreate(
+                [
+                    'bank_transaction_id' => $transaction->id,
+                    'invoice_id' => $match['invoice_id'],
+                ],
+                [
+                    'confidence' => $match['confidence'],
+                    'match_type' => $match['match_type'],
+                ],
+            ));
     }
 }

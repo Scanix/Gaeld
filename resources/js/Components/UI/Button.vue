@@ -54,6 +54,7 @@ const classes = computed(() => buttonVariants({ variant: props.variant, size: pr
 <template>
   <component
     :is="as"
+    v-bind="$attrs"
     :class="cn(classes, $attrs.class)"
     :disabled="disabled || loading"
   >

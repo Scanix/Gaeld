@@ -2,6 +2,8 @@
 
 namespace App\Domains\Api\Requests;
 
+use App\Domains\Contacts\Models\Contact;
+use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Http\FormRequest;
@@ -35,6 +37,25 @@ class StoreInvoiceApiRequest extends FormRequest
             'issue_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:issue_date',
             'currency' => 'string|size:3',
+            'tax_treatment' => [
+                'nullable',
+                Rule::enum(InvoiceTaxTreatment::class),
+                function (string $attribute, mixed $value, \Closure $fail) use ($orgId): void {
+                    if ($value !== InvoiceTaxTreatment::ReverseCharge->value) {
+                        return;
+                    }
+
+                    $customer = Contact::where('uuid', $this->input('customer_id'))
+                        ->where('organization_id', $orgId)
+                        ->first();
+
+                    if ($customer === null || ! InvoiceTaxTreatment::isEuCountry($customer->country)) {
+                        $fail(__('app.invoice_reverse_charge_eu_customer_required'));
+                    } elseif (! InvoiceTaxTreatment::hasValidEuVatNumber($customer->country, $customer->vat_number)) {
+                        $fail(__('app.invoice_reverse_charge_vat_number_required'));
+                    }
+                },
+            ],
             'notes' => 'nullable|string',
             'payment_terms' => 'nullable|string',
             'lines' => 'required|array|min:1|max:500',

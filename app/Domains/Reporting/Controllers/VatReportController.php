@@ -4,6 +4,7 @@ namespace App\Domains\Reporting\Controllers;
 
 use App\Domains\Accounting\Actions\PostVatSettlementAction;
 use App\Domains\Accounting\Exceptions\DuplicateReferenceException;
+use App\Domains\Accounting\Exceptions\VatPeriodLockedException;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\VatReportService;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -29,8 +31,9 @@ class VatReportController extends Controller
     {
         $this->authorize('viewAny', Account::class);
 
-        $from = $request->input('from_date', $request->input('from', now()->startOfQuarter()->toDateString()));
-        $to = $request->input('to_date', $request->input('to', now()->endOfQuarter()->toDateString()));
+        $period = $this->resolvePeriod($request);
+        $from = $period['from'];
+        $to = $period['to'];
 
         $report = $service->generate($currentOrg->id(), $from, $to);
 
@@ -64,6 +67,32 @@ class VatReportController extends Controller
         return Inertia::render('Reports/VatReport', [
             'report' => $report,
         ]);
+    }
+
+    /**
+     * @return array{from: string, to: string}
+     */
+    private function resolvePeriod(Request $request): array
+    {
+        $from = $request->string('from_date')->toString() ?: $request->string('from')->toString();
+        $to = $request->string('to_date')->toString() ?: $request->string('to')->toString();
+        $period = $request->string('period')->toString();
+
+        if (($from === '' || $to === '') && preg_match('/^Q([1-4])\s+(\d{4})$/', trim($period), $matches) === 1) {
+            $quarterStart = Carbon::create(
+                (int) $matches[2],
+                (((int) $matches[1] - 1) * 3) + 1,
+                1,
+            );
+
+            $from = $from !== '' ? $from : $quarterStart->copy()->startOfQuarter()->toDateString();
+            $to = $to !== '' ? $to : $quarterStart->copy()->endOfQuarter()->toDateString();
+        }
+
+        return [
+            'from' => $from !== '' ? $from : now()->startOfQuarter()->toDateString(),
+            'to' => $to !== '' ? $to : now()->endOfQuarter()->toDateString(),
+        ];
     }
 
     public function exportVatReport(
@@ -117,9 +146,16 @@ class VatReportController extends Controller
         $validated = $request->validated();
 
         try {
-            $action->execute($currentOrg->id(), $validated['from_date'], $validated['to_date']);
+            $action->execute(
+                $currentOrg->id(),
+                $validated['from_date'],
+                $validated['to_date'],
+                $request->user()->id,
+            );
         } catch (DuplicateReferenceException) {
             return $this->backWithError(__('app.vat_settlement_already_posted'));
+        } catch (VatPeriodLockedException $exception) {
+            return $this->backWithError($exception);
         }
 
         return redirect()->route('reports.vat', [

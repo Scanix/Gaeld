@@ -3,6 +3,8 @@
 namespace App\Domains\Banking\Services;
 
 use App\Domains\Accounting\Constants\AccountCode;
+use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Banking\Enums\BankTransactionType;
 use App\Domains\Banking\Enums\MatchConfidence;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\ReconciliationFailedException;
@@ -14,6 +16,7 @@ use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Support\Exceptions\FeatureDisabledException;
 use App\Support\FeatureFlag;
+use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -58,6 +61,59 @@ class ReconciliationService
     public function reconcileAsPersonal(BankTransaction $transaction): BankTransaction
     {
         return $this->contraAccountReconciler->reconcileAsPersonal($transaction);
+    }
+
+    public function reconcileWithVatSettlement(BankTransaction $transaction, JournalEntry $settlement): BankTransaction
+    {
+        $transaction->loadMissing('bankAccount');
+        $settlement->loadMissing('lines.account');
+
+        $bankAccount = $transaction->getRelation('bankAccount');
+        if (! $bankAccount instanceof BankAccount || $bankAccount->organization_id !== $settlement->organization_id) {
+            throw new ReconciliationFailedException(__('app.vat_payment_does_not_match_balance'));
+        }
+
+        if (! $settlement->is_posted || $settlement->type !== 'vat_settlement') {
+            throw new ReconciliationFailedException(__('app.vat_settlement_not_available'));
+        }
+
+        if (BankTransaction::query()
+            ->whereHas('bankAccount', fn ($query) => $query->where('organization_id', $settlement->organization_id))
+            ->where('vat_settlement_journal_entry_id', $settlement->id)
+            ->exists()) {
+            throw new ReconciliationFailedException(__('app.vat_settlement_already_reconciled'));
+        }
+
+        $vatLine = $settlement->lines->first(
+            fn ($line): bool => $line->account?->code === AccountCode::VAT_PAYABLE_AFC,
+        );
+
+        if (! $vatLine) {
+            throw new ReconciliationFailedException(__('app.vat_settlement_not_available'));
+        }
+
+        $expectedAmount = Money::isPositive((string) $vatLine->credit)
+            ? (string) $vatLine->credit
+            : (string) $vatLine->debit;
+        $amount = Money::absoluteAmount((string) $transaction->amount);
+
+        $isPayable = Money::isPositive((string) $vatLine->credit)
+            && $transaction->type === BankTransactionType::Debit;
+        $isRefund = Money::isPositive((string) $vatLine->debit)
+            && $transaction->type === BankTransactionType::Credit;
+
+        if ((! $isPayable && ! $isRefund) || Money::compare($amount, $expectedAmount) !== 0) {
+            throw new ReconciliationFailedException(__('app.vat_payment_does_not_match_balance'));
+        }
+
+        $reconciled = $this->contraAccountReconciler->reconcileWithContraAccount(
+            $transaction,
+            AccountCode::VAT_PAYABLE_AFC,
+        );
+
+        $reconciled->update(['vat_settlement_journal_entry_id' => $settlement->id]);
+
+        return $reconciled->fresh(['journalEntry.lines', 'bankAccount', 'vatSettlementJournalEntry']);
     }
 
     /**

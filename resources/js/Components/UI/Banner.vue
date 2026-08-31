@@ -23,8 +23,10 @@ const colorMap = {
 
 <template>
   <div :class="['relative z-40 text-sm font-medium', colorMap[color]]" :role="role">
-    <div class="flex max-w-full items-center justify-center gap-3 px-6 py-2">
-      <slot />
+    <div class="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-2 sm:flex-nowrap sm:px-6">
+      <div class="min-w-0 text-center">
+        <slot />
+      </div>
       <button
         v-if="dismissable"
         class="ml-2 opacity-60 transition-opacity hover:opacity-100"

@@ -28,6 +28,7 @@ Route::post('/reconciliation/{bankAccount}/import', [ReconciliationController::c
 Route::post('/reconciliation/transactions/{transaction}/invoice', [ReconciliationController::class, 'reconcileInvoice'])->name('reconciliation.invoice');
 Route::post('/reconciliation/transactions/{transaction}/expense', [ReconciliationController::class, 'reconcileExpense'])->name('reconciliation.expense');
 Route::post('/reconciliation/transactions/{transaction}/manual', [ReconciliationController::class, 'reconcileManual'])->name('reconciliation.manual');
+Route::post('/reconciliation/transactions/{transaction}/vat', [ReconciliationController::class, 'reconcileVat'])->name('reconciliation.vat');
 Route::post('/reconciliation/matches/{match}/confirm', [ReconciliationController::class, 'confirmMatch'])->name('reconciliation.confirm');
 Route::post('/reconciliation/transactions/{transaction}/unreconcile', [ReconciliationController::class, 'unreconcile'])->name('reconciliation.unreconcile');
 

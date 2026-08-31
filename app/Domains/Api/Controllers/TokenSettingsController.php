@@ -8,6 +8,7 @@ use App\Domains\Api\Requests\StoreOrganizationTokenSettingsRequest;
 use App\Domains\Api\Requests\StorePersonalTokenSettingsRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\Api\TokenPermissionMap;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -54,14 +55,7 @@ class TokenSettingsController extends Controller
             'personalTokens' => $personalTokens,
             'orgTokens' => $orgTokens,
             'canManageOrgTokens' => $canManageOrgTokens,
-            'abilities' => [
-                'customers:read', 'customers:write',
-                'invoices:read', 'invoices:write',
-                'expenses:read', 'expenses:write',
-                'accounts:read',
-                'bank-accounts:read',
-                'webhooks:read', 'webhooks:write',
-            ],
+            'abilities' => TokenPermissionMap::abilities(),
         ]);
     }
 
@@ -72,9 +66,10 @@ class TokenSettingsController extends Controller
 
         $validated = $request->validated();
 
-        $abilities = $validated['abilities'] ?? ['*'];
+        $abilities = TokenPermissionMap::normalize($validated['abilities'] ?? []);
+        $abilities = $abilities === [] ? ['*'] : $abilities;
         $expiresAt = isset($validated['expires_in_days'])
-            ? now()->addDays($validated['expires_in_days'])
+            ? now()->addDays((int) $validated['expires_in_days'])
             : null;
 
         $token = $request->user()->createToken($validated['name'], $abilities, $expiresAt);
@@ -95,9 +90,10 @@ class TokenSettingsController extends Controller
 
         $validated = $request->validated();
 
-        $abilities = $validated['abilities'] ?? ['*'];
+        $abilities = TokenPermissionMap::normalize($validated['abilities'] ?? []);
+        $abilities = $abilities === [] ? ['*'] : $abilities;
         $expiresAt = isset($validated['expires_in_days'])
-            ? now()->addDays($validated['expires_in_days'])
+            ? now()->addDays((int) $validated['expires_in_days'])
             : null;
 
         $token = $request->user()->createToken($validated['name'], $abilities, $expiresAt);

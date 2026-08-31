@@ -52,4 +52,9 @@ return [
     'invoice_due_date_label' => 'Date d\'échéance',
     'invoice_closing' => 'N\'hésitez pas à nous contacter si vous avez des questions.',
     'invoice_regards' => 'Cordialement',
+    'salary_slip_subject' => 'Votre fiche de salaire pour :period',
+    'salary_slip_greeting' => 'Bonjour :name,',
+    'salary_slip_body' => 'Votre fiche de salaire pour :period est jointe à cet e-mail.',
+    'salary_slip_attachment' => 'Veuillez conserver ce document pour vos archives.',
+    'salary_slip_regards' => 'Cordialement',
 ];

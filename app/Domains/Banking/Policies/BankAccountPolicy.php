@@ -36,6 +36,12 @@ class BankAccountPolicy extends BasePolicy
             && $user->hasPermissionTo(Permission::BankingEdit);
     }
 
+    public function import(User $user, BankAccount $bankAccount): bool
+    {
+        return $this->belongsToOrganization($user, $bankAccount)
+            && $user->hasPermissionTo(Permission::BankingImport);
+    }
+
     public function delete(User $user, BankAccount $bankAccount): bool
     {
         return $this->belongsToOrganization($user, $bankAccount)

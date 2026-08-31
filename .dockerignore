@@ -1,0 +1,12 @@
+node_modules/
+vendor/
+.git/
+Dockerfile*
+.dockerignore
+*.log*
+.env*
+coverage/
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/

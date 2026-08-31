@@ -3,6 +3,7 @@
 namespace App\Domains\Users\Models;
 
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Payroll\Models\Employee;
 use App\Support\Traits\Auditable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
@@ -122,6 +123,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function resolveCurrentOrganization(): ?Organization
     {
+        $supportOrganizationId = session('saas_support_session.target_organization_id');
+        if ($supportOrganizationId) {
+            return Organization::query()->whereKey((string) $supportOrganizationId)->first();
+        }
+
         $sessionOrgId = session('current_organization_id');
 
         if ($sessionOrgId) {
@@ -150,5 +156,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function deviceSessions(): HasMany
     {
         return $this->hasMany(DeviceSession::class);
+    }
+
+    /** @return HasMany<Employee, $this> */
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class);
     }
 }

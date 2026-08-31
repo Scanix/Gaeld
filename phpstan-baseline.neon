@@ -422,66 +422,6 @@ parameters:
 			path: app/Domains/Organizations/Models/Organization.php
 
 		-
-			message: '#^Offset ''aanp_employee'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Domains/Payroll/Actions/PostPayrollAction.php
-
-		-
-			message: '#^Offset ''ac_employee'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Domains/Payroll/Actions/PostPayrollAction.php
-
-		-
-			message: '#^Offset ''ac_employer'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Domains/Payroll/Actions/PostPayrollAction.php
-
-		-
-			message: '#^Offset ''avs_employee'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Domains/Payroll/Actions/PostPayrollAction.php
-
-		-
-			message: '#^Offset ''avs_employer'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Domains/Payroll/Actions/PostPayrollAction.php
-
-		-
-			message: '#^Offset ''lpp_employee'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Domains/Payroll/Actions/PostPayrollAction.php
-
-		-
-			message: '#^Offset ''lpp_employer'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Domains/Payroll/Actions/PostPayrollAction.php
-
-		-
-			message: '#^Offset ''total_employer'' on array\<int, mixed\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Domains/Payroll/Actions/PostPayrollAction.php
-
-		-
-			message: '#^Method App\\Domains\\Payroll\\Controllers\\SalarySlipController\:\:downloadPdf\(\) should return Illuminate\\Http\\Response but returns Symfony\\Component\\HttpFoundation\\Response\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domains/Payroll/Controllers/SalarySlipController.php
-
-		-
-			message: '#^Parameter \#1 \$employee of method App\\Domains\\Payroll\\Services\\PayrollCalculator\:\:calculate\(\) expects App\\Domains\\Payroll\\Models\\Employee, App\\Domains\\Payroll\\Models\\Employee\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domains\\Payroll\\Models\\Employee\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/Payroll/Controllers/SalarySlipController.php
-
-		-
 			message: '#^Method App\\Domains\\Payroll\\Queries\\EmployeeQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Payroll\\Models\\Employee\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
 			identifier: return.type
 			count: 1
@@ -620,38 +560,14 @@ parameters:
 			path: app/Domains/Users/Services/DataExportService.php
 
 		-
-			message: '#^Method App\\Http\\Middleware\\Api\\TokenPermissionMap\:\:get\(\) should return array\<string, string\> but returns array\<string, array\<string, App\\Domains\\Organizations\\Enums\\Permission\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Http/Middleware/Api/TokenPermissionMap.php
-
-		-
-			message: '#^Offset string on string on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
 			message: '#^Parameter \#1 \$tokenType of method App\\Http\\Middleware\\EnsureApiOrganization\:\:registerTokenAbilityGate\(\) expects App\\Domains\\Api\\Enums\\TokenType, string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Http/Middleware/EnsureApiOrganization.php
 
 		-
-			message: '#^Strict comparison using \=\=\= between null and null will always evaluate to true\.$#'
-			identifier: identical.alwaysTrue
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
 			message: '#^Strict comparison using \=\=\= between string and App\\Domains\\Api\\Enums\\TokenType\:\:Organization will always evaluate to false\.$#'
 			identifier: identical.alwaysFalse
-			count: 1
-			path: app/Http/Middleware/EnsureApiOrganization.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
 			count: 1
 			path: app/Http/Middleware/EnsureApiOrganization.php
 

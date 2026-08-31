@@ -12,7 +12,6 @@ use App\Domains\Reporting\Services\AgingReportService;
 use App\Domains\Reporting\Services\ExportReportService;
 use App\Domains\Reporting\Services\ReportingService;
 use App\Http\Controllers\Controller;
-use App\Support\Money;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -223,22 +222,8 @@ class ReportController extends Controller
 
         $report = $reportingService->cashFlow($currentOrg->id(), $from, $to);
 
-        // Transform to the shape the Vue component expects
-        $operating = $report['operating']['adjustments'] ?? [];
-        if (isset($report['net_income']) && ! Money::isZero($report['net_income'])) {
-            array_unshift($operating, ['label' => 'Net Income', 'amount' => $report['net_income']]);
-        }
-
         return Inertia::render('Reports/CashFlow', [
-            'report' => [
-                'period' => $report['period'],
-                'operating' => $operating,
-                'investing' => $report['investing']['items'] ?? [],
-                'financing' => $report['financing']['items'] ?? [],
-                'net_change' => $report['net_change'] ?? '0.00',
-                'beginning_balance' => $report['beginning_cash'] ?? '0.00',
-                'ending_balance' => $report['ending_cash'] ?? '0.00',
-            ],
+            'report' => $report,
         ]);
     }
 

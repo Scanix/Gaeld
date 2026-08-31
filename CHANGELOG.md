@@ -5,14 +5,24 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.6.0] — 2026-08-20
+
+### Added
+- **Community Edition REST API:** organization-scoped journal-entry,
+  contact, invoice, expense, and CAMT.053 integration workflows with bearer
+  tokens, account-code references, stable JSON resources, and idempotent
+  retries. API access is enabled by default and can be disabled with the
+  installation-level `FEATURE_API_ACCESS` kill switch.
 
 ### Changed
 - **Dependencies:** updated Laravel 13, Inertia, Horizon, Stripe PHP 21,
-  Symfony, Vite, Tailwind, Storybook, Vue, and related locked dependencies.
+  Symfony, Vite, Tailwind, Vue, and related locked dependencies.
 - **Accounting periods:** explicit fiscal-year identity now flows through
   cash-flow reports, exports, archive PDFs, bundles, and archive lazy-loading;
   legacy year URLs remain supported.
+- **Plugin frontend boundary:** Community Edition builds no longer contain
+  SaaS Admin page sources; enabled plugins register their own frontend pages
+  through the manifest-driven Vite registry.
 
 ### Fixed
 - **SaaS deployment:** EE now uses PSR-7 2.13 and current Stripe/Sentry/Symfony
@@ -21,6 +31,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   organization-period lock contract as bulk archive generation.
 - **Year-end closing:** long fiscal years pass their explicit fiscal-year ID to
   archive generation and log the resolved period boundaries.
+
+### Removed
+- **Dead frontend tooling:** removed the unshippable Storybook configuration
+  and stories that were absent from clean public clones.
+- **Dead WebAuthn helper:** removed the deprecated unreferenced browser helper;
+  active passkey flows use `@simplewebauthn/browser`.
+
+## [3.6.2] — 2026-08-25
+
+### Fixed
+- **Onboarding banking:** first bank accounts are linked to the organization’s
+  `1020` ledger account so balances, expense payments, and reconciliation use
+  the same account.
+- **Expense VAT UX:** the VAT amount is calculated from the selected rate in
+  the form and shown read-only, while server-side VAT calculation remains
+  authoritative.
+- **Cash Flow:** the Inertia controller now preserves the calculated report
+  contract instead of remapping it to obsolete balance and section keys.
+
+## [3.6.3] — 2026-08-31
+
+### Fixed
+- **API tokens:** canonical abilities, legacy ability compatibility, wildcard
+  handling, organization scoping, and integer expiration values now agree
+  between token settings and `/api/v1` authorization.
+- **Expenses:** non-cash CHF payments credit the exact gross amount; Swiss
+  five-cent rounding remains limited to explicit cash payments.
+- **Payroll:** the run preview now uses the same server-side calculator as
+  generated salary slips.
+- **Reporting:** Cash Flow renders the backend operating, investing, and
+  financing contract with the correct cash balances and subtotals.
+- **Reconciliation and mobile UI:** empty suggestion maps serialize as JSON
+  objects, masked inputs use the Maska v3 API, and Settings tabs fit narrow
+  screens.
+- **Payroll:** 13th salary, calendar-day unpaid leave, reimbursements,
+  historical employee snapshots, salary certificates, queued salary-slip mail,
+  and a feature-gated withholding-tax contract now use one calculation path.
+- **Fiscal-year settings:** owners can review and apply an approved fiscal-year
+  start change on its effective date without mutating the current period early.
+- **VAT:** settled periods are locked at the VAT-entry boundary and exact bank
+  matching uses the posted settlement reference, amount, and direction.
+- **Accounting navigation:** salary-slip journal links now open an authorized
+  read-only detail page instead of a missing GET endpoint.
+
+## [Unreleased]
 
 ## [3.5.1] — 2026-08-07
 

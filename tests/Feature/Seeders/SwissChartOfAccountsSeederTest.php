@@ -45,6 +45,14 @@ class SwissChartOfAccountsSeederTest extends TestCase
             'code' => '2272',
             'name' => 'Pension Fund (LPP) Payable',
         ]);
+        $this->assertDatabaseHas('accounts', [
+            'organization_id' => $organization->id,
+            'code' => '2273',
+            'name' => 'Withholding Tax Payable',
+        ]);
+        $this->assertNotNull(Account::where('organization_id', $organization->id)
+            ->where('code', '2273')
+            ->value('uuid'));
     }
 
     public function test_it_does_nothing_when_no_organization_exists(): void

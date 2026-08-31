@@ -4,6 +4,7 @@ namespace App\Domains\Accounting\Actions;
 
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
+use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
@@ -47,6 +48,7 @@ class YearEndClosingAction
         $year = (int) $validated['year'];
 
         $fiscalYear = $this->resolveFiscalYear($orgId, $year, $validated['fiscal_year_id'] ?? null);
+        $preservePreviousArchiveVersion = $fiscalYear?->status === FiscalYearStatus::Expired;
 
         if ($fiscalYear !== null) {
             $year = (int) $fiscalYear->start_date->year;
@@ -79,6 +81,8 @@ class YearEndClosingAction
             throw new \RuntimeException("Account '{$validated['result_account_code']}' not found.");
         }
 
+        $closingReference = $this->resolveClosingReference($orgId, (string) $validated['reference']);
+
         // The entire closing workflow must be atomic: posting the closing
         // entry, locking the fiscal year, archiving documents, and
         // generating the next year's opening balances are all part of one
@@ -99,6 +103,8 @@ class YearEndClosingAction
             $org,
             $fiscalYear,
             $actingUser,
+            $closingReference,
+            $preservePreviousArchiveVersion,
             &$nextYearCreated,
         ): void {
             $lines = [];
@@ -140,12 +146,12 @@ class YearEndClosingAction
 
             $entry = new JournalEntryData(
                 date: $validated['closing_date'],
-                reference: $validated['reference'],
+                reference: $closingReference,
                 description: __('app.closing_entry_description', ['year' => $year]),
                 lines: $lines,
             );
 
-            $journalEntry = $this->ledger->postEntry($orgId, $entry);
+            $journalEntry = $this->ledger->postEntry($orgId, $entry, $fiscalYear?->id);
             $journalEntry->update(['type' => 'year_end_closing']);
 
             $org->closeFiscalYear($year);
@@ -154,8 +160,13 @@ class YearEndClosingAction
                 $nextYearCreated = $this->fiscalYears->close($fiscalYear, $actingUser);
             }
 
-            $this->archiving->archiveFiscalYear($orgId, $year, $fiscalYear?->id);
-            $this->openingBalances->execute($orgId, $year);
+            $this->archiving->archiveFiscalYear(
+                $orgId,
+                $year,
+                $fiscalYear?->id,
+                preservePreviousVersion: $preservePreviousArchiveVersion,
+            );
+            $this->openingBalances->execute($orgId, $year, $fiscalYear);
         });
 
         Log::info('Year-end closing completed', [
@@ -171,6 +182,21 @@ class YearEndClosingAction
         ]);
 
         return $nextYearCreated;
+    }
+
+    private function resolveClosingReference(string $orgId, string $baseReference): string
+    {
+        if (! JournalEntry::query()->where('organization_id', $orgId)->where('reference', $baseReference)->exists()) {
+            return $baseReference;
+        }
+
+        $version = 2;
+        do {
+            $reference = "{$baseReference}-v{$version}";
+            $version++;
+        } while (JournalEntry::query()->where('organization_id', $orgId)->where('reference', $reference)->exists());
+
+        return $reference;
     }
 
     private function resolveFiscalYear(string $orgId, int $year, ?string $fiscalYearId): ?FiscalYear

@@ -9,8 +9,10 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
 use App\Http\Middleware\Api\TokenPermissionMap;
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -29,16 +31,57 @@ class EnsureApiOrganization
         $token = $request->user()?->currentAccessToken();
 
         if (! $token || ! $token->organization_id) {
-            return response()->json(['message' => 'Token is not associated with an organization.'], 403);
+            Log::channel('security')->warning('API token has no organization', [
+                'method' => $request->method(),
+                'path' => $request->path(),
+                'ip' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'message' => 'Token is not associated with an organization.',
+                'code' => 'forbidden',
+            ], 403);
         }
 
         $org = $this->resolveOrganization($request, $token);
 
         if (! $org) {
-            return response()->json(['message' => 'Organization not found or access denied.'], 403);
+            Log::channel('security')->warning('API token organization access denied', [
+                'token_id' => $token->id,
+                'organization_id' => $token->organization_id,
+                'method' => $request->method(),
+                'path' => $request->path(),
+                'ip' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'message' => 'Organization not found or access denied.',
+                'code' => 'forbidden',
+            ], 403);
         }
 
         $this->currentOrganization->set($org);
+
+        foreach ($request->route()?->parameters() ?? [] as $parameter) {
+            if ($parameter instanceof Model
+                && $parameter->getAttribute('organization_id') !== null
+                && (string) $parameter->getAttribute('organization_id') !== (string) $org->id) {
+                Log::channel('security')->warning('API cross-organization access denied', [
+                    'token_id' => $token->id,
+                    'organization_id' => $org->id,
+                    'resource_organization_id' => $parameter->getAttribute('organization_id'),
+                    'resource_type' => $parameter::class,
+                    'method' => $request->method(),
+                    'path' => $request->path(),
+                    'ip' => $request->ip(),
+                ]);
+
+                return response()->json([
+                    'message' => 'Resource not found.',
+                    'code' => 'not_found',
+                ], 404);
+            }
+        }
 
         app(PermissionRegistrar::class)->setPermissionsTeamId($org->id);
 

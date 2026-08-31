@@ -20,6 +20,10 @@ Route::post('/welcome/skip', [OnboardingWizardController::class, 'skip'])->name(
 // Organization settings
 Route::get('/settings', [OrganizationSettingsController::class, 'show'])->name('settings');
 Route::put('/settings/general', [OrganizationSettingsController::class, 'updateGeneral'])->name('settings.general');
+Route::post('/settings/fiscal-year-change-request', [OrganizationSettingsController::class, 'requestFiscalYearChange'])->name('settings.fiscal-year-change-request');
+Route::post('/settings/fiscal-year-change-requests/{fiscalYearChangeRequest}/approve', [OrganizationSettingsController::class, 'approveFiscalYearChange'])->name('settings.fiscal-year-change.approve');
+Route::post('/settings/fiscal-year-change-requests/{fiscalYearChangeRequest}/reject', [OrganizationSettingsController::class, 'rejectFiscalYearChange'])->name('settings.fiscal-year-change.reject');
+Route::post('/settings/fiscal-year-change-requests/{fiscalYearChangeRequest}/apply', [OrganizationSettingsController::class, 'applyFiscalYearChange'])->name('settings.fiscal-year-change.apply');
 Route::put('/settings/invoice', [OrganizationSettingsController::class, 'updateInvoice'])->name('settings.invoice');
 Route::post('/settings/invoice/logo', [OrganizationSettingsController::class, 'uploadLogo'])->name('settings.logo.upload');
 Route::delete('/settings/invoice/logo', [OrganizationSettingsController::class, 'deleteLogo'])->name('settings.logo.delete');

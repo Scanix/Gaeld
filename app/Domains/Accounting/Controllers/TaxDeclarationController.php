@@ -3,7 +3,6 @@
 namespace App\Domains\Accounting\Controllers;
 
 use App\Domains\Accounting\Enums\TaxDeclarationStatus;
-use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\TaxDeclaration;
 use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Requests\StoreTaxDeclarationRequest;
@@ -18,7 +17,7 @@ class TaxDeclarationController extends Controller
 {
     public function index(): Response
     {
-        $this->authorize('viewAny', Account::class);
+        $this->authorize('viewAny', TaxDeclaration::class);
 
         $declarations = TaxDeclaration::query()
             ->orderByDesc('fiscal_year')
@@ -27,12 +26,13 @@ class TaxDeclarationController extends Controller
 
         return Inertia::render('Accounting/TaxDeclarations/Index', [
             'declarations' => $declarations,
+            'canManage' => request()->user()->can('create', TaxDeclaration::class),
         ]);
     }
 
     public function store(StoreTaxDeclarationRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
-        $this->authorize('create', Account::class);
+        $this->authorize('create', TaxDeclaration::class);
 
         $validated = $request->validated();
         $validated['canton'] = strtoupper($validated['canton']);
@@ -72,6 +72,7 @@ class TaxDeclarationController extends Controller
 
         return Inertia::render('Accounting/TaxDeclarations/Show', [
             'declaration' => $taxDeclaration,
+            'canManage' => request()->user()->can('update', $taxDeclaration),
         ]);
     }
 
@@ -83,6 +84,8 @@ class TaxDeclarationController extends Controller
             $taxDeclaration->update([
                 'status' => TaxDeclarationStatus::Finalized,
                 'finalized_at' => now(),
+                'locked_at' => now(),
+                'locked_by_user_id' => request()->user()->id,
                 'data' => $this->buildSummaryData($currentOrg->id(), $taxDeclaration->fiscal_year),
             ]);
         }

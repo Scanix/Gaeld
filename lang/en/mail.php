@@ -52,4 +52,9 @@ return [
     'invoice_due_date_label' => 'Due date',
     'invoice_closing' => 'Please contact us if you have any questions.',
     'invoice_regards' => 'Kind regards',
+    'salary_slip_subject' => 'Your salary slip for :period',
+    'salary_slip_greeting' => 'Hello :name,',
+    'salary_slip_body' => 'Your salary slip for :period is attached to this email.',
+    'salary_slip_attachment' => 'Please keep this document for your records.',
+    'salary_slip_regards' => 'Kind regards',
 ];

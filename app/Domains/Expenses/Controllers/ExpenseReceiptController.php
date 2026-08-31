@@ -6,6 +6,7 @@ use App\Domains\Expenses\Jobs\ProcessReceiptOcrJob;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Models\ReceiptScan;
 use App\Domains\Expenses\Requests\ScanReceiptRequest;
+use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use App\Support\FeatureFlag;
@@ -73,7 +74,9 @@ class ExpenseReceiptController extends Controller
         $limit = $this->resolveOcrDailyLimit($currentOrg);
 
         if ($limit !== -1 && (int) Cache::get($dailyKey, 0) >= $limit) {
-            return response()->json(['message' => __('app.ocr_daily_limit_reached')], 429);
+            return response()->json([
+                'message' => __('app.ocr_daily_limit_reached', ['limit' => $limit]),
+            ], 429);
         }
 
         $receiptPath = $this->uploadService->store($request->file('receipt'), "receipts/{$orgId}");
@@ -129,6 +132,10 @@ class ExpenseReceiptController extends Controller
             // from a different organization cannot read results by knowing the scan UUID.
             $ownedByScan = ReceiptScan::where('scan_id', $scanId)
                 ->where('organization_id', $currentOrg->id())
+                ->when(
+                    $this->isSelfService(),
+                    fn ($query) => $query->where('user_id', $request->user()->id),
+                )
                 ->where('expires_at', '>', now())
                 ->exists();
 
@@ -139,6 +146,10 @@ class ExpenseReceiptController extends Controller
             // Cache expired (30 min TTL) — fall back to DB record (48 h TTL)
             $scan = ReceiptScan::where('scan_id', $scanId)
                 ->where('organization_id', $currentOrg->id())
+                ->when(
+                    $this->isSelfService(),
+                    fn ($query) => $query->where('user_id', $request->user()->id),
+                )
                 ->where('expires_at', '>', now())
                 ->first();
 
@@ -154,5 +165,11 @@ class ExpenseReceiptController extends Controller
         }
 
         return response()->json($data);
+    }
+
+    private function isSelfService(): bool
+    {
+        return request()->user()->hasPermissionTo(Permission::ExpensesViewOwn)
+            && ! request()->user()->hasPermissionTo(Permission::ExpensesView);
     }
 }

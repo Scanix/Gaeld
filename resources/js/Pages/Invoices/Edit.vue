@@ -32,6 +32,7 @@ const props = defineProps({
   catalogItems: { type: Array, default: () => [] },
   justificatifUrl: { type: String, default: null },
   defaultVatRateId: { type: [String, Number], default: null },
+  taxTreatments: { type: Array, default: () => [] },
 })
 
 const { t } = useTranslations()
@@ -47,6 +48,7 @@ const form = useForm({
   currency: props.invoice.currency ?? 'CHF',
   notes: props.invoice.notes ?? '',
   payment_terms: props.invoice.payment_terms ?? '',
+  tax_treatment: props.invoice.tax_treatment ?? 'standard',
   lines: (props.invoice.lines ?? []).map(l => ({
     type: l.type ?? 'item',
     discount_type: l.discount_type ?? 'flat',
@@ -179,6 +181,18 @@ function onCustomerCreated(customer) {
               :options="currencyOptions(t)"
               :error="form.errors.currency"
             />
+            <div class="sm:col-span-2">
+              <FormSelect
+                id="tax_treatment"
+                v-model="form.tax_treatment"
+                :label="t('invoice_tax_treatment')"
+                :options="taxTreatments"
+                :error="form.errors.tax_treatment"
+              />
+              <p v-if="form.tax_treatment === 'reverse_charge'" class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                {{ t('invoice_reverse_charge_hint') }}
+              </p>
+            </div>
           </div>
 
           <!-- Line items -->
@@ -190,6 +204,7 @@ function onCustomerCreated(customer) {
             :errors="form.errors"
             :currency="form.currency"
             :default-vat-rate-id="defaultVatRateId"
+            :tax-treatment="form.tax_treatment"
           />
 
           <!-- Notes & Terms -->

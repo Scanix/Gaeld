@@ -40,8 +40,12 @@ use App\Domains\Migration\Jobs\ProcessMigrationImport;
 use App\Domains\Organizations\Events\MemberRemoved;
 use App\Domains\Organizations\Jobs\ExportOrganizationDataJob;
 use App\Domains\Organizations\Listeners\RevokeOrganizationTokens;
+use App\Domains\Organizations\Models\FiscalYearChangeRequest;
+use App\Domains\Organizations\Policies\FiscalYearChangeRequestPolicy;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Payroll\Contracts\SourceTaxServiceInterface;
 use App\Domains\Payroll\Models\SalarySlip;
+use App\Domains\Payroll\Services\NullSourceTaxService;
 use App\Domains\Reporting\Jobs\GenerateReportsJob;
 use App\Domains\Users\Jobs\ExportUserDataJob;
 use App\Http\Services\GlobalSearchService;
@@ -70,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(CurrentOrganization::class);
+        $this->app->singleton(SourceTaxServiceInterface::class, NullSourceTaxService::class);
         $this->app->singleton(
             ReceiptOcrInterface::class,
             config('services.ocr.driver', 'tesseract') === 'tesseract'
@@ -133,6 +138,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(LongWaitDetected::class, SendHorizonTelegramAlert::class);
 
         Gate::policy(Contact::class, ContactPolicy::class);
+        Gate::policy(FiscalYearChangeRequest::class, FiscalYearChangeRequestPolicy::class);
         Gate::policy(FiscalYear::class, FiscalYearPolicy::class);
         Gate::policy(TaxDeclaration::class, TaxDeclarationPolicy::class);
         Gate::policy(CostCenter::class, CostCenterPolicy::class);

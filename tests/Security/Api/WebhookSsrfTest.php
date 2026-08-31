@@ -2,6 +2,7 @@
 
 namespace Tests\Security\Api;
 
+use App\Domains\Api\Models\Webhook;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Security\SecurityTestCase;
 
@@ -94,22 +95,17 @@ class WebhookSsrfTest extends SecurityTestCase
     {
         $token = $this->createApiToken($this->ownerA, $this->orgA);
 
-        // First create a valid webhook
-        $create = $this->withToken($token)
-            ->postJson('/api/v1/webhooks', [
-                'url' => 'https://webhook.example.com/legit',
-                'events' => ['invoice.created'],
-            ]);
-
-        if ($create->status() !== 201 && $create->status() !== 200) {
-            $this->markTestSkipped('Could not create webhook to test update SSRF');
-        }
-
-        $webhookId = $create->json('data.id') ?? $create->json('id');
+        $webhook = Webhook::create([
+            'organization_id' => $this->orgA->id,
+            'url' => 'https://webhook.example.com/legit',
+            'secret' => Webhook::generateSecret(),
+            'events' => ['invoice.created'],
+            'is_active' => true,
+        ]);
 
         // Attempt to update the URL to an SSRF target
         $this->withToken($token)
-            ->putJson("/api/v1/webhooks/{$webhookId}", [
+            ->putJson("/api/v1/webhooks/{$webhook->id}", [
                 'url' => 'http://169.254.169.254/latest/meta-data/',
                 'events' => ['invoice.created'],
             ])

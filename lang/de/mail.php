@@ -52,4 +52,9 @@ return [
     'invoice_due_date_label' => 'Fälligkeitsdatum',
     'invoice_closing' => 'Bei Fragen stehen wir Ihnen gerne zur Verfügung.',
     'invoice_regards' => 'Freundliche Grüsse',
+    'salary_slip_subject' => 'Ihre Lohnabrechnung für :period',
+    'salary_slip_greeting' => 'Guten Tag :name,',
+    'salary_slip_body' => 'Ihre Lohnabrechnung für :period finden Sie im Anhang.',
+    'salary_slip_attachment' => 'Bitte bewahren Sie dieses Dokument für Ihre Unterlagen auf.',
+    'salary_slip_regards' => 'Freundliche Grüsse',
 ];

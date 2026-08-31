@@ -68,6 +68,7 @@ class UnreconcileTransactionAction
 
             $transaction->update([
                 'journal_entry_id' => null,
+                'vat_settlement_journal_entry_id' => null,
                 'matched_invoice_id' => null,
                 'matched_expense_id' => null,
                 'is_reconciled' => false,

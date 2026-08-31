@@ -6,6 +6,10 @@ use App\Domains\Accounting\Queries\VatRateQuery;
 use App\Domains\Expenses\Controllers\ExpenseCategoryController;
 use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
 use App\Domains\Invoicing\Queries\InvoiceCatalogItemQuery;
+use App\Domains\Organizations\Actions\ApplyFiscalYearChangeAction;
+use App\Domains\Organizations\Actions\ApproveFiscalYearChangeAction;
+use App\Domains\Organizations\Actions\RejectFiscalYearChangeAction;
+use App\Domains\Organizations\Actions\RequestFiscalYearChangeAction;
 use App\Domains\Organizations\Actions\UpdateOrganizationAction;
 use App\Domains\Organizations\DTOs\UpdateCommunicationsData;
 use App\Domains\Organizations\DTOs\UpdateInvoiceSettingsData;
@@ -13,6 +17,8 @@ use App\Domains\Organizations\DTOs\UpdateOrganizationData;
 use App\Domains\Organizations\Enums\BusinessType;
 use App\Domains\Organizations\Enums\OrganizationModule;
 use App\Domains\Organizations\Jobs\ExportOrganizationDataJob;
+use App\Domains\Organizations\Models\FiscalYearChangeRequest;
+use App\Domains\Organizations\Requests\RequestFiscalYearChangeRequest;
 use App\Domains\Organizations\Requests\UpdateCommunicationsRequest;
 use App\Domains\Organizations\Requests\UpdateInvoiceSettingsRequest;
 use App\Domains\Organizations\Requests\UpdateOrganizationSettingsRequest;
@@ -58,7 +64,68 @@ class OrganizationSettingsController extends Controller
             'vatRates' => VatRateQuery::active(),
             'modules' => OrganizationModule::values(),
             'modulePresets' => OrganizationModule::presets(),
+            'pendingFiscalYearChange' => FiscalYearChangeRequest::query()
+                ->whereIn('status', ['pending', 'approved'])
+                ->latest()
+                ->first(),
         ]);
+    }
+
+    public function requestFiscalYearChange(
+        RequestFiscalYearChangeRequest $request,
+        CurrentOrganization $currentOrg,
+        RequestFiscalYearChangeAction $action,
+    ): RedirectResponse {
+        $organization = $currentOrg->get();
+
+        $action->execute(
+            $organization,
+            $request->user(),
+            $request->validated('requested_start'),
+            $request->validated('reason'),
+        );
+
+        return redirect()->route('settings')
+            ->with('success', __('app.fiscal_year_change_requested'));
+    }
+
+    public function approveFiscalYearChange(
+        Request $request,
+        FiscalYearChangeRequest $fiscalYearChangeRequest,
+        ApproveFiscalYearChangeAction $action,
+    ): RedirectResponse {
+        $this->authorize('approve', $fiscalYearChangeRequest);
+
+        $action->execute($fiscalYearChangeRequest, $request->user());
+
+        return redirect()->route('settings')
+            ->with('success', __('app.fiscal_year_change_approved'));
+    }
+
+    public function rejectFiscalYearChange(
+        Request $request,
+        FiscalYearChangeRequest $fiscalYearChangeRequest,
+        RejectFiscalYearChangeAction $action,
+    ): RedirectResponse {
+        $this->authorize('reject', $fiscalYearChangeRequest);
+
+        $action->execute($fiscalYearChangeRequest, $request->user());
+
+        return redirect()->route('settings')
+            ->with('success', __('app.fiscal_year_change_rejected'));
+    }
+
+    public function applyFiscalYearChange(
+        FiscalYearChangeRequest $fiscalYearChangeRequest,
+        CurrentOrganization $currentOrg,
+        ApplyFiscalYearChangeAction $action,
+    ): RedirectResponse {
+        $this->authorize('apply', $fiscalYearChangeRequest);
+
+        $action->execute($fiscalYearChangeRequest, $currentOrg->get());
+
+        return redirect()->route('settings')
+            ->with('success', __('app.fiscal_year_change_applied'));
     }
 
     public function updateGeneral(UpdateOrganizationSettingsRequest $request, CurrentOrganization $currentOrg, UpdateOrganizationAction $action): RedirectResponse

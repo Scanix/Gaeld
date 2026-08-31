@@ -4,10 +4,14 @@ use App\Domains\Api\Controllers\AccountApiController;
 use App\Domains\Api\Controllers\ApiInfoController;
 use App\Domains\Api\Controllers\ApiTokenController;
 use App\Domains\Api\Controllers\BankAccountApiController;
+use App\Domains\Api\Controllers\BankImportApiController;
+use App\Domains\Api\Controllers\ContactApiController;
 use App\Domains\Api\Controllers\ExpenseApiController;
 use App\Domains\Api\Controllers\InvoiceApiController;
+use App\Domains\Api\Controllers\JournalEntryApiController;
 use App\Domains\Api\Controllers\OrgTokenController;
 use App\Domains\Api\Controllers\WebhookApiController;
+use App\Http\Middleware\Api\HandleApiIdempotency;
 use App\Http\Middleware\LogOrgTokenActivity;
 use Illuminate\Support\Facades\Route;
 
@@ -31,7 +35,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/', ApiInfoController::class)->name('api.info');
 });
 
-Route::middleware(['auth:sanctum', 'api-org', LogOrgTokenActivity::class, 'feature:api_access', 'throttle:api'])->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOrgTokenActivity::class, 'feature:api_access', 'throttle:api'])->prefix('v1')->group(function () {
 
     // Personal token management (user's own tokens)
     Route::get('/tokens', [ApiTokenController::class, 'index'])->name('api.tokens.index');
@@ -77,6 +81,32 @@ Route::middleware(['auth:sanctum', 'api-org', LogOrgTokenActivity::class, 'featu
     Route::post('/expenses/{expense}/approve', [ExpenseApiController::class, 'approve'])->name('api.expenses.approve');
     Route::post('/expenses/{expense}/post-to-ledger', [ExpenseApiController::class, 'postToLedger'])->name('api.expenses.post-to-ledger');
 
+    // Contacts
+    Route::apiResource('contacts', ContactApiController::class)->names([
+        'index' => 'api.contacts.index',
+        'show' => 'api.contacts.show',
+        'store' => 'api.contacts.store',
+        'update' => 'api.contacts.update',
+        'destroy' => 'api.contacts.destroy',
+    ]);
+    Route::apiResource('customers', ContactApiController::class)
+        ->parameters(['customers' => 'contact'])
+        ->names([
+            'index' => 'api.customers.index',
+            'show' => 'api.customers.show',
+            'store' => 'api.customers.store',
+            'update' => 'api.customers.update',
+            'destroy' => 'api.customers.destroy',
+        ]);
+
+    // Journal entries
+    Route::get('/journal-entries', [JournalEntryApiController::class, 'index'])->name('api.journal-entries.index');
+    Route::get('/journal-entries/{journalEntry}', [JournalEntryApiController::class, 'show'])->name('api.journal-entries.show');
+    Route::post('/journal-entries', [JournalEntryApiController::class, 'store'])->name('api.journal-entries.store');
+    Route::post('/journal-entries/{journalEntry}/post', [JournalEntryApiController::class, 'post'])->name('api.journal-entries.post');
+    Route::post('/journal-entries/{journalEntry}/reverse', [JournalEntryApiController::class, 'reverse'])->name('api.journal-entries.reverse');
+    Route::delete('/journal-entries/{journalEntry}', [JournalEntryApiController::class, 'destroy'])->name('api.journal-entries.destroy');
+
     // Accounts (read-only)
     Route::get('/accounts', [AccountApiController::class, 'index'])->name('api.accounts.index');
     Route::get('/accounts/{account}', [AccountApiController::class, 'show'])->name('api.accounts.show');
@@ -84,6 +114,8 @@ Route::middleware(['auth:sanctum', 'api-org', LogOrgTokenActivity::class, 'featu
     // Bank Accounts (read-only)
     Route::get('/bank-accounts', [BankAccountApiController::class, 'index'])->name('api.bank-accounts.index');
     Route::get('/bank-accounts/{bankAccount}', [BankAccountApiController::class, 'show'])->name('api.bank-accounts.show');
+    Route::post('/bank-accounts/{bankAccount}/imports/camt053', [BankImportApiController::class, 'store'])
+        ->name('api.bank-accounts.import-camt053');
 
     // Webhooks
     Route::apiResource('webhooks', WebhookApiController::class)->names([

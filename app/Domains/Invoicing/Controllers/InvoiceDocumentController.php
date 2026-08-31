@@ -73,8 +73,10 @@ class InvoiceDocumentController extends Controller
 
         $organization = $currentOrg->get();
 
-        // Guard: a QR-bill cannot be issued without a QR-IBAN configured on the org.
-        if (empty($organization->qr_iban)) {
+        $bankAccount = $organization->defaultInvoicingBankAccount();
+        $paymentIban = $invoice->qr_iban ?: $bankAccount?->qr_iban ?: $bankAccount?->iban;
+
+        if (empty($paymentIban)) {
             return $this->backWithError(__('app.qr_iban_required'));
         }
 

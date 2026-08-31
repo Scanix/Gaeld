@@ -46,10 +46,11 @@ class ExpenseReconciler
             $this->validatePreconditions($transaction, $bankAccount);
 
             $amount = Money::absoluteAmount((string) $transaction->amount);
+            $netAmount = Money::absoluteAmount((string) $expense->amount);
             $reference = $this->buildReference($orgId, $transaction);
 
             $journalEntry = $this->expenseService->postToLedger($expense, RecordExpensePaymentData::forReconciliation(
-                amount: $amount,
+                amount: $netAmount,
                 paymentDate: $transaction->date->toDateString(),
                 reference: $reference,
                 transactionDescription: $transaction->description,

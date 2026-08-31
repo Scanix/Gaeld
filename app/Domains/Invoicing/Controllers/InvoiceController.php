@@ -11,6 +11,7 @@ use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
+use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Queries\InvoiceQuery;
@@ -80,6 +81,7 @@ class InvoiceController extends Controller
             'defaultNotes' => $currentOrg->get()->default_invoice_notes ?? '',
             'defaultPaymentTermsDays' => $currentOrg->get()->default_payment_terms_days,
             'defaultVatRateId' => optional(VatRateQuery::active()->firstWhere('is_default', true))->id,
+            'taxTreatments' => InvoiceTaxTreatment::options(),
         ]);
     }
 
@@ -149,13 +151,17 @@ class InvoiceController extends Controller
     {
         $this->authorize('view', $invoice);
 
+        $defaultBankAccount = $invoice->organization->defaultInvoicingBankAccount();
+
         return Inertia::render('Invoices/Show', [
             'invoice' => $invoice->load(['customer', 'lines.vatRate', 'journalEntry.lines.account', 'payments.journalEntry']),
             'canForceDelete' => $request->user()->can('forceDelete', $invoice),
+            'canRecordPayment' => $request->user()->can('recordPayment', $invoice),
+            'canSend' => $request->user()->can('send', $invoice),
             'justificatifUrl' => $invoice->justificatif_path
                 ? route('invoices.justificatif.download', $invoice)
                 : null,
-            'hasQrIban' => ! empty($invoice->organization->qr_iban ?? null),
+            'hasQrIban' => ! empty($invoice->qr_iban ?: $defaultBankAccount?->qr_iban ?: $defaultBankAccount?->iban),
             'bankAccounts' => BankAccount::query()
                 ->where('is_active', true)
                 ->select('id', 'account_id', 'name', 'iban', 'currency')
@@ -185,6 +191,7 @@ class InvoiceController extends Controller
                 ? route('invoices.justificatif.download', $invoice)
                 : null,
             'defaultVatRateId' => optional(VatRateQuery::active()->firstWhere('is_default', true))->id,
+            'taxTreatments' => InvoiceTaxTreatment::options(),
         ]);
     }
 

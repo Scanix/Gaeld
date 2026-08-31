@@ -2,7 +2,7 @@
 
 namespace App\Domains\Api\Requests;
 
-use App\Domains\Organizations\Enums\Permission;
+use App\Http\Middleware\Api\TokenPermissionMap;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,7 +24,7 @@ class StoreApiTokenRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'abilities' => 'array',
-            'abilities.*' => ['string', Rule::in(array_column(Permission::cases(), 'value'))],
+            'abilities.*' => ['string', Rule::in(TokenPermissionMap::acceptedAbilities())],
             'expires_in_days' => 'nullable|integer|min:1|max:365',
         ];
     }

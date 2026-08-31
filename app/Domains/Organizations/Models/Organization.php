@@ -197,11 +197,18 @@ class Organization extends Model
     {
         return $this->bankAccounts()
             ->where('is_default_for_invoicing', true)
+            ->where('is_active', true)
             ->first()
             ?? $this->bankAccounts()
-                ->whereNotNull('qr_iban')
-                ->where('qr_iban', '!=', '')
                 ->where('is_active', true)
+                ->where(fn ($query) => $query
+                    ->whereNotNull('qr_iban')
+                    ->where('qr_iban', '!=', '')
+                    ->orWhere(fn ($query) => $query
+                        ->whereNotNull('iban')
+                        ->where('iban', '!=', '')
+                    )
+                )
                 ->first();
     }
 

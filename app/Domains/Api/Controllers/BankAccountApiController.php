@@ -4,6 +4,7 @@ namespace App\Domains\Api\Controllers;
 
 use App\Domains\Api\Resources\BankAccountResource;
 use App\Domains\Banking\Models\BankAccount;
+use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -48,8 +49,9 @@ class BankAccountApiController extends Controller
      * @response 200 scenario="Success" {"data":{"id":"9c8f1b2a-3d4e-5f67-8901-abcdef123456","name":"UBS Business","iban":"CH93 0076 2011 6238 5295 7","bank_name":"UBS","currency":"CHF","balance":12500.00,"is_active":true,"account_id":"abc123","created_at":"2025-01-01T00:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"}}
      * @response 404 scenario="Not found" {"message":"Bank account not found."}
      */
-    public function show(BankAccount $bankAccount): BankAccountResource
+    public function show(BankAccount $bankAccount, CurrentOrganization $currentOrganization): BankAccountResource
     {
+        abort_unless($bankAccount->organization_id === $currentOrganization->id(), 404);
         $this->authorize('view', $bankAccount);
 
         return new BankAccountResource($bankAccount);

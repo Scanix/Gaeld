@@ -19,6 +19,7 @@ class InvoiceResource extends JsonResource
             'number' => $this->number,
             'status' => $this->status->value,
             'type' => $this->type->value,
+            'tax_treatment' => $this->tax_treatment->value,
             'related_invoice_id' => $this->related_invoice_id,
             'customer' => new ContactResource($this->whenLoaded('customer')),
             'issue_date' => $this->issue_date->toDateString(),
@@ -33,6 +34,7 @@ class InvoiceResource extends JsonResource
             'amount_due' => $this->amountDue(),
             'lines' => InvoiceLineResource::collection($this->whenLoaded('lines')),
             'payments' => InvoicePaymentResource::collection($this->whenLoaded('payments')),
+            'journal_entry' => new JournalEntryResource($this->whenLoaded('journalEntry')),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
