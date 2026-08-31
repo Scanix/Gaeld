@@ -8,6 +8,7 @@ RCLONE_LOG="${RCLONE_LOG:-$BACKUP_DIR/logs/rclone.log}"
 DAILY_RETENTION_DAYS="${DAILY_RETENTION_DAYS:-7}"
 WEEKLY_RETENTION_DAYS="${WEEKLY_RETENTION_DAYS:-56}"
 LOCK_FILE="${LOCK_FILE:-$BACKUP_DIR/.backup-sync.lock}"
+ONEDRIVE_HARD_DELETE="${ONEDRIVE_HARD_DELETE:-false}"
 
 RCLONE_OPTIONS=(
     --transfers 4
@@ -20,6 +21,18 @@ DRY_RUN="${DRY_RUN:-false}"
 
 if [[ "$DRY_RUN" != "true" && "$DRY_RUN" != "false" ]]; then
     printf 'DRY_RUN must be true or false\n' >&2
+
+    exit 1
+fi
+
+if [[ "$ONEDRIVE_HARD_DELETE" != "true" && "$ONEDRIVE_HARD_DELETE" != "false" ]]; then
+    printf 'ONEDRIVE_HARD_DELETE must be true or false\n' >&2
+
+    exit 1
+fi
+
+if [[ "$ONEDRIVE_HARD_DELETE" == "true" && "$RCLONE_REMOTE" != onedrive:* ]]; then
+    printf 'ONEDRIVE_HARD_DELETE=true requires an onedrive remote\n' >&2
 
     exit 1
 fi
@@ -104,6 +117,9 @@ sync_and_prune() {
     if [[ "$DRY_RUN" == "true" ]]; then
         delete_args+=(--dry-run)
     fi
+    if [[ "$ONEDRIVE_HARD_DELETE" == "true" ]]; then
+        delete_args+=(--onedrive-hard-delete)
+    fi
 
     if ! rclone delete "${delete_args[@]}" 2>> "$RCLONE_LOG"; then
         log "SYNC FAIL: $category daily cleanup"
@@ -150,6 +166,9 @@ sync_and_prune() {
     if [[ "$DRY_RUN" == "true" ]]; then
         delete_args+=(--dry-run)
     fi
+    if [[ "$ONEDRIVE_HARD_DELETE" == "true" ]]; then
+        delete_args+=(--onedrive-hard-delete)
+    fi
 
     if ! rclone delete "${delete_args[@]}" 2>> "$RCLONE_LOG"; then
         log "SYNC FAIL: $category weekly cleanup"
@@ -158,9 +177,9 @@ sync_and_prune() {
     fi
 
     if [[ "$DRY_RUN" == "true" ]]; then
-        log "SYNC DRY RUN: $category (daily ${DAILY_RETENTION_DAYS}d, weekly ${WEEKLY_RETENTION_DAYS}d)"
+        log "SYNC DRY RUN: $category (daily ${DAILY_RETENTION_DAYS}d, weekly ${WEEKLY_RETENTION_DAYS}d, hard delete ${ONEDRIVE_HARD_DELETE})"
     else
-        log "SYNC OK: $category (daily ${DAILY_RETENTION_DAYS}d, weekly ${WEEKLY_RETENTION_DAYS}d)"
+        log "SYNC OK: $category (daily ${DAILY_RETENTION_DAYS}d, weekly ${WEEKLY_RETENTION_DAYS}d, hard delete ${ONEDRIVE_HARD_DELETE})"
     fi
 }
 
