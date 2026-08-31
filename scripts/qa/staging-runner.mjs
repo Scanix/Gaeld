@@ -1130,20 +1130,38 @@ async function createInvoiceForReplay(page, customerName, period, index, taxTrea
   await page.locator('#line-price-0').fill('250.00')
   await page.locator('#tax_treatment').selectOption(taxTreatment)
 
-  const response = await submitAndCapturePost(
-    page,
-    page.getByRole('button', { name: /Create & Finalize|Create and finalize|Créer et finaliser/i }),
-    '/invoices',
-  )
-  await page.waitForLoadState('networkidle')
-  const body = await page.locator('body').innerText()
-  const number = body.match(/INV-\d{4}-\d+/)?.[0] || null
+  const submitButton = page.getByRole('button', { name: /Create & Finalize|Create and finalize|Créer et finaliser/i }).last()
+  try {
+    const state = await submitButton.evaluate(button => ({
+      disabled: button.disabled,
+      visible: !!(button.offsetWidth || button.offsetHeight || button.getClientRects().length),
+      formValid: button.form?.checkValidity() ?? null,
+      invalidFields: button.form
+        ? [...button.form.elements].filter(element => !element.checkValidity()).map(element => element.id || element.name)
+        : [],
+    }))
+    const response = await submitAndCapturePost(page, submitButton, '/invoices')
+    await page.waitForLoadState('networkidle')
+    const body = await page.locator('body').innerText()
 
-  return {
-    status: response.status(),
-    created: response.status() === 302 && page.url().includes('/invoices/'),
-    number,
-    total: taxTreatment === 'reverse_charge' ? '250.00' : '270.25',
+    return {
+      status: response.status(),
+      created: response.status() === 302 && page.url().includes('/invoices/'),
+      number: body.match(/INV-\d{4}-\d+/)?.[0] || null,
+      total: taxTreatment === 'reverse_charge' ? '250.00' : '270.25',
+      state,
+    }
+  } catch (error) {
+    const state = await submitButton.evaluate(button => ({
+      disabled: button.disabled,
+      visible: !!(button.offsetWidth || button.offsetHeight || button.getClientRects().length),
+      formValid: button.form?.checkValidity() ?? null,
+      invalidFields: button.form
+        ? [...button.form.elements].filter(element => !element.checkValidity()).map(element => element.id || element.name)
+        : [],
+    })).catch(() => null)
+    const body = await page.locator('body').innerText().catch(() => '')
+    throw new Error(`${error.message} (invoice ${period.start}, tax ${taxTreatment}, url ${page.url()}, state ${JSON.stringify(state)}, body ${body.slice(-500)})`)
   }
 }
 
