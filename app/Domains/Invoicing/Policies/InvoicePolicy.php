@@ -85,6 +85,10 @@ class InvoicePolicy extends BasePolicy
 
     public function recordPayment(User $user, Invoice $invoice): bool
     {
+        if ($invoice->archived_at !== null) {
+            return false;
+        }
+
         return $this->belongsToOrganization($user, $invoice)
             && $user->hasPermissionTo(Permission::InvoicingRecordPayment)
             && in_array($invoice->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue], true);
@@ -92,6 +96,10 @@ class InvoicePolicy extends BasePolicy
 
     public function send(User $user, Invoice $invoice): bool
     {
+        if ($invoice->archived_at !== null) {
+            return false;
+        }
+
         return $this->belongsToOrganization($user, $invoice)
             && $user->hasPermissionTo(Permission::InvoicingEdit)
             && in_array($invoice->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue], true);

@@ -19,6 +19,9 @@ import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 const props = defineProps({
   expense: Object,
   receiptUrl: { type: String, default: null },
+  canUpdate: { type: Boolean, default: false },
+  canDelete: { type: Boolean, default: false },
+  canApprove: { type: Boolean, default: false },
 })
 
 const showPostDialog = ref(false)
@@ -101,7 +104,7 @@ const journalColumns = computed(() => [
       </div>
       <div class="flex flex-wrap gap-2">
         <Button
-          v-if="expense.status !== 'posted' && !expense.archived_at"
+          v-if="canUpdate"
           as="a"
           :href="`/expenses/${expense.id}/edit`"
           variant="outline"
@@ -111,7 +114,7 @@ const journalColumns = computed(() => [
           {{ t('edit') }}
         </Button>
         <Button
-          v-if="expense.status === 'approved' && !expense.archived_at"
+          v-if="canUpdate && expense.status === 'approved'"
           size="sm"
           :disabled="!expense.expense_account_code"
           :title="!expense.expense_account_code ? t('expense_account_code_required') : undefined"
@@ -119,10 +122,10 @@ const journalColumns = computed(() => [
         >
           {{ t('post_to_ledger') }}
         </Button>
-        <DropdownMenu v-if="(expense.status === 'pending' || expense.status === 'approved') && !expense.archived_at">
+        <DropdownMenu v-if="canUpdate || canDelete || canApprove">
           <template #default="{ close }">
             <button
-              v-if="expense.status === 'pending'"
+              v-if="canApprove && expense.status === 'pending'"
               class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
               :disabled="approveForm.processing"
               @click="approve(); close()"
@@ -131,7 +134,7 @@ const journalColumns = computed(() => [
               {{ t('approve') }}
             </button>
             <button
-              v-if="expense.status === 'approved'"
+              v-if="canUpdate && expense.status === 'approved'"
               class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
               :disabled="unapproveForm.processing"
               @click="unapprove(); close()"
@@ -139,8 +142,9 @@ const journalColumns = computed(() => [
               <RotateCcw class="h-4 w-4 shrink-0" />
               {{ t('unapprove_expense') }}
             </button>
-            <div class="my-1 border-t border-[hsl(var(--border))]" />
+            <div v-if="canDelete" class="my-1 border-t border-[hsl(var(--border))]" />
             <button
+              v-if="canDelete"
               class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
               @click="showDeleteDialog = true; close()"
             >
@@ -185,7 +189,7 @@ const journalColumns = computed(() => [
           <div class="flex items-center justify-between">
             <CardTitle>{{ t('receipt') }}</CardTitle>
             <Button
-              v-if="expense.status !== 'posted' && !expense.archived_at"
+              v-if="canUpdate"
               variant="ghost"
               size="sm"
               @click="removeReceipt"

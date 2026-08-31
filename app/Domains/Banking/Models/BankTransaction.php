@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property int $bank_account_id
  * @property int|null $bank_import_id
  * @property string|null $journal_entry_id
+ * @property string|null $vat_settlement_journal_entry_id
  * @property Carbon $date
  * @property string|null $description
  * @property string $amount
@@ -58,6 +59,7 @@ class BankTransaction extends Model
         'bank_account_id',
         'bank_import_id',
         'journal_entry_id',
+        'vat_settlement_journal_entry_id',
         'date',
         'description',
         'amount',
@@ -102,6 +104,12 @@ class BankTransaction extends Model
     public function journalEntry(): BelongsTo
     {
         return $this->belongsTo(JournalEntry::class);
+    }
+
+    /** @return BelongsTo<JournalEntry, $this> */
+    public function vatSettlementJournalEntry(): BelongsTo
+    {
+        return $this->belongsTo(JournalEntry::class, 'vat_settlement_journal_entry_id');
     }
 
     /** @return BelongsTo<Invoice, $this> */

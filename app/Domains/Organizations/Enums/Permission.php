@@ -29,6 +29,7 @@ enum Permission: string
 
     // Expenses
     case ExpensesView = 'expenses.view';
+    case ExpensesViewOwn = 'expenses.view-own';
     case ExpensesCreate = 'expenses.create';
     case ExpensesEdit = 'expenses.edit';
     case ExpensesDelete = 'expenses.delete';
@@ -54,6 +55,7 @@ enum Permission: string
 
     // Payroll
     case PayrollView = 'payroll.view';
+    case PayrollSalarySlipsViewOwn = 'payroll.salary-slips.view-own';
     case PayrollCreate = 'payroll.create';
     case PayrollEdit = 'payroll.edit';
     case PayrollDelete = 'payroll.delete';

@@ -87,13 +87,62 @@ class Money
     }
 
     /**
+     * Divide and round the result to the standard monetary scale.
+     *
+     * @return numeric-string
+     */
+    public static function divideRounded(string $amount, string $divisor): string
+    {
+        /** @var numeric-string $amount */
+        /** @var numeric-string $divisor */
+        if (bccomp($divisor, '0', self::SCALE) === 0) {
+            throw new \InvalidArgumentException('Money::divideRounded() division by zero.');
+        }
+
+        return self::round(bcdiv($amount, $divisor, 8));
+    }
+
+    /**
+     * Normalize a non-negative monetary amount to two decimal places.
+     *
+     * @return numeric-string
+     */
+    public static function normalize(string $value): string
+    {
+        if (preg_match('/^\d+(?:\.\d{1,2})?$/', $value) !== 1) {
+            throw new \InvalidArgumentException('Money amounts must be non-negative and have at most two decimals.');
+        }
+
+        if (! is_numeric($value)) {
+            throw new \InvalidArgumentException('Money amounts must be numeric.');
+        }
+
+        $normalized = bcadd($value, '0', self::SCALE);
+
+        return $normalized;
+    }
+
+    /**
      * @return numeric-string
      */
     public static function percentage(string $amount, string $rate): string
     {
         /** @var numeric-string $amount */
         /** @var numeric-string $rate */
-        return bcdiv(bcmul($amount, $rate, self::INTERMEDIATE_SCALE), '100', self::SCALE);
+        return self::round(bcdiv(bcmul($amount, $rate, 8), '100', 8));
+    }
+
+    /**
+     * Round a value to two decimals using half-up rounding.
+     *
+     * @return numeric-string
+     */
+    public static function round(string $value): string
+    {
+        /** @var numeric-string $value */
+        $adjustment = bccomp($value, '0', 8) < 0 ? '-0.005' : '0.005';
+
+        return bcadd($value, $adjustment, self::SCALE);
     }
 
     /**

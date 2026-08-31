@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Actions;
 
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceType;
@@ -53,11 +54,21 @@ class CreateInvoiceAction
     private function createWithNumber(CreateInvoiceData $data, string $number): Invoice
     {
         return DB::transaction(function () use ($data, $number) {
+            $customer = $data->customerId === null
+                ? null
+                : Contact::withoutGlobalScope('organization')
+                    ->where('organization_id', $data->organizationId)
+                    ->findOrFail($data->customerId);
+            $data->taxTreatment->validateCustomer($customer);
+            $customerSnapshot = $customer?->toInvoiceSnapshot();
+
             $invoice = Invoice::create([
                 'organization_id' => $data->organizationId,
                 'customer_id' => $data->customerId,
+                'customer_snapshot' => $customerSnapshot,
                 'number' => $number,
                 'status' => InvoiceStatus::Draft,
+                'tax_treatment' => $data->taxTreatment,
                 'type' => InvoiceType::Invoice,
                 'issue_date' => $data->issueDate,
                 'due_date' => $data->dueDate,
@@ -69,7 +80,7 @@ class CreateInvoiceAction
                 'payment_terms' => $data->paymentTerms,
             ]);
 
-            $this->syncInvoiceLines->create($invoice, $data->lines);
+            $this->syncInvoiceLines->create($invoice, $data->lines, $data->taxTreatment->appliesSwissVat());
 
             $invoice->recalculate();
 

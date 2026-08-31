@@ -25,9 +25,16 @@ const { t } = useTranslations()
 const { formatCurrency } = useFormatters()
 
 // Period selector: quarter or custom
+const initialFrom = props.report?.period?.from ?? ''
+const initialMonth = Number.parseInt(initialFrom.slice(5, 7), 10)
+const initialYear = Number.parseInt(initialFrom.slice(0, 4), 10)
+const initialQuarter = Math.ceil(initialMonth / 3)
+const currentDate = new Date()
 const mode = ref('quarter')
-const year = ref(new Date().getFullYear())
-const quarter = ref(Math.ceil((new Date().getMonth() + 1) / 3))
+const year = ref(Number.isFinite(initialYear) ? initialYear : currentDate.getFullYear())
+const quarter = ref(initialQuarter >= 1 && initialQuarter <= 4
+  ? initialQuarter
+  : Math.ceil((currentDate.getMonth() + 1) / 3))
 const customFrom = ref('')
 const customTo = ref('')
 
@@ -85,13 +92,14 @@ function postSettlement() {
   })
 }
 
-// Closed fiscal year detection based on selected period
-const periodYear = computed(() => {
-  if (mode.value === 'quarter') return year.value
-  // For custom range, use the 'from' date year
-  return customFrom.value ? parseInt(customFrom.value.slice(0, 4), 10) : null
+// Closed fiscal year detection must use a date inside the selected period.
+// A calendar year can straddle two explicit fiscal years (e.g. Q4 2025).
+const periodDate = computed(() => {
+  if (mode.value === 'quarter') return quarterDates(year.value, quarter.value).to
+
+  return customTo.value || customFrom.value || null
 })
-const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodYear)
+const { isClosed: isPeriodClosed, closedYear } = useClosedFiscalYear(periodDate)
 </script>
 
 <template>

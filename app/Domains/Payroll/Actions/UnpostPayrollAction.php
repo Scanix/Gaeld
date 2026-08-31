@@ -35,6 +35,7 @@ class UnpostPayrollAction
         $slip->update([
             'journal_entry_id' => null,
             'posted_at' => null,
+            'email_sent_at' => null,
         ]);
 
         return $slip->fresh();

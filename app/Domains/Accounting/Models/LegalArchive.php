@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string $organization_id
  * @property string $document_type
  * @property string $document_id
+ * @property int $version
  * @property int $fiscal_year
  * @property string|null $fiscal_year_id
  * @property string $checksum_sha256
@@ -36,6 +37,7 @@ class LegalArchive extends Model
         'organization_id',
         'document_type',
         'document_id',
+        'version',
         'fiscal_year',
         'fiscal_year_id',
         'checksum_sha256',
@@ -49,6 +51,7 @@ class LegalArchive extends Model
     {
         return [
             'fiscal_year' => 'integer',
+            'version' => 'integer',
             'archived_at' => 'datetime',
             'expires_at' => 'datetime',
             'verified_at' => 'datetime',

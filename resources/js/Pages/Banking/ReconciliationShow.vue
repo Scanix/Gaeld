@@ -31,6 +31,7 @@ const props = defineProps({
   filter: { type: String, default: 'unreconciled' },
   openInvoices: { type: Array, default: () => [] },
   openExpenses: { type: Array, default: () => [] },
+  vatSettlements: { type: Array, default: () => [] },
   pageFeatures: { type: Object, default: () => ({}) },
 })
 
@@ -42,6 +43,7 @@ const personalSuggestionsSafe = computed(() => contract.value.personalSuggestion
 const filterSafe = computed(() => contract.value.filter)
 const openInvoicesSafe = computed(() => contract.value.openInvoices)
 const openExpensesSafe = computed(() => contract.value.openExpenses)
+const vatSettlementsSafe = computed(() => contract.value.vatSettlements)
 const pageFeaturesSafe = computed(() => contract.value.pageFeatures)
 
 const { t } = useTranslations()
@@ -92,11 +94,30 @@ function onCsvMappingConfirm({ mapping, delimiter }) {
 // Match modals
 const showMatchModal = ref(false)
 const matchingTransaction = ref(null)
-const matchType = ref('invoice') // 'invoice', 'expense', 'manual'
+const matchType = ref('invoice') // 'invoice', 'expense', 'manual', 'vat'
 
 const matchInvoiceForm = useForm({ invoice_id: '' })
 const matchExpenseForm = useForm({ expense_id: '', expense_account_code: '6530' })
 const matchManualForm = useForm({ contra_account_code: '' })
+const matchVatForm = useForm({ vat_settlement_id: '' })
+
+const vatSettlementOptions = computed(() => {
+  const direction = matchingTransaction.value?.type
+
+  return vatSettlementsSafe.value
+    .filter(settlement => !direction || settlement.direction === direction)
+    .map((settlement) => ({
+      value: settlement.id,
+      label: `${settlement.reference} — ${formatCurrency(settlement.amount)} (${t('vat_payment_direction_' + settlement.direction)})`,
+    }))
+})
+
+const matchTypes = computed(() => [
+  'invoice',
+  'expense',
+  'manual',
+  ...(vatSettlementOptions.value.length ? ['vat'] : []),
+])
 
 // Invoice combobox options: "INV-001 — Customer Name (CHF 1'500.00) [payé]"
 const invoiceOptions = computed(() =>
@@ -143,6 +164,10 @@ function submitMatch() {
     })
   } else if (matchType.value === 'expense') {
     matchExpenseForm.post(`/reconciliation/transactions/${txId}/expense`, {
+      onSuccess: () => closeMatchModal(),
+    })
+  } else if (matchType.value === 'vat') {
+    matchVatForm.post(`/reconciliation/transactions/${txId}/vat`, {
       onSuccess: () => closeMatchModal(),
     })
   } else {
@@ -209,6 +234,7 @@ function closeMatchModal() {
   matchInvoiceForm.reset()
   matchExpenseForm.reset()
   matchManualForm.reset()
+  matchVatForm.reset()
 }
 
 const autoReconciling = ref(false)
@@ -282,7 +308,7 @@ const justificationMissingCount = computed(() => {
   return txs.filter(
     tx => tx.is_reconciled
       && (
-        (!tx.matched_invoice && !tx.matched_expense)
+        (!tx.matched_invoice && !tx.matched_expense && !tx.vat_settlement_journal_entry_id)
         || (tx.matched_expense && !tx.matched_expense.receipt_path)
       ),
   ).length
@@ -423,7 +449,7 @@ const justificationMissingCount = computed(() => {
                 </Badge>
               </div>
               <Badge
-                v-if="tx.is_reconciled && !tx.matched_invoice && !tx.matched_expense"
+                v-if="tx.is_reconciled && !tx.matched_invoice && !tx.matched_expense && !tx.vat_settlement_journal_entry_id"
                 variant="outline"
                 class="mt-2 border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
                 :title="t('justification_missing_help')"
@@ -602,13 +628,13 @@ const justificationMissingCount = computed(() => {
         <!-- Match type tabs -->
         <div class="flex gap-2">
           <Button
-            v-for="mt in ['invoice', 'expense', 'manual']"
+            v-for="mt in matchTypes"
             :key="mt"
             :variant="matchType === mt ? 'default' : 'outline'"
             size="sm"
             @click="matchType = mt"
           >
-            {{ mt === 'invoice' ? (t('invoice')) : mt === 'expense' ? (t('expense')) : (t('manual')) }}
+            {{ mt === 'invoice' ? (t('invoice')) : mt === 'expense' ? (t('expense')) : mt === 'vat' ? (t('vat_payment')) : (t('manual')) }}
           </Button>
         </div>
 
@@ -747,6 +773,23 @@ const justificationMissingCount = computed(() => {
             </Button>
           </div>
         </form>
+
+        <div v-if="matchType === 'vat'" class="space-y-3">
+          <p class="text-sm text-muted-foreground">{{ t('vat_reconcile_help') }}</p>
+          <Combobox
+            v-model="matchVatForm.vat_settlement_id"
+            :options="vatSettlementOptions"
+            :placeholder="t('search_vat_settlement')"
+            :emptyText="t('no_vat_settlements_found')"
+            :error="matchVatForm.errors.vat_settlement_id"
+          />
+          <div class="flex justify-end gap-3">
+            <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') }}</Button>
+            <Button type="button" :disabled="matchVatForm.processing || !matchVatForm.vat_settlement_id" @click="submitMatch">
+              <Check class="mr-2 h-4 w-4" /> {{ t('reconcile') }}
+            </Button>
+          </div>
+        </div>
       </div>
     </Modal>
 

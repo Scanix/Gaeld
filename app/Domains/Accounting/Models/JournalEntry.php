@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Models;
 
 use App\Domains\Organizations\Models\Organization;
+use App\Domains\Users\Models\User;
 use App\Support\Money;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
@@ -26,6 +27,11 @@ use Illuminate\Support\Carbon;
  * @property string $reference
  * @property string|null $description
  * @property bool $is_posted
+ * @property string|null $type
+ * @property Carbon|null $vat_period_start
+ * @property Carbon|null $vat_period_end
+ * @property Carbon|null $vat_period_locked_at
+ * @property int|null $vat_period_locked_by_user_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, TransactionLine> $lines
@@ -42,6 +48,10 @@ class JournalEntry extends Model
         'description',
         'is_posted',
         'type',
+        'vat_period_start',
+        'vat_period_end',
+        'vat_period_locked_at',
+        'vat_period_locked_by_user_id',
         'archived_at',
     ];
 
@@ -50,6 +60,9 @@ class JournalEntry extends Model
         return [
             'date' => 'date',
             'is_posted' => 'boolean',
+            'vat_period_start' => 'date',
+            'vat_period_end' => 'date',
+            'vat_period_locked_at' => 'datetime',
             'archived_at' => 'datetime',
         ];
     }
@@ -64,6 +77,12 @@ class JournalEntry extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(TransactionLine::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function vatPeriodLockedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'vat_period_locked_by_user_id');
     }
 
     public function isBalanced(): bool

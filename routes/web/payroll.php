@@ -2,10 +2,14 @@
 
 use App\Domains\Payroll\Controllers\EmployeeController;
 use App\Domains\Payroll\Controllers\PayrollRunController;
+use App\Domains\Payroll\Controllers\SalaryCertificateController;
 use App\Domains\Payroll\Controllers\SalarySlipController;
 use Illuminate\Support\Facades\Route;
 
 Route::resource('payroll/employees', EmployeeController::class)->names('payroll.employees');
+Route::get('/payroll/employees/{employee}/salary-certificate/{year}', [SalaryCertificateController::class, 'download'])
+    ->whereNumber('year')
+    ->name('payroll.salaryCertificate.download');
 
 Route::get('/payroll/salary-slips', [SalarySlipController::class, 'index'])->name('payroll.salarySlips.index');
 Route::get('/payroll/salary-slips/{slip}', [SalarySlipController::class, 'show'])->name('payroll.salarySlips.show');

@@ -5,6 +5,7 @@ namespace App\Domains\Expenses\Requests\Concerns;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Expenses\Enums\ExpenseType;
 use App\Domains\Expenses\Validation\ExpenseSharedValidationRules;
+use App\Domains\Organizations\Enums\Permission;
 use Illuminate\Validation\Rule;
 
 trait ExpenseValidationRules
@@ -12,13 +13,16 @@ trait ExpenseValidationRules
     /** @return array<string, mixed> */
     protected function sharedRules(string $orgId): array
     {
+        $selfService = $this->user()->hasPermissionTo(Permission::ExpensesViewOwn)
+            && ! $this->user()->hasPermissionTo(Permission::ExpensesView);
+
         return array_merge(ExpenseSharedValidationRules::store(), [
             'vat_rate_id' => [
                 'nullable',
                 Rule::exists('vat_rates', 'id')->where('organization_id', $orgId),
             ],
             'supplier_id' => [
-                'nullable',
+                $selfService ? 'prohibited' : 'nullable',
                 Rule::exists('contacts', 'id')->where('organization_id', $orgId)->whereNull('deleted_at'),
             ],
             'type' => ['sometimes', Rule::enum(ExpenseType::class)],
@@ -27,14 +31,14 @@ trait ExpenseValidationRules
             'receipt_path' => ['nullable', 'string', 'starts_with:receipts/'],
             'scan_id' => ['nullable', 'string', 'uuid'],
             'expense_account_code' => [
-                'nullable',
+                $selfService ? 'prohibited' : 'nullable',
                 'string',
                 Rule::exists('accounts', 'code')
                     ->where('organization_id', $orgId)
                     ->where('type', AccountType::Expense->value),
             ],
             'bank_account_code' => [
-                'nullable',
+                $selfService ? 'prohibited' : 'nullable',
                 'string',
                 Rule::exists('accounts', 'code')->where('organization_id', $orgId),
             ],

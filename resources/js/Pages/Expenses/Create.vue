@@ -31,6 +31,7 @@ const props = defineProps({
   expenseAccounts: { type: Array, default: () => [] },
   bankAccounts: { type: Array, default: () => [] },
   ocrData: { type: Object, default: null },
+  selfService: { type: Boolean, default: false },
 })
 
 const form = useForm({
@@ -66,6 +67,18 @@ const { forceClear } = useUnsavedChanges(computed(() => form.isDirty))
 
 function submit() {
   forceClear.value = true
+  form.transform(data => {
+    if (!props.selfService) return data
+
+    const {
+      supplier_id,
+      expense_account_code,
+      bank_account_code,
+      ...selfServiceData
+    } = data
+
+    return selfServiceData
+  })
   form.post('/expenses', {
     forceFormData: true,
     onError: () => { forceClear.value = false },
@@ -168,7 +181,7 @@ function onSupplierCreated(supplier) {
         </Alert>
         <Alert v-if="categories.length === 0" variant="warning" class="mb-4">
           {{ t('expense_categories_unavailable') }}
-          <a href="/settings?tab=expenses" class="ml-1 font-medium underline underline-offset-2">{{ t('open_settings') }}</a>
+          <a v-if="!selfService" href="/settings?tab=expenses" class="ml-1 font-medium underline underline-offset-2">{{ t('open_settings') }}</a>
         </Alert>
         <form class="space-y-6" @submit.prevent="submit">
           <input v-if="form.receipt_path" type="hidden" name="receipt_path" :value="form.receipt_path">
@@ -176,7 +189,7 @@ function onSupplierCreated(supplier) {
           <!-- Expense Details -->
           <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('expense_details') }}</h3>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="flex items-end gap-2">
+            <div v-if="!selfService" class="flex items-end gap-2">
               <SearchableSelect
                 id="supplier_id"
                 v-model="form.supplier_id"
@@ -270,9 +283,9 @@ function onSupplierCreated(supplier) {
           />
 
           <!-- Accounting -->
-          <hr class="border-[hsl(var(--border))]" />
-          <h3 class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('accounting') }}</h3>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <hr v-if="!selfService" class="border-[hsl(var(--border))]" />
+          <h3 v-if="!selfService" class="text-sm font-medium text-[hsl(var(--foreground))]">{{ t('accounting') }}</h3>
+          <div v-if="!selfService" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <SearchableSelect
               id="expense_account_code"
               v-model="form.expense_account_code"
@@ -311,6 +324,7 @@ function onSupplierCreated(supplier) {
     </Card>
 
     <QuickCreateContactModal
+      v-if="!selfService"
       :open="showCreateSupplier"
       contact-type="supplier"
       @close="showCreateSupplier = false"

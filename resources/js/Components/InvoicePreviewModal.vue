@@ -75,29 +75,29 @@ const total = computed(() => subtotal.value + vatTotal.value)
 
       <!-- Line items -->
       <div class="overflow-x-auto">
-      <table class="w-full text-left">
+      <table class="min-w-[38rem] w-full text-left">
         <thead>
           <tr class="border-b border-[hsl(var(--border))] text-xs text-[hsl(var(--muted-foreground))]">
-            <th class="pb-2 pr-3">{{ t('description') }}</th>
-            <th class="pb-2 px-3 text-right">{{ t('qty') }}</th>
-            <th class="pb-2 px-3 text-right">{{ t('unit_price') }}</th>
-            <th class="pb-2 px-3 text-right">{{ t('vat') }}</th>
-            <th class="pb-2 pl-3 text-right">{{ t('amount') }}</th>
+            <th class="min-w-[14rem] whitespace-nowrap pb-2 pr-3">{{ t('description') }}</th>
+            <th class="whitespace-nowrap pb-2 px-3 text-right">{{ t('qty') }}</th>
+            <th class="whitespace-nowrap pb-2 px-3 text-right">{{ t('unit_price') }}</th>
+            <th class="whitespace-nowrap pb-2 px-3 text-right">{{ t('vat') }}</th>
+            <th class="whitespace-nowrap pb-2 pl-3 text-right">{{ t('amount') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(line, i) in lineDetails" :key="i" class="border-b border-[hsl(var(--border))]">
             <td class="py-2 pr-3">{{ line.description || '—' }}</td>
-            <td class="py-2 px-3 text-right tabular-nums">
+            <td class="whitespace-nowrap py-2 px-3 text-right tabular-nums">
               <template v-if="line.type === 'discount' && line.discount_type === 'percentage'">—</template>
               <template v-else>{{ line.quantity }}</template>
             </td>
-            <td class="py-2 px-3 text-right tabular-nums">
+            <td class="whitespace-nowrap py-2 px-3 text-right tabular-nums">
               <template v-if="line.type === 'discount' && line.discount_type === 'percentage'">{{ line.unit_price }}%</template>
               <template v-else>{{ formatCurrency(line.unit_price, form.currency) }}</template>
             </td>
-            <td class="py-2 px-3 text-right">{{ line.vat ? `${line.vat.rate}%` : '—' }}</td>
-            <td class="py-2 pl-3 text-right tabular-nums">{{ formatCurrency(line.amount, form.currency) }}</td>
+            <td class="whitespace-nowrap py-2 px-3 text-right">{{ line.vat ? `${line.vat.rate}%` : '—' }}</td>
+            <td class="whitespace-nowrap py-2 pl-3 text-right tabular-nums">{{ formatCurrency(line.amount, form.currency) }}</td>
           </tr>
         </tbody>
       </table>

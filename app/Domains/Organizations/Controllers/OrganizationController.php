@@ -8,6 +8,7 @@ use App\Domains\Organizations\Requests\StoreOrganizationRequest;
 use App\Domains\Organizations\Services\InvitationService;
 use App\Domains\Organizations\Services\OrganizationService;
 use App\Domains\Organizations\Services\OrganizationSetupService;
+use App\Domains\Payroll\Models\Employee;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,6 +53,15 @@ class OrganizationController extends Controller
                 : [],
             'canManageUsers' => $canManageUsers,
             'canAddMember' => $canManageUsers && $invitationService->canAddMember($organization),
+            'availableEmployees' => $canManageUsers
+                ? Employee::query()->whereNull('user_id')->orderBy('last_name')->orderBy('first_name')
+                    ->get(['id', 'first_name', 'last_name', 'email'])
+                    ->map(fn (Employee $employee): array => [
+                        'value' => $employee->id,
+                        'label' => $employee->fullName(),
+                        'email' => $employee->email,
+                    ])
+                : [],
         ]);
     }
 
@@ -71,6 +81,8 @@ class OrganizationController extends Controller
 
             return $org;
         });
+
+        $request->user()->switchOrganization($org);
 
         return redirect()->route('organizations.show', $org)
             ->with('success', __('app.organization_created'));
