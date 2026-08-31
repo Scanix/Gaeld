@@ -1104,8 +1104,11 @@ async function createContactForReplay(page, contact) {
   await page.locator('#city').fill(contact.city || 'Lausanne')
   await page.locator('#postal_code').fill(contact.postalCode || '1003')
   await page.locator('#country').selectOption(contact.country || 'CH')
-  if (contact.vatNumber) await page.locator('#vat_number').fill(contact.vatNumber)
-  if (contact.defaultExpenseCategory) await page.locator('#default_expense_category').fill(contact.defaultExpenseCategory)
+  if (contact.vatNumber || contact.defaultExpenseCategory) {
+    await page.locator('#tab-billing').click()
+    if (contact.vatNumber) await page.locator('#vat_number').fill(contact.vatNumber)
+    if (contact.defaultExpenseCategory) await page.locator('#default_expense_category').fill(contact.defaultExpenseCategory)
+  }
 
   const response = await submitAndCapturePost(
     page,
