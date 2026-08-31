@@ -1259,16 +1259,27 @@ async function runPayrollMonthForReplay(page, period) {
   await page.waitForLoadState('networkidle')
 
   const postResponses = []
+  let resolvePostCompletion
+  const postCompletion = new Promise(resolve => { resolvePostCompletion = resolve })
   const responseListener = response => {
     const pathname = new URL(response.url()).pathname
     if (response.request().method() === 'POST' && /\/payroll\/salary-slips\/.+\/post$/.test(pathname)) {
       postResponses.push(response.status())
+      if (postResponses.length === employeeCount) resolvePostCompletion()
     }
   }
   page.on('response', responseListener)
   await page.getByRole('button', { name: /Post|Comptabiliser/i }).first().click()
-  await page.locator('h2').filter({ hasText: /done|terminé|completed|complet/i }).waitFor({ timeout: 30000 })
+  await Promise.race([
+    postCompletion,
+    new Promise(resolve => setTimeout(resolve, 30000)),
+  ])
   page.off('response', responseListener)
+
+  if (postResponses.length !== employeeCount) {
+    const body = await page.locator('body').innerText().catch(() => '')
+    throw new Error(`Payroll posting incomplete for ${period.start}: expected ${employeeCount} POSTs, received ${postResponses.length}; body ${body.slice(-500)}`)
+  }
 
   return {
     previewStatus: preview.status(),
