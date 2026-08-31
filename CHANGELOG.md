@@ -50,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cash Flow:** the Inertia controller now preserves the calculated report
   contract instead of remapping it to obsolete balance and section keys.
 
-## [Unreleased]
+## [3.6.3] — 2026-08-31
 
 ### Fixed
 - **API tokens:** canonical abilities, legacy ability compatibility, wildcard
@@ -74,6 +74,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   matching uses the posted settlement reference, amount, and direction.
 - **Accounting navigation:** salary-slip journal links now open an authorized
   read-only detail page instead of a missing GET endpoint.
+
+## [Unreleased]
 
 ## [3.5.1] — 2026-08-07
 
