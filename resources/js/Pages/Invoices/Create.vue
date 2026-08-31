@@ -63,10 +63,12 @@ watch(() => form.issue_date, (val) => {
   const y = new Date(val).getFullYear()
   if (Number.isNaN(y) || y === lastReloadedYear) return
   lastReloadedYear = y
+  forceClear.value = true
   router.reload({
     only: ['suggestedNumber'],
     data: { for_year: y },
     preserveState: true,
+    onFinish: () => { forceClear.value = false },
   })
 })
 
