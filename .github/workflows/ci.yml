@@ -11,34 +11,9 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  test:
-    name: Tests & Lint
+  lint:
+    name: Lint & Analysis
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: gaeld
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: gaeld_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis:
-        image: redis:7
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v7
@@ -65,7 +40,6 @@ jobs:
         with:
           php-version: '8.4'
           extensions: pdo, pdo_pgsql, redis, mbstring, xml, curl, zip
-          coverage: pcov
 
       - name: Cache Composer dependencies
         uses: actions/cache@v6
@@ -110,6 +84,93 @@ jobs:
       - name: Audit NPM dependencies
         run: pnpm audit --prod || true
 
+  test:
+    name: Tests (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        include:
+          # Feature tests split into 2 balanced groups to stay under 120s timeout
+          - name: 'Feature (Group 1)'
+            test-paths: 'tests/Feature/Accounting tests/Feature/Migration tests/Feature/Console'
+          - name: 'Feature (Group 2)'
+            test-paths: 'tests/Feature/Organizations tests/Feature/Invoicing tests/Feature/Api tests/Feature/Reporting tests/Feature/Expenses tests/Feature/Banking tests/Feature/Users tests/Feature/Payroll tests/Feature/Contacts tests/Feature/Auth tests/Feature/Assets tests/Feature/Seeders tests/Feature/Security tests/Feature/Dashboard tests/Feature/Billing tests/Feature/SaasAdmin'
+          # Non-Feature suites
+          - name: 'Unit'
+            test-paths: 'tests/Unit'
+          - name: 'Security'
+            test-paths: 'tests/Security'
+          - name: 'Performance'
+            test-paths: 'tests/Performance'
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: gaeld
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: gaeld_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_pgsql, redis, mbstring, xml, curl, zip
+          coverage: pcov
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy environment file
+        run: cp .env.example .env
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@11.20.0 --activate
+
+      - name: Install NPM dependencies
+        run: pnpm install
+
+      - name: Build Vite assets
+        run: pnpm build
+
       - name: Run migrations
         env:
           DB_CONNECTION: pgsql
@@ -122,7 +183,7 @@ jobs:
           REDIS_PORT: 6379
         run: php artisan migrate --force
 
-      - name: Run tests
+      - name: Run ${{ matrix.name }} tests
         env:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
@@ -132,25 +193,15 @@ jobs:
           DB_PASSWORD: password
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
-        run: php artisan test --coverage-clover coverage/clover.xml
+        run: vendor/bin/phpunit --configuration phpunit.xml ${{ matrix.test-paths }}
 
-      - name: Coverage summary
-        if: always()
-        run: |
-          if [ -f coverage/clover.xml ]; then
-            total=$(grep -oP 'statements="\K[0-9]+' coverage/clover.xml | head -1)
-            covered=$(grep -oP 'coveredstatements="\K[0-9]+' coverage/clover.xml | head -1)
-            if [ "$total" -gt 0 ]; then
-              pct=$(echo "scale=1; $covered * 100 / $total" | bc)
-              echo "### Code Coverage: ${pct}%" >> $GITHUB_STEP_SUMMARY
-              echo "Covered ${covered} of ${total} statements" >> $GITHUB_STEP_SUMMARY
-            fi
-          fi
-
-      - name: Upload coverage artifact
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: coverage-report
-          path: coverage/clover.xml
+          name: test-results-${{ matrix.name }}
+          path: |
+            coverage/clover.xml
+            junit.xml
           retention-days: 14
+
