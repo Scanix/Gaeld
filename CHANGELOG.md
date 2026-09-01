@@ -5,6 +5,15 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.5] — 2026-09-01
+
+### Changed
+- **Navigation:** separated personal account, organizations, and current
+  organization settings in the application navigation.
+- **Organization management:** exposed organization switching and team access
+  more clearly, including for freelancers, while keeping actions aligned with
+  server-side permissions.
+
 ## [3.6.4] — 2026-09-01
 
 ### Added
