@@ -6,10 +6,12 @@ use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Organizations\Enums\OrganizationModule;
+use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Reporting\Services\DashboardService;
 use App\Http\Controllers\Controller;
 use App\Support\FeatureFlag;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,8 +21,13 @@ use Inertia\Response;
  */
 class DashboardController extends Controller
 {
-    public function index(Request $request, DashboardService $dashboardService, CurrentOrganization $currentOrg): Response
+    public function index(Request $request, DashboardService $dashboardService, CurrentOrganization $currentOrg): Response|RedirectResponse
     {
+        if ($request->user()->hasPermissionTo(Permission::PayrollSalarySlipsViewOwn)
+            && ! $request->user()->hasPermissionTo(Permission::AccountingView)) {
+            return redirect()->route('payroll.salarySlips.index');
+        }
+
         $this->authorize('viewAny', Account::class);
 
         $orgId = $currentOrg->id();

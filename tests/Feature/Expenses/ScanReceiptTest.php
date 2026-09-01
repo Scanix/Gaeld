@@ -149,6 +149,24 @@ class ScanReceiptTest extends TestCase
             ->assertJsonValidationErrors(['receipt']);
     }
 
+    public function test_scan_receipt_resolves_the_limit_in_the_quota_error(): void
+    {
+        Cache::put(
+            "ocr_daily:{$this->organization->id}:".now()->toDateString(),
+            3,
+            now()->addDay(),
+        );
+
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->postJson('/expenses/scan-receipt', [
+                'receipt' => UploadedFile::fake()->image('receipt.jpg'),
+            ]);
+
+        $response->assertStatus(429)
+            ->assertJson(['message' => 'Daily scan limit reached. You can scan 3 receipts per day.']);
+    }
+
     public function test_scan_receipt_requires_authentication(): void
     {
         $response = $this->postJson('/expenses/scan-receipt', [

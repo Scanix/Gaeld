@@ -29,7 +29,9 @@ class GenerateAccountingExportJob implements ShouldQueue
         public readonly string $fiscalYear,
         public readonly string $userId,
         public readonly ?string $fiscalYearId = null,
-    ) {}
+    ) {
+        $this->onQueue('exports');
+    }
 
     public function handle(AccountingExportService $exportService, ?FiscalYearService $fiscalYears = null): void
     {

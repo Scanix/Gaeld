@@ -158,6 +158,59 @@ class BusinessDocumentApiTest extends SecurityTestCase
         $this->assertSame($response->json('data.journal_entry.id'), $replay->json('data.journal_entry.id'));
     }
 
+    public function test_it_creates_a_reverse_charge_invoice_for_an_eu_customer(): void
+    {
+        $customer = Contact::create([
+            'organization_id' => $this->orgA->id,
+            'type' => ContactType::Organization->value,
+            'name' => 'EU Integration Customer GmbH',
+            'country' => 'DE',
+            'vat_number' => 'DE123456789',
+        ]);
+        Account::create([
+            'organization_id' => $this->orgA->id,
+            'code' => '1100',
+            'name' => 'Accounts receivable',
+            'type' => AccountType::Asset->value,
+        ]);
+        Account::create([
+            'organization_id' => $this->orgA->id,
+            'code' => '3000',
+            'name' => 'Revenue',
+            'type' => AccountType::Revenue->value,
+        ]);
+
+        $response = $this->withToken($this->tokenA)
+            ->withHeader('Idempotency-Key', 'reverse-charge-api-1')
+            ->postJson('/api/v1/invoices', [
+                'customer_id' => $customer->uuid,
+                'number' => 'API-RC-001',
+                'issue_date' => '2026-08-31',
+                'due_date' => '2026-09-30',
+                'currency' => 'CHF',
+                'tax_treatment' => 'reverse_charge',
+                'lines' => [[
+                    'description' => 'EU consulting service',
+                    'quantity' => 1,
+                    'unit_price' => '1000.00',
+                ]],
+            ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.tax_treatment', 'reverse_charge')
+            ->assertJsonPath('data.vat_amount', '0.00')
+            ->assertJsonPath('data.total', '1000.00');
+
+        $invoice = Invoice::where('number', 'API-RC-001')->firstOrFail();
+        $this->withToken($this->tokenA)
+            ->withHeader('Idempotency-Key', 'reverse-charge-api-finalize-1')
+            ->postJson("/api/v1/invoices/{$invoice->id}/finalize")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'sent');
+
+        $this->assertDatabaseCount('vat_entries', 0);
+    }
+
     public function test_posted_expense_exposes_its_generated_journal_entry(): void
     {
         Account::create([

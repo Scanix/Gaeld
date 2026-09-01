@@ -60,9 +60,9 @@ class LedgerService
      * @throws DuplicateReferenceException When a posted entry with the same reference already exists
      * @throws FiscalYearClosedException When the entry date falls in a closed fiscal year
      */
-    public function postEntry(string $organizationId, JournalEntryData $entry): JournalEntry
+    public function postEntry(string $organizationId, JournalEntryData $entry, ?string $fiscalYearId = null): JournalEntry
     {
-        $this->guardClosedFiscalYear($organizationId, $entry->date);
+        $this->guardClosedFiscalYear($organizationId, $entry->date, $fiscalYearId);
         $this->validateBalance($entry->lines);
         $this->validateAccounts($organizationId, $entry->lines);
         $this->throwIfDuplicateReference($organizationId, $entry->reference);
@@ -188,7 +188,7 @@ class LedgerService
                 reference: $reversalReference,
                 description: $description ?? 'Reversal of '.$original->reference,
                 lines: $lines,
-                type: $type,
+                type: $type ?? 'reversal',
             ));
 
             JournalEntryReversed::dispatch($reversalEntry, $original);
@@ -353,11 +353,35 @@ class LedgerService
      *
      * @throws FiscalYearClosedException
      */
-    private function guardClosedFiscalYear(string $organizationId, string $date): void
-    {
+    private function guardClosedFiscalYear(
+        string $organizationId,
+        string $date,
+        ?string $fiscalYearId = null,
+    ): void {
         $timestamp = strtotime($date);
         $isoDate = $timestamp !== false ? date('Y-m-d', $timestamp) : date('Y-m-d');
         $year = $timestamp !== false ? (int) date('Y', $timestamp) : (int) date('Y');
+
+        if ($fiscalYearId !== null) {
+            $fiscalYear = FiscalYear::query()
+                ->withoutGlobalScopes()
+                ->where('organization_id', $organizationId)
+                ->whereKey($fiscalYearId)
+                ->first();
+
+            if ($fiscalYear !== null) {
+                if ($fiscalYear->isClosed()) {
+                    throw new FiscalYearClosedException($year);
+                }
+
+                $dateIsInFiscalYear = $fiscalYear->start_date->toDateString() <= $isoDate
+                    && $fiscalYear->end_date->toDateString() >= $isoDate;
+
+                if ($dateIsInFiscalYear) {
+                    return;
+                }
+            }
+        }
 
         $fiscalYear = FiscalYear::query()
             ->withoutGlobalScopes()

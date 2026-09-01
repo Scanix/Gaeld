@@ -244,6 +244,8 @@ return [
                 'maxProcesses' => 1,
             ],
         ],
+
+        'staging' => [],
     ],
 
     /*

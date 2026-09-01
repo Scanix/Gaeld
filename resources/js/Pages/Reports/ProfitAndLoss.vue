@@ -124,8 +124,8 @@ function mergeComparison(rows, compRows, isExpense = false) {
 
     <!-- Comparison toggle -->
     <div class="mb-6 space-y-3">
-      <label class="flex cursor-pointer items-center gap-2 text-sm">
-        <input v-model="compareEnabled" type="checkbox" class="h-4 w-4 rounded border-[hsl(var(--input))]" />
+      <label for="compare_enabled" class="flex cursor-pointer items-center gap-2 text-sm">
+        <input id="compare_enabled" v-model="compareEnabled" type="checkbox" class="h-4 w-4 rounded border-[hsl(var(--input))]" />
         {{ t('compare_with') }}
       </label>
       <div v-if="compareEnabled" class="flex flex-wrap items-end gap-4">

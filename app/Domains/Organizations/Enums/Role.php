@@ -9,6 +9,7 @@ enum Role: string
     case Admin = 'admin';
     case Accountant = 'accountant';
     case Member = 'member';
+    case Employee = 'employee';
     case Viewer = 'viewer';
 
     /**
@@ -21,6 +22,7 @@ enum Role: string
             self::Admin => $this->adminPermissions(),
             self::Accountant => $this->accountantPermissions(),
             self::Member => $this->memberPermissions(),
+            self::Employee => $this->employeePermissions(),
             self::Viewer => $this->viewerPermissions(),
         };
     }
@@ -48,6 +50,7 @@ enum Role: string
             self::Admin => __('app.role_admin'),
             self::Accountant => __('app.role_accountant'),
             self::Member => __('app.role_member'),
+            self::Employee => __('app.role_employee'),
             self::Viewer => __('app.role_viewer'),
         };
     }
@@ -112,6 +115,18 @@ enum Role: string
 
             // Migration
             Permission::MigrationImport,
+        ];
+    }
+
+    /**
+     * @return Permission[]
+     */
+    private function employeePermissions(): array
+    {
+        return [
+            Permission::ExpensesViewOwn,
+            Permission::ExpensesCreate,
+            Permission::PayrollSalarySlipsViewOwn,
         ];
     }
 

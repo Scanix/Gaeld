@@ -178,14 +178,13 @@ class FiscalYearService
 
             $next = FiscalYear::query()
                 ->where('organization_id', $fiscalYear->organization_id)
-                ->where('status', FiscalYearStatus::Planned->value)
                 ->whereDate('start_date', '>', $fiscalYear->end_date->toDateString())
                 ->orderBy('start_date')
                 ->first();
 
-            if ($next) {
+            if ($next?->isPlanned()) {
                 $next->update(['status' => FiscalYearStatus::Operative]);
-            } else {
+            } elseif ($next === null) {
                 $nextStart = $fiscalYear->end_date->copy()->addDay();
                 FiscalYear::create([
                     'organization_id' => $fiscalYear->organization_id,
@@ -195,6 +194,15 @@ class FiscalYearService
                     'status' => FiscalYearStatus::Planned,
                 ]);
                 $nextYearCreated = true;
+            } else {
+                $plannedSuccessor = FiscalYear::query()
+                    ->where('organization_id', $fiscalYear->organization_id)
+                    ->where('status', FiscalYearStatus::Planned->value)
+                    ->whereDate('start_date', '>', $next->end_date->toDateString())
+                    ->orderBy('start_date')
+                    ->first();
+
+                $plannedSuccessor?->update(['status' => FiscalYearStatus::Operative]);
             }
         });
 

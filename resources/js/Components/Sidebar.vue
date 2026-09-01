@@ -83,8 +83,17 @@ function isExpanded(item) {
 }
 
 const businessType = computed(() => currentOrg.value?.business_type)
+const currentRole = computed(() => organizations.value.find(org => org.id === currentOrg.value?.id)?.role)
 
 const navigation = computed(() => {
+  if (currentRole.value === 'employee') {
+    return [
+      { key: 'expenses', href: '/expenses', icon: Receipt },
+      { key: 'salary_slips', href: '/payroll/salary-slips', icon: Briefcase },
+      { key: 'profile', href: '/profile', icon: Users },
+    ]
+  }
+
   const bt = businessType.value
   const isFidu = bt === 'fiduciary'
   const isFreelancer = bt === 'freelancer'
@@ -174,11 +183,15 @@ const navigation = computed(() => {
       { key: 'payroll', href: '/payroll/employees', icon: Briefcase, children: [
         { key: 'employees', href: '/payroll/employees' },
         { key: 'salary_slips', href: '/payroll/salary-slips' },
-        { key: 'run_payroll', href: '/payroll/run' },
+        ...(can('payroll.create') ? [
+          { key: 'run_payroll', href: '/payroll/run' },
+        ] : []),
         ...(features.value.withholding_tax ? [
           { key: 'withholding_tax', href: '/payroll/withholding-tax' },
         ] : []),
       ]},
+    ] : can('payroll.view') ? [
+      { key: 'salary_slips', href: '/payroll/salary-slips', icon: Briefcase },
     ] : []),
     ...(!isFreelancer ? [
       { key: 'organization', href: '/organizations', icon: Building2 },
@@ -200,7 +213,9 @@ const navigation = computed(() => {
 })
 
 const billingNav = computed(() =>
-  features.value.saas ? [{ key: 'billing', href: '/billing', icon: CreditCard }] : []
+  features.value.saas && currentRole.value !== 'employee'
+    ? [{ key: 'billing', href: '/billing', icon: CreditCard }]
+    : []
 )
 
 function isActive(href) {

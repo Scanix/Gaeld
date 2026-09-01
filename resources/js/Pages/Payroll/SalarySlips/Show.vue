@@ -18,6 +18,7 @@ const { formatCurrency } = useFormatters()
 
 const props = defineProps({
   slip: Object,
+  canManage: { type: Boolean, default: true },
 })
 
 const postForm = useForm({})
@@ -63,7 +64,7 @@ function deductionRow(label, employee, employer) {
       class="mb-4"
     />
 
-    <div class="max-w-2xl space-y-6">
+    <div class="max-w-3xl space-y-6">
       <!-- Header card -->
       <Card>
         <CardHeader>
@@ -71,9 +72,10 @@ function deductionRow(label, employee, employer) {
             <div>
               <CardTitle>{{ t('salary_slip') }} — {{ slip.month_label }}</CardTitle>
               <p class="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
-                <Link :href="`/payroll/employees/${slip.employee_id}`" class="hover:underline">
+                <Link v-if="canManage" :href="`/payroll/employees/${slip.employee_id}`" class="hover:underline">
                   {{ slip.employee_name }}
                 </Link>
+                <span v-else>{{ slip.employee_name }}</span>
               </p>
             </div>
             <Badge :variant="slip.status === 'posted' ? 'default' : 'secondary'">
@@ -90,16 +92,40 @@ function deductionRow(label, employee, employer) {
         </CardHeader>
         <CardContent>
           <div class="overflow-x-auto">
-          <table class="w-full text-sm">
+          <table class="min-w-[42rem] w-full text-sm">
             <thead>
               <tr class="border-b border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]">
-                <th class="pb-2 text-left font-medium">{{ t('item') }}</th>
-                <th class="pb-2 text-right font-medium">{{ t('employee_share') }}</th>
-                <th class="pb-2 text-right font-medium">{{ t('employer_share') }}</th>
-                <th class="pb-2 text-right font-medium">{{ t('total') }}</th>
+                <th class="min-w-[13rem] whitespace-nowrap pb-2 text-left font-medium">{{ t('item') }}</th>
+                <th class="min-w-[8rem] whitespace-nowrap pb-2 text-right font-medium">{{ t('employee_share') }}</th>
+                <th class="min-w-[8rem] whitespace-nowrap pb-2 text-right font-medium">{{ t('employer_share') }}</th>
+                <th class="min-w-[8rem] whitespace-nowrap pb-2 text-right font-medium">{{ t('total') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[hsl(var(--border))]">
+              <tr v-if="slip.adjustments?.base_salary && Number(slip.adjustments.base_salary) !== Number(slip.gross_salary)" class="text-[hsl(var(--muted-foreground))]">
+                <td class="py-2">{{ t('base_salary') }}</td>
+                <td class="whitespace-nowrap py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.base_salary) }}</td>
+                <td class="whitespace-nowrap py-2 text-right">—</td>
+                <td class="whitespace-nowrap py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.base_salary) }}</td>
+              </tr>
+              <tr v-if="Number(slip.adjustments?.thirteenth_salary) > 0" class="text-green-700 dark:text-green-400">
+                <td class="py-2">{{ t('thirteenth_salary') }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.thirteenth_salary) }}</td>
+                <td class="py-2 text-right">—</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.thirteenth_salary) }}</td>
+              </tr>
+              <tr v-if="Number(slip.adjustments?.unpaid_leave_amount) > 0" class="text-red-700 dark:text-red-400">
+                <td class="py-2">{{ t('unpaid_leave') }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(-slip.adjustments.unpaid_leave_amount) }}</td>
+                <td class="py-2 text-right">—</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(-slip.adjustments.unpaid_leave_amount) }}</td>
+              </tr>
+              <tr v-if="Number(slip.adjustments?.reimbursement_amount) > 0" class="text-green-700 dark:text-green-400">
+                <td class="py-2">{{ t('expense_reimbursement') }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.reimbursement_amount) }}</td>
+                <td class="py-2 text-right">—</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(slip.adjustments.reimbursement_amount) }}</td>
+              </tr>
               <!-- Gross salary -->
               <tr class="font-medium">
                 <td class="py-2.5">{{ t('gross_salary') }}</td>
@@ -118,6 +144,12 @@ function deductionRow(label, employee, employer) {
                 <td class="py-2 text-right font-mono">{{ formatCurrency(-d.employee) }}</td>
                 <td class="py-2 text-right font-mono">{{ formatCurrency(-d.employer) }}</td>
                 <td class="py-2 text-right font-mono">{{ formatCurrency(-d.total) }}</td>
+              </tr>
+              <tr v-if="Number(slip.deductions?.source_tax) > 0" class="text-red-700 dark:text-red-400">
+                <td class="py-2">{{ t('withholding_tax') }}</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(-slip.deductions.source_tax) }}</td>
+                <td class="py-2 text-right">—</td>
+                <td class="py-2 text-right font-mono">{{ formatCurrency(-slip.deductions.source_tax) }}</td>
               </tr>
             </tbody>
             <tfoot>
@@ -138,7 +170,7 @@ function deductionRow(label, employee, employer) {
       <!-- Actions -->
       <div class="flex flex-wrap gap-3">
         <Button
-          v-if="slip.status !== 'posted'"
+          v-if="canManage && slip.status !== 'posted'"
           size="sm"
           :disabled="postForm.processing"
           @click="postToLedger"
@@ -146,7 +178,7 @@ function deductionRow(label, employee, employer) {
           {{ t('post_to_ledger') }}
         </Button>
         <Button
-          v-if="slip.status === 'posted'"
+          v-if="canManage && slip.status === 'posted'"
           variant="outline"
           size="sm"
           @click="showUnpostDialog = true"
@@ -154,7 +186,7 @@ function deductionRow(label, employee, employer) {
           {{ t('unpost') }}
         </Button>
         <Button
-          v-if="slip.status !== 'posted'"
+          v-if="canManage && slip.status !== 'posted'"
           variant="outline"
           size="sm"
           class="text-[hsl(var(--destructive))]"
@@ -167,7 +199,7 @@ function deductionRow(label, employee, employer) {
         </Button>
         <p v-if="slip.status === 'posted'" class="flex items-center text-sm text-green-700 dark:text-green-400">
           {{ t('slip_posted_to_ledger') }}
-          <span v-if="slip.journal_entry_id" class="ml-2">
+          <span v-if="canManage && slip.journal_entry_id" class="ml-2">
             (<Link :href="`/accounting/journal-entries/${slip.journal_entry_id}`" class="hover:underline">#{{ slip.journal_entry_id }}</Link>)
           </span>
         </p>

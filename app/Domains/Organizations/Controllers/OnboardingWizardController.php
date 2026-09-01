@@ -112,6 +112,7 @@ class OnboardingWizardController extends Controller
                         'iban' => $data['iban'] ?? null,
                         'account_id' => $bankLedgerAccountId,
                         'currency' => $org->currency ?? 'CHF',
+                        'is_default_for_invoicing' => true,
                     ])->toArray());
                 }
 

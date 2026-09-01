@@ -13,8 +13,6 @@
         @endphp
         @if($logoFullPath && file_exists($logoFullPath))
             <div class="doc-logo"><img src="{{ $logoFullPath }}" alt="Logo"></div>
-        @else
-            <div class="doc-logo-placeholder">Logo</div>
         @endif
         <span class="org-name">{{ $organization->legal_name ?? $organization->name }}</span>
         @if($organization->address)
@@ -34,7 +32,7 @@
             <div class="doc-period-label">{{ $docPeriod }}</div>
         @endif
         @if(!empty($docRef))
-            <div class="doc-ref-label">Réf.&nbsp;{{ $docRef }}</div>
+            <div class="doc-ref-label">Ref.&nbsp;{{ $docRef }}</div>
         @endif
     </div>
 </div>

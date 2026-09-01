@@ -8,6 +8,7 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\VatPeriodLockService;
 use App\Domains\Accounting\Services\VatReportService;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
@@ -28,10 +29,13 @@ final class PostVatSettlementAction
         private readonly LedgerService $ledgerService,
         private readonly LedgerQueryService $ledgerQuery,
         private readonly VatReportService $vatReportService,
+        private readonly VatPeriodLockService $vatPeriodLocks,
     ) {}
 
-    public function execute(string $orgId, string $fromDate, string $toDate): JournalEntry
+    public function execute(string $orgId, string $fromDate, string $toDate, ?int $lockedByUserId = null): JournalEntry
     {
+        $this->vatPeriodLocks->assertPeriodUnlocked($orgId, $fromDate, $toDate);
+
         $report = $this->vatReportService->generateFresh($orgId, $fromDate, $toDate);
 
         $totalOutputVat = $report['total_output_vat'];
@@ -80,7 +84,7 @@ final class PostVatSettlementAction
 
         $reference = $this->resolveReference($orgId, $fromDate, $toDate);
 
-        return DB::transaction(function () use ($orgId, $reference, $toDate, $fromDate, $lines, $totalOutputVat, $totalInputVat, $netVat): JournalEntry {
+        return DB::transaction(function () use ($orgId, $reference, $toDate, $fromDate, $lines, $totalOutputVat, $totalInputVat, $netVat, $lockedByUserId): JournalEntry {
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
                 date: $toDate,
                 reference: $reference,
@@ -88,7 +92,13 @@ final class PostVatSettlementAction
                 lines: $lines,
             ));
 
-            $journalEntry->update(['type' => 'vat_settlement']);
+            $journalEntry->update([
+                'type' => 'vat_settlement',
+                'vat_period_start' => $fromDate,
+                'vat_period_end' => $toDate,
+                'vat_period_locked_at' => now(),
+                'vat_period_locked_by_user_id' => $lockedByUserId,
+            ]);
 
             Log::info('VAT settlement posted', [
                 'organization_id' => $orgId,

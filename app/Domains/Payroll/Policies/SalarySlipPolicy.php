@@ -15,13 +15,22 @@ class SalarySlipPolicy extends BasePolicy
     public function viewAny(User $user): bool
     {
         return $this->hasCurrentOrganization($user)
-            && $user->hasPermissionTo(Permission::PayrollView);
+            && $user->hasAnyPermission([
+                Permission::PayrollView,
+                Permission::PayrollSalarySlipsViewOwn,
+            ]);
     }
 
     public function view(User $user, SalarySlip $salarySlip): bool
     {
-        return $this->belongsToOrganization($user, $salarySlip)
-            && $user->hasPermissionTo(Permission::PayrollView);
+        if (! $this->belongsToOrganization($user, $salarySlip)) {
+            return false;
+        }
+
+        return $user->hasPermissionTo(Permission::PayrollView)
+            || ($user->hasPermissionTo(Permission::PayrollSalarySlipsViewOwn)
+                && $salarySlip->posted_at !== null
+                && $salarySlip->employee()->where('user_id', $user->id)->exists());
     }
 
     public function create(User $user): bool
