@@ -85,12 +85,24 @@ jobs:
         run: pnpm audit --prod || true
 
   test:
-    name: Tests (Parallel)
+    name: Tests (${{ matrix.name }})
     runs-on: ubuntu-latest
     needs: lint
     strategy:
       matrix:
-        test-suite: ['Feature', 'Unit', 'Security', 'Performance']
+        include:
+          # Feature tests split into 2 balanced groups to stay under 120s timeout
+          - name: 'Feature (Group 1)'
+            test-paths: 'tests/Feature/Accounting tests/Feature/Migration tests/Feature/Console'
+          - name: 'Feature (Group 2)'
+            test-paths: 'tests/Feature/Organizations tests/Feature/Invoicing tests/Feature/Api tests/Feature/Reporting tests/Feature/Expenses tests/Feature/Banking tests/Feature/Users tests/Feature/Payroll tests/Feature/Contacts tests/Feature/Auth tests/Feature/Assets tests/Feature/Seeders tests/Feature/Security tests/Feature/Dashboard tests/Feature/Billing tests/Feature/SaasAdmin'
+          # Non-Feature suites
+          - name: 'Unit'
+            test-paths: 'tests/Unit'
+          - name: 'Security'
+            test-paths: 'tests/Security'
+          - name: 'Performance'
+            test-paths: 'tests/Performance'
 
     services:
       postgres:
@@ -171,7 +183,7 @@ jobs:
           REDIS_PORT: 6379
         run: php artisan migrate --force
 
-      - name: Run ${{ matrix.test-suite }} tests
+      - name: Run ${{ matrix.name }} tests
         env:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
@@ -181,13 +193,13 @@ jobs:
           DB_PASSWORD: password
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
-        run: vendor/bin/phpunit --configuration phpunit.xml tests/${{ matrix.test-suite }} --stop-on-failure
+        run: vendor/bin/phpunit --configuration phpunit.xml ${{ matrix.test-paths }}
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: test-results-${{ matrix.test-suite }}
+          name: test-results-${{ matrix.name }}
           path: |
             coverage/clover.xml
             junit.xml
