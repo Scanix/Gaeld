@@ -28,7 +28,7 @@ const notificationResolvers = {
 
 function getNotificationMessage(n) {
   const resolver = notificationResolvers[n.data?.type]
-  return resolver ? resolver(n.data) : t('notification_unknown')
+  return resolver ? resolver(n.data) : (n.data?.message ?? t('notification_unknown'))
 }
 
 function formatDate(iso) {

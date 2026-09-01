@@ -812,6 +812,17 @@ return [
     'plan_checkout_unavailable' => 'Indisponible pour le moment',
     'checkout_success' => 'Votre abonnement est maintenant actif. Bienvenue !',
     'checkout_canceled' => 'Le paiement a été annulé. Vous pouvez souscrire un abonnement à tout moment.',
+    'checkout_pending' => 'Paiement reçu — nous confirmons votre abonnement. Cette page se mettra à jour sous peu.',
+    'next_renewal' => 'Prochain renouvellement',
+    'subscription_cancellation_notice' => 'Votre abonnement a été résilié et restera actif jusqu\'au :date.',
+    'plan_change_confirm_title' => 'Confirmer le changement de plan',
+    'plan_change_confirm_text' => 'Vous êtes sur le point de passer au plan :plan.',
+    'plan_change_new_price' => 'Nouveau prix',
+    'plan_change_due_now' => 'À payer maintenant (prorata)',
+    'plan_change_next_billing' => 'Prochaine facturation',
+    'plan_change_proration_hint' => 'Le montant au prorata reflète le temps non utilisé de votre plan actuel.',
+    'plan_change_preview_unavailable' => 'L\'aperçu du coût est momentanément indisponible. Vous pouvez confirmer le changement ; un éventuel prorata apparaîtra sur votre prochaine facture.',
+    'plan_change_confirm_button' => 'Confirmer le changement',
     'save_error' => 'Une erreur est survenue. Veuillez réessayer.',
 
     // SaaS admin enhancements

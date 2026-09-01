@@ -813,6 +813,17 @@ return [
     'plan_checkout_unavailable' => 'Derzeit nicht verfügbar',
     'checkout_success' => 'Ihr Abonnement ist jetzt aktiv. Herzlich willkommen!',
     'checkout_canceled' => 'Die Zahlung wurde abgebrochen. Sie können jederzeit ein Abonnement abschließen.',
+    'checkout_pending' => 'Zahlung eingegangen — wir bestätigen Ihr Abonnement. Diese Seite wird in Kürze aktualisiert.',
+    'next_renewal' => 'Nächste Verlängerung',
+    'subscription_cancellation_notice' => 'Ihr Abonnement wurde gekündigt und bleibt bis zum :date aktiv.',
+    'plan_change_confirm_title' => 'Planwechsel bestätigen',
+    'plan_change_confirm_text' => 'Sie sind dabei, zum Plan :plan zu wechseln.',
+    'plan_change_new_price' => 'Neuer Preis',
+    'plan_change_due_now' => 'Jetzt fällig (anteilig)',
+    'plan_change_next_billing' => 'Nächstes Rechnungsdatum',
+    'plan_change_proration_hint' => 'Der anteilige Betrag berücksichtigt die ungenutzte Zeit Ihres aktuellen Plans.',
+    'plan_change_preview_unavailable' => 'Die Kostenvorschau ist derzeit nicht verfügbar. Sie können den Wechsel trotzdem bestätigen; eine allfällige anteilige Verrechnung erscheint auf Ihrer nächsten Rechnung.',
+    'plan_change_confirm_button' => 'Wechsel bestätigen',
     'save_error' => 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
 
     // SaaS admin enhancements
