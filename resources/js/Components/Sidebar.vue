@@ -90,13 +90,15 @@ const navigation = computed(() => {
     return [
       { key: 'expenses', href: '/expenses', icon: Receipt },
       { key: 'salary_slips', href: '/payroll/salary-slips', icon: Briefcase },
+      { type: 'group', label: 'nav_workspace' },
+      { key: 'organizations', href: '/organizations', icon: Building2 },
+      { type: 'group', label: 'nav_account' },
       { key: 'profile', href: '/profile', icon: Users },
     ]
   }
 
   const bt = businessType.value
   const isFidu = bt === 'fiduciary'
-  const isFreelancer = bt === 'freelancer'
 
   return [
     { key: 'dashboard', href: '/', icon: LayoutDashboard },
@@ -193,10 +195,10 @@ const navigation = computed(() => {
     ] : can('payroll.view') ? [
       { key: 'salary_slips', href: '/payroll/salary-slips', icon: Briefcase },
     ] : []),
-    ...(!isFreelancer ? [
-      { key: 'organization', href: '/organizations', icon: Building2 },
-    ] : []),
-    { key: 'settings', href: '/settings', icon: Settings, children: [
+    // ── Workspace ──
+    { type: 'group', label: 'nav_workspace' },
+    { key: 'organizations', href: '/organizations', icon: Building2 },
+    ...(can('organization.edit') ? [{ key: 'organization_settings_nav', href: '/settings', icon: Settings, children: [
       { key: 'settings_general', href: '/settings' },
       ...(can('migration.import') ? [
         { key: 'data_migration', href: '/migration' },
@@ -208,7 +210,10 @@ const navigation = computed(() => {
         { key: 'api_tokens', href: '/settings/api-tokens' },
         { key: 'webhooks', href: '/settings/webhooks' },
       ] : []),
-    ]},
+    ]}] : []),
+    // ── Account ──
+    { type: 'group', label: 'nav_account' },
+    { key: 'profile', href: '/profile', icon: Users },
   ]
 })
 

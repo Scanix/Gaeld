@@ -251,7 +251,7 @@ function canChangeUserRole(user) {
     </div>
 
     <!-- Members -->
-    <Card class="mt-6">
+    <Card id="members" class="mt-6 scroll-mt-20">
       <CardHeader>
         <div class="flex items-center justify-between">
           <CardTitle>{{ t('members') }}</CardTitle>
