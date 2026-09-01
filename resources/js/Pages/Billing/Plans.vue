@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -9,10 +9,11 @@ import CardDescription from '@/Components/UI/CardDescription.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
+import Modal from '@/Components/UI/Modal.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { subscriptionStatusVariant, invoiceStatusVariant } from '@/lib/statusClasses'
-import { CheckCircle2, Zap, AlertCircle, CreditCard, FileText, Settings, Download, ExternalLink } from 'lucide-vue-next'
+import { CheckCircle2, Zap, AlertCircle, CreditCard, FileText, Settings, Download, ExternalLink, Clock } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 const { formatCurrency } = useFormatters()
@@ -24,11 +25,13 @@ const props = defineProps({
   invoices: { type: Array, default: () => [] },
 })
 
-// Show success banner when returning from Stripe checkout
-const checkoutResult = computed(() => {
+// Server-verified checkout result (flash), never a trusted query param.
+const checkoutResult = computed(() => page.props.flash?.billing_checkout ?? null) // 'success' | 'pending' | null
+
+// Cancel is informational only — the query param makes no state claim.
+const checkoutCanceled = computed(() => {
   const [, query = ''] = (page.url || '').split('?')
-  const params = new URLSearchParams(query)
-  return params.get('checkout') // 'success' | 'canceled' | null
+  return new URLSearchParams(query).get('checkout') === 'canceled'
 })
 
 const hasPlans = computed(() => props.plans.length > 0)
@@ -37,8 +40,9 @@ const isTrialingWithoutStripe = computed(() =>
   props.currentSubscription?.status === 'trialing' && !props.currentSubscription?.has_payment_method
 )
 
-const invoiceQuota = computed(() => page.props.auth?.invoice_quota ?? { invoices_this_month: 0, invoice_monthly_limit: -1 })
+const invoiceQuota = computed(() => page.props.auth?.invoice_quota ?? null)
 const invoiceQuotaPercent = computed(() => {
+  if (!invoiceQuota.value) return null
   const { invoices_this_month, invoice_monthly_limit } = invoiceQuota.value
   if (invoice_monthly_limit === -1) return null
   return Math.min(100, Math.round((invoices_this_month / invoice_monthly_limit) * 100))
@@ -58,13 +62,73 @@ function checkoutCurrentPlan() {
 function openPortal() {
   router.post('/billing/portal')
 }
+
+// ── Plan change preview (proration) ─────────────────────────────
+const previewModalOpen = ref(false)
+const previewLoading = ref(false)
+const previewError = ref(false)
+const preview = ref(null)
+const pendingPlan = ref(null)
+
+function getCsrfToken() {
+  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : ''
+}
+
+async function selectPlan(plan) {
+  const isStripeChange = props.currentSubscription?.has_stripe
+    && props.currentSubscription?.status !== 'canceled'
+    && props.currentSubscription?.plan_slug !== plan.slug
+    && plan.price_chf > 0
+
+  if (!isStripeChange) {
+    checkout(plan.id)
+    return
+  }
+
+  pendingPlan.value = plan
+  preview.value = null
+  previewError.value = false
+  previewLoading.value = true
+  previewModalOpen.value = true
+
+  try {
+    const response = await fetch(`/billing/preview-change/${plan.id}`, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-XSRF-TOKEN': getCsrfToken(),
+        Accept: 'application/json',
+      },
+      credentials: 'same-origin',
+    })
+    if (!response.ok) throw new Error('preview failed')
+    preview.value = await response.json()
+  } catch {
+    previewError.value = true
+  } finally {
+    previewLoading.value = false
+  }
+}
+
+function confirmPlanChange() {
+  if (pendingPlan.value) {
+    checkout(pendingPlan.value.id)
+  }
+  previewModalOpen.value = false
+}
+
+function closePreview() {
+  previewModalOpen.value = false
+  pendingPlan.value = null
+}
 </script>
 
 <template>
   <AppLayout :title="t('billing')">
     <div class="max-w-3xl mx-auto space-y-6">
 
-      <!-- Checkout success banner -->
+      <!-- Checkout success banner (server-verified) -->
       <div
         v-if="checkoutResult === 'success'"
         class="flex items-center gap-3 rounded-lg border border-[hsl(var(--primary)/0.3)] bg-[hsl(var(--accent))] p-4 text-sm text-[hsl(var(--primary))]"
@@ -73,9 +137,18 @@ function openPortal() {
         {{ t('checkout_success') }}
       </div>
 
+      <!-- Checkout pending banner: payment received, confirmation in progress -->
+      <div
+        v-if="checkoutResult === 'pending'"
+        class="flex items-center gap-3 rounded-lg border border-[hsl(var(--info)/0.3)] bg-[hsl(var(--info)/0.08)] p-4 text-sm text-[hsl(var(--info))]"
+      >
+        <Clock class="h-4 w-4 shrink-0" />
+        {{ t('checkout_pending') }}
+      </div>
+
       <!-- Checkout canceled banner -->
       <div
-        v-if="checkoutResult === 'canceled'"
+        v-if="checkoutCanceled"
         class="flex items-center gap-3 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-4 text-sm text-[hsl(var(--muted-foreground))]"
       >
         {{ t('checkout_canceled') }}
@@ -122,6 +195,15 @@ function openPortal() {
         </CardHeader>
         <CardContent class="space-y-5">
 
+          <!-- Cancellation scheduled notice -->
+          <div
+            v-if="currentSubscription.cancel_at_period_end && currentSubscription.ends_at"
+            class="flex items-center gap-3 rounded-lg border border-[hsl(var(--warning)/0.3)] bg-[hsl(var(--warning)/0.08)] p-3 text-sm text-[hsl(var(--warning-foreground,var(--foreground)))]"
+          >
+            <AlertCircle class="h-4 w-4 shrink-0" />
+            {{ t('subscription_cancellation_notice', { date: currentSubscription.ends_at }) }}
+          </div>
+
           <!-- Subscription meta -->
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
             <div>
@@ -131,6 +213,10 @@ function openPortal() {
             <div v-if="currentSubscription.trial_ends_at">
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('trial_ends') }}</p>
               <p class="font-semibold mt-0.5">{{ currentSubscription.trial_ends_at }}</p>
+            </div>
+            <div v-if="currentSubscription.current_period_ends_at && !currentSubscription.cancel_at_period_end">
+              <p class="text-[hsl(var(--muted-foreground))]">{{ t('next_renewal') }}</p>
+              <p class="font-semibold mt-0.5">{{ currentSubscription.current_period_ends_at }}</p>
             </div>
             <div v-if="currentSubscription.ends_at">
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('subscription_ends') }}</p>
@@ -291,7 +377,7 @@ function openPortal() {
                 v-if="currentSubscription?.plan_slug !== plan.slug || isTrialingWithoutStripe"
                 class="w-full"
                 :disabled="!plan.is_checkout_available"
-                @click="checkout(plan.id)"
+                @click="selectPlan(plan)"
               >
                 {{
                   !plan.is_checkout_available
@@ -311,6 +397,46 @@ function openPortal() {
       </div>
 
     </div>
+
+    <!-- Plan change confirmation modal with proration preview -->
+    <Modal :open="previewModalOpen" :title="t('plan_change_confirm_title')" size="sm" @close="closePreview">
+      <div class="space-y-4 text-sm">
+        <div v-if="previewLoading" class="space-y-2">
+          <div class="h-4 w-3/4 animate-pulse rounded bg-[hsl(var(--muted))]" />
+          <div class="h-4 w-1/2 animate-pulse rounded bg-[hsl(var(--muted))]" />
+        </div>
+
+        <div v-else-if="previewError" class="text-[hsl(var(--muted-foreground))]">
+          {{ t('plan_change_preview_unavailable') }}
+        </div>
+
+        <div v-else-if="preview" class="space-y-3">
+          <p>{{ t('plan_change_confirm_text', { plan: preview.plan_name }) }}</p>
+          <div class="rounded-lg border border-[hsl(var(--border))] divide-y divide-[hsl(var(--border))]">
+            <div class="flex items-center justify-between p-3">
+              <span class="text-[hsl(var(--muted-foreground))]">{{ t('plan_change_new_price') }}</span>
+              <span class="font-semibold">{{ formatCurrency(preview.plan_price_chf) }} / {{ t('month') }}</span>
+            </div>
+            <div class="flex items-center justify-between p-3">
+              <span class="text-[hsl(var(--muted-foreground))]">{{ t('plan_change_due_now') }}</span>
+              <span class="font-semibold">{{ formatCurrency(preview.amount_due_now_chf, preview.currency) }}</span>
+            </div>
+            <div v-if="preview.next_billing_at" class="flex items-center justify-between p-3">
+              <span class="text-[hsl(var(--muted-foreground))]">{{ t('plan_change_next_billing') }}</span>
+              <span class="font-semibold">{{ preview.next_billing_at }}</span>
+            </div>
+          </div>
+          <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('plan_change_proration_hint') }}</p>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <Button variant="outline" @click="closePreview">{{ t('cancel') }}</Button>
+          <Button :disabled="previewLoading" @click="confirmPlanChange">
+            {{ t('plan_change_confirm_button') }}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   </AppLayout>
 </template>
 
