@@ -30,6 +30,7 @@ class OrganizationController extends Controller
 
         return Inertia::render('Organizations/Index', [
             'organizations' => $organizations,
+            'canCreateOrganization' => $request->user()->can('create', Organization::class),
         ]);
     }
 

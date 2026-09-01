@@ -27,6 +27,11 @@ return [
     'nav_activity' => 'Aktivität',
     'nav_finances' => 'Finanzen',
     'nav_management' => 'Verwaltung',
+    'nav_workspace' => 'Arbeitsbereich',
+    'nav_account' => 'Konto',
+    'organization_settings_nav' => 'Organisationseinstellungen',
+    'organization_settings_short' => 'Einstellungen',
+    'team_and_access' => 'Team & Zugriff',
 
     // Geschäftstyp
     'business_type' => 'Geschäftstyp',

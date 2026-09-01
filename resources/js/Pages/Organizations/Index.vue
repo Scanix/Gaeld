@@ -7,7 +7,7 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
-import { Building2, ArrowRightLeft } from 'lucide-vue-next'
+import { Building2, ArrowRightLeft, Settings, Users } from 'lucide-vue-next'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import PageHeader from '@/Components/UI/PageHeader.vue'
 import { useTranslations } from '@/lib/useTranslations'
@@ -16,6 +16,7 @@ import { ref } from 'vue'
 
 const props = defineProps({
   organizations: { type: Array, default: () => [] },
+  canCreateOrganization: { type: Boolean, default: false },
 })
 
 const page = usePage()
@@ -38,7 +39,7 @@ const { t } = useTranslations()
 <template>
   <AppLayout :title="t('organizations')">
     <PageHeader :description="t('your_organizations')">
-      <Button as="a" href="/organizations/create">
+      <Button v-if="canCreateOrganization" as="a" href="/organizations/create">
         {{ t('new_organization') }}
       </Button>
     </PageHeader>
@@ -77,6 +78,27 @@ const { t } = useTranslations()
               size="sm"
             >
               {{ t('details') }}
+            </Button>
+            <Button
+              as="a"
+              :href="`/organizations/${org.id}#members`"
+              variant="ghost"
+              size="sm"
+              :aria-label="`${t('team_and_access')} - ${org.name}`"
+            >
+              <Users class="mr-1 h-3 w-3" />
+              {{ t('team_and_access') }}
+            </Button>
+            <Button
+              v-if="org.id === currentOrgId && ['owner', 'admin'].includes(org.pivot?.role)"
+              as="a"
+              href="/settings"
+              variant="ghost"
+              size="sm"
+              :aria-label="`${t('organization_settings_nav')} - ${org.name}`"
+            >
+              <Settings class="mr-1 h-3 w-3" />
+              {{ t('organization_settings_short') }}
             </Button>
             <Button
               v-if="org.id !== currentOrgId"

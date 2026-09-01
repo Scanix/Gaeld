@@ -65,6 +65,7 @@ class OrganizationCrudFlowTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->component('Organizations/Index')
             ->has('organizations', 1)
+            ->where('canCreateOrganization', true)
             ->where('organizations.0.id', $this->primaryOrganization->id)
             ->where('organizations.0.name', 'Primary Org'));
     }

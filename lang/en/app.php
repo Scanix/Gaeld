@@ -27,6 +27,11 @@ return [
     'nav_activity' => 'Activity',
     'nav_finances' => 'Finances',
     'nav_management' => 'Management',
+    'nav_workspace' => 'Workspace',
+    'nav_account' => 'Account',
+    'organization_settings_nav' => 'Organization settings',
+    'organization_settings_short' => 'Settings',
+    'team_and_access' => 'Team & access',
 
     // Business type
     'business_type' => 'Business type',
