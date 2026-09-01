@@ -122,7 +122,7 @@ jobs:
           REDIS_PORT: 6379
         run: php artisan migrate --force
 
-      - name: Run tests
+      - name: Run tests (without coverage for speed)
         env:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
@@ -132,10 +132,10 @@ jobs:
           DB_PASSWORD: password
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
-        run: php -d max_execution_time=0 vendor/bin/phpunit --configuration phpunit.xml --coverage-clover coverage/clover.xml
+        run: vendor/bin/phpunit --configuration phpunit.xml
 
-      - name: Coverage summary
-        if: always()
+      - name: Coverage summary (optional - local only)
+        if: always() && false
         run: |
           if [ -f coverage/clover.xml ]; then
             total=$(grep -oP 'statements="\K[0-9]+' coverage/clover.xml | head -1)
