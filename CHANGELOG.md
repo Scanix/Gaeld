@@ -5,6 +5,20 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.4] — 2026-09-01
+
+### Added
+- **Subscription billing UX:** local invoice history, server-verified
+  Checkout returns, proration previews, lifecycle notifications, and
+  idempotent billing reconciliation in the Enterprise Edition.
+- **SaaS plan enforcement:** payroll processing routes now enforce the
+  organization subscription plan while preserving read access to historical
+  payroll data.
+
+### Changed
+- Added billing notification preferences and localized billing notification
+  messages in English, French, German, and Italian.
+
 ## [3.6.0] — 2026-08-20
 
 ### Added
