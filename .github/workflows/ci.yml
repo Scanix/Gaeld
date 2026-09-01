@@ -132,7 +132,7 @@ jobs:
           DB_PASSWORD: password
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
-        run: php artisan test --coverage-clover coverage/clover.xml
+        run: php -d max_execution_time=0 artisan test --coverage-clover coverage/clover.xml
 
       - name: Coverage summary
         if: always()
