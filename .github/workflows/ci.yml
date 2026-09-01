@@ -11,9 +11,80 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  test:
-    name: Tests & Lint
+  lint:
+    name: Lint & Analysis
     runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Enforce public CE boundary
+        run: |
+          forbidden=("plugins/gaeld-ee" "deploy.php" ".gitlab-ci.yml" "resources/js/Pages/SaasAdmin" "resources/js/Components/SaasAdmin")
+          for forbidden_path in "${forbidden[@]}"; do
+            if [ -e "$forbidden_path" ]; then
+              echo "Private SaaS/EE path must not be present in the public repository: $forbidden_path"
+              exit 1
+            fi
+          done
+
+      - name: Secret scanning (Gitleaks)
+        uses: gitleaks/gitleaks-action@v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_pgsql, redis, mbstring, xml, curl, zip
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@11.20.0 --activate
+
+      - name: Install NPM dependencies
+        run: pnpm install
+
+      - name: Build Vite assets
+        run: pnpm build
+
+      - name: Run linter (Pint)
+        run: composer lint
+
+      - name: Run static analysis (PHPStan)
+        run: composer stan
+
+      - name: Audit Composer dependencies
+        continue-on-error: true
+        run: composer audit --no-dev
+
+      - name: Audit NPM dependencies
+        run: pnpm audit --prod || true
+
+  test:
+    name: Tests (Parallel)
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        test-suite: ['Feature', 'Unit', 'Security', 'Performance']
 
     services:
       postgres:
@@ -44,21 +115,6 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-
-      - name: Enforce public CE boundary
-        run: |
-          forbidden=("plugins/gaeld-ee" "deploy.php" ".gitlab-ci.yml" "resources/js/Pages/SaasAdmin" "resources/js/Components/SaasAdmin")
-          for forbidden_path in "${forbidden[@]}"; do
-            if [ -e "$forbidden_path" ]; then
-              echo "Private SaaS/EE path must not be present in the public repository: $forbidden_path"
-              exit 1
-            fi
-          done
-
-      - name: Secret scanning (Gitleaks)
-        uses: gitleaks/gitleaks-action@v3.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -97,19 +153,6 @@ jobs:
       - name: Build Vite assets
         run: pnpm build
 
-      - name: Run linter (Pint)
-        run: composer lint
-
-      - name: Run static analysis (PHPStan)
-        run: composer stan
-
-      - name: Audit Composer dependencies
-        continue-on-error: true
-        run: composer audit --no-dev
-
-      - name: Audit NPM dependencies
-        run: pnpm audit --prod || true
-
       - name: Run migrations
         env:
           DB_CONNECTION: pgsql
@@ -122,7 +165,7 @@ jobs:
           REDIS_PORT: 6379
         run: php artisan migrate --force
 
-      - name: Run tests (without coverage for speed)
+      - name: Run ${{ matrix.test-suite }} tests
         env:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
@@ -132,25 +175,15 @@ jobs:
           DB_PASSWORD: password
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
-        run: vendor/bin/phpunit --configuration phpunit.xml
+        run: vendor/bin/phpunit --configuration phpunit.xml tests/${{ matrix.test-suite }} --stop-on-failure
 
-      - name: Coverage summary (optional - local only)
-        if: always() && false
-        run: |
-          if [ -f coverage/clover.xml ]; then
-            total=$(grep -oP 'statements="\K[0-9]+' coverage/clover.xml | head -1)
-            covered=$(grep -oP 'coveredstatements="\K[0-9]+' coverage/clover.xml | head -1)
-            if [ "$total" -gt 0 ]; then
-              pct=$(echo "scale=1; $covered * 100 / $total" | bc)
-              echo "### Code Coverage: ${pct}%" >> $GITHUB_STEP_SUMMARY
-              echo "Covered ${covered} of ${total} statements" >> $GITHUB_STEP_SUMMARY
-            fi
-          fi
-
-      - name: Upload coverage artifact
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: coverage-report
-          path: coverage/clover.xml
+          name: test-results-${{ matrix.test-suite }}
+          path: |
+            coverage/clover.xml
+            junit.xml
           retention-days: 14
+
