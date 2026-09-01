@@ -10,8 +10,4 @@ $_ENV['APP_BASE_PATH'] = $basePath;
 $_SERVER['APP_BASE_PATH'] = $basePath;
 putenv('APP_BASE_PATH='.$basePath);
 
-// The complete suite exceeds the PHP CLI timeout on slower CI runners.
-set_time_limit(0);
-ini_set('max_execution_time', '0');
-
 require __DIR__.'/../vendor/autoload.php';
