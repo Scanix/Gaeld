@@ -32,6 +32,10 @@ class TaxDeclarationPolicy extends BasePolicy
 
     public function update(User $user, TaxDeclaration $taxDeclaration): bool
     {
+        if ($taxDeclaration->isLocked()) {
+            return false;
+        }
+
         return $this->belongsToOrganization($user, $taxDeclaration)
             && $user->hasPermissionTo(Permission::AccountingEdit);
     }

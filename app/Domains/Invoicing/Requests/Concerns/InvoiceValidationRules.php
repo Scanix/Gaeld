@@ -2,7 +2,9 @@
 
 namespace App\Domains\Invoicing\Requests\Concerns;
 
+use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceLineType;
+use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use Illuminate\Validation\Rule;
 
 trait InvoiceValidationRules
@@ -24,6 +26,26 @@ trait InvoiceValidationRules
             'issue_date' => 'required|date',
             'due_date' => [$finalize ? 'required' : 'nullable', 'date', 'after_or_equal:issue_date'],
             'currency' => 'string|size:3',
+            'tax_treatment' => [
+                'nullable',
+                Rule::enum(InvoiceTaxTreatment::class),
+                function (string $attribute, mixed $value, \Closure $fail) use ($orgId): void {
+                    if ($value !== InvoiceTaxTreatment::ReverseCharge->value) {
+                        return;
+                    }
+
+                    $customer = Contact::withoutGlobalScope('organization')
+                        ->where('organization_id', $orgId)
+                        ->whereKey($this->input('customer_id'))
+                        ->first();
+
+                    if ($customer === null || ! InvoiceTaxTreatment::isEuCountry($customer->country)) {
+                        $fail(__('app.invoice_reverse_charge_eu_customer_required'));
+                    } elseif (! InvoiceTaxTreatment::hasValidEuVatNumber($customer->country, $customer->vat_number)) {
+                        $fail(__('app.invoice_reverse_charge_vat_number_required'));
+                    }
+                },
+            ],
             'notes' => 'nullable|string',
             'payment_terms' => 'nullable|string',
             'lines' => 'required|array|min:1',

@@ -24,6 +24,8 @@ import HelpText from '@/Components/HelpText.vue'
 const props = defineProps({
   invoice: Object,
   canForceDelete: { type: Boolean, default: false },
+  canRecordPayment: { type: Boolean, default: false },
+  canSend: { type: Boolean, default: false },
   canRevertToDraft: { type: Boolean, default: false },
   justificatifUrl: { type: String, default: null },
   bankAccounts: { type: Array, default: () => [] },
@@ -89,7 +91,8 @@ const paymentProgress = computed(() => {
 
 const isOverdue = computed(() => {
   if (!props.invoice?.due_date) return false
-  return props.invoice.status === 'sent' && new Date(props.invoice.due_date) < new Date()
+  return ['sent', 'overdue'].includes(props.invoice.status)
+    && new Date(props.invoice.due_date) < new Date()
 })
 
 function finalize() {
@@ -233,6 +236,9 @@ const bankAccountOptions = computed(() =>
             <Badge v-if="invoice?.archived_at" variant="secondary" class="mb-1 ml-1">
               {{ t('archived') }}
             </Badge>
+            <Badge v-if="invoice?.tax_treatment === 'reverse_charge'" variant="outline" class="mb-1 ml-1">
+              {{ t('invoice_tax_treatment_reverse_charge') }}
+            </Badge>
             <p class="text-sm text-[hsl(var(--muted-foreground))]">
               {{ invoice?.customer?.name }} &middot; {{ t('issued') }} {{ formatDate(invoice?.issue_date) }} &middot; {{ t('due') }} {{ formatDate(invoice?.due_date) }}
             </p>
@@ -259,7 +265,7 @@ const bankAccountOptions = computed(() =>
             {{ t('finalize') }}
           </Button>
           <Button
-            v-if="(invoice?.status === 'sent' || invoice?.status === 'overdue') && !invoice?.archived_at"
+            v-if="canRecordPayment"
             size="sm"
             @click="openPaymentModal"
           >
@@ -285,7 +291,7 @@ const bankAccountOptions = computed(() =>
                 {{ t('duplicate') }}
               </button>
               <button
-                v-if="invoice?.status === 'sent' && !invoice?.archived_at"
+                v-if="canSend"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
                 :disabled="sendForm.processing"
                 @click="sendInvoice(); close()"

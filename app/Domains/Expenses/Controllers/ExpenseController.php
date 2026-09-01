@@ -64,6 +64,9 @@ class ExpenseController extends Controller
     {
         $this->authorize('create', Expense::class);
 
+        $selfService = $request->user()->hasPermissionTo(Permission::ExpensesViewOwn)
+            && ! $request->user()->hasPermissionTo(Permission::ExpensesView);
+
         $ocrData = null;
         if ($request->filled('scan_id')) {
             $scan = ReceiptScan::where('scan_id', $request->input('scan_id'))
@@ -81,11 +84,12 @@ class ExpenseController extends Controller
 
         return Inertia::render('Expenses/Create', [
             'vatRates' => VatRateQuery::active(),
-            'suppliers' => ContactQuery::forSelect(),
+            'suppliers' => $selfService ? [] : ContactQuery::forSelect(),
             'categories' => ExpenseCategoryQuery::forSelect(),
-            'expenseAccounts' => AccountQuery::forSelect(AccountType::Expense),
-            'bankAccounts' => BankAccountQuery::forSelect(),
+            'expenseAccounts' => $selfService ? [] : AccountQuery::forSelect(AccountType::Expense),
+            'bankAccounts' => $selfService ? [] : BankAccountQuery::forSelect(),
             'ocrData' => $ocrData,
+            'selfService' => $selfService,
         ]);
     }
 
@@ -133,13 +137,28 @@ class ExpenseController extends Controller
             ->with('success', __('app.expense_created'));
     }
 
-    public function show(Expense $expense): Response
+    public function show(Request $request, Expense $expense): Response
     {
         $this->authorize('view', $expense);
 
+        $ownOnly = $request->user()->hasPermissionTo(Permission::ExpensesViewOwn)
+            && ! $request->user()->hasPermissionTo(Permission::ExpensesView);
+
+        $expenseData = $ownOnly
+            ? $expense->load('vatRate')->makeHidden([
+                'journal_entry_id',
+                'expense_account_code',
+                'bank_account_code',
+                'supplier_id',
+            ])
+            : $expense->load(['vatRate', 'supplier', 'journalEntry.lines.account']);
+
         return Inertia::render('Expenses/Show', [
-            'expense' => $expense->load(['vatRate', 'supplier', 'journalEntry.lines.account']),
+            'expense' => $expenseData,
             'receiptUrl' => $expense->receipt_path ? route('expenses.receipt.download', $expense) : null,
+            'canUpdate' => $request->user()->can('update', $expense),
+            'canDelete' => $request->user()->can('delete', $expense),
+            'canApprove' => $request->user()->can('approve', $expense),
         ]);
     }
 

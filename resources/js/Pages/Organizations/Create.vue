@@ -30,7 +30,7 @@ const form = useForm({
   currency: 'CHF',
   locale: 'en',
   chart_of_accounts: 'swiss_sme',
-  business_type: '',
+  business_type: 'sme',
 })
 
 const businessTypes = [

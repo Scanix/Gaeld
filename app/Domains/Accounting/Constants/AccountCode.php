@@ -36,6 +36,8 @@ final class AccountCode
 
     public const LPP_PAYABLE = '2272';
 
+    public const WITHHOLDING_TAX_PAYABLE = '2273';
+
     public const OPENING_BALANCE = '9000';
 
     public const PRIVATE_WITHDRAWALS = '2850';

@@ -4,6 +4,7 @@ namespace App\Domains\Expenses\Controllers;
 
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Models\ReceiptScan;
+use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +26,10 @@ class ReceiptScanIndexController extends Controller
 
         $scans = ReceiptScan::query()
             ->where('organization_id', $currentOrg->id())
+            ->when(
+                $this->isSelfService(),
+                fn ($query) => $query->where('user_id', request()->user()->id),
+            )
             ->whereIn('status', ['pending', 'completed'])
             ->where('expires_at', '>', now())
             ->orderByDesc('created_at')
@@ -51,6 +56,10 @@ class ReceiptScanIndexController extends Controller
 
         $scan = ReceiptScan::query()
             ->where('organization_id', $currentOrg->id())
+            ->when(
+                $this->isSelfService(),
+                fn ($query) => $query->where('user_id', request()->user()->id),
+            )
             ->where('scan_id', $scanId)
             ->firstOrFail();
 
@@ -60,5 +69,11 @@ class ReceiptScanIndexController extends Controller
 
         return redirect()->route('expenses.receipt-scans.index')
             ->with('success', __('app.receipt_scan_discarded'));
+    }
+
+    private function isSelfService(): bool
+    {
+        return request()->user()->hasPermissionTo(Permission::ExpensesViewOwn)
+            && ! request()->user()->hasPermissionTo(Permission::ExpensesView);
     }
 }

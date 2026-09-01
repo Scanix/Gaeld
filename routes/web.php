@@ -14,6 +14,7 @@ use App\Domains\Users\Controllers\PasswordResetController;
 use App\Domains\Users\Controllers\RegisteredUserController;
 use App\Domains\Users\Controllers\TwoFactorChallengeController;
 use App\Http\Controllers\GlobalSearchController;
+use App\Http\Controllers\HealthController;
 use App\Http\Middleware\EnsureOnboardingComplete;
 use Illuminate\Support\Facades\Route;
 
@@ -80,6 +81,8 @@ Route::middleware('auth')->get('/logout', fn () => response(
     .'<noscript><button type="submit">Sign out</button></noscript>'
     .'</form><script nonce="'.htmlspecialchars((string) app('csp-nonce'), ENT_QUOTES, 'UTF-8').'">document.getElementById("f").submit();</script></body></html>'
 ));
+
+Route::get('/up', HealthController::class)->name('health');
 
 // Root redirect — auth/verified middlewares handle the redirects for guests and unverified users
 Route::middleware(['auth', 'verified'])->get('/', fn () => redirect()->route('dashboard'))->name('home');

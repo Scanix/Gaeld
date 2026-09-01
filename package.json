@@ -5,10 +5,12 @@
     "packageManager": "pnpm@11.20.0",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "qa:staging": "node scripts/qa/staging-runner.mjs"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^3.7.0",
+        "@playwright/test": "^1.55.0",
         "@sentry/vite-plugin": "^5.4.0",
         "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-vue": "^6.0.8",

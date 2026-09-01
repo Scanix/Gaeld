@@ -17,6 +17,7 @@ const props = defineProps({
   placeholder: String,
   autocomplete: String,
   class: String,
+  labelClass: String,
 })
 
 defineEmits(['update:modelValue'])
@@ -43,7 +44,7 @@ function togglePasswordVisibility() {
     <label
       v-if="label"
       :for="id"
-      class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+      :class="['text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70', labelClass]"
     >
       {{ label }}
       <span v-if="required" class="text-[hsl(var(--destructive))]">*</span>

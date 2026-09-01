@@ -81,6 +81,12 @@ const reconciliationSchema = z.object({
   filter: z.enum(['unreconciled', 'reconciled', 'all']).optional(),
   openInvoices: z.array(z.record(z.string(), z.unknown())).optional(),
   openExpenses: z.array(z.record(z.string(), z.unknown())).optional(),
+  vatSettlements: z.array(z.object({
+    id: z.string(),
+    reference: z.string(),
+    amount: moneyValue,
+    direction: z.enum(['debit', 'credit']),
+  }).passthrough()).optional(),
   pageFeatures: z.object({
     auto_reconciliation: z.boolean().optional(),
   }).passthrough().optional(),
@@ -149,6 +155,7 @@ const RECONCILIATION_FALLBACK = {
   filter: 'unreconciled',
   openInvoices: [],
   openExpenses: [],
+  vatSettlements: [],
   pageFeatures: {
     auto_reconciliation: false,
   },

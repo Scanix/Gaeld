@@ -57,12 +57,14 @@ class UnpostPayrollTest extends TestCase
     public function test_it_unposts_a_slip_and_reverses_the_journal_entry(): void
     {
         $slip = $this->postedSlip();
+        $slip->update(['email_sent_at' => now()]);
         $originalRef = $slip->journalEntry->reference;
 
         $result = app(UnpostPayrollAction::class)->execute($slip);
 
         $this->assertNull($result->posted_at);
         $this->assertNull($result->journal_entry_id);
+        $this->assertNull($result->email_sent_at);
 
         $reversal = JournalEntry::where('organization_id', $this->org->id)
             ->where('reference', 'REV-'.$originalRef)

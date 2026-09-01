@@ -112,8 +112,57 @@ const steps = computed(() => {
 })
 
 const currentStep = ref(0)
+const stepErrors = reactive({})
+
+const stepFields = {
+  0: ['business_type'],
+  1: [],
+  2: ['fiscal_year_name', 'fiscal_year_start', 'fiscal_year_end'],
+  3: ['bank_account_name'],
+  4: [],
+}
+
+function clearStepErrors() {
+  Object.keys(stepErrors).forEach((key) => delete stepErrors[key])
+}
+
+function validateStep(step = currentStep.value) {
+  clearStepErrors()
+
+  const fields = stepFields[step] || []
+  if (step === 2 && !createFiscalYear.value) return true
+  if (step === 3 && !createBankAccount.value) return true
+
+  let valid = true
+  for (const field of fields) {
+    if (!form[field]) {
+      stepErrors[field] = t('field_required')
+      valid = false
+    }
+  }
+
+  if (step === 2 && form.fiscal_year_start && form.fiscal_year_end && form.fiscal_year_end <= form.fiscal_year_start) {
+    stepErrors.fiscal_year_end = t('field_required')
+    valid = false
+  }
+
+  return valid
+}
+
+function validateAllSteps() {
+  for (const step of [0, 2, 3]) {
+    if (!validateStep(step)) {
+      currentStep.value = step
+      return false
+    }
+  }
+
+  clearStepErrors()
+  return true
+}
 
 function nextStep() {
+  if (!validateStep()) return
   if (currentStep.value < steps.value.length - 1) {
     currentStep.value++
   }
@@ -127,6 +176,8 @@ function prevStep() {
 
 // The bank step is always index 3. Submit posts the form from that step.
 function submit() {
+  if (!validateAllSteps()) return
+
   const payload = { ...form.data() }
 
   if (!createFiscalYear.value) {
@@ -188,7 +239,7 @@ function skip() {
       <Moon v-else class="h-4 w-4" />
     </button>
   </div>
-  <div class="flex min-h-screen items-center justify-center bg-[hsl(var(--background))] p-8">
+  <div class="flex min-h-screen items-center justify-center overflow-x-hidden bg-[hsl(var(--background))] p-4 sm:p-8">
     <Card class="w-full max-w-2xl">
       <CardHeader>
         <CardTitle class="text-3xl">{{ t('onboarding_welcome_title') }}</CardTitle>
@@ -196,7 +247,7 @@ function skip() {
 
         <!-- Stepper indicator -->
         <nav aria-label="Onboarding progress" class="mt-6">
-          <ol class="flex items-center gap-2">
+          <ol class="flex flex-wrap items-center gap-2">
             <li
               v-for="(step, i) in steps"
               :key="step.key"
@@ -235,7 +286,7 @@ function skip() {
             <legend class="text-lg font-semibold">{{ t('onboarding_modules_title') }}</legend>
             <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('onboarding_modules_desc') }}</p>
 
-            <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-3" :class="stepErrors.business_type ? 'rounded-lg ring-1 ring-[hsl(var(--destructive))] ring-offset-2' : ''">
               <button
                 v-for="bt in businessTypes"
                 :key="bt.value"
@@ -249,6 +300,7 @@ function skip() {
                 <span class="text-xs text-[hsl(var(--muted-foreground))]">{{ bt.desc() }}</span>
               </button>
             </div>
+            <p v-if="stepErrors.business_type || form.errors.business_type" class="text-sm text-[hsl(var(--destructive))]" role="alert">{{ stepErrors.business_type || form.errors.business_type }}</p>
 
             <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('onboarding_modules_preset_hint') }}</p>
 
@@ -297,10 +349,10 @@ function skip() {
               <span class="text-sm font-medium">{{ t('onboarding_fiscal_year_enable') }}</span>
             </label>
             <div v-if="createFiscalYear" class="space-y-4">
-              <FormInput id="fiscal_year_name" v-model="form.fiscal_year_name" :label="t('name')" :error="form.errors.fiscal_year_name" />
+              <FormInput id="fiscal_year_name" v-model="form.fiscal_year_name" :label="t('name')" :error="stepErrors.fiscal_year_name || form.errors.fiscal_year_name" :required="createFiscalYear" />
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormInput id="fiscal_year_start" v-model="form.fiscal_year_start" type="date" :label="t('start_date')" :error="form.errors.fiscal_year_start" />
-                <FormInput id="fiscal_year_end" v-model="form.fiscal_year_end" type="date" :label="t('end_date')" :error="form.errors.fiscal_year_end" />
+                <FormInput id="fiscal_year_start" v-model="form.fiscal_year_start" type="date" :label="t('start_date')" :error="stepErrors.fiscal_year_start || form.errors.fiscal_year_start" :required="createFiscalYear" />
+                <FormInput id="fiscal_year_end" v-model="form.fiscal_year_end" type="date" :label="t('end_date')" :error="stepErrors.fiscal_year_end || form.errors.fiscal_year_end" :required="createFiscalYear" />
               </div>
             </div>
           </fieldset>
@@ -314,7 +366,7 @@ function skip() {
               <span class="text-sm font-medium">{{ t('onboarding_bank_enable') }}</span>
             </label>
             <div v-if="createBankAccount" class="space-y-4">
-              <FormInput id="bank_account_name" v-model="form.bank_account_name" :label="t('name')" :error="form.errors.bank_account_name" />
+              <FormInput id="bank_account_name" v-model="form.bank_account_name" :label="t('name')" :error="stepErrors.bank_account_name || form.errors.bank_account_name" :required="createBankAccount" />
               <FormInput id="bank_name" v-model="form.bank_name" :label="t('bank_name')" :error="form.errors.bank_name" />
               <FormInput id="iban" v-model="form.iban" label="IBAN" :error="form.errors.iban" />
             </div>

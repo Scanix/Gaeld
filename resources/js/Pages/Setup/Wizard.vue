@@ -86,8 +86,8 @@ const setupModes = [
 // Per-step required fields for client-side validation
 const stepFields = {
   0: ['user_name', 'user_email', 'user_password', 'user_password_confirmation'],
-  1: [],
-  2: [],
+  1: ['business_type'],
+  2: ['setup_mode'],
   3: ['org_name'],
   4: ['currency', 'locale'],
 }
@@ -189,7 +189,7 @@ function prevStep() {
 
           <!-- Step 2: Business Type -->
           <fieldset v-show="currentStep === 1" class="space-y-6">
-            <legend class="text-lg font-semibold">{{ t('business_type') }}</legend>
+            <legend class="text-lg font-semibold">{{ t('business_type') }} <span class="text-[hsl(var(--destructive))]">*</span></legend>
             <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
               <button
                 v-for="bt in businessTypes"
@@ -204,12 +204,12 @@ function prevStep() {
                 <span class="text-xs text-[hsl(var(--muted-foreground))]">{{ bt.desc() }}</span>
               </button>
             </div>
-            <p v-if="form.errors.business_type" class="text-sm text-[hsl(var(--destructive))]" role="alert">{{ form.errors.business_type }}</p>
+            <p v-if="stepErrors.business_type || form.errors.business_type" class="text-sm text-[hsl(var(--destructive))]" role="alert">{{ stepErrors.business_type || form.errors.business_type }}</p>
           </fieldset>
 
           <!-- Step 3: Setup Mode -->
           <fieldset v-show="currentStep === 2" class="space-y-6">
-            <legend class="text-lg font-semibold">{{ t('step_setup_mode') }}</legend>
+            <legend class="text-lg font-semibold">{{ t('step_setup_mode') }} <span class="text-[hsl(var(--destructive))]">*</span></legend>
             <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('setup_mode_desc') }}</p>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <button
@@ -225,7 +225,7 @@ function prevStep() {
                 <span class="text-sm text-[hsl(var(--muted-foreground))]">{{ mode.desc() }}</span>
               </button>
             </div>
-            <p v-if="form.errors.setup_mode" class="text-sm text-[hsl(var(--destructive))]" role="alert">{{ form.errors.setup_mode }}</p>
+            <p v-if="stepErrors.setup_mode || form.errors.setup_mode" class="text-sm text-[hsl(var(--destructive))]" role="alert">{{ stepErrors.setup_mode || form.errors.setup_mode }}</p>
           </fieldset>
 
           <!-- Step 4: Organization -->

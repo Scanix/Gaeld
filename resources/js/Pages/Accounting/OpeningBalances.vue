@@ -38,6 +38,7 @@ const form = useForm({
   date: props.defaultDate,
   reference: '',
   description: '',
+  allow_contra: false,
   balances: props.accounts.map(a => ({ account_id: a.id, amount: '' })),
   is_posted: true,
 })
@@ -63,6 +64,16 @@ const groupedAccounts = computed(() => {
 const totalSigned = computed(() =>
   form.balances.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0)
 )
+
+const balanceDifference = computed(() => form.balances.reduce((difference, balance) => {
+  const account = props.accounts.find(item => String(item.id) === String(balance.account_id))
+  const amount = parseFloat(balance.amount) || 0
+  if (!account || amount === 0) return difference
+
+  const absoluteAmount = Math.abs(amount)
+  const shouldDebit = (amount > 0) === (account.type === 'asset')
+  return difference + (shouldDebit ? absoluteAmount : -absoluteAmount)
+}, 0))
 
 const filledCount = computed(() =>
   form.balances.filter(b => parseFloat(b.amount) !== 0 && b.amount !== '').length
@@ -211,6 +222,14 @@ function submitHistorical() {
           </div>
 
           <div v-if="form.errors.balances" class="mt-2 text-xs text-[hsl(var(--destructive))]">{{ form.errors.balances }}</div>
+
+          <label class="mt-4 flex items-start gap-3 rounded-md border border-[hsl(var(--warning)/0.4)] bg-[hsl(var(--warning)/0.1)] p-3 text-sm">
+            <input id="allow_contra" v-model="form.allow_contra" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-[hsl(var(--border))]" />
+            <span>
+              <span class="font-medium">{{ t('opening_balances_allow_contra') }}</span>
+              <span class="mt-1 block text-xs text-[hsl(var(--muted-foreground))]">{{ t('opening_balances_contra_help') }}</span>
+            </span>
+          </label>
 
           <div class="mt-6 flex flex-wrap justify-end gap-2">
             <Link href="/accounting/journal-entries">

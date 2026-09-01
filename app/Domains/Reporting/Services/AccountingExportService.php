@@ -63,7 +63,13 @@ class AccountingExportService
         $fromDate = $period->fromDate;
         $toDate = $period->toDate;
 
-        Storage::disk('local')->makeDirectory('exports');
+        $exportDisk = Storage::disk('local');
+        $exportDisk->makeDirectory('exports');
+        $exportDirectory = $exportDisk->path('exports');
+
+        if (! chmod($exportDirectory, 0770)) {
+            throw new \RuntimeException('Unable to make accounting exports readable by the web process.');
+        }
 
         $tmpDir = sys_get_temp_dir().'/gaeld-export-'.uniqid();
         mkdir($tmpDir, 0700, true);
@@ -85,6 +91,10 @@ class AccountingExportService
             $zipPath = Storage::disk('local')->path($zipFilename);
 
             $this->createZip($zipPath, $tmpDir);
+
+            if (! chmod($zipPath, 0660)) {
+                throw new \RuntimeException('Unable to make the accounting export readable by the web process.');
+            }
 
             return $zipPath;
         } finally {

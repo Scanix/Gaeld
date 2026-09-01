@@ -11,6 +11,9 @@ class AddSecurityHeadersTest extends TestCase
         $response = $this->get('/up');
 
         $response->assertOk();
+        $response->assertJsonPath('status', 'healthy');
+        $response->assertJsonStructure(['status', 'checks']);
+        $response->assertDontSee('cdn.jsdelivr.net');
         $response->assertHeader('Content-Security-Policy');
 
         $csp = (string) $response->headers->get('Content-Security-Policy');

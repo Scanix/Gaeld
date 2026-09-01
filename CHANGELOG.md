@@ -50,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cash Flow:** the Inertia controller now preserves the calculated report
   contract instead of remapping it to obsolete balance and section keys.
 
-## [Unreleased]
+## [3.6.3] — 2026-08-31
 
 ### Fixed
 - **API tokens:** canonical abilities, legacy ability compatibility, wildcard
@@ -65,6 +65,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Reconciliation and mobile UI:** empty suggestion maps serialize as JSON
   objects, masked inputs use the Maska v3 API, and Settings tabs fit narrow
   screens.
+- **Payroll:** 13th salary, calendar-day unpaid leave, reimbursements,
+  historical employee snapshots, salary certificates, queued salary-slip mail,
+  and a feature-gated withholding-tax contract now use one calculation path.
+- **Fiscal-year settings:** owners can review and apply an approved fiscal-year
+  start change on its effective date without mutating the current period early.
+- **VAT:** settled periods are locked at the VAT-entry boundary and exact bank
+  matching uses the posted settlement reference, amount, and direction.
+- **Accounting navigation:** salary-slip journal links now open an authorized
+  read-only detail page instead of a missing GET endpoint.
+
+## [Unreleased]
 
 ## [3.5.1] — 2026-08-07
 

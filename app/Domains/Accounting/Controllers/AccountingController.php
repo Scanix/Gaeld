@@ -99,6 +99,15 @@ class AccountingController extends Controller
         ]);
     }
 
+    public function showJournalEntry(JournalEntry $journalEntry): Response
+    {
+        $this->authorize('view', $journalEntry);
+
+        return Inertia::render('Accounting/JournalEntryShow', [
+            'entry' => $journalEntry->load('lines.account'),
+        ]);
+    }
+
     public function createJournalEntry(CurrentOrganization $currentOrg): Response
     {
         $this->authorize('create', JournalEntry::class);
@@ -295,7 +304,9 @@ class AccountingController extends Controller
             $rows = array_map(fn ($row) => [
                 $row['account_code'],
                 $row['account_name'],
-                $row['account_type'],
+                $row['account_type'] instanceof AccountType
+                    ? $row['account_type']->value
+                    : $row['account_type'],
                 $row['debit'],
                 $row['credit'],
             ], $balances);

@@ -18,6 +18,7 @@ import { Plus, Eye, FileText } from 'lucide-vue-next'
 
 const props = defineProps({
   declarations: Array,
+  canManage: { type: Boolean, default: false },
 })
 
 const { t } = useTranslations()
@@ -80,7 +81,7 @@ function submitForm() {
       <CardHeader>
         <div class="flex items-center justify-between">
           <CardTitle>{{ t('tax_declarations') }}</CardTitle>
-          <Button size="sm" @click="openCreate">
+          <Button v-if="canManage" size="sm" @click="openCreate">
             <Plus class="mr-1 h-4 w-4" /> {{ t('add') }}
           </Button>
         </div>
@@ -94,6 +95,7 @@ function submitForm() {
               :title="t('empty_tax_declarations_title')"
               :description="t('empty_tax_declarations_desc')"
               :action-label="t('create_first')"
+              v-if="canManage"
               @action="openCreate"
             />
           </template>

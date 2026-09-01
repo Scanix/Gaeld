@@ -13,23 +13,25 @@ import EmptyState from '@/Components/UI/EmptyState.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 import { computed } from 'vue'
-import { Pencil } from 'lucide-vue-next'
+import { FileText, Pencil } from 'lucide-vue-next'
 
 const { t } = useTranslations()
 const { formatDate, formatCurrency } = useFormatters()
 
 const props = defineProps({
   employee: Object,
+  payrollWritable: { type: Boolean, default: true },
   salarySlips: { type: Array, default: () => [] },
+  certificateYears: { type: Array, default: () => [] },
 })
 
 
 
 const salaryColumns = computed(() => [
-  { key: 'period', label: t('period') },
-  { key: 'gross_salary', label: t('gross_salary'), class: 'text-right' },
-  { key: 'net_salary', label: t('net_salary'), class: 'text-right' },
-  { key: 'status', label: t('status') },
+  { key: 'period', label: t('period'), minWidth: 140 },
+  { key: 'gross_salary', label: t('gross_salary'), class: 'text-right whitespace-nowrap', minWidth: 140 },
+  { key: 'net_salary', label: t('net_salary'), class: 'text-right whitespace-nowrap', minWidth: 140 },
+  { key: 'status', label: t('status'), minWidth: 110 },
   { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 </script>
@@ -51,7 +53,7 @@ const salaryColumns = computed(() => [
               <Badge :variant="employee.status === 'active' ? 'default' : 'secondary'">
                 {{ t('employee_status_' + employee.status) }}
               </Badge>
-              <Button variant="outline" size="sm" as="a" :href="`/payroll/employees/${employee.id}/edit`">
+              <Button v-if="payrollWritable" variant="outline" size="sm" as="a" :href="`/payroll/employees/${employee.id}/edit`">
                 <Pencil class="mr-2 h-4 w-4" />
                 {{ t('edit') }}
               </Button>
@@ -70,7 +72,7 @@ const salaryColumns = computed(() => [
             </div>
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('start_date') }}</p>
-              <p class="font-medium">{{ formatDate(employee.start_date) }}</p>
+              <p class="font-medium">{{ formatDate(employee.entry_date) }}</p>
             </div>
             <div>
               <p class="text-[hsl(var(--muted-foreground))]">{{ t('gross_salary') }}</p>
@@ -93,8 +95,19 @@ const salaryColumns = computed(() => [
           <Button as="a" href="/payroll/salary-slips" class="w-full" variant="outline">
             {{ t('view_salary_slips') }}
           </Button>
-          <Button as="a" href="/payroll/run" class="w-full">
+          <Button v-if="payrollWritable" as="a" href="/payroll/run" class="w-full">
             {{ t('run_payroll') }}
+          </Button>
+          <Button
+            v-for="certificateYear in certificateYears"
+            :key="certificateYear"
+            as="a"
+            variant="outline"
+            class="w-full"
+            :href="`/payroll/employees/${employee.id}/salary-certificate/${certificateYear}`"
+          >
+            <FileText class="mr-2 h-4 w-4" />
+            {{ t('download_salary_certificate', { year: certificateYear }) }}
           </Button>
         </CardContent>
       </Card>
