@@ -281,9 +281,6 @@ function confirmDeletePasskey() {
 const notificationPrefsForm = useForm({
   notification_preferences: {
     ocr_email: page.props.auth?.user?.notification_preferences?.ocr_email ?? true,
-    ...(page.props.features?.saas
-      ? { billing_email: page.props.auth?.user?.notification_preferences?.billing_email ?? true }
-      : {}),
   },
 })
 
@@ -723,14 +720,6 @@ function confirmRevokeOtherSessions() {
               <span class="text-sm text-[hsl(var(--foreground))]">{{ t('notification_prefs_ocr_email') }}</span>
               <input
                 v-model="notificationPrefsForm.notification_preferences.ocr_email"
-                type="checkbox"
-                class="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))]"
-              />
-            </label>
-            <label v-if="page.props.features?.saas" class="flex cursor-pointer items-center justify-between gap-4">
-              <span class="text-sm text-[hsl(var(--foreground))]">{{ t('notification_prefs_billing_email') }}</span>
-              <input
-                v-model="notificationPrefsForm.notification_preferences.billing_email"
                 type="checkbox"
                 class="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))]"
               />

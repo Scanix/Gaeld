@@ -24,19 +24,11 @@ const notificationResolvers = {
   expense_submitted: (data) => t('expense_submitted_notification', { name: data.submitter_name ?? '' }),
   expense_approved: () => t('expense_approved_notification'),
   invoice_payment_recorded: (data) => t('invoice_payment_recorded_notification', { number: data.invoice_number ?? '' }),
-  trial_expiring: (data) => t('notification_trial_expiring', { days: data.days_remaining ?? '' }),
-  upgrade_nudge: () => t('notification_upgrade_nudge'),
-  billing_payment_failed: () => t('notification_billing_payment_failed'),
-  billing_payment_recovered: () => t('notification_billing_payment_recovered'),
-  billing_subscription_activated: (data) => t('notification_billing_subscription_activated', { plan: data.plan_name ?? '' }),
-  billing_plan_changed: (data) => t('notification_billing_plan_changed', { plan: data.plan_name ?? '' }),
-  billing_cancellation_scheduled: (data) => t('notification_billing_cancellation_scheduled', { date: data.ends_at ?? '' }),
-  billing_trial_expired: () => t('notification_billing_trial_expired'),
 }
 
 function getNotificationMessage(n) {
   const resolver = notificationResolvers[n.data?.type]
-  return resolver ? resolver(n.data) : t('notification_unknown')
+  return resolver ? resolver(n.data) : (n.data?.message ?? t('notification_unknown'))
 }
 
 function formatDate(iso) {
