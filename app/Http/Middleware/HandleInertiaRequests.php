@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
                 'preview' => $request->session()->get('preview'),
                 'newToken' => $request->session()->get('newToken'),
                 'webhookSecret' => $request->session()->get('webhookSecret'),
+                'billing_checkout' => $request->session()->get('billing_checkout'),
             ],
             'twoFactor' => fn () => $request->session()->get('twoFactor'),
             'systemMessage' => FeatureFlag::isSaas()

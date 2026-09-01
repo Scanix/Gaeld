@@ -826,6 +826,17 @@ return [
     'plan_checkout_unavailable' => 'Not available yet',
     'checkout_success' => 'Your subscription is now active. Welcome aboard!',
     'checkout_canceled' => 'Checkout was canceled. You can start a subscription anytime.',
+    'checkout_pending' => 'Payment received — we are confirming your subscription. This page will update shortly.',
+    'next_renewal' => 'Next renewal',
+    'subscription_cancellation_notice' => 'Your subscription has been canceled and will remain active until :date.',
+    'plan_change_confirm_title' => 'Confirm plan change',
+    'plan_change_confirm_text' => 'You are about to switch to the :plan plan.',
+    'plan_change_new_price' => 'New price',
+    'plan_change_due_now' => 'Due now (prorated)',
+    'plan_change_next_billing' => 'Next billing date',
+    'plan_change_proration_hint' => 'The prorated amount reflects the unused time on your current plan.',
+    'plan_change_preview_unavailable' => 'The cost preview is currently unavailable. You can still confirm the change; any proration will appear on your next invoice.',
+    'plan_change_confirm_button' => 'Confirm change',
     'save_error' => 'An error occurred. Please try again.',
 
     // SaaS admin enhancements
