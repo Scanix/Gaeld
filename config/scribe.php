@@ -46,7 +46,7 @@ return [
 
             // Include these routes even if they did not match the rules above.
             'include' => [
-                // 'users.index', 'POST /new', '/auth/*'
+                'api.info',
             ],
 
             // Exclude these routes even if they matched the rules above.

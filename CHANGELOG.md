@@ -5,6 +5,23 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.6] — 2026-09-02
+
+### Added
+- **API documentation:** generated the OpenAPI and endpoint reference from the
+  current Laravel routes, including contacts, journal entries, CAMT.053 imports,
+  invoice lifecycle actions, and expense workflow actions.
+
+### Changed
+- **API documentation:** preserved the Laravel route parameter names and
+  separated the `/contacts` and `/customers` alias metadata.
+- **Documentation links:** contextual links now follow the user's locale on the
+  external documentation site.
+
+### Fixed
+- **API documentation:** included the unauthenticated API information endpoint
+  and added regression coverage for its Scribe documentation scope.
+
 ## [3.6.5] — 2026-09-01
 
 ### Changed

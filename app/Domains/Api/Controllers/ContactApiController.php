@@ -13,9 +13,16 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * JSON API access to organization contacts used by invoices and expenses.
+ *
+ * @group Contacts
  */
 class ContactApiController extends Controller
 {
+    /**
+     * List contacts
+     *
+     * Returns a paginated list of contacts for the current organisation.
+     */
     public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Contact::class);
@@ -37,6 +44,13 @@ class ContactApiController extends Controller
         return ContactResource::collection($contacts);
     }
 
+    /**
+     * Show contact
+     *
+     * Returns a single contact by UUID.
+     *
+     * @urlParam contact string required The contact UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     */
     public function show(Contact $contact, CurrentOrganization $currentOrganization): ContactResource
     {
         $this->ensureOrganization($contact, $currentOrganization->id());
@@ -45,6 +59,11 @@ class ContactApiController extends Controller
         return new ContactResource($contact->load('contactPersons'));
     }
 
+    /**
+     * Create contact
+     *
+     * Creates a contact in the current organisation.
+     */
     public function store(
         ContactApiRequest $request,
         CurrentOrganization $currentOrganization,
@@ -61,6 +80,13 @@ class ContactApiController extends Controller
             ->setStatusCode(201);
     }
 
+    /**
+     * Update contact
+     *
+     * Updates an existing contact in the current organisation.
+     *
+     * @urlParam contact string required The contact UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     */
     public function update(
         ContactApiRequest $request,
         Contact $contact,
@@ -73,6 +99,13 @@ class ContactApiController extends Controller
         return new ContactResource($contact->fresh('contactPersons'));
     }
 
+    /**
+     * Delete contact
+     *
+     * Permanently deletes a contact from the current organisation.
+     *
+     * @urlParam contact string required The contact UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     */
     public function destroy(
         Contact $contact,
         CurrentOrganization $currentOrganization,
