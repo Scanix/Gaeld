@@ -723,6 +723,7 @@ return [
     'signup_subtitle' => 'Nessuna carta di credito richiesta. Annulla in qualsiasi momento.',
     'signup_cta' => 'Inizia la prova di :days giorni',
     'signup_cta_free' => 'Crea un account gratuito',
+    'signup_cta_trial' => 'Inizia la prova gratuita di :days giorni',
     'signup_cta_team' => 'Inizia la prova Team di :days giorni',
     'signup_cta_paid' => 'Inizia la prova di :days giorni',
     'signup_disclaimer_free' => 'Il tuo piano gratuito viene attivato subito. Non sono richiesti dati di pagamento.',

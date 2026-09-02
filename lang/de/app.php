@@ -760,6 +760,7 @@ return [
     'signup_subtitle' => 'Keine Kreditkarte erforderlich. Jederzeit kündbar.',
     'signup_cta' => ':days-tägige Testphase starten',
     'signup_cta_free' => 'Kostenloses Konto erstellen',
+    'signup_cta_trial' => ':days-tägige kostenlose Testphase starten',
     'signup_cta_team' => ':days-tägige Team-Testphase starten',
     'signup_cta_paid' => ':days-tägige Testphase starten',
     'signup_disclaimer_free' => 'Ihr kostenloser Tarif wird sofort aktiviert. Es sind keine Zahlungsdaten erforderlich.',

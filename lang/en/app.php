@@ -764,6 +764,7 @@ return [
     'signup_subtitle' => 'No credit card required to start. Cancel anytime.',
     'signup_cta' => 'Start :days-day free trial',
     'signup_cta_free' => 'Create free account',
+    'signup_cta_trial' => 'Start :days-day free trial',
     'signup_cta_team' => 'Start :days-day Team trial',
     'signup_cta_paid' => 'Start :days-day free trial',
     'signup_disclaimer_free' => 'Your free plan starts immediately. No payment details are required.',

@@ -756,6 +756,7 @@ return [
     'signup_subtitle' => 'Aucune carte de crédit requise. Annulez à tout moment.',
     'signup_cta' => 'Commencer l\'essai de :days jours',
     'signup_cta_free' => 'Créer un compte gratuit',
+    'signup_cta_trial' => 'Commencer l\'essai gratuit de :days jours',
     'signup_cta_team' => 'Commencer l\'essai Team de :days jours',
     'signup_cta_paid' => 'Commencer l\'essai de :days jours',
     'signup_disclaimer_free' => 'Votre forfait gratuit est activé immédiatement. Aucune donnée de paiement n\'est requise.',
