@@ -117,6 +117,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **SaaS offer alignment:** added the Cloud Free, Solo, and Team offer contract,
+  server-side quotas for invoices, OCR, members, and document storage, and
+  cardless Solo/Team trials with explicit paid conversion and Cloud Free
+  fallback.
+
+### Changed
+- **Community Edition configuration:** made `.env.example` CE-only and kept
+  SaaS/EE settings in the production-specific template.
+- **Billing compatibility:** preserved legacy Starter and Business plan records
+  for existing subscriptions while hiding them from new plan selection.
+
 ## [3.5.1] — 2026-08-07
 
 ### Added

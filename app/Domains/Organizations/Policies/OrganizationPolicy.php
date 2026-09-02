@@ -5,6 +5,7 @@ namespace App\Domains\Organizations\Policies;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
+use App\Support\Contracts\OrganizationQuotaResolver;
 use App\Support\Policies\BasePolicy;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -25,7 +26,7 @@ class OrganizationPolicy extends BasePolicy
 
     public function create(User $user): bool
     {
-        $max = config('features.max_organizations_per_user', 10);
+        $max = app(OrganizationQuotaResolver::class)->maxOrganizations($user);
 
         return $user->organizations()->count() < $max;
     }

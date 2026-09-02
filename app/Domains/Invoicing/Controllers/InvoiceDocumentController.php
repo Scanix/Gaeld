@@ -7,9 +7,9 @@ use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Support\QrBillValidationMessageFormatter;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Organizations\Services\OrganizationDocumentStorageService;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
-use App\Support\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -24,7 +24,7 @@ class InvoiceDocumentController extends Controller
     use HandlesFlashErrorResponses;
 
     public function __construct(
-        private FileUploadService $uploadService,
+        private OrganizationDocumentStorageService $documentStorage,
     ) {}
 
     public function removeJustificatif(Invoice $invoice): RedirectResponse
@@ -32,7 +32,7 @@ class InvoiceDocumentController extends Controller
         $this->authorize('update', $invoice);
 
         if ($invoice->justificatif_path) {
-            $this->uploadService->delete($invoice->justificatif_path);
+            $this->documentStorage->delete($invoice->organization, $invoice->justificatif_path);
             $invoice->update(['justificatif_path' => null]);
         }
 

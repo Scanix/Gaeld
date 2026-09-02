@@ -22,6 +22,7 @@ use App\Domains\Expenses\Requests\StoreExpenseRequest;
 use App\Domains\Expenses\Requests\UpdateExpenseRequest;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Organizations\Services\OrganizationDocumentStorageService;
 use App\Domains\Reporting\Services\DashboardService;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
@@ -33,6 +34,7 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\PermissionRegistrar;
+use Throwable;
 
 /**
  * Expense CRUD operations.
@@ -43,6 +45,7 @@ class ExpenseController extends Controller
 
     public function __construct(
         private FileUploadService $uploadService,
+        private OrganizationDocumentStorageService $documentStorage,
     ) {}
 
     public function index(Request $request): Response
@@ -96,12 +99,22 @@ class ExpenseController extends Controller
     public function store(StoreExpenseRequest $request, CreateExpenseAction $action, CurrentOrganization $currentOrg): RedirectResponse
     {
         $validated = $request->validated();
+        $newReceiptPath = null;
 
         if ($request->hasFile('receipt')) {
-            $validated['receipt_path'] = $this->uploadService->store(
-                $request->file('receipt'),
-                "receipts/{$currentOrg->id()}",
-            );
+            $organization = $currentOrg->get();
+            $receipt = $request->file('receipt');
+            $receiptBytes = (int) $receipt->getSize();
+            $this->documentStorage->reserve($organization, $receiptBytes);
+
+            try {
+                $newReceiptPath = $this->uploadService->store($receipt, "receipts/{$currentOrg->id()}");
+                $validated['receipt_path'] = $newReceiptPath;
+            } catch (Throwable $exception) {
+                $this->documentStorage->release($organization, $receiptBytes);
+
+                throw $exception;
+            }
         } elseif ($request->filled('receipt_path')) {
             // Accept a pre-stored receipt path from the scan-receipt flow
             $path = $request->input('receipt_path');
@@ -114,7 +127,15 @@ class ExpenseController extends Controller
         $validated['organization_id'] = $currentOrg->id();
         $validated['user_id'] = $request->user()->id;
 
-        $expense = $action->execute(CreateExpenseData::fromArray($validated));
+        try {
+            $expense = $action->execute(CreateExpenseData::fromArray($validated));
+        } catch (Throwable $exception) {
+            if ($newReceiptPath) {
+                $this->documentStorage->delete($currentOrg->get(), $newReceiptPath);
+            }
+
+            throw $exception;
+        }
 
         if ($request->filled('scan_id')) {
             ReceiptScan::where('scan_id', $request->input('scan_id'))
@@ -180,19 +201,42 @@ class ExpenseController extends Controller
     public function update(UpdateExpenseRequest $request, Expense $expense, UpdateExpenseAction $action): RedirectResponse
     {
         $validated = $request->validated();
+        $newReceiptPath = null;
 
         if ($request->hasFile('receipt')) {
-            $this->uploadService->delete($expense->receipt_path);
-            $validated['receipt_path'] = $this->uploadService->store(
-                $request->file('receipt'),
-                "receipts/{$expense->organization_id}",
-            );
+            $organization = $expense->organization;
+            $receipt = $request->file('receipt');
+            $receiptBytes = (int) $receipt->getSize();
+            $this->documentStorage->reserve($organization, $receiptBytes);
+
+            try {
+                $newReceiptPath = $this->uploadService->store($receipt, "receipts/{$expense->organization_id}");
+                $validated['receipt_path'] = $newReceiptPath;
+            } catch (Throwable $exception) {
+                $this->documentStorage->release($organization, $receiptBytes);
+
+                throw $exception;
+            }
         }
 
         try {
             $action->execute($expense, UpdateExpenseData::fromArray($validated));
         } catch (InvalidExpenseStateException $e) {
+            if ($newReceiptPath) {
+                $this->documentStorage->delete($expense->organization, $newReceiptPath);
+            }
+
             return $this->backWithError($e);
+        } catch (Throwable $exception) {
+            if ($newReceiptPath) {
+                $this->documentStorage->delete($expense->organization, $newReceiptPath);
+            }
+
+            throw $exception;
+        }
+
+        if ($newReceiptPath && $expense->getOriginal('receipt_path')) {
+            $this->documentStorage->delete($expense->organization, $expense->getOriginal('receipt_path'));
         }
 
         return redirect()->route('expenses.show', $expense)
@@ -206,7 +250,7 @@ class ExpenseController extends Controller
         $orgId = $expense->organization_id;
 
         try {
-            $this->uploadService->delete($expense->receipt_path);
+            $this->documentStorage->delete($expense->organization, $expense->receipt_path);
             $action->execute($expense);
         } catch (InvalidExpenseStateException $e) {
             return $this->backWithError($e);

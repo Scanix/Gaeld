@@ -3,8 +3,10 @@
 namespace App\Http\Middleware;
 
 use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Organizations\Models\OrganizationDocumentStorageUsage;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
+use App\Support\Contracts\OrganizationQuotaResolver;
 use App\Support\FeatureFlag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -137,7 +139,7 @@ class HandleInertiaRequests extends Middleware
      */
     private function resolveAuth(User $user, Request $request): array
     {
-        return [
+        $auth = [
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -161,10 +163,17 @@ class HandleInertiaRequests extends Middleware
                     'name' => $org->name,
                     'role' => $org->pivot->role,
                 ]),
-            'ocr_quota' => fn () => $this->resolveOcrQuota($user),
-            'invoice_quota' => fn () => $this->resolveInvoiceMonthlyQuota($user),
             'notifications_unread_count' => fn () => $user->unreadNotifications()->count(),
         ];
+
+        if (! $request->is('saas-admin') && ! $request->is('saas-admin/*')) {
+            $auth['ocr_quota'] = fn (): array => $this->resolveOcrQuota($user);
+            $auth['invoice_quota'] = fn (): array => $this->resolveInvoiceMonthlyQuota($user);
+            $auth['document_storage_quota'] = fn (): array => $this->resolveDocumentStorageQuota($user);
+            $auth['member_quota'] = fn (): array => $this->resolveMemberQuota($user);
+        }
+
+        return $auth;
     }
 
     /**
@@ -186,15 +195,20 @@ class HandleInertiaRequests extends Middleware
             return null;
         }
 
+        $plan = $sub->getPlan();
+
         return [
             'status' => $sub->getStatus(),
-            'plan_slug' => $sub->getPlan()?->slug,
+            'plan_slug' => is_object($plan) ? ($plan->slug ?? null) : null,
+            'plan_name' => is_object($plan) ? ($plan->name ?? null) : null,
+            'plan_price_chf' => is_object($plan) ? ($plan->price_chf ?? null) : null,
+            'plan_is_legacy' => is_object($plan) && method_exists($plan, 'isLegacy') && $plan->isLegacy(),
             'trial_ends_at' => $sub->getTrialEndsAt()?->format('Y-m-d'),
             'ends_at' => $sub->getEndsAt()?->format('Y-m-d'),
         ];
     }
 
-    /** @return array{ocr_scans_today: int, ocr_daily_limit: int} */
+    /** @return array{ocr_scans_today: int, ocr_daily_limit: int, ocr_scans_this_month: int, ocr_monthly_limit: int} */
     private function resolveOcrQuota(User $user): array
     {
         $org = $this->currentOrganization->isBound()
@@ -202,22 +216,26 @@ class HandleInertiaRequests extends Middleware
             : $user->resolveCurrentOrganization();
 
         if (! $org) {
-            return ['ocr_scans_today' => 0, 'ocr_daily_limit' => config('services.ocr.daily_limit', 3)];
+            return [
+                'ocr_scans_today' => 0,
+                'ocr_daily_limit' => config('services.ocr.daily_limit', 3),
+                'ocr_scans_this_month' => 0,
+                'ocr_monthly_limit' => -1,
+            ];
         }
 
         $orgId = $org->id;
         $dailyKey = "ocr_daily:{$orgId}:".now()->toDateString();
+        $monthlyKey = 'ocr_monthly:'.$orgId.':'.now()->format('Y-m');
         $scansToday = (int) Cache::get($dailyKey, 0);
+        $resolver = app(OrganizationQuotaResolver::class);
 
-        $limit = config('services.ocr.daily_limit', 3);
-        if (FeatureFlag::isSaas()) {
-            $plan = $org->activeSubscription?->getPlan();
-            if ($plan && isset($plan->max_ocr_scans_per_day)) {
-                $limit = (int) $plan->max_ocr_scans_per_day;
-            }
-        }
-
-        return ['ocr_scans_today' => $scansToday, 'ocr_daily_limit' => $limit];
+        return [
+            'ocr_scans_today' => $scansToday,
+            'ocr_daily_limit' => $resolver->maxOcrScansPerDay($org),
+            'ocr_scans_this_month' => (int) Cache::get($monthlyKey, 0),
+            'ocr_monthly_limit' => $resolver->maxOcrScansPerMonth($org),
+        ];
     }
 
     /** @return array{invoices_this_month: int, invoice_monthly_limit: int} */
@@ -235,15 +253,53 @@ class HandleInertiaRequests extends Middleware
         $monthlyKey = 'invoices_monthly:'.$orgId.':'.now()->format('Y-m');
         $invoicesThisMonth = (int) Cache::get($monthlyKey, 0);
 
-        $limit = -1;
-        if (FeatureFlag::isSaas()) {
-            $plan = $org->activeSubscription?->getPlan();
-            if ($plan && isset($plan->max_invoices_per_month)) {
-                $limit = (int) $plan->max_invoices_per_month;
-            }
-        }
+        $limit = app(OrganizationQuotaResolver::class)->maxInvoicesPerMonth($org);
 
         return ['invoices_this_month' => $invoicesThisMonth, 'invoice_monthly_limit' => $limit];
+    }
+
+    /** @return array{bytes_used: int|null, storage_limit_bytes: int, metered: bool} */
+    private function resolveDocumentStorageQuota(User $user): array
+    {
+        $org = $this->currentOrganization->isBound()
+            ? $this->currentOrganization->get()
+            : $user->resolveCurrentOrganization();
+
+        if (! $org) {
+            return ['bytes_used' => null, 'storage_limit_bytes' => -1, 'metered' => false];
+        }
+
+        $usage = OrganizationDocumentStorageUsage::query()
+            ->where('organization_id', $org->id)
+            ->first();
+
+        return [
+            'bytes_used' => $usage?->bytes_used,
+            'storage_limit_bytes' => app(OrganizationQuotaResolver::class)->maxStorageBytes($org),
+            'metered' => $usage !== null,
+        ];
+    }
+
+    /** @return array{members: int, pending_invitations: int, total: int, member_limit: int} */
+    private function resolveMemberQuota(User $user): array
+    {
+        $org = $this->currentOrganization->isBound()
+            ? $this->currentOrganization->get()
+            : $user->resolveCurrentOrganization();
+
+        if (! $org) {
+            return ['members' => 0, 'pending_invitations' => 0, 'total' => 0, 'member_limit' => -1];
+        }
+
+        $members = $org->users()->count();
+        $pendingInvitations = $org->invitations()->pending()->count();
+
+        return [
+            'members' => $members,
+            'pending_invitations' => $pendingInvitations,
+            'total' => $members + $pendingInvitations,
+            'member_limit' => app(OrganizationQuotaResolver::class)->maxUsers($org),
+        ];
     }
 
     /**
