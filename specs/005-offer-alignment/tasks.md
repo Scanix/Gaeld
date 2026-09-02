@@ -12,9 +12,9 @@
 - [X] T005 Add reversible plan metadata and quota columns for monthly OCR, document storage, and public/legacy availability in `plugins/gaeld-ee/migrations/2026_09_02_182246_add_offer_alignment_to_ee_plans.php`.
 - [X] T006 Update `plugins/gaeld-ee/src/Domains/Billing/Models/Plan.php` casts, PHPDoc, public/legacy helpers, and entitlement accessors for the new fields.
 - [X] T007 [P] Add canonical Cloud Free/Solo/Team records and mark legacy Starter/Business unavailable for new selection without deleting their rows in `plugins/gaeld-ee/migrations/2026_09_02_182246_add_offer_alignment_to_ee_plans.php`.
-- [ ] T008 Implement an idempotent legacy subscription migration/backfill for existing Free, Starter, and Business assignments in `plugins/gaeld-ee/src/Domains/Billing/Actions/MigrateLegacyOfferSubscriptionsAction.php`.
-- [ ] T009 Add migration tests for legacy Free quota conversion, legacy paid price/Stripe preservation, admin-granted subscriptions, reruns, and interrupted/repeated execution in `plugins/gaeld-ee/tests/Feature/Billing/OfferMigrationTest.php`.
-- [ ] T010 Add a safe operational command or job for the migration with dry-run and summary output in `plugins/gaeld-ee/src/Domains/Billing/Commands/MigrateOfferPlansCommand.php`.
+- [X] T008 Implement an idempotent legacy subscription migration/backfill for existing Free, Starter, and Business assignments in `plugins/gaeld-ee/src/Domains/Billing/Actions/MigrateLegacyOfferSubscriptionsAction.php`.
+- [X] T009 Add migration tests for legacy Free quota conversion, legacy paid price/Stripe preservation, admin-granted subscriptions, reruns, and interrupted/repeated execution in `plugins/gaeld-ee/tests/Feature/Billing/OfferMigrationTest.php`.
+- [X] T010 Add a safe operational command or job for the migration with dry-run and summary output in `plugins/gaeld-ee/src/Domains/Billing/Commands/MigrateOfferPlansCommand.php`.
 
 ## Phase 3: Quota and entitlement foundation
 
