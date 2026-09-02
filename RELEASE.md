@@ -10,9 +10,9 @@ itself.
 Every production release records both immutable refs before deployment:
 
 ```text
-CE_VERSION=v3.7.2
+CE_VERSION=v3.7.3
 EE_VERSION=v2.9.9
-CE_SHA=f0709ba
+CE_SHA=ce9cb6b
 EE_SHA=7adaabc
 ```
 
@@ -21,8 +21,8 @@ EE_SHA=7adaabc
 must not be inferred from the CE version or copied into the public repository.
 The deployment pair and the tested commit SHAs belong in the release record.
 
-The current coordinated production release (2026-09-03) is CE `v3.7.2` at
-`f0709ba` with EE `v2.9.9` at `7adaabc`. It is deployed as release `242`.
+The current coordinated production release (2026-09-03) is CE `v3.7.3` at
+`ce9cb6b` with EE `v2.9.9` at `7adaabc`. It is deployed as release `244`.
 
 ## Validated Staging Candidate
 
@@ -61,7 +61,7 @@ was removed and its absence verified afterward. The latest production file
 archive also passed gzip integrity checking without extraction.
 
 The CE release was promoted to the public CE `main` branch and the private
-`production` branch. Production release `242` was deployed on 2026-09-03 with
+`production` branch. Production release `244` was deployed on 2026-09-03 with
 the immutable pair above. The offer-alignment and document-storage migrations
 are applied, the health endpoint reports healthy database and cache checks,
 the failed-job queue is empty, and the offer-plan migration and Stripe price
