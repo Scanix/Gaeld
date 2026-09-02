@@ -28,11 +28,11 @@ The current coordinated production release (2026-09-01) is CE `v3.6.6` at
 ## Validated Staging Candidate
 
 The offer-alignment candidate was deployed and accepted on staging on
-2026-09-02:
+2026-09-03:
 
 ```text
-STAGING_RELEASE=144
-API_REF=57cd8ed
+STAGING_RELEASE=145
+API_REF=v3.7.0
 EE_REF=v2.9.2
 EE_SHA=a6e5863
 ```
