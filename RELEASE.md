@@ -12,7 +12,7 @@ Every production release records both immutable refs before deployment:
 ```text
 CE_VERSION=v3.7.0
 EE_VERSION=v2.9.2
-CE_SHA=TO_BE_TAGGED
+CE_SHA=96cd595
 EE_SHA=a6e5863
 ```
 
