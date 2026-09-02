@@ -212,7 +212,7 @@ async function createAccount(page, options = {}) {
   const cookieButton = page.getByRole('button', { name: /Accept|Accepter|Agree|J'accepte/ })
   if (await cookieButton.count()) await cookieButton.first().click()
   const planLabel = plan === 'team' ? 'Team' : plan === 'solo' ? 'Solo' : 'Cloud Free'
-  await page.locator('button[role="radio"]').filter({ hasText: planLabel }).first().click()
+  await page.getByRole('radio', { name: new RegExp(`^${planLabel}\\b`) }).click()
   await page.locator('#signup-name').fill(accountName)
   await page.locator('#signup-org-name').fill(`${accountName} ${RUN_ID} Organization`)
   await page.locator('#signup-email').fill(email)
