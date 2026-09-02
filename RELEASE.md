@@ -31,10 +31,10 @@ The offer-alignment candidate was deployed and accepted on staging on
 2026-09-02:
 
 ```text
-STAGING_RELEASE=143
-API_REF=92b5d9a053dd3171b10c02e5cc2fdc3c875ef62a
-EE_REF=v2.9.0
-EE_SHA=47eccd68e13053504f1b13a8bdb0e11dc1d26ca3
+STAGING_RELEASE=144
+API_REF=57cd8ed
+EE_REF=v2.9.1
+EE_SHA=c92a3aebfa78974f6727ff75215ed976b9b111c7
 ```
 
 The staging acceptance run passed 41 checks with zero failures, zero skipped
@@ -43,6 +43,10 @@ email verification, onboarding, accounting, invoices, expenses, payroll, VAT,
 year-end close and reopen, permissions, billing, and Stripe test-clock
 lifecycle. The staging health endpoint returned `200` with database and cache
 checks healthy.
+
+The staging migration dry run scanned 202 active subscriptions, identified 106
+Cloud Free subscriptions and 95 legacy subscriptions to preserve, and
+performed 0 repairs. No data was changed.
 
 This pair is ready for production review, but has not been promoted to the
 public CE `main` branch or the private `production` branch. Production remains
