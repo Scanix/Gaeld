@@ -55,6 +55,12 @@ the worker started successfully; healthchecks passed; migrations, admin
 organization creation, Swiss chart seeding, demo data, and configuration cache
 completed successfully. The temporary project was removed after the check.
 
+The latest production PostgreSQL backup was integrity-checked and restored on
+2026-09-03 into a temporary local PostgreSQL database. The restore produced 80
+tables, 34 users, 37 organizations, and 52 invoices; the temporary database
+was removed and its absence verified afterward. The latest production file
+archive also passed gzip integrity checking without extraction.
+
 This pair is ready for production review, but has not been promoted to the
 public CE `main` branch or the private `production` branch. Production remains
 on its existing release until the backup/restore gate, release approvals, and
