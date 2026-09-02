@@ -1,5 +1,9 @@
 # Installation Guide
 
+The latest public Community Edition release is `v3.6.5`. The coordinated SaaS
+CE/EE production pair and its deployment procedure are documented in
+[RELEASE.md](RELEASE.md).
+
 ## Docker Installation (Recommended)
 
 ### Prerequisites
@@ -131,6 +135,10 @@ Key environment variables:
 | `FEATURE_BANK_SYNC` | Enable bank sync | `false` |
 | `FEATURE_AUTOMATION` | Enable automation | `false` |
 | `FEATURE_API_ACCESS` | Enable the Community Edition REST API | `true` |
+| `SCOUT_DRIVER` | Search engine | `database` |
+| `SCOUT_QUEUE` | Queue Scout index synchronization | `true` |
+| `MEILISEARCH_HOST` | Meilisearch URL when `SCOUT_DRIVER=meilisearch` | `http://localhost:7700` |
+| `MEILISEARCH_KEY` | Meilisearch API key when `SCOUT_DRIVER=meilisearch` | _(unset)_ |
 | `DOCS_BASE_URL` | Documentation site URL | `http://localhost:3000` |
 | `PLUGINS_ENABLED` | Enable plugin system | `true` |
 | `TRUSTED_PROXIES` | Trusted reverse proxies (see below) | _(unset)_ |
@@ -162,6 +170,52 @@ TRUSTED_PROXIES=10.0.0.5,172.18.0.0/16
 
 Also make sure `APP_URL` uses the public HTTPS URL, e.g.
 `APP_URL=https://accounting.example.com`.
+
+## Search / Meilisearch
+
+The default `database` Scout driver needs no additional service. For larger
+installations, Meilisearch can be enabled with:
+
+```env
+SCOUT_DRIVER=meilisearch
+SCOUT_QUEUE=true
+MEILISEARCH_HOST=http://127.0.0.1:7700
+MEILISEARCH_KEY=your-search-api-key
+```
+
+After changing index settings or deploying a new searchable model, synchronize
+the settings and import existing records:
+
+```bash
+./vendor/bin/sail artisan scout:sync-index-settings
+./vendor/bin/sail artisan gaeld:meilisearch:reindex
+```
+
+The reindex command imports `invoices`, `contacts`, and `expenses` without
+deleting application data. If an index contains stale documents, add
+`--flush` to rebuild only the corresponding Meilisearch indexes, then verify
+the document counts and an organization-scoped search.
+
+## Backup Retention
+
+The production deployment uses system-level backup scripts for MySQL,
+PostgreSQL, files, and off-site synchronization. The shared synchronization
+script is [scripts/backup-sync.sh](scripts/backup-sync.sh); it requires an
+explicit `RCLONE_REMOTE` value and keeps 7 days of daily archives and 56 days
+of weekly archives by default.
+
+Preview a retention run before applying it:
+
+```bash
+DRY_RUN=true RCLONE_REMOTE=<configured-backup-remote> \
+	/data/backups/scripts/backup-sync.sh
+```
+
+The script verifies the local archive before pruning the remote destination and
+prevents concurrent runs. Keep the provider path and credentials outside Git.
+For OneDrive, only enable `ONEDRIVE_HARD_DELETE=true` when the remote is known
+to be dedicated to these backup directories. Do not use `rclone cleanup` on a
+shared account root.
 
 ---
 
