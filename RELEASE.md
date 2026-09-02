@@ -25,6 +25,30 @@ The current coordinated production release (2026-09-01) is CE `v3.6.5` at
 `5dc656fcc4f55c442cc568a59ba9aba4c3bb73a1` with EE `v2.8.7` at
 `808166a598f61835dba16453107c91ac680f74ea`. It is deployed as release `232`.
 
+## Validated Staging Candidate
+
+The offer-alignment candidate was deployed and accepted on staging on
+2026-09-02:
+
+```text
+STAGING_RELEASE=143
+API_REF=92b5d9a053dd3171b10c02e5cc2fdc3c875ef62a
+EE_REF=v2.9.0
+EE_SHA=47eccd68e13053504f1b13a8bdb0e11dc1d26ca3
+```
+
+The staging acceptance run passed 41 checks with zero failures, zero skipped
+checks, and no console or request errors. It covered disposable Team signup,
+email verification, onboarding, accounting, invoices, expenses, payroll, VAT,
+year-end close and reopen, permissions, billing, and Stripe test-clock
+lifecycle. The staging health endpoint returned `200` with database and cache
+checks healthy.
+
+This pair is ready for production review, but has not been promoted to the
+public CE `main` branch or the private `production` branch. Production remains
+on its existing release until the backup/restore gate, release approvals, and
+the production migration plan are complete.
+
 ## Release Gate
 
 Before promoting a release candidate:
