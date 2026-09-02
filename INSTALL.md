@@ -1,6 +1,6 @@
 # Installation Guide
 
-The latest public Community Edition release is `v3.6.6`. The coordinated SaaS
+The latest public Community Edition release is `v3.7.0`. The coordinated SaaS
 CE/EE production pair and its deployment procedure are documented in
 [RELEASE.md](RELEASE.md).
 
