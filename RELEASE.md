@@ -11,9 +11,9 @@ Every production release records both immutable refs before deployment:
 
 ```text
 CE_VERSION=v3.7.0
-EE_VERSION=v2.9.2
+EE_VERSION=v2.9.3
 CE_SHA=96cd595
-EE_SHA=a6e5863
+EE_SHA=5a912a2
 ```
 
 `CE_VERSION` is the public release tag shared by GitHub and GitLab CE.
@@ -21,9 +21,8 @@ EE_SHA=a6e5863
 must not be inferred from the CE version or copied into the public repository.
 The deployment pair and the tested commit SHAs belong in the release record.
 
-The current coordinated production release (2026-09-01) is CE `v3.6.6` at
-`e9e9c02f086ba60427df3e443d7e30e1563db054` with EE `v2.8.7` at
-`808166a598f61835dba16453107c91ac680f74ea`. It is deployed as release `233`.
+The current coordinated production release (2026-09-03) is CE `v3.7.0` at
+`96cd595` with EE `v2.9.3` at `5a912a2`. It is deployed as release `235`.
 
 ## Validated Staging Candidate
 
@@ -61,10 +60,12 @@ tables, 34 users, 37 organizations, and 52 invoices; the temporary database
 was removed and its absence verified afterward. The latest production file
 archive also passed gzip integrity checking without extraction.
 
-This pair is ready for production review, but has not been promoted to the
-public CE `main` branch or the private `production` branch. Production remains
-on its existing release until the backup/restore gate, release approvals, and
-the production migration plan are complete.
+The CE release was promoted to the public CE `main` branch and the private
+`production` branch. Production release `235` was deployed on 2026-09-03 with
+the immutable pair above. The offer-alignment and document-storage migrations
+are applied, the health endpoint reports healthy database and cache checks,
+the failed-job queue is empty, and the offer-plan migration and Stripe price
+synchronization dry runs made no changes.
 
 ## Release Gate
 
