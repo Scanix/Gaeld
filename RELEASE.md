@@ -48,6 +48,13 @@ The staging migration dry run scanned 202 active subscriptions, identified 106
 Cloud Free subscriptions and 95 legacy subscriptions to preserve, and
 performed 0 repairs. No data was changed.
 
+The CE installation was also verified on 2026-09-02 from a clean archive of
+the committed API candidate using `./gaeld setup --demo` in an isolated Docker
+Compose project. PostgreSQL, Redis, Meilisearch, Mailpit, the application, and
+the worker started successfully; healthchecks passed; migrations, admin
+organization creation, Swiss chart seeding, demo data, and configuration cache
+completed successfully. The temporary project was removed after the check.
+
 This pair is ready for production review, but has not been promoted to the
 public CE `main` branch or the private `production` branch. Production remains
 on its existing release until the backup/restore gate, release approvals, and
