@@ -8,8 +8,9 @@ use App\Domains\Expenses\Models\ReceiptScan;
 use App\Domains\Expenses\Requests\ScanReceiptRequest;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Organizations\Services\OrganizationDocumentStorageService;
 use App\Http\Controllers\Controller;
-use App\Support\FeatureFlag;
+use App\Support\Contracts\OrganizationQuotaResolver;
 use App\Support\Services\FileUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 /**
  * Receipt upload, OCR scanning, and file management for expenses.
@@ -26,6 +28,8 @@ class ExpenseReceiptController extends Controller
 {
     public function __construct(
         private FileUploadService $uploadService,
+        private OrganizationQuotaResolver $quotaResolver,
+        private OrganizationDocumentStorageService $documentStorage,
     ) {}
 
     public function removeReceipt(Expense $expense): RedirectResponse
@@ -33,7 +37,7 @@ class ExpenseReceiptController extends Controller
         $this->authorize('update', $expense);
 
         if ($expense->receipt_path) {
-            $this->uploadService->delete($expense->receipt_path);
+            $this->documentStorage->delete($expense->organization, $expense->receipt_path);
             $expense->update(['receipt_path' => null]);
         }
 
@@ -70,16 +74,39 @@ class ExpenseReceiptController extends Controller
 
         $orgId = $currentOrg->id();
         $dailyKey = "ocr_daily:{$orgId}:".now()->toDateString();
+        $monthlyKey = 'ocr_monthly:'.$orgId.':'.now()->format('Y-m');
 
-        $limit = $this->resolveOcrDailyLimit($currentOrg);
+        $organization = $currentOrg->get();
+        $dailyLimit = $this->quotaResolver->maxOcrScansPerDay($organization);
+        $monthlyLimit = $this->quotaResolver->maxOcrScansPerMonth($organization);
 
-        if ($limit !== -1 && (int) Cache::get($dailyKey, 0) >= $limit) {
+        if ($dailyLimit !== -1 && ! $this->reserveCounter($dailyKey, $dailyLimit, now()->startOfDay()->addDay())) {
             return response()->json([
-                'message' => __('app.ocr_daily_limit_reached', ['limit' => $limit]),
+                'message' => __('app.ocr_daily_limit_reached', ['limit' => $dailyLimit]),
             ], 429);
         }
 
-        $receiptPath = $this->uploadService->store($request->file('receipt'), "receipts/{$orgId}");
+        if ($monthlyLimit !== -1 && ! $this->reserveCounter($monthlyKey, $monthlyLimit, now()->startOfMonth()->addMonth())) {
+            if ($dailyLimit !== -1) {
+                Cache::decrement($dailyKey);
+            }
+
+            return response()->json([
+                'message' => __('app.ocr_monthly_limit_reached', ['limit' => $monthlyLimit]),
+            ], 429);
+        }
+
+        $receipt = $request->file('receipt');
+        $receiptBytes = (int) $receipt->getSize();
+        $this->documentStorage->reserve($organization, $receiptBytes);
+
+        try {
+            $receiptPath = $this->uploadService->store($receipt, "receipts/{$orgId}");
+        } catch (Throwable $exception) {
+            $this->documentStorage->release($organization, $receiptBytes);
+
+            throw $exception;
+        }
         $scanId = Str::uuid()->toString();
 
         ReceiptScan::create([
@@ -99,26 +126,24 @@ class ExpenseReceiptController extends Controller
 
         ProcessReceiptOcrJob::dispatch($scanId, $receiptPath, $request->user()->id, $orgId);
 
-        Cache::add($dailyKey, 0, now()->startOfDay()->addDay());
-        Cache::increment($dailyKey);
-
         return response()->json([
             'scan_id' => $scanId,
             'receipt_path' => $receiptPath,
         ]);
     }
 
-    private function resolveOcrDailyLimit(CurrentOrganization $currentOrg): int
+    private function reserveCounter(string $key, int $limit, \DateTimeInterface $expiresAt): bool
     {
-        if (FeatureFlag::isSaas()) {
-            $org = $currentOrg->get();
-            $plan = $org->activeSubscription?->getPlan();
-            if ($plan && isset($plan->max_ocr_scans_per_day)) {
-                return (int) $plan->max_ocr_scans_per_day;
-            }
+        Cache::add($key, 0, $expiresAt);
+        $newCount = Cache::increment($key);
+
+        if ($newCount > $limit) {
+            Cache::decrement($key);
+
+            return false;
         }
 
-        return (int) config('services.ocr.daily_limit', 3);
+        return true;
     }
 
     public function scanReceiptStatus(Request $request, CurrentOrganization $currentOrg, string $scanId): JsonResponse

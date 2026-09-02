@@ -74,6 +74,7 @@ class RegistrationTest extends TestCase
         $subscription = Subscription::firstOrFail();
         $this->assertSame('trialing', $subscription->status);
         $this->assertNotNull($subscription->trial_ends_at);
+        $this->assertTrue($subscription->trial_ends_at->isPast());
 
         $this->assertTrue(
             Account::where('organization_id', $subscription->organization_id)

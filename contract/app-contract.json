@@ -50,7 +50,11 @@
     "auth.role": "string",
     "auth.permissions": "string[]",
     "auth.organizations": [{"id": "uuid", "name": "string", "role": "string"}],
-    "auth.subscription": {"status": "string", "plan_slug": "string", "trial_ends_at": "datetime|null", "ends_at": "datetime|null"},
+    "auth.subscription": {"status": "string", "plan_slug": "string", "plan_name": "string|null", "plan_price_chf": "number|null", "plan_is_legacy": "boolean", "trial_ends_at": "datetime|null", "ends_at": "datetime|null"},
+    "auth.ocr_quota": {"ocr_scans_today": "int", "ocr_daily_limit": "int", "ocr_scans_this_month": "int", "ocr_monthly_limit": "int"},
+    "auth.invoice_quota": {"invoices_this_month": "int", "invoice_monthly_limit": "int"},
+    "auth.document_storage_quota": {"bytes_used": "int|null", "storage_limit_bytes": "int", "metered": "boolean"},
+    "auth.member_quota": {"members": "int", "pending_invitations": "int", "total": "int", "member_limit": "int"},
     "locale": "string (en|fr|de|it)",
     "translations": "object (lazy)",
     "features": "object (all feature flags)",
@@ -331,7 +335,7 @@
       "tax_declarations": {"path": "/accounting/tax-declarations", "feature_gate": "tax_declaration", "page": "Accounting/TaxDeclarations/*"},
       "consolidation": {"path": "/accounting/consolidation", "feature_gate": "consolidation", "page": "Accounting/Consolidation/*"},
       "withholding_tax": {"path": "/payroll/withholding-tax", "feature_gate": "withholding_tax", "page": "Payroll/WithholdingTax/*"},
-      "billing": {"path": "/billing", "feature_gate": "saas", "page": "Billing/*"},
+      "billing": {"path": "/billing", "feature_gate": "saas", "page": "Billing/*", "public_plan_slugs": ["free", "solo", "team"], "public_plan_names": {"free": "Cloud Free", "solo": "Solo", "team": "Team"}, "legacy_plans": ["starter", "business"], "paid_trials": {"plans": ["solo", "team"], "days": 14, "payment_method_required": false, "fallback": "free"}},
       "saas_admin": {"path": "/saas-admin", "feature_gate": "saas", "page": "SaasAdmin/*", "routes": ["saas-admin.index", "saas-admin.organizations.index", "saas-admin.billing.index", "saas-admin.billing", "saas-admin.health", "saas-admin.operations", "saas-admin.support.start", "saas-admin.support.stop", "saas-admin.campaigns.store", "saas-admin.campaigns.send", "saas-admin.exports.store", "saas-admin.exports.download"], "shared_props": ["auth.support_session", "supportSession"]},
       "analytical_report": {"path": "/accounting/analytical-report", "feature_gate": "analytical", "page": "Reports/AnalyticalReport"}
     }

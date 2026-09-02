@@ -115,7 +115,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Accounting navigation:** salary-slip journal links now open an authorized
   read-only detail page instead of a missing GET endpoint.
 
-## [Unreleased]
+## [3.7.0] — 2026-09-03
+
+### Added
+- **SaaS offer alignment:** added the Cloud Free, Solo, and Team offer contract,
+  server-side quotas for invoices, OCR, members, and document storage, and
+  cardless Solo/Team trials with explicit paid conversion and Cloud Free
+  fallback.
+
+### Changed
+- **Community Edition configuration:** made `.env.example` CE-only and kept
+  SaaS/EE settings in the production-specific template.
+- **Billing compatibility:** preserved legacy Starter and Business plan records
+  for existing subscriptions while hiding them from new plan selection.
+
+### Fixed
+- **SaaS Admin performance:** avoid evaluating organization quota props on
+  administrative routes where they are not used.
+- **Staging QA:** align disposable signup checks with Cloud Free, Solo, and
+  Team plans and select the exact Team plan control.
+- **CE test isolation:** keep EE-dependent offer tests out of the CE-only
+  runtime while retaining their coverage in the EE suite.
 
 ## [3.5.1] — 2026-08-07
 

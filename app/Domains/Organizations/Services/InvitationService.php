@@ -8,7 +8,7 @@ use App\Domains\Organizations\Models\OrganizationInvitation;
 use App\Domains\Organizations\Notifications\InvitationNotification;
 use App\Domains\Payroll\Models\Employee;
 use App\Domains\Users\Models\User;
-use App\Support\FeatureFlag;
+use App\Support\Contracts\OrganizationQuotaResolver;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -21,6 +21,7 @@ class InvitationService
 {
     public function __construct(
         private readonly OrganizationService $organizationService,
+        private readonly OrganizationQuotaResolver $quotaResolver,
     ) {}
 
     // ──────────────────────────────────────────────────────────────
@@ -154,18 +155,7 @@ class InvitationService
 
     public function canAddMember(Organization $organization): bool
     {
-        if (! FeatureFlag::isSaas()) {
-            return true;
-        }
-
-        $subscription = $organization->activeSubscription ?? null;
-        if (! $subscription) {
-            return false;
-        }
-
-        // getPlan() returns mixed; ?-> is intentional — plan may be null at runtime.
-        // @phpstan-ignore nullsafe.neverNull
-        $maxUsers = $subscription->getPlan()?->max_users ?? -1;
+        $maxUsers = $this->quotaResolver->maxUsers($organization);
         if ($maxUsers === -1) {
             return true;
         }

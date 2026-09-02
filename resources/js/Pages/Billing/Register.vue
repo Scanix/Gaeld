@@ -69,7 +69,7 @@ function submit() {
     <div class="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
       <img src="/logo-wide.svg" alt="Gäld" class="h-8 mx-auto mb-6" />
       <h2 class="text-2xl font-bold text-[hsl(var(--foreground))]">
-        {{ selectedPlanIsFree ? t('signup_title_free') : t('signup_title', { days: trial_days }) }}
+        {{ selectedPlanIsFree ? t('signup_title_free') : t('signup_title_paid', { days: trial_days }) }}
       </h2>
       <p class="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{{ t('signup_subtitle') }}</p>
     </div>
@@ -99,7 +99,7 @@ function submit() {
             aria-hidden="true"
           />
           <div class="flex items-center gap-2 mb-1">
-            <Zap v-if="plan.slug !== 'starter'" class="h-4 w-4 text-[hsl(var(--primary))]" />
+            <Zap v-if="plan.slug !== 'solo'" class="h-4 w-4 text-[hsl(var(--primary))]" />
             <span class="font-semibold text-[hsl(var(--foreground))]">{{ plan.name }}</span>
           </div>
           <p class="text-2xl font-bold text-[hsl(var(--foreground))]">
@@ -111,13 +111,17 @@ function submit() {
               <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
               {{ plan.max_users === -1 ? t('unlimited_users') : `${plan.max_users} ${t(plan.max_users === 1 ? 'user' : 'users')}` }}
             </li>
-            <li class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
+            <li v-if="plan.max_ocr_scans_per_month === -1" class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
               <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
               {{ plan.max_invoices_per_month === -1 ? t('unlimited_invoices') : `${plan.max_invoices_per_month} ${t(plan.max_invoices_per_month === 1 ? 'invoice_per_month' : 'invoices_per_month')}` }}
             </li>
             <li class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
               <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
               {{ plan.max_ocr_scans_per_day === -1 ? t('unlimited_ocr_per_day') : `${plan.max_ocr_scans_per_day} ${t(plan.max_ocr_scans_per_day === 1 ? 'ocr_scan_per_day' : 'ocr_scans_per_day')}` }}
+            </li>
+            <li v-if="plan.max_ocr_scans_per_month !== -1" class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
+              <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
+              {{ `${plan.max_ocr_scans_per_month} ${t(plan.max_ocr_scans_per_month === 1 ? 'ocr_scan_per_month' : 'ocr_scans_per_month')}` }}
             </li>
             <li v-for="feature in plan.features" :key="feature" class="flex items-center gap-1.5 text-xs text-[hsl(var(--foreground))]">
               <CheckCircle2 class="h-3 w-3 text-[hsl(var(--primary))] shrink-0" />
@@ -290,11 +294,11 @@ function submit() {
           </div>
 
           <Button type="submit" class="w-full" :disabled="form.processing">
-            {{ form.processing ? t('creating_account') : (selectedPlanIsFree ? t('signup_cta_free') : t('signup_cta', { days: trial_days })) }}
+            {{ form.processing ? t('creating_account') : (selectedPlanIsFree ? t('signup_cta_free') : t('signup_cta_trial', { days: trial_days })) }}
           </Button>
 
           <p class="text-center text-xs text-[hsl(var(--muted-foreground))]">
-            {{ t(selectedPlanIsFree ? 'signup_disclaimer_free' : 'signup_disclaimer') }}
+            {{ t(selectedPlanIsFree ? 'signup_disclaimer_free' : 'signup_disclaimer_trial') }}
           </p>
         </form>
       </div>

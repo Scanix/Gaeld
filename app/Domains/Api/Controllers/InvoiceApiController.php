@@ -27,7 +27,7 @@ use App\Domains\Invoicing\Services\InvoiceMailerService;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
-use App\Support\FeatureFlag;
+use App\Support\Contracts\OrganizationQuotaResolver;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -109,12 +109,13 @@ class InvoiceApiController extends Controller
         CreateInvoiceAction $action,
         CurrentOrganization $currentOrg,
         InvoiceNumberGenerator $numberGenerator,
+        OrganizationQuotaResolver $quotaResolver,
     ): JsonResponse {
         $this->authorize('create', Invoice::class);
 
         $orgId = $currentOrg->id();
         $monthlyKey = 'invoices_monthly:'.$orgId.':'.now()->format('Y-m');
-        $limit = $this->resolveInvoiceMonthlyLimit($currentOrg);
+        $limit = $quotaResolver->maxInvoicesPerMonth($currentOrg->get());
 
         if ($limit !== -1) {
             Cache::add($monthlyKey, 0, now()->startOfMonth()->addMonth());
@@ -471,18 +472,6 @@ class InvoiceApiController extends Controller
 
         return $sqlState === '23505'
             && str_contains($exception->getMessage(), 'invoices_organization_id_number_unique');
-    }
-
-    private function resolveInvoiceMonthlyLimit(CurrentOrganization $currentOrg): int
-    {
-        if (FeatureFlag::isSaas()) {
-            $plan = $currentOrg->get()->activeSubscription?->getPlan();
-            if ($plan && isset($plan->max_invoices_per_month)) {
-                return (int) $plan->max_invoices_per_month;
-            }
-        }
-
-        return -1;
     }
 
     private function apiError(string $message, string $code, int $status): JsonResponse

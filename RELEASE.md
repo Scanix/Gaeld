@@ -10,10 +10,10 @@ itself.
 Every production release records both immutable refs before deployment:
 
 ```text
-CE_VERSION=v3.6.5
-EE_VERSION=v2.8.7
-CE_SHA=5dc656fcc4f55c442cc568a59ba9aba4c3bb73a1
-EE_SHA=808166a598f61835dba16453107c91ac680f74ea
+CE_VERSION=v3.7.0
+EE_VERSION=v2.9.2
+CE_SHA=TO_BE_TAGGED
+EE_SHA=a6e5863
 ```
 
 `CE_VERSION` is the public release tag shared by GitHub and GitLab CE.
@@ -21,9 +21,50 @@ EE_SHA=808166a598f61835dba16453107c91ac680f74ea
 must not be inferred from the CE version or copied into the public repository.
 The deployment pair and the tested commit SHAs belong in the release record.
 
-The current coordinated production release (2026-09-01) is CE `v3.6.5` at
-`5dc656fcc4f55c442cc568a59ba9aba4c3bb73a1` with EE `v2.8.7` at
-`808166a598f61835dba16453107c91ac680f74ea`. It is deployed as release `232`.
+The current coordinated production release (2026-09-01) is CE `v3.6.6` at
+`e9e9c02f086ba60427df3e443d7e30e1563db054` with EE `v2.8.7` at
+`808166a598f61835dba16453107c91ac680f74ea`. It is deployed as release `233`.
+
+## Validated Staging Candidate
+
+The offer-alignment candidate was deployed and accepted on staging on
+2026-09-02:
+
+```text
+STAGING_RELEASE=144
+API_REF=57cd8ed
+EE_REF=v2.9.2
+EE_SHA=a6e5863
+```
+
+The staging acceptance run passed 41 checks with zero failures, zero skipped
+checks, and no console or request errors. It covered disposable Team signup,
+email verification, onboarding, accounting, invoices, expenses, payroll, VAT,
+year-end close and reopen, permissions, billing, and Stripe test-clock
+lifecycle. The staging health endpoint returned `200` with database and cache
+checks healthy.
+
+The staging migration dry run scanned 202 active subscriptions, identified 106
+Cloud Free subscriptions and 95 legacy subscriptions to preserve, and
+performed 0 repairs. No data was changed.
+
+The CE installation was also verified on 2026-09-02 from a clean archive of
+the committed API candidate using `./gaeld setup --demo` in an isolated Docker
+Compose project. PostgreSQL, Redis, Meilisearch, Mailpit, the application, and
+the worker started successfully; healthchecks passed; migrations, admin
+organization creation, Swiss chart seeding, demo data, and configuration cache
+completed successfully. The temporary project was removed after the check.
+
+The latest production PostgreSQL backup was integrity-checked and restored on
+2026-09-03 into a temporary local PostgreSQL database. The restore produced 80
+tables, 34 users, 37 organizations, and 52 invoices; the temporary database
+was removed and its absence verified afterward. The latest production file
+archive also passed gzip integrity checking without extraction.
+
+This pair is ready for production review, but has not been promoted to the
+public CE `main` branch or the private `production` branch. Production remains
+on its existing release until the backup/restore gate, release approvals, and
+the production migration plan are complete.
 
 ## Release Gate
 

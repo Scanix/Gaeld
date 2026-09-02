@@ -64,11 +64,11 @@ organizations whose names contain the current run ID. Set
 `QA_CLEANUP_ORGANIZATION=0` only when deliberately retaining the run for
 inspection.
 
-Set `QA_PLAN=business` for the full SaaS workflow. `QA_PLAN=free` is useful for
-the lower-cost signup and accounting smoke tests; payroll and some billing
-checks require Business and a Stripe Checkout adapter.
+Set `QA_PLAN=team` for the full SaaS workflow. `QA_PLAN=free` is useful for the
+lower-cost signup and accounting smoke tests; paid conversion checks require a
+configured Solo/Team Stripe Checkout adapter.
 
-Set `QA_EXHAUSTIVE=1` with `QA_CREATE_ACCOUNT=1` and `QA_PLAN=business` to run
+Set `QA_EXHAUSTIVE=1` with `QA_CREATE_ACCOUNT=1` and `QA_PLAN=team` to run
 the dedicated 24-month campaign. It creates a second disposable tenant,
 replays 24 months of invoices, expenses, payroll, CAMT.053/CAMT.054 imports,
 seven monthly report views, eight VAT settlements, both year-end closures, 14

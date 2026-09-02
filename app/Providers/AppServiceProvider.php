@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Console\Commands\BackfillOrganizationDocumentStorageCommand;
 use App\Domains\Accounting\Jobs\ExportChartOfAccountsJob;
 use App\Domains\Accounting\Listeners\JournalEventSubscriber;
 use App\Domains\Accounting\Models\Account;
@@ -50,8 +51,10 @@ use App\Domains\Reporting\Jobs\GenerateReportsJob;
 use App\Domains\Users\Jobs\ExportUserDataJob;
 use App\Http\Services\GlobalSearchService;
 use App\Listeners\SendHorizonTelegramAlert;
+use App\Support\Contracts\OrganizationQuotaResolver;
 use App\Support\Listeners\AuthAuditSubscriber;
 use App\Support\Observers\LocksArchivedRecord;
+use App\Support\Services\DefaultOrganizationQuotaResolver;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -75,7 +78,9 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->commands([BackfillOrganizationDocumentStorageCommand::class]);
         $this->app->scoped(CurrentOrganization::class);
+        $this->app->singleton(OrganizationQuotaResolver::class, DefaultOrganizationQuotaResolver::class);
         $this->app->singleton(SourceTaxServiceInterface::class, NullSourceTaxService::class);
         $this->app->singleton(
             ReceiptOcrInterface::class,
