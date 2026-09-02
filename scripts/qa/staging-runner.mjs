@@ -78,17 +78,17 @@ function assertSafeConfiguration() {
   if (RUN_ENABLED && !CREATE_ACCOUNT && (!EMAIL || !PASSWORD)) {
     throw new Error('QA_EMAIL and QA_PASSWORD are required when QA_RUN=1')
   }
-  if (CLEANUP_ORGANIZATION && !CREATE_ACCOUNT) {
+  if (RUN_ENABLED && CLEANUP_ORGANIZATION && !CREATE_ACCOUNT) {
     throw new Error('QA_CLEANUP_ORGANIZATION requires QA_CREATE_ACCOUNT=1')
   }
-  if (CLEANUP_ORGANIZATION && SSH_TARGET !== 'build-remote') {
+  if (RUN_ENABLED && CLEANUP_ORGANIZATION && SSH_TARGET !== 'build-remote') {
     throw new Error('QA cleanup is restricted to the build-remote staging host')
   }
   if (EXHAUSTIVE && !CREATE_ACCOUNT) {
     throw new Error('QA_EXHAUSTIVE requires QA_CREATE_ACCOUNT=1')
   }
-  if (EXHAUSTIVE && PLAN !== 'business') {
-    throw new Error('QA_EXHAUSTIVE requires QA_PLAN=business')
+  if (EXHAUSTIVE && PLAN !== 'team') {
+    throw new Error('QA_EXHAUSTIVE requires QA_PLAN=team')
   }
   if (EXHAUSTIVE && !STRIPE_WEBHOOK_SECRET) {
     throw new Error('QA_EXHAUSTIVE requires STRIPE_WEBHOOK_SECRET')
@@ -99,8 +99,8 @@ function assertSafeConfiguration() {
   if (FULL && !MAILPIT_URL) {
     throw new Error('QA_FULL requires QA_MAILPIT_URL')
   }
-  if (!['free', 'business'].includes(PLAN)) {
-    throw new Error('QA_PLAN must be free or business')
+  if (!['free', 'solo', 'team'].includes(PLAN)) {
+    throw new Error('QA_PLAN must be free, solo, or team')
   }
 }
 
@@ -211,7 +211,8 @@ async function createAccount(page, options = {}) {
   await page.goto(`${BASE_URL}/signup`, { waitUntil: 'networkidle' })
   const cookieButton = page.getByRole('button', { name: /Accept|Accepter|Agree|J'accepte/ })
   if (await cookieButton.count()) await cookieButton.first().click()
-  await page.locator('button[role="radio"]').filter({ hasText: plan === 'business' ? 'Business' : 'Free' }).first().click()
+  const planLabel = plan === 'team' ? 'Team' : plan === 'solo' ? 'Solo' : 'Cloud Free'
+  await page.locator('button[role="radio"]').filter({ hasText: planLabel }).first().click()
   await page.locator('#signup-name').fill(accountName)
   await page.locator('#signup-org-name').fill(`${accountName} ${RUN_ID} Organization`)
   await page.locator('#signup-email').fill(email)
@@ -1012,7 +1013,7 @@ async function exerciseBillingAndStripe(page) {
       : prices.body.data?.find(item => item.currency === 'chf' && item.unit_amount === 2900 && item.recurring?.interval === 'month')
 
     if (!price) {
-      result.testClock = { status: 'fail', created: true, reason: 'No active recurring CHF Business price was available' }
+      result.testClock = { status: 'fail', created: true, reason: 'No active recurring CHF Team price was available' }
       return result
     }
 
@@ -1822,11 +1823,8 @@ async function createExhaustiveTenant(browser, createdAccounts) {
   const { context, page, consoleErrors, requestFailures } = await createContext(browser)
 
   try {
-    const auth = await createAccount(page, { email, accountName, plan: 'business' })
+    const auth = await createAccount(page, { email, accountName, plan: 'team' })
     createdAccounts.push(auth)
-    if (auth.checkoutUrl || new URL(auth.url).hostname === 'checkout.stripe.com') {
-      await completeStripeCheckout(page, auth.checkoutUrl, accountName)
-    }
     if (auth.needsVerification || page.url().includes('/email/verify')) {
       const verification = await verifyAccountFromMailpit(page, email)
       if (verification.status !== 'pass') throw new Error('Exhaustive tenant email verification failed')
@@ -2031,12 +2029,6 @@ async function main() {
       const auth = CREATE_ACCOUNT ? await createAccount(page) : await login(page)
       if (CREATE_ACCOUNT) createdAccounts[0] = auth
       const signupSucceeded = auth.httpStatus === 302 || auth.httpStatus === 409
-      if (CREATE_ACCOUNT && auth.plan === 'business' && (auth.checkoutUrl || new URL(auth.url).hostname === 'checkout.stripe.com')) {
-        const checkout = await completeStripeCheckout(page, auth.checkoutUrl)
-        auth.url = checkout.url
-        auth.checkoutCompleted = true
-        auth.needsVerification = page.url().includes('/email/verify')
-      }
       report.results.push(result(0, CREATE_ACCOUNT ? 'ephemeral account signup' : 'authenticated login', signupSucceeded ? 'pass' : 'fail', {
         httpStatus: auth.httpStatus,
         url: auth.url,
