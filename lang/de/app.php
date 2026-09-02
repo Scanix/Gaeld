@@ -886,6 +886,7 @@ return [
     'billing_subscriptions_description' => 'Verwenden Sie die Organisationsseite, um den Zugriff zu ändern. Starten Sie die Stripe-Diagnose nur für mit Stripe verknüpfte Abonnements.',
     'billing_customer_only' => 'Nur Stripe-Kunde',
     'grant_cloud_free' => 'Cloud Free gewähren',
+    'grant_cloud_free_requires_local' => 'Verwenden Sie die Organisationsseite, um ein mit Stripe verknüpftes Abonnement zu verwalten.',
     'grant_cloud_free_description' => 'Ein kostenloses gehostetes Abonnement zuweisen, ohne einen Stripe-Kunden oder eine Zahlung zu erstellen.',
     'grant' => 'Gewähren',
     'revoke_subscription' => 'Abonnement widerrufen',

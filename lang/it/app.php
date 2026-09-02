@@ -849,6 +849,7 @@ return [
     'billing_subscriptions_description' => 'Usi la scheda dell’organizzazione per modificare gli accessi. Avvii la diagnosi Stripe solo per gli abbonamenti collegati a Stripe.',
     'billing_customer_only' => 'Solo cliente Stripe',
     'grant_cloud_free' => 'Concedi Cloud Free',
+    'grant_cloud_free_requires_local' => 'Usi la scheda dell’organizzazione per gestire un abbonamento collegato a Stripe.',
     'grant_cloud_free_description' => 'Assegna un abbonamento ospitato gratuito senza creare un cliente o un pagamento Stripe.',
     'grant' => 'Concedere',
     'revoke_subscription' => 'Revoca abbonamento',

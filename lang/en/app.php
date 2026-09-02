@@ -939,6 +939,7 @@ return [
     'billing_subscriptions_description' => 'Use the organization record for access changes. Run Stripe diagnostics only for subscriptions linked to Stripe.',
     'billing_customer_only' => 'Customer only',
     'grant_cloud_free' => 'Grant Cloud Free',
+    'grant_cloud_free_requires_local' => 'Use the organization page to handle a Stripe-linked subscription.',
     'grant_cloud_free_description' => 'Assign a free hosted subscription without creating a Stripe customer or payment.',
     'grant' => 'Grant',
     'revoke_subscription' => 'Revoke Subscription',

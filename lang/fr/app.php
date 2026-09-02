@@ -882,6 +882,7 @@ return [
     'billing_subscriptions_description' => 'Utilisez la fiche de l’organisation pour modifier ses accès. Lancez un diagnostic Stripe uniquement pour les abonnements liés à Stripe.',
     'billing_customer_only' => 'Client Stripe seul',
     'grant_cloud_free' => 'Accorder Cloud Free',
+    'grant_cloud_free_requires_local' => 'Utilisez la fiche de l’organisation pour gérer un abonnement lié à Stripe.',
     'grant_cloud_free_description' => 'Attribuer un abonnement hébergé gratuit sans créer de client ni de paiement Stripe.',
     'grant' => 'Accorder',
     'revoke_subscription' => 'Révoquer l\'abonnement',
