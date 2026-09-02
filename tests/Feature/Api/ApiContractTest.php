@@ -27,6 +27,11 @@ class ApiContractTest extends SecurityTestCase
             ->assertJsonPath('status', 'ok');
     }
 
+    public function test_scribe_documentation_includes_the_public_api_root(): void
+    {
+        $this->assertContains('api.info', config('scribe.routes.0.include'));
+    }
+
     public function test_protected_api_requests_return_stable_authentication_errors(): void
     {
         $this->getJson('/api/v1/journal-entries')

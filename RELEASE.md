@@ -10,14 +10,20 @@ itself.
 Every production release records both immutable refs before deployment:
 
 ```text
-CE_VERSION=v3.6.2
-EE_VERSION=v2.8.0
+CE_VERSION=v3.6.5
+EE_VERSION=v2.8.7
+CE_SHA=5dc656fcc4f55c442cc568a59ba9aba4c3bb73a1
+EE_SHA=808166a598f61835dba16453107c91ac680f74ea
 ```
 
 `CE_VERSION` is the public release tag shared by GitHub and GitLab CE.
 `EE_VERSION` is selected and tagged in the private `gaeld-ee` repository; it
 must not be inferred from the CE version or copied into the public repository.
 The deployment pair and the tested commit SHAs belong in the release record.
+
+The current coordinated production release (2026-09-01) is CE `v3.6.5` at
+`5dc656fcc4f55c442cc568a59ba9aba4c3bb73a1` with EE `v2.8.7` at
+`808166a598f61835dba16453107c91ac680f74ea`. It is deployed as release `232`.
 
 ## Release Gate
 
@@ -134,7 +140,7 @@ and fixture afterward.
 2. Fetch both remotes and verify that the release tag does not already exist:
 
 ```bash
-CE_VERSION=v3.6.2
+CE_VERSION=v3.6.5
 git fetch --prune origin --tags
 git fetch --prune gitlab --tags
 git switch main
@@ -223,12 +229,14 @@ production branch resolves the CE tag before deployment.
 Create the database backup, then deploy the exact pair:
 
 ```bash
-DEPLOY_EE_REF="$EE_VERSION" vendor/bin/sail dep deploy production
+DEPLOY_EE_REF="$EE_VERSION" vendor/bin/dep deploy production
 ```
 
 `DEPLOY_EE_REF` is required conceptually even when a default exists: the
 Deployer recipe must clone the immutable EE tag or commit rather than a moving
 branch. Verify the deployment output names both the CE release and EE ref.
+The Deployer binary runs from the release checkout; it is not exposed as a Sail
+service command in this repository.
 
 After publishing, verify the application health endpoint, login, one existing
 accounting workflow, API token authentication, account-code journal posting,
@@ -250,9 +258,58 @@ Never move or delete a published tag. If production validation fails:
    CE deployment and its matching immutable `DEPLOY_EE_REF`:
 
 ```bash
-DEPLOY_EE_REF=<known-good-ee-tag> vendor/bin/sail dep rollback production
+DEPLOY_EE_REF=<known-good-ee-tag> vendor/bin/dep rollback production
 ```
 
 3. Re-run the health and accounting smoke tests, inspect logs, and record the
    failed CE SHA, EE SHA, migration state, and recovery result before starting
    another release.
+
+## Backup and Search Operations
+
+Production backups are created by system-level cron jobs rather than the
+Laravel scheduler:
+
+- MySQL dumps at 02:00 UTC.
+- PostgreSQL dumps and global roles at 02:15 UTC.
+- File archives at 02:30 UTC.
+- Off-site synchronization and retention at 04:00 UTC.
+
+The shared [scripts/backup-sync.sh](scripts/backup-sync.sh) script copies and
+verifies each category before pruning remote archives. Its default retention is
+7 days for daily archives and 56 days for weekly archives. The remote must be
+provided by the host environment; do not commit a provider path or credentials:
+
+```bash
+RCLONE_REMOTE=<configured-backup-remote> \
+  /data/backups/scripts/backup-sync.sh
+```
+
+Preview a cleanup before applying it:
+
+```bash
+DRY_RUN=true RCLONE_REMOTE=<configured-backup-remote> \
+  /data/backups/scripts/backup-sync.sh
+```
+
+The script refuses to prune a category without a recent local archive and
+uses a lock to prevent concurrent runs. For OneDrive, production enables
+`ONEDRIVE_HARD_DELETE=true` so expired backup objects do not accumulate in the
+recycle bin. Do not run `rclone cleanup` on the account root: it has a broader
+scope than the backup directories and can permanently remove unrelated files.
+
+Production search uses Scout with Meilisearch and queued synchronization. A
+deployment syncs index settings but does not import all existing records. If
+index counts do not match active database records, run the import from the
+active release:
+
+```bash
+cd /data/www/gaeld_app/current
+/usr/bin/php artisan gaeld:meilisearch:reindex
+```
+
+Use `--flush` only for a confirmed stale index. Without a model argument, it
+rebuilds the Meilisearch documents for `invoices`, `contacts`, and `expenses`;
+it does not delete SQL rows. Pass `invoices`, `contacts`, or `expenses` to
+limit the rebuild to one index. Verify the index document counts and an
+organization-filtered search after the command completes.

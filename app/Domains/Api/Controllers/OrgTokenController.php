@@ -108,7 +108,7 @@ class OrgTokenController extends Controller
      *
      * Permanently deletes an organisation-scoped API token.
      *
-     * @urlParam tokenUuid string required The token UUID. Example: <token-uuid>
+     * @urlParam token string required The token UUID. Example: <token-uuid>
      *
      * @response 204 scenario="Revoked"
      * @response 404 scenario="Not found" {"message":"Token not found."}

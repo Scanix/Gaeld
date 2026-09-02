@@ -15,6 +15,15 @@ use Illuminate\Http\JsonResponse;
 
 class BankImportApiController extends Controller
 {
+    /**
+     * Import CAMT.053 transactions
+     *
+     * Imports transactions from a CAMT.053 file into a bank account.
+     *
+     * @urlParam bankAccount string required The bank account UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     *
+     * @bodyParam camt_file file required CAMT.053 XML file to import.
+     */
     public function store(
         ImportCamtApiRequest $request,
         BankAccount $bankAccount,

@@ -44,7 +44,7 @@ class BankAccountApiController extends Controller
      *
      * Returns a single bank account by UUID.
      *
-     * @urlParam bank_account string required The bank account UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     * @urlParam bankAccount string required The bank account UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
      *
      * @response 200 scenario="Success" {"data":{"id":"9c8f1b2a-3d4e-5f67-8901-abcdef123456","name":"UBS Business","iban":"CH93 0076 2011 6238 5295 7","bank_name":"UBS","currency":"CHF","balance":12500.00,"is_active":true,"account_id":"abc123","created_at":"2025-01-01T00:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"}}
      * @response 404 scenario="Not found" {"message":"Bank account not found."}

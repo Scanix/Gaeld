@@ -29,6 +29,11 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class JournalEntryApiController extends Controller
 {
+    /**
+     * List journal entries
+     *
+     * Returns a paginated list of journal entries for the current organisation.
+     */
     public function index(JournalEntryIndexApiRequest $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', JournalEntry::class);
@@ -50,6 +55,13 @@ class JournalEntryApiController extends Controller
         return JournalEntryResource::collection($entries);
     }
 
+    /**
+     * Show journal entry
+     *
+     * Returns a single journal entry by UUID.
+     *
+     * @urlParam journalEntry string required The journal entry UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     */
     public function show(
         JournalEntry $journalEntry,
         CurrentOrganization $currentOrganization,
@@ -60,6 +72,11 @@ class JournalEntryApiController extends Controller
         return new JournalEntryResource($journalEntry->load('lines.account'));
     }
 
+    /**
+     * Create journal entry
+     *
+     * Creates a draft or posted journal entry in the current organisation.
+     */
     public function store(
         StoreJournalEntryApiRequest $request,
         CurrentOrganization $currentOrganization,
@@ -109,6 +126,13 @@ class JournalEntryApiController extends Controller
         }
     }
 
+    /**
+     * Post journal entry
+     *
+     * Posts a draft journal entry to the accounting ledger.
+     *
+     * @urlParam journalEntry string required The journal entry UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     */
     public function post(
         Request $request,
         JournalEntry $journalEntry,
@@ -143,6 +167,13 @@ class JournalEntryApiController extends Controller
         );
     }
 
+    /**
+     * Reverse journal entry
+     *
+     * Creates a reversing journal entry for a posted journal entry.
+     *
+     * @urlParam journalEntry string required The journal entry UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     */
     public function reverse(
         JournalEntryActionApiRequest $request,
         JournalEntry $journalEntry,
@@ -172,6 +203,13 @@ class JournalEntryApiController extends Controller
         );
     }
 
+    /**
+     * Delete journal entry
+     *
+     * Permanently deletes a draft journal entry.
+     *
+     * @urlParam journalEntry string required The journal entry UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     */
     public function destroy(
         Request $request,
         JournalEntry $journalEntry,

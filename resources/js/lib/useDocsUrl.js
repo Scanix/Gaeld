@@ -15,11 +15,17 @@ export function useDocsUrl() {
 
   const baseUrl = computed(() => (page.props?.docsBaseUrl ?? '').replace(/\/$/, ''))
   const routes = computed(() => page.props?.docsRoutes ?? {})
+  const locale = computed(() => page.props?.locale ?? 'en')
 
   function url(routeKey) {
     const path = routes.value?.[routeKey]
     if (!path) return baseUrl.value || ''
-    return baseUrl.value + path
+
+    const localePrefix = locale.value && locale.value !== 'en'
+      ? `/${locale.value}`
+      : ''
+
+    return baseUrl.value + localePrefix + path
   }
 
   return { url, baseUrl, routes }

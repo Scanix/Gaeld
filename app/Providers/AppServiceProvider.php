@@ -63,6 +63,8 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Knuckles\Camel\Extraction\ExtractedEndpointData;
+use Knuckles\Scribe\Scribe;
 use Laravel\Horizon\Events\LongWaitDetected;
 use Laravel\Sanctum\Sanctum;
 
@@ -98,6 +100,23 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::preventLazyLoading(! app()->isProduction());
+
+        if (class_exists(Scribe::class)) {
+            Scribe::normalizeEndpointUrlUsing(
+                static fn (string $uri, mixed ...$context): string => $uri,
+            );
+            Scribe::afterExtracting(
+                static function (ExtractedEndpointData $endpointData): void {
+                    if (! str_starts_with($endpointData->uri, 'api/v1/customers')) {
+                        return;
+                    }
+
+                    $endpointData->metadata->groupName = 'Customers';
+                    $endpointData->metadata->title = str_replace('contact', 'customer', $endpointData->metadata->title ?? '');
+                    $endpointData->metadata->description = str_replace('contact', 'customer', $endpointData->metadata->description ?? '');
+                },
+            );
+        }
 
         // Authenticated users who visit /login or /register are sent to / (home)
         // instead of directly to /dashboard, matching test expectations.
