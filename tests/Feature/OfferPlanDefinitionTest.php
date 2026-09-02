@@ -23,6 +23,15 @@ class OfferPlanDefinitionTest extends TestCase
         return $app;
     }
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (! class_exists(Plan::class)) {
+            $this->markTestSkipped('Enterprise Edition is not enabled.');
+        }
+    }
+
     protected function tearDown(): void
     {
         parent::tearDown();

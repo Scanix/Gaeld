@@ -1,6 +1,6 @@
 # Installation Guide
 
-The latest public Community Edition release is `v3.6.5`. The coordinated SaaS
+The latest public Community Edition release is `v3.6.6`. The coordinated SaaS
 CE/EE production pair and its deployment procedure are documented in
 [RELEASE.md](RELEASE.md).
 
@@ -140,7 +140,7 @@ Key environment variables:
 | `MEILISEARCH_HOST` | Meilisearch URL when `SCOUT_DRIVER=meilisearch` | `http://localhost:7700` |
 | `MEILISEARCH_KEY` | Meilisearch API key when `SCOUT_DRIVER=meilisearch` | _(unset)_ |
 | `DOCS_BASE_URL` | Documentation site URL | `http://localhost:3000` |
-| `PLUGINS_ENABLED` | Enable plugin system | `true` |
+| `PLUGINS_ENABLED` | Enable optional plugin system | `false` |
 | `TRUSTED_PROXIES` | Trusted reverse proxies (see below) | _(unset)_ |
 
 The public repository is the Community Edition. SaaS billing and Enterprise

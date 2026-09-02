@@ -34,6 +34,10 @@ class MemberQuotaTest extends TestCase
     {
         parent::setUp();
 
+        if (! class_exists(Plan::class)) {
+            $this->markTestSkipped('Enterprise Edition is not enabled.');
+        }
+
         config()->set('features.saas', true);
     }
 
