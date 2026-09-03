@@ -1,6 +1,6 @@
 # Installation Guide
 
-The latest public Community Edition release is `v3.7.0`. The coordinated SaaS
+The latest public Community Edition release is `v3.8.0`. The coordinated SaaS
 CE/EE production pair and its deployment procedure are documented in
 [RELEASE.md](RELEASE.md).
 
@@ -143,8 +143,11 @@ Key environment variables:
 | `PLUGINS_ENABLED` | Enable optional plugin system | `false` |
 | `TRUSTED_PROXIES` | Trusted reverse proxies (see below) | _(unset)_ |
 
-The public repository is the Community Edition. SaaS billing and Enterprise
-features require the private EE plugin and are not installed by this guide.
+The public repository is the complete Community Edition under
+AGPL-3.0-or-later. SaaS billing, hosted quotas, subscriptions, and Enterprise
+features belong to the private EE distribution and are not installed or
+required by this guide. A self-hosted CE installation does not require a SaaS
+subscription or private registry credentials.
 The Community Edition REST API is enabled by default and can be disabled with
 `FEATURE_API_ACCESS=false` when an installation does not need external access.
 

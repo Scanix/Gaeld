@@ -8,6 +8,14 @@
 
 **Input**: User description: "Define and implement a clean separation between the Community Edition and the commercial edition across repositories, packaging, runtime behavior, documentation, and release operations."
 
+## Clarifications
+
+### Session 2026-09-03
+
+- Q: Quel mécanisme devons-nous retenir pour distribuer l’édition commerciale EE sans l’inclure dans l’archive publique CE ? → A: Registry privé Composer/npm.
+- Q: Quelles fonctionnalités doivent rester dans la CE publique mais être configurables, et lesquelles doivent être exclusivement privées dans l’EE ? → A: Socle CE, services commerciaux EE.
+- Q: Pour une installation CE existante qui contient déjà des tables ou une configuration EE/SaaS, quelle politique de séparation devons-nous supporter dans la première version ? → A: Migration supportée.
+
 ## User Scenarios & Testing
 
 ### User Story 1 - Install the Community Edition Independently (Priority: P1)
@@ -144,6 +152,9 @@ approved boundary matrix in all supported locales where applicable.
 - **FR-003**: Commercial-only source MUST remain outside the public CE artifact,
   including SaaS billing, Stripe integration, hosted plan enforcement, SaaS
   administration, and private deployment configuration.
+- **FR-003a**: The public CE MUST retain the complete accounting foundation,
+  including accounting, invoicing, expenses, VAT, reports, import/export, and
+  the existing CE API contract; commercial hosted services MUST remain in EE.
 - **FR-004**: Shared CE/EE contracts MUST be explicit, versioned, and testable;
   CE MUST provide safe defaults when EE is absent.
 - **FR-005**: The runtime MUST fail safely when EE is absent or incompatible,
@@ -165,6 +176,9 @@ approved boundary matrix in all supported locales where applicable.
 - **FR-012**: The implementation MUST define a compatibility and migration path
   for existing CE installations, existing hosted organizations, and existing
   commercial subscriptions without involuntary plan or data changes.
+- **FR-012a**: Existing CE installations that contain EE/SaaS tables or
+  configuration MUST have a documented, non-destructive migration path that
+  preserves CE data and makes the resulting ownership and runtime mode explicit.
 - **FR-013**: The repository workflow MUST identify generated, ignored, and local
   work-in-progress files so they cannot silently influence release artifacts.
 - **FR-014**: The separation MUST preserve the AGPL obligations and public
@@ -222,11 +236,3 @@ approved boundary matrix in all supported locales where applicable.
   destructively as part of the boundary definition alone.
 - The first implementation should prefer explicit contracts and packaging
   checks over a broad source-tree rewrite.
-- **[NEEDS CLARIFICATION: Should commercial features be distributed as a private
-  EE plugin archive, a private package registry artifact, or another mechanism?]
-- **[NEEDS CLARIFICATION: Which capabilities, if any, should remain present in
-  the public CE source but disabled in hosted mode rather than being exclusively
-  commercial?]
-- **[NEEDS CLARIFICATION: Should existing CE installations with previously
-  installed EE/SaaS tables receive a supported separation migration, or is a
-  clean CE reinstall/upgrade path sufficient for the first release?]

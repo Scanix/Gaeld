@@ -3,11 +3,11 @@
 namespace App\Domains\Migration\Controllers;
 
 use App\Domains\Migration\Enums\DataType;
-use App\Domains\Migration\Enums\Platform;
 use App\Domains\Migration\Jobs\ProcessMigrationImport;
 use App\Domains\Migration\Models\MigrationSession;
 use App\Domains\Migration\Parsers\GenericCsvParser;
 use App\Domains\Migration\Requests\ExecuteMigrationRequest;
+use App\Domains\Migration\Requests\FetchMigrationDataRequest;
 use App\Domains\Migration\Requests\StartMigrationRequest;
 use App\Domains\Migration\Requests\UploadMigrationFileRequest;
 use App\Domains\Migration\Services\MigrationOrchestrator;
@@ -54,7 +54,7 @@ class MigrationController extends Controller
     {
         $this->authorize('create', MigrationSession::class);
 
-        $platform = Platform::from($request->validated('platform'));
+        $platform = $request->validated('platform');
         $session = $this->orchestrator->startSession(
             $this->currentOrganization->get(),
             $platform,
@@ -73,11 +73,17 @@ class MigrationController extends Controller
         $this->authorize('view', $session);
 
         $parser = $this->registry->getParser($session->platform);
+        $platform = $this->registry->platformMetadata($session->platform);
 
         return Inertia::render('Migration/Show', [
             'session' => $session,
-            'supportedDataTypes' => $parser?->supportedDataTypes() ?? [],
-            'acceptedExtensions' => $parser?->acceptedExtensions() ?? [],
+            'platform' => $platform,
+            'supportedDataTypes' => $platform !== null
+                ? $platform['data_types']
+                : ($parser?->supportedDataTypes() ?? []),
+            'acceptedExtensions' => $platform !== null
+                ? $platform['extensions']
+                : ($parser?->acceptedExtensions() ?? []),
         ]);
     }
 
@@ -120,6 +126,46 @@ class MigrationController extends Controller
             $parseResult->rows,
             $dataType,
             $this->currentOrganization->get(),
+            platform: $session->platform,
+        );
+
+        return redirect()->route('migration.show', $session)
+            ->with('preview', [
+                'data_type' => $dataType->value,
+                'preview' => $preview,
+            ]);
+    }
+
+    /**
+     * Fetch and preview data from a plugin-provided external connector.
+     */
+    public function fetch(FetchMigrationDataRequest $request, MigrationSession $session): RedirectResponse
+    {
+        $this->authorize('update', $session);
+
+        $dataType = DataType::from($request->validated('data_type'));
+        $parseResult = $this->orchestrator->fetchFromConnector(
+            $session,
+            $dataType,
+            $this->currentOrganization->get(),
+        );
+
+        if (! $parseResult->isSuccessful()) {
+            $errorMessage = ! empty($parseResult->errors)
+                ? implode(', ', $parseResult->errors)
+                : __('migration.connector_fetch_failed');
+
+            return $this->backWithError($errorMessage);
+        }
+
+        $cacheKey = "migration:{$session->id}:{$dataType->value}";
+        cache()->put($cacheKey, $parseResult->rows, now()->addHours(2));
+
+        $preview = $this->orchestrator->preview(
+            $parseResult->rows,
+            $dataType,
+            $this->currentOrganization->get(),
+            platform: $session->platform,
         );
 
         return redirect()->route('migration.show', $session)

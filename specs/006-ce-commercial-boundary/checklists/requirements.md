@@ -15,7 +15,7 @@
 
 ## Requirement Completeness
 
-- [ ] No unresolved clarification markers remain
+- [x] No unresolved clarification markers remain
 - [x] Requirements are testable and unambiguous where decisions are known
 - [x] Success criteria are measurable
 - [x] Success criteria cover source, runtime, packaging, release, and documentation
@@ -28,9 +28,9 @@
 
 - [x] Functional requirements have corresponding acceptance intent
 - [x] User stories cover the primary boundary journeys
-- [ ] Distribution mechanism is selected
-- [ ] Public-source versus commercial-source ownership exceptions are selected
-- [ ] Existing-installation migration posture is selected
+- [x] Distribution mechanism is selected
+- [x] Public-source versus commercial-source ownership exceptions are selected
+- [x] Existing-installation migration posture is selected
 
 ## Notes
 

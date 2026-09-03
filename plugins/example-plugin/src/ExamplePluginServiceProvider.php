@@ -13,6 +13,8 @@ class ExamplePluginServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->loadTranslationsFrom(__DIR__.'/../lang');
+
         // Load plugin routes
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 

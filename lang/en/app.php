@@ -2028,6 +2028,8 @@ return [
     'migration.upload_files' => 'Upload Files',
     'migration.upload_files_desc' => 'Upload CSV or JSON files containing your data.',
     'migration.upload_file' => 'Upload file',
+    'migration.fetch_from_source' => 'Fetch from application',
+    'migration.fetching' => 'Fetching…',
     'migration.select_data_type' => 'Data type',
     'migration.select_platform' => 'Source platform',
     'migration.select_platform_desc' => 'Select the platform you are migrating from.',

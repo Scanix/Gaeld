@@ -2,11 +2,17 @@
 
 namespace Tests\Feature\Migration;
 
+use App\Domains\Migration\Contracts\MigrationConnectorInterface;
+use App\Domains\Migration\DTOs\ContactImportRow;
+use App\Domains\Migration\DTOs\ParseResult;
+use App\Domains\Migration\Enums\DataType;
 use App\Domains\Migration\Enums\ImportStatus;
 use App\Domains\Migration\Enums\Platform;
 use App\Domains\Migration\Models\MigrationSession;
+use App\Domains\Migration\Services\MigrationRegistry;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -175,6 +181,36 @@ class MigrationControllerTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('file');
+    }
+
+    public function test_fetch_imports_normalized_connector_rows_into_preview_cache(): void
+    {
+        $connector = $this->createMock(MigrationConnectorInterface::class);
+        $connector->method('key')->willReturn('test-connector');
+        $connector->method('platform')->willReturn('test_accounting_app');
+        $connector->method('supportedDataTypes')->willReturn([DataType::Contacts]);
+        $connector->method('fetch')->willReturn(new ParseResult(new Collection([
+            new ContactImportRow(2, 'customer', 'Connector Contact'),
+        ])));
+        app(MigrationRegistry::class)->registerPluginConnector('test-connector', $connector);
+
+        $session = MigrationSession::create([
+            'organization_id' => $this->organization->id,
+            'platform' => 'test_accounting_app',
+            'status' => ImportStatus::Pending,
+            'data_types_status' => [],
+            'imported_counts' => [],
+            'errors' => [],
+            'created_by' => $this->user->id,
+        ]);
+
+        $response = $this->actAsOrg()->post("/migration/{$session->id}/fetch", [
+            'data_type' => 'contacts',
+        ]);
+
+        $response->assertRedirect("/migration/{$session->id}");
+        $response->assertSessionHas('preview.data_type', 'contacts');
+        $this->assertTrue(cache()->has("migration:{$session->id}:contacts"));
     }
 
     // ────────────────────────────────────────────────

@@ -5,6 +5,66 @@ JSON plus Markdown evidence. It refuses every URL except
 `https://staging.home.nectoria.com` and never targets the production branch or
 production infrastructure.
 
+## CE Artifact Boundary
+
+Build the public CE archive from a clean checkout and audit it before
+publication. The audit accepts a directory or a `.tar`, `.tar.gz`, `.tgz`, or
+`.zip` archive and rejects private EE paths, populated credentials, commercial
+source maps, and sensitive local files:
+
+```sh
+git archive --format=tar.gz --output=/tmp/gaeld-ce.tar.gz HEAD
+./scripts/qa/check-ce-artifact.sh /tmp/gaeld-ce.tar.gz
+```
+
+The current worktree may contain the private EE checkout for local SaaS tests;
+run the audit against the clean archive rather than using it as a release
+artifact.
+
+When the API, web, and docs repositories are checked out beside one another,
+verify that their public boundary projections match the API-owned matrix:
+
+```sh
+./scripts/qa/check-boundary-projections.sh
+```
+
+The check uses Node's standard JSON parser and does not require the private EE
+repository or registry credentials.
+
+For the installation-level CE smoke run, use an isolated database and opt in
+explicitly because the command runs `migrate:fresh`:
+
+```sh
+CE_SMOKE_ALLOW_DB_RESET=1 ./scripts/qa/ce-standalone-smoke.sh
+```
+
+The smoke run disables plugin discovery, caches config and routes, builds the
+CE assets, and executes the focused standalone/API/fail-closed tests. It clears
+the temporary config and route caches on exit.
+
+## Mixed Installation Migration
+
+Before migrating an existing installation, create and verify a database and
+file backup, run the command in dry-run mode, and review the redacted summary.
+The `--force` flag is an operator confirmation; it does not authorize deleting
+EE tables or changing hosted subscriptions:
+
+```sh
+vendor/bin/sail artisan edition:migrate --dry-run
+vendor/bin/sail artisan edition:migrate --mode=ce --force
+```
+
+Rehearse the migration against the test database with both CE-only and EE
+rollback coverage:
+
+```sh
+EDITION_MIGRATION_ALLOW_DB_RESET=1 ./scripts/qa/mixed-installation-migration.sh
+```
+
+The rehearsal is isolated by the PHPUnit test database and asserts that CE
+records, EE tables, hosted organizations, subscriptions, prices, Stripe
+identifiers, and billing history remain unchanged.
+
 ## Prerequisites
 
 Install the JavaScript dependencies with Sail:

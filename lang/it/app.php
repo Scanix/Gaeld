@@ -1898,6 +1898,8 @@ return [
     'migration.upload_files' => 'Carica file',
     'migration.upload_files_desc' => 'Carica file CSV o JSON contenenti i tuoi dati.',
     'migration.upload_file' => 'Carica file',
+    'migration.fetch_from_source' => 'Recupera dall’applicazione',
+    'migration.fetching' => 'Recupero…',
     'migration.select_data_type' => 'Tipo di dati',
     'migration.select_platform' => 'Piattaforma di origine',
     'migration.select_platform_desc' => 'Seleziona la piattaforma da cui stai migrando.',
