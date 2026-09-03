@@ -5,6 +5,15 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.1] — 2026-09-03
+
+### Changed
+- **Customer-facing messaging:** removed the Early Beta banner from the
+  authenticated application and replaced the public beta disclaimer with
+  transparent product-limits copy.
+- **Public release readiness:** aligned the CE release documentation with the
+  coordinated production candidate and its immutable EE `v2.9.20` pair.
+
 ## [3.8.0] — 2026-09-03
 
 ### Added

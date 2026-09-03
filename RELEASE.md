@@ -26,22 +26,28 @@ The current coordinated production release (2026-09-03) is CE `v3.7.5` at
 
 ## Release Candidate
 
-The next coordinated candidate contains the CE plugin extension API and the
-private EE packaging and boundary checks:
+The next coordinated candidate removes the customer-facing Early Beta
+messaging from the hosted application and public website while preserving
+operational subscription, payment, support, and system banners:
 
 ```text
-CE_VERSION=v3.8.0
+CE_VERSION=v3.8.1
 EE_VERSION=v2.9.20
-CE_SHA=8bbb618
+CE_SHA=5aca96f
 EE_SHA=3cdfd8d
 EE_CONTENT_DIGEST=e49cfb95ca8bbd9c6e60f5e5c5b7459897b60fecdfd5ec3f30ee1fca1d9fd478
+WEB_VERSION=v2.14.2
+WEB_SHA=bf63fbf
+DOCS_VERSION=v2.12.0
 ```
 
 The candidate must be tested from a clean CE archive and a tagged private EE
-artifact before staging deployment. The refs above are the exact implementation
-commits and the digest that staging must consume.
+artifact before staging deployment. `CE_SHA` and `WEB_SHA` identify the
+implementation commits; the final release tags are created only after the
+staging acceptance below passes. The EE ref and digest are the immutable
+artifact that staging and production must consume.
 
-## Validated Staging Candidate
+## Previous Validated Staging Candidate
 
 The offer-alignment candidate was deployed and accepted on staging on
 2026-09-03:
