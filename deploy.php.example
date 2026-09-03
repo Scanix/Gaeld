@@ -18,6 +18,11 @@ require 'recipe/laravel.php';
 set('application', 'gaeld');
 set('repository', getenv('DEPLOY_REPO') ?: 'git@github.com:Scanix/Gaeld.git');
 set('keep_releases', 5);
+set('deploy_ee_version', getenv('DEPLOY_EE_VERSION') ?: '');
+set('deploy_ee_registry_url', getenv('DEPLOY_EE_COMPOSER_REGISTRY_URL') ?: '');
+set('deploy_ee_registry_domain', getenv('DEPLOY_EE_COMPOSER_REGISTRY_DOMAIN') ?: '');
+set('deploy_ee_registry_auth_file', getenv('DEPLOY_EE_COMPOSER_AUTH_FILE') ?: '');
+set('deploy_ee_content_digest', getenv('DEPLOY_EE_CONTENT_DIGEST') ?: '');
 
 // --- Shared files/dirs (persisted across releases) ---
 add('shared_files', ['.env']);
@@ -51,6 +56,62 @@ task('assets:upload', function () {
     upload(__DIR__.'/public/build/', '{{release_path}}/public/build/');
 })->desc('Upload built assets to release path');
 
+task('deploy:ee:artifact', function () {
+    $eeTag = (string) get('deploy_ee_version');
+    if ($eeTag === '') {
+        writeln('CE-only deployment: no EE artifact to install.');
+
+        return;
+    }
+
+    $registryUrl = (string) get('deploy_ee_registry_url');
+    $registryDomain = (string) get('deploy_ee_registry_domain');
+    $authFile = (string) get('deploy_ee_registry_auth_file');
+    $expectedDigest = (string) get('deploy_ee_content_digest');
+    if ($registryUrl === '' || $registryDomain === '' || $authFile === '' || $expectedDigest === '' || ! is_file($authFile)) {
+        throw new \RuntimeException('DEPLOY_EE_COMPOSER_REGISTRY_URL, DEPLOY_EE_COMPOSER_REGISTRY_DOMAIN, DEPLOY_EE_COMPOSER_AUTH_FILE, and DEPLOY_EE_CONTENT_DIGEST are required for EE deployment.');
+    }
+
+    $eeVersion = ltrim($eeTag, 'v');
+    if (! preg_match('/^\d+\.\d+\.\d+$/', $eeVersion)) {
+        throw new \RuntimeException('DEPLOY_EE_VERSION must be a semantic-version tag such as v2.9.18.');
+    }
+
+    $composerHome = '{{release_path}}/.deploy/composer';
+    $authDestination = $composerHome.'/auth.json';
+    $pluginDestination = '{{release_path}}/plugins/gaeld-ee';
+    run('mkdir -p {{release_path}}/.deploy/composer {{release_path}}/plugins');
+    upload($authFile, $authDestination);
+    run('chmod 600 '.escapeshellarg($authDestination));
+    run('COMPOSER_HOME='.escapeshellarg($composerHome).' {{bin/composer}} config --global gitlab-domains '.escapeshellarg($registryDomain));
+    run(
+        'COMPOSER_HOME='.escapeshellarg($composerHome)
+        .' {{bin/composer}} create-project --no-install --no-scripts --no-dev --prefer-dist --no-interaction'
+        .' --repository='.escapeshellarg($registryUrl)
+        .' '.escapeshellarg('gaeld/ee-plugin:'.$eeVersion)
+        .' '.escapeshellarg($pluginDestination),
+    );
+    run('test -f '.escapeshellarg($pluginDestination.'/plugin.json'));
+    run(
+        'actual_digest=$({{bin/php}} '.escapeshellarg($pluginDestination.'/scripts/content-digest.php')
+        .' '.escapeshellarg($pluginDestination).'); test "$actual_digest" = '.escapeshellarg($expectedDigest),
+    );
+})->desc('Install and verify the immutable EE package from GitLab Composer');
+
+task('deploy:ee:vendors', function () {
+    if ((string) get('deploy_ee_version') === '') {
+        return;
+    }
+
+    $composerHome = '{{release_path}}/.deploy/composer';
+    run('COMPOSER_HOME='.escapeshellarg($composerHome).' {{bin/composer}} install --working-dir='.escapeshellarg('{{release_path}}/plugins/gaeld-ee').' --no-dev --prefer-dist --no-interaction --optimize-autoloader');
+    run('rm -f '.escapeshellarg($composerHome.'/auth.json'));
+})->desc('Install the immutable EE artifact dependencies');
+
+task('deploy:ee:cleanup', function () {
+    run('rm -f {{release_path}}/.deploy/composer/auth.json');
+})->desc('Remove temporary private registry credentials');
+
 task('deploy:fpm:restart', function () {
     // Adjust the PHP-FPM service name to match your server (e.g. php8.3-fpm).
     run('sudo systemctl reload php8.4-fpm');
@@ -80,10 +141,24 @@ task('deploy:meilisearch:sync', function () {
     run('cd {{release_path}} && {{bin/php}} artisan scout:sync-index-settings 2>/dev/null || true');
 })->desc('Sync MeiliSearch index settings (skipped if driver is not meilisearch)');
 
+task('deploy:verify:edition', function () {
+    $eeVersion = (string) get('deploy_ee_version');
+    if ($eeVersion === '') {
+        writeln('CE-only deployment: no EE compatibility gate required.');
+
+        return;
+    }
+
+    run('cd {{release_path}} && {{bin/php}} artisan edition:verify --ee-version='.escapeshellarg($eeVersion));
+})->desc('Verify the CE/EE compatibility pair before activation');
+
 // --- Deployment flow ---
 task('deploy', [
     'deploy:prepare',
+    'deploy:ee:artifact',
+    'deploy:ee:vendors',
     'deploy:vendors',
+    'deploy:verify:edition',
     'assets:build',
     'assets:upload',
     'deploy:storage:link',
@@ -102,3 +177,4 @@ task('deploy', [
 
 // --- Hooks ---
 after('deploy:failed', 'deploy:unlock');
+after('deploy:failed', 'deploy:ee:cleanup');

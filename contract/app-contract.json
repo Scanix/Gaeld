@@ -4,7 +4,10 @@
     "description": "Application contract describing the real runtime behavior of the Gäld SaaS accounting application.",
     "framework": "Laravel 13 + Inertia.js + Vue 3",
     "database": "PostgreSQL 16",
-    "cache": "Redis"
+    "cache": "Redis",
+    "edition_boundary_contract": "edition-boundary",
+    "edition_boundary_version": "1.0.0",
+    "edition_boundary_owner": "api"
   },
 
   "auth": {
@@ -309,8 +312,9 @@
       "migration": [
         {"method": "GET", "path": "/migration", "controller": "MigrationController@index", "page": "Migration/Index", "name": "migration.index", "props": ["sessions", "platforms"]},
         {"method": "POST", "path": "/migration", "controller": "MigrationController@store", "name": "migration.store"},
-        {"method": "GET", "path": "/migration/{session}", "controller": "MigrationController@show", "page": "Migration/Show", "name": "migration.show", "props": ["session", "supportedDataTypes", "acceptedExtensions"]},
+        {"method": "GET", "path": "/migration/{session}", "controller": "MigrationController@show", "page": "Migration/Show", "name": "migration.show", "props": ["session", "platform", "supportedDataTypes", "acceptedExtensions"]},
         {"method": "POST", "path": "/migration/{session}/upload", "controller": "MigrationController@upload", "name": "migration.upload"},
+        {"method": "POST", "path": "/migration/{session}/fetch", "controller": "MigrationController@fetch", "name": "migration.fetch"},
         {"method": "POST", "path": "/migration/{session}/execute", "controller": "MigrationController@execute", "name": "migration.execute"},
         {"method": "POST", "path": "/migration/{session}/rollback", "controller": "MigrationController@rollback", "name": "migration.rollback"},
         {"method": "DELETE", "path": "/migration/{session}", "controller": "MigrationController@destroy", "name": "migration.destroy"}

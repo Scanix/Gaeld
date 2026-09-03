@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Domains\Migration\Contracts\AccountMapperInterface;
+use App\Domains\Migration\Contracts\MigrationConnectorInterface;
+use App\Domains\Migration\Contracts\PlatformParserInterface;
+use App\Domains\Migration\Contracts\PluginDataTypeImporterInterface;
+use App\Domains\Migration\Services\PluginMigrationRegistrar;
+use App\Support\Contracts\EditionCompatibility;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -59,7 +65,13 @@ class PluginServiceProvider extends ServiceProvider
 
         $manifest = json_decode(File::get($manifestPath), true);
 
-        if (! $manifest || empty($manifest['provider']) || empty($manifest['slug'])) {
+        if (
+            ! is_array($manifest)
+            || ! is_string($manifest['provider'] ?? null)
+            || ! is_string($manifest['slug'] ?? null)
+            || preg_match('/\A[a-z0-9][a-z0-9-]{0,63}\z/', $manifest['slug']) !== 1
+            || ! str_starts_with($manifest['provider'], 'Plugins\\')
+        ) {
             Log::warning("Plugin manifest invalid or missing provider/slug: {$pluginDir}");
 
             return null;
@@ -67,6 +79,44 @@ class PluginServiceProvider extends ServiceProvider
 
         if (isset($manifest['enabled']) && ! $manifest['enabled']) {
             return null;
+        }
+
+        $compatibility = $manifest['compatibility'] ?? null;
+        $requiresCompatibility = $manifest['slug'] === 'gaeld-ee' || $compatibility !== null;
+        if ($requiresCompatibility && ! is_array($compatibility)) {
+            Log::warning("Plugin manifest missing compatibility metadata: {$pluginDir}");
+
+            return null;
+        }
+
+        if (is_array($compatibility)) {
+            $reason = $this->app->make(EditionCompatibility::class)->incompatibilityReason($compatibility);
+            if ($reason !== null) {
+                Log::warning("Plugin manifest rejected ({$reason}): {$pluginDir}");
+
+                return null;
+            }
+        }
+
+        if (isset($manifest['extensions'])) {
+            $extensions = $manifest['extensions'];
+            $migrationExtensions = is_array($extensions)
+                ? ($extensions['migration'] ?? [])
+                : null;
+
+            if (! is_array($extensions) || ! is_array($migrationExtensions)) {
+                Log::warning("Plugin extensions metadata is invalid: {$pluginDir}");
+
+                return null;
+            }
+
+            foreach (['parsers', 'connectors', 'importers', 'mappers'] as $extensionType) {
+                if (isset($migrationExtensions[$extensionType]) && ! is_array($migrationExtensions[$extensionType])) {
+                    Log::warning("Plugin migration extension metadata is invalid: {$pluginDir}");
+
+                    return null;
+                }
+            }
         }
 
         return $manifest;
@@ -157,8 +207,113 @@ class PluginServiceProvider extends ServiceProvider
 
         if (class_exists($providerClass)) {
             $this->app->register($providerClass);
+            $this->registerMigrationExtensions($manifest);
         } else {
             Log::warning("Plugin provider class not found: {$providerClass}");
         }
+    }
+
+    /**
+     * Register typed migration extensions declared by the plugin manifest.
+     *
+     * @param  array<string, mixed>  $manifest
+     */
+    private function registerMigrationExtensions(array $manifest): void
+    {
+        $extensions = $manifest['extensions']['migration'] ?? [];
+
+        if ($extensions === []) {
+            return;
+        }
+
+        if (! is_array($extensions)) {
+            Log::warning("Plugin migration extensions are invalid: {$manifest['slug']}");
+
+            return;
+        }
+
+        $registrar = $this->app->make(PluginMigrationRegistrar::class);
+        $namespaceRoot = $this->pluginNamespaceRoot($manifest['provider'] ?? null);
+
+        if ($namespaceRoot === null) {
+            Log::warning("Plugin migration extension provider namespace is invalid: {$manifest['slug']}");
+
+            return;
+        }
+
+        foreach (['parsers', 'connectors', 'importers', 'mappers'] as $extensionType) {
+            $classes = $extensions[$extensionType] ?? [];
+
+            if (! is_array($classes)) {
+                Log::warning("Plugin migration extension list is invalid: {$manifest['slug']}");
+
+                continue;
+            }
+
+            foreach ($classes as $class) {
+                if (! is_string($class) || ! str_starts_with($class, $namespaceRoot)) {
+                    Log::warning("Plugin migration extension class is invalid: {$manifest['slug']}");
+
+                    continue;
+                }
+
+                try {
+                    $this->registerMigrationExtension(
+                        $manifest['slug'],
+                        $extensionType,
+                        $class,
+                        $registrar,
+                    );
+                } catch (\Throwable) {
+                    Log::warning("Plugin migration extension could not be registered: {$manifest['slug']}");
+                }
+            }
+        }
+    }
+
+    private function pluginNamespaceRoot(mixed $providerClass): ?string
+    {
+        if (! is_string($providerClass)) {
+            return null;
+        }
+
+        $segments = explode('\\', trim($providerClass, '\\'));
+
+        if (count($segments) < 3 || $segments[0] !== 'Plugins') {
+            return null;
+        }
+
+        return implode('\\', array_slice($segments, 0, 2)).'\\';
+    }
+
+    private function registerMigrationExtension(
+        string $pluginSlug,
+        string $extensionType,
+        string $class,
+        PluginMigrationRegistrar $registrar,
+    ): void {
+        if (! class_exists($class)) {
+            Log::warning("Plugin migration extension class not found: {$pluginSlug}");
+
+            return;
+        }
+
+        $extension = $this->app->make($class);
+
+        match ($extensionType) {
+            'parsers' => $extension instanceof PlatformParserInterface
+                ? $registrar->registerParser($pluginSlug, $extension)
+                : Log::warning("Plugin migration parser has an invalid contract: {$pluginSlug}"),
+            'connectors' => $extension instanceof MigrationConnectorInterface
+                ? $registrar->registerConnector($pluginSlug, $extension)
+                : Log::warning("Plugin migration connector has an invalid contract: {$pluginSlug}"),
+            'importers' => $extension instanceof PluginDataTypeImporterInterface
+                ? $registrar->registerImporter($pluginSlug, $extension)
+                : Log::warning("Plugin migration importer has an invalid contract: {$pluginSlug}"),
+            'mappers' => $extension instanceof AccountMapperInterface
+                ? $registrar->registerMapper($pluginSlug, $extension)
+                : Log::warning("Plugin migration mapper has an invalid contract: {$pluginSlug}"),
+            default => null,
+        };
     }
 }

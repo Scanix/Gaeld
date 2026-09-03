@@ -21,9 +21,66 @@ function vueFiles(directory) {
   })
 }
 
+function readEditionCompatibility(root) {
+  try {
+    const contract = JSON.parse(readFileSync(join(root, 'contract/edition-boundary.json'), 'utf8'))
+    return contract?.compatibility ?? null
+  } catch {
+    return null
+  }
+}
+
+function versionParts(version) {
+  if (typeof version !== 'string' || !/^\d+\.\d+\.\d+$/.test(version)) {
+    return null
+  }
+
+  return version.split('.').map(Number)
+}
+
+function compareVersions(left, right) {
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) {
+      return left[index] - right[index]
+    }
+  }
+
+  return 0
+}
+
+function hasCompatibleEditionMetadata(root, manifest) {
+  const compatibility = manifest.compatibility
+  if (manifest.slug !== 'gaeld-ee' && compatibility === undefined) {
+    return true
+  }
+
+  const contract = readEditionCompatibility(root)
+  const versionRange = contract?.supported_ee_range
+  const range = typeof versionRange === 'string'
+    ? versionRange.match(/^>=(\d+\.\d+\.\d+) <(\d+\.\d+\.\d+)$/)
+    : null
+  const pluginVersion = versionParts(compatibility?.ee_version)
+  const minimumVersion = range ? versionParts(range[1]) : null
+  const maximumVersion = range ? versionParts(range[2]) : null
+
+  return Boolean(
+    contract &&
+    typeof contract.contract_version === 'string' &&
+    compatibility &&
+    typeof compatibility === 'object' &&
+    !Array.isArray(compatibility) &&
+    compatibility.contract_version === contract.contract_version &&
+    pluginVersion &&
+    minimumVersion &&
+    maximumVersion &&
+    compareVersions(pluginVersion, minimumVersion) >= 0 &&
+    compareVersions(pluginVersion, maximumVersion) < 0
+  )
+}
+
 function discoverPluginFrontends(root, environment) {
   const pluginsEnabled = environment.VITE_PLUGINS_ENABLED ?? environment.PLUGINS_ENABLED
-  if (pluginsEnabled === 'false') {
+  if (pluginsEnabled !== 'true') {
     return []
   }
 
@@ -41,19 +98,51 @@ function discoverPluginFrontends(root, environment) {
         return []
       }
 
-      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+      let manifest
+      try {
+        manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+      } catch {
+        return []
+      }
+
+      if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
+        return []
+      }
+
+      if (
+        typeof manifest.slug !== 'string' ||
+        !/^[a-z0-9][a-z0-9-]{0,63}$/.test(manifest.slug) ||
+        typeof manifest.provider !== 'string' ||
+        !manifest.provider.startsWith('Plugins\\')
+      ) {
+        return []
+      }
+
+      if (!hasCompatibleEditionMetadata(root, manifest)) {
+        return []
+      }
+
       const frontend = manifest.frontend
-      if (! frontend || manifest.enabled === false) {
+      if (!frontend || typeof frontend !== 'object' || Array.isArray(frontend) || manifest.enabled === false) {
         return []
       }
 
       const featureGate = frontend.feature_gate
-      if (featureGate && environment[`FEATURE_${featureGate.toUpperCase()}`] === 'false') {
+      if (featureGate && environment[`FEATURE_${featureGate.toUpperCase()}`] !== 'true') {
         return []
       }
 
       const pagesPattern = String(frontend.pages ?? '')
+      if (!pagesPattern.endsWith('/**/*.vue')) {
+        return []
+      }
+
       const pagesDirectory = resolve(pluginDirectory, pagesPattern.replace('/**/*.vue', ''))
+      const pluginRoot = resolve(pluginDirectory)
+      if (pagesDirectory !== pluginRoot && !pagesDirectory.startsWith(`${pluginRoot}/`)) {
+        return []
+      }
+
       const pageFiles = vueFiles(pagesDirectory)
 
       return [{

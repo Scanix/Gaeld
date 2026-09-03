@@ -114,6 +114,7 @@ return [
     'created_on' => 'Creato il',
     'expired_upload' => 'I dati analizzati per :type sono scaduti. Ricarica il file.',
     'no_rows_found' => 'Nessuna riga di dati trovata nel file. Verifica che il formato e le intestazioni delle colonne siano corretti.',
+    'connector_fetch_failed' => 'L’applicazione collegata non ha potuto fornire i dati. Riprova.',
 
     // Errors
     'no_data_uploaded' => 'Carica almeno un file prima di importare.',

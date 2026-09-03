@@ -41,7 +41,11 @@ For larger changes, please open an issue first so we can discuss the approach.
 This repository is the public Community Edition. Do not add credentials,
 private deployment files, or material that is not intended for the public
 release. Public CI checks the repository boundary; `.gitignore` is convenience
-only and must not be treated as a security mechanism.
+only and must not be treated as a security mechanism. Use
+`contract/edition-boundary.json` and `scripts/qa/check-ce-artifact.sh` as the
+ownership and release checks. Reusable accounting behavior belongs in CE;
+commercial billing, hosted quotas, subscriptions, and SaaS administration stay
+in the private EE repository.
 
 ### New feature procedure
 

@@ -8,7 +8,7 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'enabled' => env('PLUGINS_ENABLED', true),
+    'enabled' => env('PLUGINS_ENABLED', false),
 
     'path' => base_path('plugins'),
 

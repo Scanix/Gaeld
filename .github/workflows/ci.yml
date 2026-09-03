@@ -30,6 +30,11 @@ jobs:
             fi
           done
 
+      - name: Audit clean CE artifact
+        run: |
+          git archive --format=tar.gz --output=/tmp/gaeld-ce.tar.gz HEAD
+          ./scripts/qa/check-ce-artifact.sh /tmp/gaeld-ce.tar.gz
+
       - name: Secret scanning (Gitleaks)
         uses: gitleaks/gitleaks-action@v3.0.0
         env:

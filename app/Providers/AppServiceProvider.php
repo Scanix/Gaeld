@@ -51,7 +51,10 @@ use App\Domains\Reporting\Jobs\GenerateReportsJob;
 use App\Domains\Users\Jobs\ExportUserDataJob;
 use App\Http\Services\GlobalSearchService;
 use App\Listeners\SendHorizonTelegramAlert;
+use App\Support\Contracts\EditionCompatibility;
 use App\Support\Contracts\OrganizationQuotaResolver;
+use App\Support\EditionCompatibility as EditionCompatibilityService;
+use App\Support\EditionReleasePair;
 use App\Support\Listeners\AuthAuditSubscriber;
 use App\Support\Observers\LocksArchivedRecord;
 use App\Support\Services\DefaultOrganizationQuotaResolver;
@@ -80,6 +83,11 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->commands([BackfillOrganizationDocumentStorageCommand::class]);
         $this->app->scoped(CurrentOrganization::class);
+        $this->app->singleton(EditionCompatibility::class, EditionCompatibilityService::class);
+        $this->app->singleton(
+            EditionReleasePair::class,
+            fn ($app): EditionReleasePair => new EditionReleasePair($app->make(EditionCompatibility::class)),
+        );
         $this->app->singleton(OrganizationQuotaResolver::class, DefaultOrganizationQuotaResolver::class);
         $this->app->singleton(SourceTaxServiceInterface::class, NullSourceTaxService::class);
         $this->app->singleton(

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Migration\Models;
 
+use App\Domains\Migration\Casts\MigrationSourceCast;
 use App\Domains\Migration\Enums\ImportStatus;
 use App\Domains\Migration\Enums\Platform;
 use App\Domains\Organizations\Models\Organization;
@@ -20,7 +21,7 @@ use Illuminate\Support\Carbon;
  *
  * @property string $id
  * @property string $organization_id
- * @property Platform $platform
+ * @property Platform|string $platform
  * @property ImportStatus $status
  * @property array<string, string> $data_types_status Per-type ImportStatus values
  * @property array<string, int> $imported_counts Per-type imported row counts
@@ -50,7 +51,7 @@ class MigrationSession extends Model
     protected function casts(): array
     {
         return [
-            'platform' => Platform::class,
+            'platform' => MigrationSourceCast::class,
             'status' => ImportStatus::class,
             'data_types_status' => 'array',
             'imported_counts' => 'array',

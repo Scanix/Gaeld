@@ -71,6 +71,15 @@ const platformIcons = {
   generic_csv: '📄',
   manual: '✏️',
 }
+
+function platformDefinition(platform) {
+  return props.platforms.find(item => item.platform === platform)
+}
+
+function platformLabel(platform) {
+  const definition = platformDefinition(platform)
+  return t(definition?.label_key || `migration.platform_${platform}`)
+}
 </script>
 
 <template>
@@ -111,7 +120,7 @@ const platformIcons = {
             </div>
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-2">
-                <p class="font-medium text-sm">{{ t(`migration.platform_${session.platform}`) }}</p>
+                <p class="font-medium text-sm">{{ platformLabel(session.platform) }}</p>
                 <Badge :variant="statusVariant[session.status] || 'secondary'">
                   {{ t(`migration.status_${session.status}`) }}
                 </Badge>
@@ -167,9 +176,9 @@ const platformIcons = {
           >
             <span class="mt-0.5 text-2xl">{{ platformIcons[platform.platform] || '📦' }}</span>
             <div class="min-w-0 flex-1">
-              <p class="font-medium">{{ t(`migration.platform_${platform.platform}`) }}</p>
+              <p class="font-medium">{{ t(platform.label_key) }}</p>
               <p class="mt-0.5 text-sm text-[hsl(var(--muted-foreground))]">
-                {{ t(`migration.platform_${platform.platform}_desc`) }}
+                {{ t(platform.description_key) }}
               </p>
               <div class="mt-2 flex flex-wrap gap-1">
                 <Badge v-for="dt in platform.data_types" :key="dt" variant="outline" class="text-xs">

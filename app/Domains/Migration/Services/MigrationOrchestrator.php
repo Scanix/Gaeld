@@ -46,8 +46,10 @@ class MigrationOrchestrator
     /**
      * Start a new migration session.
      */
-    public function startSession(Organization $organization, Platform $platform, int $userId): MigrationSession
+    public function startSession(Organization $organization, Platform|string $platform, int $userId): MigrationSession
     {
+        $platform = $this->registry->sourceKey($platform);
+
         return MigrationSession::create([
             'organization_id' => $organization->id,
             'platform' => $platform,
@@ -68,18 +70,51 @@ class MigrationOrchestrator
         DataType $dataType,
     ): ParseResult {
         $parser = $this->registry->getParser($session->platform);
+        $source = $this->registry->sourceKey($session->platform);
 
         if (! $parser) {
-            return new ParseResult(collect(), ["Unsupported platform: {$session->platform->value}"]);
+            return new ParseResult(collect(), ["Unsupported platform: {$source}"]);
         }
 
         if (! in_array($dataType, $parser->supportedDataTypes(), true)) {
-            return new ParseResult(collect(), ["Platform {$session->platform->value} does not support {$dataType->value}"]);
+            return new ParseResult(collect(), ["Platform {$source} does not support {$dataType->value}"]);
         }
 
         $rows = $parser->parse($file, $dataType);
 
         return new ParseResult($rows);
+    }
+
+    /**
+     * Fetch normalized rows from a plugin connector for the session source.
+     */
+    public function fetchFromConnector(
+        MigrationSession $session,
+        DataType $dataType,
+        Organization $organization,
+    ): ParseResult {
+        $connector = $this->registry->getConnector($session->platform);
+
+        if ($connector === null) {
+            return new ParseResult(collect(), ['No connector registered for this migration source.']);
+        }
+
+        if (! in_array($dataType, $connector->supportedDataTypes(), true)) {
+            return new ParseResult(collect(), ["Connector does not support {$dataType->value}."]);
+        }
+
+        try {
+            return $connector->fetch($organization, $dataType);
+        } catch (\Throwable $exception) {
+            Log::warning('Migration connector fetch failed', [
+                'connector' => $connector->key(),
+                'source' => $this->registry->sourceKey($session->platform),
+                'organization_id' => $organization->id,
+                'exception' => $exception::class,
+            ]);
+
+            return new ParseResult(collect(), [__('migration.connector_fetch_failed')]);
+        }
     }
 
     /**
@@ -92,8 +127,9 @@ class MigrationOrchestrator
         DataType $dataType,
         Organization $organization,
         int $sampleSize = 50,
+        Platform|string|null $platform = null,
     ): PreviewData {
-        $importer = $this->registry->getImporter($dataType);
+        $importer = $this->registry->getImporter($dataType, $platform);
         $validation = $importer?->validate($rows, $organization);
 
         $accountMappings = [];
@@ -126,7 +162,7 @@ class MigrationOrchestrator
         DataType $dataType,
         Organization $organization,
     ): ImportResult {
-        $importer = $this->registry->getImporter($dataType);
+        $importer = $this->registry->getImporter($dataType, $session->platform);
 
         if (! $importer) {
             return ImportResult::failure($dataType, ["No importer registered for {$dataType->value}"]);
@@ -194,7 +230,7 @@ class MigrationOrchestrator
             array_keys($rowsByType),
         );
 
-        $orderedTypes = $this->registry->resolveImportOrder($requestedTypes);
+        $orderedTypes = $this->registry->resolveImportOrder($requestedTypes, $session->platform);
         $results = [];
 
         $session->update(['status' => ImportStatus::Importing]);

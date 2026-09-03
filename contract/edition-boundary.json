@@ -1,0 +1,158 @@
+{
+  "_meta": {
+    "generated": "2026-09-03",
+    "contract": "edition-boundary",
+    "version": "1.0.0",
+    "visibility": "public",
+    "description": "Authoritative ownership and release contract for the Community Edition and commercial Edition."
+  },
+  "editions": {
+    "ce": {
+      "name": "Community Edition",
+      "visibility": "public",
+      "license": "AGPL-3.0-or-later",
+      "repository": "api",
+      "packaging": "public-source-checkout",
+      "private_registry_required": false,
+      "commercial_credentials_required": false,
+      "runtime_default": "complete-self-hosted-accounting"
+    },
+    "ee": {
+      "name": "Commercial Edition",
+      "visibility": "private",
+      "license": "proprietary",
+      "repository": "gaeld-ee",
+      "packaging": "private-composer-and-optional-npm-artifacts",
+      "private_registry_required": true,
+      "commercial_credentials_required": true,
+      "runtime_default": "hosted-commercial-services"
+    },
+    "shared": {
+      "name": "Shared contracts",
+      "visibility": "public-metadata",
+      "license": "AGPL-3.0-or-later",
+      "repository": "api",
+      "packaging": "versioned-contract-files",
+      "private_registry_required": false,
+      "commercial_credentials_required": false,
+      "runtime_default": "ce-safe-defaults"
+    }
+  },
+  "boundary_matrix": [
+    {
+      "id": "core-accounting",
+      "owner": "ce",
+      "source_paths": [
+        "app/Domains/Accounting",
+        "app/Domains/Expenses",
+        "app/Domains/Invoicing",
+        "app/Domains/Reporting"
+      ],
+      "runtime_ownership": "community-edition",
+      "license": "AGPL-3.0-or-later",
+      "packaging": "public-ce-artifact",
+      "dependencies": ["laravel/framework", "postgresql"],
+      "data_ownership": "CE-owned accounting and document data",
+      "feature_flags": "available-without-ee",
+      "tests": ["tests/Feature/Accounting", "tests/Feature/Invoicing", "tests/Feature/Expenses"],
+      "documentation": ["README.md", "INSTALL.md", "docs/docs/self-hosting.md"],
+      "deployment": "published with the public CE release"
+    },
+    {
+      "id": "ce-api-contract",
+      "owner": "ce",
+      "source_paths": ["app/Domains/Api", "contract/api-contract.json"],
+      "runtime_ownership": "community-edition",
+      "license": "AGPL-3.0-or-later",
+      "packaging": "public-ce-artifact",
+      "dependencies": ["laravel/sanctum"],
+      "data_ownership": "organization-scoped CE data",
+      "feature_flags": "CE contract defaults; commercial gates remain server-side",
+      "tests": ["tests/Feature/Api", "tests/Security/Api"],
+      "documentation": ["contract/api-contract.json", "docs/docs/api"],
+      "deployment": "versioned with the CE contract"
+    },
+    {
+      "id": "shared-runtime-contracts",
+      "owner": "shared",
+      "source_paths": ["app/Support/Contracts", "contract/app-contract.json", "contract/edition-boundary.json"],
+      "runtime_ownership": "CE-owned interfaces with optional EE bindings",
+      "license": "AGPL-3.0-or-later",
+      "packaging": "public-contract-metadata",
+      "dependencies": [],
+      "data_ownership": "no commercial data storage",
+      "feature_flags": "CE-safe defaults when EE is absent",
+      "tests": ["tests/Feature/EditionBoundary"],
+      "documentation": ["README.md", "RELEASE.md"],
+      "deployment": "compatibility checked before an EE binding is activated"
+    },
+    {
+      "id": "hosted-commercial-services",
+      "owner": "ee",
+      "source_paths": [
+        "plugins/gaeld-ee/src/Domains/Billing",
+        "plugins/gaeld-ee/src/Domains/SaasAdmin",
+        "plugins/gaeld-ee/src/Support"
+      ],
+      "runtime_ownership": "commercial-edition",
+      "license": "proprietary",
+      "packaging": "private-registry-artifact",
+      "dependencies": ["stripe/stripe-php", "private-composer-registry"],
+      "data_ownership": "EE subscription, quota, billing, and SaaS administration data",
+      "feature_flags": "enabled only by an intentional EE deployment",
+      "tests": ["plugins/gaeld-ee/tests/Feature", "plugins/gaeld-ee/tests/Security"],
+      "documentation": ["plugins/gaeld-ee/INTERNAL.md", "docs/docs/billing.md"],
+      "deployment": "private artifact activated only after CE/EE compatibility validation"
+    },
+    {
+      "id": "public-product-surfaces",
+      "owner": "shared",
+      "source_paths": ["../web", "../docs"],
+      "runtime_ownership": "public messaging reflects CE and hosted commercial boundaries",
+      "license": "public-product-metadata",
+      "packaging": "separate-web-and-documentation-releases",
+      "dependencies": ["next.js", "docusaurus"],
+      "data_ownership": "no accounting or subscription data",
+      "feature_flags": "none",
+      "tests": ["../web/src/__tests__", "../web/tests", "../docs/scripts"],
+      "documentation": ["../web/messages", "../docs/docs"],
+      "deployment": "released independently and checked against this matrix"
+    }
+  ],
+  "artifact_policy": {
+    "public_ce": {
+      "repository": "api",
+      "must_exclude": [
+        "plugins/gaeld-ee",
+        "deploy.php",
+        ".gitlab-ci.yml",
+        "private registry credentials",
+        "commercial-only migrations",
+        "commercial source maps"
+      ],
+      "requires_private_registry": false,
+      "requires_commercial_credentials": false
+    },
+    "private_ee": {
+      "repository": "gaeld-ee",
+      "must_include": ["compatibility metadata", "package provenance", "commercial tests"],
+      "must_not_publish": ["registry credentials", "Stripe secrets", "unredacted environment configuration"],
+      "requires_private_registry": true,
+      "requires_commercial_credentials": true
+    }
+  },
+  "compatibility": {
+    "contract_version": "1.0.0",
+    "ee_package": "gaeld/ee-plugin",
+    "ee_version_policy": "immutable-versioned-artifact",
+    "supported_ee_range": ">=2.0.0 <3.0.0",
+    "failure_mode": "reject-incompatible-pair-before-traffic-switch",
+    "diagnostics": "identify the contract mismatch without exposing secrets"
+  },
+  "release": {
+    "identifiers": ["ce_version", "ee_version", "contract_version", "artifact_digest"],
+    "pre_switch_gate": "compatibility-and-artifact-integrity",
+    "rollback": "last-known-compatible-immutable-ce-ee-pair",
+    "migration_policy": "non-destructive-and-audited"
+  }
+}

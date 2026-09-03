@@ -17,12 +17,15 @@ use Illuminate\Support\Collection;
  * Adding a new platform requires only a new implementation of this
  * interface — no changes to the orchestration code.
  */
-interface PlatformParserInterface
+interface PlatformParserInterface extends MigrationSourceInterface
 {
     /**
      * The platform enum value this parser handles.
+     *
+     * Core parsers return a {@see Platform} enum. Plugins may return a stable
+     * lower-case source key without changing the core enum.
      */
-    public function platform(): Platform;
+    public function platform(): Platform|string;
 
     /**
      * Human-readable label translation key.

@@ -6,5 +6,17 @@
     "author": "Gäld Community",
     "provider": "Plugins\\ExamplePlugin\\ExamplePluginServiceProvider",
     "enabled": true,
+    "extensions": {
+        "migration": {
+            "parsers": [
+                "Plugins\\ExamplePlugin\\Migration\\ExamplePluginParser"
+            ],
+            "connectors": [],
+            "importers": [
+                "Plugins\\ExamplePlugin\\Migration\\ExamplePluginContactImporter"
+            ],
+            "mappers": []
+        }
+    },
     "requires": []
 }
