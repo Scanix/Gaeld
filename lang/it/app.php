@@ -851,6 +851,7 @@ return [
     'grant_cloud_free' => 'Concedi Cloud Free',
     'grant_cloud_free_requires_local' => 'Usi la scheda dell’organizzazione per gestire un abbonamento collegato a Stripe.',
     'grant_cloud_free_description' => 'Assegna un abbonamento ospitato gratuito senza creare un cliente o un pagamento Stripe.',
+    'no_cloud_free_grants_available' => 'Non ci sono abbonamenti locali a pagamento disponibili per Cloud Free.',
     'grant' => 'Concedere',
     'revoke_subscription' => 'Revoca abbonamento',
     'revoke_subscription_confirm' => 'Sei sicuro di voler annullare l\'abbonamento di :org? Questa azione avrà effetto immediato.',

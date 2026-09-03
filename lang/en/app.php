@@ -941,6 +941,7 @@ return [
     'grant_cloud_free' => 'Grant Cloud Free',
     'grant_cloud_free_requires_local' => 'Use the organization page to handle a Stripe-linked subscription.',
     'grant_cloud_free_description' => 'Assign a free hosted subscription without creating a Stripe customer or payment.',
+    'no_cloud_free_grants_available' => 'No local non-free subscriptions are available for a Cloud Free grant.',
     'grant' => 'Grant',
     'revoke_subscription' => 'Revoke Subscription',
     'revoke_subscription_confirm' => 'Are you sure you want to cancel the subscription for :org? This will take effect immediately.',
