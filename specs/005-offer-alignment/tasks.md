@@ -70,7 +70,7 @@
 - [X] T045 Run the API frontend build, website tests/build, and documentation build with the repository-supported commands in `package.json`, `../web/package.json`, and `../docs/package.json`.
 - [ ] T046 Perform staging acceptance for Cloud Free signup, Solo/Team cardless trials, explicit payment conversion, expiry fallback, quotas, API denial, legacy plan display, export, and all four locales using `scripts/qa/staging-runner.mjs`.
 - [ ] T047 Record Cloud Free incremental cost, storage, OCR, abuse, conversion, support, and migration metrics for the first observation period in `../wiki/api/OFFER_READINESS_CHECKLIST.md`.
-- [ ] T048 [P] Update the offer readiness checklist and release notes with the actual plan records, Stripe price IDs, operational evidence, rollout date, and rollback reference in `../wiki/api/OFFER_READINESS_CHECKLIST.md` and the applicable changelogs.
+- [X] T048 [P] Update the offer readiness checklist and release notes with the actual plan records, Stripe price IDs, operational evidence, rollout date, and rollback reference in `../wiki/api/OFFER_READINESS_CHECKLIST.md` and the applicable changelogs.
 
 ## Dependencies and Execution Order
 
