@@ -78,6 +78,12 @@ task('deploy:build:link', function () {
     run('ln -s {{deploy_path}}/shared/public/build {{release_path}}/public/build');
 })->desc('Symlink public/build to shared build assets');
 
+task('deploy:legacy-worker:disable', function () {
+    if (test("systemctl list-unit-files | grep -q '^gaeld-worker\\.service'")) {
+        run('sudo systemctl disable --now gaeld-worker');
+    }
+})->desc('Keep the legacy queue worker disabled when Horizon is active');
+
 task('deploy:horizon:restart', function () {
     if (test("systemctl list-unit-files | grep -q '^{{horizon_service}}\\.service'")) {
         run('sudo systemctl restart {{horizon_service}}');
@@ -182,6 +188,7 @@ task('deploy', [
     'deploy:publish',
     'deploy:sentry:release',
     'deploy:fpm:restart',
+    'deploy:legacy-worker:disable',
     'deploy:horizon:restart',
 ])->desc('Deploy the SaaS application');
 
