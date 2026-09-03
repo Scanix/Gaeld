@@ -38,8 +38,8 @@ EE_CONTENT_DIGEST=e49cfb95ca8bbd9c6e60f5e5c5b7459897b60fecdfd5ec3f30ee1fca1d9fd4
 ```
 
 The candidate must be tested from a clean CE archive and a tagged private EE
-artifact before staging deployment. Replace both placeholders with the exact
-implementation commit SHAs after the release commits are created.
+artifact before staging deployment. The refs above are the exact implementation
+commits and the digest that staging must consume.
 
 ## Validated Staging Candidate
 
