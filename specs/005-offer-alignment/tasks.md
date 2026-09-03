@@ -5,7 +5,7 @@
 - [X] T001 Create canonical offer fixtures for Cloud Free, Solo, Team, legacy Starter, and legacy Business in `plugins/gaeld-ee/tests/Feature/Billing/Concerns/CreatesOfferFixtures.php`.
 - [X] T002 [P] Add offer and migration test cases covering canonical/public status, stable internal slugs, and legacy plan visibility in `tests/Feature/OfferPlanDefinitionTest.php`.
 - [X] T003 [P] Add a four-locale pricing-key parity test for the website messages in `../web/src/__tests__/pricing-contract.test.ts`.
-- [ ] T004 Update `specs/005-offer-alignment/spec.md` and `specs/005-offer-alignment/plan.md` with any approved Solo/Team entitlement evidence before implementation begins.
+- [X] T004 Update `specs/005-offer-alignment/spec.md` and `specs/005-offer-alignment/plan.md` with any approved Solo/Team entitlement evidence before implementation begins.
 
 ## Phase 2: Plan persistence and legacy compatibility
 
