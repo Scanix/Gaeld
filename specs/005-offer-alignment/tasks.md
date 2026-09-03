@@ -68,7 +68,7 @@
 - [X] T043 [P] Run core invoice, OCR, storage, member, API, and CE compatibility tests through Sail in `tests/Feature/` and `tests/Security/`.
 - [X] T044 Run Pint and PHPStan on changed PHP paths through Sail using `pint.json` and `phpstan.neon`.
 - [X] T045 Run the API frontend build, website tests/build, and documentation build with the repository-supported commands in `package.json`, `../web/package.json`, and `../docs/package.json`.
-- [ ] T046 Perform staging acceptance for Cloud Free signup, Solo/Team cardless trials, explicit payment conversion, expiry fallback, quotas, API denial, legacy plan display, export, and all four locales using `scripts/qa/staging-runner.mjs`.
+- [X] T046 Perform staging acceptance for Cloud Free signup, Solo/Team cardless trials, explicit payment conversion, expiry fallback, quotas, API denial, legacy plan display, export, and all four locales using `scripts/qa/staging-runner.mjs`. Exhaustive Team acceptance passed 44/44 in `storage/app/qa/staging-qa-commercial-20260903-151020.md`; the Cloud Free/Solo matrix passed 42/42 in `storage/app/qa/staging-qa-offer-matrix-20260903-152927.md`.
 - [ ] T047 Record Cloud Free incremental cost, storage, OCR, abuse, conversion, support, and migration metrics for the first observation period in `../wiki/api/OFFER_READINESS_CHECKLIST.md`.
 - [X] T048 [P] Update the offer readiness checklist and release notes with the actual plan records, Stripe price IDs, operational evidence, rollout date, and rollback reference in `../wiki/api/OFFER_READINESS_CHECKLIST.md` and the applicable changelogs.
 

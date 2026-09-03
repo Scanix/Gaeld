@@ -21,14 +21,30 @@ use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
+use Plugins\GaeldEE\Domains\Billing\Models\Plan;
+use Plugins\GaeldEE\Domains\Billing\Models\Subscription;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
 class InvoiceFlowTest extends TestCase
 {
     use RefreshDatabase, WithAuthenticatedOrganization;
+
+    public function createApplication(): Application
+    {
+        $_ENV['APP_BASE_PATH'] = realpath(__DIR__.'/../../..');
+        $_ENV['PLUGINS_ENABLED'] = 'true';
+        RefreshDatabaseState::$migrated = false;
+        $app = parent::createApplication();
+        $_ENV['PLUGINS_ENABLED'] = 'false';
+
+        return $app;
+    }
 
     private Contact $customer;
 
@@ -37,6 +53,11 @@ class InvoiceFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        if (! class_exists(Plan::class)) {
+            $this->markTestSkipped('Enterprise Edition is not enabled.');
+        }
+
         $this->setUpOrganization();
 
         Account::create([
@@ -81,6 +102,13 @@ class InvoiceFlowTest extends TestCase
         ]);
     }
 
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        RefreshDatabaseState::$migrated = false;
+    }
+
     /**
      * @param  array<string, mixed>  $overrides
      * @param  array<int, array<string, mixed>>  $lines
@@ -117,6 +145,47 @@ class InvoiceFlowTest extends TestCase
             taxTreatment: InvoiceTaxTreatment::tryFrom($data['tax_treatment'] ?? 'standard')
                 ?? InvoiceTaxTreatment::Standard,
         ));
+    }
+
+    public function test_cloud_free_rejects_the_sixth_invoice_in_the_current_month(): void
+    {
+        config()->set('features.saas', true);
+        Subscription::create([
+            'organization_id' => $this->org->id,
+            'plan_id' => Plan::cloudFree()->id,
+            'status' => 'active',
+        ]);
+
+        $monthlyKey = 'invoices_monthly:'.$this->org->id.':'.now()->format('Y-m');
+        Cache::forget($monthlyKey);
+
+        $payload = [
+            'customer_id' => $this->customer->id,
+            'issue_date' => now()->toDateString(),
+            'due_date' => now()->addDays(30)->toDateString(),
+            'finalize' => true,
+            'tax_treatment' => InvoiceTaxTreatment::Standard->value,
+            'lines' => [[
+                'description' => 'Cloud Free quota test',
+                'quantity' => 1,
+                'unit_price' => 10,
+                'vat_rate_id' => $this->vatRate->id,
+            ]],
+        ];
+
+        for ($invoiceNumber = 1; $invoiceNumber <= 5; $invoiceNumber++) {
+            $this->actAsOrg()
+                ->post('/invoices', $payload)
+                ->assertRedirect();
+        }
+
+        $this->actAsOrg()
+            ->post('/invoices', $payload)
+            ->assertRedirect()
+            ->assertSessionHas('error', __('app.invoice_monthly_limit_reached'));
+
+        $this->assertSame(5, Invoice::query()->where('organization_id', $this->org->id)->count());
+        $this->assertSame(5, (int) Cache::get($monthlyKey));
     }
 
     public function test_reverse_charge_requires_an_eu_vat_customer_and_excludes_swiss_vat(): void

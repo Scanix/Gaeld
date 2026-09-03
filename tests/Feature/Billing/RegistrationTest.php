@@ -7,10 +7,8 @@ use App\Domains\Expenses\Models\ExpenseCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
-use Mockery;
 use Plugins\GaeldEE\Domains\Billing\Models\Plan;
 use Plugins\GaeldEE\Domains\Billing\Models\Subscription;
-use Plugins\GaeldEE\Domains\Billing\Services\BillingService;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -31,31 +29,10 @@ class RegistrationTest extends TestCase
         Password::defaults(fn () => Password::min(12)->letters()->mixedCase()->numbers()->symbols());
     }
 
-    public function test_signup_with_paid_plan_creates_trialing_subscription_and_seeds_chart_of_accounts(): void
+    public function test_signup_with_team_plan_starts_a_no_card_trial_and_seeds_chart_of_accounts(): void
     {
-        $billing = Mockery::mock(BillingService::class);
-        $billing->shouldReceive('createCheckoutSession')
-            ->once()
-            ->andReturn('https://checkout.stripe.test/session');
-        $this->app->instance(BillingService::class, $billing);
-
-        $plan = Plan::where('slug', 'business')->first()
-            ?? Plan::create([
-                'id' => (string) Str::uuid(),
-                'name' => 'Business',
-                'slug' => 'business',
-                'price_chf' => 29.00,
-                'stripe_price_id' => 'price_test_business',
-                'max_users' => -1,
-                'max_invoices_per_month' => -1,
-                'features' => [],
-                'is_active' => true,
-                'sort_order' => 2,
-            ]);
-
-        // Force a non-zero price so the controller treats this as paid even
-        // when the seeded business plan has been overridden in fixtures.
-        $plan->forceFill(['price_chf' => 29.00, 'stripe_price_id' => 'price_test_business'])->save();
+        $plan = Plan::team();
+        $plan->forceFill(['price_chf' => 39.00, 'stripe_price_id' => 'price_test_team'])->save();
 
         $response = $this->post('/signup', [
             'name' => 'Alice Example',
@@ -68,13 +45,15 @@ class RegistrationTest extends TestCase
             'chart_of_accounts' => 'swiss_sme',
         ]);
 
-        // Paid plan triggers a redirect to the Stripe Checkout session URL.
-        $response->assertRedirect('https://checkout.stripe.test/session');
+        // Paid-plan signup starts a trial; payment is an explicit later action.
+        $response->assertRedirect(route('onboarding.wizard'));
 
         $subscription = Subscription::firstOrFail();
         $this->assertSame('trialing', $subscription->status);
         $this->assertNotNull($subscription->trial_ends_at);
-        $this->assertTrue($subscription->trial_ends_at->isPast());
+        $this->assertTrue($subscription->trial_ends_at->isFuture());
+        $this->assertNull($subscription->stripe_customer_id);
+        $this->assertNull($subscription->stripe_subscription_id);
 
         $this->assertTrue(
             Account::where('organization_id', $subscription->organization_id)

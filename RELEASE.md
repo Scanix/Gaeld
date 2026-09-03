@@ -24,13 +24,13 @@ The deployment pair and the tested commit SHAs belong in the release record.
 The current coordinated production release (2026-09-03) is CE `v3.8.1` at
 `f0609be7` with EE `v2.9.20` at `3cdfd8d`. It is deployed as API release
 `256`, with web `v2.14.2` at `bf63fbf` and the documentation site at
-`v2.12.0`.
+`v2.12.1`.
 
 ## Released Pair
 
-The next coordinated candidate removes the customer-facing Early Beta
-messaging from the hosted application and public website while preserving
-operational subscription, payment, support, and system banners:
+The released pair removes the customer-facing Early Beta messaging from the
+hosted application and public website while preserving operational
+subscription, payment, support, and system banners:
 
 ```text
 CE_VERSION=v3.8.1
@@ -40,7 +40,7 @@ EE_SHA=3cdfd8d
 EE_CONTENT_DIGEST=e49cfb95ca8bbd9c6e60f5e5c5b7459897b60fecdfd5ec3f30ee1fca1d9fd478
 WEB_VERSION=v2.14.2
 WEB_SHA=bf63fbf
-DOCS_VERSION=v2.12.0
+DOCS_VERSION=v2.12.1
 ```
 
 The release was tested from a clean CE archive and a tagged private EE
@@ -79,7 +79,7 @@ EE_REF=v2.9.20
 EE_SHA=3cdfd8d
 WEB_REF=v2.14.2
 WEB_SHA=bf63fbf
-DOCS_REF=v2.12.0
+DOCS_REF=v2.12.1
 ```
 
 The API deployment consumed the pinned EE artifact and completed migrations,
@@ -88,6 +88,9 @@ The production `/up`, `/login`, `/api/v1/`, website, and documentation URLs
 returned HTTP 200. Database and cache health are healthy, Horizon, PHP-FPM,
 and nginx are active, no failed queue jobs were present, and no customer-facing
 beta wording remains in the compiled application or public responses.
+The legacy `gaeld-worker` systemd unit is intentionally disabled; Horizon is
+the sole queue executor and its production supervisors cover the default,
+exports, webhooks, processing, scheduled, and OCR queues.
 
 Fresh production backups were created before activation: PostgreSQL
 `/data/backups/postgresql/daily/gaeld_20260903_133719.sql.gz` and files
@@ -95,6 +98,33 @@ Fresh production backups were created before activation: PostgreSQL
 integrity checks. The Sentry release notification was skipped because the
 deployment token is not configured; application availability and queue health
 were verified independently.
+
+## Commercial Acceptance
+
+The complete hosted-offer acceptance was completed on staging on 2026-09-03.
+The exhaustive Team campaign in
+`storage/app/qa/staging-qa-commercial-20260903-151020.md` passed 44 checks with
+zero failures, zero skips, console errors, or request failures. It covered
+email verification, onboarding, opening balances, 24 months of invoices,
+expenses, payroll, CAMT.053/CAMT.054 imports, reconciliation, reports, salary
+certificates, VAT settlements, year-end closing, reopen/reclose, exports,
+permissions, responsive/accessibility checks, explicit Team conversion through
+Stripe Checkout, Stripe webhook lifecycle, idempotency, and ephemeral-tenant
+cleanup.
+
+The separate Cloud Free/Solo matrix in
+`storage/app/qa/staging-qa-offer-matrix-20260903-152927.md` passed 42 checks
+with zero failures or skips. It verified Cloud Free and Solo signup and
+cardless trials, no Stripe customer before explicit conversion, five allowed
+Cloud Free invoices followed by rejection of the sixth, Cloud Free payroll
+denial, and the resulting user-facing billing states. The focused commercial
+backend tests passed 67/67 with 234 assertions and the public
+pricing/localization Playwright checks passed 11/11.
+
+This closes the offer-alignment staging acceptance gate (T046). Economic
+observation metrics (T047), formal product-owner approval, and the separate
+CE/EE boundary acceptance with EE absent remain operational or governance
+gates; they are not represented as complete by these workflow results.
 
 ## Previous Validated Staging Candidate
 
