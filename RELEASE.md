@@ -21,21 +21,71 @@ EE_SHA=8d91d37
 must not be inferred from the CE version or copied into the public repository.
 The deployment pair and the tested commit SHAs belong in the release record.
 
-The current coordinated production release (2026-09-03) is CE `v3.8.1` at
-`f0609be7` with EE `v2.9.20` at `3cdfd8d`. It is deployed as API release
-`256`, with web `v2.14.2` at `bf63fbf` and the documentation site at
-`v2.12.1`.
+The current coordinated production release (2026-09-03) is CE `v3.8.2` at
+`29e657e` with deployment commit `8efc7313`, using EE `v2.9.20` at `3cdfd8d`.
+It is deployed as API release `257`, with web `v2.14.3` at `1e47ae3` and the
+documentation site at `v2.12.2` at `7561b90`.
 
 ## Release Candidate
 
-The next additive API release is CE `v3.8.2`. It contains the minimal
-self-hosted integration scope: first-token bootstrapping, bank-account
-creation through `/api/v1`, and token-authenticated invoice PDF downloads.
-The wider headless-accounting API remains out of scope.
+The v3.8.2 release contains the minimal self-hosted integration scope:
+first-token bootstrapping, bank-account creation through `/api/v1`, and
+token-authenticated invoice PDF downloads. The wider headless-accounting API
+remains out of scope.
 
-The candidate uses the already validated EE `v2.9.20` pair. Exact CE, web,
-documentation, and deployment SHAs are recorded here after the coordinated
-commits and staging acceptance pass.
+The release uses the already validated EE `v2.9.20` pair. The public API,
+documentation, and web contract tags are `v3.8.2`, `v2.12.2`, and `v2.14.3`.
+
+## v3.8.2 Staging Validation
+
+The candidate was deployed to staging as release `148` with CE deployment
+commit `8efc7313` and EE `v2.9.20`. The direct API smoke test passed for token
+bootstrap, bank-account creation, idempotent replay, and invoice PDF delivery;
+all temporary records were removed afterward.
+
+The general safe UI runner also completed signup, email verification,
+onboarding, accounting, invoicing, expenses, VAT, fiscal-year, archives,
+billing, and responsive checks. Its three failures were limited to existing
+payroll/persona selectors and two expected-by-environment 403 diagnostics; it
+was not used as the acceptance signal for this API-only release.
+
+## v3.8.2 Production Rollout
+
+The release was deployed to production on 2026-09-03:
+
+```text
+PRODUCTION_RELEASE=257
+API_REF=v3.8.2
+API_TAG_SHA=29e657e
+API_DEPLOY_COMMIT=8efc7313
+EE_REF=v2.9.20
+EE_SHA=3cdfd8d
+WEB_REF=v2.14.3
+WEB_SHA=1e47ae3
+DOCS_VERSION=v2.12.2
+DOCS_SHA=7561b90
+```
+
+The production `/up`, `/api/v1/`, and new API route checks returned healthy
+responses. The production API smoke test passed bank-account creation and
+idempotent replay on a SaaS tenant whose plan includes `api_access`; temporary
+token and bank-account records were removed. Invoice PDF behavior was also
+validated on staging with the same CE tag.
+
+The docs site was published as static release `4`, and the marketing site was
+updated to web commit `1e47ae3`; both public URLs returned HTTP 200. The fresh
+backups below passed gzip and tar integrity checks before deployment:
+
+```text
+/data/backups/postgresql/daily/gaeld_20260903_170329.sql.gz
+/data/backups/postgresql/daily/roles_20260903_170329.sql.gz
+/data/backups/files/daily/files_20260903_170332.tar.gz
+```
+
+Sentry release notification was skipped because the deployment credentials are
+not configured. Deployer also reported a sudo failure while disabling the
+legacy worker; post-deployment checks confirmed `gaeld-worker` inactive and
+`gaeld-horizon` active, so no queue action was required.
 
 ## Released Pair
 
