@@ -2,7 +2,7 @@
 
 ## Phase 1: Contract and fixtures
 
-- [ ] T001 Create canonical offer fixtures for Cloud Free, Solo, Team, legacy Starter, and legacy Business in `plugins/gaeld-ee/tests/Feature/Billing/Concerns/CreatesOfferFixtures.php`.
+- [X] T001 Create canonical offer fixtures for Cloud Free, Solo, Team, legacy Starter, and legacy Business in `plugins/gaeld-ee/tests/Feature/Billing/Concerns/CreatesOfferFixtures.php`.
 - [X] T002 [P] Add offer and migration test cases covering canonical/public status, stable internal slugs, and legacy plan visibility in `tests/Feature/OfferPlanDefinitionTest.php`.
 - [X] T003 [P] Add a four-locale pricing-key parity test for the website messages in `../web/src/__tests__/pricing-contract.test.ts`.
 - [ ] T004 Update `specs/005-offer-alignment/spec.md` and `specs/005-offer-alignment/plan.md` with any approved Solo/Team entitlement evidence before implementation begins.
@@ -27,7 +27,7 @@
 - [X] T017 [US2] Add monthly OCR reservation and displayed-period support while preserving existing daily quota behavior for legacy plans in `app/Domains/Expenses/Controllers/ExpenseReceiptController.php`, `app/Http/Middleware/HandleInertiaRequests.php`, and `resources/js/Components/QuickReceiptButton.vue`.
 - [X] T018 [P] [US2] Add invoice, OCR, storage, and quota-boundary tests for Cloud Free, Solo, Team, and CE mode in `tests/Feature/Invoicing/InvoiceFlowTest.php`, `tests/Feature/Expenses/ScanReceiptTest.php`, and `tests/Feature/Organizations/DocumentStorageQuotaTest.php`.
 - [X] T019 [US2] Enforce Solo/Team member limits through the quota resolver and add Cloud Free/Solo/Team invitation boundary coverage in `app/Domains/Organizations/Services/InvitationService.php` and `tests/Feature/Organizations/MemberQuotaTest.php`.
-- [ ] T020 [US2] Update SaaS feature resolution and API authorization tests so Cloud Free/Solo are denied advanced features/API and Team is allowed while CE behavior remains unchanged in `plugins/gaeld-ee/src/Support/SubscriptionFeatureResolver.php`, `tests/Security/Authorization/FeatureFlagEnforcementTest.php`, and `tests/Security/Api/ApiTokenSecurityTest.php`.
+- [X] T020 [US2] Update SaaS feature resolution and API authorization tests so Cloud Free/Solo are denied advanced features/API and Team is allowed while CE behavior remains unchanged in `plugins/gaeld-ee/src/Support/SubscriptionFeatureResolver.php`, `tests/Security/Authorization/FeatureFlagEnforcementTest.php`, and `tests/Security/Api/ApiTokenSecurityTest.php`.
 
 ## Phase 4: Signup, trial, and billing lifecycle [US1]
 
