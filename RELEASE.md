@@ -117,9 +117,10 @@ The separate Cloud Free/Solo matrix in
 with zero failures or skips. It verified Cloud Free and Solo signup and
 cardless trials, no Stripe customer before explicit conversion, five allowed
 Cloud Free invoices followed by rejection of the sixth, Cloud Free payroll
-denial, and the resulting user-facing billing states. The focused commercial
-backend tests passed 67/67 with 234 assertions and the public
-pricing/localization Playwright checks passed 11/11.
+denial, and the resulting user-facing billing states. The focused EE commercial
+tests passed 55/55 with 188 assertions, the CE invoice flow passed 12/12 with
+46 assertions, and the public pricing/localization Playwright checks passed
+11/11.
 
 This closes the offer-alignment staging acceptance gate (T046). Economic
 observation metrics (T047), formal product-owner approval, and the separate
