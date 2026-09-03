@@ -24,6 +24,23 @@ The deployment pair and the tested commit SHAs belong in the release record.
 The current coordinated production release (2026-09-03) is CE `v3.7.5` at
 `51aa424` with EE `v2.9.18` at `8d91d37`. It is deployed as release `255`.
 
+## Release Candidate
+
+The next coordinated candidate contains the CE plugin extension API and the
+private EE packaging and boundary checks:
+
+```text
+CE_VERSION=v3.8.0
+EE_VERSION=v2.9.20
+CE_SHA=8bbb618
+EE_SHA=3cdfd8d
+EE_CONTENT_DIGEST=e49cfb95ca8bbd9c6e60f5e5c5b7459897b60fecdfd5ec3f30ee1fca1d9fd478
+```
+
+The candidate must be tested from a clean CE archive and a tagged private EE
+artifact before staging deployment. The refs above are the exact implementation
+commits and the digest that staging must consume.
+
 ## Validated Staging Candidate
 
 The offer-alignment candidate was deployed and accepted on staging on
@@ -79,6 +96,13 @@ Before promoting a release candidate:
   Admin frontend source.
 - The candidate is tested from a clean CE checkout, not only from a worktree
   containing ignored or untracked files.
+- The clean CE archive passes `./scripts/qa/check-ce-artifact.sh` and contains
+  no private EE source, populated credentials, commercial source maps, or
+  deployment-only files.
+- An EE deployment consumes an immutable package from the private GitLab
+  Composer registry, verifies its normalized content digest before activation,
+  and records the checked pair with `DEPLOY_EE_VERSION` and
+  `DEPLOY_EE_CONTENT_DIGEST`.
 - Composer and pnpm audits report no known vulnerabilities. Composer may report
   `laragear/webauthn` as abandoned in favor of `laravel/passkeys`; this is a
   tracked migration item, not an unused code path.
@@ -99,8 +123,61 @@ vendor/bin/sail bin pint --dirty --format agent
 vendor/bin/sail bin phpstan analyse --memory-limit=2G
 vendor/bin/sail pnpm run build
 vendor/bin/sail php -r 'json_decode(file_get_contents("contract/api-contract.json"), true, 512, JSON_THROW_ON_ERROR);'
+./scripts/qa/check-ce-artifact.sh /path/to/gaeld-ce.tar.gz
+./scripts/qa/check-boundary-projections.sh
 git diff --check
 ```
+
+For a hosted deployment, create a deployment-only Composer `auth.json` through
+the secret store, then provide its path and the approved content digest without
+putting credentials in the command line:
+
+```bash
+DEPLOY_EE_VERSION=v2.9.18 \
+DEPLOY_EE_COMPOSER_REGISTRY_URL='https://gitlab.nectoria.com/api/v4/group/nectoria/products/gaeld/-/packages/composer/packages.json' \
+DEPLOY_EE_COMPOSER_REGISTRY_DOMAIN='gitlab.nectoria.com' \
+DEPLOY_EE_COMPOSER_AUTH_FILE=/secure/secrets/gaeld-ee-composer-auth.json \
+DEPLOY_EE_CONTENT_DIGEST='<normalized-content-sha256>' \
+dep deploy
+```
+
+The Deployer template configures GitLab Composer, installs the exact package
+version, verifies the normalized content digest, installs its dependencies, and
+runs `edition:verify` before `deploy:publish`. A missing, unauthorized, or
+mismatched package stops the deployment before traffic activation.
+
+For a mixed installation, take and verify database/file backups first, run
+`edition:migrate --dry-run`, review its redacted schema/configuration summary,
+and apply only an explicit target mode with `--force`. The migration records
+runtime ownership metadata and does not delete EE tables, CE records, hosted
+organizations, subscription rows, prices, Stripe identifiers, or billing
+history. Roll back by selecting the last compatible immutable CE/EE pair; do
+not use `migrate:rollback` as an operational edition rollback.
+
+## Boundary Feature Validation (2026-09-03)
+
+The CE boundary slice passed with 21 tests and 168 assertions. The EE boundary
+slice passed with 7 tests and 37 assertions (one registry-consumer test is
+skipped when private credentials are unavailable). The complete CE test suites also
+passed when run separately to avoid the combined-run timeout:
+
+```text
+Unit: 589 tests, 2084 assertions, 30 existing PHPUnit notices
+Security: 136 tests, 190 assertions, 6 skipped tests
+Feature: 743 tests, 3156 assertions, 2 existing PHPUnit notices and 7 skipped tests
+EE complete suite: 106 tests, 744 assertions, 1 skipped registry-consumer test
+```
+
+The following gates passed for this candidate: PHPStan on changed PHP paths,
+Pint formatting, the API Vite build, the web Vitest and pricing Playwright
+checks, public-offer copy validation, the Next.js production build, the
+documentation boundary checker, and the Docusaurus build for EN/FR/DE/IT.
+The CE and EE package audits also passed without publishing or deploying an
+artifact. The SaaS Admin benchmark now runs with isolated database state while
+its child process performs migrations; the parent test no longer holds a
+transaction that can deadlock PostgreSQL. The live private registry consumer
+check was not run because no registry credentials or published digest were
+available in this local environment.
 
 The default `phpunit.xml` intentionally runs CE with plugins and throttling
 disabled. To exercise the conditional EE tests and the two skipped test paths,
@@ -129,16 +206,10 @@ to remove files from a worktree that contains unreviewed work; inspect and
 preserve those files, then create a separate clean checkout for release
 validation.
 
-Verify the public boundary before staging:
+The public boundary can also be checked directly from a clean archive:
 
 ```bash
-for forbidden_path in plugins/gaeld-ee deploy.php .gitlab-ci.yml \
-  resources/js/Pages/SaasAdmin resources/js/Components/SaasAdmin; do
-  if git ls-files -- "$forbidden_path" "$forbidden_path/**" | grep -q .; then
-    printf 'Forbidden public path: %s\n' "$forbidden_path"
-    exit 1
-  fi
-done
+./scripts/qa/check-ce-artifact.sh /path/to/gaeld-ce.tar.gz
 ```
 
 ## API Smoke Test

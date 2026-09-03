@@ -114,6 +114,7 @@ return [
     'created_on' => 'Créé le',
     'expired_upload' => 'Les données analysées pour :type ont expiré. Veuillez télécharger le fichier à nouveau.',
     'no_rows_found' => 'Aucune ligne de données trouvée dans le fichier. Vérifiez que le format et les en-têtes de colonnes sont corrects.',
+    'connector_fetch_failed' => 'L’application connectée n’a pas pu fournir les données. Veuillez réessayer.',
 
     // Errors
     'no_data_uploaded' => 'Veuillez télécharger au moins un fichier avant d\'importer.',

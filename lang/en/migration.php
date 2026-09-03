@@ -114,6 +114,7 @@ return [
     'created_on' => 'Created on',
     'expired_upload' => 'Parsed data for :type has expired. Please upload the file again.',
     'no_rows_found' => 'No data rows were found in the file. Please check that the file format and column headers are correct.',
+    'connector_fetch_failed' => 'The connected application could not provide data. Please try again.',
 
     // Errors
     'no_data_uploaded' => 'Please upload at least one file before importing.',

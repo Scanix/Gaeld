@@ -1957,6 +1957,8 @@ return [
     'migration.upload_files' => 'Téléverser les fichiers',
     'migration.upload_files_desc' => 'Téléversez des fichiers CSV ou JSON contenant vos données.',
     'migration.upload_file' => 'Téléverser le fichier',
+    'migration.fetch_from_source' => 'Récupérer depuis l’application',
+    'migration.fetching' => 'Récupération…',
     'migration.select_data_type' => 'Type de données',
     'migration.select_platform' => 'Plateforme source',
     'migration.select_platform_desc' => 'Sélectionnez la plateforme depuis laquelle vous migrez.',

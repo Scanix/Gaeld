@@ -5,6 +5,29 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.0] — 2026-09-03
+
+### Added
+- **Plugin migration extensions:** community plugins can register source
+  parsers, source-specific importers, and API-backed connectors without
+  changing the CE migration enums or controller.
+- **Connector migration workflow:** connected applications can fetch
+  organization-scoped data into the existing preview, validation, queued
+  import, and rollback pipeline.
+- **CE/EE boundary contract:** added explicit runtime compatibility metadata,
+  clean artifact checks, and non-destructive mixed-installation migration
+  support.
+
+### Changed
+- **Plugin discovery:** optional plugins and frontend pages now fail closed on
+  invalid identity, compatibility, namespace, feature-gate, or path metadata.
+- **Migration sources:** built-in platform keys remain compatible while plugin
+  source keys are persisted and exposed through the migration UI.
+
+### Removed
+- Removed the unused `PluginLifecycle` contract and documented the absence of
+  historical duplicate accounting domains from the EE source tree.
+
 ## [3.6.6] — 2026-09-02
 
 ### Added

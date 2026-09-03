@@ -1949,6 +1949,8 @@ return [
     'migration.upload_files' => 'Dateien hochladen',
     'migration.upload_files_desc' => 'Laden Sie CSV- oder JSON-Dateien mit Ihren Daten hoch.',
     'migration.upload_file' => 'Datei hochladen',
+    'migration.fetch_from_source' => 'Aus Anwendung abrufen',
+    'migration.fetching' => 'Wird abgerufen…',
     'migration.select_data_type' => 'Datentyp',
     'migration.select_platform' => 'Quellplattform',
     'migration.select_platform_desc' => 'Wählen Sie die Plattform, von der Sie migrieren.',

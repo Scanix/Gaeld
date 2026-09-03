@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useForm, router } from '@inertiajs/vue3'
+import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -21,6 +21,7 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  Download,
   Upload,
 } from 'lucide-vue-next'
 
@@ -29,6 +30,7 @@ const { formatDate } = useFormatters()
 
 const props = defineProps({
   session: { type: Object, required: true },
+  platform: { type: Object, default: null },
   supportedDataTypes: { type: Array, default: () => [] },
   acceptedExtensions: { type: Array, default: () => [] },
 })
@@ -70,9 +72,34 @@ const acceptString = computed(() =>
   props.acceptedExtensions.map(ext => `.${ext}`).join(',')
 )
 
+const isConnector = computed(() => props.platform?.source_type === 'connector')
+
 function onFileSelected(file) {
   uploadForm.file = file
   uploadError.value = ''
+}
+
+const connectorForm = useForm({
+  data_type: '',
+})
+
+const connectorError = ref('')
+
+function applyPreview(page, errorTarget) {
+  const flash = page.props.flash
+  if (flash?.preview) {
+    const { data_type, preview } = flash.preview
+    uploadedTypes.value[data_type] = {
+      count: preview.totalRows,
+      valid: preview.validRows,
+      invalid: preview.invalidRows,
+      errors: preview.rowErrors,
+      accountMappings: preview.accountMappings,
+      sampleRows: preview.sampleRows,
+    }
+  } else if (flash?.error) {
+    errorTarget.value = flash.error
+  }
 }
 
 function submitUpload() {
@@ -83,24 +110,28 @@ function submitUpload() {
     forceFormData: true,
     preserveScroll: true,
     onSuccess: (page) => {
-      const flash = page.props.flash
-      if (flash?.preview) {
-        const { data_type, preview } = flash.preview
-        uploadedTypes.value[data_type] = {
-          count: preview.totalRows,
-          valid: preview.validRows,
-          invalid: preview.invalidRows,
-          errors: preview.rowErrors,
-          accountMappings: preview.accountMappings,
-          sampleRows: preview.sampleRows,
-        }
-      } else if (flash?.error) {
-        uploadError.value = flash.error
-      }
+      applyPreview(page, uploadError)
       uploadForm.reset()
     },
     onError: (errors) => {
       uploadError.value = Object.values(errors).flat().join(', ')
+    },
+  })
+}
+
+function fetchFromConnector() {
+  if (!selectedDataType.value) return
+
+  connectorForm.data_type = selectedDataType.value
+  connectorError.value = ''
+  connectorForm.post(`/migration/${props.session.id}/fetch`, {
+    preserveScroll: true,
+    onSuccess: (page) => {
+      applyPreview(page, connectorError)
+      connectorForm.reset()
+    },
+    onError: (errors) => {
+      connectorError.value = Object.values(errors).flat().join(', ')
     },
   })
 }
@@ -186,6 +217,10 @@ function formatColumns(row) {
     ([key]) => !['sourceRow', 'warnings', 'valid'].includes(key)
   )
 }
+
+function platformLabel() {
+  return t(props.platform?.label_key || `migration.platform_${props.session.platform}`)
+}
 </script>
 
 <template>
@@ -223,7 +258,7 @@ function formatColumns(row) {
     </nav>
 
     <div class="mb-4 flex items-center gap-2">
-      <Badge variant="outline">{{ t(`migration.platform_${session.platform}`) }}</Badge>
+      <Badge variant="outline">{{ platformLabel() }}</Badge>
       <Badge :variant="statusVariant[session.status] || 'secondary'">
         {{ t(`migration.status_${session.status}`) }}
       </Badge>
@@ -258,8 +293,29 @@ function formatColumns(row) {
           </div>
         </div>
 
+        <!-- Fetch from an external connector -->
+        <div v-if="isConnector" class="space-y-4">
+          <FormSelect
+            id="connector_data_type"
+            v-model="selectedDataType"
+            :label="t('migration.select_data_type')"
+            :options="dataTypeOptions"
+          />
+
+          <p v-if="connectorError" class="text-sm text-[hsl(var(--destructive))]">
+            {{ connectorError }}
+          </p>
+
+          <div class="flex justify-end">
+            <Button :disabled="!selectedDataType || connectorForm.processing" @click="fetchFromConnector">
+              <Download class="mr-2 h-4 w-4" />
+              {{ connectorForm.processing ? t('migration.fetching') : t('migration.fetch_from_source') }}
+            </Button>
+          </div>
+        </div>
+
         <!-- Upload new data type -->
-        <div class="space-y-4">
+        <div v-else class="space-y-4">
           <FormSelect
             id="data_type"
             v-model="selectedDataType"
