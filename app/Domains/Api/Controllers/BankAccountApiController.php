@@ -2,17 +2,22 @@
 
 namespace App\Domains\Api\Controllers;
 
+use App\Domains\Api\Requests\StoreBankAccountApiRequest;
 use App\Domains\Api\Resources\BankAccountResource;
+use App\Domains\Api\Services\AccountCodeResolver;
+use App\Domains\Banking\Actions\CreateBankAccountAction;
+use App\Domains\Banking\DTOs\CreateBankAccountData;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * @group Bank Accounts
  *
- * Read-only access to bank accounts and their balances.
+ * Manage bank accounts and their balances.
  */
 class BankAccountApiController extends Controller
 {
@@ -32,6 +37,7 @@ class BankAccountApiController extends Controller
         $this->authorize('viewAny', BankAccount::class);
 
         $bankAccounts = BankAccount::query()
+            ->with('ledgerAccount')
             ->when($request->boolean('active_only'), fn ($q) => $q->where('is_active', true))
             ->orderBy('name')
             ->paginate(min((int) $request->input('per_page', 25), 100));
@@ -54,6 +60,44 @@ class BankAccountApiController extends Controller
         abort_unless($bankAccount->organization_id === $currentOrganization->id(), 404);
         $this->authorize('view', $bankAccount);
 
-        return new BankAccountResource($bankAccount);
+        return new BankAccountResource($bankAccount->load('ledgerAccount'));
+    }
+
+    /**
+     * Create a bank account for the current organization.
+     *
+     * @bodyParam name string required Display name. Example: PostFinance
+     * @bodyParam iban string Swiss IBAN. Example: CH9300762011623852957
+     * @bodyParam qr_iban string Swiss QR-IBAN. Example: CH4431999123000889012
+     * @bodyParam currency string ISO 4217 currency code. Example: CHF
+     * @bodyParam account_code string required Active GL account code. Example: 1020
+     * @bodyParam bank_name string Bank name. Example: PostFinance
+     * @bodyParam bic string BIC/SWIFT code. Example: POFICHBEXXX
+     *
+     * @response 201 scenario="Created" {"data":{"id":"9c8f...","name":"PostFinance","iban":"CH9300762011623852957","qr_iban":"CH4431999123000889012","currency":"CHF","account_id":"abc123","account_code":"1020","is_active":true}}
+     */
+    public function store(
+        StoreBankAccountApiRequest $request,
+        CurrentOrganization $currentOrganization,
+        AccountCodeResolver $accountResolver,
+        CreateBankAccountAction $action,
+    ): JsonResponse {
+        $this->authorize('create', BankAccount::class);
+
+        $validated = $request->validated();
+        $validated['organization_id'] = $currentOrganization->id();
+
+        if (isset($validated['account_code'])) {
+            $validated['account_id'] = (string) $accountResolver
+                ->resolve($currentOrganization->id(), $validated['account_code'])
+                ->id;
+            unset($validated['account_code']);
+        }
+
+        $bankAccount = $action->execute(CreateBankAccountData::fromArray($validated));
+
+        return (new BankAccountResource($bankAccount))
+            ->response()
+            ->setStatusCode(201);
     }
 }

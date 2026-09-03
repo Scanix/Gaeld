@@ -26,6 +26,17 @@ The current coordinated production release (2026-09-03) is CE `v3.8.1` at
 `256`, with web `v2.14.2` at `bf63fbf` and the documentation site at
 `v2.12.1`.
 
+## Release Candidate
+
+The next additive API release is CE `v3.8.2`. It contains the minimal
+self-hosted integration scope: first-token bootstrapping, bank-account
+creation through `/api/v1`, and token-authenticated invoice PDF downloads.
+The wider headless-accounting API remains out of scope.
+
+The candidate uses the already validated EE `v2.9.20` pair. Exact CE, web,
+documentation, and deployment SHAs are recorded here after the coordinated
+commits and staging acceptance pass.
+
 ## Released Pair
 
 The released pair removes the customer-facing Early Beta messaging from the

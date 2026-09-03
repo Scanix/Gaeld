@@ -170,6 +170,7 @@ final class TokenPermissionMap
             BankAccount::class => [
                 'viewAny' => Permission::BankingView,
                 'view' => Permission::BankingView,
+                'create' => Permission::BankingCreate,
                 'import' => Permission::BankingImport,
             ],
             Organization::class => [

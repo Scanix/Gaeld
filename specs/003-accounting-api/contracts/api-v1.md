@@ -27,6 +27,22 @@ installation. An administrator may disable the complete API surface with the
 documented installation-level feature flag; token abilities and organization
 membership remain mandatory even when the flag is enabled.
 
+For a self-hosted installation, the local administrator can bootstrap the
+first organization token without using the web UI:
+
+```bash
+vendor/bin/sail artisan gaeld:token <organization-uuid> \
+  --name="Integration token" \
+  --abilities=banking.view \
+  --abilities=banking.create \
+  --abilities=banking.import \
+  --expires-in-days=365
+```
+
+The command selects the first organization owner unless `--user` is supplied.
+It prints the plain-text token once. It is deliberately a local/admin command,
+not an unauthenticated API bootstrap endpoint.
+
 ## Token Abilities
 
 The API reuses the existing permission values instead of introducing a second
@@ -39,7 +55,7 @@ permission vocabulary. Relevant values include:
 - `invoicing.view`, `invoicing.create`, `invoicing.edit`,
   `invoicing.finalize`, `invoicing.record-payment`
 - `expenses.view`, `expenses.create`, `expenses.edit`, `expenses.approve`
-- `banking.view`, `banking.import`, `banking.reconcile`
+- `banking.view`, `banking.create`, `banking.import`
 - `contacts.view`, `contacts.create`, `contacts.edit`
 
 `GET /api/v1/meta/abilities` is the source of truth for abilities accepted by
@@ -191,6 +207,39 @@ The multipart field is `camt_file`. The response contains the import UUID,
 bank-account UUID, detected format, statement identifier, and number of newly
 created transactions. Re-importing the same statement with a different key
 returns an import with zero new transactions.
+
+### Bank account creation
+
+```http
+POST /api/v1/bank-accounts
+Idempotency-Key: bank-account-postfinance-2026
+```
+
+```json
+{
+  "name": "PostFinance",
+  "iban": "CH9300762011623852957",
+  "qr_iban": "CH4431999123000889012",
+  "currency": "CHF",
+  "account_code": "1020"
+}
+```
+
+The request requires `banking.create` and an `account_code` referring to an
+active account in the token organization. The response uses the same
+`BankAccountResource` as the read endpoints and includes the public bank
+account and linked ledger-account identifiers.
+
+### Invoice PDF
+
+```http
+GET /api/v1/invoices/{invoice}/pdf
+```
+
+The request requires `invoicing.view` and returns `application/pdf` bytes with
+an attachment filename. Missing payment-account data returns `qr_iban_required`;
+QR-bill validation failures return `qr_bill_invalid` in the normal JSON error
+envelope.
 
 ## Idempotency
 
