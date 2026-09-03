@@ -21,10 +21,12 @@ EE_SHA=8d91d37
 must not be inferred from the CE version or copied into the public repository.
 The deployment pair and the tested commit SHAs belong in the release record.
 
-The current coordinated production release (2026-09-03) is CE `v3.7.5` at
-`51aa424` with EE `v2.9.18` at `8d91d37`. It is deployed as release `255`.
+The current coordinated production release (2026-09-03) is CE `v3.8.1` at
+`f0609be7` with EE `v2.9.20` at `3cdfd8d`. It is deployed as API release
+`256`, with web `v2.14.2` at `bf63fbf` and the documentation site at
+`v2.12.0`.
 
-## Release Candidate
+## Released Pair
 
 The next coordinated candidate removes the customer-facing Early Beta
 messaging from the hosted application and public website while preserving
@@ -41,11 +43,10 @@ WEB_SHA=bf63fbf
 DOCS_VERSION=v2.12.0
 ```
 
-The candidate must be tested from a clean CE archive and a tagged private EE
-artifact before staging deployment. `CE_SHA` and `WEB_SHA` identify the
-implementation commits; the final release tags are created only after the
-staging acceptance below passes. The EE ref and digest are the immutable
-artifact that staging and production must consume.
+The release was tested from a clean CE archive and a tagged private EE
+artifact before deployment. `CE_SHA` and `WEB_SHA` identify the implementation
+commits. The EE ref and digest are the immutable artifacts consumed by staging
+and production.
 
 ## Validated Staging Candidate
 
@@ -64,6 +65,36 @@ wizard, organization and fiscal-year provisioning, and authenticated dashboard
 access. The authenticated safe smoke runner passed 29 checks with zero
 failures, zero skipped checks, console errors, or request failures. Evidence is
 in `storage/app/qa/staging-qa-1788440287426-r147.md`.
+
+## Production Rollout
+
+The coordinated release was deployed to production on 2026-09-03:
+
+```text
+PRODUCTION_RELEASE=256
+API_REF=v3.8.1
+API_TAG_SHA=f0609be7
+API_DEPLOY_COMMIT=5b2fa691
+EE_REF=v2.9.20
+EE_SHA=3cdfd8d
+WEB_REF=v2.14.2
+WEB_SHA=bf63fbf
+DOCS_REF=v2.12.0
+```
+
+The API deployment consumed the pinned EE artifact and completed migrations,
+cache rebuilds, permission synchronization, and service reloads successfully.
+The production `/up`, `/login`, `/api/v1/`, website, and documentation URLs
+returned HTTP 200. Database and cache health are healthy, Horizon, PHP-FPM,
+and nginx are active, no failed queue jobs were present, and no customer-facing
+beta wording remains in the compiled application or public responses.
+
+Fresh production backups were created before activation: PostgreSQL
+`/data/backups/postgresql/daily/gaeld_20260903_133719.sql.gz` and files
+`/data/backups/files/daily/files_20260903_133719.tar.gz`. Both passed gzip
+integrity checks. The Sentry release notification was skipped because the
+deployment token is not configured; application availability and queue health
+were verified independently.
 
 ## Previous Validated Staging Candidate
 
@@ -101,9 +132,10 @@ tables, 34 users, 37 organizations, and 52 invoices; the temporary database
 was removed and its absence verified afterward. The latest production file
 archive also passed gzip integrity checking without extraction.
 
-The CE release was promoted to the public CE `main` branch and the private
-`production` branch. Production release `255` was deployed on 2026-09-03 with
-the immutable pair above. The offer-alignment and document-storage migrations
+The previous CE release was promoted to the public CE `main` branch and the
+private `production` branch. Production release `255` was deployed on
+2026-09-03 with the preceding immutable pair. The offer-alignment and
+document-storage migrations
 are applied, the health endpoint reports healthy database and cache checks,
 the failed-job queue is empty, and the offer-plan migration and Stripe price
 synchronization dry runs made no changes. The plan-change proration preview was
