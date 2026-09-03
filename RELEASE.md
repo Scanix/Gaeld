@@ -22,7 +22,7 @@ must not be inferred from the CE version or copied into the public repository.
 The deployment pair and the tested commit SHAs belong in the release record.
 
 The current coordinated production release (2026-09-03) is CE `v3.7.5` at
-`51aa424` with EE `v2.9.18` at `8d91d37`. It is deployed as release `254`.
+`51aa424` with EE `v2.9.18` at `8d91d37`. It is deployed as release `255`.
 
 ## Validated Staging Candidate
 
@@ -61,7 +61,7 @@ was removed and its absence verified afterward. The latest production file
 archive also passed gzip integrity checking without extraction.
 
 The CE release was promoted to the public CE `main` branch and the private
-`production` branch. Production release `245` was deployed on 2026-09-03 with
+`production` branch. Production release `255` was deployed on 2026-09-03 with
 the immutable pair above. The offer-alignment and document-storage migrations
 are applied, the health endpoint reports healthy database and cache checks,
 the failed-job queue is empty, and the offer-plan migration and Stripe price
