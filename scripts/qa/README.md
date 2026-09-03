@@ -124,6 +124,12 @@ organizations whose names contain the current run ID. Set
 `QA_CLEANUP_ORGANIZATION=0` only when deliberately retaining the run for
 inspection.
 
+Set `QA_OFFER_MATRIX=1` with `QA_CREATE_ACCOUNT=1` to verify the Cloud Free and
+Solo offer boundary on disposable tenants. This mode checks cardless signup,
+absence of Stripe customers before explicit conversion, the Cloud Free fifth
+and sixth invoice boundary, Cloud Free payroll denial, and cleanup. It requires
+`STRIPE_SECRET_KEY` and `QA_MAILPIT_URL`; it is intended for staging only.
+
 Set `QA_PLAN=team` for the full SaaS workflow. `QA_PLAN=free` is useful for the
 lower-cost signup and accounting smoke tests; paid conversion checks require a
 configured Solo/Team Stripe Checkout adapter.

@@ -1,5 +1,8 @@
+# Legacy fallback for installations that do not run Laravel Horizon.
+# Do not enable this unit alongside gaeld-horizon.service: both consume the
+# same Redis queues and would create duplicate queue consumers.
 [Unit]
-Description=Gaeld Queue Worker
+Description=Gaeld Legacy Queue Worker (Horizon fallback)
 After=network.target redis.service postgresql.service
 
 [Service]

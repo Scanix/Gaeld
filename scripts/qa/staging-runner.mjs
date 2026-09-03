@@ -36,6 +36,7 @@ const CAPTURE_SCREENSHOTS = process.env.QA_CAPTURE_SCREENSHOTS !== '0'
 const CREATE_ACCOUNT = process.env.QA_CREATE_ACCOUNT === '1'
 const EXHAUSTIVE = process.env.QA_EXHAUSTIVE === '1'
 const FULL = process.env.QA_FULL === '1'
+const OFFER_MATRIX = process.env.QA_OFFER_MATRIX === '1'
 const CLEANUP_ORGANIZATION = process.env.QA_CLEANUP_ORGANIZATION !== '0'
 const EMAIL = process.env.QA_EMAIL
 const PASSWORD = process.env.QA_PASSWORD
@@ -98,6 +99,12 @@ function assertSafeConfiguration() {
   }
   if (FULL && !MAILPIT_URL) {
     throw new Error('QA_FULL requires QA_MAILPIT_URL')
+  }
+  if (OFFER_MATRIX && (!RUN_ENABLED || !CREATE_ACCOUNT)) {
+    throw new Error('QA_OFFER_MATRIX requires QA_RUN=1 and QA_CREATE_ACCOUNT=1')
+  }
+  if (OFFER_MATRIX && !STRIPE_SECRET_KEY) {
+    throw new Error('QA_OFFER_MATRIX requires STRIPE_SECRET_KEY for Stripe customer checks')
   }
   if (!['free', 'solo', 'team'].includes(PLAN)) {
     throw new Error('QA_PLAN must be free, solo, or team')
@@ -245,8 +252,14 @@ async function completeStripeCheckout(page, checkoutUrl = null, accountName = AC
 
   const cardMethod = page.locator('input[name="payment-method-accordion-item-title"][value="card"]')
   await cardMethod.waitFor({ state: 'attached', timeout: 30000 })
-  await cardMethod.check({ force: true })
+  const cardButton = page.locator('button[data-testid="card-accordion-item-button"], button[aria-label*="card" i], button[aria-label*="carte" i]').first()
+  if (await cardButton.count()) {
+    await cardButton.dispatchEvent('click')
+  } else {
+    await cardMethod.check({ force: true })
+  }
   await page.waitForTimeout(500)
+  if (!(await cardMethod.isChecked())) throw new Error('Stripe card payment method could not be selected')
 
   const fillStripeField = async (name, autocomplete, title, value) => {
     const direct = page.locator(`input[name="${name}"], input[autocomplete="${autocomplete}"]`).first()
@@ -265,15 +278,67 @@ async function completeStripeCheckout(page, checkoutUrl = null, accountName = AC
   const nameField = page.locator('input[autocomplete="cc-name"], input[name="billingName"]').first()
   if (await nameField.count()) await nameField.fill(accountName)
 
-  const submit = page.getByRole('button', { name: /Start trial|Démarrer la période d'essai|Pay|Payer/ }).last()
-  await submit.click()
-  await page.waitForURL(url => {
-    const parsed = new URL(url.toString())
-    return parsed.hostname === new URL(BASE_URL).hostname && /\/welcome|\/email\/verify|\/billing/.test(parsed.pathname)
-  }, { timeout: 90000 })
+  const submitButtons = page.locator('button[type="submit"]')
+  const submit = (await submitButtons.count()) > 0
+    ? submitButtons.last()
+    : page.getByRole('button', { name: /S'abonner|Subscribe|Start trial|Démarrer la période d'essai|Pay now|Payer maintenant/i }).last()
+  await Promise.all([
+    page.waitForURL(url => {
+      const parsed = new URL(url.toString())
+      return parsed.hostname === new URL(BASE_URL).hostname && /\/welcome|\/email\/verify|\/billing/.test(parsed.pathname)
+    }, { timeout: 90000 }),
+    submit.dispatchEvent('click'),
+  ])
   await page.waitForLoadState('domcontentloaded')
 
   return { httpStatus: 200, url: page.url() }
+}
+
+async function convertPaidTrial(page, accountName = ACCOUNT_NAME) {
+  await page.goto(`${BASE_URL}/billing`, { waitUntil: 'networkidle' })
+  const continueButton = page.getByRole('button', { name: /Continue to payment|Choose a paid plan|Choisir un forfait payant|Kostenpflichtigen Tarif wählen|Scegli (?:il|un) piano a pagamento|Continuer vers le paiement|Weiter zur Zahlung|Continua al pagamento/i }).first()
+  if (!(await continueButton.count())) throw new Error('Paid trial conversion action was unavailable')
+
+  const [checkoutResponse] = await Promise.all([
+    page.waitForResponse(response =>
+      response.request().method() === 'POST' && new URL(response.url()).pathname.startsWith('/billing/checkout/'),
+    { timeout: 30000 }),
+    continueButton.click(),
+  ])
+  const checkoutUrl = checkoutResponse.headers()['x-inertia-location'] || null
+  await page.waitForURL(url => new URL(url.toString()).hostname === 'checkout.stripe.com', { timeout: 30000 })
+  const checkout = await completeStripeCheckout(page, checkoutUrl, accountName)
+
+  await page.goto(`${BASE_URL}/billing`, { waitUntil: 'networkidle' })
+  const billingBody = await page.locator('body').innerText()
+  const rawPage = await page.locator('#app').getAttribute('data-page')
+  let currentSubscription = null
+  if (rawPage) {
+    try {
+      currentSubscription = JSON.parse(rawPage).props?.currentSubscription ?? null
+    } catch {
+      currentSubscription = null
+    }
+  }
+
+  const renderedActiveTeam = /\bTeam\b/.test(billingBody)
+    && /Active|Actif|Aktiv|Attivo/i.test(billingBody)
+    && /Update payment method|Manage subscription|Mettre à jour le moyen de paiement|Gérer l'abonnement|Zahlungsmethode aktualisieren|Abonnement verwalten|Aggiorna metodo di pagamento|Gestisci abbonamento/i.test(billingBody)
+
+  return {
+    httpStatus: checkoutResponse.status(),
+    checkoutStatus: checkout.httpStatus,
+    url: page.url(),
+    plan: currentSubscription?.plan_slug ?? (renderedActiveTeam ? 'team' : null),
+    subscriptionStatus: currentSubscription?.status ?? (renderedActiveTeam ? 'active' : null),
+    hasStripeSubscription: currentSubscription?.has_stripe_subscription ?? renderedActiveTeam,
+    hasPaymentMethod: currentSubscription?.has_payment_method ?? renderedActiveTeam,
+    converted: currentSubscription?.plan_slug === 'team'
+      && currentSubscription?.status === 'active'
+      && currentSubscription?.has_stripe_subscription === true
+      && currentSubscription?.has_payment_method === true
+      || renderedActiveTeam,
+  }
 }
 
 async function completeOnboarding(page, accountName = ACCOUNT_NAME, longYear = false) {
@@ -319,6 +384,119 @@ async function completeOnboarding(page, accountName = ACCOUNT_NAME, longYear = f
     company: dashboardText.includes(accountName),
     fiscalYear: fiscalYearText.includes(longYear ? 'Migration Year' : '2026'),
     bank: bankingText.includes('Compte principal CHF'),
+  }
+}
+
+async function createOfferMatrixTenant(browser, email, accountName, plan, createdAccounts) {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
+  const page = await context.newPage()
+
+  try {
+    const auth = await createAccount(page, { email, password: `Qa-${RUN_ID.replace(/[^a-zA-Z0-9]/g, '')}-${plan}-Aa1!`, accountName, plan })
+    createdAccounts.push(auth)
+    if (!auth.needsVerification) throw new Error(`${plan} signup did not request email verification`)
+
+    const verification = await verifyAccountFromMailpit(page, email)
+    if (verification.status !== 'pass') throw new Error(`${plan} email verification failed`)
+    await login(page, email, auth.password)
+    const onboarding = await completeOnboarding(page, accountName)
+    if (!onboarding.company || !onboarding.fiscalYear || !onboarding.bank) {
+      throw new Error(`${plan} onboarding did not complete`)
+    }
+
+    return { context, page, auth, onboarding }
+  } catch (error) {
+    await context.close()
+    throw error
+  }
+}
+
+async function exerciseOfferMatrix(browser, createdAccounts) {
+  const tenants = []
+  const cloudFreeEmail = generatedAccountEmail('-cloud-free')
+  const soloEmail = generatedAccountEmail('-solo')
+  const cloudFreeName = `Gäld Offer Cloud Free ${RUN_ID}`
+  const soloName = `Gäld Offer Solo ${RUN_ID}`
+
+  try {
+    const cloudFree = await createOfferMatrixTenant(browser, cloudFreeEmail, cloudFreeName, 'free', createdAccounts)
+    const solo = await createOfferMatrixTenant(browser, soloEmail, soloName, 'solo', createdAccounts)
+    tenants.push(cloudFree, solo)
+
+    const cloudFreeBilling = await cloudFree.page.goto(`${BASE_URL}/billing`, { waitUntil: 'networkidle' })
+    const cloudFreeBody = await cloudFree.page.locator('body').innerText()
+    const soloBilling = await solo.page.goto(`${BASE_URL}/billing`, { waitUntil: 'networkidle' })
+    const soloBody = await solo.page.locator('body').innerText()
+
+    const cloudFreeCustomers = await stripeRequest(`/customers?email=${encodeURIComponent(cloudFreeEmail)}&limit=10`)
+    const soloCustomers = await stripeRequest(`/customers?email=${encodeURIComponent(soloEmail)}&limit=10`)
+    const cloudFreeNoStripeCustomer = (cloudFreeCustomers.body.data?.length ?? 0) === 0
+    const soloNoStripeCustomer = (soloCustomers.body.data?.length ?? 0) === 0
+
+    const customerName = `QA Offer Customer ${RUN_ID}`
+    const contact = await createContactForReplay(cloudFree.page, {
+      name: customerName,
+      email: `qa-offer-customer-${RUN_ID}@example.test`,
+      country: 'CH',
+    })
+    const today = dateAfterDays(0)
+    const year = Number(today.slice(0, 4))
+    const month = Number(today.slice(5, 7))
+    const period = {
+      year,
+      month,
+      start: `${today.slice(0, 7)}-01`,
+      end: new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10),
+      date: today,
+    }
+    const invoices = []
+    for (let index = 0; index < 6; index += 1) {
+      invoices.push(await createInvoiceForReplay(cloudFree.page, customerName, period, index))
+    }
+    const invoiceList = await cloudFree.page.goto(`${BASE_URL}/invoices`, { waitUntil: 'networkidle' })
+    const invoiceListBody = await cloudFree.page.locator('body').innerText()
+    const sixthInvoiceDescription = `QA 24M invoice ${RUN_ID} 6`
+    const invoiceQuotaRejected = invoices.slice(0, 5).every(invoice => invoice.created)
+      && invoices[5]?.created === false
+      && !invoiceListBody.includes(sixthInvoiceDescription)
+
+    const payroll = await cloudFree.page.goto(`${BASE_URL}/payroll/run`, { waitUntil: 'domcontentloaded' })
+    const cloudFreePayrollDenied = payroll?.status() === 403
+
+    return {
+      cloudFree: {
+        billingStatus: cloudFreeBilling?.status() ?? null,
+        planVisible: /Cloud Free/.test(cloudFreeBody),
+        active: /Active/.test(cloudFreeBody),
+        noStripeCustomer: cloudFreeNoStripeCustomer,
+        contactCreated: contact.created,
+        invoicesCreated: invoices.filter(invoice => invoice.created).length,
+        invoiceQuotaRejected,
+        payrollStatus: payroll?.status() ?? null,
+        payrollDenied: cloudFreePayrollDenied,
+      },
+      solo: {
+        billingStatus: soloBilling?.status() ?? null,
+        planVisible: /Solo/.test(soloBody),
+        trialVisible: /Trial/.test(soloBody),
+        noPaymentMethodRequired: /No payment method|Aucun moyen de paiement|keine Zahlungsmethode|Nessun metodo di pagamento/i.test(soloBody),
+        noStripeCustomer: soloNoStripeCustomer,
+      },
+      passed: cloudFreeBilling?.status() === 200
+        && cloudFreeBody.includes('Cloud Free')
+        && cloudFreeNoStripeCustomer
+        && contact.created
+        && invoiceQuotaRejected
+        && cloudFreePayrollDenied
+        && soloBilling?.status() === 200
+        && soloBody.includes('Solo')
+        && /Trial/.test(soloBody)
+        && /No payment method|Aucun moyen de paiement|keine Zahlungsmethode|Nessun metodo di pagamento/i.test(soloBody)
+        && soloNoStripeCustomer,
+      invoiceListStatus: invoiceList?.status() ?? null,
+    }
+  } finally {
+    for (const tenant of tenants) await tenant.context.close()
   }
 }
 
@@ -1295,7 +1473,7 @@ async function createInvoiceForReplay(page, customerName, period, index, taxTrea
     const body = await page.locator('body').innerText()
     const pageInvoiceId = page.url().match(/\/invoices\/([^/?#]+)/i)?.[1]
     const redirectedInvoiceId = response.headers()['location']?.match(/\/invoices\/([^/?#]+)/i)?.[1]
-    const invoiceId = pageInvoiceId && pageInvoiceId !== 'create' ? pageInvoiceId : redirectedInvoiceId
+    const invoiceId = [pageInvoiceId, redirectedInvoiceId].find(id => id && id !== 'create') || null
 
     return {
       status: response.status(),
@@ -1835,6 +2013,9 @@ async function createExhaustiveTenant(browser, createdAccounts) {
     const onboarding = await completeOnboarding(page, accountName, true)
     if (!onboarding.company || !onboarding.fiscalYear || !onboarding.bank) throw new Error('Exhaustive tenant onboarding did not complete')
 
+    const conversion = await convertPaidTrial(page, accountName)
+    if (!conversion.converted) throw new Error(`Paid Team trial conversion failed: ${JSON.stringify(conversion)}`)
+
     const openingBalances = FULL
       ? await exerciseFullPaperMigration(page)
       : await exerciseOpeningBalanceContract(page)
@@ -1856,6 +2037,7 @@ async function createExhaustiveTenant(browser, createdAccounts) {
       account: { email, accountName },
       diagnostics: { consoleErrors, requestFailures },
       onboarding,
+      conversion,
       openingBalances,
       employees,
       replay,
@@ -2002,7 +2184,7 @@ async function main() {
     runId: RUN_ID,
     startedAt: new Date().toISOString(),
     baseUrl: BASE_URL,
-    mode: RUN_ENABLED ? (FULL ? 'staging-full' : EXHAUSTIVE ? 'staging-exhaustive' : 'staging-safe-smoke') : 'dry-run',
+    mode: RUN_ENABLED ? (FULL ? 'staging-full' : EXHAUSTIVE ? 'staging-exhaustive' : OFFER_MATRIX ? 'staging-offer-matrix' : 'staging-safe-smoke') : 'dry-run',
     accountMode: CREATE_ACCOUNT ? 'ephemeral-signup' : 'existing-account',
     protectedOrganization: '[redacted]',
     results: [],
@@ -2146,12 +2328,22 @@ async function main() {
           report.results.push(result(9, 'billing and Stripe test workflow', 'fail', { error: error.message }))
         }
 
+        if (OFFER_MATRIX) {
+          try {
+            const offerMatrix = await exerciseOfferMatrix(browser, createdAccounts)
+            report.results.push(result(9, 'Cloud Free and Solo offer matrix', offerMatrix.passed ? 'pass' : 'fail', offerMatrix))
+          } catch (error) {
+            report.results.push(result(9, 'Cloud Free and Solo offer matrix', 'fail', { error: error.message }))
+          }
+        }
+
         if (EXHAUSTIVE) {
           try {
             const exhaustive = await createExhaustiveTenant(browser, createdAccounts)
             additionalConsoleErrors.push(...exhaustive.diagnostics.consoleErrors)
             additionalRequestFailures.push(...exhaustive.diagnostics.requestFailures)
             report.results.push(result(0, 'exhaustive 24-month UI replay', exhaustive.replay.passed ? 'pass' : 'fail', exhaustive))
+            report.results.push(result(9, 'explicit Team trial conversion', exhaustive.conversion.converted ? 'pass' : 'fail', exhaustive.conversion))
             const webhook = await exerciseStripeWebhookLifecycle(exhaustive.account.email)
             report.results.push(result(9, 'Stripe webhook lifecycle', webhook.status === 'pass' ? 'pass' : 'fail', webhook))
           } catch (error) {
