@@ -47,6 +47,24 @@ implementation commits; the final release tags are created only after the
 staging acceptance below passes. The EE ref and digest are the immutable
 artifact that staging and production must consume.
 
+## Validated Staging Candidate
+
+The customer-facing messaging candidate was deployed and accepted on staging
+on 2026-09-03:
+
+```text
+STAGING_RELEASE=147
+API_REF=v3.8.1 candidate at 40a3fcb
+EE_REF=v2.9.20
+EE_SHA=3cdfd8d
+```
+
+The newly created Cloud Free account completed email verification, the setup
+wizard, organization and fiscal-year provisioning, and authenticated dashboard
+access. The authenticated safe smoke runner passed 29 checks with zero
+failures, zero skipped checks, console errors, or request failures. Evidence is
+in `storage/app/qa/staging-qa-1788440287426-r147.md`.
+
 ## Previous Validated Staging Candidate
 
 The offer-alignment candidate was deployed and accepted on staging on
