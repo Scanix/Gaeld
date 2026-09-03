@@ -31,10 +31,10 @@ private EE packaging and boundary checks:
 
 ```text
 CE_VERSION=v3.8.0
-EE_VERSION=v2.9.19
+EE_VERSION=v2.9.20
 CE_SHA=8bbb618
-EE_SHA=e9b1aef
-EE_CONTENT_DIGEST=fc84b572c2278e5f5416e9762caa48da713826d0ad248e5bf4af5d3108f02660
+EE_SHA=3cdfd8d
+EE_CONTENT_DIGEST=e49cfb95ca8bbd9c6e60f5e5c5b7459897b60fecdfd5ec3f30ee1fca1d9fd478
 ```
 
 The candidate must be tested from a clean CE archive and a tagged private EE
