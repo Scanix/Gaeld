@@ -38,7 +38,7 @@
 - [X] T025 Register the trial-expiry job in the EE scheduler and make middleware/reconciliation safe when expiry races with explicit paid conversion in `plugins/gaeld-ee/src/GaeldEEServiceProvider.php` and `plugins/gaeld-ee/src/Domains/Billing/Services/BillingService.php`.
 - [X] T026 Add registration, no-charge Solo/Team trial, expiry fallback, inactive-plan rejection, and legacy signup regression tests in `plugins/gaeld-ee/tests/Feature/Billing/RegistrationTest.php`, `tests/Feature/Billing/TrialFallbackTest.php`, and `tests/Feature/OfferPlanDefinitionTest.php`.
 - [X] T027 Update Billing server props and Inertia UI to distinguish current canonical plans, legacy subscriptions, trial state, quotas, explicit paid conversion, and Cloud Free fallback in `plugins/gaeld-ee/src/Domains/Billing/Controllers/BillingController.php`, `plugins/gaeld-ee/resources/js/Pages/Billing/Plans.vue`, and `app/Http/Middleware/HandleInertiaRequests.php`.
-- [ ] T028 Add billing lifecycle tests proving legacy plans retain price/history and explicit changes update one Stripe subscription in `plugins/gaeld-ee/tests/Feature/Billing/PlanChangeTest.php` and `plugins/gaeld-ee/tests/Feature/Billing/StripeWebhookLifecycleTest.php`.
+- [X] T028 Add billing lifecycle tests proving legacy plans retain price/history and explicit changes update one Stripe subscription in `plugins/gaeld-ee/tests/Feature/Billing/PlanChangeTest.php` and `plugins/gaeld-ee/tests/Feature/Billing/StripeWebhookLifecycleTest.php`.
 
 ## Phase 5: Legacy subscription migration [US3]
 
