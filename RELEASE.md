@@ -87,8 +87,10 @@ backups below passed gzip and tar integrity checks before deployment:
 
 Sentry release notification was skipped because the deployment credentials are
 not configured. Deployer also reported a sudo failure while disabling the
-legacy worker; post-deployment checks confirmed `gaeld-worker` inactive and
-`gaeld-horizon` active, so no queue action was required.
+legacy worker; post-deployment checks confirmed `gaeld-worker` was already
+inactive. Because Deployer stopped before its Horizon step, the deploy user
+issued `horizon:terminate`; systemd restarted `gaeld-horizon` from release
+`257` at 19:25:25 UTC, and the final service check was `active`.
 
 ## Released Pair
 
