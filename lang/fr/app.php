@@ -884,6 +884,7 @@ return [
     'grant_cloud_free' => 'Accorder Cloud Free',
     'grant_cloud_free_requires_local' => 'Utilisez la fiche de l’organisation pour gérer un abonnement lié à Stripe.',
     'grant_cloud_free_description' => 'Attribuer un abonnement hébergé gratuit sans créer de client ni de paiement Stripe.',
+    'no_cloud_free_grants_available' => 'Aucun abonnement local non gratuit ne peut recevoir Cloud Free.',
     'grant' => 'Accorder',
     'revoke_subscription' => 'Révoquer l\'abonnement',
     'revoke_subscription_confirm' => 'Êtes-vous sûr de vouloir résilier l\'abonnement de :org ? Cette action prend effet immédiatement.',
