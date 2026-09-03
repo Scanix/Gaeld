@@ -32,7 +32,7 @@ private EE packaging and boundary checks:
 ```text
 CE_VERSION=v3.8.0
 EE_VERSION=v2.9.19
-CE_SHA=TO_BE_TAGGED
+CE_SHA=8bbb618
 EE_SHA=e9b1aef
 EE_CONTENT_DIGEST=fc84b572c2278e5f5416e9762caa48da713826d0ad248e5bf4af5d3108f02660
 ```
