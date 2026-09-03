@@ -2165,8 +2165,6 @@ return [
     'system_message' => 'Messaggio di sistema',
     'system_message_desc' => 'Mostrato come banner a tutti gli utenti autenticati. Lascia vuoto per nascondere.',
     'system_message_placeholder' => 'es. Manutenzione programmata domenica 02:00–04:00 UTC',
-    'early_beta' => 'Beta anticipata',
-    'early_beta_notice' => 'Gäld è in fase di sviluppo attivo. I dati possono essere reimpostati senza preavviso.',
     'export_pdf' => 'Esportare PDF',
     'export_csv' => 'Esportare CSV',
     'n_days' => ':n giorni',

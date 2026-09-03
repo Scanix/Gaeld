@@ -2294,8 +2294,6 @@ return [
     'system_message' => 'System Message',
     'system_message_desc' => 'Shown as a banner to all logged-in users. Leave empty to hide.',
     'system_message_placeholder' => 'e.g. Scheduled maintenance on Sunday 02:00–04:00 UTC',
-    'early_beta' => 'Early Beta',
-    'early_beta_notice' => 'Gäld is under active development. Data may be reset without notice.',
     'export_pdf' => 'Export PDF',
     'export_csv' => 'Export CSV',
     'n_days' => ':n days',

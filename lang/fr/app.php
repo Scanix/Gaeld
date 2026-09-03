@@ -2223,8 +2223,6 @@ return [
     'system_message' => 'Message système',
     'system_message_desc' => 'Affiché en bannière à tous les utilisateurs connectés. Laissez vide pour masquer.',
     'system_message_placeholder' => 'ex. Maintenance planifiée dimanche 02h00–04h00 UTC',
-    'early_beta' => 'Bêta anticipée',
-    'early_beta_notice' => 'Gäld est en développement actif. Les données peuvent être réinitialisées sans préavis.',
     'export_pdf' => 'Exporter PDF',
     'export_csv' => 'Exporter CSV',
     'n_days' => ':n jours',
