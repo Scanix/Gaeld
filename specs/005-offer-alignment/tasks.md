@@ -65,7 +65,7 @@
 ## Phase 8: Staging rollout and cross-cutting verification
 
 - [X] T042 [P] Run focused EE billing, migration, trial, quota, and security tests through Sail and record unrelated failures separately in `plugins/gaeld-ee/tests/Feature/Billing/` and `plugins/gaeld-ee/tests/Security/`.
-- [ ] T043 [P] Run core invoice, OCR, storage, member, API, and CE compatibility tests through Sail in `tests/Feature/` and `tests/Security/`.
+- [X] T043 [P] Run core invoice, OCR, storage, member, API, and CE compatibility tests through Sail in `tests/Feature/` and `tests/Security/`.
 - [X] T044 Run Pint and PHPStan on changed PHP paths through Sail using `pint.json` and `phpstan.neon`.
 - [X] T045 Run the API frontend build, website tests/build, and documentation build with the repository-supported commands in `package.json`, `../web/package.json`, and `../docs/package.json`.
 - [ ] T046 Perform staging acceptance for Cloud Free signup, Solo/Team cardless trials, explicit payment conversion, expiry fallback, quotas, API denial, legacy plan display, export, and all four locales using `scripts/qa/staging-runner.mjs`.
