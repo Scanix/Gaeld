@@ -52,7 +52,7 @@
 - [X] T033 [US4] Update the Next.js pricing cards, plan names, prices, quotas, CTA behavior, and structured JSON-LD in `../web/src/app/[locale]/pricing/page.tsx`.
 - [X] T034 [US4] Update localized website pricing messages, metadata, Cloud Free quota copy, Solo/Team trial copy, and CE/self-hosting distinction in `../web/messages/en.json`, `../web/messages/fr.json`, `../web/messages/de.json`, and `../web/messages/it.json`.
 - [X] T035 [P] [US4] Add website pricing contract assertions for all four offers and absence of retired pricing keys in `../web/src/__tests__/pricing-contract.test.ts`.
-- [ ] T036 [US4] Add or update localized website Playwright coverage for desktop/mobile pricing cards, links, and readable quota text in `../web/tests/pricing.spec.ts`.
+- [X] T036 [US4] Add or update localized website Playwright coverage for desktop/mobile pricing cards, links, and readable quota text in `../web/tests/pricing.spec.ts`.
 
 ## Phase 7: Documentation and contract alignment [US4]
 
