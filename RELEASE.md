@@ -24,7 +24,7 @@ The deployment pair and the tested commit SHAs belong in the release record.
 The current coordinated production release (2026-09-03) is CE `v3.8.2` at
 `29e657e` with deployment commit `8efc7313`, using EE `v2.9.20` at `3cdfd8d`.
 It is deployed as API release `257`, with web `v2.14.3` at `1e47ae3` and the
-documentation site at `v2.12.2` at `7561b90`.
+documentation site at `v2.12.3` at `fd97bee`.
 
 ## Release Candidate
 
@@ -34,7 +34,7 @@ token-authenticated invoice PDF downloads. The wider headless-accounting API
 remains out of scope.
 
 The release uses the already validated EE `v2.9.20` pair. The public API,
-documentation, and web contract tags are `v3.8.2`, `v2.12.2`, and `v2.14.3`.
+documentation, and web contract tags are `v3.8.2`, `v2.12.3`, and `v2.14.3`.
 
 ## v3.8.2 Staging Validation
 
@@ -62,8 +62,9 @@ EE_REF=v2.9.20
 EE_SHA=3cdfd8d
 WEB_REF=v2.14.3
 WEB_SHA=1e47ae3
-DOCS_VERSION=v2.12.2
-DOCS_SHA=7561b90
+DOCS_VERSION=v2.12.3
+DOCS_SHA=fd97bee
+DOCS_STATIC_RELEASE=5
 ```
 
 The production `/up`, `/api/v1/`, and new API route checks returned healthy
@@ -72,8 +73,10 @@ idempotent replay on a SaaS tenant whose plan includes `api_access`; temporary
 token and bank-account records were removed. Invoice PDF behavior was also
 validated on staging with the same CE tag.
 
-The docs site was published as static release `4`, and the marketing site was
-updated to web commit `1e47ae3`; both public URLs returned HTTP 200. The fresh
+The docs site was published as static release `5`, and the marketing site was
+updated to web commit `1e47ae3`; both public URLs returned HTTP 200. The docs
+search index was refreshed to `12,232` documents and returns the new bank-account
+and invoice-PDF pages. The fresh
 backups below passed gzip and tar integrity checks before deployment:
 
 ```text
