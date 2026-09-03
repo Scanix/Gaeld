@@ -11,9 +11,9 @@ Every production release records both immutable refs before deployment:
 
 ```text
 CE_VERSION=v3.7.3
-EE_VERSION=v2.9.11
+EE_VERSION=v2.9.12
 CE_SHA=ce9cb6b
-EE_SHA=97bc351
+EE_SHA=c2b27de
 ```
 
 `CE_VERSION` is the public release tag shared by GitHub and GitLab CE.
@@ -22,7 +22,7 @@ must not be inferred from the CE version or copied into the public repository.
 The deployment pair and the tested commit SHAs belong in the release record.
 
 The current coordinated production release (2026-09-03) is CE `v3.7.3` at
-`ce9cb6b` with EE `v2.9.11` at `97bc351`. It is deployed as release `246`.
+`ce9cb6b` with EE `v2.9.12` at `c2b27de`. It is deployed as release `247`.
 
 ## Validated Staging Candidate
 
