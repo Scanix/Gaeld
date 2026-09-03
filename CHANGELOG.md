@@ -5,6 +5,19 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.2] — 2026-09-03
+
+### Added
+- **Minimal integration API:** added the `gaeld:token` command for securely
+  bootstrapping an organization-scoped API token on self-hosted installations.
+- **Bank account API:** added `POST /api/v1/bank-accounts` with organization-
+  scoped active GL account linking, idempotent creation, and the same mixed-use
+  and default-invoicing behavior as the web workflow.
+- **Invoice PDF API:** added `GET /api/v1/invoices/{invoice}/pdf` for
+  token-authenticated Swiss QR-bill PDF downloads with structured errors.
+- **API documentation:** regenerated the OpenAPI and Docusaurus references
+  and refreshed the public roadmap in all supported documentation locales.
+
 ## [3.8.1] — 2026-09-03
 
 ### Changed

@@ -8,6 +8,7 @@ use App\Domains\Api\Controllers\BankImportApiController;
 use App\Domains\Api\Controllers\ContactApiController;
 use App\Domains\Api\Controllers\ExpenseApiController;
 use App\Domains\Api\Controllers\InvoiceApiController;
+use App\Domains\Api\Controllers\InvoicePdfApiController;
 use App\Domains\Api\Controllers\JournalEntryApiController;
 use App\Domains\Api\Controllers\OrgTokenController;
 use App\Domains\Api\Controllers\WebhookApiController;
@@ -67,6 +68,7 @@ Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOr
     Route::post('/invoices/{invoice}/send', [InvoiceApiController::class, 'send'])->name('api.invoices.send');
     Route::post('/invoices/{invoice}/reminder', [InvoiceApiController::class, 'reminder'])->name('api.invoices.reminder');
     Route::post('/invoices/{invoice}/credit-note', [InvoiceApiController::class, 'creditNote'])->name('api.invoices.credit-note');
+    Route::get('/invoices/{invoice}/pdf', InvoicePdfApiController::class)->name('api.invoices.pdf');
 
     // Expenses
     Route::apiResource('expenses', ExpenseApiController::class)->names([
@@ -111,9 +113,10 @@ Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOr
     Route::get('/accounts', [AccountApiController::class, 'index'])->name('api.accounts.index');
     Route::get('/accounts/{account}', [AccountApiController::class, 'show'])->name('api.accounts.show');
 
-    // Bank Accounts (read-only)
+    // Bank Accounts
     Route::get('/bank-accounts', [BankAccountApiController::class, 'index'])->name('api.bank-accounts.index');
     Route::get('/bank-accounts/{bankAccount}', [BankAccountApiController::class, 'show'])->name('api.bank-accounts.show');
+    Route::post('/bank-accounts', [BankAccountApiController::class, 'store'])->name('api.bank-accounts.store');
     Route::post('/bank-accounts/{bankAccount}/imports/camt053', [BankImportApiController::class, 'store'])
         ->name('api.bank-accounts.import-camt053');
 

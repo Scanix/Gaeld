@@ -1,10 +1,23 @@
 {
   "_meta": {
-    "generated": "2026-04-13",
+    "generated": "2026-09-03",
     "method": "source-code-audit",
     "note": "Strict contract derived from reading every controller, request, resource, model, middleware. Nothing assumed — all verified in code.",
     "base_url": "/api/v1",
-    "auth_note": "All routes except GET /api/v1/ require Sanctum token with api-org middleware + feature:api_access flag."
+    "auth_note": "All routes except GET /api/v1/ require Sanctum token with api-org middleware + feature:api_access flag. Mutations also use the shared idempotency boundary when applicable."
+  },
+  "cli_commands": {
+    "gaeld:token": {
+      "description": "Create an organization-scoped API token for an existing organization owner.",
+      "arguments": {
+        "organization": "Organization UUID",
+        "--user": "Optional owner email address; defaults to the first owner",
+        "--name": "Optional token name",
+        "--abilities": "Repeatable canonical or legacy token ability",
+        "--expires-in-days": "Optional integer from 1 to 365"
+      },
+      "security": "Local/admin command only. The plain-text token is printed once and is never persisted in plain text."
+    }
   },
 
   "authentication": {
@@ -22,7 +35,7 @@
       "contacts.view", "contacts.create", "contacts.edit", "contacts.delete",
       "invoicing.view", "invoicing.create", "invoicing.edit", "invoicing.delete", "invoicing.finalize", "invoicing.record-payment",
       "expenses.view", "expenses.create", "expenses.edit", "expenses.approve", "expenses.delete",
-      "banking.view", "banking.import",
+      "banking.view", "banking.create", "banking.import",
       "organization.view", "organization.edit", "organization.delete", "organization.manage-users", "organization.view-audit-log"
     ],
     "wildcard": "*",
@@ -898,12 +911,17 @@
           {
             "id": "uuid",
             "name": "string",
-            "iban": "string",
+            "iban": "string|null",
+            "qr_iban": "string|null",
             "bank_name": "string|null",
+            "bic": "string|null",
             "currency": "string",
             "balance": "numeric",
             "is_active": "boolean",
+            "is_mixed_use": "boolean",
+            "is_default_for_invoicing": "boolean",
             "account_id": "uuid|null (linked ledger account)",
+            "account_code": "string|null",
             "created_at": "ISO8601|null",
             "updated_at": "ISO8601|null"
           }
@@ -911,6 +929,33 @@
         "links": {},
         "meta": { "current_page": "int", "per_page": "int", "total": "int" }
       }
+    },
+
+    {
+      "name": "api.bank-accounts.store",
+      "method": "POST",
+      "path": "/api/v1/bank-accounts",
+      "controller": "BankAccountApiController@store",
+      "auth_required": true,
+      "abilities_required": ["banking.create"],
+      "policy": "create on BankAccount",
+      "request": {
+        "headers": { "Idempotency-Key": "string|null" },
+        "body": {
+          "name": { "type": "string", "required": true, "max": 255 },
+          "iban": { "type": "string|null", "max": 34 },
+          "qr_iban": { "type": "string|null", "max": 34 },
+          "bank_name": { "type": "string|null", "max": 255 },
+          "bic": { "type": "string|null", "max": 11 },
+          "currency": { "type": "string|null", "length": 3, "default": "CHF" },
+          "account_code": { "type": "string", "required": true, "note": "Active GL account code in the token organization" },
+          "is_mixed_use": { "type": "boolean", "required": false },
+          "is_default_for_invoicing": { "type": "boolean", "required": false }
+        }
+      },
+      "response_201": { "data": "BankAccountResource" },
+      "response_422": { "message": "string", "code": "validation_error|domain_error" },
+      "notes": "The account_code is resolved within the token organization. The action also preserves mixed-use and default-invoicing side effects."
     },
 
     {
@@ -928,12 +973,17 @@
         "data": {
           "id": "uuid",
           "name": "string",
-          "iban": "string",
+          "iban": "string|null",
+          "qr_iban": "string|null",
           "bank_name": "string|null",
+          "bic": "string|null",
           "currency": "string",
           "balance": "numeric",
           "is_active": "boolean",
+          "is_mixed_use": "boolean",
+          "is_default_for_invoicing": "boolean",
           "account_id": "uuid|null",
+          "account_code": "string|null",
           "created_at": "ISO8601|null",
           "updated_at": "ISO8601|null"
         }
@@ -1252,6 +1302,21 @@
       "request": { "params": { "invoice": "uuid" } },
       "response_201": { "data": "InvoiceResource (credit note)" },
       "response_422": { "message": "string (invalid state)" }
+    },
+
+    {
+      "name": "api.invoices.pdf",
+      "method": "GET",
+      "path": "/api/v1/invoices/{invoice}/pdf",
+      "controller": "InvoicePdfApiController@__invoke",
+      "auth_required": true,
+      "abilities_required": ["invoicing.view"],
+      "policy": "view on Invoice",
+      "request": { "params": { "invoice": "uuid" } },
+      "response_200": { "content_type": "application/pdf", "body": "PDF bytes" },
+      "response_404": { "message": "Resource not found.", "code": "not_found" },
+      "response_422": { "message": "string", "code": "qr_iban_required|qr_bill_invalid" },
+      "notes": "Returns the invoice content and Swiss QR payment slip. The token-authenticated endpoint does not require a browser session."
     },
 
     {

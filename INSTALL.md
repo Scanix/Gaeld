@@ -151,6 +151,23 @@ subscription or private registry credentials.
 The Community Edition REST API is enabled by default and can be disabled with
 `FEATURE_API_ACCESS=false` when an installation does not need external access.
 
+### Create an integration token
+
+After installation, create an organization-scoped token from the server. The
+organization UUID is available in the organization settings or database:
+
+```bash
+./vendor/bin/sail artisan gaeld:token <organization-uuid> \
+	--name="Bookkeeping integration" \
+	--abilities=banking.view \
+	--abilities=banking.create \
+	--abilities=banking.import \
+	--expires-in-days=365
+```
+
+The token is printed once and must be stored securely by the integrating
+application. Do not put it in shell history, source control, or logs.
+
 ---
 
 ## Reverse Proxy / HTTPS
