@@ -44,7 +44,7 @@
 
 - [X] T029 Add a controlled legacy-plan display and explicit transition path in `plugins/gaeld-ee/resources/js/Pages/Billing/Plans.vue`, `plugins/gaeld-ee/resources/js/Components/LegacyPlanNotice.vue`, and the relevant four-locale translations.
 - [X] T030 Add administrator migration reporting, dry-run output, and audit-safe summaries in `plugins/gaeld-ee/src/Domains/SaasAdmin/Controllers/BillingAdminController.php` and `plugins/gaeld-ee/src/Domains/Billing/Commands/MigrateOfferPlansCommand.php`.
-- [ ] T031 [P] Add security tests proving crafted inactive-plan identifiers cannot be selected and one tenant cannot affect another tenant's subscription in `plugins/gaeld-ee/tests/Security/Billing/OfferMigrationSecurityTest.php`.
+- [X] T031 [P] Add security tests proving crafted inactive-plan identifiers cannot be selected and one tenant cannot affect another tenant's subscription in `plugins/gaeld-ee/tests/Security/Billing/OfferMigrationSecurityTest.php`.
 - [ ] T032 Document forward migration, rollback posture, legacy price protection, and Stripe operator steps in `plugins/gaeld-ee/INTERNAL.md` and `RELEASE.md`.
 
 ## Phase 6: Website and localized public copy [US4]
