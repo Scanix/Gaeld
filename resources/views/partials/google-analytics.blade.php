@@ -2,8 +2,19 @@
 {{-- 1. Default consent to "denied" before any tags fire --}}
 <script nonce="{{ app('csp-nonce') }}">
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('consent', 'default', {
+  window.gtag = function(){window.dataLayer.push(arguments);};
+  window.gaeldLoadGtm = function(){
+    if (window.gaeldGtmLoaded) return;
+    window.gaeldGtmLoaded = true;
+    var f=document.getElementsByTagName('script')[0],
+        j=document.createElement('script'),
+        dl='dataLayer'!='dataLayer'?'&l=dataLayer':'';
+    j.async=true;
+    j.id='gaeld-gtm';
+    j.src='https://www.googletagmanager.com/gtm.js?id={{ config('services.google.gtm_id') }}'+dl;
+    f.parentNode.insertBefore(j,f);
+  };
+  window.gtag('consent', 'default', {
     'ad_storage': 'denied',
     'ad_user_data': 'denied',
     'ad_personalization': 'denied',
@@ -17,23 +28,16 @@
     if (cc && cc[1]) {
       var parsed = JSON.parse(decodeURIComponent(cc[1]));
       if (parsed && parsed.categories && parsed.categories.indexOf('analytics') > -1) {
-        gtag('consent', 'update', {
+        window.gtag('consent', 'update', {
           'ad_storage': 'granted',
           'ad_user_data': 'granted',
           'ad_personalization': 'granted',
           'analytics_storage': 'granted'
         });
+        window.gaeldLoadGtm();
       }
     }
   } catch(e) {}
 </script>
 
-{{-- 3. Load GTM container --}}
-<script nonce="{{ app('csp-nonce') }}">
-  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','{{ config('services.google.gtm_id') }}');
-</script>
 @endif
