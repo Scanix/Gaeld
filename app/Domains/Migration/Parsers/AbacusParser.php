@@ -28,12 +28,12 @@ class AbacusParser implements PlatformParserInterface
 
     public function labelKey(): string
     {
-        return 'migration.platforms.abacus.label';
+        return 'migration.platform_abacus';
     }
 
     public function descriptionKey(): string
     {
-        return 'migration.platforms.abacus.description';
+        return 'migration.platform_abacus_desc';
     }
 
     public function supportedDataTypes(): array

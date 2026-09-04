@@ -47,6 +47,23 @@ class MigrationControllerTest extends TestCase
         );
     }
 
+    public function test_index_platform_metadata_uses_loaded_translation_keys(): void
+    {
+        $response = $this->actAsOrg()->get('/migration');
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('platforms', function (Collection $platforms): bool {
+                $builtInPlatforms = $platforms->whereIn('platform', ['bexio', 'banana', 'abacus', 'generic_csv']);
+
+                return $builtInPlatforms->isNotEmpty()
+                    && $builtInPlatforms->every(function (array $platform): bool {
+                        return trans('app.'.$platform['label_key']) !== 'app.'.$platform['label_key']
+                            && trans('app.'.$platform['description_key']) !== 'app.'.$platform['description_key'];
+                    });
+            })
+        );
+    }
+
     // ────────────────────────────────────────────────
     // Store (create session)
     // ────────────────────────────────────────────────

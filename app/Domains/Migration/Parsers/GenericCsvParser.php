@@ -37,12 +37,12 @@ class GenericCsvParser implements PlatformParserInterface
 
     public function labelKey(): string
     {
-        return 'migration.platforms.generic_csv.label';
+        return 'migration.platform_generic_csv';
     }
 
     public function descriptionKey(): string
     {
-        return 'migration.platforms.generic_csv.description';
+        return 'migration.platform_generic_csv_desc';
     }
 
     public function supportedDataTypes(): array
