@@ -29,6 +29,17 @@ class ContactValidationRulesTest extends TestCase
         $this->assertFalse($validator->fails());
     }
 
+    public function test_store_accepts_a_french_five_digit_postal_code(): void
+    {
+        $validator = Validator::make([
+            'name' => 'Client France',
+            'country' => 'FR',
+            'postal_code' => '75001',
+        ], ContactValidationRules::store());
+
+        $this->assertFalse($validator->fails());
+    }
+
     public function test_store_rejects_an_invalid_type(): void
     {
         $validator = Validator::make(
