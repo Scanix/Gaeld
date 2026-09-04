@@ -1715,7 +1715,6 @@ return [
     'check_service_status' => 'Voir l’état du service',
     'error_service_status_title' => 'Gäld rencontre-t-il une interruption ?',
     'error_service_status_description' => 'Consultez l’état du système pour voir les incidents et les maintenances en cours.',
-    'try_again' => 'Réessayer',
 
     // Search
     'search_results' => 'Résultats de recherche',
