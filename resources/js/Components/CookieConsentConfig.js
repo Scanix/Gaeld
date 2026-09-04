@@ -14,6 +14,10 @@ function updateGtmConsent(accepted) {
     ad_personalization: value,
     analytics_storage: value,
   })
+
+  if (accepted && typeof window.gaeldLoadGtm === 'function') {
+    window.gaeldLoadGtm()
+  }
 }
 
 const pluginConfig = {
