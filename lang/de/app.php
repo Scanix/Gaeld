@@ -1556,7 +1556,6 @@ return [
     'check_service_status' => 'Dienststatus prüfen',
     'error_service_status_title' => 'Gibt es bei Gäld eine Störung?',
     'error_service_status_description' => 'Prüfen Sie den Systemstatus auf Störungen und Wartungshinweise.',
-    'try_again' => 'Erneut versuchen',
 
     // EE-Features
     'cost_centers' => 'Kostenstellen',

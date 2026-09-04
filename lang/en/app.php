@@ -1789,7 +1789,6 @@ return [
     'check_service_status' => 'Check service status',
     'error_service_status_title' => 'Is Gäld having an outage?',
     'error_service_status_description' => 'Check the system status for incidents and maintenance updates.',
-    'try_again' => 'Try again',
 
     // Search
     'search_results' => 'Search Results',
