@@ -2,7 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { ShieldX, FileQuestion, Clock, ServerCrash, Construction, Timer, ExternalLink, RefreshCw } from 'lucide-vue-next'
+import { ShieldX, FileQuestion, Clock, ServerCrash, Construction, Timer, ExternalLink, RefreshCw, LogOut } from 'lucide-vue-next'
 
 const props = defineProps({
   status: { type: Number, required: true },
@@ -20,6 +20,7 @@ const FALLBACKS = {
   error_service_status_title: 'Is Gäld having an outage?',
   error_service_status_description: 'Check the system status for incidents and maintenance updates.',
   try_again: 'Try again',
+  sign_out_and_try_again: 'Sign out and try again',
 }
 
 function tSafe(key) {
@@ -125,6 +126,14 @@ function retry() {
           <RefreshCw class="h-4 w-4" aria-hidden="true" />
           {{ tSafe('try_again') }}
         </button>
+        <a
+          v-if="isServiceIssue"
+          href="/logout"
+          class="inline-flex items-center justify-center gap-2 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-4 py-2 text-sm font-medium text-[hsl(var(--foreground))] shadow-sm hover:bg-[hsl(var(--accent))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+        >
+          <LogOut class="h-4 w-4" aria-hidden="true" />
+          {{ tSafe('sign_out_and_try_again') }}
+        </a>
         <Link
           href="/"
           class="inline-flex items-center justify-center rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-4 py-2 text-sm font-medium text-[hsl(var(--foreground))] shadow-sm hover:bg-[hsl(var(--accent))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
