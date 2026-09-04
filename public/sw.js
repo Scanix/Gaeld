@@ -4,14 +4,15 @@
  * Strategy:
  *  - CacheFirst for versioned Vite build assets (/build/**)
  *    They carry content-hashes in filenames, so we can cache indefinitely.
- *  - NetworkFirst for all navigation requests (Inertia/Laravel routes).
- *    Falls back to the cached app-shell HTML when offline.
+ *  - NetworkOnly for navigation requests (Inertia/Laravel routes).
+ *    HTML contains session and asset-version state, so it must never be served
+ *    from an old deployment cache.
  *  - Passthrough for cross-origin requests.
  *
- * Cache version: bump CACHE_NAME when the shell structure changes significantly.
+ * Cache version: bump when the service-worker behavior or shell structure changes.
  */
 
-const CACHE_NAME = 'gaeld-shell-v1'
+const CACHE_NAME = 'gaeld-shell-v2'
 
 // ─── Install ──────────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
@@ -73,18 +74,14 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // NetworkFirst — navigation requests (Inertia routes served by Laravel)
-  // Falls back to the cached app-shell so the app loads without a connection.
+  // NetworkOnly — never cache Inertia/Laravel HTML. It contains session state,
+  // CSRF tokens, and the current Vite asset version.
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).catch(() =>
-        caches.match('/').then(
-          (cached) =>
-            cached ||
-            new Response(
-              '<!doctype html><html><head><meta charset="utf-8"><title>Gäld — Offline</title></head><body style="font-family:sans-serif;padding:2rem"><h1>You are offline</h1><p>Please check your connection and try again.</p></body></html>',
-              { headers: { 'Content-Type': 'text/html' } }
-            )
+        new Response(
+          '<!doctype html><html><head><meta charset="utf-8"><title>Gäld — Offline</title></head><body style="font-family:sans-serif;padding:2rem"><h1>You are offline</h1><p>Please check your connection and try again.</p></body></html>',
+          { headers: { 'Content-Type': 'text/html' }, status: 503 }
         )
       )
     )
