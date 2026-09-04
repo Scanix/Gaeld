@@ -7,6 +7,8 @@ LOG="${LOG:-$BACKUP_DIR/logs/backup.log}"
 RCLONE_LOG="${RCLONE_LOG:-$BACKUP_DIR/logs/rclone.log}"
 DAILY_RETENTION_DAYS="${DAILY_RETENTION_DAYS:-7}"
 WEEKLY_RETENTION_DAYS="${WEEKLY_RETENTION_DAYS:-56}"
+LOCAL_DAILY_RETENTION_COUNT="${LOCAL_DAILY_RETENTION_COUNT:-5}"
+LOCAL_WEEKLY_RETENTION_COUNT="${LOCAL_WEEKLY_RETENTION_COUNT:-5}"
 LOCK_FILE="${LOCK_FILE:-$BACKUP_DIR/.backup-sync.lock}"
 ONEDRIVE_HARD_DELETE="${ONEDRIVE_HARD_DELETE:-false}"
 
@@ -37,6 +39,12 @@ if [[ "$ONEDRIVE_HARD_DELETE" == "true" && "$RCLONE_REMOTE" != onedrive:* ]]; th
     exit 1
 fi
 
+if ! [[ "$LOCAL_DAILY_RETENTION_COUNT" =~ ^[1-9][0-9]*$ ]] || ! [[ "$LOCAL_WEEKLY_RETENTION_COUNT" =~ ^[1-9][0-9]*$ ]]; then
+    printf 'Local retention counts must be positive integers\n' >&2
+
+    exit 1
+fi
+
 log() {
     printf '[%s] %s\n' "$(date)" "$*" >> "$LOG"
 }
@@ -57,6 +65,24 @@ has_recent_local_archive() {
         -mmin "-${max_age_minutes}" -print -quit | grep -q .
 }
 
+prune_local_archives() {
+    local directory="$1"
+    local pattern="$2"
+    local keep_count="$3"
+
+    [[ -d "$directory" ]] || return 0
+
+    while IFS= read -r archive; do
+        rm -f -- "$archive"
+        log "LOCAL CLEANUP: removed $archive"
+    done < <(
+        find "$directory" -maxdepth 1 -type f -name "$pattern" -printf '%T@ %p\n' \
+            | sort -rn \
+            | tail -n +"$((keep_count + 1))" \
+            | cut -d' ' -f2-
+    )
+}
+
 sync_and_prune() {
     local category="$1"
     local pattern="$2"
@@ -64,6 +90,11 @@ sync_and_prune() {
     local weekly_source="$BACKUP_DIR/$category/weekly"
     local daily_remote="$RCLONE_REMOTE/$category/daily"
     local weekly_remote="$RCLONE_REMOTE/$category/weekly"
+
+    # Free local space before copying. The creation job keeps the newest five;
+    # this also protects the host when an older job failed before its cleanup.
+    prune_local_archives "$daily_source" "$pattern" "$LOCAL_DAILY_RETENTION_COUNT"
+    prune_local_archives "$weekly_source" "$pattern" "$LOCAL_WEEKLY_RETENTION_COUNT"
 
     if [[ ! -d "$daily_source" ]] || ! has_local_archive "$daily_source" "$pattern"; then
         log "SYNC FAIL: $category daily has no local archive"
