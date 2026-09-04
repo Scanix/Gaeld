@@ -211,4 +211,17 @@ return Application::configure(basePath: dirname(__DIR__))
                 'status' => $e->getStatusCode(),
             ])->toResponse(request())->setStatusCode($e->getStatusCode());
         });
+
+        $exceptions->renderable(function (Throwable $e) {
+            if ($e instanceof HttpExceptionInterface
+                || request()->is('api/*')
+                || request()->expectsJson()
+                || config('app.debug')) {
+                return null;
+            }
+
+            return Inertia::render('Error', [
+                'status' => 500,
+            ])->toResponse(request())->setStatusCode(500);
+        });
     })->create();
