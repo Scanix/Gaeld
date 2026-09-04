@@ -35,7 +35,7 @@ readonly class InvoiceLineData
             unitPrice: $data['unit_price'],
             type: InvoiceLineType::tryFrom($data['type'] ?? 'item') ?? InvoiceLineType::Item,
             discountType: $data['discount_type'] ?? null,
-            vatRateId: $data['vat_rate_id'] ?? null,
+            vatRateId: blank($data['vat_rate_id'] ?? null) ? null : (string) $data['vat_rate_id'],
             sortOrder: $data['sort_order'] ?? null,
         );
     }

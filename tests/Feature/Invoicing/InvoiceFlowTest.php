@@ -142,6 +142,21 @@ class InvoiceFlowTest extends TestCase
         $this->assertDatabaseCount('vat_entries', 0);
     }
 
+    public function test_standard_invoice_can_have_no_vat_when_each_line_has_no_rate(): void
+    {
+        $invoice = $this->createInvoice(lines: [[
+            'description' => 'VAT-exempt service',
+            'quantity' => 1,
+            'unit_price' => 150.00,
+            'vat_rate_id' => '',
+        ]]);
+
+        $this->assertSame(InvoiceTaxTreatment::Standard, $invoice->tax_treatment);
+        $this->assertNull($invoice->lines->first()->vat_rate_id);
+        $this->assertSame('0.00', $invoice->vat_amount);
+        $this->assertSame('150.00', $invoice->total);
+    }
+
     public function test_reverse_charge_rejects_a_non_eu_customer_or_missing_vat_number(): void
     {
         $this->customer->update(['country' => 'CH', 'vat_number' => null]);
