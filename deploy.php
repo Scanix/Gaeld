@@ -96,7 +96,7 @@ task('deploy:horizon:restart', function () {
 
 task('deploy:ee:plugin', function () {
     $eeRepo = getenv('EE_REPO') ?: 'git@gitlab.nectoria.com:nectoria/products/gaeld/gaeld-ee.git';
-    $eeRef = getenv('DEPLOY_EE_REF') ?: 'v2.9.25';
+    $eeRef = getenv('DEPLOY_EE_REF') ?: 'v2.9.26';
     $eeRefArg = escapeshellarg($eeRef);
     $cachePath = '{{deploy_path}}/shared/gaeld-ee';
     $pluginPath = '{{release_path}}/plugins/gaeld-ee';
