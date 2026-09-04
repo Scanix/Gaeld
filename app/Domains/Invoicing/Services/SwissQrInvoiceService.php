@@ -163,6 +163,15 @@ class SwissQrInvoiceService
             return;
         }
 
+        // The ultimate debtor is optional on a Swiss QR bill. Do not build an
+        // invalid structured address when a contact has no postal code or city.
+        if (blank(data_get($customerDetails, 'postal_code'))
+            || blank(data_get($customerDetails, 'city'))
+            || blank(data_get($customerDetails, 'country'))
+        ) {
+            return;
+        }
+
         $debtorAddress = StructuredAddress::createWithStreet(
             $customerDetails['name'],
             $customerDetails['address'] ?? '',

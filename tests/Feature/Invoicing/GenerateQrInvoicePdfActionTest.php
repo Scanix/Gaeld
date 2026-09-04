@@ -123,6 +123,20 @@ class GenerateQrInvoicePdfActionTest extends TestCase
         $this->assertStringStartsWith('%PDF-', $pdf);
     }
 
+    public function test_renders_a_qr_invoice_without_a_customer_postal_code_or_city(): void
+    {
+        $this->customer->update([
+            'address' => null,
+            'postal_code' => null,
+            'city' => null,
+        ]);
+        $invoice = $this->makeInvoice('INV-PDF-NO-DEBTOR-ADDRESS');
+
+        $pdf = app(GenerateQrInvoicePdfAction::class)->execute($invoice, $this->org, 'fr');
+
+        $this->assertStringStartsWith('%PDF-', $pdf);
+    }
+
     public function test_renders_with_a_long_line_description_without_throwing(): void
     {
         $invoice = $this->makeInvoice('INV-PDF-LONGDESC', description: str_repeat('Consulting services rendered over multiple engagements. ', 5));
