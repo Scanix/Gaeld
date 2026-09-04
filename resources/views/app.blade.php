@@ -33,11 +33,22 @@
         @include('partials.google-analytics')
         @inertiaHead
 
-        {{-- Register PWA service worker --}}
+        {{-- Remove service-worker registrations left by older releases. --}}
         <script nonce="{{ app('csp-nonce') }}">
           if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function () {
-              navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+              registrations.forEach(function (registration) {
+                registration.unregister();
+              });
+            });
+          }
+          if ('caches' in window) {
+            caches.keys().then(function (keys) {
+              return Promise.all(keys.filter(function (key) {
+                return key.indexOf('gaeld-shell-') === 0;
+              }).map(function (key) {
+                return caches.delete(key);
+              }));
             });
           }
         </script>
