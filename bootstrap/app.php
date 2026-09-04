@@ -213,7 +213,8 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->renderable(function (Throwable $e) {
-            if ($e instanceof HttpExceptionInterface
+            if ($e instanceof AuthenticationException
+                || $e instanceof HttpExceptionInterface
                 || request()->is('api/*')
                 || request()->expectsJson()
                 || config('app.debug')) {

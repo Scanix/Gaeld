@@ -79,6 +79,13 @@ class SessionSecurityTest extends SecurityTestCase
         $response->assertSee('nonce="'.$matches[1].'"', false);
     }
 
+    public function test_get_logout_with_an_expired_session_redirects_to_login(): void
+    {
+        $response = $this->get('/logout');
+
+        $response->assertRedirect(route('login'));
+    }
+
     // ──────────────────────────────────────────────────────────────
     //  CSRF — state-changing web routes must reject missing token
     // ──────────────────────────────────────────────────────────────
