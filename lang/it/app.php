@@ -1516,6 +1516,10 @@ return [
     'error_503_description' => 'Stiamo effettuando manutenzione. Riprova tra poco.',
     'go_to_dashboard' => 'Vai alla dashboard',
     'go_back' => 'Torna indietro',
+    'check_service_status' => 'Controlla lo stato del servizio',
+    'error_service_status_title' => 'Gäld sta riscontrando un’interruzione?',
+    'error_service_status_description' => 'Controlla lo stato del sistema per incidenti e aggiornamenti sulla manutenzione.',
+    'try_again' => 'Riprova',
 
     // Funzionalità EE
     'cost_centers' => 'Centri di costo',

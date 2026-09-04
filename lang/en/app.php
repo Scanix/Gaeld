@@ -1786,6 +1786,10 @@ return [
     'error_503_description' => 'We\'re currently performing maintenance. Please check back soon.',
     'go_to_dashboard' => 'Go to Dashboard',
     'go_back' => 'Go Back',
+    'check_service_status' => 'Check service status',
+    'error_service_status_title' => 'Is Gäld having an outage?',
+    'error_service_status_description' => 'Check the system status for incidents and maintenance updates.',
+    'try_again' => 'Try again',
 
     // Search
     'search_results' => 'Search Results',
