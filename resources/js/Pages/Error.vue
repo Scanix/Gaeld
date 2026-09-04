@@ -2,7 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { useTranslations } from '@/lib/useTranslations'
-import { ShieldX, FileQuestion, Clock, ServerCrash, Construction, Timer } from 'lucide-vue-next'
+import { ShieldX, FileQuestion, Clock, ServerCrash, Construction, Timer, ExternalLink, RefreshCw } from 'lucide-vue-next'
 
 const props = defineProps({
   status: { type: Number, required: true },
@@ -16,6 +16,10 @@ const FALLBACKS = {
   unexpected_error_occurred: 'An unexpected error occurred.',
   go_to_dashboard: 'Go to Dashboard',
   go_back: 'Go Back',
+  check_service_status: 'Check service status',
+  error_service_status_title: 'Is Gäld having an outage?',
+  error_service_status_description: 'Check the system status for incidents and maintenance updates.',
+  try_again: 'Try again',
 }
 
 function tSafe(key) {
@@ -46,9 +50,14 @@ const description = computed(() => {
   const val = t(descKey)
   return val !== descKey ? val : tSafe('unexpected_error_occurred')
 })
+const isServiceIssue = computed(() => props.status >= 500)
 
 function goBack() {
   window.history.back()
+}
+
+function retry() {
+  window.location.reload()
 }
 </script>
 
@@ -84,11 +93,41 @@ function goBack() {
         {{ description }}
       </p>
 
+      <div
+        v-if="isServiceIssue"
+        class="mb-8 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.35)] p-4 text-left"
+        role="status"
+      >
+        <p class="mb-1 text-sm font-semibold text-[hsl(var(--foreground))]">
+          {{ tSafe('error_service_status_title') }}
+        </p>
+        <p class="mb-3 text-sm text-[hsl(var(--muted-foreground))]">
+          {{ tSafe('error_service_status_description') }}
+        </p>
+        <a
+          href="https://status.nectoria.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-sm font-medium text-[hsl(var(--primary))] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+        >
+          {{ tSafe('check_service_status') }}
+          <ExternalLink class="h-4 w-4" aria-hidden="true" />
+        </a>
+      </div>
+
       <!-- Actions -->
       <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <button
+          type="button"
+          class="inline-flex items-center justify-center gap-2 rounded-md bg-[hsl(var(--primary))] px-4 py-2 text-sm font-medium text-[hsl(var(--primary-foreground))] shadow hover:bg-[hsl(var(--primary)/0.9)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+          @click="retry"
+        >
+          <RefreshCw class="h-4 w-4" aria-hidden="true" />
+          {{ tSafe('try_again') }}
+        </button>
         <Link
           href="/"
-          class="inline-flex items-center justify-center rounded-md bg-[hsl(var(--primary))] px-4 py-2 text-sm font-medium text-[hsl(var(--primary-foreground))] shadow hover:bg-[hsl(var(--primary)/0.9)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
+          class="inline-flex items-center justify-center rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-4 py-2 text-sm font-medium text-[hsl(var(--foreground))] shadow-sm hover:bg-[hsl(var(--accent))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
         >
           {{ tSafe('go_to_dashboard') }}
         </Link>
