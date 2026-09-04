@@ -32,12 +32,12 @@ class BexioParser implements PlatformParserInterface
 
     public function labelKey(): string
     {
-        return 'migration.platforms.bexio.label';
+        return 'migration.platform_bexio';
     }
 
     public function descriptionKey(): string
     {
-        return 'migration.platforms.bexio.description';
+        return 'migration.platform_bexio_desc';
     }
 
     public function supportedDataTypes(): array

@@ -29,12 +29,12 @@ class BananaParser implements PlatformParserInterface
 
     public function labelKey(): string
     {
-        return 'migration.platforms.banana.label';
+        return 'migration.platform_banana';
     }
 
     public function descriptionKey(): string
     {
-        return 'migration.platforms.banana.description';
+        return 'migration.platform_banana_desc';
     }
 
     public function supportedDataTypes(): array
