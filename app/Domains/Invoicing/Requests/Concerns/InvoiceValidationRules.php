@@ -56,7 +56,9 @@ trait InvoiceValidationRules
             'lines.*.unit_price' => 'required_unless:lines.*.type,text|numeric',
             'customer_id' => [
                 $finalize ? 'required' : 'nullable',
-                Rule::exists('contacts', 'id')->where('organization_id', $orgId),
+                Rule::exists('contacts', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
             ],
             'lines.*.vat_rate_id' => [
                 'nullable',
