@@ -235,7 +235,12 @@ const eventGroups = computed(() => {
             placeholder="https://example.com/webhooks/gaeld"
           />
 
-          <div>
+          <div
+            role="group"
+            aria-required="true"
+            :aria-invalid="form.errors.events ? 'true' : undefined"
+            aria-describedby="webhook-events-error"
+          >
             <div class="flex items-center justify-between mb-2">
               <label class="text-sm font-medium">{{ t('events') }} <span class="text-destructive">*</span></label>
               <button type="button" class="text-xs text-primary underline" @click="toggleAllEvents">
@@ -262,7 +267,7 @@ const eventGroups = computed(() => {
                 </div>
               </div>
             </div>
-            <p v-if="form.errors.events" class="text-xs text-destructive mt-1">{{ form.errors.events }}</p>
+            <p v-if="form.errors.events" id="webhook-events-error" class="text-xs text-destructive mt-1">{{ form.errors.events }}</p>
           </div>
 
           <div class="flex items-center gap-2">
