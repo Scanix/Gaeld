@@ -55,6 +55,7 @@ function togglePasswordVisibility() {
         :type="effectiveType"
         :value="modelValue"
         :required="required"
+        :aria-required="required ? 'true' : undefined"
         :readonly="readonly"
         :placeholder="placeholder"
         :autocomplete="autocomplete"

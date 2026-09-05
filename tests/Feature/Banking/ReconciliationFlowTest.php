@@ -271,6 +271,50 @@ class ReconciliationFlowTest extends TestCase
         $this->assertEquals('9800.00', $result->bankAccount->balance);
     }
 
+    public function test_reconcile_expense_rejects_a_non_expense_account_code(): void
+    {
+        $expense = Expense::create([
+            'organization_id' => $this->organization->id,
+            'category' => 'Software',
+            'amount' => 200.00,
+            'vat_amount' => 0,
+            'date' => '2026-03-12',
+            'status' => ExpenseStatus::Posted,
+            'currency' => 'CHF',
+        ]);
+        $transaction = BankTransaction::create([
+            'bank_account_id' => $this->bankAccount->id,
+            'date' => '2026-03-12',
+            'description' => 'Invalid account test',
+            'amount' => 200.00,
+            'type' => BankTransactionType::Debit,
+        ]);
+
+        $this->actAsOrg()
+            ->post(route('reconciliation.expense', $transaction), [
+                'expense_id' => $expense->id,
+                'expense_account_code' => '1100',
+            ])
+            ->assertSessionHasErrors('expense_account_code');
+    }
+
+    public function test_manual_reconciliation_rejects_an_unknown_account_code(): void
+    {
+        $transaction = BankTransaction::create([
+            'bank_account_id' => $this->bankAccount->id,
+            'date' => '2026-03-12',
+            'description' => 'Invalid account test',
+            'amount' => 200.00,
+            'type' => BankTransactionType::Debit,
+        ]);
+
+        $this->actAsOrg()
+            ->post(route('reconciliation.manual', $transaction), [
+                'contra_account_code' => '9999',
+            ])
+            ->assertSessionHasErrors('contra_account_code');
+    }
+
     public function test_reconcile_transaction_with_vat_payment(): void
     {
         $journalEntry = JournalEntry::create([

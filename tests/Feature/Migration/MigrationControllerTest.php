@@ -12,6 +12,7 @@ use App\Domains\Migration\Models\MigrationSession;
 use App\Domains\Migration\Services\MigrationRegistry;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
@@ -198,6 +199,52 @@ class MigrationControllerTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('file');
+    }
+
+    public function test_upload_rejects_a_file_with_an_undeclared_extension(): void
+    {
+        $session = MigrationSession::create([
+            'organization_id' => $this->organization->id,
+            'platform' => Platform::GenericCsv,
+            'status' => ImportStatus::Pending,
+            'data_types_status' => [],
+            'imported_counts' => [],
+            'errors' => [],
+            'created_by' => $this->user->id,
+        ]);
+
+        $response = $this->actAsOrg()->post("/migration/{$session->id}/upload", [
+            'file' => UploadedFile::fake()->createWithContent(
+                'accounts.php',
+                "code,name,type\n1020,Bank,asset\n",
+            ),
+            'data_type' => 'accounts',
+        ]);
+
+        $response->assertSessionHasErrors('file');
+    }
+
+    public function test_upload_rejects_a_data_type_not_supported_by_the_session_platform(): void
+    {
+        $session = MigrationSession::create([
+            'organization_id' => $this->organization->id,
+            'platform' => Platform::Bexio,
+            'status' => ImportStatus::Pending,
+            'data_types_status' => [],
+            'imported_counts' => [],
+            'errors' => [],
+            'created_by' => $this->user->id,
+        ]);
+
+        $response = $this->actAsOrg()->post("/migration/{$session->id}/upload", [
+            'file' => UploadedFile::fake()->createWithContent(
+                'journal.csv',
+                "date,description\n2026-01-01,Opening\n",
+            ),
+            'data_type' => DataType::JournalEntries->value,
+        ]);
+
+        $response->assertSessionHasErrors('data_type');
     }
 
     public function test_fetch_imports_normalized_connector_rows_into_preview_cache(): void

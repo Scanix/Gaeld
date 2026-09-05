@@ -200,7 +200,11 @@ class ExpenseController extends Controller
 
     public function update(UpdateExpenseRequest $request, Expense $expense, UpdateExpenseAction $action): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = array_merge([
+            'category' => $expense->category,
+            'amount' => $expense->amount,
+            'date' => $expense->date->toDateString(),
+        ], $request->validated());
         $newReceiptPath = null;
 
         if ($request->hasFile('receipt')) {

@@ -61,6 +61,13 @@ const payrollPeriodEnd = computed(() => {
 const { isClosed: isYearClosed, closedYear } = useClosedFiscalYear(payrollPeriodEnd)
 const errorMessage = ref('')
 
+function setRequestError(payload, fallback) {
+  const fieldErrors = Object.values(payload?.errors ?? {}).flat().filter(Boolean)
+  errorMessage.value = fieldErrors.length > 0
+    ? fieldErrors.join(' ')
+    : payload?.message || fallback
+}
+
 const monthOptions = computed(() =>
   Array.from({ length: 12 }, (_, i) => ({
     value: String(i + 1),
@@ -138,7 +145,7 @@ async function goToPreview() {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}))
-      errorMessage.value = err.message || t('payroll_generate_error')
+      setRequestError(err, t('payroll_generate_error'))
       return
     }
 
@@ -193,7 +200,7 @@ async function generateSlips() {
     })
     if (!response.ok) {
       const err = await response.json().catch(() => ({}))
-      errorMessage.value = err.message || t('payroll_generate_error')
+      setRequestError(err, t('payroll_generate_error'))
       return
     }
     const data = await response.json()
@@ -280,8 +287,8 @@ async function postSlips() {
       </CardHeader>
       <CardContent class="space-y-6">
         <div class="flex flex-wrap gap-4">
-          <FormSelect id="month" v-model="month" :label="t('month')" :options="monthOptions" class="w-full sm:w-40" />
-          <FormSelect id="year" v-model="year" :label="t('year')" :options="yearOptions" class="w-full sm:w-28" />
+          <FormSelect id="month" v-model="month" :label="t('month')" :options="monthOptions" required class="w-full sm:w-40" />
+          <FormSelect id="year" v-model="year" :label="t('year')" :options="yearOptions" required class="w-full sm:w-28" />
         </div>
 
         <div>

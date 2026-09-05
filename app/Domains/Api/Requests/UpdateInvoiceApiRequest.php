@@ -11,6 +11,11 @@ use Illuminate\Validation\Rule;
 
 class UpdateInvoiceApiRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return $this->user()?->can('update', $this->route('invoice')) ?? false;
+    }
+
     /**
      * @return array<string, mixed>
      */

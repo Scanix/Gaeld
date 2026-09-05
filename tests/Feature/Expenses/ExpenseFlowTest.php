@@ -197,6 +197,23 @@ class ExpenseFlowTest extends TestCase
         $postAction->execute($expense->fresh(), '6530');
     }
 
+    public function test_web_update_allows_a_partial_payload(): void
+    {
+        $expense = $this->createExpense([
+            'description' => 'Original description',
+        ]);
+
+        $response = $this->actAsOrg()->put(route('expenses.update', $expense), [
+            'description' => 'Updated description',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('expenses.show', $expense));
+        $this->assertSame('Updated description', $expense->refresh()->description);
+        $this->assertSame('Software and Subscriptions', $expense->category);
+        $this->assertSame('700.00', $expense->amount);
+    }
+
     public function test_destroy_uses_generic_flash_error_when_exception_message_is_empty(): void
     {
         $expense = $this->createExpense();
