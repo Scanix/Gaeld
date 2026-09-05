@@ -137,6 +137,7 @@ function lineError(index, field) {
                   min="0"
                   :label="index === 0 ? t('debit') : ''"
                   :error="lineError(index, 'debit')"
+                  required
                 />
               </div>
               <div class="col-span-5 sm:col-span-2">
@@ -148,6 +149,7 @@ function lineError(index, field) {
                   min="0"
                   :label="index === 0 ? t('credit') : ''"
                   :error="lineError(index, 'credit')"
+                  required
                 />
               </div>
               <div class="col-span-10 sm:col-span-2">
