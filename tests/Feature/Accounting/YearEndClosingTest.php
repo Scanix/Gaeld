@@ -3,7 +3,9 @@
 namespace Tests\Feature\Accounting;
 
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\ClosingAccountsService;
 use App\Domains\Accounting\Services\LedgerService;
@@ -102,6 +104,29 @@ class YearEndClosingTest extends TestCase
             ->post('/accounting/year-end-closing/reopen', ['year' => 2025])
             ->assertRedirect()
             ->assertSessionHas('error');
+    }
+
+    public function test_reopen_rejects_a_fiscal_year_id_from_another_organization(): void
+    {
+        $foreignOrganization = Organization::factory()->create();
+        $foreignFiscalYear = FiscalYear::create([
+            'organization_id' => $foreignOrganization->id,
+            'name' => 'Foreign 2025',
+            'start_date' => '2025-01-01',
+            'end_date' => '2025-12-31',
+            'status' => FiscalYearStatus::Closed,
+        ]);
+        $this->organization->closeFiscalYear(2025);
+
+        $this->asOwner()
+            ->post('/accounting/year-end-closing/reopen', [
+                'fiscal_year_id' => $foreignFiscalYear->id,
+                'year' => 2025,
+            ])
+            ->assertSessionHasErrors('fiscal_year_id');
+
+        $this->organization->refresh();
+        $this->assertTrue($this->organization->isFiscalYearClosed(2025));
     }
 
     public function test_reopen_succeeds_and_redirects_with_success(): void
