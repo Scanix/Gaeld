@@ -4,6 +4,7 @@ namespace Tests\Feature\Contacts;
 
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Notifications\InvitationNotification;
+use App\Domains\Payroll\Models\Employee;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -185,6 +186,27 @@ class MemberManagementTest extends TestCase
             ]);
 
         $response->assertSessionHasErrors('role');
+    }
+
+    public function test_owner_cannot_assign_an_employee_from_another_organization(): void
+    {
+        $otherOrganization = Organization::factory()->create();
+        $foreignEmployee = Employee::create([
+            'organization_id' => $otherOrganization->id,
+            'first_name' => 'Foreign',
+            'last_name' => 'Employee',
+            'entry_date' => '2026-01-01',
+            'gross_salary' => '5000.00',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->owner)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->post("/organizations/{$this->organization->id}/members/{$this->member->id}/role", [
+                'role' => 'employee',
+                'employee_id' => $foreignEmployee->id,
+            ])
+            ->assertNotFound();
     }
 
     // --- Remove Member ---

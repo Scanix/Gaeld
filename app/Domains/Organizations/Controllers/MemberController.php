@@ -52,7 +52,11 @@ class MemberController extends Controller
         }
 
         $employee = isset($validated['employee_id'])
-            ? Employee::query()->whereNull('user_id')->whereKey($validated['employee_id'])->firstOrFail()
+            ? Employee::query()
+                ->where('organization_id', $organization->id)
+                ->whereNull('user_id')
+                ->whereKey($validated['employee_id'])
+                ->firstOrFail()
             : null;
 
         $this->organizationService->changeMemberRole($organization, $user, $role, $employee);
