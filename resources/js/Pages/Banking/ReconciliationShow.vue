@@ -666,6 +666,7 @@ const justificationMissingCount = computed(() => {
               :placeholder="t('search_invoice')"
               :emptyText="t('no_invoices_found')"
               :error="matchInvoiceForm.errors.invoice_id"
+              required
             />
             <p v-if="matchInvoiceForm.errors.invoice_id" class="text-xs text-[hsl(var(--destructive))]">{{ matchInvoiceForm.errors.invoice_id }}</p>
           </div>
@@ -713,6 +714,7 @@ const justificationMissingCount = computed(() => {
                   :placeholder="t('search_expense')"
                   :emptyText="t('no_expenses_found')"
                   :error="matchExpenseForm.errors.expense_id"
+                  required
                 />
                 <p v-if="matchExpenseForm.errors.expense_id" class="text-xs text-[hsl(var(--destructive))]">{{ matchExpenseForm.errors.expense_id }}</p>
               </div>
@@ -722,6 +724,7 @@ const justificationMissingCount = computed(() => {
                 :label="t('expense_account')"
                 :error="matchExpenseForm.errors.expense_account_code"
                 placeholder="6530"
+                required
               />
             </div>
           </details>
@@ -734,6 +737,7 @@ const justificationMissingCount = computed(() => {
                 :placeholder="t('search_expense')"
                 :emptyText="t('no_expenses_found')"
                 :error="matchExpenseForm.errors.expense_id"
+                required
               />
               <p v-if="matchExpenseForm.errors.expense_id" class="text-xs text-[hsl(var(--destructive))]">{{ matchExpenseForm.errors.expense_id }}</p>
             </div>
@@ -743,6 +747,7 @@ const justificationMissingCount = computed(() => {
               :label="t('expense_account')"
               :error="matchExpenseForm.errors.expense_account_code"
               placeholder="6530"
+              required
             />
           </template>
           <div class="flex justify-end gap-3">
@@ -782,6 +787,7 @@ const justificationMissingCount = computed(() => {
             :placeholder="t('search_vat_settlement')"
             :emptyText="t('no_vat_settlements_found')"
             :error="matchVatForm.errors.vat_settlement_id"
+            required
           />
           <div class="flex justify-end gap-3">
             <Button variant="outline" type="button" @click="closeMatchModal">{{ t('cancel') }}</Button>
