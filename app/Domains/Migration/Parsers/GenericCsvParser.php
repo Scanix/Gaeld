@@ -73,14 +73,14 @@ class GenericCsvParser implements PlatformParserInterface
     public function parse(UploadedFile $file, DataType $dataType): Collection
     {
         $content = $file->get();
-        $lines = array_filter(explode("\n", str_replace("\r\n", "\n", $content)));
+        $lines = explode("\n", str_replace("\r\n", "\n", $content));
 
         if (count($lines) < 2) {
             return collect();
         }
 
         // Skip header row
-        $headers = str_getcsv(array_shift($lines), $this->delimiter);
+        array_shift($lines);
 
         $rows = collect();
         foreach ($lines as $index => $line) {
@@ -92,7 +92,7 @@ class GenericCsvParser implements PlatformParserInterface
             $values = str_getcsv($line, $this->delimiter);
             $mapped = $this->applyMapping($values);
 
-            $importRow = $this->createRow($mapped, $index + 1, $dataType);
+            $importRow = $this->createRow($mapped, $index + 2, $dataType);
             $rows->push($importRow);
         }
 

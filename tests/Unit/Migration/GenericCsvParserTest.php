@@ -112,6 +112,23 @@ class GenericCsvParserTest extends TestCase
         $this->assertCount(2, $rows);
     }
 
+    public function test_parse_preserves_physical_source_row_numbers_after_blank_lines(): void
+    {
+        $csv = "code,name,type\n1020,Bank,asset\n\n3000,Revenue,revenue\n";
+        $file = UploadedFile::fake()->createWithContent('accounts.csv', $csv);
+
+        $this->parser->setColumnMapping([
+            'code' => 0,
+            'name' => 1,
+            'type' => 2,
+        ]);
+
+        $rows = $this->parser->parse($file, DataType::Accounts);
+
+        $this->assertSame(2, $rows[0]->sourceRow());
+        $this->assertSame(4, $rows[1]->sourceRow());
+    }
+
     public function test_extract_headers_returns_first_row(): void
     {
         $csv = "Konto,Name,Typ,Beschreibung\n1020,Bank,asset,main\n";
