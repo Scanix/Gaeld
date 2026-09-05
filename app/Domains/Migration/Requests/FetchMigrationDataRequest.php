@@ -10,6 +10,14 @@ use Illuminate\Validation\Rule;
 
 class FetchMigrationDataRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        $session = $this->route('session');
+
+        return $session instanceof MigrationSession
+            && $this->user()?->can('update', $session) === true;
+    }
+
     /**
      * @return array<string, mixed>
      */

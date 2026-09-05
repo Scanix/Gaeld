@@ -277,6 +277,25 @@ class MigrationControllerTest extends TestCase
         $this->assertTrue(cache()->has("migration:{$session->id}:contacts"));
     }
 
+    public function test_execute_rejects_a_data_type_not_supported_by_the_session_platform(): void
+    {
+        $session = MigrationSession::create([
+            'organization_id' => $this->organization->id,
+            'platform' => Platform::Bexio,
+            'status' => ImportStatus::Pending,
+            'data_types_status' => [],
+            'imported_counts' => [],
+            'errors' => [],
+            'created_by' => $this->user->id,
+        ]);
+
+        $response = $this->actAsOrg()->post("/migration/{$session->id}/execute", [
+            'data_types' => [DataType::JournalEntries->value],
+        ]);
+
+        $response->assertSessionHasErrors('data_types.0');
+    }
+
     // ────────────────────────────────────────────────
     // Execute
     // ────────────────────────────────────────────────
