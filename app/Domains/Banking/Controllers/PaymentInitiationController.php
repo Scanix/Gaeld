@@ -7,8 +7,8 @@ use App\Domains\Banking\Services\PaymentInitiationService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DownloadPaymentBatchRequest;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -65,15 +65,10 @@ class PaymentInitiationController extends Controller
     }
 
     public function download(
-        Request $request,
+        DownloadPaymentBatchRequest $request,
         PaymentInitiationService $service,
     ): RedirectResponse|Response {
-        $validated = $request->validate([
-            'bank_account_id' => 'required|integer',
-            'expense_ids' => 'required|array|min:1',
-            'expense_ids.*' => 'string',
-            'execution_date' => 'nullable|date',
-        ]);
+        $validated = $request->validated();
 
         /** @var BankAccount $debtor */
         $debtor = BankAccount::query()->findOrFail($validated['bank_account_id']);
