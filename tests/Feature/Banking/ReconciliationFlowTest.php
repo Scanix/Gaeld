@@ -234,6 +234,39 @@ class ReconciliationFlowTest extends TestCase
         $this->assertEquals('15000.00', $result->bankAccount->balance);
     }
 
+    public function test_reconcile_invoice_rejects_a_cancelled_invoice(): void
+    {
+        $client = Contact::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Cancelled Invoice Customer',
+        ]);
+        $invoice = Invoice::create([
+            'organization_id' => $this->organization->id,
+            'customer_id' => $client->id,
+            'number' => 'INV-CANCELLED-001',
+            'status' => InvoiceStatus::Cancelled,
+            'issue_date' => '2026-03-01',
+            'due_date' => '2026-03-31',
+            'subtotal' => 100.00,
+            'vat_amount' => 0,
+            'total' => 100.00,
+            'currency' => 'CHF',
+        ]);
+        $transaction = BankTransaction::create([
+            'bank_account_id' => $this->bankAccount->id,
+            'date' => '2026-03-10',
+            'description' => 'Cancelled invoice test',
+            'amount' => 100.00,
+            'type' => BankTransactionType::Credit,
+        ]);
+
+        $this->actAsOrg()
+            ->post(route('reconciliation.invoice', $transaction), [
+                'invoice_id' => $invoice->id,
+            ])
+            ->assertSessionHasErrors('invoice_id');
+    }
+
     public function test_reconcile_transaction_with_expense(): void
     {
         $reconciliationService = app(ReconciliationService::class);
