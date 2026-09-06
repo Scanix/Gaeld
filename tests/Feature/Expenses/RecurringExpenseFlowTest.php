@@ -2,10 +2,13 @@
 
 namespace Tests\Feature\Expenses;
 
+use App\Domains\Expenses\Actions\CreateExpenseAction;
+use App\Domains\Expenses\Jobs\GenerateRecurringExpensesJob;
 use App\Domains\Expenses\Models\RecurringExpense;
 use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -16,6 +19,7 @@ class RecurringExpenseFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Carbon::setTestNow('2026-03-15 08:00:00');
         $this->setUpOrganization();
     }
 
@@ -50,6 +54,26 @@ class RecurringExpenseFlowTest extends TestCase
             'amount' => '300.00',
             'frequency' => 'quarterly',
         ]);
+    }
+
+    public function test_retry_after_success_does_not_create_a_duplicate_expense(): void
+    {
+        RecurringExpense::create([
+            'organization_id' => $this->org->id,
+            'category' => 'Software',
+            'description' => 'Monthly subscription',
+            'amount' => '100.00',
+            'vat_amount' => '0.00',
+            'frequency' => RecurrenceFrequency::Monthly,
+            'next_due_date' => '2026-03-15',
+            'is_active' => true,
+        ]);
+
+        $job = app(GenerateRecurringExpensesJob::class);
+        $job->handle(app(CreateExpenseAction::class));
+        $job->handle(app(CreateExpenseAction::class));
+
+        $this->assertDatabaseCount('expenses', 1);
     }
 
     public function test_cannot_update_recurring_expense_from_another_organization(): void

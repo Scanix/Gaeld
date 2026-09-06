@@ -174,6 +174,29 @@ class RecurringInvoiceFlowTest extends TestCase
         $this->assertEquals($this->org->id, $invoice->organization_id);
     }
 
+    public function test_retry_after_success_does_not_create_a_duplicate_invoice(): void
+    {
+        RecurringInvoice::create([
+            'organization_id' => $this->org->id,
+            'customer_id' => $this->customer->id,
+            'frequency' => RecurrenceFrequency::Monthly,
+            'next_issue_date' => '2026-03-15',
+            'template_data' => [
+                'currency' => 'CHF',
+                'lines' => [
+                    ['description' => 'Hosting', 'quantity' => 1, 'unit_price' => '200.00', 'sort_order' => 0],
+                ],
+            ],
+            'is_active' => true,
+        ]);
+
+        $job = app(GenerateRecurringInvoicesJob::class);
+        $job->handle(app(CreateInvoiceAction::class), app(InvoiceNumberGenerator::class));
+        $job->handle(app(CreateInvoiceAction::class), app(InvoiceNumberGenerator::class));
+
+        $this->assertDatabaseCount('invoices', 1);
+    }
+
     public function test_job_advances_next_issue_date(): void
     {
         $recurring = RecurringInvoice::create([
