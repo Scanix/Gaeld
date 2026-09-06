@@ -79,13 +79,32 @@ class InvoicePdfRenderer
         $logoFullPath = $organization->logo_path
             ? Storage::disk('local')->path($organization->logo_path)
             : null;
+        $logoHeight = 0.0;
         if ($logoFullPath && file_exists($logoFullPath)) {
-            $tcpdf->Image($logoFullPath, InvoicePdfStyle::LOGO_X, InvoicePdfStyle::LOGO_Y, InvoicePdfStyle::LOGO_WIDTH);
+            $logoWidth = (float) InvoicePdfStyle::LOGO_WIDTH;
+            $imageSize = @getimagesize($logoFullPath);
+            if ($imageSize !== false && $imageSize[0] > 0 && $imageSize[1] > 0) {
+                $aspectRatio = $imageSize[0] / $imageSize[1];
+                $logoHeight = min(InvoicePdfStyle::LOGO_MAX_HEIGHT, $logoWidth / $aspectRatio);
+                $logoWidth = $logoHeight * $aspectRatio;
+            } else {
+                $logoHeight = InvoicePdfStyle::LOGO_MAX_HEIGHT;
+            }
+
+            $tcpdf->Image(
+                $logoFullPath,
+                InvoicePdfStyle::LOGO_X,
+                InvoicePdfStyle::LOGO_Y,
+                $logoWidth,
+                $logoHeight,
+            );
         }
 
         // Organization info (top left, sender position on Swiss business letters)
         $tcpdf->SetFont('Helvetica', 'B', 10);
-        $organizationY = $logoFullPath && file_exists($logoFullPath) ? 30 : InvoicePdfStyle::MARGIN_TOP;
+        $organizationY = $logoHeight > 0
+            ? InvoicePdfStyle::LOGO_Y + $logoHeight + InvoicePdfStyle::LOGO_GAP
+            : InvoicePdfStyle::MARGIN_TOP;
         $tcpdf->SetXY(InvoicePdfStyle::ORGANIZATION_X, $organizationY);
         $tcpdf->Cell(InvoicePdfStyle::ORGANIZATION_WIDTH, 5, $organization->legal_name ?? $organization->name, 0, 1, 'L');
 
