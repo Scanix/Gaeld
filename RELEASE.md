@@ -26,6 +26,18 @@ The current coordinated production release (2026-09-03) is CE `v3.8.2` at
 It is deployed as API release `257`, with web `v2.14.3` at `1e47ae3` and the
 documentation site at `v2.12.3` at `fd97bee`.
 
+## v3.8.3 Staging Candidate
+
+This candidate contains the convergence fixes validated on the `develop`
+branch: organization-scoped recurring policies, retry-safe recurring and
+asynchronous jobs, signed export isolation, OCR retry preservation, and custom
+logo layout protection in invoice PDFs.
+
+The selected staging pair is CE `v3.8.3` with EE `v2.9.27`. The CE tag SHA is
+recorded after the release commit is created and before the candidate is
+promoted to the GitLab deployment branch. This candidate is for staging only;
+no production deployment is part of this release step.
+
 ## Release Candidate
 
 The v3.8.2 release contains the minimal self-hosted integration scope:
@@ -308,6 +320,29 @@ history. Roll back by selecting the last compatible immutable CE/EE pair; do
 not use `migrate:rollback` as an operational edition rollback.
 
 ## Boundary Feature Validation (2026-09-03)
+
+### Convergence validation (2026-09-06)
+
+The CE standalone smoke was rerun after correcting the edition-flag handoff
+inside the Sail container. With `PLUGINS_ENABLED=false` and
+`FEATURE_SAAS=false` applied to the container process, the clean CE boundary
+tests passed **4/4 tests and 35 assertions**. The smoke also completed a fresh
+CE migration and frontend build without loading the EE provider or commercial
+routes.
+
+The EE-enabled staging convergence campaign
+`convergence-20260906-082834` passed **44/44 checks**, with zero failures,
+skips, console errors, or request failures. It covered ephemeral signup and
+verification, onboarding, accounting operations, payroll, VAT, fiscal-year
+close/reopen, multi-persona authorization, billing, Stripe Test Clock
+lifecycle, exports, and the exhaustive 24-month replay. Raw evidence is in
+`storage/app/qa/staging-qa-convergence-20260906-082834.json` with the compact
+report at `storage/app/qa/staging-qa-convergence-20260906-082834.md`.
+
+This evidence closes the latest EE-enabled staging run. It does not close the
+separate CE/EE boundary task T045: staging acceptance with EE absent, plus the
+explicit migration and rollback rehearsal, still require a staging environment
+configured without the EE plugin and a recorded rollback pair.
 
 The CE boundary slice passed with 21 tests and 168 assertions. The EE boundary
 slice passed with 7 tests and 37 assertions (one registry-consumer test is

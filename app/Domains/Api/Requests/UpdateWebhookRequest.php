@@ -8,6 +8,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateWebhookRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return $this->user()?->can('update', $this->route('webhook')) ?? false;
+    }
+
     /**
      * @return array<string, mixed>
      */

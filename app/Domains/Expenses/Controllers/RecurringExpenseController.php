@@ -21,7 +21,7 @@ class RecurringExpenseController extends Controller
 {
     public function index(): Response
     {
-        $this->authorize('viewAny', Expense::class);
+        $this->authorize('viewAny', RecurringExpense::class);
 
         $recurringExpenses = RecurringExpense::with('supplier:id,name')
             ->orderByDesc('next_due_date')
@@ -34,7 +34,7 @@ class RecurringExpenseController extends Controller
 
     public function create(): Response
     {
-        $this->authorize('create', Expense::class);
+        $this->authorize('create', RecurringExpense::class);
 
         return Inertia::render('Expenses/Recurring/Create', [
             'suppliers' => ContactQuery::forSelect(),
@@ -45,7 +45,7 @@ class RecurringExpenseController extends Controller
 
     public function store(RecurringExpenseRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
-        $this->authorize('create', Expense::class);
+        $this->authorize('create', RecurringExpense::class);
 
         $validated = $request->validated();
 
@@ -73,7 +73,7 @@ class RecurringExpenseController extends Controller
 
     public function edit(RecurringExpense $recurring): Response
     {
-        $this->authorize('update', Expense::class);
+        $this->authorize('update', $recurring);
 
         return Inertia::render('Expenses/Recurring/Edit', [
             'recurringExpense' => $recurring->load('supplier:id,name'),
@@ -85,7 +85,7 @@ class RecurringExpenseController extends Controller
 
     public function update(RecurringExpenseRequest $request, RecurringExpense $recurring): RedirectResponse
     {
-        $this->authorize('update', Expense::class);
+        $this->authorize('update', $recurring);
 
         $recurring->update($request->validated());
 
@@ -95,7 +95,7 @@ class RecurringExpenseController extends Controller
 
     public function destroy(RecurringExpense $recurring): RedirectResponse
     {
-        $this->authorize('delete', Expense::class);
+        $this->authorize('delete', $recurring);
 
         $recurring->delete();
 
@@ -105,7 +105,7 @@ class RecurringExpenseController extends Controller
 
     public function pause(RecurringExpense $recurring): RedirectResponse
     {
-        $this->authorize('update', Expense::class);
+        $this->authorize('update', $recurring);
 
         $recurring->update(['is_active' => false]);
 
@@ -114,7 +114,7 @@ class RecurringExpenseController extends Controller
 
     public function resume(RecurringExpense $recurring): RedirectResponse
     {
-        $this->authorize('update', Expense::class);
+        $this->authorize('update', $recurring);
 
         $recurring->update(['is_active' => true]);
 

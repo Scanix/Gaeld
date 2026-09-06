@@ -19,6 +19,6 @@ class UpdateExpenseRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->sharedRules($this->route('expense')->organization_id);
+        return $this->sharedRules($this->route('expense')->organization_id, partial: true);
     }
 }

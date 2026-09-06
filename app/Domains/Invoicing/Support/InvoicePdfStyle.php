@@ -104,6 +104,10 @@ final class InvoicePdfStyle
 
     public const LOGO_WIDTH = 28;
 
+    public const LOGO_MAX_HEIGHT = 15;
+
+    public const LOGO_GAP = 3;
+
     // Language mapping for QR bill
     public const QR_LANGUAGE_MAP = ['en' => 'en', 'de' => 'de', 'fr' => 'fr', 'it' => 'it'];
 }

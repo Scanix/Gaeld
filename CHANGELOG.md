@@ -5,6 +5,20 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.3] — 2026-09-06
+
+### Fixed
+- **Authorization boundaries:** aligned recurring invoice and expense workflows
+  with their dedicated organization-scoped policies and requests.
+- **Asynchronous jobs:** made recurring generation, migration imports, exports,
+  and OCR retries idempotent or retry-safe to prevent duplicate side effects.
+- **Invoice PDFs:** constrained custom logo dimensions so portrait logos cannot
+  cover the issuer address.
+- **Signed exports:** restricted accounting downloads to the current
+  organization.
+- **Community Edition smoke validation:** pass edition flags into the Sail
+  container so CE checks cannot accidentally boot the EE plugin.
+
 ## [3.8.2] — 2026-09-03
 
 ### Added

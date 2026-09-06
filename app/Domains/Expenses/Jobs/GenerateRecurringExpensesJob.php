@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class GenerateRecurringExpensesJob implements ShouldQueue
@@ -21,19 +22,31 @@ class GenerateRecurringExpensesJob implements ShouldQueue
 
     public function handle(CreateExpenseAction $createExpense): void
     {
+        $today = Carbon::today();
         $dueRecurrings = RecurringExpense::withoutGlobalScope('organization')
             ->active()
-            ->due(Carbon::today())
-            ->get();
+            ->due($today)
+            ->get(['id', 'organization_id']);
 
-        foreach ($dueRecurrings as $recurring) {
+        foreach ($dueRecurrings as $candidate) {
             try {
-                $this->generateExpense($recurring, $createExpense);
-                $this->advanceSchedule($recurring);
-            } catch (\DomainException|\RuntimeException|\InvalidArgumentException $e) {
+                DB::transaction(function () use ($candidate, $createExpense, $today): void {
+                    $recurring = RecurringExpense::withoutGlobalScope('organization')
+                        ->whereKey($candidate->getKey())
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($recurring === null || ! $recurring->is_active || $recurring->next_due_date->isAfter($today)) {
+                        return;
+                    }
+
+                    $this->generateExpense($recurring, $createExpense);
+                    $this->advanceSchedule($recurring);
+                });
+            } catch (\DomainException|\InvalidArgumentException $e) {
                 Log::error('GenerateRecurringExpensesJob: failed to generate', [
-                    'recurring_expense_id' => $recurring->id,
-                    'organization_id' => $recurring->organization_id,
+                    'recurring_expense_id' => $candidate->id,
+                    'organization_id' => $candidate->organization_id,
                     'error' => $e->getMessage(),
                 ]);
             }

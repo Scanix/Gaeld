@@ -12,6 +12,7 @@ use App\Support\FeatureFlag;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -53,9 +54,13 @@ class PayrollRunController extends Controller
         $validated = $request->validate([
             'month' => ['required', 'integer', 'min:1', 'max:12'],
             'year' => ['required', 'integer', 'min:2000'],
-            'employee_ids' => ['nullable', 'array'],
-            'employee_ids.*' => ['uuid'],
-            ...PayrollAdjustmentRules::for($request),
+            'employee_ids' => ['nullable', 'array', 'max:500'],
+            'employee_ids.*' => [
+                'uuid',
+                'distinct',
+                Rule::exists('employees', 'id')->where('organization_id', $currentOrg->id()),
+            ],
+            ...PayrollAdjustmentRules::for($request, $currentOrg->id()),
         ]);
 
         $slips = $action->preview(
@@ -86,9 +91,13 @@ class PayrollRunController extends Controller
             'month' => ['required', 'integer', 'min:1', 'max:12'],
             'year' => ['required', 'integer', 'min:2000'],
             'post' => ['boolean'],
-            'employee_ids' => ['nullable', 'array'],
-            'employee_ids.*' => ['uuid'],
-            ...PayrollAdjustmentRules::for($request),
+            'employee_ids' => ['nullable', 'array', 'max:500'],
+            'employee_ids.*' => [
+                'uuid',
+                'distinct',
+                Rule::exists('employees', 'id')->where('organization_id', $currentOrg->id()),
+            ],
+            ...PayrollAdjustmentRules::for($request, $currentOrg->id()),
         ]);
 
         $slips = $action->execute(

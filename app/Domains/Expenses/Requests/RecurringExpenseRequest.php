@@ -3,7 +3,7 @@
 namespace App\Domains\Expenses\Requests;
 
 use App\Domains\Accounting\Enums\AccountType;
-use App\Domains\Expenses\Models\Expense;
+use App\Domains\Expenses\Models\RecurringExpense;
 use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Http\FormRequest;
@@ -13,7 +13,14 @@ class RecurringExpenseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create', Expense::class);
+        $recurring = $this->route('recurring');
+
+        if ($this->isMethod('POST')) {
+            return $this->user()?->can('create', RecurringExpense::class) ?? false;
+        }
+
+        return $recurring instanceof RecurringExpense
+            && ($this->user()?->can('update', $recurring) ?? false);
     }
 
     /**

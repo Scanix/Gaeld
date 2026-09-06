@@ -8,6 +8,7 @@ use App\Domains\Reporting\Mail\AccountingExportReadyMail;
 use App\Domains\Reporting\Services\AccountingExportService;
 use App\Domains\Users\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -16,13 +17,15 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
-class GenerateAccountingExportJob implements ShouldQueue
+class GenerateAccountingExportJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
 
     public int $backoff = 60;
+
+    public int $uniqueFor = 86400;
 
     public function __construct(
         public readonly string $orgId,
@@ -31,6 +34,11 @@ class GenerateAccountingExportJob implements ShouldQueue
         public readonly ?string $fiscalYearId = null,
     ) {
         $this->onQueue('exports');
+    }
+
+    public function uniqueId(): string
+    {
+        return 'accounting-export:'.$this->orgId.':'.($this->fiscalYearId ?? $this->fiscalYear).':'.$this->userId;
     }
 
     public function handle(AccountingExportService $exportService, ?FiscalYearService $fiscalYears = null): void

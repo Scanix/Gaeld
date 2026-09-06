@@ -5,6 +5,7 @@ namespace App\Domains\Payroll\Requests;
 use Carbon\Carbon;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 final class PayrollAdjustmentRules
 {
@@ -39,11 +40,22 @@ final class PayrollAdjustmentRules
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function for(Request $request): array
+    public static function for(Request $request, string $organizationId): array
     {
+        $selectedEmployeeIds = $request->input('employee_ids', []);
+        $adjustmentEmployeeRules = [
+            'required',
+            'uuid',
+            Rule::exists('employees', 'id')->where('organization_id', $organizationId),
+        ];
+
+        if (is_array($selectedEmployeeIds) && $selectedEmployeeIds !== []) {
+            $adjustmentEmployeeRules[] = Rule::in($selectedEmployeeIds);
+        }
+
         return [
-            'adjustments' => ['nullable', 'array'],
-            'adjustments.*.employee_id' => ['required', 'uuid'],
+            'adjustments' => ['nullable', 'array', 'max:500'],
+            'adjustments.*.employee_id' => $adjustmentEmployeeRules,
             'adjustments.*.unpaid_leave_days' => self::unpaidLeaveDays($request),
             'adjustments.*.reimbursement_amount' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
         ];

@@ -142,6 +142,30 @@ class InvoiceFlowTest extends TestCase
         $this->assertDatabaseCount('vat_entries', 0);
     }
 
+    public function test_finalized_invoice_rejects_a_soft_deleted_customer(): void
+    {
+        $deletedCustomer = Contact::create([
+            'organization_id' => $this->org->id,
+            'name' => 'Deleted Customer AG',
+        ]);
+        $deletedCustomer->delete();
+
+        $response = $this->actAsOrg()->post(route('invoices.store'), [
+            'customer_id' => $deletedCustomer->id,
+            'issue_date' => '2026-03-16',
+            'due_date' => '2026-04-15',
+            'finalize' => true,
+            'lines' => [[
+                'description' => 'Consulting',
+                'quantity' => 1,
+                'unit_price' => 150.00,
+                'vat_rate_id' => $this->vatRate->id,
+            ]],
+        ]);
+
+        $response->assertSessionHasErrors('customer_id');
+    }
+
     public function test_standard_invoice_can_have_no_vat_when_each_line_has_no_rate(): void
     {
         $invoice = $this->createInvoice(lines: [[

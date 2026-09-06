@@ -81,6 +81,19 @@ class CamtUploadSecurityTest extends SecurityTestCase
             'Server must return a controlled error response, not crash');
     }
 
+    public function test_unsupported_extension_is_rejected(): void
+    {
+        $file = UploadedFile::fake()->createWithContent('transactions.php', 'not a bank statement');
+
+        $response = $this->actingAs($this->ownerA)
+            ->withSession(['current_organization_id' => $this->orgA->id])
+            ->post("/reconciliation/{$this->bankAccountA->uuid}/import", [
+                'camt_file' => $file,
+            ]);
+
+        $response->assertSessionHasErrors('camt_file');
+    }
+
     // ──────────────────────────────────────────────────────────────
     //  File size limit
     // ──────────────────────────────────────────────────────────────

@@ -3,11 +3,17 @@
 namespace App\Domains\Api\Requests;
 
 use App\Domains\Api\Enums\WebhookEvent;
+use App\Domains\Api\Models\Webhook;
 use App\Support\Rules\ValidWebhookUrl;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreWebhookRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return $this->user()?->can('create', Webhook::class) ?? false;
+    }
+
     /**
      * @return array<string, mixed>
      */

@@ -6,6 +6,7 @@ use App\Domains\Organizations\Mail\OrganizationExportReadyMail;
 use App\Domains\Organizations\Services\OrganizationExportService;
 use App\Domains\Users\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
-class ExportOrganizationDataJob implements ShouldQueue
+class ExportOrganizationDataJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -22,10 +23,17 @@ class ExportOrganizationDataJob implements ShouldQueue
 
     public int $backoff = 60;
 
+    public int $uniqueFor = 172800;
+
     public function __construct(
         public readonly string $organizationId,
         public readonly string $userId,
     ) {}
+
+    public function uniqueId(): string
+    {
+        return 'organization-export:'.$this->organizationId.':'.$this->userId;
+    }
 
     public function handle(OrganizationExportService $exportService): void
     {
