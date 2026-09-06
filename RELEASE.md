@@ -26,6 +26,18 @@ The current coordinated production release (2026-09-03) is CE `v3.8.2` at
 It is deployed as API release `257`, with web `v2.14.3` at `1e47ae3` and the
 documentation site at `v2.12.3` at `fd97bee`.
 
+## v3.8.3 Staging Candidate
+
+This candidate contains the convergence fixes validated on the `develop`
+branch: organization-scoped recurring policies, retry-safe recurring and
+asynchronous jobs, signed export isolation, OCR retry preservation, and custom
+logo layout protection in invoice PDFs.
+
+The selected staging pair is CE `v3.8.3` with EE `v2.9.27`. The CE tag SHA is
+recorded after the release commit is created and before the candidate is
+promoted to the GitLab deployment branch. This candidate is for staging only;
+no production deployment is part of this release step.
+
 ## Release Candidate
 
 The v3.8.2 release contains the minimal self-hosted integration scope:
