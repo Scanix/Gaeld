@@ -39,13 +39,13 @@ The candidate is for staging only; no production deployment is part of this
 release step.
 
 The candidate was deployed to staging as release `149`. The health endpoint
-returned HTTP 200 with database and cache checks healthy. The post-deploy safe
-smoke passed 39 checks with zero console or request failures; two payroll and
-multi-persona steps timed out on the runner's obsolete `#start_date` selector.
-The same workflows passed in the exhaustive EE campaign
-`storage/app/qa/staging-qa-convergence-20260906-082834.md` (44/44), so those
-two failures are recorded as QA-runner coverage defects rather than silently
-treated as application failures.
+returned HTTP 200 with database and cache checks healthy. After aligning the
+runner with the employee form's `#entry_date` field, the post-deploy safe
+smoke `release-v383-fix-20260906-144147` passed **41/41 checks** with zero
+failures, skips, console errors, or request failures. Evidence is in
+`storage/app/qa/staging-qa-release-v383-fix-20260906-144147.md`. The same
+workflows also passed in the exhaustive EE campaign
+`storage/app/qa/staging-qa-convergence-20260906-082834.md` (44/44).
 
 ## Release Candidate
 
