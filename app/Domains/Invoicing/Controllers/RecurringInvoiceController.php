@@ -20,7 +20,7 @@ class RecurringInvoiceController extends Controller
 {
     public function index(): Response
     {
-        $this->authorize('viewAny', Invoice::class);
+        $this->authorize('viewAny', RecurringInvoice::class);
 
         $recurringInvoices = RecurringInvoice::with('customer:id,name')
             ->orderByDesc('next_issue_date')
@@ -33,7 +33,7 @@ class RecurringInvoiceController extends Controller
 
     public function create(): Response
     {
-        $this->authorize('create', Invoice::class);
+        $this->authorize('create', RecurringInvoice::class);
 
         return Inertia::render('Invoices/Recurring/Create', [
             'customers' => ContactQuery::forSelect(),
@@ -46,7 +46,7 @@ class RecurringInvoiceController extends Controller
 
     public function store(RecurringInvoiceRequest $request, CurrentOrganization $currentOrg): RedirectResponse
     {
-        $this->authorize('create', Invoice::class);
+        $this->authorize('create', RecurringInvoice::class);
 
         $validated = $request->validated();
 
@@ -65,7 +65,7 @@ class RecurringInvoiceController extends Controller
 
     public function edit(RecurringInvoice $recurring): Response
     {
-        $this->authorize('update', Invoice::class);
+        $this->authorize('update', $recurring);
 
         return Inertia::render('Invoices/Recurring/Edit', [
             'recurringInvoice' => $recurring->load('customer:id,name'),
@@ -79,7 +79,7 @@ class RecurringInvoiceController extends Controller
 
     public function update(RecurringInvoiceRequest $request, RecurringInvoice $recurring): RedirectResponse
     {
-        $this->authorize('update', Invoice::class);
+        $this->authorize('update', $recurring);
 
         $recurring->update($request->validated());
 
@@ -89,7 +89,7 @@ class RecurringInvoiceController extends Controller
 
     public function destroy(RecurringInvoice $recurring): RedirectResponse
     {
-        $this->authorize('delete', Invoice::class);
+        $this->authorize('delete', $recurring);
 
         $recurring->delete();
 
@@ -99,7 +99,7 @@ class RecurringInvoiceController extends Controller
 
     public function pause(RecurringInvoice $recurring): RedirectResponse
     {
-        $this->authorize('update', Invoice::class);
+        $this->authorize('update', $recurring);
 
         $recurring->update(['is_active' => false]);
 
@@ -108,7 +108,7 @@ class RecurringInvoiceController extends Controller
 
     public function resume(RecurringInvoice $recurring): RedirectResponse
     {
-        $this->authorize('update', Invoice::class);
+        $this->authorize('update', $recurring);
 
         $recurring->update(['is_active' => true]);
 

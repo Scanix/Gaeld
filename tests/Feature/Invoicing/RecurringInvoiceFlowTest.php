@@ -101,6 +101,45 @@ class RecurringInvoiceFlowTest extends TestCase
         $response->assertSessionHasErrors(['customer_id', 'frequency', 'next_issue_date', 'template_data']);
     }
 
+    public function test_can_update_recurring_invoice(): void
+    {
+        $recurring = RecurringInvoice::create([
+            'organization_id' => $this->org->id,
+            'customer_id' => $this->customer->id,
+            'frequency' => RecurrenceFrequency::Monthly,
+            'next_issue_date' => '2026-04-01',
+            'template_data' => [
+                'currency' => 'CHF',
+                'lines' => [
+                    ['description' => 'Monthly Support', 'quantity' => 1, 'unit_price' => '500.00'],
+                ],
+            ],
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->put(route('invoices.recurring.update', $recurring), [
+                'customer_id' => $this->customer->id,
+                'frequency' => 'quarterly',
+                'next_issue_date' => '2026-04-01',
+                'end_date' => null,
+                'template_data' => [
+                    'currency' => 'CHF',
+                    'lines' => [
+                        ['description' => 'Quarterly Support', 'quantity' => 1, 'unit_price' => '1500.00'],
+                    ],
+                ],
+                'is_active' => true,
+            ]);
+
+        $response->assertRedirect(route('invoices.recurring.index'));
+        $this->assertDatabaseHas('recurring_invoices', [
+            'id' => $recurring->id,
+            'frequency' => 'quarterly',
+        ]);
+    }
+
     // ──────────────────────────────────────────────────────────────
     //  Job: GenerateRecurringInvoicesJob
     // ──────────────────────────────────────────────────────────────

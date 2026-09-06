@@ -89,13 +89,17 @@ class AccountingExportController extends Controller
             ->with('success', __('app.export_dispatched'));
     }
 
-    public function download(Request $request): BinaryFileResponse
+    public function download(Request $request, CurrentOrganization $currentOrg): BinaryFileResponse
     {
         abort_unless($request->hasValidSignature(), 403);
 
-        $path = $request->query('path', '');
+        $filename = basename((string) $request->query('path', ''));
+        abort_unless(
+            str_starts_with($filename, 'accounting-'.$currentOrg->id().'-'),
+            403,
+        );
 
-        $absolutePath = Storage::disk('local')->path('exports/'.basename($path));
+        $absolutePath = Storage::disk('local')->path('exports/'.$filename);
 
         abort_unless(file_exists($absolutePath), 404);
 

@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Organizations\Models\Organization;
 use App\Domains\Reporting\Jobs\GenerateAccountingExportJob;
 use App\Domains\Reporting\Mail\AccountingExportReadyMail;
 use App\Domains\Reporting\Services\AccountingExportService;
@@ -123,12 +124,13 @@ class AccountingExportTest extends TestCase
     public function test_download_returns_file_with_valid_signed_url(): void
     {
         Storage::fake('local');
-        Storage::disk('local')->put('exports/test-export.zip', 'fake-zip-content');
+        $filename = 'accounting-'.$this->org->id.'-test.zip';
+        Storage::disk('local')->put('exports/'.$filename, 'fake-zip-content');
 
         $url = URL::temporarySignedRoute(
             'accounting.export.download',
             now()->addDay(),
-            ['path' => 'test-export.zip'],
+            ['path' => $filename],
         );
 
         $response = $this->actingAs($this->user)->get($url);
@@ -136,14 +138,40 @@ class AccountingExportTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_signed_exports_cannot_be_downloaded_from_another_organization(): void
+    {
+        Storage::fake('local');
+        $foreignOrganization = Organization::factory()->create();
+        $accountingFilename = 'accounting-'.$foreignOrganization->id.'-test.zip';
+        $chartFilename = 'chart-of-accounts-'.$foreignOrganization->id.'-test.csv';
+
+        Storage::disk('local')->put('exports/'.$accountingFilename, 'foreign-accounting-export');
+        Storage::disk('local')->put('exports/'.$chartFilename, 'foreign-chart-export');
+
+        $accountingUrl = URL::temporarySignedRoute(
+            'accounting.export.download',
+            now()->addDay(),
+            ['path' => $accountingFilename],
+        );
+        $chartUrl = URL::temporarySignedRoute(
+            'accounting.accounts.export.download',
+            now()->addDay(),
+            ['path' => $chartFilename],
+        );
+
+        $this->actAsOrg()->get($accountingUrl)->assertForbidden();
+        $this->actAsOrg()->get($chartUrl)->assertForbidden();
+    }
+
     public function test_download_returns_404_for_missing_file(): void
     {
         Storage::fake('local');
+        $filename = 'accounting-'.$this->org->id.'-nonexistent.zip';
 
         $url = URL::temporarySignedRoute(
             'accounting.export.download',
             now()->addDay(),
-            ['path' => 'nonexistent.zip'],
+            ['path' => $filename],
         );
 
         $response = $this->actingAs($this->user)->get($url);
