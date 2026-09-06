@@ -7,6 +7,7 @@ use App\Domains\Migration\Models\MigrationSession;
 use App\Domains\Migration\Services\MigrationOrchestrator;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -14,13 +15,15 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
-class ProcessMigrationImport implements ShouldQueue
+class ProcessMigrationImport implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
 
     public int $timeout = 600;
+
+    public int $uniqueFor = 7200;
 
     /**
      * @param  array<string, Collection<int, mixed>>  $rowsByType
@@ -32,13 +35,26 @@ class ProcessMigrationImport implements ShouldQueue
 
     public function handle(MigrationOrchestrator $orchestrator): void
     {
-        $organization = Organization::findOrFail($this->session->organization_id);
+        $session = MigrationSession::query()
+            ->whereKey($this->session->getKey())
+            ->firstOrFail();
+
+        if (in_array($session->status, [ImportStatus::Completed, ImportStatus::Reversed], true)) {
+            return;
+        }
+
+        $organization = Organization::findOrFail($session->organization_id);
 
         $orchestrator->executeAll(
-            $this->session,
+            $session,
             $this->rowsByType,
             $organization,
         );
+    }
+
+    public function uniqueId(): string
+    {
+        return 'migration-session:'.$this->session->getKey();
     }
 
     public function failed(\Throwable $e): void

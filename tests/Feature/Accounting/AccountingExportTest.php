@@ -287,6 +287,10 @@ class AccountingExportTest extends TestCase
         $this->app->instance(AccountingExportService::class, $service);
 
         $job = new GenerateAccountingExportJob($this->org->id, '2025', (string) $this->user->id);
+        $this->assertSame(
+            'accounting-export:'.$this->org->id.':2025:'.$this->user->id,
+            $job->uniqueId(),
+        );
         $job->handle(app(AccountingExportService::class));
 
         Mail::assertSent(AccountingExportReadyMail::class, function (AccountingExportReadyMail $mail) {

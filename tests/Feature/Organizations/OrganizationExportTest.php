@@ -263,6 +263,10 @@ class OrganizationExportTest extends TestCase
         $this->app->instance(OrganizationExportService::class, $service);
 
         $job = new ExportOrganizationDataJob($this->org->id, (string) $this->user->id);
+        $this->assertSame(
+            'organization-export:'.$this->org->id.':'.$this->user->id,
+            $job->uniqueId(),
+        );
         $job->handle(app(OrganizationExportService::class));
 
         Mail::assertSent(OrganizationExportReadyMail::class, function (OrganizationExportReadyMail $mail) {

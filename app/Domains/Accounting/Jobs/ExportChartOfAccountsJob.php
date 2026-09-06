@@ -6,6 +6,7 @@ use App\Domains\Accounting\Mail\ChartOfAccountsExportReadyMail;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Users\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
-class ExportChartOfAccountsJob implements ShouldQueue
+class ExportChartOfAccountsJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -23,11 +24,18 @@ class ExportChartOfAccountsJob implements ShouldQueue
 
     public int $backoff = 60;
 
+    public int $uniqueFor = 86400;
+
     public function __construct(
         public readonly string $orgId,
         public readonly string $userId,
         public readonly string $format = 'csv',
     ) {}
+
+    public function uniqueId(): string
+    {
+        return 'chart-of-accounts-export:'.$this->orgId.':'.$this->userId.':'.$this->format;
+    }
 
     public function handle(): void
     {

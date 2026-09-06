@@ -6,6 +6,7 @@ use App\Domains\Users\Mail\DataExportReady;
 use App\Domains\Users\Models\User;
 use App\Domains\Users\Services\DataExportService;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
-class ExportUserDataJob implements ShouldQueue
+class ExportUserDataJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -23,9 +24,16 @@ class ExportUserDataJob implements ShouldQueue
 
     public int $backoff = 60;
 
+    public int $uniqueFor = 172800;
+
     public function __construct(
         public readonly User $user,
     ) {}
+
+    public function uniqueId(): string
+    {
+        return 'user-export:'.$this->user->getKey();
+    }
 
     public function handle(DataExportService $exportService): void
     {

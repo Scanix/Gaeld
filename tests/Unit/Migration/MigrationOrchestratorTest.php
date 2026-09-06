@@ -311,4 +311,38 @@ class MigrationOrchestratorTest extends TestCase
         $session->refresh();
         $this->assertSame(ImportStatus::PartiallyCompleted, $session->status);
     }
+
+    public function test_execute_all_does_not_replay_completed_or_partial_data_types(): void
+    {
+        $accountImporter = $this->createMock(DataTypeImporterInterface::class);
+        $accountImporter->method('dataType')->willReturn(DataType::Accounts);
+        $accountImporter->method('dependencies')->willReturn([]);
+        $accountImporter->expects($this->never())->method('import');
+
+        $contactImporter = $this->createMock(DataTypeImporterInterface::class);
+        $contactImporter->method('dataType')->willReturn(DataType::Contacts);
+        $contactImporter->method('dependencies')->willReturn([]);
+        $contactImporter->expects($this->once())->method('validate')->willReturn(ValidationResult::success());
+        $contactImporter->expects($this->once())->method('import')->willReturn(ImportResult::success(DataType::Contacts, 1));
+
+        $this->registry->registerImporter($accountImporter);
+        $this->registry->registerImporter($contactImporter);
+
+        $session = $this->orchestrator->startSession(
+            $this->organization,
+            Platform::Bexio,
+            $this->user->id,
+        );
+        $session->update([
+            'data_types_status' => [
+                DataType::Accounts->value => ImportStatus::PartiallyCompleted->value,
+                DataType::Contacts->value => ImportStatus::Pending->value,
+            ],
+        ]);
+
+        $this->orchestrator->executeAll($session, [
+            'accounts' => collect([new AccountImportRow(1, '1020', 'Bank', 'asset')]),
+            'contacts' => collect([new ContactImportRow(1, 'customer', 'Test')]),
+        ], $this->organization);
+    }
 }
