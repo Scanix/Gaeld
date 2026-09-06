@@ -33,10 +33,19 @@ branch: organization-scoped recurring policies, retry-safe recurring and
 asynchronous jobs, signed export isolation, OCR retry preservation, and custom
 logo layout protection in invoice PDFs.
 
-The selected staging pair is CE `v3.8.3` with EE `v2.9.27`. The CE tag SHA is
-recorded after the release commit is created and before the candidate is
-promoted to the GitLab deployment branch. This candidate is for staging only;
-no production deployment is part of this release step.
+The selected staging pair is CE `v3.8.3` at `1a10b685` with EE `v2.9.27` at
+`a25b632`. The private GitLab staging promotion is merge commit `192b7e94`.
+The candidate is for staging only; no production deployment is part of this
+release step.
+
+The candidate was deployed to staging as release `149`. The health endpoint
+returned HTTP 200 with database and cache checks healthy. After aligning the
+runner with the employee form's `#entry_date` field, the post-deploy safe
+smoke `release-v383-fix-20260906-144147` passed **41/41 checks** with zero
+failures, skips, console errors, or request failures. Evidence is in
+`storage/app/qa/staging-qa-release-v383-fix-20260906-144147.md`. The same
+workflows also passed in the exhaustive EE campaign
+`storage/app/qa/staging-qa-convergence-20260906-082834.md` (44/44).
 
 ## Release Candidate
 
