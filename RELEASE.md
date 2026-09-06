@@ -38,6 +38,13 @@ The selected staging pair is CE `v3.8.3` at `1a10b685` with EE `v2.9.27` at
 The candidate is for staging only; no production deployment is part of this
 release step.
 
+## v3.8.4 Staging Candidate
+
+This candidate improves the invoice line-item form at wide desktop widths. The
+dense seven-column layout now activates at `2xl` instead of `xl`, keeping field
+labels and readable spacing visible on medium and standard desktop screens.
+The frontend production build passed before preparing this candidate.
+
 The candidate was deployed to staging as release `149`. The health endpoint
 returned HTTP 200 with database and cache checks healthy. After aligning the
 runner with the employee form's `#entry_date` field, the post-deploy safe
