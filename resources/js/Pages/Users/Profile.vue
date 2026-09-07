@@ -14,6 +14,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useHelp } from '@/lib/useHelp'
 import { ref, onMounted, computed } from 'vue'
+import { Building2, CreditCard } from 'lucide-vue-next'
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser'
 
 const props = defineProps({
@@ -22,6 +23,12 @@ const props = defineProps({
 
 const page = usePage()
 const flash = computed(() => page.props.flash || {})
+const ownedOrganizations = computed(() =>
+  (page.props.auth?.organizations ?? []).filter(organization => organization.role === 'owner'),
+)
+const showOrganizationBilling = computed(() =>
+  page.props.features?.saas === true && ownedOrganizations.value.length > 0,
+)
 const twoFactorFlash = computed(() => {
   const session = page.props.flash
   // twoFactor data is passed via session flash
@@ -49,6 +56,13 @@ function submitPassword() {
   passwordForm.put('/profile/password', {
     preserveScroll: true,
     onSuccess: () => passwordForm.reset(),
+  })
+}
+
+function manageOrganizationBilling(organization) {
+  const form = useForm({})
+  form.post(`/organizations/${organization.id}/switch`, {
+    onSuccess: () => router.visit('/billing'),
   })
 }
 
@@ -386,6 +400,31 @@ function confirmRevokeOtherSessions() {
               <Button type="submit" :disabled="profileForm.processing">{{ t('save') }}</Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card v-if="showOrganizationBilling">
+        <CardHeader>
+          <CardTitle>{{ t('organization_billing') }}</CardTitle>
+          <CardDescription>{{ t('organization_billing_desc') }}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="divide-y divide-[hsl(var(--border))]">
+            <div
+              v-for="organization in ownedOrganizations"
+              :key="organization.id"
+              class="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+            >
+              <div class="flex min-w-0 items-center gap-3">
+                <Building2 class="h-4 w-4 shrink-0 text-[hsl(var(--muted-foreground))]" />
+                <span class="truncate text-sm font-medium">{{ organization.name }}</span>
+              </div>
+              <Button variant="outline" size="sm" class="gap-2" @click="manageOrganizationBilling(organization)">
+                <CreditCard class="h-4 w-4" />
+                {{ t('manage_billing') }}
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
