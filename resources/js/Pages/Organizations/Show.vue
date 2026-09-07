@@ -7,6 +7,7 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
+import Alert from '@/Components/UI/Alert.vue'
 import FormInput from '@/Components/UI/FormInput.vue'
 import FormSelect from '@/Components/UI/FormSelect.vue'
 import DataTable from '@/Components/UI/DataTable.vue'
@@ -20,6 +21,7 @@ const props = defineProps({
   invitations: { type: Array, default: () => [] },
   canManageUsers: { type: Boolean, default: false },
   canAddMember: { type: Boolean, default: true },
+  memberQuota: { type: Object, default: () => ({}) },
   availableEmployees: { type: Array, default: () => [] },
 })
 
@@ -34,6 +36,11 @@ const currentUserOrgRole = computed(() =>
 )
 const isOwner = computed(() => currentUserOrgRole.value === 'owner')
 const isOwnerOrAdmin = computed(() => ['owner', 'admin'].includes(currentUserOrgRole.value))
+const memberLimitReached = computed(() =>
+  props.canManageUsers
+  && !props.canAddMember
+  && props.memberQuota?.limit !== -1,
+)
 
 const localeOptions = [
   { value: 'en', label: t('locale_en') },
@@ -254,7 +261,15 @@ function canChangeUserRole(user) {
     <Card id="members" class="mt-6 scroll-mt-20">
       <CardHeader>
         <div class="flex items-center justify-between">
-          <CardTitle>{{ t('members') }}</CardTitle>
+          <div>
+            <CardTitle>{{ t('members') }}</CardTitle>
+            <p
+              v-if="memberQuota.limit !== undefined && memberQuota.limit !== -1"
+              class="mt-1 text-xs text-[hsl(var(--muted-foreground))]"
+            >
+              {{ t('member_usage', { current: memberQuota.total, limit: memberQuota.limit }) }}
+            </p>
+          </div>
           <Button
             v-if="canManageUsers && canAddMember"
             size="sm"
@@ -263,6 +278,30 @@ function canChangeUserRole(user) {
         </div>
       </CardHeader>
       <CardContent>
+        <Alert
+          v-if="memberLimitReached"
+          variant="warning"
+          :title="t('member_limit_reached_title')"
+          class="mb-4"
+        >
+          <p>
+            {{ t('member_limit_reached', {
+              plan: memberQuota.plan_name || t('current_plan'),
+              current: memberQuota.total,
+              limit: memberQuota.limit,
+            }) }}
+          </p>
+          <Button
+            v-if="memberQuota.billing_available"
+            as="a"
+            href="/billing"
+            variant="link"
+            size="sm"
+            class="mt-2 h-auto p-0"
+          >
+            {{ t('view_billing') }}
+          </Button>
+        </Alert>
         <DataTable
           :columns="userColumns"
           :rows="organization.users ?? []"
