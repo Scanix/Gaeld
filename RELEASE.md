@@ -26,6 +26,28 @@ The current coordinated production release (2026-09-03) is CE `v3.8.2` at
 It is deployed as API release `257`, with web `v2.14.3` at `1e47ae3` and the
 documentation site at `v2.12.3` at `fd97bee`.
 
+## v3.8.5 Staging Release
+
+This release contains the organization and billing-limit UX, balanced invoice
+accounting for text and discount lines, matching annual-procedure coverage,
+and the five Dependabot frontend updates:
+
+- Autoprefixer `10.5.5`
+- Maska `3.2.1`
+- PostCSS `8.5.28`
+- Zod `4.5.4`
+- `@simplewebauthn/browser` `14.0.0`
+
+The API release commit is `3ee9f11`. The matching web test commit is `7b0ade6`.
+The candidate passed focused invoice tests, the Security suite, PHP formatting,
+web TypeScript and ESLint checks, the web production build, and the all-locale
+documentation build. It was deployed to staging as releases `153` and `154`
+while the dependency candidate was split into patch and WebAuthn-major stages.
+
+The latest staging health check returned HTTP 200 with database and cache
+healthy. Authenticated staging QA remains pending because the configured QA
+account is rejected by the staging login endpoint.
+
 ## v3.8.3 Staging Candidate
 
 This candidate contains the convergence fixes validated on the `develop`

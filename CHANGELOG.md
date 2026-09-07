@@ -5,6 +5,19 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.5] - 2026-09-07
+
+### Fixed
+- **Invoice accounting:** exclude text-only lines and subtract flat discount
+  lines when posting revenue and VAT entries, keeping discounted invoices
+  balanced.
+- **Organization limits:** explain Cloud Free organization and member limits
+  in the UI and expose per-organization billing access for owners.
+
+### Changed
+- **Frontend dependencies:** update Autoprefixer, Maska, PostCSS, Zod, and
+  SimpleWebAuthn Browser to the tested Dependabot versions.
+
 ## [3.8.4] — 2026-09-06
 
 ### Fixed
