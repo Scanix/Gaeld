@@ -14,7 +14,7 @@
         "@sentry/vite-plugin": "^5.4.0",
         "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-vue": "^6.0.8",
-        "autoprefixer": "^10.5.4",
+        "autoprefixer": "^10.5.5",
         "laravel-vite-plugin": "^3.2.0",
         "postcss": "^8.5.26",
         "tailwindcss": "^4.3.3",
