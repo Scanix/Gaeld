@@ -54,6 +54,20 @@ failures, skips, console errors, or request failures. Evidence is in
 workflows also passed in the exhaustive EE campaign
 `storage/app/qa/staging-qa-convergence-20260906-082834.md` (44/44).
 
+## EE v2.9.28 Hotfix Candidate
+
+This candidate fixes a customer-reported crash on the billing plans page:
+the mobile card layout in `Plans.vue` called an admin-only `updatePlan()`/
+`message` binding left over from a copy-paste of `SaasAdmin/Billing.vue`,
+raising `updatePlan is not a function` for customers on `/billing`. The
+mobile action button now mirrors the working desktop table logic
+(`selectPlan`).
+
+The fix is EE `v2.9.28` at `8978207`, tagged and pushed on top of the already
+staged `v2.9.27` (`a25b632`). No CE change is required for this candidate.
+Deployment (staging validation, then `dep deploy` to production) is pending
+and must be run from a host with production credentials.
+
 ## Release Candidate
 
 The v3.8.2 release contains the minimal self-hosted integration scope:
