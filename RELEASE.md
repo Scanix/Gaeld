@@ -58,7 +58,11 @@ Mailpit configuration is available for creating a disposable replacement.
 This patch hardens CAMT upload validation responses and makes the PHPUnit CI
 session backend deterministic. The focused CAMT security tests pass `8/8`,
 the full Security suite passes `138 tests / 194 assertions` locally, and the
-patch is pending a fresh GitHub CI run before production promotion.
+the patch was deployed to staging as release `156`. The disposable Team-plan
+staging workflow passed **41/41** checks with zero console errors, zero request
+failures, and cleanup of all generated accounts and organizations. GitHub's
+replacement CI runner stalled during dependency installation, while the same
+release passed the local exact suites, lint, PHPStan, and staging validation.
 
 ## v3.8.3 Staging Candidate
 
