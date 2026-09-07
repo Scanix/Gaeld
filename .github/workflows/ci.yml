@@ -198,6 +198,7 @@ jobs:
           DB_PASSWORD: password
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
+          SESSION_DRIVER: file
         run: vendor/bin/phpunit --configuration phpunit.xml ${{ matrix.test-paths }}
 
       - name: Upload test results
