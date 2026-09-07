@@ -236,6 +236,39 @@ class InvoiceFlowTest extends TestCase
         $this->assertNotNull($payment->journal_entry_id);
     }
 
+    public function test_discounted_invoice_posts_a_balanced_journal_entry(): void
+    {
+        $invoice = $this->createInvoice(lines: [
+            [
+                'description' => 'Service A',
+                'quantity' => 1,
+                'unit_price' => 180.00,
+                'vat_rate_id' => '',
+            ],
+            [
+                'description' => 'Service B',
+                'quantity' => 1,
+                'unit_price' => 190.00,
+                'vat_rate_id' => '',
+            ],
+            [
+                'description' => 'Friendly discount',
+                'quantity' => 1,
+                'unit_price' => 20.00,
+                'type' => 'discount',
+                'discount_type' => 'flat',
+                'vat_rate_id' => '',
+            ],
+        ]);
+
+        $this->assertSame('350.00', $invoice->total);
+
+        $invoice = app(FinalizeInvoiceAction::class)->execute($invoice);
+
+        $this->assertEquals(InvoiceStatus::Sent, $invoice->status);
+        $this->assertTrue($invoice->journalEntry->isBalanced());
+    }
+
     public function test_invoice_keeps_customer_snapshot_after_contact_address_changes(): void
     {
         $this->customer->update([
