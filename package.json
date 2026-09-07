@@ -16,7 +16,7 @@
         "@vitejs/plugin-vue": "^6.0.8",
         "autoprefixer": "^10.5.5",
         "laravel-vite-plugin": "^3.2.0",
-        "postcss": "^8.5.26",
+        "postcss": "^8.5.28",
         "tailwindcss": "^4.3.3",
         "vite": "^8.2.2"
     },
