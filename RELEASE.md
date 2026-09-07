@@ -53,6 +53,13 @@ database and cache healthy. Authenticated staging QA remains pending because
 the configured QA account is rejected by the staging login endpoint and no
 Mailpit configuration is available for creating a disposable replacement.
 
+## v3.8.6 Staging Patch
+
+This patch hardens CAMT upload validation responses and makes the PHPUnit CI
+session backend deterministic. The focused CAMT security tests pass `8/8`,
+the full Security suite passes `138 tests / 194 assertions` locally, and the
+patch is pending a fresh GitHub CI run before production promotion.
+
 ## v3.8.3 Staging Candidate
 
 This candidate contains the convergence fixes validated on the `develop`
