@@ -10,9 +10,11 @@ use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
+use App\Domains\Invoicing\Enums\InvoiceLineType;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -75,13 +77,7 @@ class InvoiceAccountingService
             $groupedByVat = $invoice->lines->groupBy(fn ($line) => $line->vat_rate_id ?? 'none');
 
             foreach ($groupedByVat as $vatRateId => $invoiceLines) {
-                $netAmount = '0';
-                $vatAmount = '0';
-
-                foreach ($invoiceLines as $line) {
-                    $netAmount = Money::add($netAmount, Money::absoluteAmount((string) $line->amount));
-                    $vatAmount = Money::add($vatAmount, Money::absoluteAmount((string) ($line->vat_amount ?? '0')));
-                }
+                ['netAmount' => $netAmount, 'vatAmount' => $vatAmount] = $this->calculateGroupTotals($invoiceLines);
 
                 // Revenue line: Credit for invoice, Debit for credit note
                 if (Money::isPositive($netAmount)) {
@@ -123,12 +119,7 @@ class InvoiceAccountingService
                     continue;
                 }
 
-                $netAmount = '0';
-                $vatAmount = '0';
-                foreach ($invoiceLines as $line) {
-                    $netAmount = Money::add($netAmount, Money::absoluteAmount((string) $line->amount));
-                    $vatAmount = Money::add($vatAmount, Money::absoluteAmount((string) ($line->vat_amount ?? '0')));
-                }
+                ['netAmount' => $netAmount, 'vatAmount' => $vatAmount] = $this->calculateGroupTotals($invoiceLines);
 
                 if (Money::isPositive($vatAmount)) {
                     VatEntry::create([
@@ -148,6 +139,38 @@ class InvoiceAccountingService
 
             return $invoice->fresh(['lines', 'customer', 'journalEntry.lines']);
         });
+    }
+
+    /**
+     * @param  iterable<int, InvoiceLine>  $invoiceLines
+     * @return array{netAmount: numeric-string, vatAmount: numeric-string}
+     */
+    private function calculateGroupTotals(iterable $invoiceLines): array
+    {
+        $netAmount = '0';
+        $vatAmount = '0';
+
+        foreach ($invoiceLines as $line) {
+            if ($line->type === InvoiceLineType::Text) {
+                continue;
+            }
+
+            $lineAmount = Money::absoluteAmount((string) $line->amount);
+            $lineVatAmount = Money::absoluteAmount((string) ($line->vat_amount ?? '0'));
+
+            if ($line->type === InvoiceLineType::Discount) {
+                $netAmount = Money::subtract($netAmount, $lineAmount);
+                $vatAmount = Money::subtract($vatAmount, $lineVatAmount);
+            } else {
+                $netAmount = Money::add($netAmount, $lineAmount);
+                $vatAmount = Money::add($vatAmount, $lineVatAmount);
+            }
+        }
+
+        return [
+            'netAmount' => $netAmount,
+            'vatAmount' => $vatAmount,
+        ];
     }
 
     /**
