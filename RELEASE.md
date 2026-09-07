@@ -38,7 +38,10 @@ and the five Dependabot frontend updates:
 - Zod `4.5.4`
 - `@simplewebauthn/browser` `14.0.0`
 
-The API release commit is `3ee9f11`. The matching web test commit is `7b0ade6`.
+The final aligned API release commit is `c2078156`. The matching web test commit
+is `7b0ade6`. Dependabot PRs #55, #56, and #58 were merged after their shared
+Security-job failure was reproduced as a CI-only issue; PRs #57 and #59 were
+integrated with regenerated lockfile commits `8fd9c3bd` and `660ff4d3`.
 The candidate passed focused invoice tests, the Security suite, PHP formatting,
 web TypeScript and ESLint checks, the web production build, and the all-locale
 documentation build. It was deployed to staging as releases `153` and `154`
