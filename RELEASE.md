@@ -47,9 +47,11 @@ web TypeScript and ESLint checks, the web production build, and the all-locale
 documentation build. It was deployed to staging as releases `153` and `154`
 while the dependency candidate was split into patch and WebAuthn-major stages.
 
-The latest staging health check returned HTTP 200 with database and cache
-healthy. Authenticated staging QA remains pending because the configured QA
-account is rejected by the staging login endpoint.
+The final aligned candidate was deployed to staging as release `155` with
+private promotion merge `ddac5e25`. Its health endpoint returned HTTP 200 with
+database and cache healthy. Authenticated staging QA remains pending because
+the configured QA account is rejected by the staging login endpoint and no
+Mailpit configuration is available for creating a disposable replacement.
 
 ## v3.8.3 Staging Candidate
 
