@@ -3,8 +3,11 @@
 namespace App\Domains\Banking\Requests;
 
 use App\Domains\Banking\Models\BankAccount;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ImportCamtRequest extends FormRequest
 {
@@ -36,5 +39,18 @@ class ImportCamtRequest extends FormRequest
             'csv_mapping.reference' => 'nullable|integer|min:0',
             'csv_delimiter' => ['nullable', 'string', Rule::in([',', ';', "\t", '|'])],
         ];
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        if ($this->expectsJson()) {
+            throw new ValidationException($validator);
+        }
+
+        throw new HttpResponseException(
+            redirect()->back()
+                ->withErrors($validator)
+                ->withInput(),
+        );
     }
 }
