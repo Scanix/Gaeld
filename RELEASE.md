@@ -64,6 +64,12 @@ failures, and cleanup of all generated accounts and organizations. GitHub's
 replacement CI runner stalled during dependency installation, while the same
 release passed the local exact suites, lint, PHPStan, and staging validation.
 
+The release was promoted to production as release `281` with private
+promotion merge `fc75d7ab` after fresh PostgreSQL and file backups completed.
+The deployed pair is CE `v3.8.6` and EE `v2.9.27`, with web `v2.14.5` and
+docs `v2.12.3`. Production `/up`, `/login`, and `/signup` returned HTTP 200;
+Horizon was active after deployment.
+
 ## v3.8.3 Staging Candidate
 
 This candidate contains the convergence fixes validated on the `develop`
