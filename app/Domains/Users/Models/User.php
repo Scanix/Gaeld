@@ -13,8 +13,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
-use Laragear\WebAuthn\Contracts\WebAuthnAuthenticatable;
-use Laragear\WebAuthn\WebAuthnAuthentication;
+use Laravel\Passkeys\Contracts\PasskeyUser;
+use Laravel\Passkeys\PasskeyAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
@@ -30,9 +30,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $onboarding_completed_at
  * @property array<string, mixed>|null $notification_preferences
  */
-class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, WebAuthnAuthenticatable
+class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, PasskeyUser
 {
-    use Auditable, HasApiTokens, HasFactory, HasRoles, Notifiable, WebAuthnAuthentication;
+    use Auditable, HasApiTokens, HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable;
 
     protected $fillable = [
         'name',
@@ -110,7 +110,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function hasAnyTwoFactor(): bool
     {
-        return $this->hasTwoFactorEnabled() || $this->webAuthnCredentials()->exists();
+        return $this->hasTwoFactorEnabled() || $this->hasPasskeysEnabled();
     }
 
     /** @return BelongsToMany<Organization, $this> */

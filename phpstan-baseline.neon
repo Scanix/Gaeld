@@ -482,18 +482,6 @@ parameters:
 			path: app/Domains/Reporting/Services/ReportingService.php
 
 		-
-			message: '#^Method App\\Domains\\Users\\Controllers\\PasskeyController\:\:registerOptions\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Domains/Users/Controllers/PasskeyController.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Domains/Users/Controllers/PasskeyController.php
-
-		-
 			message: '#^Argument of an invalid type array\|string supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 1

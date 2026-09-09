@@ -125,7 +125,7 @@ class UserService
             }
 
             // Delete WebAuthn credentials (passkeys) — always, even on anonymization
-            $user->webAuthnCredentials()->delete();
+            $user->passkeys()->delete();
 
             // Delete sessions — always
             DB::table('sessions')->where('user_id', $user->id)->delete();

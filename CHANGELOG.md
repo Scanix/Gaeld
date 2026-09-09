@@ -5,6 +5,15 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.12] - 2026-09-09
+
+### Changed
+- **Passkeys:** replace the abandoned `laragear/webauthn` integration with
+  the official `laravel/passkeys` package.
+- **Legacy credentials:** convert encrypted Laragear P-256 credentials to
+  Laravel Passkeys CredentialRecord data during migration, failing explicitly
+  when a credential cannot be converted.
+
 ## [3.8.11] - 2026-09-09
 
 ### Fixed
