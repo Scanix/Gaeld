@@ -5,6 +5,17 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.8 Staging Release
+
+This release updates the authenticated application navigation and clarifies
+the separation between organization context, user profile, and SaaS billing.
+It also distinguishes the single free organization from additional paid
+organizations for SaaS owners.
+
+The release candidate is CE `v3.8.8`, built from the validated navigation and
+organization-limit changes on `develop`. The staging promotion must preserve
+the private GitLab deployment recipe and use the matching immutable CE tag.
+
 ## Release Matrix
 
 Every production release records both immutable refs before deployment:

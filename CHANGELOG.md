@@ -5,6 +5,20 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.8] - 2026-09-09
+
+### Changed
+- **Application navigation:** organize the sidebar around sales, purchases,
+  banking, accounting, reports, payroll, and organization administration.
+- **User menu:** move profile, security, preferences, and sessions into the
+  topbar account menu.
+- **Organization creation:** distinguish the single free organization from
+  additional paid organizations for SaaS owners.
+
+### Fixed
+- **SaaS organization limits:** allow paid plans to create additional
+  organizations while preserving the one-free-organization rule.
+
 ## [3.8.7] - 2026-09-08
 
 ### Fixed
