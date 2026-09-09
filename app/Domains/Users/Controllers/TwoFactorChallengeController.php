@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Passkeys\Actions\GenerateVerificationOptions;
+use Laravel\Passkeys\Actions\VerifyPasskey;
+use Laravel\Passkeys\Http\Requests\PasskeyVerificationRequest;
+use Laravel\Passkeys\Support\WebAuthn;
 use PragmaRX\Google2FA\Google2FA;
 use Symfony\Component\HttpFoundation\Cookie;
 
@@ -94,7 +98,7 @@ class TwoFactorChallengeController extends Controller
     /**
      * Return WebAuthn assertion options so the user can verify via passkey as 2FA.
      */
-    public function passkeyOptions(Request $request): JsonResponse
+    public function passkeyOptions(Request $request, GenerateVerificationOptions $options): JsonResponse
     {
         $userId = $request->session()->get('two_factor:user_id');
 
@@ -105,38 +109,22 @@ class TwoFactorChallengeController extends Controller
         /** @var User $user */
         $user = User::findOrFail($userId);
 
-        $credentials = $user->webAuthnCredentials()->get();
+        $credentials = $user->passkeys()->get();
 
         if ($credentials->isEmpty()) {
             return response()->json(['message' => 'No passkeys registered.'], 422);
         }
 
-        // Generate a random challenge and store it in the session
-        $challengeBytes = random_bytes(32);
-        $challengeB64url = rtrim(strtr(base64_encode($challengeBytes), '+/', '-_'), '=');
-        $request->session()->put('two_factor:webauthn_challenge', $challengeB64url);
+        $verificationOptions = $options($user);
+        $request->session()->put('passkey.verification_options', WebAuthn::toJson($verificationOptions));
 
-        $allowCredentials = $credentials->map(fn ($cred): array => [
-            'type' => 'public-key',
-            'id' => $cred->id,
-        ])->values()->all();
-
-        /** @var string $appUrl */
-        $appUrl = config('app.url');
-
-        return response()->json([
-            'challenge' => $challengeB64url,
-            'timeout' => 60000,
-            'rpId' => config('webauthn.relying_party.id') ?: parse_url($appUrl, PHP_URL_HOST),
-            'allowCredentials' => $allowCredentials,
-            'userVerification' => 'preferred',
-        ]);
+        return response()->json(json_decode(WebAuthn::toJson($verificationOptions), true, flags: JSON_THROW_ON_ERROR));
     }
 
     /**
      * Verify passkey assertion as 2FA.
      */
-    public function passkeyVerify(Request $request): RedirectResponse|JsonResponse
+    public function passkeyVerify(PasskeyVerificationRequest $request, VerifyPasskey $verify): RedirectResponse|JsonResponse
     {
         $userId = $request->session()->get('two_factor:user_id');
         $remember = $request->session()->get('two_factor:remember', false);
@@ -145,41 +133,17 @@ class TwoFactorChallengeController extends Controller
             return response()->json(['message' => 'No pending 2FA challenge.'], 403);
         }
 
-        $challengeB64 = $request->session()->get('two_factor:webauthn_challenge');
-
-        if (! $challengeB64) {
-            return response()->json(['message' => 'No WebAuthn challenge found.'], 422);
-        }
-
         /** @var User $user */
         $user = User::findOrFail($userId);
 
-        // Validate the assertion manually since we're not using the standard auth flow
-        $credentialId = $request->input('id');
-        $credential = $user->webAuthnCredentials()->where('id', $credentialId)->first();
-
-        if (! $credential) {
-            return response()->json(['message' => trans('app.passkey_login_failed')], 422);
-        }
-
-        // Verify the challenge matches
-        $clientData = json_decode(base64_decode(strtr($request->input('response.clientDataJSON'), '-_', '+/')), true);
-        $expectedChallenge = $challengeB64;
-        $receivedChallenge = $clientData['challenge'] ?? '';
-
-        if (! hash_equals($expectedChallenge, $receivedChallenge)) {
-            return response()->json(['message' => trans('app.passkey_login_failed')], 422);
-        }
+        $passkey = $verify($request->credential(), $request->verificationOptions(), $user);
 
         // Challenge valid — authenticate
         Auth::login($user, $remember);
 
-        $request->session()->forget(['two_factor:user_id', 'two_factor:remember', 'two_factor:webauthn_challenge']);
+        $request->session()->forget(['two_factor:user_id', 'two_factor:remember', 'passkey.verification_options']);
         $request->session()->put('two_factor_authenticated', true);
         $request->session()->regenerate();
-
-        // Update credential usage timestamp
-        $credential->touch();
 
         return response()->json([
             'redirect' => route('dashboard'),
@@ -213,7 +177,7 @@ class TwoFactorChallengeController extends Controller
             $methods[] = 'recovery';
         }
 
-        if ($user->webAuthnCredentials()->exists()) {
+        if ($user->hasPasskeysEnabled()) {
             $methods[] = 'passkey';
         }
 

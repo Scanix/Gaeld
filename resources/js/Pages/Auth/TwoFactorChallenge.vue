@@ -77,7 +77,7 @@ async function verifyWithPasskey() {
         'Accept': 'application/json',
       },
       credentials: 'same-origin',
-      body: JSON.stringify(assertion),
+      body: JSON.stringify({ credential: assertion, remember: form.remember }),
     })
 
     if (!verifyRes.ok) {

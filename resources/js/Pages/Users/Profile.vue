@@ -261,7 +261,7 @@ async function registerPasskey() {
         'Accept': 'application/json',
       },
       credentials: 'same-origin',
-      body: JSON.stringify(attestation),
+      body: JSON.stringify({ name: 'Passkey', credential: attestation }),
     })
 
     if (!registerRes.ok) throw new Error(t('passkey_register_failed'))

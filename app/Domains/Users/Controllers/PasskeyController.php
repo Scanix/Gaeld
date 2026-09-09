@@ -6,27 +6,35 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Laragear\WebAuthn\Http\Requests\AttestationRequest;
-use Laragear\WebAuthn\Http\Requests\AttestedRequest;
+use Laravel\Passkeys\Actions\GenerateRegistrationOptions;
+use Laravel\Passkeys\Actions\StorePasskey;
+use Laravel\Passkeys\Http\Requests\PasskeyRegistrationRequest;
+use Laravel\Passkeys\Support\WebAuthn;
 
 /**
  * WebAuthn passkey registration and removal.
  */
 class PasskeyController extends Controller
 {
-    public function registerOptions(AttestationRequest $request)
+    public function registerOptions(Request $request, GenerateRegistrationOptions $options): JsonResponse
     {
-        return $request->toCreate();
+        $registrationOptions = $options($request->user());
+        $request->session()->put('passkey.registration_options', WebAuthn::toJson($registrationOptions));
+
+        return response()->json(json_decode(WebAuthn::toJson($registrationOptions), true, flags: JSON_THROW_ON_ERROR));
     }
 
-    public function register(AttestedRequest $request): JsonResponse
+    public function register(PasskeyRegistrationRequest $request, StorePasskey $store): JsonResponse
     {
-        $id = $request->save(
-            fn ($credential) => $credential->alias = $request->input('name', 'Passkey'),
+        $passkey = $store(
+            $request->user(),
+            $request->string('name')->toString(),
+            $request->credential(),
+            $request->registrationOptions(),
         );
 
         return response()->json([
-            'id' => $id,
+            'id' => $passkey->getKey(),
             'message' => trans('app.passkey_registered'),
         ]);
     }
@@ -34,14 +42,14 @@ class PasskeyController extends Controller
     public function index(Request $request): JsonResponse
     {
         $credentials = $request->user()
-            ->webAuthnCredentials()
-            ->select(['id', 'alias', 'created_at', 'updated_at'])
+            ->passkeys()
+            ->select(['id', 'name', 'created_at', 'last_used_at'])
             ->get()
             ->map(fn ($cred) => [
                 'id' => $cred->id,
-                'name' => $cred->alias ?? 'Passkey',
-                'created_at' => $cred->created_at?->toDateString(),
-                'last_used' => $cred->updated_at?->toDateString(),
+                'name' => $cred->name,
+                'created_at' => $cred->created_at->toDateString(),
+                'last_used' => $cred->last_used_at?->toDateString(),
             ]);
 
         return response()->json($credentials);
@@ -54,7 +62,7 @@ class PasskeyController extends Controller
         ]);
 
         $request->user()
-            ->webAuthnCredentials()
+            ->passkeys()
             ->where('id', $credentialId)
             ->delete();
 

@@ -23,4 +23,4 @@ User accounts, authentication, profile management, and GDPR data export.
 
 - Users belong to one or more Organizations via pivot table
 - Sanctum tokens managed by the Api domain
-- WebAuthn via `laragear/webauthn` package
+- WebAuthn via the official `laravel/passkeys` package

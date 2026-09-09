@@ -147,7 +147,7 @@ class HandleInertiaRequests extends Middleware
                 'locale' => $user->locale,
                 'show_help' => $user->show_help,
                 'two_factor_enabled' => $user->hasTwoFactorEnabled(),
-                'has_passkeys' => $user->webAuthnCredentials()->exists(),
+                'has_passkeys' => $user->hasPasskeysEnabled(),
                 'notification_preferences' => $user->notification_preferences ?? [],
                 'onboarding_completed_at' => $user->onboarding_completed_at?->toIso8601String(),
             ],
