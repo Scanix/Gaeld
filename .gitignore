@@ -30,6 +30,7 @@ yarn-error.log
 !/.vscode/settings.json
 !/.vscode/tasks.json
 !/.vscode/extensions.json
+*.code-workspace
 /.desloppify
 /.agents/
 skills-lock.json
