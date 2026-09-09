@@ -84,7 +84,7 @@ jobs:
 
       - name: Audit Composer dependencies
         continue-on-error: true
-        run: composer audit --no-dev
+        run: composer audit --no-dev --abandoned=report
 
       - name: Audit NPM dependencies
         run: pnpm audit --prod || true

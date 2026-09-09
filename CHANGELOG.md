@@ -5,6 +5,16 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.10] - 2026-09-09
+
+### Fixed
+- **CI session isolation:** force PHPUnit's array session driver even when the
+  environment provides another session backend, keeping validation errors
+  available without relying on file sessions.
+- **Composer audit reporting:** report abandoned packages without hiding
+  security advisories or failing the CI job solely because a package is marked
+  abandoned.
+
 ## [3.8.9] - 2026-09-09
 
 ### Fixed
