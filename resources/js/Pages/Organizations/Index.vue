@@ -7,21 +7,29 @@ import CardTitle from '@/Components/UI/CardTitle.vue'
 import CardContent from '@/Components/UI/CardContent.vue'
 import Button from '@/Components/UI/Button.vue'
 import Badge from '@/Components/UI/Badge.vue'
+import Alert from '@/Components/UI/Alert.vue'
 import { Building2, ArrowRightLeft, Settings, Users } from 'lucide-vue-next'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import PageHeader from '@/Components/UI/PageHeader.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { usePage } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   organizations: { type: Array, default: () => [] },
   canCreateOrganization: { type: Boolean, default: false },
+  organizationQuota: { type: Object, default: () => ({}) },
 })
 
 const page = usePage()
 const currentOrgId = page.props.auth?.currentOrganization?.id
 const switchError = ref('')
+const organizationLimitReached = computed(() =>
+  !props.canCreateOrganization
+  && typeof props.organizationQuota?.limit === 'number'
+  && props.organizationQuota.limit !== -1,
+)
+const requiresPaidPlanForNext = computed(() => props.organizationQuota?.requires_paid_plan_for_next === true)
 
 function switchForm(orgId) {
   switchError.value = ''
@@ -40,9 +48,43 @@ const { t } = useTranslations()
   <AppLayout :title="t('organizations')">
     <PageHeader :description="t('your_organizations')">
       <Button v-if="canCreateOrganization" as="a" href="/organizations/create">
-        {{ t('new_organization') }}
+        {{ requiresPaidPlanForNext ? t('create_paid_organization') : t('new_organization') }}
       </Button>
     </PageHeader>
+
+    <Alert
+      v-if="requiresPaidPlanForNext"
+      variant="info"
+      :title="t('paid_organization_required_title')"
+      class="mb-4"
+    >
+      {{ t('paid_organization_required') }}
+    </Alert>
+
+    <Alert
+      v-if="organizationLimitReached"
+      variant="warning"
+      :title="t('organization_limit_reached_title')"
+      class="mb-4"
+    >
+      <p>
+        {{ t('organization_limit_reached', {
+          plan: organizationQuota.plan_name || t('current_plan'),
+          count: organizationQuota.count ?? organizations.length,
+          limit: organizationQuota.limit,
+        }) }}
+      </p>
+      <Button
+        v-if="organizationQuota.billing_available"
+        as="a"
+        href="/billing"
+        variant="link"
+        size="sm"
+        class="mt-2 h-auto p-0"
+      >
+        {{ t('view_billing') }}
+      </Button>
+    </Alert>
 
     <p v-if="switchError" class="mb-4 text-sm text-[hsl(var(--destructive))]">{{ switchError }}</p>
 

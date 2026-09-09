@@ -12,6 +12,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class GenerateRecurringInvoicesJob implements ShouldQueue
@@ -31,19 +32,31 @@ class GenerateRecurringInvoicesJob implements ShouldQueue
 
     public function handle(CreateInvoiceAction $createInvoice, InvoiceNumberGenerator $numberGenerator): void
     {
+        $today = Carbon::today();
         $dueRecurrings = RecurringInvoice::withoutGlobalScope('organization')
             ->active()
-            ->due(Carbon::today())
-            ->get();
+            ->due($today)
+            ->get(['id', 'organization_id']);
 
-        foreach ($dueRecurrings as $recurring) {
+        foreach ($dueRecurrings as $candidate) {
             try {
-                $this->generateInvoice($recurring, $createInvoice, $numberGenerator);
-                $this->advanceSchedule($recurring);
-            } catch (\DomainException|\RuntimeException|\InvalidArgumentException $e) {
+                DB::transaction(function () use ($candidate, $createInvoice, $numberGenerator, $today): void {
+                    $recurring = RecurringInvoice::withoutGlobalScope('organization')
+                        ->whereKey($candidate->getKey())
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($recurring === null || ! $recurring->is_active || $recurring->next_issue_date->isAfter($today)) {
+                        return;
+                    }
+
+                    $this->generateInvoice($recurring, $createInvoice, $numberGenerator);
+                    $this->advanceSchedule($recurring);
+                });
+            } catch (\DomainException|\InvalidArgumentException $e) {
                 Log::error('GenerateRecurringInvoicesJob: failed to generate', [
-                    'recurring_invoice_id' => $recurring->id,
-                    'organization_id' => $recurring->organization_id,
+                    'recurring_invoice_id' => $candidate->id,
+                    'organization_id' => $candidate->organization_id,
                     'error' => $e->getMessage(),
                 ]);
             }

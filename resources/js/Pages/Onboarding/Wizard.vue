@@ -115,7 +115,7 @@ const currentStep = ref(0)
 const stepErrors = reactive({})
 
 const stepFields = {
-  0: ['business_type'],
+  0: [],
   1: [],
   2: ['fiscal_year_name', 'fiscal_year_start', 'fiscal_year_end'],
   3: ['bank_account_name'],

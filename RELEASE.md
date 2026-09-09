@@ -5,6 +5,17 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.8 Staging Release
+
+This release updates the authenticated application navigation and clarifies
+the separation between organization context, user profile, and SaaS billing.
+It also distinguishes the single free organization from additional paid
+organizations for SaaS owners.
+
+The release candidate is CE `v3.8.8`, built from the validated navigation and
+organization-limit changes on `develop`. The staging promotion must preserve
+the private GitLab deployment recipe and use the matching immutable CE tag.
+
 ## Release Matrix
 
 Every production release records both immutable refs before deployment:
@@ -25,6 +36,92 @@ The current coordinated production release (2026-09-03) is CE `v3.8.2` at
 `29e657e` with deployment commit `8efc7313`, using EE `v2.9.20` at `3cdfd8d`.
 It is deployed as API release `257`, with web `v2.14.3` at `1e47ae3` and the
 documentation site at `v2.12.3` at `fd97bee`.
+
+## v3.8.5 Staging Release
+
+This release contains the organization and billing-limit UX, balanced invoice
+accounting for text and discount lines, matching annual-procedure coverage,
+and the five Dependabot frontend updates:
+
+- Autoprefixer `10.5.5`
+- Maska `3.2.1`
+- PostCSS `8.5.28`
+- Zod `4.5.4`
+- `@simplewebauthn/browser` `14.0.0`
+
+The final aligned API release commit is `c2078156`. The matching web test commit
+is `7b0ade6`. Dependabot PRs #55, #56, and #58 were merged after their shared
+Security-job failure was reproduced as a CI-only issue; PRs #57 and #59 were
+integrated with regenerated lockfile commits `8fd9c3bd` and `660ff4d3`.
+The candidate passed focused invoice tests, the Security suite, PHP formatting,
+web TypeScript and ESLint checks, the web production build, and the all-locale
+documentation build. It was deployed to staging as releases `153` and `154`
+while the dependency candidate was split into patch and WebAuthn-major stages.
+
+The final aligned candidate was deployed to staging as release `155` with
+private promotion merge `ddac5e25`. Its health endpoint returned HTTP 200 with
+database and cache healthy. Authenticated staging QA remains pending because
+the configured QA account is rejected by the staging login endpoint and no
+Mailpit configuration is available for creating a disposable replacement.
+
+## v3.8.6 Staging Patch
+
+This patch hardens CAMT upload validation responses and makes the PHPUnit CI
+session backend deterministic. The focused CAMT security tests pass `8/8`,
+the full Security suite passes `138 tests / 194 assertions` locally, and the
+the patch was deployed to staging as release `156`. The disposable Team-plan
+staging workflow passed **41/41** checks with zero console errors, zero request
+failures, and cleanup of all generated accounts and organizations. GitHub's
+replacement CI runner stalled during dependency installation, while the same
+release passed the local exact suites, lint, PHPStan, and staging validation.
+
+The release was promoted to production as release `281` with private
+promotion merge `fc75d7ab` after fresh PostgreSQL and file backups completed.
+The deployed pair is CE `v3.8.6` and EE `v2.9.27`, with web `v2.14.5` and
+docs `v2.12.3`. Production `/up`, `/login`, and `/signup` returned HTTP 200;
+Horizon was active after deployment.
+
+## v3.8.3 Staging Candidate
+
+This candidate contains the convergence fixes validated on the `develop`
+branch: organization-scoped recurring policies, retry-safe recurring and
+asynchronous jobs, signed export isolation, OCR retry preservation, and custom
+logo layout protection in invoice PDFs.
+
+The selected staging pair is CE `v3.8.3` at `1a10b685` with EE `v2.9.27` at
+`a25b632`. The private GitLab staging promotion is merge commit `192b7e94`.
+The candidate is for staging only; no production deployment is part of this
+release step.
+
+## v3.8.4 Staging Candidate
+
+This candidate improves the invoice line-item form at wide desktop widths. The
+dense seven-column layout now activates at `2xl` instead of `xl`, keeping field
+labels and readable spacing visible on medium and standard desktop screens.
+The frontend production build passed before preparing this candidate.
+
+The candidate was deployed to staging as release `149`. The health endpoint
+returned HTTP 200 with database and cache checks healthy. After aligning the
+runner with the employee form's `#entry_date` field, the post-deploy safe
+smoke `release-v383-fix-20260906-144147` passed **41/41 checks** with zero
+failures, skips, console errors, or request failures. Evidence is in
+`storage/app/qa/staging-qa-release-v383-fix-20260906-144147.md`. The same
+workflows also passed in the exhaustive EE campaign
+`storage/app/qa/staging-qa-convergence-20260906-082834.md` (44/44).
+
+## EE v2.9.28 Hotfix Candidate
+
+This candidate fixes a customer-reported crash on the billing plans page:
+the mobile card layout in `Plans.vue` called an admin-only `updatePlan()`/
+`message` binding left over from a copy-paste of `SaasAdmin/Billing.vue`,
+raising `updatePlan is not a function` for customers on `/billing`. The
+mobile action button now mirrors the working desktop table logic
+(`selectPlan`).
+
+The fix is EE `v2.9.28` at `8978207`, tagged and pushed on top of the already
+staged `v2.9.27` (`a25b632`). No CE change is required for this candidate.
+Deployment (staging validation, then `dep deploy` to production) is pending
+and must be run from a host with production credentials.
 
 ## Release Candidate
 
@@ -308,6 +405,29 @@ history. Roll back by selecting the last compatible immutable CE/EE pair; do
 not use `migrate:rollback` as an operational edition rollback.
 
 ## Boundary Feature Validation (2026-09-03)
+
+### Convergence validation (2026-09-06)
+
+The CE standalone smoke was rerun after correcting the edition-flag handoff
+inside the Sail container. With `PLUGINS_ENABLED=false` and
+`FEATURE_SAAS=false` applied to the container process, the clean CE boundary
+tests passed **4/4 tests and 35 assertions**. The smoke also completed a fresh
+CE migration and frontend build without loading the EE provider or commercial
+routes.
+
+The EE-enabled staging convergence campaign
+`convergence-20260906-082834` passed **44/44 checks**, with zero failures,
+skips, console errors, or request failures. It covered ephemeral signup and
+verification, onboarding, accounting operations, payroll, VAT, fiscal-year
+close/reopen, multi-persona authorization, billing, Stripe Test Clock
+lifecycle, exports, and the exhaustive 24-month replay. Raw evidence is in
+`storage/app/qa/staging-qa-convergence-20260906-082834.json` with the compact
+report at `storage/app/qa/staging-qa-convergence-20260906-082834.md`.
+
+This evidence closes the latest EE-enabled staging run. It does not close the
+separate CE/EE boundary task T045: staging acceptance with EE absent, plus the
+explicit migration and rollback rehearsal, still require a staging environment
+configured without the EE plugin and a recorded rollback pair.
 
 The CE boundary slice passed with 21 tests and 168 assertions. The EE boundary
 slice passed with 7 tests and 37 assertions (one registry-consumer test is

@@ -7,6 +7,7 @@ use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use App\Support\Contracts\OrganizationQuotaResolver;
 use App\Support\Policies\BasePolicy;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
@@ -28,7 +29,12 @@ class OrganizationPolicy extends BasePolicy
     {
         $max = app(OrganizationQuotaResolver::class)->maxOrganizations($user);
 
-        return $user->organizations()->count() < $max;
+        if ($max === -1 || $user->organizations()->count() < $max) {
+            return true;
+        }
+
+        return Route::has('billing.index')
+            && $user->organizations()->wherePivot('role', 'owner')->exists();
     }
 
     public function update(User $user, Organization $organization): bool

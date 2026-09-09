@@ -11,6 +11,7 @@ const props = defineProps({
   placeholder: { type: String, default: 'Search…' },
   emptyText: { type: String, default: 'No results found.' },
   disabled: { type: Boolean, default: false },
+  required: { type: Boolean, default: false },
   error: { type: String, default: '' },
   class: String,
 })
@@ -130,6 +131,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
       :class="error ? 'border-[hsl(var(--destructive))]' : ''"
       :disabled="disabled"
       :aria-expanded="open"
+      :aria-required="required ? 'true' : undefined"
       aria-haspopup="listbox"
       @click="openDropdown"
     >

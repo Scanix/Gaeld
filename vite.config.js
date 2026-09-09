@@ -202,13 +202,13 @@ export default defineConfig(({ mode }) => {
         },
       }),
       sentryVitePlugin({
-        org: process.env.SENTRY_ORG,
-        project: process.env.SENTRY_PROJECT,
-        authToken: process.env.SENTRY_AUTH_TOKEN,
+        org: environment.SENTRY_ORG,
+        project: environment.SENTRY_PROJECT,
+        authToken: environment.SENTRY_AUTH_TOKEN,
         sourcemaps: {
           assets: ['./public/build/**'],
         },
-        disable: !process.env.SENTRY_AUTH_TOKEN,
+        disable: !environment.SENTRY_AUTH_TOKEN,
       }),
     ],
     build: {

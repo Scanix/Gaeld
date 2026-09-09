@@ -160,6 +160,28 @@ class ManualJournalEntryTest extends TestCase
         $response->assertSessionHasErrors('lines.0.account_id');
     }
 
+    public function test_store_rejects_an_inactive_account(): void
+    {
+        $inactiveAccount = Account::create([
+            'organization_id' => $this->organization->id,
+            'code' => '1998',
+            'name' => 'Inactive account',
+            'type' => AccountType::Asset->value,
+            'is_active' => false,
+        ]);
+
+        $response = $this->actAsOrg()->from('/accounting/journal-entries/create')->post('/accounting/journal-entries', [
+            'date' => '2026-03-15',
+            'is_posted' => true,
+            'lines' => [
+                ['account_id' => $inactiveAccount->id, 'debit' => '100.00', 'credit' => '0'],
+                ['account_id' => $this->revenue->id, 'debit' => '0', 'credit' => '100.00'],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors('lines.0.account_id');
+    }
+
     public function test_destroy_deletes_draft_only(): void
     {
         $this->actAsOrg()->post('/accounting/journal-entries', [

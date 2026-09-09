@@ -48,12 +48,74 @@ class MemberQuotaTest extends TestCase
         RefreshDatabaseState::$migrated = false;
     }
 
-    public function test_cloud_free_allows_one_owner_but_no_second_member_or_organization(): void
+    public function test_cloud_free_allows_one_owner_but_requires_paid_plan_for_another_organization(): void
     {
         [$owner, $organization] = $this->organizationWithPlan(Plan::cloudFree());
 
         $this->assertFalse(app(InvitationService::class)->canAddMember($organization));
-        $this->assertFalse((new OrganizationPolicy)->create($owner));
+        $this->assertTrue((new OrganizationPolicy)->create($owner));
+    }
+
+    public function test_cloud_free_organization_page_explains_member_limit(): void
+    {
+        [$owner, $organization] = $this->organizationWithPlan(Plan::cloudFree());
+
+        $this->actingAs($owner)
+            ->withSession(['current_organization_id' => $organization->id])
+            ->get(route('organizations.show', $organization))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('canManageUsers', true)
+                ->where('canAddMember', false)
+                ->where('memberQuota.members', 1)
+                ->where('memberQuota.total', 1)
+                ->where('memberQuota.limit', 1)
+                ->where('memberQuota.plan_name', 'Cloud Free'));
+    }
+
+    public function test_cloud_free_rejects_an_invitation_with_an_explicit_plan_limit_error(): void
+    {
+        [$owner, $organization] = $this->organizationWithPlan(Plan::cloudFree());
+
+        $this->actingAs($owner)
+            ->withSession(['current_organization_id' => $organization->id])
+            ->post(route('organizations.invitations.store', $organization), [
+                'email' => 'member@example.test',
+                'role' => 'member',
+            ])
+            ->assertSessionHasErrors(['email' => __('app.max_users_reached')]);
+    }
+
+    public function test_cloud_free_organization_index_explains_organization_limit(): void
+    {
+        [$owner, $organization] = $this->organizationWithPlan(Plan::cloudFree());
+
+        $this->actingAs($owner)
+            ->withSession(['current_organization_id' => $organization->id])
+            ->get(route('organizations.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('canCreateOrganization', true)
+                ->where('organizationQuota.count', 1)
+                ->where('organizationQuota.limit', 1)
+                ->where('organizationQuota.plan_name', 'Cloud Free'));
+    }
+
+    public function test_profile_exposes_all_owned_organizations_for_billing_management(): void
+    {
+        [$owner, $organization] = $this->organizationWithPlan(Plan::solo());
+        $secondOrganization = Organization::factory()->create(['name' => 'Second Organization']);
+        $secondOrganization->users()->attach($owner->id, ['role' => 'owner']);
+
+        $this->actingAs($owner)
+            ->withSession(['current_organization_id' => $organization->id])
+            ->get(route('profile'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Users/Profile')
+                ->has('auth.organizations', 2)
+                ->where('auth.organizations.0.role', 'owner')
+                ->where('auth.organizations.1.name', 'Second Organization'));
     }
 
     public function test_paid_plans_allow_their_configured_member_capacity(): void
@@ -65,7 +127,7 @@ class MemberQuotaTest extends TestCase
         Subscription::query()->where('organization_id', $organization->id)->update(['plan_id' => Plan::team()->id]);
 
         $this->assertTrue(app(InvitationService::class)->canAddMember($organization));
-        $this->assertFalse((new OrganizationPolicy)->create($owner));
+        $this->assertTrue((new OrganizationPolicy)->create($owner));
     }
 
     public function test_billing_page_exposes_members_and_pending_invitations_as_consumption(): void

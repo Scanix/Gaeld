@@ -7,6 +7,7 @@ use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Organizations\Models\Organization;
 use App\Domains\Payroll\Actions\GeneratePayrollRunAction;
 use App\Domains\Payroll\Actions\GenerateSalaryCertificateAction;
 use App\Domains\Payroll\Actions\PostPayrollAction;
@@ -343,6 +344,30 @@ class PayrollFlowTest extends TestCase
             ])
             ->assertStatus(422)
             ->assertJsonValidationErrors(['adjustments.0.unpaid_leave_days']);
+    }
+
+    #[Test]
+    public function it_rejects_an_employee_from_another_organization(): void
+    {
+        $otherOrganization = Organization::factory()->create();
+        $otherEmployee = Employee::create([
+            'organization_id' => $otherOrganization->id,
+            'first_name' => 'Other',
+            'last_name' => 'Organization',
+            'entry_date' => '2025-01-01',
+            'gross_salary' => '5000.00',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->user)
+            ->withSession(['current_organization_id' => $this->org->id])
+            ->postJson(route('payroll.run.preview'), [
+                'employee_ids' => [$otherEmployee->id],
+                'month' => 3,
+                'year' => 2026,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['employee_ids.0']);
     }
 
     #[Test]

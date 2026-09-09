@@ -14,24 +14,24 @@
         "@sentry/vite-plugin": "^5.4.0",
         "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-vue": "^6.0.8",
-        "autoprefixer": "^10.5.4",
+        "autoprefixer": "^10.5.5",
         "laravel-vite-plugin": "^3.2.0",
-        "postcss": "^8.5.26",
+        "postcss": "^8.5.28",
         "tailwindcss": "^4.3.3",
         "vite": "^8.2.2"
     },
     "dependencies": {
-        "@simplewebauthn/browser": "^13.3.0",
+        "@simplewebauthn/browser": "^14.0.0",
         "axios": "^1.20.0",
         "chart.js": "^4.5.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "lucide-vue-next": "^1.0.0",
-        "maska": "^3.2.0",
+        "maska": "^3.2.1",
         "tailwind-merge": "^3.6.0",
         "vanilla-cookieconsent": "^3.1.0",
         "vue": "^3.5.42",
         "vue-chartjs": "^5.3.4",
-        "zod": "^4.5.1"
+        "zod": "^4.5.4"
     }
 }

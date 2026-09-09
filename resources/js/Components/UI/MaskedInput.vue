@@ -45,6 +45,7 @@ const maskaOptions = MASKS[props.mask]
       type="text"
       :value="modelValue"
       :required="required"
+      :aria-required="required ? 'true' : undefined"
       :placeholder="placeholder"
       :aria-describedby="error ? id + '-error' : undefined"
       :aria-invalid="error ? true : undefined"

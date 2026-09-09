@@ -652,7 +652,7 @@ async function exercisePayroll(page) {
   await page.locator('#first_name').fill(firstName)
   await page.locator('#last_name').fill(lastName)
   await page.locator('#email').fill(generatedAccountEmail('-lionel'))
-  await page.locator('#start_date').fill(dateAfterDays(-60))
+  await page.locator('#entry_date').fill(dateAfterDays(-60))
   await page.locator('#gross_salary').fill('6200.00')
   await page.locator('#iban').fill('CH5604835012345678009')
   const employeeResponse = await submitAndCapturePost(
@@ -932,7 +932,7 @@ async function createEmployeeRecord(page, firstName, lastName, email, salary, en
   await page.locator('#first_name').fill(firstName)
   await page.locator('#last_name').fill(lastName)
   await page.locator('#email').fill(email)
-  await page.locator('#start_date').fill(entryDate)
+  await page.locator('#entry_date').fill(entryDate)
   await page.locator('#gross_salary').fill(salary)
   await page.locator('#iban').fill('CH5604835012345678009')
   const response = await submitAndCapturePost(

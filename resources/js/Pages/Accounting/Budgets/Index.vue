@@ -146,6 +146,7 @@ function annualTotal(monthly) {
               :error="addForm.errors.account_id"
               :help-href="chartHelpHref"
               :help-label="t('chart_of_accounts')"
+              required
             />
           </div>
           <FormInput
@@ -156,6 +157,7 @@ function annualTotal(monthly) {
             placeholder="0.00"
             class="w-40"
             :error="addForm.errors.monthly_amount"
+            required
           />
           <div class="flex gap-2 pb-0.5">
             <Button :disabled="addForm.processing" @click="submitAdd">{{ t('save') }}</Button>

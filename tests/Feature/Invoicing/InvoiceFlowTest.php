@@ -142,6 +142,30 @@ class InvoiceFlowTest extends TestCase
         $this->assertDatabaseCount('vat_entries', 0);
     }
 
+    public function test_finalized_invoice_rejects_a_soft_deleted_customer(): void
+    {
+        $deletedCustomer = Contact::create([
+            'organization_id' => $this->org->id,
+            'name' => 'Deleted Customer AG',
+        ]);
+        $deletedCustomer->delete();
+
+        $response = $this->actAsOrg()->post(route('invoices.store'), [
+            'customer_id' => $deletedCustomer->id,
+            'issue_date' => '2026-03-16',
+            'due_date' => '2026-04-15',
+            'finalize' => true,
+            'lines' => [[
+                'description' => 'Consulting',
+                'quantity' => 1,
+                'unit_price' => 150.00,
+                'vat_rate_id' => $this->vatRate->id,
+            ]],
+        ]);
+
+        $response->assertSessionHasErrors('customer_id');
+    }
+
     public function test_standard_invoice_can_have_no_vat_when_each_line_has_no_rate(): void
     {
         $invoice = $this->createInvoice(lines: [[
@@ -210,6 +234,39 @@ class InvoiceFlowTest extends TestCase
         $this->assertEquals(InvoiceStatus::Paid, $invoice->status);
         $this->assertEquals((float) $invoice->total, (float) $payment->amount);
         $this->assertNotNull($payment->journal_entry_id);
+    }
+
+    public function test_discounted_invoice_posts_a_balanced_journal_entry(): void
+    {
+        $invoice = $this->createInvoice(lines: [
+            [
+                'description' => 'Service A',
+                'quantity' => 1,
+                'unit_price' => 180.00,
+                'vat_rate_id' => '',
+            ],
+            [
+                'description' => 'Service B',
+                'quantity' => 1,
+                'unit_price' => 190.00,
+                'vat_rate_id' => '',
+            ],
+            [
+                'description' => 'Friendly discount',
+                'quantity' => 1,
+                'unit_price' => 20.00,
+                'type' => 'discount',
+                'discount_type' => 'flat',
+                'vat_rate_id' => '',
+            ],
+        ]);
+
+        $this->assertSame('350.00', $invoice->total);
+
+        $invoice = app(FinalizeInvoiceAction::class)->execute($invoice);
+
+        $this->assertEquals(InvoiceStatus::Sent, $invoice->status);
+        $this->assertTrue($invoice->journalEntry->isBalanced());
     }
 
     public function test_invoice_keeps_customer_snapshot_after_contact_address_changes(): void

@@ -236,6 +236,14 @@ class MigrationOrchestrator
         $session->update(['status' => ImportStatus::Importing]);
 
         foreach ($orderedTypes as $dataType) {
+            $currentStatus = ($session->data_types_status ?? [])[$dataType->value] ?? null;
+            if (in_array($currentStatus, [
+                ImportStatus::Completed->value,
+                ImportStatus::PartiallyCompleted->value,
+            ], true)) {
+                continue;
+            }
+
             $rows = $rowsByType[$dataType->value] ?? collect();
 
             if ($rows->isEmpty()) {

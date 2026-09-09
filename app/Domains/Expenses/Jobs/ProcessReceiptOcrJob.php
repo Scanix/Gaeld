@@ -51,7 +51,7 @@ class ProcessReceiptOcrJob implements ShouldQueue
                 ->update(['status' => 'completed', 'extracted_data' => $result->toArray()]);
 
             $this->notifyUser($filename, true);
-        } catch (\DomainException|\RuntimeException|\InvalidArgumentException $e) {
+        } catch (\DomainException|\InvalidArgumentException $e) {
             Log::warning('ProcessReceiptOcrJob failed', [
                 'scan_id' => $this->scanId,
                 'error' => $e->getMessage(),

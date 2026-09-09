@@ -1,6 +1,6 @@
 <script setup>
 import { useForm, usePage, router, Link } from '@inertiajs/vue3'
-import { LogOut, User, HelpCircle, BookOpen, Menu, Sun, Moon } from 'lucide-vue-next'
+import { LogOut, User, HelpCircle, BookOpen, Menu, Sun, Moon, Shield, SlidersHorizontal, MonitorSmartphone } from 'lucide-vue-next'
 import { ref } from 'vue'
 import Button from './UI/Button.vue'
 import GlobalSearch from './GlobalSearch.vue'
@@ -102,17 +102,43 @@ function logout() {
         <div
           v-if="showUserMenu"
           role="menu"
-          class="absolute right-0 top-full mt-1 w-48 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--popover))] p-1 shadow-lg"
+          class="absolute right-0 top-full mt-1 w-56 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--popover))] p-1 shadow-lg"
           @mouseleave="showUserMenu = false"
         >
           <Link
             href="/profile"
+            role="menuitem"
             class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))]"
           >
             <User class="h-4 w-4" />
             {{ t('profile') }}
           </Link>
+          <Link
+            href="/profile#security"
+            role="menuitem"
+            class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))]"
+          >
+            <Shield class="h-4 w-4" />
+            {{ t('security') }}
+          </Link>
+          <Link
+            href="/profile#preferences"
+            role="menuitem"
+            class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))]"
+          >
+            <SlidersHorizontal class="h-4 w-4" />
+            {{ t('preferences') }}
+          </Link>
+          <Link
+            href="/profile#sessions"
+            role="menuitem"
+            class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))]"
+          >
+            <MonitorSmartphone class="h-4 w-4" />
+            {{ t('sessions') }}
+          </Link>
           <button
+            role="menuitem"
             class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--accent))]"
             @click="logout"
           >

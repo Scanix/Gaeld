@@ -34,6 +34,7 @@ defineEmits(['update:modelValue'])
       :id="id"
       :value="modelValue"
       :required="required"
+      :aria-required="required ? 'true' : undefined"
       :aria-describedby="error ? id + '-error' : undefined"
       :aria-invalid="error ? true : undefined"
       :class="cn(

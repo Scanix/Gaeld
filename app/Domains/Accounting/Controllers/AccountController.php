@@ -93,13 +93,17 @@ class AccountController extends Controller
             ->with('success', __('app.export_dispatched'));
     }
 
-    public function downloadExport(Request $request): BinaryFileResponse
+    public function downloadExport(Request $request, CurrentOrganization $currentOrg): BinaryFileResponse
     {
         abort_unless($request->hasValidSignature(), 403);
 
-        $path = $request->query('path', '');
+        $filename = basename((string) $request->query('path', ''));
+        abort_unless(
+            str_starts_with($filename, 'chart-of-accounts-'.$currentOrg->id().'-'),
+            403,
+        );
 
-        $absolutePath = Storage::disk('local')->path('exports/'.basename($path));
+        $absolutePath = Storage::disk('local')->path('exports/'.$filename);
 
         abort_unless(file_exists($absolutePath), 404);
 

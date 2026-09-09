@@ -5,6 +5,70 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.8] - 2026-09-09
+
+### Changed
+- **Application navigation:** organize the sidebar around sales, purchases,
+  banking, accounting, reports, payroll, and organization administration.
+- **User menu:** move profile, security, preferences, and sessions into the
+  topbar account menu.
+- **Organization creation:** distinguish the single free organization from
+  additional paid organizations for SaaS owners.
+
+### Fixed
+- **SaaS organization limits:** allow paid plans to create additional
+  organizations while preserving the one-free-organization rule.
+
+## [3.8.7] - 2026-09-08
+
+### Fixed
+- **Sentry source maps:** load Sentry organization, project, and authentication
+  settings from the Vite environment so production builds can upload source
+  maps when the credentials are defined in `.env.production`.
+
+## [3.8.6] - 2026-09-07
+
+### Fixed
+- **CAMT upload validation:** return controlled web validation responses for
+  missing, oversized, unsupported, and MIME-confused uploads across supported
+  PHP runtimes.
+- **CI security tests:** isolate PHPUnit sessions from Redis so upload
+  validation assertions are deterministic in GitHub Actions.
+
+## [3.8.5] - 2026-09-07
+
+### Fixed
+- **Invoice accounting:** exclude text-only lines and subtract flat discount
+  lines when posting revenue and VAT entries, keeping discounted invoices
+  balanced.
+- **Organization limits:** explain Cloud Free organization and member limits
+  in the UI and expose per-organization billing access for owners.
+
+### Changed
+- **Frontend dependencies:** update Autoprefixer, Maska, PostCSS, Zod, and
+  SimpleWebAuthn Browser to the tested Dependabot versions.
+
+## [3.8.4] — 2026-09-06
+
+### Fixed
+- **Invoice line-item form:** keep field labels and readable two-column spacing
+  until very wide screens instead of switching to a cramped desktop grid too
+  early.
+
+## [3.8.3] — 2026-09-06
+
+### Fixed
+- **Authorization boundaries:** aligned recurring invoice and expense workflows
+  with their dedicated organization-scoped policies and requests.
+- **Asynchronous jobs:** made recurring generation, migration imports, exports,
+  and OCR retries idempotent or retry-safe to prevent duplicate side effects.
+- **Invoice PDFs:** constrained custom logo dimensions so portrait logos cannot
+  cover the issuer address.
+- **Signed exports:** restricted accounting downloads to the current
+  organization.
+- **Community Edition smoke validation:** pass edition flags into the Sail
+  container so CE checks cannot accidentally boot the EE plugin.
+
 ## [3.8.2] — 2026-09-03
 
 ### Added

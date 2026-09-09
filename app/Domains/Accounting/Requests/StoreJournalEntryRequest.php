@@ -2,12 +2,23 @@
 
 namespace App\Domains\Accounting\Requests;
 
+use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreJournalEntryRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        $journalEntry = $this->route('journalEntry');
+
+        return $this->user()?->can(
+            $journalEntry instanceof JournalEntry ? 'update' : 'create',
+            $journalEntry instanceof JournalEntry ? $journalEntry : JournalEntry::class,
+        ) ?? false;
+    }
+
     /** @return array<string, mixed> */
     public function rules(): array
     {
@@ -22,7 +33,9 @@ class StoreJournalEntryRequest extends FormRequest
             'lines.*.account_id' => [
                 'required',
                 'integer',
-                Rule::exists('accounts', 'id')->where('organization_id', $orgId),
+                Rule::exists('accounts', 'id')
+                    ->where('organization_id', $orgId)
+                    ->where('is_active', true),
             ],
             'lines.*.debit' => ['required', 'numeric', 'min:0', 'max:99999999999.99'],
             'lines.*.credit' => ['required', 'numeric', 'min:0', 'max:99999999999.99'],

@@ -250,6 +250,32 @@ class ScanReceiptTest extends TestCase
         $this->assertEquals('Migros', $cached['extracted']['vendor']);
     }
 
+    public function test_ocr_job_rethrows_transient_runtime_failures_for_retry(): void
+    {
+        Storage::fake('local');
+        $receiptPath = 'receipts/test-org/transient-failure.jpg';
+        Storage::disk('local')->put($receiptPath, 'fake-image-content');
+
+        $this->app->bind(ReceiptOcrInterface::class, function () {
+            return new class implements ReceiptOcrInterface
+            {
+                public function extract(string $imagePath): ReceiptOcrResult
+                {
+                    throw new \RuntimeException('OCR provider unavailable');
+                }
+            };
+        });
+
+        $this->expectException(\RuntimeException::class);
+
+        (new ProcessReceiptOcrJob(
+            'transient-scan-id',
+            $receiptPath,
+            $this->user->id,
+            $this->organization->id,
+        ))->handle(app(ReceiptOcrInterface::class));
+    }
+
     public function test_create_expense_rejects_non_uuid_scan_id(): void
     {
         $response = $this->actingAs($this->user)

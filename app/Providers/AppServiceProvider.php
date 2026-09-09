@@ -30,6 +30,8 @@ use App\Domains\Expenses\Contracts\ReceiptOcrInterface;
 use App\Domains\Expenses\Jobs\ProcessReceiptOcrJob;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Models\ExpenseCategory;
+use App\Domains\Expenses\Models\RecurringExpense;
+use App\Domains\Expenses\Policies\RecurringExpensePolicy;
 use App\Domains\Expenses\Search\ExpenseSearchProvider;
 use App\Domains\Expenses\Services\NullOcrService;
 use App\Domains\Expenses\Services\TesseractOcrService;
@@ -176,6 +178,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(CostCenter::class, CostCenterPolicy::class);
         Gate::policy(ExchangeRate::class, ExchangeRatePolicy::class);
         Gate::policy(ConsolidationGroup::class, ConsolidationGroupPolicy::class);
+        Gate::policy(RecurringExpense::class, RecurringExpensePolicy::class);
 
         // Lock legally archived records (Swiss CO 10-year immutability).
         $registerLock = function (string $modelClass, string $documentType): void {

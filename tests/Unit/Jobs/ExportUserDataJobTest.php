@@ -26,6 +26,7 @@ class ExportUserDataJobTest extends TestCase
             ->andReturn(['user' => ['name' => 'Test User']]);
 
         $job = new ExportUserDataJob($user);
+        $this->assertSame('user-export:42', $job->uniqueId());
         $job->handle($exportService);
 
         // Assert file was stored

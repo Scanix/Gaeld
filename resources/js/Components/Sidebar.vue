@@ -18,7 +18,6 @@ import {
   X,
   CreditCard,
   Repeat,
-  Package,
   Briefcase,
   Settings,
   Sun,
@@ -90,10 +89,8 @@ const navigation = computed(() => {
     return [
       { key: 'expenses', href: '/expenses', icon: Receipt },
       { key: 'salary_slips', href: '/payroll/salary-slips', icon: Briefcase },
-      { type: 'group', label: 'nav_workspace' },
+      { type: 'group', label: 'nav_administration' },
       { key: 'organizations', href: '/organizations', icon: Building2 },
-      { type: 'group', label: 'nav_account' },
-      { key: 'profile', href: '/profile', icon: Users },
     ]
   }
 
@@ -102,29 +99,34 @@ const navigation = computed(() => {
 
   return [
     { key: 'dashboard', href: '/', icon: LayoutDashboard },
-    // ── Activity ──
-    { type: 'group', label: 'nav_activity' },
+    // ── Sales and purchases ──
     ...(!isFidu ? [
+      { type: 'group', label: 'nav_sales' },
       { key: 'invoices', href: '/invoices', icon: FileText, children: [
         { key: 'invoices', href: '/invoices' },
         { key: 'recurring', href: '/invoices/recurring', icon: Repeat },
       ]},
+      { type: 'group', label: 'nav_purchases' },
       { key: 'expenses', href: '/expenses', icon: Receipt, children: [
         { key: 'expenses', href: '/expenses' },
         { key: 'recurring', href: '/expenses/recurring', icon: Repeat },
+        { key: 'receipt_scans', href: '/expenses/receipt-scans' },
       ]},
+      { type: 'group', label: 'nav_contacts' },
       { key: 'contacts', href: '/contacts', icon: Users },
     ] : []),
     ...(isFidu ? [
+      { type: 'group', label: 'nav_contacts' },
       { key: 'contacts', href: '/contacts', icon: Users },
     ] : []),
-    // ── Finances ──
-    { type: 'group', label: 'nav_finances' },
+    // ── Banking and accounting ──
+    { type: 'group', label: 'nav_banking' },
     { key: 'banking', href: '/banking', icon: Landmark, children: [
       { key: 'bank_accounts', href: '/banking' },
       { key: 'reconciliation', href: '/reconciliation' },
       { key: 'payments_outgoing', href: '/payments/outgoing' },
     ]},
+    { type: 'group', label: 'nav_accounting' },
     { key: 'accounting', href: '/accounting/journal-entries', icon: BookOpen, children: [
       { key: 'journal_entries', href: '/accounting/journal-entries' },
       ...(can('accounting.create') ? [
@@ -164,6 +166,9 @@ const navigation = computed(() => {
       ...(features.value.multi_currency && accountingRoutes.value.exchangeRates ? [
         { key: 'exchange_rates', href: '/accounting/exchange-rates' },
       ] : []),
+      ...(features.value.assets ? [
+        { key: 'assets', href: '/assets' },
+      ] : []),
     ]},
     { key: 'reports', href: '/reports/profit-and-loss', icon: BarChart3, children: [
       { key: 'profit_and_loss', href: '/reports/profit-and-loss' },
@@ -176,11 +181,8 @@ const navigation = computed(() => {
         { key: 'analytical_report', href: '/accounting/analytical-report' },
       ] : []),
     ]},
-    ...(features.value.assets ? [
-      { key: 'assets', href: '/assets', icon: Package },
-    ] : []),
-    // ── Management ──
-    { type: 'group', label: 'nav_management' },
+    // ── Payroll ──
+    { type: 'group', label: 'nav_payroll' },
     ...(features.value.payroll ? [
       { key: 'payroll', href: '/payroll/employees', icon: Briefcase, children: [
         { key: 'employees', href: '/payroll/employees' },
@@ -195,8 +197,8 @@ const navigation = computed(() => {
     ] : can('payroll.view') ? [
       { key: 'salary_slips', href: '/payroll/salary-slips', icon: Briefcase },
     ] : []),
-    // ── Workspace ──
-    { type: 'group', label: 'nav_workspace' },
+    // ── Organization administration ──
+    { type: 'group', label: 'nav_administration' },
     { key: 'organizations', href: '/organizations', icon: Building2 },
     ...(can('organization.edit') ? [{ key: 'organization_settings_nav', href: '/settings', icon: Settings, children: [
       { key: 'settings_general', href: '/settings' },
@@ -211,17 +213,11 @@ const navigation = computed(() => {
         { key: 'webhooks', href: '/settings/webhooks' },
       ] : []),
     ]}] : []),
-    // ── Account ──
-    { type: 'group', label: 'nav_account' },
-    { key: 'profile', href: '/profile', icon: Users },
+    ...(features.value.saas && currentRole.value !== 'employee' ? [
+      { key: 'billing', href: '/billing', icon: CreditCard },
+    ] : []),
   ]
 })
-
-const billingNav = computed(() =>
-  features.value.saas && currentRole.value !== 'employee'
-    ? [{ key: 'billing', href: '/billing', icon: CreditCard }]
-    : []
-)
 
 function isActive(href) {
   const currentPath = (page.url || '/').split('?')[0]
@@ -388,31 +384,6 @@ function isGroupActive(item) {
         </Tooltip>
       </template>
 
-      <!-- Billing (SaaS only) -->
-      <template v-if="billingNav.length">
-        <div class="my-1 border-t border-[hsl(var(--sidebar-border))]" />
-        <Tooltip
-          v-for="item in billingNav"
-          :key="item.key"
-          :content="collapsed ? t(item.key) : ''"
-          side="right"
-        >
-          <Link
-            :href="item.href"
-            :aria-label="collapsed ? t(item.key) : undefined"
-            :aria-current="isActive(item.href) ? 'page' : undefined"
-            :class="[
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-              isActive(item.href)
-                ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
-                : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]',
-            ]"
-          >
-            <component :is="item.icon" class="h-4 w-4 shrink-0" />
-            <span v-if="!collapsed">{{ t(item.key) }}</span>
-          </Link>
-        </Tooltip>
-      </template>
     </nav>
 
     <!-- Mobile utility actions: theme, help, docs (desktop uses topbar) -->

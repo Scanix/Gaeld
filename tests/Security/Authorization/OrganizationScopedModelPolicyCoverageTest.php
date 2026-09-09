@@ -7,7 +7,6 @@ use App\Domains\Accounting\Models\JournalEvent;
 use App\Domains\Banking\Models\BankImport;
 use App\Domains\Banking\Models\PersonalTransactionPattern;
 use App\Domains\Expenses\Models\ReceiptScan;
-use App\Domains\Expenses\Models\RecurringExpense;
 use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Domains\Organizations\Models\OrganizationInvitation;
 use App\Domains\Payroll\Models\DeductionRate;
@@ -51,7 +50,6 @@ class OrganizationScopedModelPolicyCoverageTest extends TestCase
         BankImport::class => 'Managed exclusively through ReconciliationController; no standalone route.',
         PersonalTransactionPattern::class => 'Managed exclusively through ReconciliationController; no standalone route.',
         ReceiptScan::class => 'Managed exclusively through Expense controllers, authorized via the parent Expense.',
-        RecurringExpense::class => 'RecurringExpenseController has no dedicated policy yet — tracked as follow-up.',
         InvoicePayment::class => 'Managed exclusively through InvoiceLifecycleController, authorized via the parent Invoice.',
         OrganizationInvitation::class => 'InvitationController authorizes against the parent Organization ("manageUsers" ability), not the invitation itself.',
         DeductionRate::class => 'No dedicated policy yet — tracked as follow-up.',
