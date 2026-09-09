@@ -5,6 +5,12 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.13 Passkeys Migration Patch
+
+This patch corrects the CBOR encoder namespace used by the legacy credential
+conversion. It must be promoted before production so the existing active
+credential can be converted safely.
+
 ## v3.8.12 Passkeys Release
 
 This release replaces the abandoned Laragear WebAuthn package with the
