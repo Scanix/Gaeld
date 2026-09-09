@@ -33,6 +33,17 @@ class OrganizationController extends Controller
         $organizationCount = $organizations->count();
         $currentOrganization = $user->resolveCurrentOrganization();
         $plan = $currentOrganization?->getAttribute('activeSubscription')?->getPlan();
+        $ownedOrganizations = $user->organizations()
+            ->wherePivot('role', 'owner')
+            ->get();
+        $hasFreeOrganization = $ownedOrganizations->contains(
+            function (Organization $organization): bool {
+                $plan = $organization->activeSubscription?->getPlan();
+
+                return (float) data_get($plan, 'price_chf', 0) === 0.0;
+            },
+        );
+        $paidOrganizationCreationAvailable = Route::has('billing.index') && $ownedOrganizations->isNotEmpty();
 
         return Inertia::render('Organizations/Index', [
             'organizations' => $organizations,
@@ -42,6 +53,9 @@ class OrganizationController extends Controller
                 'limit' => $organizationLimit,
                 'plan_name' => is_object($plan) ? ($plan->name ?? null) : null,
                 'billing_available' => Route::has('billing.index'),
+                'has_free_organization' => $hasFreeOrganization,
+                'paid_creation_available' => $paidOrganizationCreationAvailable,
+                'requires_paid_plan_for_next' => $hasFreeOrganization && $paidOrganizationCreationAvailable,
             ],
         ]);
     }

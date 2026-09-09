@@ -29,6 +29,7 @@ const organizationLimitReached = computed(() =>
   && typeof props.organizationQuota?.limit === 'number'
   && props.organizationQuota.limit !== -1,
 )
+const requiresPaidPlanForNext = computed(() => props.organizationQuota?.requires_paid_plan_for_next === true)
 
 function switchForm(orgId) {
   switchError.value = ''
@@ -47,9 +48,18 @@ const { t } = useTranslations()
   <AppLayout :title="t('organizations')">
     <PageHeader :description="t('your_organizations')">
       <Button v-if="canCreateOrganization" as="a" href="/organizations/create">
-        {{ t('new_organization') }}
+        {{ requiresPaidPlanForNext ? t('create_paid_organization') : t('new_organization') }}
       </Button>
     </PageHeader>
+
+    <Alert
+      v-if="requiresPaidPlanForNext"
+      variant="info"
+      :title="t('paid_organization_required_title')"
+      class="mb-4"
+    >
+      {{ t('paid_organization_required') }}
+    </Alert>
 
     <Alert
       v-if="organizationLimitReached"
