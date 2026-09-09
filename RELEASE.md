@@ -5,6 +5,12 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.11 CI Patch
+
+This patch makes the GitHub Actions PHPUnit environment explicit: debug mode
+and the array session backend are set in the test job. It does not change the
+runtime production session backend or the CE/EE boundary.
+
 ## v3.8.10 CI Patch
 
 This patch forces the isolated PHPUnit array session backend and changes the
