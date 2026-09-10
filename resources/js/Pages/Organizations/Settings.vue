@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, nextTick, computed } from 'vue'
-import { useForm, usePage, router } from '@inertiajs/vue3'
+import { useForm, usePage, router, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -328,31 +328,33 @@ const businessTypeOptions = [
 
 <template>
   <AppLayout :title="t('organization_settings')" help-page="user-management">
-    <div class="max-w-3xl space-y-6">
-      <!-- Tabs -->
-      <div role="tablist" aria-label="Settings" class="grid grid-cols-2 gap-1 rounded-lg bg-[hsl(var(--muted))] p-1 sm:flex">
-        <button
-          v-for="(tab, index) in tabs"
-          :key="tab.key"
-          role="tab"
-          :id="`tab-${tab.key}`"
-          :aria-selected="activeTab === tab.key"
-          :aria-controls="`tabpanel-${tab.key}`"
-          :tabindex="activeTab === tab.key ? 0 : -1"
-          :ref="element => setTabRef(element, index)"
-          :class="[
-            'min-w-0 rounded-md px-3 py-2 text-sm font-medium transition-colors sm:flex-1',
-            activeTab === tab.key
-              ? 'bg-[hsl(var(--background))] text-[hsl(var(--foreground))] shadow-sm'
-              : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]',
-          ]"
-          @click="activeTab = tab.key"
-          @keydown="handleTabKey($event, index)"
-        >
-          {{ t(tab.label) }}
-        </button>
-      </div>
+    <div class="max-w-6xl space-y-6">
+      <div class="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)]">
+        <nav aria-label="Organization settings" class="space-y-1">
+          <p class="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">
+            {{ t('organization_settings_nav') }}
+          </p>
+          <button
+            v-for="tab in tabs"
+            :key="`settings-nav-${tab.key}`"
+            type="button"
+            class="flex w-full items-center rounded-md px-3 py-2 text-left text-sm font-medium transition-colors"
+            :class="activeTab === tab.key
+              ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
+              : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--foreground))]'"
+            @click="activeTab = tab.key"
+          >
+            {{ t(tab.label) }}
+          </button>
+          <Link
+            href="/settings/activity-log"
+            class="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--foreground))]"
+          >
+            {{ t('activity_log') }}
+          </Link>
+        </nav>
 
+        <div class="min-w-0 space-y-6">
       <!-- General Tab -->
       <div v-show="activeTab === 'general'" id="tabpanel-general" role="tabpanel" aria-labelledby="tab-general">
         <Card>
@@ -846,6 +848,8 @@ const businessTypeOptions = [
         </Card>
       </div>
     </div>
+        </div>
+      </div>
 
     <ConfirmDialog
       :open="!!categoryToDelete"

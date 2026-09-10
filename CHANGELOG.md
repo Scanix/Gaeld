@@ -5,6 +5,16 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.14] - 2026-09-10
+
+### Changed
+- **Organization context:** introduce a Stripe-style organization switcher
+  with search, roles, active context, organization list, and creation access.
+- **Organization settings:** add a secondary settings navigation and make team
+  and access discoverable from organization administration.
+- **Personal account:** give profile, security, preferences, and sessions
+  canonical destinations instead of anchor-only links.
+
 ## [3.8.13] - 2026-09-09
 
 ### Fixed

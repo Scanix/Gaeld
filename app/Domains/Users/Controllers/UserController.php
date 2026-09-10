@@ -33,6 +33,7 @@ class UserController extends Controller
 
         return Inertia::render('Users/Profile', [
             'user' => $request->user(),
+            'activeSection' => $request->route('section', 'profile'),
         ]);
     }
 

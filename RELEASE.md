@@ -5,6 +5,13 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.14 Staging Navigation Release
+
+This staging release introduces the organization context switcher, the
+organization settings navigation, explicit team and access entry points, and
+canonical personal profile destinations. It contains no EE source and keeps
+the private deployment recipe only on `gitlab/production`.
+
 ## v3.8.13 Passkeys Migration Patch
 
 This patch corrects the CBOR encoder namespace used by the legacy credential

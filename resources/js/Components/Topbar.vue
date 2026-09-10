@@ -114,7 +114,7 @@ function logout() {
             {{ t('profile') }}
           </Link>
           <Link
-            href="/profile#security"
+            href="/profile/security"
             role="menuitem"
             class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))]"
           >
@@ -122,7 +122,7 @@ function logout() {
             {{ t('security') }}
           </Link>
           <Link
-            href="/profile#preferences"
+            href="/profile/preferences"
             role="menuitem"
             class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))]"
           >
@@ -130,7 +130,7 @@ function logout() {
             {{ t('preferences') }}
           </Link>
           <Link
-            href="/profile#sessions"
+            href="/profile/sessions"
             role="menuitem"
             class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))]"
           >
