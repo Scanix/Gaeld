@@ -19,6 +19,7 @@ import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/brow
 
 const props = defineProps({
   user: Object,
+  activeSection: { type: String, default: 'profile' },
 })
 
 const page = usePage()
@@ -223,6 +224,10 @@ async function loadPasskeys() {
 }
 
 onMounted(() => {
+  if (props.activeSection !== 'profile') {
+    requestAnimationFrame(() => document.getElementById(props.activeSection)?.scrollIntoView({ block: 'start' }))
+  }
+
   if (supportsPasskeys) {
     loadPasskeys()
   }

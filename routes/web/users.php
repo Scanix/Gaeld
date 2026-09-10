@@ -43,6 +43,9 @@ Route::put('/profile/notification-preferences', [UserController::class, 'updateN
 Route::get('/profile/sessions', [DeviceSessionController::class, 'index'])->name('profile.sessions');
 Route::delete('/profile/sessions/{id}', [DeviceSessionController::class, 'destroy'])->name('profile.sessions.destroy');
 Route::delete('/profile/sessions', [DeviceSessionController::class, 'destroyOthers'])->name('profile.sessions.destroy-others');
+Route::get('/profile/{section}', [UserController::class, 'profile'])
+    ->whereIn('section', ['preferences', 'security', 'sessions'])
+    ->name('profile.section');
 
 // Notifications
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
