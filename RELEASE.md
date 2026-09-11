@@ -5,6 +5,11 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.15 Staging Patch
+
+This patch simplifies the 500 error page actions and keeps retry/sign-out
+actions readable on narrow screens.
+
 ## v3.8.14 Staging Navigation Release
 
 This staging release introduces the organization context switcher, the
