@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3'
+import { Head } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { ShieldX, FileQuestion, Clock, ServerCrash, Construction, Timer, ExternalLink, RefreshCw, LogOut } from 'lucide-vue-next'
@@ -134,13 +134,8 @@ function retry() {
           <LogOut class="h-4 w-4" aria-hidden="true" />
           {{ tSafe('sign_out_and_try_again') }}
         </a>
-        <Link
-          href="/"
-          class="inline-flex items-center justify-center rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-4 py-2 text-sm font-medium text-[hsl(var(--foreground))] shadow-sm hover:bg-[hsl(var(--accent))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
-        >
-          {{ tSafe('go_to_dashboard') }}
-        </Link>
         <button
+          v-if="!isServiceIssue"
           type="button"
           class="inline-flex items-center justify-center rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-4 py-2 text-sm font-medium text-[hsl(var(--foreground))] shadow-sm hover:bg-[hsl(var(--accent))] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[hsl(var(--ring))]"
           @click="goBack"

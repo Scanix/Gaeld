@@ -5,6 +5,12 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.15] - 2026-09-11
+
+### Fixed
+- **Error page actions:** simplify service-error actions so retry, sign-out,
+  and navigation do not render as a crowded set of competing buttons.
+
 ## [3.8.14] - 2026-09-10
 
 ### Changed
