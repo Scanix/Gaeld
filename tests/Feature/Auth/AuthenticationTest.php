@@ -41,6 +41,27 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_login_with_invalid_password_returns_validation_error_not_500(): void
+    {
+        Organization::create([
+            'name' => 'Test Org',
+            'currency' => 'CHF',
+        ]);
+
+        $user = User::factory()->create([
+            'password' => 'password123',
+        ]);
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ])
+            ->assertSessionHasErrors('form')
+            ->assertStatus(302);
+
+        $this->assertGuest();
+    }
+
     public function test_guest_is_redirected_to_login_when_accessing_dashboard(): void
     {
         Organization::create([

@@ -214,6 +214,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->renderable(function (Throwable $e) {
             if ($e instanceof AuthenticationException
+                || $e instanceof ValidationException
                 || $e instanceof HttpExceptionInterface
                 || request()->is('api/*')
                 || request()->expectsJson()
