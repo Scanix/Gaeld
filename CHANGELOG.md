@@ -5,6 +5,26 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.17] - 2026-09-12
+
+### Changed
+- **Account navigation:** move personal profile destinations into a dedicated
+  sidebar submenu and keep organization switching as the sole entry point to
+  the organization list.
+- **Subscription terminology:** use “Subscription” for customer-facing SaaS
+  plan management while preserving billing terminology for accounting and
+  SaaS administration.
+
+### Fixed
+- **Form validation:** preserve Laravel validation responses instead of
+  rendering them as generic Inertia 500 errors.
+
+## [3.8.16] - 2026-09-11
+
+### Fixed
+- **Staging smoke tests:** align plan checks with the public capability
+  contract used by the staged application.
+
 ## [3.8.15] - 2026-09-11
 
 ### Fixed
