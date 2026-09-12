@@ -20,6 +20,7 @@ import {
   Repeat,
   Briefcase,
   Settings,
+  UserRound,
   Sun,
   Moon,
 } from 'lucide-vue-next'
@@ -106,7 +107,12 @@ const navigation = computed(() => {
       { key: 'expenses', href: '/expenses', icon: Receipt },
       { key: 'salary_slips', href: '/payroll/salary-slips', icon: Briefcase },
       { type: 'group', label: 'nav_administration' },
-      { key: 'organizations', href: '/organizations', icon: Building2 },
+      { key: 'user_account', href: '/profile', icon: UserRound, children: [
+        { key: 'profile', href: '/profile', exact: true },
+        { key: 'security', href: '/profile/security' },
+        { key: 'preferences', href: '/profile/preferences' },
+        { key: 'sessions', href: '/profile/sessions' },
+      ]},
     ]
   }
 
@@ -215,7 +221,6 @@ const navigation = computed(() => {
     ] : []),
     // ── Organization administration ──
     { type: 'group', label: 'nav_administration' },
-    { key: 'organizations', href: '/organizations', icon: Building2 },
     ...(can('organization.edit') ? [{ key: 'organization_settings_nav', href: '/settings', icon: Settings, children: [
       { key: 'settings_general', href: '/settings' },
       ...(currentOrg.value?.id ? [
@@ -233,21 +238,27 @@ const navigation = computed(() => {
       ] : []),
     ]}] : []),
     ...(features.value.saas && currentRole.value !== 'employee' ? [
-      { key: 'billing', href: '/billing', icon: CreditCard },
+      { key: 'subscription', href: '/billing', icon: CreditCard },
     ] : []),
+    { key: 'user_account', href: '/profile', icon: UserRound, children: [
+      { key: 'profile', href: '/profile', exact: true },
+      { key: 'security', href: '/profile/security' },
+      { key: 'preferences', href: '/profile/preferences' },
+      { key: 'sessions', href: '/profile/sessions' },
+    ]},
   ]
 })
 
-function isActive(href) {
+function isActive(href, exact = false) {
   const currentPath = (page.url || '/').split('?')[0]
-  if (href === '/') return currentPath === '/'
+  if (href === '/' || exact) return currentPath === href
 
   return currentPath === href || currentPath.startsWith(`${href}/`)
 }
 
 function isGroupActive(item) {
   if (item.children) {
-    return item.children.some(c => isActive(c.href))
+    return item.children.some(c => isActive(c.href, c.exact))
   }
   return isActive(item.href)
 }

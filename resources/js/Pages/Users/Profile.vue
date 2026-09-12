@@ -410,8 +410,8 @@ function confirmRevokeOtherSessions() {
 
       <Card v-if="showOrganizationBilling">
         <CardHeader>
-          <CardTitle>{{ t('organization_billing') }}</CardTitle>
-          <CardDescription>{{ t('organization_billing_desc') }}</CardDescription>
+          <CardTitle>{{ t('organization_subscription') }}</CardTitle>
+          <CardDescription>{{ t('organization_subscription_desc') }}</CardDescription>
         </CardHeader>
         <CardContent>
           <div class="divide-y divide-[hsl(var(--border))]">
@@ -426,7 +426,7 @@ function confirmRevokeOtherSessions() {
               </div>
               <Button variant="outline" size="sm" class="gap-2" @click="manageOrganizationBilling(organization)">
                 <CreditCard class="h-4 w-4" />
-                {{ t('manage_billing') }}
+                {{ t('manage_subscription') }}
               </Button>
             </div>
           </div>

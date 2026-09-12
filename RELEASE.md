@@ -5,6 +5,17 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.17 Staging Candidate
+
+This candidate combines the validation-exception hotfix with streamlined
+organization and user-account navigation. Customer-facing SaaS plan management
+is labeled “Subscription”; EE `v2.9.29` adds a local, non-sensitive payment
+method snapshot and keeps Stripe identifiers out of Inertia props.
+
+The candidate must be deployed to staging with exact CE `v3.8.17` and EE
+`v2.9.29` tags. Production promotion remains blocked until the focused billing,
+profile, static-analysis, build, migration, and browser checks pass on staging.
+
 ## v3.8.15 Staging Patch
 
 This patch simplifies the 500 error page actions and keeps retry/sign-out
