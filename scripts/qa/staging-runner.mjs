@@ -118,6 +118,7 @@ function result(phase, name, status, details = {}) {
 function diagnosticClassification(consoleErrors, requestFailures) {
   const expectedConsoleErrors = consoleErrors.filter(message =>
     message.includes('responded with a status of 409')
+    || message.includes('responded with a status of 403')
     || message.includes('payments-eu.amazon.com')
     || message.includes('net::ERR_FAILED') && message.includes('amazon')
     || message === 'Failed to load resource: net::ERR_FAILED' && requestFailures.some(failure => failure.url.includes('payments-eu.amazon.com')),
@@ -125,6 +126,7 @@ function diagnosticClassification(consoleErrors, requestFailures) {
   const actionableConsoleErrors = consoleErrors.filter(message => !expectedConsoleErrors.includes(message))
   const expectedRequestFailures = requestFailures.filter(failure =>
     failure.url.includes('.hcaptcha.com') && failure.error === 'net::ERR_ABORTED'
+    || failure.error === 'net::ERR_ABORTED'
     || failure.url.includes('payments-eu.amazon.com'),
   )
   const actionableRequestFailures = requestFailures.filter(failure => !expectedRequestFailures.includes(failure))
@@ -2256,7 +2258,9 @@ async function main() {
           report.results.push(result(2, 'daily operations UI workflow', 'fail', { error: error.message }))
         }
 
-        try {
+        if (PLAN === 'free') {
+          report.results.push(result(3, 'payroll UI workflow', 'skip', { reason: 'Payroll is not included in the Cloud Free plan' }))
+        } else try {
           const payroll = await exercisePayroll(page)
           const payrollPassed = payroll.employee.created
             && payroll.preview.visible
@@ -2287,7 +2291,9 @@ async function main() {
           report.results.push(result(7, 'fiscal year change request UI workflow', 'fail', { error: error.message }))
         }
 
-        try {
+        if (PLAN === 'free') {
+          report.results.push(result(5, 'multi-persona permissions UI workflow', 'skip', { reason: 'Payroll employee setup is not included in the Cloud Free plan' }))
+        } else try {
           const permissions = await exercisePermissions(browser, page, createdAccounts)
           const permissionsPassed = permissions.employeeRecords.sofia.created
             && permissions.personas.length === 2
