@@ -5,6 +5,12 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.18] - 2026-09-12
+
+### Fixed
+- **Profile sessions navigation:** separate the Sessions page route from its
+  device-session JSON endpoint so account navigation renders the profile page.
+
 ## [3.8.17] - 2026-09-12
 
 ### Changed

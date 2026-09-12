@@ -28,6 +28,18 @@ class UserProfileHttpTest extends TestCase
             ->assertInertia(fn ($page) => $page->component('Users/Profile'));
     }
 
+    public function test_profile_section_pages_render_with_the_active_section(): void
+    {
+        foreach (['security', 'preferences', 'sessions'] as $section) {
+            $this->actingAs($this->user)
+                ->get("/profile/{$section}")
+                ->assertOk()
+                ->assertInertia(fn ($page) => $page
+                    ->component('Users/Profile')
+                    ->where('activeSection', $section));
+        }
+    }
+
     public function test_profile_update_changes_name_and_locale(): void
     {
         $this->actingAs($this->user)

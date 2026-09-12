@@ -5,6 +5,13 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.18 Staging Patch
+
+This patch resolves the `/profile/sessions` route collision found during the
+`v3.8.17` staging acceptance pass. The page route now renders the profile
+Sessions section while device data loads from a dedicated JSON endpoint. EE
+remains pinned to `v2.9.29`.
+
 ## v3.8.17 Staging Candidate
 
 This candidate combines the validation-exception hotfix with streamlined
