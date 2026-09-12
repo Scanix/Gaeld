@@ -318,7 +318,7 @@ const showRevokeAll = ref(false)
 
 async function loadSessions() {
   try {
-    const res = await fetch('/profile/sessions', {
+    const res = await fetch('/profile/device-sessions', {
       headers: { 'Accept': 'application/json' },
       credentials: 'same-origin',
     })
