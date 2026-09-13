@@ -5,6 +5,12 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.19 Staging Candidate
+
+This candidate integrates [PR #60](https://github.com/Scanix/Gaeld/pull/60),
+which fixes `GET /api/v1/invoices` for organizations with multiple invoices
+containing VAT-rated lines. The matching EE artifact remains `v2.9.30`.
+
 ## v3.8.18 Staging Patch
 
 This patch resolves the `/profile/sessions` route collision found during the
