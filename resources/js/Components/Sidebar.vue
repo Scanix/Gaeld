@@ -20,7 +20,6 @@ import {
   Repeat,
   Briefcase,
   Settings,
-  UserRound,
   Sun,
   Moon,
 } from 'lucide-vue-next'
@@ -106,13 +105,6 @@ const navigation = computed(() => {
     return [
       { key: 'expenses', href: '/expenses', icon: Receipt },
       { key: 'salary_slips', href: '/payroll/salary-slips', icon: Briefcase },
-      { type: 'group', label: 'nav_administration' },
-      { key: 'user_account', href: '/profile', icon: UserRound, children: [
-        { key: 'profile', href: '/profile', exact: true },
-        { key: 'security', href: '/profile/security' },
-        { key: 'preferences', href: '/profile/preferences' },
-        { key: 'sessions', href: '/profile/sessions' },
-      ]},
     ]
   }
 
@@ -240,12 +232,6 @@ const navigation = computed(() => {
     ...(features.value.saas && currentRole.value !== 'employee' ? [
       { key: 'subscription', href: '/billing', icon: CreditCard },
     ] : []),
-    { key: 'user_account', href: '/profile', icon: UserRound, children: [
-      { key: 'profile', href: '/profile', exact: true },
-      { key: 'security', href: '/profile/security' },
-      { key: 'preferences', href: '/profile/preferences' },
-      { key: 'sessions', href: '/profile/sessions' },
-    ]},
   ]
 })
 

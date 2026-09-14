@@ -5,6 +5,17 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.20] - 2026-09-14
+
+### Changed
+- **Account navigation:** keep profile, security, preferences, and sessions in
+  the topbar account menu instead of duplicating them in the sidebar.
+
+### Fixed
+- **Cookie consent:** load the consent banner and Google Tag Manager only when
+  analytics is configured, avoiding an unnecessary consent prompt on
+  self-hosted instances.
+
 ## [3.8.19] - 2026-09-13
 
 ### Fixed

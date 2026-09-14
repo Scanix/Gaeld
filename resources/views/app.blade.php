@@ -29,8 +29,11 @@
         </script>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @vite('resources/js/cookieConsent.js')
-        @include('partials.google-analytics')
+        {{-- Without analytics only strictly necessary cookies are set, so no consent banner is needed. --}}
+        @if(config('services.google.gtm_id'))
+            @vite('resources/js/cookieConsent.js')
+            @include('partials.google-analytics')
+        @endif
         @inertiaHead
 
         {{-- Remove service-worker registrations left by older releases. --}}

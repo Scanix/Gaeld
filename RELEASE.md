@@ -5,6 +5,13 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.20 Staging Candidate
+
+This candidate includes PR #62 for analytics-aware cookie consent and removes
+the duplicate user navigation from the sidebar. Impact Accounting remains on
+its separate `feature/impact-accounting` branch and is intentionally excluded
+from this release.
+
 ## v3.8.19 Staging Candidate
 
 This candidate integrates [PR #60](https://github.com/Scanix/Gaeld/pull/60),
