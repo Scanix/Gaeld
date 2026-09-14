@@ -92,6 +92,14 @@ task('deploy:horizon:restart', function () {
     }
 })->desc('Restart queue service after deploy');
 
+task('deploy:scheduler:restart', function () {
+    if (test("systemctl list-unit-files | grep -q '^gaeld-schedule\\.service'")) {
+        run('sudo systemctl restart gaeld-schedule');
+    } else {
+        warning('Skipping scheduler restart: gaeld-schedule.service not found.');
+    }
+})->desc('Restart Laravel scheduler after deploy');
+
 // --- SaaS-specific tasks ---
 
 task('deploy:ee:plugin', function () {
@@ -189,6 +197,7 @@ task('deploy', [
     'deploy:sentry:release',
     'deploy:fpm:restart',
     'deploy:legacy-worker:disable',
+    'deploy:scheduler:restart',
     'deploy:horizon:restart',
 ])->desc('Deploy the SaaS application');
 
