@@ -93,7 +93,19 @@ const { t } = useTranslations()
 
 const { isClosed: isDateClosed, closedYear } = useClosedFiscalYear(() => form.date)
 
+const categoryByName = new Map(props.categories.map(category => [category.name, category]))
 const categoryOptions = props.categories.map(c => ({ value: c.name, label: c.name }))
+let suggestedExpenseAccountCode = ''
+
+watch(() => form.category, (category) => {
+  const defaultAccountCode = categoryByName.get(category)?.default_expense_account?.code ?? ''
+
+  if (!form.expense_account_code || form.expense_account_code === suggestedExpenseAccountCode) {
+    form.expense_account_code = defaultAccountCode
+  }
+
+  suggestedExpenseAccountCode = defaultAccountCode
+}, { immediate: true })
 
 const vatOptions = [
   { value: '', label: t('no_vat') },

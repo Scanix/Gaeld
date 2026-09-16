@@ -8,6 +8,7 @@ use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Accounting\Queries\AccountQuery;
 use App\Domains\Accounting\Requests\StoreJournalEntryRequest;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
@@ -58,6 +59,7 @@ class AccountingController extends Controller
 
         return Inertia::render('Accounting/ChartOfAccounts', [
             'accounts' => $accounts,
+            'parentAccounts' => AccountQuery::forSelect(),
             'query' => ['search' => $request->input('search', '')],
             'can' => [
                 'create' => $user->can('create', Account::class),

@@ -31,6 +31,7 @@ const props = defineProps({
   filter: { type: String, default: 'unreconciled' },
   openInvoices: { type: Array, default: () => [] },
   openExpenses: { type: Array, default: () => [] },
+  expenseAccounts: { type: Array, default: () => [] },
   vatSettlements: { type: Array, default: () => [] },
   pageFeatures: { type: Object, default: () => ({}) },
 })
@@ -97,7 +98,7 @@ const matchingTransaction = ref(null)
 const matchType = ref('invoice') // 'invoice', 'expense', 'manual', 'vat'
 
 const matchInvoiceForm = useForm({ invoice_id: '' })
-const matchExpenseForm = useForm({ expense_id: '', expense_account_code: '6530' })
+const matchExpenseForm = useForm({ expense_id: '', expense_account_code: '' })
 const matchManualForm = useForm({ contra_account_code: '' })
 const matchVatForm = useForm({ vat_settlement_id: '' })
 
@@ -135,6 +136,17 @@ const expenseOptions = computed(() =>
   }))
 )
 
+const expenseAccountOptions = computed(() => props.expenseAccounts
+  .slice()
+  .sort((a, b) => String(a.code).localeCompare(String(b.code)))
+  .map(account => ({ value: account.code, label: `${account.code} — ${account.display_name ?? account.name}` })))
+
+function expenseAccountFor(expenseId) {
+  return openExpensesSafe.value.find(expense => expense.id === expenseId)?.expense_account_code
+    || expenseAccountOptions.value[0]?.value
+    || ''
+}
+
 function createInvoiceFromTransaction() {
   router.visit('/invoices/create')
 }
@@ -143,6 +155,8 @@ function openMatchModal(transaction) {
   matchingTransaction.value = transaction
   matchType.value = transaction.type === 'credit' ? 'invoice' : 'expense'
   matchInvoiceForm.invoice_id = ''
+  matchExpenseForm.expense_id = ''
+  matchExpenseForm.expense_account_code = expenseAccountOptions.value[0]?.value || ''
   showMatchModal.value = true
 }
 
@@ -153,6 +167,7 @@ function selectInvoiceSuggestion(inv) {
 
 function selectExpenseSuggestion(exp) {
   matchExpenseForm.expense_id = exp.id
+  matchExpenseForm.expense_account_code = expenseAccountFor(exp.id)
   nextTick(() => submitMatch())
 }
 
@@ -183,7 +198,7 @@ function quickMatch(transaction, type, id) {
   } else if (type === 'expense') {
     router.post(`/reconciliation/transactions/${transaction.id}/expense`, {
       expense_id: id,
-      expense_account_code: '6530',
+      expense_account_code: expenseAccountFor(id),
     })
   }
 }
@@ -718,12 +733,12 @@ const justificationMissingCount = computed(() => {
                 />
                 <p v-if="matchExpenseForm.errors.expense_id" class="text-xs text-[hsl(var(--destructive))]">{{ matchExpenseForm.errors.expense_id }}</p>
               </div>
-              <FormInput
+              <FormSelect
                 id="expense_account_code"
                 v-model="matchExpenseForm.expense_account_code"
                 :label="t('expense_account')"
+                :options="expenseAccountOptions"
                 :error="matchExpenseForm.errors.expense_account_code"
-                placeholder="6530"
                 required
               />
             </div>
@@ -741,12 +756,12 @@ const justificationMissingCount = computed(() => {
               />
               <p v-if="matchExpenseForm.errors.expense_id" class="text-xs text-[hsl(var(--destructive))]">{{ matchExpenseForm.errors.expense_id }}</p>
             </div>
-            <FormInput
+            <FormSelect
               id="expense_account_code"
               v-model="matchExpenseForm.expense_account_code"
               :label="t('expense_account')"
+              :options="expenseAccountOptions"
               :error="matchExpenseForm.errors.expense_account_code"
-              placeholder="6530"
               required
             />
           </template>

@@ -20,6 +20,7 @@ import { Plus, Upload, Download, Pencil, Trash2, BookOpen, Search } from 'lucide
 
 const props = defineProps({
   accounts: Object,
+  parentAccounts: { type: Array, default: () => [] },
   can: Object,
   accountTypes: Array,
   query: {
@@ -194,7 +195,7 @@ function requestExport() {
                     <Pencil class="h-4 w-4" />
                   </Button>
                   <Button
-                    v-if="can?.delete && !row.has_transactions"
+                    v-if="can?.delete && !row.has_transactions && !row.is_system"
                     variant="ghost"
                     size="icon"
                     @click="confirmDelete(row)"
@@ -228,7 +229,7 @@ function requestExport() {
       :open="showForm"
       :account="editingAccount"
       :account-types="accountTypes"
-      :accounts="accounts?.data ?? []"
+      :accounts="parentAccounts"
       @close="showForm = false"
     />
 

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Expenses;
 
+use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,6 +31,72 @@ class ExpenseCategoryTest extends TestCase
             'organization_id' => $this->org->id,
             'name' => 'Software',
         ]);
+    }
+
+    public function test_it_creates_a_category_with_an_organization_expense_account(): void
+    {
+        $account = Account::create([
+            'organization_id' => $this->org->id,
+            'code' => '4000',
+            'name' => 'Cost of Materials',
+            'type' => AccountType::Expense,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actAsOrg()->post('/settings/expense-categories', [
+            'name' => 'Goods Purchased for Resale',
+            'default_expense_account_id' => $account->id,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('expense_categories', [
+            'organization_id' => $this->org->id,
+            'name' => 'Goods Purchased for Resale',
+            'default_expense_account_id' => $account->id,
+        ]);
+    }
+
+    public function test_it_rejects_a_default_account_from_another_organization(): void
+    {
+        $otherOrganization = Organization::factory()->create();
+        $foreignAccount = Account::create([
+            'organization_id' => $otherOrganization->id,
+            'code' => '4000',
+            'name' => 'Foreign Materials',
+            'type' => AccountType::Expense,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actAsOrg()->post('/settings/expense-categories', [
+            'name' => 'Foreign account category',
+            'default_expense_account_id' => $foreignAccount->id,
+        ]);
+
+        $response->assertSessionHasErrors('default_expense_account_id');
+    }
+
+    public function test_it_updates_a_category_default_account(): void
+    {
+        $category = ExpenseCategory::create([
+            'organization_id' => $this->org->id,
+            'name' => 'Resale material',
+            'sort_order' => 1,
+        ]);
+        $account = Account::create([
+            'organization_id' => $this->org->id,
+            'code' => '4000',
+            'name' => 'Cost of Materials',
+            'type' => AccountType::Expense,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actAsOrg()->put("/settings/expense-categories/{$category->id}", [
+            'name' => $category->name,
+            'default_expense_account_id' => $account->id,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertSame($account->id, $category->refresh()->default_expense_account_id);
     }
 
     public function test_it_deletes_an_expense_category(): void

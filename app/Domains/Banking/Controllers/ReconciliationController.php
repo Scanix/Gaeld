@@ -3,7 +3,9 @@
 namespace App\Domains\Banking\Controllers;
 
 use App\Domains\Accounting\Constants\AccountCode;
+use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Queries\AccountQuery;
 use App\Domains\Banking\Actions\UnreconcileTransactionAction;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
 use App\Domains\Banking\Exceptions\NotReconciledException;
@@ -142,7 +144,7 @@ class ReconciliationController extends Controller
             ->where('status', ExpenseStatus::Posted)
             ->whereNotIn('id', $reconciledExpenseIds)
             ->orderByDesc('date')
-            ->get(['id', 'description', 'vendor', 'category', 'amount', 'currency', 'date', 'status']);
+            ->get(['id', 'description', 'vendor', 'category', 'amount', 'currency', 'date', 'status', 'expense_account_code']);
 
         return Inertia::render('Banking/ReconciliationShow', [
             'bankAccount' => $bankAccount->load('ledgerAccount'),
@@ -152,6 +154,7 @@ class ReconciliationController extends Controller
             'filter' => $filter,
             'openInvoices' => $openInvoices,
             'openExpenses' => $openExpenses,
+            'expenseAccounts' => AccountQuery::forSelect(AccountType::Expense),
             'vatSettlements' => $this->availableVatSettlements($bankAccount->organization_id),
             'pageFeatures' => [
                 'auto_reconciliation' => FeatureFlag::enabled('auto_reconciliation'),

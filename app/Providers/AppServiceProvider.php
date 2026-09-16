@@ -212,12 +212,13 @@ class AppServiceProvider extends ServiceProvider
         };
 
         $referenceFlush = $flushTags('reference');
+        $accountFlush = $flushTags('reference', 'ledger');
         $contactsFlush = $flushTags('contacts');
         $dashboardFlush = $flushTags('dashboard');
 
         foreach (['created', 'updated', 'deleted'] as $event) {
             VatRate::$event($referenceFlush);
-            Account::$event($referenceFlush);
+            Account::$event($accountFlush);
             ExpenseCategory::$event($referenceFlush);
             Contact::$event($contactsFlush);
             Invoice::$event($dashboardFlush);

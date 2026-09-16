@@ -21,6 +21,7 @@ const { t } = useTranslations()
 
 const isEditing = computed(() => !!props.account)
 const hasTransactions = computed(() => props.account?.has_transactions ?? false)
+const isSystemAccount = computed(() => props.account?.is_system ?? false)
 
 const form = ref({
   code: '',
@@ -107,7 +108,7 @@ function submit() {
         v-model="form.code"
         :label="t('account_code')"
         :error="errors.code"
-        :disabled="hasTransactions"
+        :disabled="hasTransactions || isSystemAccount"
         required
       />
 
@@ -125,7 +126,7 @@ function submit() {
         :label="t('account_type')"
         :options="accountTypes"
         :error="errors.type"
-        :disabled="hasTransactions"
+        :disabled="hasTransactions || isSystemAccount"
         required
       />
 

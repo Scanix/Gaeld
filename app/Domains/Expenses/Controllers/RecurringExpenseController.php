@@ -2,8 +2,11 @@
 
 namespace App\Domains\Expenses\Controllers;
 
+use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Queries\AccountQuery;
 use App\Domains\Contacts\Queries\ContactQuery;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Expenses\Models\RecurringExpense;
 use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
 use App\Domains\Expenses\Requests\RecurringExpenseRequest;
@@ -39,6 +42,7 @@ class RecurringExpenseController extends Controller
         return Inertia::render('Expenses/Recurring/Create', [
             'suppliers' => ContactQuery::forSelect(),
             'categories' => ExpenseCategoryQuery::forSelect(),
+            'expenseAccounts' => AccountQuery::forSelect(AccountType::Expense),
             'frequencies' => $this->frequencyOptions(),
         ]);
     }
@@ -48,6 +52,7 @@ class RecurringExpenseController extends Controller
         $this->authorize('create', RecurringExpense::class);
 
         $validated = $request->validated();
+        $validated = $this->applyDefaultExpenseAccount($validated, $currentOrg->id());
 
         RecurringExpense::create([
             'organization_id' => $currentOrg->id(),
@@ -79,6 +84,7 @@ class RecurringExpenseController extends Controller
             'recurringExpense' => $recurring->load('supplier:id,name'),
             'suppliers' => ContactQuery::forSelect(),
             'categories' => ExpenseCategoryQuery::forSelect(),
+            'expenseAccounts' => AccountQuery::forSelect(AccountType::Expense),
             'frequencies' => $this->frequencyOptions(),
         ]);
     }
@@ -87,7 +93,12 @@ class RecurringExpenseController extends Controller
     {
         $this->authorize('update', $recurring);
 
-        $recurring->update($request->validated());
+        $validated = array_merge([
+            'expense_account_code' => $recurring->expense_account_code,
+            'bank_account_code' => $recurring->bank_account_code,
+        ], $request->validated());
+
+        $recurring->update($this->applyDefaultExpenseAccount($validated, $recurring->organization_id));
 
         return redirect()->route('expenses.recurring.index')
             ->with('success', __('app.recurring_expense_updated'));
@@ -128,5 +139,32 @@ class RecurringExpenseController extends Controller
             fn (RecurrenceFrequency $f) => ['value' => $f->value, 'label' => $f->label()],
             RecurrenceFrequency::cases(),
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function applyDefaultExpenseAccount(array $validated, string $organizationId): array
+    {
+        if (filled($validated['expense_account_code'] ?? null)) {
+            return $validated;
+        }
+
+        $category = ExpenseCategory::withoutGlobalScopes()
+            ->where('organization_id', $organizationId)
+            ->where('name', $validated['category'] ?? '')
+            ->with(['defaultExpenseAccount' => function ($query) use ($organizationId): void {
+                $query->where('organization_id', $organizationId)
+                    ->where('is_active', true)
+                    ->where('type', AccountType::Expense);
+            }])
+            ->first();
+
+        if ($category?->defaultExpenseAccount?->code !== null) {
+            $validated['expense_account_code'] = $category->defaultExpenseAccount->code;
+        }
+
+        return $validated;
     }
 }

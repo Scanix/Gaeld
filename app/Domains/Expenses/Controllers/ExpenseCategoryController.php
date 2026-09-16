@@ -2,9 +2,12 @@
 
 namespace App\Domains\Expenses\Controllers;
 
+use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
 use App\Domains\Expenses\Requests\StoreExpenseCategoryRequest;
+use App\Domains\Expenses\Requests\UpdateExpenseCategoryRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -29,12 +32,22 @@ class ExpenseCategoryController extends Controller
 
         ExpenseCategory::create([
             'organization_id' => $currentOrg->id(),
-            'name' => $validated['name'],
+            ...$validated,
             'sort_order' => $maxSort + 1,
         ]);
 
         return redirect()->route('settings', ['tab' => 'expenses'])
             ->with('success', __('app.expense_category_created'));
+    }
+
+    public function update(UpdateExpenseCategoryRequest $request, ExpenseCategory $expenseCategory, CurrentOrganization $currentOrg): RedirectResponse
+    {
+        $this->authorize('update', $currentOrg->get());
+
+        $expenseCategory->update($request->validated());
+
+        return redirect()->route('settings', ['tab' => 'expenses'])
+            ->with('success', __('app.expense_category_updated'));
     }
 
     public function destroy(ExpenseCategory $expenseCategory, CurrentOrganization $currentOrg): RedirectResponse
@@ -52,12 +65,20 @@ class ExpenseCategoryController extends Controller
      */
     public static function seedDefaults(string $organizationId): void
     {
+        $defaultAccountId = Account::withoutGlobalScopes()
+            ->where('organization_id', $organizationId)
+            ->where('code', ExpenseCategory::RESALE_ACCOUNT_CODE)
+            ->where('type', AccountType::Expense)
+            ->where('is_active', true)
+            ->value('id');
+
         foreach (ExpenseCategory::DEFAULT_CATEGORIES as $i => $name) {
             ExpenseCategory::withoutGlobalScopes()->create([
                 'organization_id' => $organizationId,
                 'name' => $name,
                 'is_default' => true,
                 'sort_order' => $i,
+                'default_expense_account_id' => $name === ExpenseCategory::RESALE_CATEGORY ? $defaultAccountId : null,
             ]);
         }
     }

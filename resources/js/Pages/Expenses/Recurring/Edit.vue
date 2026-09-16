@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
@@ -19,6 +19,7 @@ const props = defineProps({
   recurringExpense: { type: Object, required: true },
   suppliers: { type: Array, default: () => [] },
   categories: { type: Array, default: () => [] },
+  expenseAccounts: { type: Array, default: () => [] },
   frequencies: { type: Array, default: () => [] },
 })
 
@@ -51,8 +52,26 @@ const supplierOptions = computed(() => [
 ])
 
 const categoryOptions = computed(() =>
-  props.categories.map(c => ({ value: c, label: c })),
+  props.categories.map(c => ({ value: c.name, label: c.name })),
 )
+
+const categoryByName = computed(() => new Map(props.categories.map(category => [category.name, category])))
+let suggestedExpenseAccountCode = ''
+
+watch(() => form.category, (category) => {
+  const defaultAccountCode = categoryByName.value.get(category)?.default_expense_account?.code ?? ''
+
+  if (!form.expense_account_code || form.expense_account_code === suggestedExpenseAccountCode) {
+    form.expense_account_code = defaultAccountCode
+  }
+
+  suggestedExpenseAccountCode = defaultAccountCode
+}, { immediate: true })
+
+const expenseAccountOptions = computed(() => props.expenseAccounts
+  .slice()
+  .sort((a, b) => String(a.code).localeCompare(String(b.code)))
+  .map(account => ({ value: account.code, label: `${account.code} — ${account.display_name ?? account.name}` })))
 
 const frequencyOptions = computed(() =>
   props.frequencies.map(f => ({ value: f.value, label: f.label })),
@@ -161,6 +180,14 @@ const paymentMethodOptions = computed(() => [
               :label="t('payment_method')"
               :options="paymentMethodOptions"
               :error="form.errors.payment_method"
+            />
+            <SearchableSelect
+              id="expense_account_code"
+              v-model="form.expense_account_code"
+              :label="t('expense_account')"
+              :options="expenseAccountOptions"
+              :placeholder="t('select_account')"
+              :error="form.errors.expense_account_code"
             />
           </div>
 

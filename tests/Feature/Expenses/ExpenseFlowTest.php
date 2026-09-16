@@ -13,6 +13,7 @@ use App\Domains\Expenses\DTOs\CreateExpenseData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Exceptions\InvalidExpenseStateException;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Expenses\Models\ExpenseCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -212,6 +213,65 @@ class ExpenseFlowTest extends TestCase
         $this->assertSame('Updated description', $expense->refresh()->description);
         $this->assertSame('Software and Subscriptions', $expense->category);
         $this->assertSame('700.00', $expense->amount);
+    }
+
+    public function test_category_default_account_is_applied_when_creating_an_expense(): void
+    {
+        $account = Account::create([
+            'organization_id' => $this->org->id,
+            'code' => '4000',
+            'name' => 'Cost of Materials',
+            'type' => AccountType::Expense,
+            'is_active' => true,
+        ]);
+        ExpenseCategory::create([
+            'organization_id' => $this->org->id,
+            'name' => 'Goods Purchased for Resale',
+            'default_expense_account_id' => $account->id,
+        ]);
+
+        $response = $this->actAsOrg()->post('/expenses', [
+            'category' => 'Goods Purchased for Resale',
+            'amount' => '120.00',
+            'date' => '2026-03-16',
+            'currency' => 'CHF',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('expenses', [
+            'category' => 'Goods Purchased for Resale',
+            'expense_account_code' => '4000',
+        ]);
+    }
+
+    public function test_explicit_expense_account_overrides_category_default(): void
+    {
+        $defaultAccount = Account::create([
+            'organization_id' => $this->org->id,
+            'code' => '4000',
+            'name' => 'Cost of Materials',
+            'type' => AccountType::Expense,
+            'is_active' => true,
+        ]);
+        ExpenseCategory::create([
+            'organization_id' => $this->org->id,
+            'name' => 'Goods Purchased for Resale',
+            'default_expense_account_id' => $defaultAccount->id,
+        ]);
+
+        $response = $this->actAsOrg()->post('/expenses', [
+            'category' => 'Goods Purchased for Resale',
+            'amount' => '120.00',
+            'date' => '2026-03-16',
+            'currency' => 'CHF',
+            'expense_account_code' => '6530',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('expenses', [
+            'category' => 'Goods Purchased for Resale',
+            'expense_account_code' => '6530',
+        ]);
     }
 
     public function test_destroy_uses_generic_flash_error_when_exception_message_is_empty(): void

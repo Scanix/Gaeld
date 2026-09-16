@@ -108,6 +108,7 @@ class ChartTemplateTest extends TestCase
 
         $this->assertContains('1000', $codes, 'Cash account missing');
         $this->assertContains('1020', $codes, 'Bank account missing');
+        $this->assertContains('4000', $codes, 'Cost of materials account missing');
     }
 
     public function test_each_template_has_unique_key(): void

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Models;
 
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
@@ -18,9 +19,11 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property bool $is_default
  * @property int $sort_order
+ * @property int|null $default_expense_account_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Organization $organization
+ * @property-read Account|null $defaultExpenseAccount
  */
 class ExpenseCategory extends Model
 {
@@ -31,6 +34,7 @@ class ExpenseCategory extends Model
         'name',
         'is_default',
         'sort_order',
+        'default_expense_account_id',
     ];
 
     protected function casts(): array
@@ -47,6 +51,12 @@ class ExpenseCategory extends Model
         return $this->belongsTo(Organization::class);
     }
 
+    /** @return BelongsTo<Account, $this> */
+    public function defaultExpenseAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'default_expense_account_id');
+    }
+
     /**
      * Default categories seeded for new organizations.
      */
@@ -60,5 +70,10 @@ class ExpenseCategory extends Model
         'Utilities',
         'Insurance',
         'Other',
+        'Goods Purchased for Resale',
     ];
+
+    public const RESALE_CATEGORY = 'Goods Purchased for Resale';
+
+    public const RESALE_ACCOUNT_CODE = '4000';
 }

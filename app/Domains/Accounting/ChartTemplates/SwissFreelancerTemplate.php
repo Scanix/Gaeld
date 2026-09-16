@@ -102,6 +102,9 @@ class SwissFreelancerTemplate implements ChartTemplateInterface
             ['code' => '4200', 'type' => AccountType::Expense->value, 'name' => [
                 'en' => 'Cost of Services', 'fr' => 'Charges de prestations de tiers', 'de' => 'Aufwand für Drittleistungen', 'it' => 'Costi per servizi di terzi', 'rm' => 'Custs da prestaziuns da terzas',
             ]],
+            ['code' => '4000', 'type' => AccountType::Expense->value, 'name' => [
+                'en' => 'Cost of Materials', 'fr' => 'Charges de matières', 'de' => 'Materialaufwand', 'it' => 'Costi per materiale', 'rm' => 'Custs da material',
+            ]],
             ['code' => '5000', 'type' => AccountType::Expense->value, 'name' => [
                 'en' => 'Salaries', 'fr' => 'Salaires', 'de' => 'Löhne', 'it' => 'Salari', 'rm' => 'Salaris',
             ]],

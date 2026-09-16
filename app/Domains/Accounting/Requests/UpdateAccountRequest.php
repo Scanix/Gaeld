@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Requests;
 
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Accounting\Models\Account;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -15,6 +16,11 @@ class UpdateAccountRequest extends FormRequest
     public function rules(): array
     {
         $account = $this->route('account');
+
+        if (! $account instanceof Account) {
+            return [];
+        }
+
         $hasTransactions = $account->transactionLines()->exists();
 
         $rules = [
@@ -29,7 +35,7 @@ class UpdateAccountRequest extends FormRequest
             ],
         ];
 
-        if (! $hasTransactions) {
+        if (! $hasTransactions && ! $account->is_system) {
             $rules['code'] = [
                 'required',
                 'string',

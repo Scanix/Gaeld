@@ -19,24 +19,6 @@ parameters:
 			path: app/Domains/Accounting/Controllers/LettrageController.php
 
 		-
-			message: '#^Access to an undefined property \(object\|string\)\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Accounting/Requests/UpdateAccountRequest.php
-
-		-
-			message: '#^Access to an undefined property \(object\|string\)\:\:\$organization_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domains/Accounting/Requests/UpdateAccountRequest.php
-
-		-
-			message: '#^Call to an undefined method \(object\|string\)\:\:transactionLines\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Domains/Accounting/Requests/UpdateAccountRequest.php
-
-		-
 			message: '#^Parameter \#1 \$rows of method App\\Domains\\Accounting\\Services\\LedgerQueryService\:\:computeTrialBalances\(\) expects Illuminate\\Support\\Collection\<int, stdClass\>, Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domains\\Accounting\\Models\\Account\> given\.$#'
 			identifier: argument.type
 			count: 1

@@ -38,6 +38,7 @@ Route::get('/settings/export/download', [OrganizationSettingsController::class, 
 // Expense categories
 Route::get('/settings/expense-categories', [ExpenseCategoryController::class, 'index'])->name('settings.expense-categories.index');
 Route::post('/settings/expense-categories', [ExpenseCategoryController::class, 'store'])->name('settings.expense-categories.store');
+Route::put('/settings/expense-categories/{expenseCategory}', [ExpenseCategoryController::class, 'update'])->name('settings.expense-categories.update');
 Route::delete('/settings/expense-categories/{expenseCategory}', [ExpenseCategoryController::class, 'destroy'])->name('settings.expense-categories.destroy');
 
 // Activity log
