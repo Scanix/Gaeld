@@ -22,6 +22,7 @@ return new class extends Migration
 
         foreach (DB::table('organizations')->pluck('id') as $organizationId) {
             DB::table('accounts')->insertOrIgnore([
+                'uuid' => (string) Str::uuid(),
                 'organization_id' => $organizationId,
                 'code' => '4000',
                 'name' => 'Cost of Materials',
