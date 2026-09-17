@@ -960,6 +960,8 @@ return [
     'invitation_email_line' => 'Sie wurden eingeladen, :organization auf Gäld beizutreten.',
     'invitation_email_action' => 'Einladung annehmen',
     'invitation_email_expiry' => 'Diese Einladung läuft in :days Tagen ab.',
+    'email_greeting' => 'Guten Tag :name,',
+    'email_salutation' => 'Freundliche Grüsse, Gäld',
     'change_role' => 'Rolle ändern',
     'remove_member' => 'Mitglied entfernen',
     'leave_organization' => 'Organisation verlassen',
@@ -1126,6 +1128,7 @@ return [
 
     // Payment reminders
     'send_reminder' => 'Mahnung senden',
+    'send_reminder_confirm' => "Empfänger: :name (:email)\nOrganisation: :organization\nRechnung: :number\nOffener Betrag: :amount\nFälligkeit: :dueDate\nTage überfällig: :days\n\nDiese Mahnung jetzt senden?",
     'reminder_sent' => 'Mahnung gesendet.',
     'reminders_sent' => 'Mahnungen gesendet',
     'last_reminded' => 'Zuletzt gemahnt',
@@ -1544,6 +1547,8 @@ return [
     'settings_comms_title' => 'E-Mail-Kommunikation',
     'settings_comms_desc' => 'Betreff und Text der Rechnungs-E-Mails an Kunden anpassen.',
     'settings_email_subject' => 'E-Mail-Betreff',
+    'settings_contact_email' => 'Antwortadresse',
+    'settings_contact_email_placeholder' => 'buchhaltung@example.ch',
     'settings_email_subject_placeholder' => 'Rechnung {invoice_number} von {organization_name}',
     'settings_email_body' => 'E-Mail-Text',
     'settings_email_body_placeholder' => 'Sehr geehrte/r {customer_name}, anbei finden Sie Rechnung {invoice_number} über {amount}, fällig am {due_date}.',
@@ -1916,6 +1921,7 @@ return [
     'account_must_be_active' => 'Das ausgewählte Konto muss aktiv sein.',
     'expense_account_must_be_expense' => 'Das ausgewählte Konto muss ein Aufwandkonto sein.',
     'expense_category_created' => 'Kategorie hinzugefügt.',
+    'expense_category_updated' => 'Kategorie aktualisiert.',
     'expense_category_deleted' => 'Kategorie entfernt.',
     'add' => 'Hinzufügen',
     'settings_catalog_items_title' => 'Katalogartikel',

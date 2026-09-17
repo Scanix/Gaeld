@@ -31,16 +31,17 @@ return [
     'org_export_regards' => 'Cordialement',
 
     // Rappels de paiement
-    'reminder_subject_first' => 'Rappel de paiement — Facture :number',
-    'reminder_subject_second' => 'Deuxième rappel — Facture :number',
-    'reminder_subject_final' => 'Dernier rappel — Facture :number',
-    'reminder_greeting' => 'Rappel de paiement',
-    'reminder_body' => 'La facture :number de :currency :total était due le :due_date (il y a :days_overdue jours). Nous vous prions de bien vouloir régler ce montant dans les meilleurs délais.',
+    'reminder_subject_first' => 'Rappel de paiement de :organization — Facture :number',
+    'reminder_subject_second' => 'Deuxième rappel de :organization — Facture :number',
+    'reminder_subject_final' => 'Dernier rappel de :organization — Facture :number',
+    'reminder_greeting' => 'Bonjour :name,',
+    'reminder_body' => 'La facture :number de :organization présente un solde restant dû de :currency :amount. Elle était échue le :due_date (il y a :days_overdue jours). Nous vous prions de bien vouloir régler ce montant dans les meilleurs délais.',
     'reminder_invoice_number' => 'Facture',
-    'reminder_amount' => 'Montant',
+    'reminder_amount' => 'Solde restant dû',
     'reminder_due_date' => 'Date d\'échéance',
     'reminder_days_overdue' => 'Jours de retard',
     'reminder_closing' => 'Si le paiement a déjà été effectué, veuillez ne pas tenir compte de ce message.',
+    'reminder_contact' => 'Pour toute question concernant cette facture, veuillez contacter :email.',
     'reminder_regards' => 'Cordialement',
 
     // E-mail initial de facture
@@ -51,6 +52,7 @@ return [
     'invoice_amount_label' => 'Montant',
     'invoice_due_date_label' => 'Date d\'échéance',
     'invoice_closing' => 'N\'hésitez pas à nous contacter si vous avez des questions.',
+    'invoice_contact' => 'Une question ? Contactez-nous à l\'adresse :email.',
     'invoice_regards' => 'Cordialement',
     'salary_slip_subject' => 'Votre fiche de salaire pour :period',
     'salary_slip_greeting' => 'Bonjour :name,',

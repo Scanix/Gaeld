@@ -40,6 +40,7 @@ use Illuminate\Support\Carbon;
  * @property array<int, int>|null $closed_fiscal_years
  * @property array<string, bool>|null $enabled_modules
  * @property string|null $locale
+ * @property string|null $contact_email
  * @property BusinessType|null $business_type
  * @property string $setup_mode
  * @property Carbon|null $founded_at
@@ -69,6 +70,7 @@ class Organization extends Model
         'fiscal_year_start',
         'closed_fiscal_years',
         'locale',
+        'contact_email',
         'business_type',
         'require_two_factor',
         'default_payment_terms_days',

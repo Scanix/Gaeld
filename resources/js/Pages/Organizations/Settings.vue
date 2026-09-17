@@ -189,6 +189,7 @@ function deleteLogo() {
 const commsForm = useForm({
   invoice_email_subject: props.organization.invoice_email_subject || '',
   invoice_email_body: props.organization.invoice_email_body || '',
+  contact_email: props.organization.contact_email || '',
 })
 
 function submitCommunications() {
@@ -753,6 +754,15 @@ const businessTypeOptions = [
           </CardHeader>
           <CardContent>
             <form class="space-y-6" @submit.prevent="submitCommunications">
+              <FormInput
+                id="contact_email"
+                v-model="commsForm.contact_email"
+                type="email"
+                :label="t('settings_contact_email')"
+                :error="commsForm.errors.contact_email"
+                :placeholder="t('settings_contact_email_placeholder')"
+              />
+
               <FormInput
                 id="invoice_email_subject"
                 v-model="commsForm.invoice_email_subject"

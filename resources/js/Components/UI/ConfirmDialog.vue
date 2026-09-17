@@ -27,7 +27,7 @@ defineEmits(['confirm', 'cancel'])
 
 <template>
   <Modal :open="open" :title="title ?? t('confirm_action')" @close="$emit('cancel')">
-    <p class="mb-6 text-sm text-[hsl(var(--muted-foreground))]">{{ message ?? t('are_you_sure') }}</p>
+    <p class="mb-6 whitespace-pre-line text-sm text-[hsl(var(--muted-foreground))]">{{ message ?? t('are_you_sure') }}</p>
     <div v-if="errorMessages.length" class="mb-4 rounded-md border border-[hsl(var(--destructive))]/20 bg-[hsl(var(--destructive))]/5 p-3" role="alert">
       <ul class="list-disc pl-4 text-sm text-[hsl(var(--destructive))]">
         <li v-for="(err, i) in errorMessages" :key="i">{{ err }}</li>

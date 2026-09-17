@@ -4,11 +4,13 @@ namespace App\Domains\Invoicing\Services;
 
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Mail\InvoiceMail;
 use App\Domains\Invoicing\Mail\InvoiceReminderMail;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -34,25 +36,45 @@ class InvoiceMailerService
         $pdf = $this->pdfAction->execute($invoice, $organization, $locale);
         $filename = 'invoice-'.($invoice->number ?? $invoice->id).'.pdf';
 
-        Mail::to($customerEmail)->send(new InvoiceMail($invoice, $organization, $pdf, $filename));
+        Mail::to($customerEmail)->locale($locale)->send(new InvoiceMail($invoice, $organization, $pdf, $filename));
 
         return $invoice;
     }
 
     public function sendReminder(Invoice $invoice): Invoice
     {
-        if (! $invoice->isOverdue()) {
-            throw new InvalidInvoiceStateException('Invoice is not overdue.');
-        }
+        return DB::transaction(function () use ($invoice): Invoice {
+            $lockedInvoice = Invoice::query()
+                ->whereKey($invoice->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $customerEmail = $this->resolveCustomerEmail($invoice);
+            if ($lockedInvoice->type !== InvoiceType::Invoice || ! $lockedInvoice->isOverdue()) {
+                throw new InvalidInvoiceStateException('Invoice is not overdue.');
+            }
 
-        $invoice->increment('reminder_count');
-        $invoice->update(['last_reminded_at' => now()]);
+            if ($lockedInvoice->isFullyPaid()) {
+                throw new InvalidInvoiceStateException('Invoice has no outstanding balance.');
+            }
 
-        Mail::to($customerEmail)->send(new InvoiceReminderMail($invoice->fresh()));
+            if ($lockedInvoice->last_reminded_at?->greaterThan(now()->subDays(7))) {
+                throw new InvalidInvoiceStateException('A reminder was already sent within the last 7 days.');
+            }
 
-        return $invoice->fresh();
+            $customerEmail = $this->resolveCustomerEmail($lockedInvoice);
+            $reminderNumber = ((int) $lockedInvoice->reminder_count) + 1;
+            $organization = $lockedInvoice->loadMissing('organization')->organization;
+            $locale = $organization->locale ?? app()->getLocale();
+
+            Mail::to($customerEmail)->locale($locale)->send(new InvoiceReminderMail($lockedInvoice, $organization, $reminderNumber));
+
+            $lockedInvoice->update([
+                'reminder_count' => $reminderNumber,
+                'last_reminded_at' => now(),
+            ]);
+
+            return $lockedInvoice->fresh();
+        });
     }
 
     private function resolveCustomerEmail(Invoice $invoice): string

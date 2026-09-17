@@ -93,11 +93,16 @@ class QrInvoiceValidationFlashTest extends TestCase
     {
         $this->setUpOrganization();
 
-        $customer = Contact::factory()->for($this->org, 'organization')->create();
+        $customer = Contact::factory()->for($this->org, 'organization')->create([
+            'email' => 'billing@qr-validation.test',
+        ]);
         $invoice = Invoice::factory()
             ->for($this->org, 'organization')
             ->for($customer, 'customer')
-            ->create(['status' => InvoiceStatus::Sent]);
+            ->create([
+                'status' => InvoiceStatus::Overdue,
+                'due_date' => now()->subDay(),
+            ]);
 
         $this->mock(InvoiceMailerService::class, function (MockInterface $mock): void {
             $mock->shouldReceive('sendReminder')

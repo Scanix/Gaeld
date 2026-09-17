@@ -26,6 +26,7 @@ const props = defineProps({
   canForceDelete: { type: Boolean, default: false },
   canRecordPayment: { type: Boolean, default: false },
   canSend: { type: Boolean, default: false },
+  canSendReminder: { type: Boolean, default: false },
   canRevertToDraft: { type: Boolean, default: false },
   justificatifUrl: { type: String, default: null },
   bankAccounts: { type: Array, default: () => [] },
@@ -41,6 +42,7 @@ const { formatCurrency, formatDate } = useFormatters()
 
 const showPaymentModal = ref(false)
 const showDeleteDialog = ref(false)
+const showReminderDialog = ref(false)
 const showCancelDialog = ref(false)
 const showRevertToDraftDialog = ref(false)
 const showPurgeDialog = ref(false)
@@ -63,7 +65,15 @@ function sendInvoice() {
 }
 
 function sendReminder() {
-  reminderForm.post(`/invoices/${props.invoice.id}/reminder`)
+  reminderForm.post(`/invoices/${props.invoice.id}/reminder`, {
+    onSuccess: () => {
+      showReminderDialog.value = false
+    },
+  })
+}
+
+function requestReminder() {
+  showReminderDialog.value = true
 }
 
 const finalizeForm = useForm({})
@@ -300,10 +310,10 @@ const bankAccountOptions = computed(() =>
                 {{ t('send_invoice_email') }}
               </button>
               <button
-                v-if="isOverdue && !invoice?.archived_at"
+                v-if="canSendReminder"
                 class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
                 :disabled="reminderForm.processing"
-                @click="sendReminder(); close()"
+                @click="requestReminder(); close()"
               >
                 <Bell class="h-4 w-4 shrink-0" />
                 {{ t('send_reminder') }}
@@ -563,6 +573,25 @@ const bankAccountOptions = computed(() =>
     </Modal>
 
     <!-- Delete Confirmation -->
+    <ConfirmDialog
+      :open="showReminderDialog"
+      :title="t('send_reminder')"
+      :message="t('send_reminder_confirm', {
+        name: invoice?.customer?.name,
+        email: invoice?.customer?.email,
+        organization: invoice?.organization?.name,
+        number: invoice?.number,
+        amount: formatCurrency(amountDue),
+        dueDate: formatDate(invoice?.due_date),
+        days: Math.max(0, Math.floor((Date.now() - new Date(invoice?.due_date).getTime()) / 86400000)),
+      })"
+      :confirm-label="t('send_reminder')"
+      :processing="reminderForm.processing"
+      :errors="reminderForm.errors"
+      @confirm="sendReminder"
+      @cancel="showReminderDialog = false"
+    />
+
     <ConfirmDialog
       :open="showDeleteDialog"
       :title="t('delete_invoice')"

@@ -22,7 +22,9 @@ class TwoFactorDisabledNotification extends Notification
     {
         return (new MailMessage)
             ->subject(__('app.two_factor_disabled_subject', ['app' => config('app.name')]))
+            ->greeting(__('app.email_greeting', ['name' => $notifiable->name ?? config('app.name')]))
             ->line(__('app.two_factor_disabled_notification'))
-            ->line(__('app.two_factor_disabled_warning'));
+            ->line(__('app.two_factor_disabled_warning'))
+            ->salutation(__('app.email_salutation'));
     }
 }

@@ -7,6 +7,7 @@ readonly class UpdateCommunicationsData
     public function __construct(
         public ?string $invoiceEmailSubject = null,
         public ?string $invoiceEmailBody = null,
+        public ?string $contactEmail = null,
     ) {}
 
     /**
@@ -18,6 +19,7 @@ readonly class UpdateCommunicationsData
         return new self(
             invoiceEmailSubject: $data['invoice_email_subject'] ?? null,
             invoiceEmailBody: $data['invoice_email_body'] ?? null,
+            contactEmail: $data['contact_email'] ?? null,
         );
     }
 
@@ -30,6 +32,7 @@ readonly class UpdateCommunicationsData
         return [
             'invoice_email_subject' => $this->invoiceEmailSubject,
             'invoice_email_body' => $this->invoiceEmailBody,
+            'contact_email' => $this->contactEmail,
         ];
     }
 }

@@ -364,7 +364,7 @@ class InvoiceApiController extends Controller
      */
     public function reminder(Invoice $invoice, InvoiceMailerService $mailerService): InvoiceResource|JsonResponse
     {
-        $this->authorize('send', $invoice);
+        $this->authorize('sendReminder', $invoice);
 
         try {
             $mailerService->sendReminder($invoice);

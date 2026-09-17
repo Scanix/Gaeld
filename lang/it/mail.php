@@ -31,16 +31,17 @@ return [
     'org_export_regards' => 'Cordiali saluti',
 
     // Solleciti di pagamento
-    'reminder_subject_first' => 'Promemoria di pagamento — Fattura :number',
-    'reminder_subject_second' => 'Secondo promemoria — Fattura :number',
-    'reminder_subject_final' => 'Ultimo promemoria — Fattura :number',
-    'reminder_greeting' => 'Promemoria di pagamento',
-    'reminder_body' => 'La fattura :number di :currency :total era dovuta il :due_date (:days_overdue giorni fa). Ti chiediamo gentilmente di saldare questo importo al più presto.',
+    'reminder_subject_first' => 'Sollecito di pagamento da :organization — Fattura :number',
+    'reminder_subject_second' => 'Secondo sollecito da :organization — Fattura :number',
+    'reminder_subject_final' => 'Ultimo sollecito da :organization — Fattura :number',
+    'reminder_greeting' => 'Buongiorno :name,',
+    'reminder_body' => 'La fattura :number di :organization presenta un saldo residuo di :currency :amount. Era dovuta il :due_date (:days_overdue giorni fa). La preghiamo di effettuare il pagamento al più presto.',
     'reminder_invoice_number' => 'Fattura',
-    'reminder_amount' => 'Importo',
+    'reminder_amount' => 'Saldo residuo',
     'reminder_due_date' => 'Scadenza',
     'reminder_days_overdue' => 'Giorni di ritardo',
     'reminder_closing' => 'Se il pagamento è già stato effettuato, si prega di ignorare questo messaggio.',
+    'reminder_contact' => 'Per domande su questa fattura, contatti :email.',
     'reminder_regards' => 'Cordiali saluti',
 
     // E-mail iniziale della fattura
@@ -51,6 +52,7 @@ return [
     'invoice_amount_label' => 'Importo',
     'invoice_due_date_label' => 'Scadenza',
     'invoice_closing' => 'Contattaci se hai domande.',
+    'invoice_contact' => 'Domande? Ci contatti a :email.',
     'invoice_regards' => 'Cordiali saluti',
     'salary_slip_subject' => 'Il suo cedolino paga per :period',
     'salary_slip_greeting' => 'Buongiorno :name,',

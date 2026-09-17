@@ -8,11 +8,11 @@ use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\CreateInvoiceAction;
 use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
-use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
-use App\Domains\Invoicing\Jobs\SendPaymentRemindersJob;
 use App\Domains\Invoicing\Mail\InvoiceReminderMail;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Domains\Invoicing\Services\InvoiceMailerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -85,6 +85,60 @@ class PaymentReminderFlowTest extends TestCase
         Mail::assertSent(InvoiceReminderMail::class);
     }
 
+    public function test_reminder_uses_outstanding_balance_and_organization_reply_address(): void
+    {
+        Mail::fake();
+        config()->set('mail.from.address', 'mailer@gaeld.test');
+        $this->org->update([
+            'name' => 'Alpine Services SA',
+            'contact_email' => 'billing@alpine.test',
+            'locale' => 'fr',
+        ]);
+
+        $invoice = $this->createOverdueInvoice();
+        InvoicePayment::create([
+            'organization_id' => $this->org->id,
+            'invoice_id' => $invoice->id,
+            'amount' => '500.00',
+            'payment_date' => '2026-04-01',
+            'payment_method' => PaymentMethod::Bank->value,
+        ]);
+
+        app(InvoiceMailerService::class)->sendReminder($invoice);
+
+        Mail::assertSent(InvoiceReminderMail::class, function (InvoiceReminderMail $mail): bool {
+            $envelope = $mail->envelope();
+
+            return $mail->amountDue === '1000.00'
+                && $mail->organization->name === 'Alpine Services SA'
+                && str_contains($envelope->subject, 'Alpine Services SA')
+                && $envelope->from?->address === 'mailer@gaeld.test'
+                && $envelope->from?->name === 'Alpine Services SA'
+                && $envelope->replyTo[0]->address === 'billing@alpine.test'
+                && str_contains($mail->render(), "1'000.00");
+        });
+    }
+
+    public function test_failed_delivery_does_not_increment_reminder_count(): void
+    {
+        $invoice = $this->createOverdueInvoice();
+
+        Mail::shouldReceive('to')
+            ->once()
+            ->andThrow(new \RuntimeException('SMTP unavailable'));
+
+        try {
+            app(InvoiceMailerService::class)->sendReminder($invoice);
+            $this->fail('Expected the mail delivery exception to bubble up.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('SMTP unavailable', $exception->getMessage());
+        }
+
+        $invoice->refresh();
+        $this->assertSame(0, $invoice->reminder_count);
+        $this->assertNull($invoice->last_reminded_at);
+    }
+
     public function test_reminder_action_throws_if_not_overdue(): void
     {
         Mail::fake();
@@ -132,29 +186,7 @@ class PaymentReminderFlowTest extends TestCase
         app(InvoiceMailerService::class)->sendReminder($invoice);
     }
 
-    // ──────────────────────────────────────────────────────────────
-    //  Job: SendPaymentRemindersJob
-    // ──────────────────────────────────────────────────────────────
-
-    public function test_job_sends_reminders_for_overdue_invoices(): void
-    {
-        Mail::fake();
-
-        $invoice = $this->createOverdueInvoice();
-        $this->assertSame(0, $invoice->reminder_count);
-
-        app(SendPaymentRemindersJob::class)->handle(
-            app(InvoiceMailerService::class),
-        );
-
-        Mail::assertSent(InvoiceReminderMail::class, 1);
-
-        $invoice->refresh();
-        $this->assertSame(1, $invoice->reminder_count);
-        $this->assertNotNull($invoice->last_reminded_at);
-    }
-
-    public function test_job_respects_cooldown_period(): void
+    public function test_manual_reminder_respects_cooldown_period(): void
     {
         Mail::fake();
 
@@ -166,53 +198,11 @@ class PaymentReminderFlowTest extends TestCase
             'reminder_count' => 1,
         ]);
 
-        app(SendPaymentRemindersJob::class)->handle(
-            app(InvoiceMailerService::class),
-        );
-
+        $this->expectException(InvalidInvoiceStateException::class);
+        app(InvoiceMailerService::class)->sendReminder($invoice);
         Mail::assertNothingSent();
 
         $invoice->refresh();
         $this->assertSame(1, $invoice->reminder_count, 'Reminder count should not change during cooldown');
-    }
-
-    public function test_job_sends_after_cooldown_expired(): void
-    {
-        Mail::fake();
-
-        $invoice = $this->createOverdueInvoice();
-
-        // Simulate reminder sent 10 days ago (cooldown expired)
-        $invoice->update([
-            'last_reminded_at' => Carbon::now()->subDays(10),
-            'reminder_count' => 1,
-        ]);
-
-        app(SendPaymentRemindersJob::class)->handle(
-            app(InvoiceMailerService::class),
-        );
-
-        Mail::assertSent(InvoiceReminderMail::class, 1);
-
-        $invoice->refresh();
-        $this->assertSame(2, $invoice->reminder_count);
-    }
-
-    public function test_job_skips_paid_invoices(): void
-    {
-        Mail::fake();
-
-        $invoice = $this->createOverdueInvoice();
-        $invoice->update(['status' => InvoiceStatus::Paid]);
-
-        app(SendPaymentRemindersJob::class)->handle(
-            app(InvoiceMailerService::class),
-        );
-
-        Mail::assertNothingSent();
-
-        $invoice->refresh();
-        $this->assertSame(0, $invoice->reminder_count, 'Paid invoices should not get reminders');
-        $this->assertTrue($invoice->status === InvoiceStatus::Paid);
     }
 }

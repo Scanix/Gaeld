@@ -956,6 +956,8 @@ return [
     'invitation_email_line' => 'Vous avez été invité à rejoindre :organization sur Gäld.',
     'invitation_email_action' => 'Accepter l\'invitation',
     'invitation_email_expiry' => 'Cette invitation expire dans :days jours.',
+    'email_greeting' => 'Bonjour :name,',
+    'email_salutation' => 'Cordialement, Gäld',
     'change_role' => 'Changer le rôle',
     'remove_member' => 'Retirer le membre',
     'leave_organization' => 'Quitter l\'organisation',
@@ -1122,6 +1124,7 @@ return [
 
     // Payment reminders
     'send_reminder' => 'Envoyer un rappel',
+    'send_reminder_confirm' => "Destinataire : :name (:email)\nOrganisation : :organization\nFacture : :number\nSolde restant : :amount\nÉchéance : :dueDate\nRetard : :days jours\n\nVoulez-vous envoyer ce rappel maintenant ?",
     'reminder_sent' => 'Rappel envoyé.',
     'reminders_sent' => 'Rappels envoyés',
     'last_reminded' => 'Dernier rappel',
@@ -1660,6 +1663,8 @@ return [
     'settings_comms_title' => 'Communications e-mail',
     'settings_comms_desc' => 'Personnalisez l\'objet et le corps des e-mails de facturation envoyés aux clients.',
     'settings_email_subject' => 'Objet de l\'e-mail',
+    'settings_contact_email' => 'Adresse de réponse',
+    'settings_contact_email_placeholder' => 'comptabilite@example.ch',
     'settings_email_subject_placeholder' => 'Facture {invoice_number} de {organization_name}',
     'settings_email_body' => 'Corps de l\'e-mail',
     'settings_email_body_placeholder' => 'Bonjour {customer_name}, veuillez trouver ci-joint la facture {invoice_number} d\'un montant de {amount}, à régler avant le {due_date}.',
@@ -1924,6 +1929,7 @@ return [
     'account_must_be_active' => 'Le compte sélectionné doit être actif.',
     'expense_account_must_be_expense' => 'Le compte sélectionné doit être un compte de charges.',
     'expense_category_created' => 'Catégorie ajoutée.',
+    'expense_category_updated' => 'Catégorie mise à jour.',
     'expense_category_deleted' => 'Catégorie supprimée.',
     'add' => 'Ajouter',
     'settings_catalog_items_title' => 'Articles du catalogue',

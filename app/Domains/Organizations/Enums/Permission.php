@@ -42,6 +42,7 @@ enum Permission: string
     case InvoicingDelete = 'invoicing.delete';
     case InvoicingFinalize = 'invoicing.finalize';
     case InvoicingRecordPayment = 'invoicing.record-payment';
+    case InvoicingSendReminder = 'invoicing.send-reminder';
 
     // Organization
     case OrganizationView = 'organization.view';

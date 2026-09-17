@@ -82,6 +82,7 @@ final class TokenPermissionMap
                     Permission::InvoicingCreate->value,
                     Permission::InvoicingEdit->value,
                     Permission::InvoicingDelete->value,
+                    Permission::InvoicingSendReminder->value,
                 ],
                 'expenses:read' => [Permission::ExpensesView->value],
                 'expenses:write' => [
@@ -143,6 +144,7 @@ final class TokenPermissionMap
                 'finalize' => Permission::InvoicingFinalize,
                 'recordPayment' => Permission::InvoicingRecordPayment,
                 'send' => Permission::InvoicingEdit,
+                'sendReminder' => Permission::InvoicingSendReminder,
                 'cancel' => Permission::InvoicingEdit,
                 'creditNote' => Permission::InvoicingCreate,
             ],

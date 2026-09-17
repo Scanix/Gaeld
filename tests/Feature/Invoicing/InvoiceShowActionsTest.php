@@ -36,6 +36,7 @@ class InvoiceShowActionsTest extends TestCase
         $this->customer = Contact::create([
             'organization_id' => $this->org->id,
             'name' => 'Show Actions AG',
+            'email' => 'billing@show-actions.test',
         ]);
     }
 
@@ -66,6 +67,7 @@ class InvoiceShowActionsTest extends TestCase
 
         $this->assertTrue($props['canRecordPayment']);
         $this->assertTrue($props['canSend']);
+        $this->assertTrue($props['canSendReminder']);
     }
 
     public function test_archived_invoice_hides_payment_and_send_actions(): void
@@ -79,6 +81,7 @@ class InvoiceShowActionsTest extends TestCase
 
         $this->assertFalse($props['canRecordPayment']);
         $this->assertFalse($props['canSend']);
+        $this->assertFalse($props['canSendReminder']);
     }
 
     public function test_archived_invoice_rejects_payment_and_send_requests(): void
@@ -96,6 +99,10 @@ class InvoiceShowActionsTest extends TestCase
         $this->actAsOrg()
             ->post(route('invoices.send', $invoice))
             ->assertForbidden();
+
+        $this->actAsOrg()
+            ->post(route('invoices.reminder', $invoice))
+            ->assertForbidden();
     }
 
     public function test_draft_invoice_hides_payment_and_send_actions(): void
@@ -109,5 +116,6 @@ class InvoiceShowActionsTest extends TestCase
 
         $this->assertFalse($props['canRecordPayment']);
         $this->assertFalse($props['canSend']);
+        $this->assertFalse($props['canSendReminder']);
     }
 }

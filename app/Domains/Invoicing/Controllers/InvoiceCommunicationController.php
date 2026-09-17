@@ -39,7 +39,7 @@ class InvoiceCommunicationController extends Controller
 
     public function sendReminder(Invoice $invoice, InvoiceMailerService $mailerService): RedirectResponse
     {
-        $this->authorize('send', $invoice);
+        $this->authorize('sendReminder', $invoice);
 
         try {
             $mailerService->sendReminder($invoice);

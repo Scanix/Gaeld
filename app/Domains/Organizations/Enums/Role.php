@@ -101,6 +101,7 @@ enum Role: string
             Permission::InvoicingEdit,
             Permission::InvoicingFinalize,
             Permission::InvoicingRecordPayment,
+            Permission::InvoicingSendReminder,
 
             // Organization
             Permission::OrganizationView,
@@ -165,6 +166,7 @@ enum Role: string
             Permission::InvoicingEdit,
             Permission::InvoicingFinalize,
             Permission::InvoicingRecordPayment,
+            Permission::InvoicingSendReminder,
 
             // Organization
             Permission::OrganizationView,

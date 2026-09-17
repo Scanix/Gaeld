@@ -5,6 +5,7 @@ namespace Tests\Feature\Users;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Models\OrganizationInvitation;
 use App\Domains\Organizations\Notifications\InvitationNotification;
+use App\Domains\Organizations\Services\InvitationService;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -192,5 +193,35 @@ class InvitationFlowTest extends TestCase
         $this->assertNotEquals(hash('sha256', $oldPlainToken), $freshInvitation->token);
 
         Notification::assertSentOnDemand(InvitationNotification::class);
+    }
+
+    public function test_resend_invitation_can_be_accepted_with_the_new_token(): void
+    {
+        Notification::fake();
+
+        $invitedUser = User::factory()->create(['email' => 'resent@example.com']);
+        $invitation = OrganizationInvitation::create([
+            'organization_id' => $this->organization->id,
+            'email' => $invitedUser->email,
+            'role' => 'member',
+            'token' => hash('sha256', Str::random(64)),
+            'invited_by' => $this->owner->id,
+            'expires_at' => now()->addDays(3),
+        ]);
+
+        app(InvitationService::class)->resend($invitation);
+
+        $this->assertNotNull($invitation->plain_token);
+        $this->assertSame(hash('sha256', $invitation->plain_token), $invitation->fresh()->token);
+
+        $this->actingAs($invitedUser);
+        $acceptedOrganization = app(InvitationService::class)->accept($invitation->plain_token);
+
+        $this->assertTrue($acceptedOrganization->is($this->organization));
+        $this->assertDatabaseHas('organization_users', [
+            'organization_id' => $this->organization->id,
+            'user_id' => $invitedUser->id,
+            'role' => 'member',
+        ]);
     }
 }

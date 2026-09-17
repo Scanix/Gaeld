@@ -20,6 +20,7 @@ class UpdateCommunicationsRequest extends FormRequest
         return [
             'invoice_email_subject' => 'nullable|string|max:255',
             'invoice_email_body' => 'nullable|string|max:5000',
+            'contact_email' => 'nullable|email:rfc|max:255',
         ];
     }
 }

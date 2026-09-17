@@ -52,9 +52,11 @@ class OcrScanCompletedNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject($subject)
+            ->greeting(__('app.email_greeting', ['name' => $notifiable->name ?? config('app.name')]))
             ->line($subject)
             ->action(__('app.expenses'), $this->success && $this->scanId !== ''
                 ? route('expenses.create', ['scan_id' => $this->scanId])
-                : route('expenses.index'));
+                : route('expenses.index'))
+            ->salutation(__('app.email_salutation'));
     }
 }

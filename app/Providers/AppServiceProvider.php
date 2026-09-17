@@ -36,7 +36,6 @@ use App\Domains\Expenses\Search\ExpenseSearchProvider;
 use App\Domains\Expenses\Services\NullOcrService;
 use App\Domains\Expenses\Services\TesseractOcrService;
 use App\Domains\Invoicing\Jobs\GenerateRecurringInvoicesJob;
-use App\Domains\Invoicing\Jobs\SendPaymentRemindersJob;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Search\InvoiceSearchProvider;
 use App\Domains\Migration\Jobs\ProcessMigrationImport;
@@ -154,7 +153,6 @@ class AppServiceProvider extends ServiceProvider
             ExportUserDataJob::class => [null, 'exports'],
             ExportOrganizationDataJob::class => [null, 'exports'],
             GenerateRecurringInvoicesJob::class => [null, 'scheduled'],
-            SendPaymentRemindersJob::class => [null, 'scheduled'],
             GenerateReportsJob::class => [null, 'scheduled'],
             MonthlyDepreciationJob::class => [null, 'scheduled'],
         ]);

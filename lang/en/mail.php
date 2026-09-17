@@ -31,16 +31,17 @@ return [
     'org_export_regards' => 'Regards',
 
     // Payment reminders
-    'reminder_subject_first' => 'Payment reminder — Invoice :number',
-    'reminder_subject_second' => 'Second reminder — Invoice :number',
-    'reminder_subject_final' => 'Final reminder — Invoice :number',
-    'reminder_greeting' => 'Payment Reminder',
-    'reminder_body' => 'Invoice :number for :currency :total was due on :due_date (:days_overdue days ago). We kindly ask you to settle this amount at your earliest convenience.',
+    'reminder_subject_first' => 'Payment reminder from :organization — Invoice :number',
+    'reminder_subject_second' => 'Second payment reminder from :organization — Invoice :number',
+    'reminder_subject_final' => 'Final payment reminder from :organization — Invoice :number',
+    'reminder_greeting' => 'Hello :name,',
+    'reminder_body' => 'Invoice :number from :organization has an outstanding balance of :currency :amount. It was due on :due_date (:days_overdue days ago). Please arrange payment at your earliest convenience.',
     'reminder_invoice_number' => 'Invoice',
-    'reminder_amount' => 'Amount',
+    'reminder_amount' => 'Outstanding balance',
     'reminder_due_date' => 'Due date',
     'reminder_days_overdue' => 'Days overdue',
     'reminder_closing' => 'Please disregard this message if payment has already been made.',
+    'reminder_contact' => 'For questions about this invoice, please contact :email.',
     'reminder_regards' => 'Kind regards',
 
     // Initial invoice email
@@ -51,6 +52,7 @@ return [
     'invoice_amount_label' => 'Amount',
     'invoice_due_date_label' => 'Due date',
     'invoice_closing' => 'Please contact us if you have any questions.',
+    'invoice_contact' => 'Questions? Contact us at :email.',
     'invoice_regards' => 'Kind regards',
     'salary_slip_subject' => 'Your salary slip for :period',
     'salary_slip_greeting' => 'Hello :name,',

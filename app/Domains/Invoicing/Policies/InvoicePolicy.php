@@ -3,6 +3,7 @@
 namespace App\Domains\Invoicing\Policies;
 
 use App\Domains\Invoicing\Enums\InvoiceStatus;
+use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Users\Models\User;
@@ -103,6 +104,20 @@ class InvoicePolicy extends BasePolicy
         return $this->belongsToOrganization($user, $invoice)
             && $user->hasPermissionTo(Permission::InvoicingEdit)
             && in_array($invoice->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue], true);
+    }
+
+    public function sendReminder(User $user, Invoice $invoice): bool
+    {
+        if ($invoice->archived_at !== null) {
+            return false;
+        }
+
+        return $this->belongsToOrganization($user, $invoice)
+            && $user->hasPermissionTo(Permission::InvoicingSendReminder)
+            && $invoice->type === InvoiceType::Invoice
+            && $invoice->isOverdue()
+            && filled($invoice->customer?->email)
+            && ! $invoice->isFullyPaid();
     }
 
     public function cancel(User $user, Invoice $invoice): bool

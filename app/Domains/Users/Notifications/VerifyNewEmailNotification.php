@@ -29,8 +29,10 @@ class VerifyNewEmailNotification extends Notification
 
         return (new MailMessage)
             ->subject(__('app.verify_new_email_subject', ['app' => config('app.name')]))
+            ->greeting(__('app.email_greeting', ['name' => $notifiable->name ?? config('app.name')]))
             ->line(__('app.verify_new_email_line'))
             ->action(__('app.verify_new_email_action'), $url)
-            ->line(__('app.verify_new_email_expire'));
+            ->line(__('app.verify_new_email_expire'))
+            ->salutation(__('app.email_salutation'));
     }
 }

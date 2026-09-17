@@ -923,6 +923,8 @@ return [
     'invitation_email_line' => 'Sei stato invitato a unirti a :organization su Gäld.',
     'invitation_email_action' => 'Accetta invito',
     'invitation_email_expiry' => 'Questo invito scadrà tra :days giorni.',
+    'email_greeting' => 'Buongiorno :name,',
+    'email_salutation' => 'Cordiali saluti, Gäld',
     'change_role' => 'Cambia ruolo',
     'remove_member' => 'Rimuovi membro',
     'leave_organization' => 'Lascia organizzazione',
@@ -1089,6 +1091,7 @@ return [
 
     // Payment reminders
     'send_reminder' => 'Invia sollecito',
+    'send_reminder_confirm' => "Destinatario: :name (:email)\nOrganizzazione: :organization\nFattura: :number\nSaldo residuo: :amount\nScadenza: :dueDate\nGiorni di ritardo: :days\n\nInviare ora questo sollecito?",
     'reminder_sent' => 'Sollecito inviato.',
     'reminders_sent' => 'Solleciti inviati',
     'last_reminded' => 'Ultimo sollecito',
@@ -1507,6 +1510,8 @@ return [
     'settings_comms_title' => 'Comunicazioni e-mail',
     'settings_comms_desc' => 'Personalizza oggetto e testo delle e-mail di fatturazione inviate ai clienti.',
     'settings_email_subject' => 'Oggetto e-mail',
+    'settings_contact_email' => 'Indirizzo di risposta',
+    'settings_contact_email_placeholder' => 'contabilita@example.ch',
     'settings_email_subject_placeholder' => 'Fattura {invoice_number} da {organization_name}',
     'settings_email_body' => 'Corpo e-mail',
     'settings_email_body_placeholder' => 'Gentile {customer_name}, in allegato la fattura {invoice_number} di {amount}, con scadenza {due_date}.',
@@ -1865,6 +1870,7 @@ return [
     'account_must_be_active' => 'Il conto selezionato deve essere attivo.',
     'expense_account_must_be_expense' => 'Il conto selezionato deve essere un conto di costo.',
     'expense_category_created' => 'Categoria aggiunta.',
+    'expense_category_updated' => 'Categoria aggiornata.',
     'expense_category_deleted' => 'Categoria rimossa.',
     'add' => 'Aggiungi',
     'settings_catalog_items_title' => 'Articoli di catalogo',

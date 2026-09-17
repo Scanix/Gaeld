@@ -138,15 +138,18 @@ class InvitationService
 
     public function resend(OrganizationInvitation $invitation): void
     {
+        $plainToken = Str::random(64);
+
         $invitation->update([
-            'token' => Str::random(64),
+            'token' => hash('sha256', $plainToken),
             'expires_at' => now()->addDays(7),
         ]);
 
+        $invitation->plain_token = $plainToken;
         $invitation->load('organization');
 
         Notification::route('mail', $invitation->email)
-            ->notify((new InvitationNotification($invitation))->locale($invitation->organization->locale));
+            ->notify((new InvitationNotification($invitation, $plainToken))->locale($invitation->organization->locale));
     }
 
     // ──────────────────────────────────────────────────────────────

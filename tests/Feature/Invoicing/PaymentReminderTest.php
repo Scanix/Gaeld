@@ -4,8 +4,6 @@ namespace Tests\Feature\Invoicing;
 
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
-use App\Domains\Invoicing\Jobs\SendPaymentRemindersJob;
-use App\Domains\Invoicing\Mail\InvoiceReminderMail;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -16,7 +14,7 @@ class PaymentReminderTest extends TestCase
 {
     use RefreshDatabase, WithAuthenticatedOrganization;
 
-    public function test_marked_overdue_invoice_receives_a_payment_reminder(): void
+    public function test_marking_an_invoice_overdue_does_not_send_a_payment_reminder(): void
     {
         $this->setUpOrganization();
         Mail::fake();
@@ -55,15 +53,10 @@ class PaymentReminderTest extends TestCase
         $this->assertTrue($invoice->isOverdue());
         $this->assertCount(2, Invoice::overdue()->get());
 
-        app()->call([app(SendPaymentRemindersJob::class), 'handle']);
-
         $invoice->refresh();
-        $this->assertSame(1, $invoice->reminder_count);
-        $this->assertNotNull($invoice->last_reminded_at);
-        Mail::assertSent(InvoiceReminderMail::class, function (InvoiceReminderMail $mail) use ($invoice): bool {
-            return $mail->invoice->is($invoice);
-        });
-        Mail::assertSent(InvoiceReminderMail::class, 1);
+        $this->assertSame(0, $invoice->reminder_count);
+        $this->assertNull($invoice->last_reminded_at);
+        Mail::assertNothingSent();
 
         $this->assertSame(InvoiceStatus::Overdue, $invoice->status);
         $this->assertSame(0, $archivedInvoice->fresh()->reminder_count);

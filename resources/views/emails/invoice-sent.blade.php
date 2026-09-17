@@ -22,6 +22,10 @@
 
 {{ __('mail.invoice_closing') }}
 
+@if($organization->contact_email)
+{{ __('mail.invoice_contact', ['email' => $organization->contact_email]) }}
+@endif
+
 {{ __('mail.invoice_regards') }},<br>
 {{ $organization->name }}
 @endcomponent

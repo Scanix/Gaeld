@@ -31,16 +31,17 @@ return [
     'org_export_regards' => 'Freundliche Grüsse',
 
     // Zahlungserinnerungen
-    'reminder_subject_first' => 'Zahlungserinnerung — Rechnung :number',
-    'reminder_subject_second' => 'Zweite Erinnerung — Rechnung :number',
-    'reminder_subject_final' => 'Letzte Erinnerung — Rechnung :number',
-    'reminder_greeting' => 'Zahlungserinnerung',
-    'reminder_body' => 'Die Rechnung :number über :currency :total war am :due_date fällig (vor :days_overdue Tagen). Wir bitten Sie, diesen Betrag baldmöglichst zu begleichen.',
+    'reminder_subject_first' => 'Zahlungserinnerung von :organization — Rechnung :number',
+    'reminder_subject_second' => 'Zweite Zahlungserinnerung von :organization — Rechnung :number',
+    'reminder_subject_final' => 'Letzte Zahlungserinnerung von :organization — Rechnung :number',
+    'reminder_greeting' => 'Guten Tag :name,',
+    'reminder_body' => 'Die Rechnung :number von :organization weist einen offenen Betrag von :currency :amount auf. Sie war am :due_date fällig (vor :days_overdue Tagen). Wir bitten Sie, diesen Betrag baldmöglichst zu begleichen.',
     'reminder_invoice_number' => 'Rechnung',
-    'reminder_amount' => 'Betrag',
+    'reminder_amount' => 'Offener Betrag',
     'reminder_due_date' => 'Fälligkeitsdatum',
     'reminder_days_overdue' => 'Tage überfällig',
     'reminder_closing' => 'Falls die Zahlung bereits erfolgt ist, betrachten Sie diese Nachricht bitte als gegenstandslos.',
+    'reminder_contact' => 'Bei Fragen zu dieser Rechnung wenden Sie sich bitte an :email.',
     'reminder_regards' => 'Freundliche Grüsse',
 
     // Erstes Rechnungs-E-Mail
@@ -51,6 +52,7 @@ return [
     'invoice_amount_label' => 'Betrag',
     'invoice_due_date_label' => 'Fälligkeitsdatum',
     'invoice_closing' => 'Bei Fragen stehen wir Ihnen gerne zur Verfügung.',
+    'invoice_contact' => 'Bei Fragen erreichen Sie uns unter :email.',
     'invoice_regards' => 'Freundliche Grüsse',
     'salary_slip_subject' => 'Ihre Lohnabrechnung für :period',
     'salary_slip_greeting' => 'Guten Tag :name,',

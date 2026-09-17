@@ -1013,6 +1013,8 @@ return [
     'invitation_email_line' => 'You\'ve been invited to join :organization on Gäld.',
     'invitation_email_action' => 'Accept Invitation',
     'invitation_email_expiry' => 'This invitation will expire in :days days.',
+    'email_greeting' => 'Hello :name,',
+    'email_salutation' => 'Kind regards, Gäld',
     'change_role' => 'Change Role',
     'remove_member' => 'Remove Member',
     'leave_organization' => 'Leave Organization',
@@ -1203,6 +1205,7 @@ return [
 
     // Payment reminders
     'send_reminder' => 'Send Reminder',
+    'send_reminder_confirm' => "Recipient: :name (:email)\nOrganization: :organization\nInvoice: :number\nOutstanding balance: :amount\nDue date: :dueDate\nDays overdue: :days\n\nSend this reminder now?",
     'reminder_sent' => 'Reminder sent.',
     'reminders_sent' => 'Reminders sent',
     'last_reminded' => 'Last reminded',
@@ -1756,6 +1759,8 @@ return [
     'settings_comms_title' => 'Email Communications',
     'settings_comms_desc' => 'Customize the subject and body of invoice emails sent to customers.',
     'settings_email_subject' => 'Email Subject',
+    'settings_contact_email' => 'Reply-to address',
+    'settings_contact_email_placeholder' => 'accounts@example.ch',
     'settings_email_subject_placeholder' => 'Invoice {invoice_number} from {organization_name}',
     'settings_email_body' => 'Email Body',
     'settings_email_body_placeholder' => 'Dear {customer_name}, please find attached invoice {invoice_number} for {amount}, due on {due_date}.',
@@ -1998,6 +2003,7 @@ return [
     'account_must_be_active' => 'The selected account must be active.',
     'expense_account_must_be_expense' => 'The selected account must be an expense account.',
     'expense_category_created' => 'Category added.',
+    'expense_category_updated' => 'Category updated.',
     'expense_category_deleted' => 'Category removed.',
     'add' => 'Add',
     'settings_catalog_items_title' => 'Catalog Items',

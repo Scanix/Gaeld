@@ -188,6 +188,7 @@ class InvoiceController extends Controller
             'canForceDelete' => $request->user()->can('forceDelete', $invoice),
             'canRecordPayment' => $request->user()->can('recordPayment', $invoice),
             'canSend' => $request->user()->can('send', $invoice),
+            'canSendReminder' => $request->user()->can('sendReminder', $invoice),
             'justificatifUrl' => $invoice->justificatif_path
                 ? route('invoices.justificatif.download', $invoice)
                 : null,

@@ -28,7 +28,6 @@ use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Invoicing\Jobs\GenerateRecurringInvoicesJob;
-use App\Domains\Invoicing\Jobs\SendPaymentRemindersJob;
 use App\Domains\Invoicing\Mail\InvoiceReminderMail;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\RecurringInvoice;
@@ -53,7 +52,7 @@ use Tests\Traits\WithAuthenticatedOrganization;
  *  Phase E  – fixed-asset depreciation for 12 months
  *  Phase F  – 4 quarterly VAT settlements
  *  Phase G  – 4 quarterly social-charges postings
- *  Phase H  – overdue payment-reminder job
+ *  Phase H  – overdue payment-reminder verification
  *  Phase I  – year-end closing (journal entry + fiscal year locked + 2026 opening balances)
  *  Phase J  – coherence assertions (double-entry invariant, P&L zeroed, audit trail, etc.)
  */
@@ -164,7 +163,7 @@ class FiscalYearCoherenceTest extends TestCase
         // ── Phase G: social charges ───────────────────────────────
         $this->runPhaseG_SocialCharges();
 
-        // ── Phase H: payment-reminder job ────────────────────────
+        // ── Phase H: payment-reminder verification ───────────────
         // Reset clock so the overdue invoice (due 2025-11-01) is genuinely past-due.
         Carbon::setTestNow(null);
         $this->runPhaseH_PaymentReminders($overdueInvoice);
@@ -346,14 +345,13 @@ class FiscalYearCoherenceTest extends TestCase
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  Phase H – Overdue payment-reminder job
+    //  Phase H – Overdue payment-reminder verification
     // ─────────────────────────────────────────────────────────────
 
     private function runPhaseH_PaymentReminders(Invoice $overdueInvoice): void
     {
-        // The job uses withoutGlobalScope so it finds invoices across all orgs;
-        // with RefreshDatabase there is exactly one overdue invoice (INV-2025-007).
-        app()->call([app(SendPaymentRemindersJob::class), 'handle']);
+        $this->assertTrue($overdueInvoice->fresh()->isOverdue());
+        $this->assertSame(0, $overdueInvoice->fresh()->reminder_count);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -542,12 +540,12 @@ class FiscalYearCoherenceTest extends TestCase
             'Recurring invoice next_issue_date should advance to 2025-07-01 after generation'
         );
 
-        // ── J12: Payment reminder sent for overdue invoice ───────
-        Mail::assertSent(InvoiceReminderMail::class);
+        // ── J12: No automatic payment reminder was sent ──────────
+        Mail::assertNotSent(InvoiceReminderMail::class);
 
-        $this->assertNotNull(
+        $this->assertNull(
             $overdueInvoice->fresh()->last_reminded_at,
-            'Overdue invoice last_reminded_at should be set after reminder job'
+            'Overdue invoices must not be reminded automatically'
         );
     }
 

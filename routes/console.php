@@ -4,7 +4,6 @@ use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Assets\Jobs\MonthlyDepreciationJob;
 use App\Domains\Expenses\Jobs\GenerateRecurringExpensesJob;
 use App\Domains\Invoicing\Jobs\GenerateRecurringInvoicesJob;
-use App\Domains\Invoicing\Jobs\SendPaymentRemindersJob;
 use App\Domains\Reporting\Jobs\GenerateReportsJob;
 use App\Support\FeatureFlag;
 use Illuminate\Support\Facades\Artisan;
@@ -38,11 +37,6 @@ Schedule::job(GenerateRecurringInvoicesJob::class)->dailyAt('03:00');
  * Generate recurring expenses (03:30) — all editions.
  */
 Schedule::job(GenerateRecurringExpensesJob::class)->dailyAt('03:30');
-
-/**
- * Send payment reminders for overdue invoices (04:00) — all editions.
- */
-Schedule::job(SendPaymentRemindersJob::class)->dailyAt('04:00');
 
 /**
  * Nightly auto-reconciliation (02:00) — EE only.

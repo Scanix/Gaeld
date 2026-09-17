@@ -32,6 +32,7 @@ class InvitationNotification extends Notification
             ->greeting(__('app.invitation_email_greeting'))
             ->line(__('app.invitation_email_line', ['organization' => $orgName]))
             ->action(__('app.invitation_email_action'), $url)
-            ->line(__('app.invitation_email_expiry', ['days' => 7]));
+            ->line(__('app.invitation_email_expiry', ['days' => 7]))
+            ->salutation(__('app.email_salutation'));
     }
 }
