@@ -10,6 +10,7 @@ use App\Domains\Organizations\Services\OrganizationSetupService;
 use App\Domains\Payroll\Models\Employee;
 use App\Http\Controllers\Controller;
 use App\Support\Contracts\OrganizationQuotaResolver;
+use App\Support\FeatureFlag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,13 +33,13 @@ class OrganizationController extends Controller
         $organizationLimit = app(OrganizationQuotaResolver::class)->maxOrganizations($user);
         $organizationCount = $organizations->count();
         $currentOrganization = $user->resolveCurrentOrganization();
-        $plan = $currentOrganization?->getAttribute('activeSubscription')?->getPlan();
+        $plan = $this->activePlan($currentOrganization);
         $ownedOrganizations = $user->organizations()
             ->wherePivot('role', 'owner')
             ->get();
         $hasFreeOrganization = $ownedOrganizations->contains(
             function (Organization $organization): bool {
-                $plan = $organization->activeSubscription?->getPlan();
+                $plan = $this->activePlan($organization);
 
                 return (float) data_get($plan, 'price_chf', 0) === 0.0;
             },
@@ -75,7 +76,7 @@ class OrganizationController extends Controller
         $members = $organization->users()->count();
         $pendingInvitations = $organization->invitations()->pending()->count();
         $memberLimit = app(OrganizationQuotaResolver::class)->maxUsers($organization);
-        $plan = $organization->getAttribute('activeSubscription')?->getPlan();
+        $plan = $this->activePlan($organization);
 
         return Inertia::render('Organizations/Show', [
             'organization' => $organization->load('users'),
@@ -125,6 +126,15 @@ class OrganizationController extends Controller
 
         return redirect()->route('organizations.show', $org)
             ->with('success', __('app.organization_created'));
+    }
+
+    private function activePlan(?Organization $organization): mixed
+    {
+        if (! FeatureFlag::isSaas() || $organization === null) {
+            return null;
+        }
+
+        return $organization->activeSubscription?->getPlan();
     }
 
     public function destroy(

@@ -5,6 +5,20 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.21] - 2026-09-18
+
+### Fixed
+- **PDF exports:** remove the per-export 120-second execution-time override so
+  large report and archive exports can use the configured worker limit.
+- **CE/EE boundary:** keep community organization pages from resolving EE
+  subscription relations when SaaS mode is disabled.
+- **EE migration compatibility:** pair with EE `v2.9.31`, which supports both
+  the legacy `customers` schema and the merged `contacts` schema.
+
+### Validation
+- Full API suite: 1,531 passed, 13 skipped, 5,738 assertions.
+- Staging acceptance is required before production promotion.
+
 ## [3.8.20] - 2026-09-14
 
 ### Changed
