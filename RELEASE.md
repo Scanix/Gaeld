@@ -5,6 +5,18 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.21 Staging Candidate
+
+This candidate removes the global 120-second timeout from PDF exports and keeps
+CE organization pages independent from EE subscription tables when SaaS mode is
+disabled. It is paired with private EE `v2.9.31`, which fixes mixed-installation
+migrations after the CE `customers` to `contacts` merge and preserves
+`contacts.peppol_id`.
+
+The full API suite passed 1,531 tests with 13 skipped tests and 5,738
+assertions. Deploy this exact CE/EE pair to staging, then run the disposable
+account QA runner before any production promotion.
+
 ## v3.8.20 Staging Candidate
 
 This candidate includes PR #62 for analytics-aware cookie consent and removes
