@@ -865,6 +865,8 @@ return [
     'actions' => 'Azioni',
     'no_payments_recorded' => 'Nessun pagamento registrato.',
     'invoice_line_items_hint' => 'Aggiungete servizi, sconti o note. I totali si aggiornano durante la modifica.',
+    'invoice_total_must_be_positive' => 'Il totale della fattura deve essere superiore a zero prima della finalizzazione.',
+    'invoice_total_must_not_be_zero' => 'Il totale della fattura non può essere zero prima della finalizzazione.',
     'expense_categories_unavailable' => 'Non sono ancora disponibili categorie di spesa.',
     'open_settings' => 'Apri impostazioni',
     'more_details' => 'Maggiori dettagli',
