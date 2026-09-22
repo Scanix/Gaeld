@@ -1155,7 +1155,7 @@ async function exerciseBillingAndStripe(page) {
   const result = {
     billing: {
       httpStatus: billingPage?.status() ?? null,
-      rendered: /Billing|Facturation|Abonnement/i.test(billingBody),
+      rendered: /Billing|Subscription|Facturation|Abonnement/i.test(billingBody),
     },
     stripe: {
       httpStatus: stripe.response.status,
