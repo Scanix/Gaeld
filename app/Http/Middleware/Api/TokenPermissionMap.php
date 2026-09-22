@@ -155,6 +155,7 @@ final class TokenPermissionMap
                 'update' => Permission::ExpensesEdit,
                 'delete' => Permission::ExpensesDelete,
                 'approve' => Permission::ExpensesApprove,
+                'cancel' => Permission::ExpensesEdit,
             ],
             Account::class => [
                 'viewAny' => Permission::AccountingView,

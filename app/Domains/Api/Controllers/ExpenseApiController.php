@@ -9,6 +9,7 @@ use App\Domains\Api\Requests\StoreExpenseApiRequest;
 use App\Domains\Api\Requests\UpdateExpenseApiRequest;
 use App\Domains\Api\Resources\ExpenseResource;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
+use App\Domains\Expenses\Actions\CancelExpenseAction;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\DeleteExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
@@ -76,7 +77,8 @@ class ExpenseApiController extends Controller
      * Records a new expense in the current organisation.
      *
      * @bodyParam category string required The expense category. Example: Office supplies
-     * @bodyParam amount number required The expense amount. Example: 45.90
+     * @bodyParam amount number required The expense amount. Interpreted as net by default; set amount_basis=gross for a total including VAT. Example: 45.90
+     * @bodyParam amount_basis string Optional amount basis: net or gross. API defaults to net for backward compatibility. Example: net
      * @bodyParam date string required The expense date (YYYY-MM-DD). Example: 2025-02-10
      * @bodyParam description string A description of the expense. Example: Printer paper
      * @bodyParam vat_amount number The VAT amount. Example: 3.45
@@ -120,7 +122,8 @@ class ExpenseApiController extends Controller
      * @urlParam expense string required The expense UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
      *
      * @bodyParam category string The expense category. Example: Travel
-     * @bodyParam amount number The expense amount. Example: 120.00
+     * @bodyParam amount number The expense amount. Interpreted as net by default; set amount_basis=gross for a total including VAT. Example: 120.00
+     * @bodyParam amount_basis string Optional amount basis: net or gross. API defaults to net for backward compatibility. Example: net
      * @bodyParam date string The expense date (YYYY-MM-DD). Example: 2025-02-15
      * @bodyParam description string A description of the expense. Example: Train ticket
      * @bodyParam vat_amount number The VAT amount. Example: 9.23
@@ -161,6 +164,7 @@ class ExpenseApiController extends Controller
         return [
             'category' => $validated['category'] ?? $expense->category,
             'amount' => $validated['amount'] ?? $expense->amount,
+            'amount_basis' => $validated['amount_basis'] ?? 'net',
             'date' => $validated['date'] ?? $expense->date->toDateString(),
             'description' => array_key_exists('description', $validated) ? $validated['description'] : $expense->description,
             'vat_amount' => array_key_exists('vat_amount', $validated) ? $validated['vat_amount'] : $expense->vat_amount,
@@ -255,6 +259,24 @@ class ExpenseApiController extends Controller
             return $this->apiError($e->getMessage(), 'expense_ledger_posting_failed', 422);
         } catch (ModelNotFoundException) {
             return $this->apiError('Account not found.', 'account_not_found', 404);
+        }
+
+        $dashboardService->flushCache($expense->organization_id);
+
+        return new ExpenseResource($expense->fresh(['journalEntry.lines.account']));
+    }
+
+    public function cancel(
+        Expense $expense,
+        CancelExpenseAction $action,
+        DashboardService $dashboardService,
+    ): ExpenseResource|JsonResponse {
+        $this->authorize('cancel', $expense);
+
+        try {
+            $action->execute($expense);
+        } catch (\DomainException $e) {
+            return $this->apiError($e->getMessage(), 'expense_cancellation_failed', 422);
         }
 
         $dashboardService->flushCache($expense->organization_id);

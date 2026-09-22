@@ -5,6 +5,24 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.22 Staging Candidate
+
+This candidate makes TTC the default entry basis for ordinary and recurring
+expenses while keeping the normalized ledger representation as net amount plus
+input VAT. It adds explicit net/gross API fields, direct expense posting for
+authorized users, and traceable cancellation through a posted reversal entry.
+Unposted expenses remain deletable within the existing organization and
+self-service permission boundaries.
+
+The exact staging pair is CE `v3.8.22` with EE `v2.9.31`. The CE commit and
+tag must be pushed to both GitHub and the internal GitLab CE mirror before
+deployment. This is a staging release only; production promotion requires
+staging acceptance of the TTC calculation, direct posting, cancellation,
+recurring expenses, Quick Receipt, and employee permissions.
+
+Validation for this candidate: 1,540 API tests passed, 13 skipped, 5,768
+assertions; Pint and PHPStan passed; the frontend production build passed.
+
 ## v3.8.21 Staging Candidate
 
 This candidate removes the global 120-second timeout from PDF exports and keeps

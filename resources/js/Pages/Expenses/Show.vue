@@ -13,7 +13,7 @@ import DropdownMenu from '@/Components/UI/DropdownMenu.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, CheckCircle, RotateCcw, Download, Eye, X } from 'lucide-vue-next'
+import { Pencil, Trash2, CheckCircle, RotateCcw, Download, Eye, X, Ban } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 
 const props = defineProps({
@@ -22,13 +22,16 @@ const props = defineProps({
   canUpdate: { type: Boolean, default: false },
   canDelete: { type: Boolean, default: false },
   canApprove: { type: Boolean, default: false },
+  canCancel: { type: Boolean, default: false },
 })
 
 const showPostDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showCancelDialog = ref(false)
 const showReceiptPreview = ref(false)
 const deleting = ref(false)
 const posting = ref(false)
+const canceling = ref(false)
 const approveForm = useForm({})
 const unapproveForm = useForm({})
 
@@ -58,10 +61,21 @@ function executeDelete() {
   })
 }
 
+function executeCancel() {
+  canceling.value = true
+  router.post(`/expenses/${props.expense.id}/cancel`, {}, {
+    onFinish: () => {
+      canceling.value = false
+      showCancelDialog.value = false
+    },
+  })
+}
+
 const statusVariant = {
   pending: 'warning',
   approved: 'info',
   posted: 'success',
+  cancelled: 'secondary',
 }
 
 const { t } = useTranslations()
@@ -114,7 +128,7 @@ const journalColumns = computed(() => [
           {{ t('edit') }}
         </Button>
         <Button
-          v-if="canUpdate && expense.status === 'approved'"
+          v-if="canUpdate && (expense.status === 'pending' || expense.status === 'approved')"
           size="sm"
           :disabled="!expense.expense_account_code"
           :title="!expense.expense_account_code ? t('expense_account_code_required') : undefined"
@@ -142,6 +156,15 @@ const journalColumns = computed(() => [
               <RotateCcw class="h-4 w-4 shrink-0" />
               {{ t('unapprove_expense') }}
             </button>
+            <button
+              v-if="canCancel && expense.status === 'posted'"
+              class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
+              :disabled="canceling"
+              @click="showCancelDialog = true; close()"
+            >
+              <Ban class="h-4 w-4 shrink-0" />
+              {{ t('cancel_expense') }}
+            </button>
             <div v-if="canDelete" class="my-1 border-t border-[hsl(var(--border))]" />
             <button
               v-if="canDelete"
@@ -161,12 +184,14 @@ const journalColumns = computed(() => [
         <CardHeader><CardTitle>{{ t('details') }}</CardTitle></CardHeader>
         <CardContent>
           <dl class="grid grid-cols-2 gap-y-3 text-sm">
-            <dt class="text-muted-foreground">{{ t('amount') }}</dt>
+            <dt class="text-muted-foreground">{{ t('net_amount_excl_vat') }}</dt>
             <dd class="font-medium">{{ formatCurrency(expense.amount, expense.currency) }}</dd>
             <dt class="text-muted-foreground">{{ t('vat') }}</dt>
             <dd>{{ expense.vat_rate ? `${expense.vat_rate.name} (${expense.vat_rate.rate}%)` : '—' }}</dd>
             <dt class="text-muted-foreground">{{ t('vat_amount') }}</dt>
             <dd>{{ expense.vat_amount ? formatCurrency(expense.vat_amount, expense.currency) : '—' }}</dd>
+            <dt class="text-muted-foreground">{{ t('gross_amount_incl_vat') }}</dt>
+            <dd class="font-medium">{{ formatCurrency(expense.gross_amount ?? (Number(expense.amount || 0) + Number(expense.vat_amount || 0)), expense.currency) }}</dd>
             <dt class="text-muted-foreground">{{ t('date') }}</dt>
             <dd>{{ formatDate(expense.date) }}</dd>
             <dt class="text-muted-foreground">{{ t('supplier') }}</dt>
@@ -245,6 +270,16 @@ const journalColumns = computed(() => [
       :processing="deleting"
       @confirm="executeDelete"
       @cancel="showDeleteDialog = false"
+    />
+
+    <ConfirmDialog
+      :open="showCancelDialog"
+      :title="t('cancel_expense')"
+      :message="t('cancel_expense_confirm')"
+      :confirm-label="t('cancel_expense')"
+      :processing="canceling"
+      @confirm="executeCancel"
+      @cancel="showCancelDialog = false"
     />
   </AppLayout>
 

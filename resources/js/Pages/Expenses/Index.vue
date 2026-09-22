@@ -67,7 +67,8 @@ const columns = computed(() => [
   { key: 'category', label: t('category'), sortable: true },
   { key: 'description', label: t('description') },
   { key: 'vendor', label: t('vendor'), sortable: true },
-  { key: 'amount', label: t('amount'), class: 'text-right', format: (v) => formatCurrency(v), sortable: true },
+  { key: 'amount', label: t('net_amount_excl_vat'), class: 'text-right', format: (v, row) => formatCurrency(v, row.currency), sortable: true },
+  { key: 'gross_amount', label: t('gross_amount_incl_vat'), class: 'text-right', format: (v, row) => formatCurrency(v, row.currency), sortable: false },
   { key: 'status', label: t('status'), sortable: true },
   { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
@@ -76,6 +77,7 @@ const statusVariant = {
   pending: 'warning',
   approved: 'info',
   posted: 'success',
+  cancelled: 'secondary',
 }
 
 const statusFilters = computed(() => [
@@ -87,6 +89,7 @@ const statusFilters = computed(() => [
       { value: 'pending', label: t('expense_status_pending') },
       { value: 'approved', label: t('expense_status_approved') },
       { value: 'posted', label: t('expense_status_posted') },
+      { value: 'cancelled', label: t('expense_status_cancelled') },
     ],
   },
 ])
@@ -146,7 +149,7 @@ const statusFilters = computed(() => [
             <Eye class="h-4 w-4" />
           </Button>
           <Button
-            v-if="row.status !== 'posted'"
+            v-if="row.status === 'pending' || row.status === 'approved'"
             as="a"
             :href="`/expenses/${row.id}/edit`"
             variant="ghost"

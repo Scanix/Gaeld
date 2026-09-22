@@ -9,6 +9,7 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Enums\ExpenseType;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
+use App\Support\Money;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Database\Factories\Domains\Expenses\Models\ExpenseFactory;
@@ -35,6 +36,7 @@ use Laravel\Scout\Searchable;
  * @property string|null $description
  * @property string $amount
  * @property string $vat_amount
+ * @property-read string $gross_amount
  * @property Carbon $date
  * @property string|null $vendor
  * @property string|null $receipt_path
@@ -80,6 +82,8 @@ class Expense extends Model
         'archived_at',
     ];
 
+    protected $appends = ['gross_amount'];
+
     protected function casts(): array
     {
         return [
@@ -120,6 +124,11 @@ class Expense extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Contact::class);
+    }
+
+    public function getGrossAmountAttribute(): string
+    {
+        return Money::add((string) $this->amount, (string) ($this->vat_amount ?? '0'));
     }
 
     // ──────────────────────────────────────────────────────────────

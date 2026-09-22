@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\DTOs;
 
+use App\Domains\Expenses\Enums\ExpenseAmountBasis;
 use App\Support\MapsToSnakeCase;
 use App\Support\ValidatesFromArray;
 
@@ -18,6 +19,7 @@ readonly class CreateExpenseData
         public string $category,
         public string $amount,
         public string $date,
+        public ExpenseAmountBasis $amountBasis = ExpenseAmountBasis::Net,
         public ?int $userId = null,
         public ?string $description = null,
         public ?string $vatAmount = null,
@@ -42,6 +44,7 @@ readonly class CreateExpenseData
             category: $data['category'],
             amount: (string) $data['amount'],
             date: $data['date'],
+            amountBasis: ExpenseAmountBasis::tryFrom((string) ($data['amount_basis'] ?? ExpenseAmountBasis::Net->value)) ?? ExpenseAmountBasis::Net,
             userId: isset($data['user_id']) ? (int) $data['user_id'] : null,
             description: $data['description'] ?? null,
             vatAmount: isset($data['vat_amount']) ? (string) $data['vat_amount'] : null,

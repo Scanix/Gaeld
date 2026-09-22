@@ -5,6 +5,28 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.22] - 2026-09-22
+
+### Changed
+- **Expense entry:** use the paid amount including VAT by default, with an
+  explicit net-amount option. Persisted accounting values remain net amount
+  plus input VAT.
+- **Recurring expenses and receipts:** normalize gross/net input consistently
+  and expose the net, VAT, and gross breakdown.
+- **Expense lifecycle:** allow direct posting for authorized users and add a
+  traceable cancellation flow using a posted ledger reversal.
+
+### Fixed
+- **Expense deletion:** keep unposted expenses deletable by their authorized
+  creator or a responsible user while preserving employee self-service limits.
+- **Expense API:** expose explicit net and gross amounts and document the
+  backward-compatible net default for API clients.
+
+### Validation
+- Full API suite: 1,540 passed, 13 skipped, 5,768 assertions.
+- PHPStan, Pint, focused Expenses/API tests, and frontend build passed.
+- Staging deployment target: CE `v3.8.22` with EE `v2.9.31`.
+
 ## [3.8.21] - 2026-09-18
 
 ### Fixed

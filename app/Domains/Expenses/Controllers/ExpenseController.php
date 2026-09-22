@@ -184,6 +184,7 @@ class ExpenseController extends Controller
             'canUpdate' => $request->user()->can('update', $expense),
             'canDelete' => $request->user()->can('delete', $expense),
             'canApprove' => $request->user()->can('approve', $expense),
+            'canCancel' => $request->user()->can('cancel', $expense),
         ]);
     }
 
@@ -207,6 +208,7 @@ class ExpenseController extends Controller
         $validated = array_merge([
             'category' => $expense->category,
             'amount' => $expense->amount,
+            'amount_basis' => 'net',
             'date' => $expense->date->toDateString(),
             'expense_account_code' => $expense->expense_account_code,
             'bank_account_code' => $expense->bank_account_code,

@@ -2,12 +2,13 @@
 
 namespace App\Domains\Expenses\Enums;
 
-/** Expense lifecycle status: pending → approved → posted (or rejected). */
+/** Expense lifecycle status: pending → approved → posted → cancelled. */
 enum ExpenseStatus: string
 {
     case Pending = 'pending';
     case Approved = 'approved';
     case Posted = 'posted';
+    case Cancelled = 'cancelled';
 
     public function canTransitionTo(self $target): bool
     {
@@ -20,9 +21,10 @@ enum ExpenseStatus: string
     public function allowedTransitions(): array
     {
         return match ($this) {
-            self::Pending => [self::Approved],
+            self::Pending => [self::Approved, self::Posted],
             self::Approved => [self::Posted, self::Pending],
-            self::Posted => [],
+            self::Posted => [self::Cancelled],
+            self::Cancelled => [],
         };
     }
 
@@ -32,12 +34,13 @@ enum ExpenseStatus: string
             self::Pending => __('app.expense_status_pending'),
             self::Approved => __('app.expense_status_approved'),
             self::Posted => __('app.expense_status_posted'),
+            self::Cancelled => __('app.expense_status_cancelled'),
         };
     }
 
     public function isEditable(): bool
     {
-        return $this !== self::Posted;
+        return in_array($this, [self::Pending, self::Approved], true);
     }
 
     public function isDeletable(): bool

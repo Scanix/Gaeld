@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\DTOs;
 
+use App\Domains\Expenses\Enums\ExpenseAmountBasis;
 use App\Support\OmitsNullValues;
 use App\Support\ValidatesFromArray;
 
@@ -17,6 +18,7 @@ readonly class UpdateExpenseData
         public string $category,
         public string $amount,
         public string $date,
+        public ExpenseAmountBasis $amountBasis = ExpenseAmountBasis::Net,
         public ?string $description = null,
         public ?string $vatAmount = null,
         public ?string $vatRateId = null,
@@ -39,6 +41,7 @@ readonly class UpdateExpenseData
             category: $data['category'],
             amount: (string) $data['amount'],
             date: $data['date'],
+            amountBasis: ExpenseAmountBasis::tryFrom((string) ($data['amount_basis'] ?? ExpenseAmountBasis::Net->value)) ?? ExpenseAmountBasis::Net,
             description: $data['description'] ?? null,
             vatAmount: isset($data['vat_amount']) ? (string) $data['vat_amount'] : null,
             vatRateId: $data['vat_rate_id'] ?? null,

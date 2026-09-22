@@ -3,6 +3,7 @@
 namespace App\Domains\Expenses\Requests;
 
 use App\Domains\Accounting\Enums\AccountType;
+use App\Domains\Expenses\Enums\ExpenseAmountBasis;
 use App\Domains\Expenses\Models\RecurringExpense;
 use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Organizations\Services\CurrentOrganization;
@@ -34,6 +35,7 @@ class RecurringExpenseRequest extends FormRequest
             'category' => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'amount' => ['required', 'numeric', 'min:0.01'],
+            'amount_basis' => ['sometimes', Rule::enum(ExpenseAmountBasis::class)],
             'vat_amount' => ['nullable', 'numeric', 'min:0'],
             'vendor' => ['nullable', 'string', 'max:255'],
             'currency' => ['nullable', 'string', 'size:3'],

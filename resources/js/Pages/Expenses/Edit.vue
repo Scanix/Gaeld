@@ -16,6 +16,7 @@ import QuickCreateContactModal from '@/Components/QuickCreateContactModal.vue'
 import QuickReceiptButton from '@/Components/QuickReceiptButton.vue'
 import FileUpload from '@/Components/UI/FileUpload.vue'
 import { useTranslations } from '@/lib/useTranslations'
+import { useFormatters } from '@/lib/useFormatters'
 import { useUnsavedChanges } from '@/lib/useUnsavedChanges'
 import { useClosedFiscalYear } from '@/lib/useClosedFiscalYear'
 import { useDocsUrl } from '@/lib/useDocsUrl'
@@ -35,7 +36,8 @@ const props = defineProps({
 const form = useForm({
   category: props.expense.category ?? '',
   description: props.expense.description ?? '',
-  amount: props.expense.amount ?? '',
+  amount: (Number(props.expense.amount ?? 0) + Number(props.expense.vat_amount ?? 0)).toFixed(2),
+  amount_basis: 'gross',
   vat_amount: props.expense.vat_amount ?? '',
   vat_rate_id: props.expense.vat_rate_id ?? '',
   date: props.expense.date?.slice(0, 10) ?? '',
@@ -60,6 +62,7 @@ function submit() {
 }
 
 const { t } = useTranslations()
+const { formatCurrency } = useFormatters()
 
 const { isClosed: isDateClosed, closedYear } = useClosedFiscalYear(() => form.date)
 
@@ -81,6 +84,65 @@ const vatOptions = [
   { value: '', label: t('no_vat') },
   ...props.vatRates.map(v => ({ value: v.id, label: `${v.name} (${v.rate}%)` })),
 ]
+
+const selectedVatRate = computed(() =>
+  props.vatRates.find(rate => String(rate.id) === String(form.vat_rate_id))
+)
+
+const amountBasisOptions = [
+  { value: 'gross', label: t('amount_basis_gross') },
+  { value: 'net', label: t('amount_basis_net') },
+]
+
+const calculatedNetAmount = computed(() => {
+  const amount = Number(form.amount)
+  const rate = Number(selectedVatRate.value?.rate)
+
+  if (!Number.isFinite(amount) || amount < 0) return '0.00'
+  if (form.amount_basis !== 'gross' || !Number.isFinite(rate) || rate <= 0) return amount.toFixed(2)
+
+  return (amount / (1 + rate / 100)).toFixed(2)
+})
+
+const calculatedVatAmount = computed(() => {
+  const amount = Number(calculatedNetAmount.value)
+  const rate = Number(selectedVatRate.value?.rate)
+
+  if (!Number.isFinite(amount) || !Number.isFinite(rate) || rate <= 0) return '0.00'
+
+  if (form.amount_basis === 'gross') {
+    return Math.max(0, Number(form.amount || 0) - amount).toFixed(2)
+  }
+
+  return ((amount * rate) / 100).toFixed(2)
+})
+
+const calculatedGrossAmount = computed(() => {
+  if (form.amount_basis === 'gross') return Number(form.amount || 0).toFixed(2)
+
+  return (Number(calculatedNetAmount.value) + Number(calculatedVatAmount.value)).toFixed(2)
+})
+
+const amountLabel = computed(() => form.amount_basis === 'gross'
+  ? t('amount_paid_incl_vat')
+  : t('net_amount_excl_vat'))
+
+const amountHint = computed(() => form.amount_basis === 'gross'
+  ? t('amount_paid_incl_vat_hint')
+  : t('net_amount_excl_vat_hint'))
+
+function setAmountBasis(basis) {
+  if (basis === form.amount_basis) return
+
+  const netAmount = calculatedNetAmount.value
+  const grossAmount = calculatedGrossAmount.value
+  form.amount_basis = basis
+  form.amount = basis === 'gross' ? grossAmount : netAmount
+}
+
+watch([() => form.amount, () => form.vat_rate_id], () => {
+  form.vat_amount = calculatedVatAmount.value
+}, { immediate: true })
 
 const paymentMethodOptions = [
   { value: 'cash', label: t('payment_cash') },
@@ -168,15 +230,47 @@ const isImage = computed(() => {
                 <Plus class="h-4 w-4" />
               </Button>
             </div>
-            <FormInput
-              id="amount"
-              v-model="form.amount"
-              type="number"
-              :label="t('net_amount_excl_vat')"
-              :hint="t('net_amount_excl_vat_hint')"
-              :error="form.errors.amount"
-              required
-            />
+            <div class="space-y-3 sm:col-span-2">
+              <fieldset>
+                <legend class="mb-2 text-sm font-medium text-[hsl(var(--foreground))]">{{ t('amount_basis') }}</legend>
+                <div class="inline-flex w-full rounded-md border border-[hsl(var(--input))] p-1 sm:w-auto">
+                  <button
+                    v-for="option in amountBasisOptions"
+                    :key="option.value"
+                    type="button"
+                    class="min-h-9 flex-1 rounded px-3 text-sm font-medium transition-colors sm:min-w-28 sm:flex-none"
+                    :class="form.amount_basis === option.value ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]'"
+                    :aria-pressed="form.amount_basis === option.value"
+                    @click="setAmountBasis(option.value)"
+                  >
+                    {{ option.label }}
+                  </button>
+                </div>
+              </fieldset>
+              <FormInput
+                id="amount"
+                v-model="form.amount"
+                type="number"
+                :label="amountLabel"
+                :hint="amountHint"
+                :error="form.errors.amount"
+                required
+              />
+              <div class="grid grid-cols-3 gap-2 rounded-md bg-[hsl(var(--muted)/0.45)] p-3 text-sm">
+                <div>
+                  <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('net_amount_excl_vat') }}</p>
+                  <p class="mt-1 font-medium tabular-nums">{{ formatCurrency(calculatedNetAmount, form.currency) }}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('vat_amount') }}</p>
+                  <p class="mt-1 font-medium tabular-nums">{{ formatCurrency(calculatedVatAmount, form.currency) }}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-[hsl(var(--muted-foreground))]">{{ t('gross_amount_incl_vat') }}</p>
+                  <p class="mt-1 font-medium tabular-nums">{{ formatCurrency(calculatedGrossAmount, form.currency) }}</p>
+                </div>
+              </div>
+            </div>
             <FormInput
               id="date"
               v-model="form.date"
@@ -213,13 +307,6 @@ const isImage = computed(() => {
               v-model="form.vat_rate_id"
               :label="t('vat_rate')"
               :options="vatOptions"
-            />
-            <FormInput
-              id="vat_amount"
-              v-model="form.vat_amount"
-              type="number"
-              :label="t('vat_amount')"
-              :error="form.errors.vat_amount"
             />
           </div>
 

@@ -2,10 +2,10 @@
 
 namespace App\Domains\Expenses\Actions;
 
-use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Expenses\DTOs\CreateExpenseData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
+use App\Domains\Expenses\Services\ExpenseAmountNormalizer;
 
 /**
  * Creates a new expense record in pending status.
@@ -15,35 +15,27 @@ use App\Domains\Expenses\Models\Expense;
  */
 class CreateExpenseAction
 {
+    public function __construct(
+        private ?ExpenseAmountNormalizer $amountNormalizer = null,
+    ) {}
+
     public function execute(CreateExpenseData $data): Expense
     {
-        // Compute VAT server-side before creating; never trust $data->vatAmount.
-        $vatAmount = $this->computeVatAmount($data->vatRateId, $data->amount);
+        $breakdown = ($this->amountNormalizer ?? app(ExpenseAmountNormalizer::class))->normalize(
+            $data->organizationId,
+            $data->amount,
+            $data->vatRateId,
+            $data->amountBasis,
+        );
+
+        $expenseData = $data->toArray();
+        unset($expenseData['amount_basis']);
+        $expenseData['amount'] = $breakdown->netAmount;
+        $expenseData['vat_amount'] = $breakdown->vatAmount;
 
         return Expense::create([
-            ...$data->toArray(),
+            ...$expenseData,
             'status' => ExpenseStatus::Pending,
-            'vat_amount' => $vatAmount,
         ]);
-    }
-
-    /**
-     * Compute VAT amount from the rate record: amount × (rate / 100), BCMath precision.
-     */
-    private function computeVatAmount(?string $vatRateId, string $amount): string
-    {
-        if (! $vatRateId) {
-            return '0';
-        }
-
-        /** @var VatRate|null $vatRate */
-        $vatRate = VatRate::find($vatRateId);
-
-        if (! $vatRate) {
-            return '0';
-        }
-
-        /** @var numeric-string $amount */
-        return bcmul($amount, bcdiv((string) $vatRate->rate, '100', 6), 2);
     }
 }

@@ -6,6 +6,7 @@ use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
+use App\Domains\Expenses\Actions\CancelExpenseAction;
 use App\Domains\Expenses\Actions\CreateExpenseAction;
 use App\Domains\Expenses\Actions\DeleteExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
@@ -95,6 +96,33 @@ class ExpenseFlowTest extends TestCase
         // Verify ledger entries
         $lines = $expense->journalEntry->lines;
         $this->assertCount(2, $lines);
+    }
+
+    public function test_pending_expense_can_be_posted_directly(): void
+    {
+        $expense = $this->createExpense();
+
+        $expense = app(PostExpenseAction::class)->execute($expense, '6530');
+
+        $this->assertEquals(ExpenseStatus::Posted, $expense->status);
+        $this->assertNotNull($expense->journal_entry_id);
+    }
+
+    public function test_posted_expense_can_be_cancelled_with_a_reversal(): void
+    {
+        $expense = $this->createExpense();
+        $expense = app(PostExpenseAction::class)->execute($expense, '6530');
+
+        $expense = app(CancelExpenseAction::class)->execute($expense);
+
+        $this->assertEquals(ExpenseStatus::Cancelled, $expense->status);
+        $this->assertTrue($expense->journalEntry->isBalanced());
+        $this->assertDatabaseHas('journal_entries', [
+            'organization_id' => $this->org->id,
+            'reference' => 'REV-EXP-'.$expense->id,
+            'is_posted' => true,
+            'type' => 'expense_cancellation',
+        ]);
     }
 
     public function test_complete_expense_flow(): void

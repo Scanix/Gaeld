@@ -88,8 +88,10 @@ class FinalizeInvoiceActionTest extends TestCase
 
     private function makeInvoice(InvoiceStatus $status, int $lineCount = 1): Invoice
     {
+        /** @var Invoice $invoice */
         $invoice = Mockery::mock(Invoice::class)->makePartial();
         $invoice->status = $status;
+        $invoice->total = $lineCount > 0 ? '100.00' : '0.00';
 
         $org = Mockery::mock(Organization::class)->makePartial();
         $invoice->shouldReceive('getAttribute')->with('organization')->andReturn($org);

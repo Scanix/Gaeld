@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Policies;
 
+use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Users\Models\User;
@@ -51,8 +52,11 @@ class ExpensePolicy extends BasePolicy
             return false;
         }
 
+        $creatorCanDelete = $expense->user_id === $user->id
+            && $user->hasPermissionTo(Permission::ExpensesEdit);
+
         return $this->belongsToOrganization($user, $expense)
-            && $user->hasPermissionTo(Permission::ExpensesDelete)
+            && ($creatorCanDelete || $user->hasPermissionTo(Permission::ExpensesDelete))
             && $expense->status->isDeletable();
     }
 
@@ -60,5 +64,16 @@ class ExpensePolicy extends BasePolicy
     {
         return $this->belongsToOrganization($user, $expense)
             && $user->hasPermissionTo(Permission::ExpensesApprove);
+    }
+
+    public function cancel(User $user, Expense $expense): bool
+    {
+        if ($expense->archived_at !== null) {
+            return false;
+        }
+
+        return $this->belongsToOrganization($user, $expense)
+            && $user->hasPermissionTo(Permission::ExpensesEdit)
+            && $expense->status->canTransitionTo(ExpenseStatus::Cancelled);
     }
 }

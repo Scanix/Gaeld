@@ -4,6 +4,7 @@ namespace App\Domains\Expenses\Controllers;
 
 use App\Domains\Accounting\Constants\AccountCode;
 use App\Domains\Expenses\Actions\ApproveExpenseAction;
+use App\Domains\Expenses\Actions\CancelExpenseAction;
 use App\Domains\Expenses\Actions\PostExpenseAction;
 use App\Domains\Expenses\Actions\UnapproveExpenseAction;
 use App\Domains\Expenses\Exceptions\ExpenseLedgerPostingException;
@@ -85,5 +86,21 @@ class ExpenseWorkflowController extends Controller
 
         return redirect()->route('expenses.show', $expense)
             ->with('success', __('app.expense_posted'));
+    }
+
+    public function cancel(Expense $expense, CancelExpenseAction $action, DashboardService $dashboardService): RedirectResponse
+    {
+        $this->authorize('cancel', $expense);
+
+        try {
+            $action->execute($expense);
+        } catch (\DomainException $e) {
+            return $this->backWithError($e);
+        }
+
+        $dashboardService->flushCache($expense->organization_id);
+
+        return redirect()->route('expenses.show', $expense)
+            ->with('success', __('app.expense_cancelled'));
     }
 }
