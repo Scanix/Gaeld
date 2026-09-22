@@ -5,6 +5,8 @@ namespace App\Domains\Invoicing\Requests\Concerns;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceLineType;
 use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
+use App\Support\Money;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\Rule;
 
 trait InvoiceValidationRules
@@ -66,5 +68,40 @@ trait InvoiceValidationRules
             ],
             'justificatif' => 'nullable|file|mimes:'.config('uploads.allowed_mimes.document').'|max:'.config('uploads.max_size.document'),
         ];
+    }
+
+    /** @return array<int, \Closure(Validator): void> */
+    public function after(): array
+    {
+        if (! $this->boolean('finalize')) {
+            return [];
+        }
+
+        return [function (Validator $validator): void {
+            $total = '0.00';
+
+            foreach ((array) $this->input('lines', []) as $line) {
+                $type = InvoiceLineType::tryFrom((string) ($line['type'] ?? InvoiceLineType::Item->value));
+
+                if ($type === null || ! $type->hasAmount()) {
+                    continue;
+                }
+
+                $amount = Money::multiply2(
+                    (string) ($line['quantity'] ?? '0'),
+                    (string) ($line['unit_price'] ?? '0'),
+                );
+
+                if ($type === InvoiceLineType::Discount) {
+                    $total = Money::subtract($total, $amount);
+                } else {
+                    $total = Money::add($total, $amount);
+                }
+            }
+
+            if (! Money::isPositive($total)) {
+                $validator->errors()->add('lines', __('app.invoice_total_must_be_positive'));
+            }
+        }];
     }
 }

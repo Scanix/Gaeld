@@ -955,6 +955,8 @@ return [
     'actions' => 'Actions',
     'no_payments_recorded' => 'No payments recorded yet.',
     'invoice_line_items_hint' => 'Add services, discounts, or notes. Totals update as you edit.',
+    'invoice_total_must_be_positive' => 'The invoice total must be greater than zero before it can be finalized.',
+    'invoice_total_must_not_be_zero' => 'The invoice total must not be zero before it can be finalized.',
     'expense_categories_unavailable' => 'No expense categories are available yet.',
     'open_settings' => 'Open settings',
     'more_details' => 'More details',

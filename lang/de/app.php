@@ -902,6 +902,8 @@ return [
     'actions' => 'Aktionen',
     'no_payments_recorded' => 'Noch keine Zahlungen erfasst.',
     'invoice_line_items_hint' => 'Fügen Sie Leistungen, Rabatte oder Notizen hinzu. Die Summen werden während der Eingabe aktualisiert.',
+    'invoice_total_must_be_positive' => 'Der Rechnungsbetrag muss vor der Finalisierung grösser als null sein.',
+    'invoice_total_must_not_be_zero' => 'Der Rechnungsbetrag darf vor der Finalisierung nicht null sein.',
     'expense_categories_unavailable' => 'Es sind noch keine Aufwandskategorien verfügbar.',
     'open_settings' => 'Einstellungen öffnen',
     'more_details' => 'Weitere Details',

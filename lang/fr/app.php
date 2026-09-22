@@ -898,6 +898,8 @@ return [
     'actions' => 'Actions',
     'no_payments_recorded' => 'Aucun paiement enregistré pour le moment.',
     'invoice_line_items_hint' => 'Ajoutez des prestations, remises ou notes. Les totaux se mettent à jour pendant la saisie.',
+    'invoice_total_must_be_positive' => 'Le total de la facture doit être supérieur à zéro avant sa finalisation.',
+    'invoice_total_must_not_be_zero' => 'Le total de la facture ne peut pas être nul avant sa finalisation.',
     'expense_categories_unavailable' => 'Aucune catégorie de dépense n’est encore disponible.',
     'open_settings' => 'Ouvrir les paramètres',
     'more_details' => 'Plus de détails',
