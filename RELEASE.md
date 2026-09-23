@@ -5,6 +5,21 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.23 Staging Candidate
+
+This patch lets authorized users correct an incorrectly entered invoice payment
+date directly from the invoice payment history. Gäld preserves the original
+accounting trail by posting a reversal for the original payment entry and a new
+payment entry on the corrected date. The amount and payment method remain
+unchanged. Corrections are rejected when the affected VAT period or fiscal year
+is closed or archived.
+
+The exact staging pair is CE `v3.8.23` with EE `v2.9.31`. This is a staging
+release only until the invoice payment correction workflow is accepted.
+
+Validation for this candidate: 71 Invoicing tests passed with 217 assertions;
+Pint, PHPStan, and the frontend production build passed.
+
 ## v3.8.22 Staging Candidate
 
 This candidate makes TTC the default entry basis for ordinary and recurring

@@ -5,6 +5,21 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.23] - 2026-09-23
+
+### Fixed
+- **Invoice payment dates:** allow authorized users to correct an incorrectly
+  entered payment date from the invoice payment history.
+- **Accounting traceability:** reverse the original payment entry and repost it
+  on the corrected date instead of changing the ledger silently.
+- **Period protection:** reject payment-date corrections in closed VAT periods
+  or fiscal years.
+
+### Validation
+- Invoicing suite: 71 passed, 217 assertions.
+- PHPStan, Pint, and frontend build passed.
+- Staging deployment target: CE `v3.8.23` with EE `v2.9.31`.
+
 ## [3.8.22] - 2026-09-22
 
 ### Changed

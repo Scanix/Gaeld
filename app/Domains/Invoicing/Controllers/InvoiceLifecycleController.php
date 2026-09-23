@@ -9,12 +9,15 @@ use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\PurgeInvoiceAction;
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
 use App\Domains\Invoicing\Actions\RevertInvoiceToDraftAction;
+use App\Domains\Invoicing\Actions\UpdatePaymentDateAction;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Domains\Invoicing\Notifications\InvoicePaymentRecordedNotification;
 use App\Domains\Invoicing\Requests\RecordPaymentRequest;
+use App\Domains\Invoicing\Requests\UpdatePaymentDateRequest;
 use App\Domains\Organizations\Enums\Permission;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
@@ -98,6 +101,24 @@ class InvoiceLifecycleController extends Controller
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', __('app.payment_recorded'));
+    }
+
+    public function updatePaymentDate(
+        UpdatePaymentDateRequest $request,
+        Invoice $invoice,
+        InvoicePayment $payment,
+        UpdatePaymentDateAction $action,
+    ): RedirectResponse {
+        $validated = $request->validated();
+
+        try {
+            $action->execute($invoice, $payment, $validated['payment_date']);
+        } catch (\DomainException $e) {
+            return $this->backWithError($e);
+        }
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('success', __('app.payment_date_updated'));
     }
 
     public function duplicate(Invoice $invoice, DuplicateInvoiceAction $action): RedirectResponse
