@@ -5,6 +5,64 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.25 Staging Candidate
+
+This candidate introduces the first structured category/account foundation for
+expenses. Categories receive stable system codes and localized labels, while
+expenses and recurring expenses gain organization-scoped references to their
+category and active expense account. Existing category names and account codes
+remain available as compatibility fallbacks, and the migration only backfills
+safe matches without rewriting historical ledger data.
+
+The expense form now shows the account suggested by the selected category. The
+exact staging pair is CE `v3.8.25` with EE `v2.9.31`.
+
+Validation for this candidate: 52 focused Expenses/API tests passed with 211
+assertions; PHPStan, Pint, and the frontend production build passed.
+
+## v3.8.24 Staging Candidate
+
+This patch fixes the visibility of the standard resale expense category. The
+category remains stored under its canonical internal value, but users now see
+the correct localized label, including French « Achats de marchandises
+destinées à la revente », in all expense entry, recurring, Quick Receipt, list,
+and detail views.
+
+The exact staging pair is CE `v3.8.24` with EE `v2.9.31`.
+
+## v3.8.23 Staging Candidate
+
+This patch lets authorized users correct an incorrectly entered invoice payment
+date directly from the invoice payment history. Gäld preserves the original
+accounting trail by posting a reversal for the original payment entry and a new
+payment entry on the corrected date. The amount and payment method remain
+unchanged. Corrections are rejected when the affected VAT period or fiscal year
+is closed or archived.
+
+The exact staging pair is CE `v3.8.23` with EE `v2.9.31`. This is a staging
+release only until the invoice payment correction workflow is accepted.
+
+Validation for this candidate: 71 Invoicing tests passed with 217 assertions;
+Pint, PHPStan, and the frontend production build passed.
+
+## v3.8.22 Staging Candidate
+
+This candidate makes TTC the default entry basis for ordinary and recurring
+expenses while keeping the normalized ledger representation as net amount plus
+input VAT. It adds explicit net/gross API fields, direct expense posting for
+authorized users, and traceable cancellation through a posted reversal entry.
+Unposted expenses remain deletable within the existing organization and
+self-service permission boundaries.
+
+The exact staging pair is CE `v3.8.22` with EE `v2.9.31`. The CE commit and
+tag must be pushed to both GitHub and the internal GitLab CE mirror before
+deployment. This is a staging release only; production promotion requires
+staging acceptance of the TTC calculation, direct posting, cancellation,
+recurring expenses, Quick Receipt, and employee permissions.
+
+Validation for this candidate: 1,540 API tests passed, 13 skipped, 5,768
+assertions; Pint and PHPStan passed; the frontend production build passed.
+
 ## v3.8.21 Staging Candidate
 
 This candidate removes the global 120-second timeout from PDF exports and keeps

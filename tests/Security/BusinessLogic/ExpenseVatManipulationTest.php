@@ -52,6 +52,7 @@ class ExpenseVatManipulationTest extends SecurityTestCase
                 'category' => 'office',
                 'description' => 'Security test expense',
                 'amount' => '100.00',
+                'amount_basis' => 'net',
                 'vat_amount' => $attackerVat,
                 'vat_rate_id' => $this->vatRateA->id,
                 'date' => now()->toDateString(),
@@ -69,6 +70,33 @@ class ExpenseVatManipulationTest extends SecurityTestCase
         $this->assertSame($expectedVat, $expense->vat_amount,
             'vat_amount must be computed from VatRate, not taken from client input.');
         $this->assertNotSame($attackerVat, $expense->vat_amount);
+    }
+
+    public function test_store_normalizes_gross_amount_when_explicitly_requested(): void
+    {
+        $this->actingAs($this->ownerA)
+            ->withSession(['current_organization_id' => $this->orgA->id])
+            ->post('/expenses', [
+                'category' => 'office',
+                'description' => 'Gross amount expense',
+                'amount' => '50.00',
+                'amount_basis' => 'gross',
+                'vat_amount' => '99999.99',
+                'vat_rate_id' => $this->vatRateA->id,
+                'date' => now()->toDateString(),
+                'currency' => 'CHF',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $expense = Expense::withoutGlobalScopes()
+            ->where('organization_id', $this->orgA->id)
+            ->where('description', 'Gross amount expense')
+            ->latest()
+            ->first();
+
+        $this->assertNotNull($expense);
+        $this->assertSame('46.25', $expense->amount);
+        $this->assertSame('3.75', $expense->vat_amount);
     }
 
     public function test_store_without_vat_rate_id_forces_vat_amount_to_zero(): void

@@ -82,6 +82,7 @@ Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOr
     // Expense workflow operations
     Route::post('/expenses/{expense}/approve', [ExpenseApiController::class, 'approve'])->name('api.expenses.approve');
     Route::post('/expenses/{expense}/post-to-ledger', [ExpenseApiController::class, 'postToLedger'])->name('api.expenses.post-to-ledger');
+    Route::post('/expenses/{expense}/cancel', [ExpenseApiController::class, 'cancel'])->name('api.expenses.cancel');
 
     // Contacts
     Route::apiResource('contacts', ContactApiController::class)->names([

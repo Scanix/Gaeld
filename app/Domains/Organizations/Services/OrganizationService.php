@@ -37,7 +37,13 @@ class OrganizationService
                 ExpenseCategory::create([
                     'organization_id' => $org->id,
                     'name' => $name,
+                    'code' => ExpenseCategory::systemCodeFor($name),
+                    'translation_key' => ExpenseCategory::systemCodeFor($name)
+                        ? 'cat_'.ExpenseCategory::systemCodeFor($name)
+                        : null,
                     'is_default' => true,
+                    'is_active' => true,
+                    'is_system' => ExpenseCategory::systemCodeFor($name) !== null,
                     'sort_order' => $sortOrder,
                 ]);
             }

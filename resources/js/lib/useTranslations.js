@@ -25,5 +25,24 @@ export function useTranslations() {
     return value
   }
 
-  return { t, locale }
+  function expenseCategoryLabel(category) {
+    const keys = {
+      'Office Supplies': 'cat_office_supplies',
+      'Travel': 'cat_travel',
+      'Software': 'cat_software',
+      'Professional Services': 'cat_professional_services',
+      'Marketing': 'cat_marketing',
+      'Rent': 'cat_rent',
+      'Utilities': 'cat_utilities',
+      'Insurance': 'cat_insurance',
+      'Other': 'cat_other',
+      'Goods Purchased for Resale': 'cat_goods_purchased_for_resale',
+    }
+
+    const key = keys[category]
+
+    return key ? t(key) : category
+  }
+
+  return { t, locale, expenseCategoryLabel }
 }

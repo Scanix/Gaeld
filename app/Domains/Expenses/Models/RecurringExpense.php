@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Models;
 
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Organizations\Models\Organization;
@@ -24,6 +25,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $organization_id
  * @property int|null $supplier_id
  * @property string $category
+ * @property string|null $expense_category_id
+ * @property int|null $expense_account_id
  * @property string|null $description
  * @property string $amount
  * @property string $vat_amount
@@ -51,6 +54,7 @@ class RecurringExpense extends Model
         'organization_id',
         'supplier_id',
         'category',
+        'expense_category_id',
         'description',
         'amount',
         'vat_amount',
@@ -59,6 +63,7 @@ class RecurringExpense extends Model
         'currency',
         'payment_method',
         'expense_account_code',
+        'expense_account_id',
         'bank_account_code',
         'frequency',
         'next_due_date',
@@ -88,6 +93,18 @@ class RecurringExpense extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Contact::class);
+    }
+
+    /** @return BelongsTo<ExpenseCategory, $this> */
+    public function expenseCategory(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseCategory::class, 'expense_category_id');
+    }
+
+    /** @return BelongsTo<Account, $this> */
+    public function expenseAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'expense_account_id');
     }
 
     /**

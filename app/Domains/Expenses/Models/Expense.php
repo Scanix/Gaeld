@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Models;
 
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Contacts\Models\Contact;
@@ -9,6 +10,7 @@ use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Enums\ExpenseType;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
+use App\Support\Money;
 use App\Support\Traits\Auditable;
 use App\Support\Traits\BelongsToOrganization;
 use Database\Factories\Domains\Expenses\Models\ExpenseFactory;
@@ -31,10 +33,13 @@ use Laravel\Scout\Searchable;
  * @property int|null $user_id
  * @property string|null $journal_entry_id
  * @property int|null $vat_rate_id
+ * @property string|null $expense_category_id
+ * @property int|null $expense_account_id
  * @property string $category
  * @property string|null $description
  * @property string $amount
  * @property string $vat_amount
+ * @property-read string $gross_amount
  * @property Carbon $date
  * @property string|null $vendor
  * @property string|null $receipt_path
@@ -63,6 +68,7 @@ class Expense extends Model
         'user_id',
         'journal_entry_id',
         'vat_rate_id',
+        'expense_category_id',
         'category',
         'description',
         'amount',
@@ -76,9 +82,12 @@ class Expense extends Model
         'supplier_id',
         'payment_method',
         'expense_account_code',
+        'expense_account_id',
         'bank_account_code',
         'archived_at',
     ];
+
+    protected $appends = ['gross_amount'];
 
     protected function casts(): array
     {
@@ -116,10 +125,27 @@ class Expense extends Model
         return $this->belongsTo(VatRate::class);
     }
 
+    /** @return BelongsTo<ExpenseCategory, $this> */
+    public function expenseCategory(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseCategory::class, 'expense_category_id');
+    }
+
+    /** @return BelongsTo<Account, $this> */
+    public function expenseAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'expense_account_id');
+    }
+
     /** @return BelongsTo<Contact, $this> */
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Contact::class);
+    }
+
+    public function getGrossAmountAttribute(): string
+    {
+        return Money::add((string) $this->amount, (string) ($this->vat_amount ?? '0'));
     }
 
     // ──────────────────────────────────────────────────────────────

@@ -19,10 +19,14 @@ class ExpenseCategoryQuery
         return Cache::tags(["org:{$orgId}:reference"])->remember(
             "expense_categories_select:{$orgId}",
             3600,
-            fn () => ExpenseCategory::with('defaultExpenseAccount')
+            fn () => ExpenseCategory::active()
+                ->with('defaultExpenseAccount')
                 ->orderBy('sort_order')
                 ->orderBy('name')
-                ->get(['id', 'name', 'default_expense_account_id'])
+                ->get(['id', 'name', 'code', 'translation_key', 'is_active', 'is_system', 'default_expense_account_id'])
+                ->each(function (ExpenseCategory $category): void {
+                    $category->setAttribute('label', $category->displayName());
+                })
         );
     }
 
@@ -40,6 +44,9 @@ class ExpenseCategoryQuery
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get()
+                ->each(function (ExpenseCategory $category): void {
+                    $category->setAttribute('label', $category->displayName());
+                })
         );
     }
 }

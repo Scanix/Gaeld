@@ -25,6 +25,7 @@ const props = defineProps({
   invoice: Object,
   canForceDelete: { type: Boolean, default: false },
   canRecordPayment: { type: Boolean, default: false },
+  canUpdatePayment: { type: Boolean, default: false },
   canSend: { type: Boolean, default: false },
   canSendReminder: { type: Boolean, default: false },
   canRevertToDraft: { type: Boolean, default: false },
@@ -41,6 +42,7 @@ const { t } = useTranslations()
 const { formatCurrency, formatDate } = useFormatters()
 
 const showPaymentModal = ref(false)
+const paymentToEdit = ref(null)
 const showDeleteDialog = ref(false)
 const showReminderDialog = ref(false)
 const showCancelDialog = ref(false)
@@ -84,6 +86,7 @@ const paymentForm = useForm({
   reference: '',
   bank_account_code: '',
 })
+const paymentDateForm = useForm({ payment_date: '' })
 
 const amountDue = computed(() => {
   return Math.max(0, parseFloat(props.invoice?.total || 0) - amountPaid.value)
@@ -133,6 +136,23 @@ function openPaymentModal() {
   paymentForm.bank_account_code = ''
   paymentForm.clearErrors()
   showPaymentModal.value = true
+}
+
+function openPaymentDateModal(payment) {
+  paymentToEdit.value = payment
+  paymentDateForm.payment_date = payment.payment_date?.slice(0, 10) ?? ''
+  paymentDateForm.clearErrors()
+}
+
+function updatePaymentDate() {
+  if (!paymentToEdit.value) return
+
+  paymentDateForm.patch(`/invoices/${props.invoice.id}/payments/${paymentToEdit.value.id}/date`, {
+    preserveScroll: true,
+    onSuccess: () => {
+      paymentToEdit.value = null
+    },
+  })
 }
 
 function duplicate() {
@@ -201,6 +221,7 @@ const paymentColumns = computed(() => [
   { key: 'amount', label: t('amount'), class: 'text-right', format: (v) => formatCurrency(v) },
   { key: 'payment_method', label: t('payment_method'), format: (v) => paymentMethodOptions.find(o => o.value === v)?.label || v },
   { key: 'reference', label: t('reference') },
+  { key: 'actions', label: '', class: 'text-right w-auto' },
 ])
 
 const statusVariant = {
@@ -418,7 +439,20 @@ const bankAccountOptions = computed(() =>
           <CardDescription v-else>{{ t('amount_due') }} {{ formatCurrency(amountDue) }}</CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTable v-if="invoice?.payments?.length" :columns="paymentColumns" :rows="invoice.payments" />
+          <DataTable v-if="invoice?.payments?.length" :columns="paymentColumns" :rows="invoice.payments">
+            <template #cell-actions="{ row }">
+              <Button
+                v-if="canUpdatePayment"
+                variant="ghost"
+                size="icon"
+                :aria-label="t('edit_payment_date')"
+                :title="t('edit_payment_date')"
+                @click.stop="openPaymentDateModal(row)"
+              >
+                <Pencil class="h-4 w-4" />
+              </Button>
+            </template>
+          </DataTable>
           <p v-else class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('no_payments_recorded') }}</p>
         </CardContent>
       </Card>
@@ -568,6 +602,24 @@ const bankAccountOptions = computed(() =>
         <div class="flex justify-end gap-3">
           <Button type="button" variant="outline" @click="showPaymentModal = false">{{ t('cancel') }}</Button>
           <Button type="submit" :disabled="paymentForm.processing">{{ t('record') }}</Button>
+        </div>
+      </form>
+    </Modal>
+
+    <Modal :open="!!paymentToEdit" :title="t('edit_payment_date')" @close="paymentToEdit = null">
+      <form class="space-y-6" @submit.prevent="updatePaymentDate">
+        <p class="text-sm text-[hsl(var(--muted-foreground))]">{{ t('edit_payment_date_hint') }}</p>
+        <FormInput
+          id="edit-payment-date"
+          v-model="paymentDateForm.payment_date"
+          type="date"
+          :label="t('payment_date')"
+          :error="paymentDateForm.errors.payment_date"
+          required
+        />
+        <div class="flex justify-end gap-3">
+          <Button type="button" variant="outline" @click="paymentToEdit = null">{{ t('cancel') }}</Button>
+          <Button type="submit" :disabled="paymentDateForm.processing">{{ t('save_changes') }}</Button>
         </div>
       </form>
     </Modal>

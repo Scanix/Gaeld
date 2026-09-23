@@ -9,6 +9,7 @@ use App\Domains\Accounting\Enums\VatEntryType;
 use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Accounting\Services\VatPeriodLockService;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceLineType;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -19,6 +20,7 @@ use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Handles write operations for invoice accounting: posting ledger entries
@@ -30,6 +32,7 @@ class InvoiceAccountingService
     public function __construct(
         private LedgerService $ledgerService,
         private LedgerQueryService $ledgerQuery,
+        private VatPeriodLockService $vatPeriodLocks,
     ) {}
 
     /**
@@ -223,6 +226,68 @@ class InvoiceAccountingService
             }
 
             return $payment->load('journalEntry');
+        });
+    }
+
+    /**
+     * Correct a payment date by reversing and reposting its ledger entry.
+     */
+    public function updatePaymentDate(Invoice $invoice, InvoicePayment $payment, string $paymentDate): InvoicePayment
+    {
+        if ($payment->invoice_id !== $invoice->id || $payment->organization_id !== $invoice->organization_id) {
+            throw new \DomainException('The payment does not belong to this invoice.');
+        }
+
+        $payment->loadMissing('journalEntry.lines');
+
+        if ($payment->journalEntry === null) {
+            throw new \DomainException('Cannot correct a payment without a journal entry.');
+        }
+
+        $oldDate = $payment->payment_date->toDateString();
+        if ($oldDate === $paymentDate) {
+            return $payment->fresh(['journalEntry']);
+        }
+
+        $this->vatPeriodLocks->assertPeriodUnlocked($payment->organization_id, $oldDate, $oldDate);
+        $this->vatPeriodLocks->assertPeriodUnlocked($payment->organization_id, $paymentDate, $paymentDate);
+
+        return DB::transaction(function () use ($invoice, $payment, $paymentDate, $oldDate): InvoicePayment {
+            $original = $payment->journalEntry;
+
+            if ($original->archived_at !== null) {
+                throw new \DomainException('Archived payment entries cannot be corrected.');
+            }
+
+            $reversal = $this->ledgerService->reverseEntry(
+                $original,
+                "Correction of payment date for {$invoice->number}",
+                'payment_date_correction',
+                $oldDate,
+            );
+            $this->ledgerService->postDraft($reversal);
+
+            $replacement = $this->ledgerService->postEntry(
+                $payment->organization_id,
+                new JournalEntryData(
+                    date: $paymentDate,
+                    reference: 'PAYDATE-'.$payment->id.'-'.Str::lower(Str::replace('-', '', Str::uuid()->toString())),
+                    description: "Payment received for {$invoice->number} (date corrected)",
+                    lines: $original->lines->map(fn ($line) => new JournalLineData(
+                        accountId: (string) $line->account_id,
+                        debit: (string) $line->debit,
+                        credit: (string) $line->credit,
+                        description: $line->description,
+                    ))->all(),
+                ),
+            );
+
+            $payment->update([
+                'journal_entry_id' => $replacement->id,
+                'payment_date' => $paymentDate,
+            ]);
+
+            return $payment->fresh(['journalEntry']);
         });
     }
 }

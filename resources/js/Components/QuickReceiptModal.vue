@@ -16,7 +16,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 
-const { t } = useTranslations()
+const { t, expenseCategoryLabel } = useTranslations()
 
 // Stages: capture → scanning → review
 const stage = ref('capture') // 'capture' | 'scanning' | 'review'
@@ -37,6 +37,7 @@ const organizationCategories = ref([])
 const form = ref({
   category: '',
   amount: '',
+  amount_basis: 'gross',
   date: new Date().toISOString().slice(0, 10),
   vendor: '',
   description: '',
@@ -46,7 +47,7 @@ const form = ref({
 
 const categoryOptions = computed(() => [
   { value: '', label: t('select_category') },
-  ...organizationCategories.value.map(category => ({ value: category.name, label: category.name })),
+  ...organizationCategories.value.map(category => ({ value: category.name, label: expenseCategoryLabel(category.name) })),
 ])
 
 watch(() => props.open, (open) => {
@@ -186,6 +187,7 @@ function createExpense() {
   const formData = new FormData()
   formData.append('category', form.value.category)
   formData.append('amount', form.value.amount)
+  formData.append('amount_basis', 'gross')
   formData.append('date', form.value.date)
   formData.append('vendor', form.value.vendor)
   formData.append('description', form.value.description)
@@ -226,6 +228,7 @@ function resetAndClose() {
   form.value = {
     category: '',
     amount: '',
+    amount_basis: 'gross',
     date: new Date().toISOString().slice(0, 10),
     vendor: '',
     description: '',

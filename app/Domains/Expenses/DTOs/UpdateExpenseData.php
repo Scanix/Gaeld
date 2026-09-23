@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\DTOs;
 
+use App\Domains\Expenses\Enums\ExpenseAmountBasis;
 use App\Support\OmitsNullValues;
 use App\Support\ValidatesFromArray;
 
@@ -17,6 +18,8 @@ readonly class UpdateExpenseData
         public string $category,
         public string $amount,
         public string $date,
+        public ExpenseAmountBasis $amountBasis = ExpenseAmountBasis::Net,
+        public ?string $expenseCategoryId = null,
         public ?string $description = null,
         public ?string $vatAmount = null,
         public ?string $vatRateId = null,
@@ -25,6 +28,7 @@ readonly class UpdateExpenseData
         public ?string $currency = null,
         public ?string $type = null,
         public ?string $expenseAccountCode = null,
+        public ?int $expenseAccountId = null,
         public ?string $bankAccountCode = null,
         public ?string $supplierId = null,
         public ?string $paymentMethod = null,
@@ -39,6 +43,8 @@ readonly class UpdateExpenseData
             category: $data['category'],
             amount: (string) $data['amount'],
             date: $data['date'],
+            amountBasis: ExpenseAmountBasis::tryFrom((string) ($data['amount_basis'] ?? ExpenseAmountBasis::Net->value)) ?? ExpenseAmountBasis::Net,
+            expenseCategoryId: $data['expense_category_id'] ?? null,
             description: $data['description'] ?? null,
             vatAmount: isset($data['vat_amount']) ? (string) $data['vat_amount'] : null,
             vatRateId: $data['vat_rate_id'] ?? null,
@@ -47,6 +53,7 @@ readonly class UpdateExpenseData
             currency: $data['currency'] ?? null,
             type: $data['type'] ?? null,
             expenseAccountCode: $data['expense_account_code'] ?? null,
+            expenseAccountId: isset($data['expense_account_id']) ? (int) $data['expense_account_id'] : null,
             bankAccountCode: $data['bank_account_code'] ?? null,
             supplierId: $data['supplier_id'] ?? null,
             paymentMethod: $data['payment_method'] ?? null,
