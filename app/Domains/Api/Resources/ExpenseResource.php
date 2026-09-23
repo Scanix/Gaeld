@@ -22,6 +22,13 @@ class ExpenseResource extends JsonResource
             'net_amount' => $this->amount,
             'vat_amount' => $this->vat_amount,
             'gross_amount' => $this->gross_amount,
+            'category_id' => $this->expense_category_id,
+            'category_label' => $this->whenLoaded('expenseCategory', fn () => $this->expenseCategory->displayName(), $this->category),
+            'expense_account' => $this->whenLoaded('expenseAccount', fn () => [
+                'id' => $this->expenseAccount->id,
+                'code' => $this->expenseAccount->code,
+                'name' => $this->expenseAccount->display_name,
+            ]),
             'date' => $this->date->toDateString(),
             'vendor' => $this->vendor,
             'status' => $this->status->value,

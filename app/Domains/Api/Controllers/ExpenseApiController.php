@@ -68,7 +68,7 @@ class ExpenseApiController extends Controller
     {
         $this->authorize('view', $expense);
 
-        return new ExpenseResource($expense->loadMissing('journalEntry'));
+        return new ExpenseResource($expense->loadMissing(['journalEntry', 'expenseCategory', 'expenseAccount']));
     }
 
     /**
@@ -152,7 +152,7 @@ class ExpenseApiController extends Controller
         $dto = UpdateExpenseData::fromArray($validated);
         $action->execute($expense, $dto);
 
-        return new ExpenseResource($expense->fresh(['journalEntry']));
+        return new ExpenseResource($expense->fresh(['journalEntry', 'expenseCategory', 'expenseAccount']));
     }
 
     /**
@@ -263,7 +263,7 @@ class ExpenseApiController extends Controller
 
         $dashboardService->flushCache($expense->organization_id);
 
-        return new ExpenseResource($expense->fresh(['journalEntry.lines.account']));
+        return new ExpenseResource($expense->fresh(['journalEntry.lines.account', 'expenseCategory', 'expenseAccount']));
     }
 
     public function cancel(

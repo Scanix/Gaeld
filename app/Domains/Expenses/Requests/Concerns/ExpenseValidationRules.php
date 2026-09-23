@@ -17,8 +17,8 @@ trait ExpenseValidationRules
             && ! $this->user()->hasPermissionTo(Permission::ExpensesView);
 
         return array_merge($partial
-            ? ExpenseSharedValidationRules::update()
-            : ExpenseSharedValidationRules::store(), [
+            ? ExpenseSharedValidationRules::update($orgId)
+            : ExpenseSharedValidationRules::store($orgId), [
                 'vat_rate_id' => [
                     'nullable',
                     Rule::exists('vat_rates', 'id')->where('organization_id', $orgId),

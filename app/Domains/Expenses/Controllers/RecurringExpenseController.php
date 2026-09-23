@@ -12,7 +12,9 @@ use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Expenses\Models\RecurringExpense;
 use App\Domains\Expenses\Queries\ExpenseCategoryQuery;
 use App\Domains\Expenses\Requests\RecurringExpenseRequest;
+use App\Domains\Expenses\Services\ExpenseAccountResolver;
 use App\Domains\Expenses\Services\ExpenseAmountNormalizer;
+use App\Domains\Expenses\Services\ExpenseCategoryResolver;
 use App\Domains\Invoicing\Enums\RecurrenceFrequency;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
@@ -57,6 +59,17 @@ class RecurringExpenseController extends Controller
 
         $validated = $request->validated();
         $validated = $this->applyDefaultExpenseAccount($validated, $currentOrg->id());
+        $category = app(ExpenseCategoryResolver::class)->resolve(
+            $currentOrg->id(),
+            $validated['expense_category_id'] ?? null,
+            $validated['category'],
+        );
+        $account = app(ExpenseAccountResolver::class)->resolve(
+            $currentOrg->id(),
+            isset($validated['expense_account_id']) ? (int) $validated['expense_account_id'] : null,
+            $validated['expense_account_code'] ?? null,
+            $category,
+        );
         $breakdown = app(ExpenseAmountNormalizer::class)->normalize(
             $currentOrg->id(),
             $validated['amount'],
@@ -71,11 +84,15 @@ class RecurringExpenseController extends Controller
             'description' => $validated['description'] ?? null,
             'amount' => $breakdown->netAmount,
             'vat_amount' => $breakdown->vatAmount,
+            'expense_category_id' => $category?->id,
+            'expense_account_id' => $account?->id,
             'vat_rate_id' => $validated['vat_rate_id'] ?? null,
             'vendor' => $validated['vendor'] ?? null,
             'currency' => $validated['currency'] ?? 'CHF',
             'payment_method' => $validated['payment_method'] ?? null,
-            'expense_account_code' => $validated['expense_account_code'] ?? null,
+            'expense_account_code' => $account !== null
+                ? $account->code
+                : ($validated['expense_account_code'] ?? null),
             'bank_account_code' => $validated['bank_account_code'] ?? null,
             'frequency' => $validated['frequency'],
             'next_due_date' => $validated['next_due_date'],
@@ -111,6 +128,19 @@ class RecurringExpenseController extends Controller
         ], $request->validated());
 
         $validated = $this->applyDefaultExpenseAccount($validated, $recurring->organization_id);
+        $category = app(ExpenseCategoryResolver::class)->resolve(
+            $recurring->organization_id,
+            $validated['expense_category_id'] ?? $recurring->expense_category_id,
+            $validated['category'],
+        );
+        $account = app(ExpenseAccountResolver::class)->resolve(
+            $recurring->organization_id,
+            isset($validated['expense_account_id'])
+                ? (int) $validated['expense_account_id']
+                : $recurring->expense_account_id,
+            $validated['expense_account_code'] ?? $recurring->expense_account_code,
+            $category,
+        );
         $vatRateId = array_key_exists('vat_rate_id', $validated)
             ? $validated['vat_rate_id']
             : $recurring->vat_rate_id;
@@ -123,6 +153,11 @@ class RecurringExpenseController extends Controller
         $validated['amount'] = $breakdown->netAmount;
         $validated['vat_amount'] = $breakdown->vatAmount;
         unset($validated['amount_basis']);
+        $validated['expense_category_id'] = $category?->id;
+        $validated['expense_account_id'] = $account?->id;
+        $validated['expense_account_code'] = $account !== null
+            ? $account->code
+            : ($validated['expense_account_code'] ?? null);
 
         $recurring->update($validated);
 

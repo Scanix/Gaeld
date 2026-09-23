@@ -178,6 +178,7 @@ return [
     'amount_paid_incl_vat' => 'Bezahlter Betrag (inkl. MwSt.)',
     'amount_paid_incl_vat_hint' => 'Geben Sie den tatsächlich bezahlten Betrag ein. Netto und MwSt. werden anhand des gewählten Satzes berechnet.',
     'gross_amount_incl_vat' => 'Gesamtbetrag inkl. MwSt.',
+    'suggested_expense_account' => 'Vorgeschlagenes Aufwandskonto',
     'status' => 'Status',
     'name' => 'Name',
     'email' => 'E-Mail',

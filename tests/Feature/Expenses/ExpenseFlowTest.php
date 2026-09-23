@@ -270,6 +270,10 @@ class ExpenseFlowTest extends TestCase
             'category' => 'Goods Purchased for Resale',
             'expense_account_code' => '4000',
         ]);
+
+        $expense = Expense::query()->where('category', 'Goods Purchased for Resale')->latest()->firstOrFail();
+        $this->assertNotNull($expense->expense_category_id);
+        $this->assertSame((int) $account->id, (int) $expense->expense_account_id);
     }
 
     public function test_explicit_expense_account_overrides_category_default(): void

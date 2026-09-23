@@ -5,6 +5,21 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.25 Staging Candidate
+
+This candidate introduces the first structured category/account foundation for
+expenses. Categories receive stable system codes and localized labels, while
+expenses and recurring expenses gain organization-scoped references to their
+category and active expense account. Existing category names and account codes
+remain available as compatibility fallbacks, and the migration only backfills
+safe matches without rewriting historical ledger data.
+
+The expense form now shows the account suggested by the selected category. The
+exact staging pair is CE `v3.8.25` with EE `v2.9.31`.
+
+Validation for this candidate: 52 focused Expenses/API tests passed with 211
+assertions; PHPStan, Pint, and the frontend production build passed.
+
 ## v3.8.24 Staging Candidate
 
 This patch fixes the visibility of the standard resale expense category. The

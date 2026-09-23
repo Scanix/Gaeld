@@ -182,6 +182,7 @@ return [
     'amount_paid_incl_vat' => 'Importo pagato (IVA incl.)',
     'amount_paid_incl_vat_hint' => 'Inserire l\'importo effettivamente pagato. Il netto e l\'IVA vengono calcolati in base all\'aliquota selezionata.',
     'gross_amount_incl_vat' => 'Totale IVA incl.',
+    'suggested_expense_account' => 'Conto spese suggerito',
     'status' => 'Stato',
     'name' => 'Nome',
     'email' => 'E-mail',

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Models;
 
+use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Contacts\Models\Contact;
@@ -32,6 +33,8 @@ use Laravel\Scout\Searchable;
  * @property int|null $user_id
  * @property string|null $journal_entry_id
  * @property int|null $vat_rate_id
+ * @property string|null $expense_category_id
+ * @property int|null $expense_account_id
  * @property string $category
  * @property string|null $description
  * @property string $amount
@@ -65,6 +68,7 @@ class Expense extends Model
         'user_id',
         'journal_entry_id',
         'vat_rate_id',
+        'expense_category_id',
         'category',
         'description',
         'amount',
@@ -78,6 +82,7 @@ class Expense extends Model
         'supplier_id',
         'payment_method',
         'expense_account_code',
+        'expense_account_id',
         'bank_account_code',
         'archived_at',
     ];
@@ -118,6 +123,18 @@ class Expense extends Model
     public function vatRate(): BelongsTo
     {
         return $this->belongsTo(VatRate::class);
+    }
+
+    /** @return BelongsTo<ExpenseCategory, $this> */
+    public function expenseCategory(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseCategory::class, 'expense_category_id');
+    }
+
+    /** @return BelongsTo<Account, $this> */
+    public function expenseAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'expense_account_id');
     }
 
     /** @return BelongsTo<Contact, $this> */

@@ -170,6 +170,10 @@ const journalColumns = computed(() => [
         <CardHeader><CardTitle>{{ t('details') }}</CardTitle></CardHeader>
         <CardContent>
           <dl class="grid grid-cols-2 gap-y-3 text-sm">
+            <dt class="text-muted-foreground">{{ t('category') }}</dt>
+            <dd>{{ categoryLabel }}</dd>
+            <dt v-if="expense.expense_account" class="text-muted-foreground">{{ t('expense_account') }}</dt>
+            <dd v-if="expense.expense_account">{{ expense.expense_account.code }} — {{ expense.expense_account.name }}</dd>
             <dt class="text-muted-foreground">{{ t('net_amount_excl_vat') }}</dt>
             <dd class="font-medium">{{ formatCurrency(expense.amount, expense.currency) }}</dd>
             <dt class="text-muted-foreground">{{ t('vat') }}</dt>

@@ -180,6 +180,7 @@ return [
     'amount_paid_incl_vat' => 'Montant payé (TTC)',
     'amount_paid_incl_vat_hint' => 'Saisissez le montant effectivement payé. Le montant HT et la TVA sont calculés selon le taux sélectionné.',
     'gross_amount_incl_vat' => 'Total TTC',
+    'suggested_expense_account' => 'Compte de charges suggéré',
     'status' => 'Statut',
     'name' => 'Nom',
     'email' => 'E-mail',

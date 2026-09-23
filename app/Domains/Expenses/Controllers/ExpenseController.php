@@ -170,13 +170,13 @@ class ExpenseController extends Controller
             && ! $request->user()->hasPermissionTo(Permission::ExpensesView);
 
         $expenseData = $ownOnly
-            ? $expense->load('vatRate')->makeHidden([
+            ? $expense->load(['vatRate', 'expenseCategory'])->makeHidden([
                 'journal_entry_id',
                 'expense_account_code',
                 'bank_account_code',
                 'supplier_id',
             ])
-            : $expense->load(['vatRate', 'supplier', 'journalEntry.lines.account']);
+            : $expense->load(['vatRate', 'supplier', 'expenseCategory', 'expenseAccount', 'journalEntry.lines.account']);
 
         return Inertia::render('Expenses/Show', [
             'expense' => $expenseData,

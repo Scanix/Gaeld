@@ -68,6 +68,7 @@ const { isClosed: isDateClosed, closedYear } = useClosedFiscalYear(() => form.da
 
 const categoryByName = new Map(props.categories.map(category => [category.name, category]))
 const categoryOptions = props.categories.map(c => ({ value: c.name, label: expenseCategoryLabel(c.name) }))
+const selectedCategoryAccount = computed(() => categoryByName.get(form.category)?.default_expense_account)
 let suggestedExpenseAccountCode = ''
 
 watch(() => form.category, (category) => {
@@ -302,6 +303,9 @@ const isImage = computed(() => {
               :error="form.errors.category"
               required
             />
+              <p v-if="selectedCategoryAccount" class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                {{ t('suggested_expense_account') }}: {{ selectedCategoryAccount.code }} — {{ selectedCategoryAccount.display_name ?? selectedCategoryAccount.name }}
+              </p>
             <FormSelect
               id="vat_rate_id"
               v-model="form.vat_rate_id"

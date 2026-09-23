@@ -26,7 +26,7 @@ class StoreExpenseApiRequest extends FormRequest
         $org = app(CurrentOrganization::class);
         $orgId = $org->isBound() ? $org->id() : 0;
 
-        return array_merge(ExpenseSharedValidationRules::store(), [
+        return array_merge(ExpenseSharedValidationRules::store((string) $orgId), [
             'vat_rate_id' => [
                 'nullable',
                 'uuid',

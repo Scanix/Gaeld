@@ -30,7 +30,7 @@ const props = defineProps({
   pendingFiscalYearChange: { type: Object, default: null },
 })
 
-const { t } = useTranslations()
+const { t, expenseCategoryLabel } = useTranslations()
 const page = usePage()
 
 // --- Tabs ---
@@ -819,7 +819,7 @@ const businessTypeOptions = [
                 class="grid gap-3 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(14rem,auto)_auto] sm:items-center"
               >
                 <div>
-                  <span class="text-sm">{{ cat.name }}</span>
+                  <span class="text-sm">{{ cat.label ?? expenseCategoryLabel(cat.name) }}</span>
                   <p v-if="cat.default_expense_account" class="text-xs text-[hsl(var(--muted-foreground))]">
                     {{ cat.default_expense_account.code }} — {{ cat.default_expense_account.display_name ?? cat.default_expense_account.name }}
                   </p>

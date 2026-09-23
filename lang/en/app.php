@@ -180,6 +180,7 @@ return [
     'amount_paid_incl_vat' => 'Amount paid (incl. VAT)',
     'amount_paid_incl_vat_hint' => 'Enter the amount actually paid. The net amount and VAT are calculated from the selected rate.',
     'gross_amount_incl_vat' => 'Total incl. VAT',
+    'suggested_expense_account' => 'Suggested expense account',
     'status' => 'Status',
     'name' => 'Name',
     'email' => 'Email',

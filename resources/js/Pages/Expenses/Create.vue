@@ -98,6 +98,7 @@ const { isClosed: isDateClosed, closedYear } = useClosedFiscalYear(() => form.da
 
 const categoryByName = new Map(props.categories.map(category => [category.name, category]))
 const categoryOptions = props.categories.map(c => ({ value: c.name, label: expenseCategoryLabel(c.name) }))
+const selectedCategoryAccount = computed(() => categoryByName.get(form.category)?.default_expense_account)
 let suggestedExpenseAccountCode = ''
 
 watch(() => form.category, (category) => {
@@ -338,6 +339,9 @@ function onSupplierCreated(supplier) {
                 :error="form.errors.category"
                 required
               />
+              <p v-if="selectedCategoryAccount" class="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                {{ t('suggested_expense_account') }}: {{ selectedCategoryAccount.code }} — {{ selectedCategoryAccount.display_name ?? selectedCategoryAccount.name }}
+              </p>
               <Tooltip :content="t('tooltip_expense_category')" side="top" class="absolute right-0 top-0">
                 <HelpCircle class="h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
               </Tooltip>

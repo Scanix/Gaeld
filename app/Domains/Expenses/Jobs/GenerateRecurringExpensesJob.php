@@ -63,6 +63,8 @@ class GenerateRecurringExpensesJob implements ShouldQueue
             'description' => $recurring->description,
             'amount' => (string) $recurring->amount,
             'amount_basis' => 'net',
+            'expense_category_id' => $recurring->expense_category_id,
+            'expense_account_id' => $recurring->expense_account_id,
             'vat_amount' => (string) $recurring->vat_amount,
             'vat_rate_id' => $recurring->vat_rate_id ? (string) $recurring->vat_rate_id : null,
             'date' => $recurring->next_due_date->toDateString(),

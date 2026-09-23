@@ -36,6 +36,21 @@ class RecurringExpenseRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'amount_basis' => ['sometimes', Rule::enum(ExpenseAmountBasis::class)],
+            'expense_category_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('expense_categories', 'id')
+                    ->where('organization_id', $orgId)
+                    ->where('is_active', true),
+            ],
+            'expense_account_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('accounts', 'id')
+                    ->where('organization_id', $orgId)
+                    ->where('type', AccountType::Expense->value)
+                    ->where('is_active', true),
+            ],
             'vat_amount' => ['nullable', 'numeric', 'min:0'],
             'vendor' => ['nullable', 'string', 'max:255'],
             'currency' => ['nullable', 'string', 'size:3'],

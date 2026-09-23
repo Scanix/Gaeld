@@ -20,6 +20,7 @@ readonly class CreateExpenseData
         public string $amount,
         public string $date,
         public ExpenseAmountBasis $amountBasis = ExpenseAmountBasis::Net,
+        public ?string $expenseCategoryId = null,
         public ?int $userId = null,
         public ?string $description = null,
         public ?string $vatAmount = null,
@@ -30,6 +31,7 @@ readonly class CreateExpenseData
         public string $currency = 'CHF',
         public string $type = 'invoice',
         public ?string $expenseAccountCode = null,
+        public ?int $expenseAccountId = null,
         public ?string $bankAccountCode = null,
         public ?string $paymentMethod = null,
     ) {}
@@ -45,6 +47,7 @@ readonly class CreateExpenseData
             amount: (string) $data['amount'],
             date: $data['date'],
             amountBasis: ExpenseAmountBasis::tryFrom((string) ($data['amount_basis'] ?? ExpenseAmountBasis::Net->value)) ?? ExpenseAmountBasis::Net,
+            expenseCategoryId: $data['expense_category_id'] ?? null,
             userId: isset($data['user_id']) ? (int) $data['user_id'] : null,
             description: $data['description'] ?? null,
             vatAmount: isset($data['vat_amount']) ? (string) $data['vat_amount'] : null,
@@ -55,6 +58,7 @@ readonly class CreateExpenseData
             currency: $data['currency'] ?? 'CHF',
             type: $data['type'] ?? 'invoice',
             expenseAccountCode: $data['expense_account_code'] ?? null,
+            expenseAccountId: isset($data['expense_account_id']) ? (int) $data['expense_account_id'] : null,
             bankAccountCode: $data['bank_account_code'] ?? null,
             paymentMethod: $data['payment_method'] ?? null,
         );
