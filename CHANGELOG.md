@@ -5,6 +5,19 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.24] - 2026-09-23
+
+### Fixed
+- **Expense category labels:** translate the standard resale category as
+  « Achats de marchandises destinées à la revente » in French, while keeping
+  the canonical stored value and account mapping unchanged.
+- **Expense surfaces:** apply the localized category label consistently in
+  ordinary expenses, recurring expenses, Quick Receipt, lists, and details.
+
+### Validation
+- Frontend production build passed.
+- Staging deployment target: CE `v3.8.24` with EE `v2.9.31`.
+
 ## [3.8.23] - 2026-09-23
 
 ### Fixed

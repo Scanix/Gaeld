@@ -340,6 +340,7 @@ return [
     'cat_office_supplies' => 'Materiale d\'ufficio',
     'cat_rent' => 'Affitto',
     'cat_insurance' => 'Assicurazioni',
+    'cat_goods_purchased_for_resale' => 'Acquisti di merci destinate alla rivendita',
 
     // Quick Receipt
     'quick_receipt' => 'Ricevuta rapida',

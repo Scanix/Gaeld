@@ -338,6 +338,7 @@ return [
     'cat_office_supplies' => 'Office Supplies',
     'cat_rent' => 'Rent',
     'cat_insurance' => 'Insurance',
+    'cat_goods_purchased_for_resale' => 'Goods Purchased for Resale',
 
     // Quick Receipt
     'quick_receipt' => 'Quick Receipt',

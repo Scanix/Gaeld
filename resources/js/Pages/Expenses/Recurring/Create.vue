@@ -24,7 +24,7 @@ const props = defineProps({
   frequencies: { type: Array, default: () => [] },
 })
 
-const { t } = useTranslations()
+const { t, expenseCategoryLabel } = useTranslations()
 const { formatCurrency } = useFormatters()
 
 const form = useForm({
@@ -55,7 +55,7 @@ const supplierOptions = computed(() => [
 ])
 
 const categoryOptions = computed(() =>
-  props.categories.map(c => ({ value: c.name, label: c.name })),
+  props.categories.map(c => ({ value: c.name, label: expenseCategoryLabel(c.name) })),
 )
 
 const categoryByName = computed(() => new Map(props.categories.map(category => [category.name, category])))

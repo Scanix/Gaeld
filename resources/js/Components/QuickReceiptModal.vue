@@ -16,7 +16,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 
-const { t } = useTranslations()
+const { t, expenseCategoryLabel } = useTranslations()
 
 // Stages: capture → scanning → review
 const stage = ref('capture') // 'capture' | 'scanning' | 'review'
@@ -47,7 +47,7 @@ const form = ref({
 
 const categoryOptions = computed(() => [
   { value: '', label: t('select_category') },
-  ...organizationCategories.value.map(category => ({ value: category.name, label: category.name })),
+  ...organizationCategories.value.map(category => ({ value: category.name, label: expenseCategoryLabel(category.name) })),
 ])
 
 watch(() => props.open, (open) => {

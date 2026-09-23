@@ -5,6 +5,16 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.24 Staging Candidate
+
+This patch fixes the visibility of the standard resale expense category. The
+category remains stored under its canonical internal value, but users now see
+the correct localized label, including French « Achats de marchandises
+destinées à la revente », in all expense entry, recurring, Quick Receipt, list,
+and detail views.
+
+The exact staging pair is CE `v3.8.24` with EE `v2.9.31`.
+
 ## v3.8.23 Staging Candidate
 
 This patch lets authorized users correct an incorrectly entered invoice payment

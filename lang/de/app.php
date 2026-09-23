@@ -340,6 +340,7 @@ return [
     'cat_office_supplies' => 'Büromaterial',
     'cat_rent' => 'Miete',
     'cat_insurance' => 'Versicherungen',
+    'cat_goods_purchased_for_resale' => 'Zum Wiederverkauf bestimmte Waren',
 
     // Quick Receipt
     'quick_receipt' => 'Schnellbeleg',

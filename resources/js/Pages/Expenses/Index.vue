@@ -24,7 +24,7 @@ const props = defineProps({
 const deleteTarget = ref(null)
 const deleting = ref(false)
 
-const { t } = useTranslations()
+const { t, expenseCategoryLabel } = useTranslations()
 const { formatCurrency, formatDate } = useFormatters()
 
 function confirmDelete(expense) {
@@ -64,7 +64,7 @@ function handleFilter({ key, value }) {
 
 const columns = computed(() => [
   { key: 'date', label: t('date'), format: (v) => formatDate(v), sortable: true },
-  { key: 'category', label: t('category'), sortable: true },
+  { key: 'category', label: t('category'), format: (v) => expenseCategoryLabel(v), sortable: true },
   { key: 'description', label: t('description') },
   { key: 'vendor', label: t('vendor'), sortable: true },
   { key: 'amount', label: t('net_amount_excl_vat'), class: 'text-right', format: (v, row) => formatCurrency(v, row.currency), sortable: true },

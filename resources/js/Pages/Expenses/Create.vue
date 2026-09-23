@@ -91,13 +91,13 @@ function onReceiptChange(file) {
   form.receipt = file ?? null
 }
 
-const { t } = useTranslations()
+const { t, expenseCategoryLabel } = useTranslations()
 const { formatCurrency } = useFormatters()
 
 const { isClosed: isDateClosed, closedYear } = useClosedFiscalYear(() => form.date)
 
 const categoryByName = new Map(props.categories.map(category => [category.name, category]))
-const categoryOptions = props.categories.map(c => ({ value: c.name, label: c.name }))
+const categoryOptions = props.categories.map(c => ({ value: c.name, label: expenseCategoryLabel(c.name) }))
 let suggestedExpenseAccountCode = ''
 
 watch(() => form.category, (category) => {

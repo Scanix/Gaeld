@@ -78,24 +78,10 @@ const statusVariant = {
   cancelled: 'secondary',
 }
 
-const { t } = useTranslations()
+const { t, expenseCategoryLabel } = useTranslations()
 const { formatCurrency, formatDate } = useFormatters()
 
-const categoryKeys = {
-  'Office Supplies': 'cat_office_supplies',
-  'Travel': 'cat_travel',
-  'Software': 'cat_software',
-  'Professional Services': 'cat_professional_services',
-  'Marketing': 'cat_marketing',
-  'Rent': 'cat_rent',
-  'Utilities': 'cat_utilities',
-  'Insurance': 'cat_insurance',
-  'Other': 'cat_other',
-}
-const categoryLabel = computed(() => {
-  const key = categoryKeys[props.expense.category]
-  return key ? t(key) : props.expense.category
-})
+const categoryLabel = computed(() => expenseCategoryLabel(props.expense.category))
 
 const expenseTitle = computed(() => props.expense.description || categoryLabel.value)
 

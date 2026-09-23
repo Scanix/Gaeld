@@ -338,6 +338,7 @@ return [
     'cat_office_supplies' => 'Fournitures de bureau',
     'cat_rent' => 'Loyer',
     'cat_insurance' => 'Assurances',
+    'cat_goods_purchased_for_resale' => 'Achats de marchandises destinées à la revente',
 
     // Quick Receipt
     'quick_receipt' => 'Reçu rapide',
