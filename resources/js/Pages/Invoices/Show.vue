@@ -1,5 +1,5 @@
 <script setup>
-import { useForm, router } from '@inertiajs/vue3'
+import { useForm, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -39,7 +39,16 @@ const props = defineProps({
 })
 
 const { t } = useTranslations()
+const page = usePage()
 const { formatCurrency, formatDate } = useFormatters()
+const invoiceCurrency = computed(() => props.invoice?.currency || 'CHF')
+const ledgerCurrency = computed(() => page.props.auth?.currentOrganization?.currency || 'CHF')
+function invoiceMoney(amount) {
+  return formatCurrency(amount, invoiceCurrency.value)
+}
+function ledgerMoney(amount) {
+  return formatCurrency(amount, ledgerCurrency.value)
+}
 
 const showPaymentModal = ref(false)
 const paymentToEdit = ref(null)
@@ -116,7 +125,7 @@ function recordPayment() {
   const amount = parseFloat(paymentForm.amount)
 
   if (!Number.isFinite(amount) || amount <= 0 || amount > amountDue.value) {
-    paymentForm.setError('amount', `${t('amount_due')}: ${formatCurrency(amountDue.value)}`)
+    paymentForm.setError('amount', `${t('amount_due')}: ${invoiceMoney(amountDue.value)}`)
     return
   }
 
@@ -203,22 +212,22 @@ function executePurge() {
 const lineColumns = computed(() => [
   { key: 'description', label: t('description') },
   { key: 'quantity', label: t('qty'), class: 'text-right', format: (v, row) => row.type === 'discount' && row.discount_type === 'percentage' ? '—' : v },
-  { key: 'unit_price', label: t('unit_price'), class: 'text-right', format: (v, row) => row.type === 'discount' && row.discount_type === 'percentage' ? `${v}%` : formatCurrency(v) },
+  { key: 'unit_price', label: t('unit_price'), class: 'text-right', format: (v, row) => row.type === 'discount' && row.discount_type === 'percentage' ? `${v}%` : invoiceMoney(v) },
   { key: 'vat_rate_id', label: t('vat'), class: 'text-right', format: (v, row) => {
     const vr = row.vat_rate ?? row.vatRate
     if (!vr) return '—'
-    const amount = row.vat_amount != null ? formatCurrency(row.vat_amount) : null
+    const amount = row.vat_amount != null ? invoiceMoney(row.vat_amount) : null
     return amount ? `${vr.rate}% (${amount})` : `${vr.rate}%`
   } },
   { key: 'total', label: t('total'), class: 'text-right', format: (v, row) => {
-    if (row.type === 'discount') return formatCurrency(-Math.abs(parseFloat(row.amount)))
-    return formatCurrency(row.amount)
+    if (row.type === 'discount') return invoiceMoney(-Math.abs(parseFloat(row.amount)))
+    return invoiceMoney(row.amount)
   }},
 ])
 
 const paymentColumns = computed(() => [
   { key: 'payment_date', label: t('date'), format: (v) => formatDate(v) },
-  { key: 'amount', label: t('amount'), class: 'text-right', format: (v) => formatCurrency(v) },
+  { key: 'amount', label: t('amount'), class: 'text-right', format: (v) => invoiceMoney(v) },
   { key: 'payment_method', label: t('payment_method'), format: (v) => paymentMethodOptions.find(o => o.value === v)?.label || v },
   { key: 'reference', label: t('reference') },
   { key: 'actions', label: '', class: 'text-right w-auto' },
@@ -404,26 +413,26 @@ const bankAccountOptions = computed(() =>
             <div class="w-full max-w-xs space-y-2 text-sm">
               <div v-if="parseFloat(invoice?.vat_amount) > 0" class="flex justify-between text-[hsl(var(--muted-foreground))]">
                 <span>{{ t('subtotal') }}</span>
-                <span class="tabular-nums">{{ formatCurrency(invoice?.subtotal) }}</span>
+                <span class="tabular-nums">{{ invoiceMoney(invoice?.subtotal) }}</span>
               </div>
               <div v-if="parseFloat(invoice?.vat_amount) > 0" class="flex justify-between text-[hsl(var(--muted-foreground))]">
                 <span>{{ t('vat_total') }}</span>
-                <span class="tabular-nums">{{ formatCurrency(invoice?.vat_amount) }}</span>
+                <span class="tabular-nums">{{ invoiceMoney(invoice?.vat_amount) }}</span>
               </div>
               <div class="flex justify-between border-t pt-1 font-semibold">
                 <span>{{ t('total') }}</span>
-                <span class="text-xl tabular-nums">{{ formatCurrency(invoice?.total) }}</span>
+                <span class="text-xl tabular-nums">{{ invoiceMoney(invoice?.total) }}</span>
               </div>
               <div v-if="invoice?.payments?.length" class="space-y-2 border-t pt-2">
                 <div class="flex justify-between text-[hsl(var(--muted-foreground))]">
                   <span>{{ t('amount') }}</span>
-                  <span class="tabular-nums">{{ formatCurrency(amountPaid) }}</span>
+                  <span class="tabular-nums">{{ invoiceMoney(amountPaid) }}</span>
                 </div>
                 <div class="h-2 overflow-hidden rounded-full bg-[hsl(var(--muted))]" aria-hidden="true">
                   <div class="h-full rounded-full bg-[hsl(var(--primary))] transition-all" :style="{ width: `${paymentProgress}%` }" />
                 </div>
                 <p class="text-right text-[hsl(var(--muted-foreground))]">
-                  {{ t('amount_due') }} {{ formatCurrency(amountDue) }}
+                  {{ t('amount_due') }} {{ invoiceMoney(amountDue) }}
                 </p>
               </div>
             </div>
@@ -436,7 +445,7 @@ const bankAccountOptions = computed(() =>
         <CardHeader>
           <CardTitle>{{ t('payment_history') }}</CardTitle>
           <CardDescription v-if="invoice?.payments?.length">{{ invoice.payments.length }} {{ t('payments_recorded') }}</CardDescription>
-          <CardDescription v-else>{{ t('amount_due') }} {{ formatCurrency(amountDue) }}</CardDescription>
+          <CardDescription v-else>{{ t('amount_due') }} {{ invoiceMoney(amountDue) }}</CardDescription>
         </CardHeader>
         <CardContent>
           <DataTable v-if="invoice?.payments?.length" :columns="paymentColumns" :rows="invoice.payments">
@@ -467,8 +476,8 @@ const bankAccountOptions = computed(() =>
           <DataTable
             :columns="[
               { key: 'account', label: t('account'), format: (v) => v ? `${v.code} ${v.name}` : '—' },
-              { key: 'debit', label: t('debit'), class: 'text-right', format: (v) => v ? formatCurrency(v) : '' },
-              { key: 'credit', label: t('credit'), class: 'text-right', format: (v) => v ? formatCurrency(v) : '' },
+              { key: 'debit', label: t('debit'), class: 'text-right', format: (v) => v ? ledgerMoney(v) : '' },
+              { key: 'credit', label: t('credit'), class: 'text-right', format: (v) => v ? ledgerMoney(v) : '' },
             ]"
             :rows="invoice.journal_entry.lines ?? []"
           />
@@ -512,7 +521,7 @@ const bankAccountOptions = computed(() =>
               <a :href="`/invoices/${cn.id}`" class="text-sm text-[hsl(var(--primary))] hover:underline">
                 {{ cn.number }}
               </a>
-              <span class="ml-2 text-sm text-[hsl(var(--muted-foreground))]">{{ formatCurrency(cn.total) }}</span>
+              <span class="ml-2 text-sm text-[hsl(var(--muted-foreground))]">{{ invoiceMoney(cn.total) }}</span>
             </div>
           </div>
         </CardContent>
@@ -564,7 +573,7 @@ const bankAccountOptions = computed(() =>
           min="0.01"
           :max="amountDue"
           step="0.01"
-          :label="`${t('amount')} (${t('due')}: ${formatCurrency(amountDue)})`"
+          :label="`${t('amount')} (${t('due')}: ${invoiceMoney(amountDue)})`"
           :error="paymentForm.errors.amount"
           required
         />
@@ -633,7 +642,7 @@ const bankAccountOptions = computed(() =>
         email: invoice?.customer?.email,
         organization: invoice?.organization?.name,
         number: invoice?.number,
-        amount: formatCurrency(amountDue),
+        amount: invoiceMoney(amountDue),
         dueDate: formatDate(invoice?.due_date),
         days: Math.max(0, Math.floor((Date.now() - new Date(invoice?.due_date).getTime()) / 86400000)),
       })"

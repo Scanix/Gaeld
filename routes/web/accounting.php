@@ -61,13 +61,12 @@ Route::middleware('feature:analytical')->group(function () {
     Route::get('/accounting/analytical-report/export/{format}', [CostCenterController::class, 'exportAnalyticalReport'])->name('accounting.analytical-report.export');
 });
 
-// Multi-currency exchange rates (feature-gated)
-Route::middleware('feature:multi_currency')->group(function () {
-    Route::get('/accounting/exchange-rates', [ExchangeRateController::class, 'index'])->name('accounting.exchange-rates.index');
-    Route::post('/accounting/exchange-rates', [ExchangeRateController::class, 'store'])->name('accounting.exchange-rates.store');
-    Route::delete('/accounting/exchange-rates/{exchangeRate}', [ExchangeRateController::class, 'destroy'])->name('accounting.exchange-rates.destroy');
-    Route::post('/accounting/exchange-rates/fetch-ecb', [ExchangeRateController::class, 'fetchEcb'])->name('accounting.exchange-rates.fetch-ecb');
-});
+// Exchange rates are required to book a foreign-currency document into the
+// organization ledger, so they are not behind the multi-currency flag.
+Route::get('/accounting/exchange-rates', [ExchangeRateController::class, 'index'])->name('accounting.exchange-rates.index');
+Route::post('/accounting/exchange-rates', [ExchangeRateController::class, 'store'])->name('accounting.exchange-rates.store');
+Route::delete('/accounting/exchange-rates/{exchangeRate}', [ExchangeRateController::class, 'destroy'])->name('accounting.exchange-rates.destroy');
+Route::post('/accounting/exchange-rates/fetch-ecb', [ExchangeRateController::class, 'fetchEcb'])->name('accounting.exchange-rates.fetch-ecb');
 
 // Consolidation (feature-gated)
 Route::middleware('feature:consolidation')->group(function () {

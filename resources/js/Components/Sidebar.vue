@@ -177,7 +177,7 @@ const navigation = computed(() => {
       ...(features.value.consolidation && accountingRoutes.value.consolidation ? [
         { key: 'consolidation', href: '/accounting/consolidation' },
       ] : []),
-      ...(features.value.multi_currency && accountingRoutes.value.exchangeRates ? [
+      ...(accountingRoutes.value.exchangeRates ? [
         { key: 'exchange_rates', href: '/accounting/exchange-rates' },
       ] : []),
       ...(features.value.assets ? [
