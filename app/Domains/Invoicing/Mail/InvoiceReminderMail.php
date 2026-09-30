@@ -24,7 +24,7 @@ class InvoiceReminderMail extends Mailable
         public readonly Organization $organization,
         public readonly int $reminderNumber,
     ) {
-        $this->daysOverdue = (int) $invoice->due_date->diffInDays(now());
+        $this->daysOverdue = (int) ($invoice->due_date?->diffInDays(now()) ?? 0);
         $this->amountDue = $invoice->amountDue();
     }
 

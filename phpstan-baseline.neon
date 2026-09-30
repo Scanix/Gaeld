@@ -332,12 +332,6 @@ parameters:
 			path: app/Domains/Invoicing/Search/InvoiceSearchProvider.php
 
 		-
-			message: '#^Expression on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.expr
-			count: 2
-			path: app/Domains/Invoicing/Services/InvoicePdfRenderer.php
-
-		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(string\|null\)\: mixed\)\|null, ''trim'' given\.$#'
 			identifier: argument.type
 			count: 1

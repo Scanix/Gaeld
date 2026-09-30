@@ -72,7 +72,7 @@ class InvoiceMail extends Mailable
                 $this->invoice->customer->name ?? '',
                 $this->invoice->number ?? '',
                 number_format($this->invoice->total ?? 0, 2).' '.($this->invoice->currency ?? 'CHF'),
-                $this->invoice->due_date->format('d.m.Y'),
+                $this->invoice->due_date?->format('d.m.Y') ?? '',
                 $this->organization->name ?? '',
             ],
             $text,

@@ -23,7 +23,7 @@ class InvoiceResource extends JsonResource
             'related_invoice_id' => $this->related_invoice_id,
             'customer' => new ContactResource($this->whenLoaded('customer')),
             'issue_date' => $this->issue_date->toDateString(),
-            'due_date' => $this->due_date->toDateString(),
+            'due_date' => $this->due_date?->toDateString(),
             'subtotal' => $this->subtotal,
             'vat_amount' => $this->vat_amount,
             'total' => $this->total,

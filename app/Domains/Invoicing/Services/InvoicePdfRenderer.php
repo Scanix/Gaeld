@@ -172,8 +172,8 @@ class InvoicePdfRenderer
         $tcpdf->SetTextColor(...InvoicePdfStyle::COLOR_GRAY);
 
         $metaLines = [];
-        $metaLines[] = $this->t('pdf_date').': '.($invoice->issue_date->format('d.m.Y') ?? '');
-        $metaLines[] = $this->t('pdf_due_date').': '.($invoice->due_date->format('d.m.Y') ?? '');
+        $metaLines[] = $this->t('pdf_date').': '.$invoice->issue_date->format('d.m.Y');
+        $metaLines[] = $this->t('pdf_due_date').': '.($invoice->due_date?->format('d.m.Y') ?? '');
         if ($invoice->payment_terms) {
             $metaLines[] = $this->t('pdf_payment_terms').': '.$invoice->payment_terms;
         }

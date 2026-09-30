@@ -37,7 +37,7 @@ use Laravel\Scout\Searchable;
  * @property InvoiceType $type
  * @property array{name: string, email: string|null, address: string|null, postal_code: string|null, city: string|null, country: string, vat_number: string|null}|null $customer_snapshot
  * @property Carbon $issue_date
- * @property Carbon $due_date
+ * @property Carbon|null $due_date
  * @property string $subtotal
  * @property string $vat_amount
  * @property string $total
@@ -207,6 +207,7 @@ class Invoice extends Model
     public function isOverdue(): bool
     {
         return in_array($this->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue], true)
+            && $this->due_date !== null
             && $this->due_date->isBefore(now()->startOfDay());
     }
 

@@ -98,6 +98,16 @@ class GenerateQrInvoicePdfActionTest extends TestCase
         $this->assertGreaterThan(2000, strlen($pdf), 'Rendered PDF should contain the invoice content + QR payment slip pages');
     }
 
+    public function test_missing_due_date_does_not_cause_a_renderer_error(): void
+    {
+        $invoice = $this->makeInvoice('INV-PDF-NO-DUE-DATE');
+        $invoice->update(['due_date' => null]);
+
+        $pdf = app(GenerateQrInvoicePdfAction::class)->execute($invoice, $this->org, 'en');
+
+        $this->assertStringStartsWith('%PDF-', $pdf);
+    }
+
     public function test_credit_notes_cannot_generate_a_qr_payment_slip(): void
     {
         // Documents existing, intentional behavior: a QR-bill is a payment

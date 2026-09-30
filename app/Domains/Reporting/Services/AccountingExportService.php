@@ -251,7 +251,7 @@ class AccountingExportService
                 $i->status->value,
                 $i->type->value,
                 $i->issue_date->toDateString(),
-                $i->due_date->toDateString(),
+                $i->due_date?->toDateString() ?? '',
                 $i->subtotal,
                 $i->vat_amount,
                 $i->total,

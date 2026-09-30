@@ -95,7 +95,7 @@ class UnreconcileTransactionAction
         }
 
         if ($invoice->status === InvoiceStatus::Paid && ! $invoice->fresh()->isFullyPaid()) {
-            $isOverdue = $invoice->due_date->isBefore(now()->startOfDay());
+            $isOverdue = $invoice->due_date?->isBefore(now()->startOfDay()) ?? false;
             $invoice->update(['status' => $isOverdue ? InvoiceStatus::Overdue : InvoiceStatus::Sent]);
         }
     }

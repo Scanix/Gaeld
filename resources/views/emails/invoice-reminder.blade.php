@@ -6,7 +6,7 @@
     'organization' => $organization->name,
     'amount' => number_format((float) $amountDue, 2, '.', "'"),
     'currency' => $invoice->currency,
-    'due_date' => $invoice->due_date->format('d.m.Y'),
+    'due_date' => $invoice->due_date?->format('d.m.Y') ?? '',
     'days_overdue' => $daysOverdue,
 ]) }}
 
@@ -15,7 +15,7 @@
 |:---|---:|
 | **{{ __('mail.reminder_invoice_number') }}** | {{ $invoice->number }} |
 | **{{ __('mail.reminder_amount') }}** | {{ $invoice->currency }} {{ number_format((float) $amountDue, 2, '.', "'") }} |
-| **{{ __('mail.reminder_due_date') }}** | {{ $invoice->due_date->format('d.m.Y') }} |
+| **{{ __('mail.reminder_due_date') }}** | {{ $invoice->due_date?->format('d.m.Y') ?? '' }} |
 | **{{ __('mail.reminder_days_overdue') }}** | {{ $daysOverdue }} |
 @endcomponent
 

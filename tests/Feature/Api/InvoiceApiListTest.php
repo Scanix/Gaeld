@@ -41,6 +41,7 @@ class InvoiceApiListTest extends SecurityTestCase
         $invoices = Invoice::factory()->count(2)->create([
             'organization_id' => $this->orgA->id,
             'customer_id' => $customer->id,
+            'due_date' => null,
         ]);
         foreach ($invoices as $invoice) {
             $invoice->lines()->create([
@@ -59,6 +60,8 @@ class InvoiceApiListTest extends SecurityTestCase
 
         $response->assertOk()
             ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.due_date', null)
+            ->assertJsonPath('data.1.due_date', null)
             ->assertJsonPath('data.0.lines.0.vat_rate_id', $vatRate->uuid)
             ->assertJsonPath('data.1.lines.0.vat_rate_id', $vatRate->uuid);
     }

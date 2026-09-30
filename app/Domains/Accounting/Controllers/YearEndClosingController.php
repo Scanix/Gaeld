@@ -85,16 +85,22 @@ class YearEndClosingController extends Controller
             ->with('customer:id,name')
             ->orderBy('due_date')
             ->get(['id', 'number', 'customer_id', 'issue_date', 'due_date', 'total', 'status'])
-            ->map(fn (Invoice $inv) => [
-                'id' => $inv->id,
-                'number' => $inv->number,
-                'customer_name' => $inv->customer?->name,
-                'issue_date' => $inv->issue_date->toDateString(),
-                'due_date' => $inv->due_date->toDateString(),
-                'total' => $inv->total,
-                'status' => $inv->status->value,
-                'days_overdue' => max(0, now()->startOfDay()->diffInDays($inv->due_date->startOfDay(), false) * -1),
-            ])
+            ->map(function (Invoice $inv): array {
+                $dueDate = $inv->due_date;
+
+                return [
+                    'id' => $inv->id,
+                    'number' => $inv->number,
+                    'customer_name' => $inv->customer?->name,
+                    'issue_date' => $inv->issue_date->toDateString(),
+                    'due_date' => $dueDate?->toDateString(),
+                    'total' => $inv->total,
+                    'status' => $inv->status->value,
+                    'days_overdue' => $dueDate === null
+                        ? 0
+                        : max(0, now()->startOfDay()->diffInDays($dueDate->startOfDay(), false) * -1),
+                ];
+            })
             ->all();
 
         $startYear = $org->created_at ? $org->created_at->year : (now()->year - 5);

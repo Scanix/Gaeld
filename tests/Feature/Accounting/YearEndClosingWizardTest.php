@@ -100,4 +100,32 @@ class YearEndClosingWizardTest extends TestCase
             ->where('outstandingInvoices.0.number', 'INV-2025-001')
         );
     }
+
+    public function test_outstanding_invoice_without_due_date_is_returned_without_error(): void
+    {
+        $customer = Contact::factory()->create([
+            'organization_id' => $this->organization->id,
+            'name' => 'No Due Date AG',
+        ]);
+
+        Invoice::create([
+            'organization_id' => $this->organization->id,
+            'customer_id' => $customer->id,
+            'number' => 'INV-2025-NO-DUE-DATE',
+            'status' => InvoiceStatus::Sent,
+            'issue_date' => '2025-06-15',
+            'due_date' => null,
+            'total' => '500.00',
+        ]);
+
+        $response = $this->actingAs($this->owner)->withSession([
+            'current_organization_id' => $this->organization->id,
+        ])->get('/accounting/year-end-closing?year=2025');
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('outstandingInvoices.0.due_date', null)
+            ->where('outstandingInvoices.0.days_overdue', 0)
+        );
+    }
 }

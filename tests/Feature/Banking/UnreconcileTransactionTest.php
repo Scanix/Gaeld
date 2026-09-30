@@ -55,7 +55,7 @@ class UnreconcileTransactionTest extends TestCase
             'number' => 'INV-2026-001',
             'status' => InvoiceStatus::Sent,
             'issue_date' => '2026-03-01',
-            'due_date' => now()->addMonth()->toDateString(),
+            'due_date' => null,
             'subtotal' => 5000.00,
             'vat_amount' => 0,
             'total' => 5000.00,
