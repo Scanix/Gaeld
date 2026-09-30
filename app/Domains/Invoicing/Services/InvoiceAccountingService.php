@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\VatEntryType;
 use App\Domains\Accounting\Models\VatEntry;
+use App\Domains\Accounting\Services\CurrencyConversionService;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\VatPeriodLockService;
@@ -33,6 +34,7 @@ class InvoiceAccountingService
         private LedgerService $ledgerService,
         private LedgerQueryService $ledgerQuery,
         private VatPeriodLockService $vatPeriodLocks,
+        private CurrencyConversionService $currencies,
     ) {}
 
     /**
@@ -54,33 +56,33 @@ class InvoiceAccountingService
     {
         return DB::transaction(function () use ($invoice) {
             $orgId = $invoice->organization_id;
-            $invoice->load('lines.vatRate');
+            $invoice->load('lines.vatRate', 'organization');
 
             $isCreditNote = $invoice->type === InvoiceType::CreditNote;
+            $ledgerCurrency = strtoupper((string) ($invoice->organization->currency ?: 'CHF'));
+            $documentCurrency = strtoupper((string) ($invoice->currency ?: $ledgerCurrency));
+            $rate = $this->currencies->rate(
+                $orgId,
+                $documentCurrency,
+                $ledgerCurrency,
+                $invoice->issue_date->toDateString(),
+            );
+            $toLedger = fn (string $amount): string => Money::round(bcmul($amount, $rate, 8));
 
             $ar = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
             $revenue = $this->ledgerQuery->resolveAccount($orgId, AccountCode::REVENUE);
 
             $lines = [];
 
-            // For credit notes, amounts are negative — use absolute values and swap debit/credit
-            $invoiceTotal = $isCreditNote
-                ? Money::absoluteAmount((string) $invoice->total)
-                : (string) $invoice->total;
-
-            // AR line: Debit for invoice, Credit for credit note
-            $lines[] = new JournalLineData(
-                accountId: (string) $ar->id,
-                debit: $isCreditNote ? '0' : $invoiceTotal,
-                credit: $isCreditNote ? $invoiceTotal : '0',
-                description: 'Accounts Receivable',
-            );
-
-            // Group invoice lines by VAT rate to create separate revenue + VAT entries
+            // Group invoice lines by VAT rate to create separate revenue + VAT entries.
+            // The receivable is the sum of those converted lines so rounding cannot
+            // leave the entry unbalanced.
             $groupedByVat = $invoice->lines->groupBy(fn ($line) => $line->vat_rate_id ?? 'none');
 
             foreach ($groupedByVat as $vatRateId => $invoiceLines) {
                 ['netAmount' => $netAmount, 'vatAmount' => $vatAmount] = $this->calculateGroupTotals($invoiceLines);
+                $netAmount = $toLedger($netAmount);
+                $vatAmount = $toLedger($vatAmount);
 
                 // Revenue line: Credit for invoice, Debit for credit note
                 if (Money::isPositive($netAmount)) {
@@ -108,11 +110,25 @@ class InvoiceAccountingService
                 }
             }
 
+            $invoiceTotal = '0';
+            foreach (array_slice($lines, 0) as $line) {
+                $invoiceTotal = Money::add($invoiceTotal, $isCreditNote ? $line->debit : $line->credit);
+            }
+            array_unshift($lines, new JournalLineData(
+                accountId: (string) $ar->id,
+                debit: $isCreditNote ? '0' : $invoiceTotal,
+                credit: $isCreditNote ? $invoiceTotal : '0',
+                description: 'Accounts Receivable',
+            ));
+
             $docType = $isCreditNote ? 'Credit Note' : 'Invoice';
+            $fxNote = $documentCurrency === $ledgerCurrency
+                ? ''
+                : sprintf(' [%s %s @ %s %s]', $invoice->total, $documentCurrency, $rate, $ledgerCurrency);
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
                 date: $invoice->issue_date->toDateString(),
                 reference: $invoice->number,
-                description: "{$docType} {$invoice->number} — ".($invoice->customer->name ?? 'N/A'),
+                description: "{$docType} {$invoice->number} — ".($invoice->customer->name ?? 'N/A').$fxNote,
                 lines: $lines,
             ));
 
@@ -123,6 +139,8 @@ class InvoiceAccountingService
                 }
 
                 ['netAmount' => $netAmount, 'vatAmount' => $vatAmount] = $this->calculateGroupTotals($invoiceLines);
+                $netAmount = $toLedger($netAmount);
+                $vatAmount = $toLedger($vatAmount);
 
                 if (Money::isPositive($vatAmount)) {
                     VatEntry::create([
@@ -198,15 +216,30 @@ class InvoiceAccountingService
             $bankAccount = $this->ledgerQuery->resolveAccount($orgId, $bankAccountCode);
             $accountsReceivable = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
 
+            $invoice->loadMissing('organization');
+            $ledgerCurrency = strtoupper((string) ($invoice->organization->currency ?: 'CHF'));
+            $documentCurrency = strtoupper((string) ($invoice->currency ?: $ledgerCurrency));
+            $converted = $this->currencies->convert(
+                $orgId,
+                $documentCurrency,
+                $ledgerCurrency,
+                (string) $data->amount,
+                $invoice->issue_date->toDateString(),
+            );
+            $ledgerAmount = $converted['amount'];
+            $fxNote = $documentCurrency === $ledgerCurrency
+                ? ''
+                : sprintf(' [%s %s @ %s]', $data->amount, $documentCurrency, $converted['rate']);
+
             $paymentRef = $data->reference ?? 'PAY-'.$invoice->number.'-'.($invoice->payments()->count() + 1);
 
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
                 date: $data->paymentDate,
                 reference: $paymentRef,
-                description: "Payment received for {$invoice->number}",
+                description: "Payment received for {$invoice->number}{$fxNote}",
                 lines: [
-                    new JournalLineData(accountId: (string) $bankAccount->id, debit: $data->amount, credit: '0', description: 'Bank deposit'),
-                    new JournalLineData(accountId: (string) $accountsReceivable->id, debit: '0', credit: $data->amount, description: 'Clear receivable'),
+                    new JournalLineData(accountId: (string) $bankAccount->id, debit: $ledgerAmount, credit: '0', description: 'Bank deposit'),
+                    new JournalLineData(accountId: (string) $accountsReceivable->id, debit: '0', credit: $ledgerAmount, description: 'Clear receivable'),
                 ],
             ));
 

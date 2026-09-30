@@ -4,6 +4,7 @@ namespace Tests\Feature\Invoicing;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\ExchangeRate;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Accounting\Services\LedgerQueryService;
@@ -21,6 +22,7 @@ use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
+use DomainException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -141,6 +143,40 @@ class InvoiceFlowTest extends TestCase
             fn ($line) => $line->account?->code === '2200',
         ));
         $this->assertDatabaseCount('vat_entries', 0);
+    }
+
+    public function test_eur_invoice_is_booked_in_the_organization_currency(): void
+    {
+        ExchangeRate::create([
+            'organization_id' => $this->org->id,
+            'currency_from' => 'EUR',
+            'currency_to' => 'CHF',
+            'rate' => '0.95000000',
+            'date' => '2026-03-01',
+            'source' => 'manual',
+        ]);
+
+        $invoice = $this->createInvoice(['currency' => 'EUR', 'number' => 'INV-EUR-001']);
+
+        $this->assertSame('EUR', $invoice->currency);
+        $this->assertSame('1621.50', $invoice->total);
+
+        $posted = app(FinalizeInvoiceAction::class)->execute($invoice);
+        $receivable = $posted->journalEntry->lines->firstWhere('description', 'Accounts Receivable');
+
+        $this->assertNotNull($receivable);
+        $this->assertSame('1540.43', $receivable->debit);
+        $this->assertSame('0.00', $receivable->credit);
+        $this->assertStringContainsString('1621.50 EUR @ 0.95000000 CHF', $posted->journalEntry->description);
+    }
+
+    public function test_foreign_invoice_without_an_exchange_rate_is_not_posted(): void
+    {
+        $invoice = $this->createInvoice(['currency' => 'EUR', 'number' => 'INV-EUR-002']);
+
+        $this->expectException(DomainException::class);
+
+        app(FinalizeInvoiceAction::class)->execute($invoice);
     }
 
     public function test_finalized_invoice_rejects_a_soft_deleted_customer(): void
