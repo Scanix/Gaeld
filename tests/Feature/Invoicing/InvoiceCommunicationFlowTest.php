@@ -53,7 +53,7 @@ class InvoiceCommunicationFlowTest extends TestCase
                 'subtotal' => '100.00',
                 'total' => '100.00',
                 'issue_date' => '2026-01-15',
-                'due_date' => '2026-02-15',
+                'due_date' => null,
             ]);
 
         $this->assertNull($bankAccount->qr_iban);
@@ -75,6 +75,8 @@ class InvoiceCommunicationFlowTest extends TestCase
         app(InvoiceMailerService::class)->sendInvoice($invoice->load('customer'));
 
         Mail::assertSent(InvoiceMail::class, function (InvoiceMail $mail) use ($invoice): bool {
+            $mail->render();
+
             return $mail->invoice->is($invoice);
         });
     }

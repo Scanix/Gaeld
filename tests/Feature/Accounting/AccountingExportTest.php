@@ -7,6 +7,7 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Reporting\Jobs\GenerateAccountingExportJob;
 use App\Domains\Reporting\Mail\AccountingExportReadyMail;
@@ -186,6 +187,12 @@ class AccountingExportTest extends TestCase
     public function test_generate_export_creates_zip_with_expected_entries(): void
     {
         Storage::fake('local');
+
+        Invoice::factory()->create([
+            'organization_id' => $this->org->id,
+            'customer_id' => null,
+            'due_date' => null,
+        ]);
 
         // Post a journal entry so there is ledger data
         $ledger = app(LedgerService::class);

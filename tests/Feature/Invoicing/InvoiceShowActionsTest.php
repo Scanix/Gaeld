@@ -118,4 +118,17 @@ class InvoiceShowActionsTest extends TestCase
         $this->assertFalse($props['canSend']);
         $this->assertFalse($props['canSendReminder']);
     }
+
+    public function test_invoice_without_due_date_hides_the_reminder_action_without_error(): void
+    {
+        $invoice = $this->invoice(['due_date' => null]);
+
+        $props = $this->actAsOrg()
+            ->get(route('invoices.show', $invoice))
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertFalse($invoice->isOverdue());
+        $this->assertFalse($props['canSendReminder']);
+    }
 }

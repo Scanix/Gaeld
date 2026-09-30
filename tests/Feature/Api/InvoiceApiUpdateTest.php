@@ -71,5 +71,16 @@ class InvoiceApiUpdateTest extends SecurityTestCase
         $invoice->refresh();
         $this->assertSame($this->orgA->id, $invoice->organization_id);
         $this->assertSame(now()->addDays(45)->toDateString(), $invoice->due_date->toDateString());
+
+        $invoice->update(['due_date' => null]);
+
+        $secondToken = $this->createApiToken($this->ownerA, $this->orgA);
+
+        $this->withToken($secondToken)
+            ->withHeader('Idempotency-Key', 'invoice-null-due-date-update')
+            ->putJson("/api/v1/invoices/{$invoice->id}", ['currency' => 'CHF'])
+            ->assertOk();
+
+        $this->assertNull($invoice->fresh()->due_date);
     }
 }

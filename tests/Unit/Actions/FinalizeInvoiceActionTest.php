@@ -71,6 +71,17 @@ class FinalizeInvoiceActionTest extends TestCase
         $this->action->execute($invoice);
     }
 
+    public function test_rejects_draft_without_due_date(): void
+    {
+        $invoice = $this->makeInvoice(InvoiceStatus::Draft);
+        $invoice->due_date = null;
+
+        $this->expectException(InvalidInvoiceStateException::class);
+        $this->expectExceptionMessage('Cannot finalize an invoice without a due date');
+
+        $this->action->execute($invoice);
+    }
+
     public function test_finalizes_valid_draft_invoice(): void
     {
         $invoice = $this->makeInvoice(InvoiceStatus::Draft, lineCount: 2);
@@ -91,6 +102,7 @@ class FinalizeInvoiceActionTest extends TestCase
         /** @var Invoice $invoice */
         $invoice = Mockery::mock(Invoice::class)->makePartial();
         $invoice->status = $status;
+        $invoice->due_date = now()->addDays(30);
         $invoice->total = $lineCount > 0 ? '100.00' : '0.00';
 
         $org = Mockery::mock(Organization::class)->makePartial();

@@ -26,6 +26,10 @@ class FinalizeInvoiceAction
             throw new InvalidInvoiceStateException("Only draft invoices can be finalized (current status: {$invoice->status->value}).");
         }
 
+        if ($invoice->due_date === null) {
+            throw new InvalidInvoiceStateException('Cannot finalize an invoice without a due date.');
+        }
+
         if ($invoice->lines()->count() === 0) {
             throw new InvalidInvoiceStateException('Cannot finalize an invoice with no line items.');
         }
