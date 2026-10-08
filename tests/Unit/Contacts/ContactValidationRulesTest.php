@@ -88,7 +88,7 @@ class ContactValidationRulesTest extends TestCase
     public function test_store_accepts_a_country_name_and_salutation_as_free_text(): void
     {
         $validator = Validator::make([
-            'name' => 'Maël Bächtold',
+            'name' => 'Maël Exemple',
             'type' => 'individual',
             'salutation' => 'Monsieur',
             'country' => 'CH',

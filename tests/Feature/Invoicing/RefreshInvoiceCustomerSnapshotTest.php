@@ -79,9 +79,9 @@ class RefreshInvoiceCustomerSnapshotTest extends TestCase
         $originalJournalEntry = $journalEntry->refresh()->getRawOriginal();
 
         $this->customer->update([
-            'name' => 'Maël Bächtold',
+            'name' => 'Maël Exemple',
             'salutation' => 'Monsieur',
-            'address' => "Rue de l'Ecluse 66a",
+            'address' => "Rue de l'Exemple 10",
             'postal_code' => '2000',
             'city' => 'Neuchâtel',
             'country_name' => 'Suisse',

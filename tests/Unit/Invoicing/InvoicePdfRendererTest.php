@@ -139,9 +139,9 @@ class InvoicePdfRendererTest extends TestCase
             'currency' => 'CHF',
             'customer_snapshot' => [
                 'salutation' => 'Monsieur',
-                'name' => 'Maël Bächtold',
+                'name' => 'Maël Exemple',
                 'email' => null,
-                'address' => "Rue de l'Ecluse 66a",
+                'address' => "Rue de l'Exemple 10",
                 'postal_code' => '2000',
                 'city' => 'Neuchâtel',
                 'country' => 'CH',
@@ -153,8 +153,8 @@ class InvoicePdfRendererTest extends TestCase
 
         $this->assertSame([
             'Monsieur',
-            'Maël Bächtold',
-            "Rue de l'Ecluse 66a",
+            'Maël Exemple',
+            "Rue de l'Exemple 10",
             '2000 Neuchâtel',
             'Suisse',
         ], $this->renderCustomerAddress($invoice, $organization));

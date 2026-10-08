@@ -66,7 +66,7 @@ class BusinessDocumentApiTest extends SecurityTestCase
     {
         $response = $this->withToken($this->tokenA)->postJson('/api/v1/contacts', [
             'type' => ContactType::Individual->value,
-            'name' => 'Maël Bächtold',
+            'name' => 'Maël Exemple',
             'salutation' => 'Monsieur',
             'country' => 'CH',
             'country_name' => 'Suisse',
@@ -96,7 +96,7 @@ class BusinessDocumentApiTest extends SecurityTestCase
     public function test_contact_api_rejects_country_names_and_salutations_over_the_limit(): void
     {
         $this->withToken($this->tokenA)->postJson('/api/v1/contacts', [
-            'name' => 'Maël Bächtold',
+            'name' => 'Maël Exemple',
             'salutation' => str_repeat('x', 51),
             'country_name' => str_repeat('x', 101),
         ])->assertUnprocessable()

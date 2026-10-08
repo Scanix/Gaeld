@@ -22,8 +22,8 @@ class ContactAddressTest extends TestCase
         $response = $this->actAsOrg()->postJson('/contacts', [
             'type' => 'individual',
             'salutation' => 'Monsieur',
-            'name' => 'Maël Bächtold',
-            'address' => "Rue de l'Ecluse 66a",
+            'name' => 'Maël Exemple',
+            'address' => "Rue de l'Exemple 10",
             'postal_code' => '2000',
             'city' => 'Neuchâtel',
             'country' => 'CH',
@@ -47,14 +47,14 @@ class ContactAddressTest extends TestCase
     public function test_contact_edit_updates_the_country_name_without_changing_the_iso_code(): void
     {
         $contact = Contact::factory()->for($this->organization)->create([
-            'name' => 'Maël Bächtold',
+            'name' => 'Maël Exemple',
             'salutation' => 'Monsieur',
             'country' => 'CH',
             'country_name' => 'Schweiz',
         ]);
 
         $this->actAsOrg()->put("/contacts/{$contact->uuid}", [
-            'name' => 'Maël Bächtold',
+            'name' => 'Maël Exemple',
             'salutation' => 'M.',
             'country_name' => 'Suisse',
         ])->assertRedirect("/contacts/{$contact->uuid}");
@@ -114,7 +114,7 @@ class ContactAddressTest extends TestCase
     public function test_contact_creation_rejects_country_names_and_salutations_over_the_limit(): void
     {
         $this->actAsOrg()->postJson('/contacts', [
-            'name' => 'Maël Bächtold',
+            'name' => 'Maël Exemple',
             'salutation' => str_repeat('x', 51),
             'country_name' => str_repeat('x', 101),
         ])->assertUnprocessable()

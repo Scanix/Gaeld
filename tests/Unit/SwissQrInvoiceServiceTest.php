@@ -206,9 +206,9 @@ class SwissQrInvoiceServiceTest extends TestCase
         $invoice->load('customer');
 
         $this->client->update([
-            'name' => 'Maël Bächtold',
+            'name' => 'Maël Exemple',
             'salutation' => 'Monsieur',
-            'address' => "Rue de l'Ecluse 66a",
+            'address' => "Rue de l'Exemple 10",
             'postal_code' => '2000',
             'city' => 'Neuchâtel',
             'country' => 'FR',
@@ -228,8 +228,8 @@ class SwissQrInvoiceServiceTest extends TestCase
         $debtor = $this->service->buildQrBill($invoice, $this->org)->getUltimateDebtor();
 
         $this->assertInstanceOf(StructuredAddress::class, $debtor);
-        $this->assertSame('Maël Bächtold', $debtor->getName());
-        $this->assertSame("Rue de l'Ecluse 66a", $debtor->getStreet());
+        $this->assertSame('Maël Exemple', $debtor->getName());
+        $this->assertSame("Rue de l'Exemple 10", $debtor->getStreet());
         $this->assertSame('2000', $debtor->getPostalCode());
         $this->assertSame('Neuchâtel', $debtor->getCity());
         $this->assertSame('FR', $debtor->getCountry());
