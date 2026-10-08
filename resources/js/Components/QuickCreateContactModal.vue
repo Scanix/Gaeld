@@ -24,6 +24,7 @@ const emit = defineEmits(['close', 'created'])
 const { t } = useTranslations()
 
 const contactSubType = ref('organization')
+const salutation = ref('')
 const name = ref('')
 const email = ref('')
 const phone = ref('')
@@ -31,6 +32,7 @@ const address = ref('')
 const city = ref('')
 const postalCode = ref('')
 const country = ref('CH')
+const countryName = ref('')
 const currency = ref('CHF')
 const vatNumber = ref('')
 const paymentTerms = ref('')
@@ -61,6 +63,7 @@ const categoryOptions = [
 watch(() => props.open, (val) => {
   if (val) {
     contactSubType.value = 'organization'
+    salutation.value = ''
     name.value = ''
     email.value = ''
     phone.value = ''
@@ -68,6 +71,7 @@ watch(() => props.open, (val) => {
     city.value = ''
     postalCode.value = ''
     country.value = 'CH'
+    countryName.value = ''
     currency.value = 'CHF'
     vatNumber.value = ''
     paymentTerms.value = ''
@@ -92,6 +96,7 @@ async function submit() {
 
   const body = {
     type: contactSubType.value,
+    salutation: salutation.value || null,
     name: name.value,
     email: email.value || null,
     phone: phone.value || null,
@@ -99,6 +104,7 @@ async function submit() {
     city: city.value || null,
     postal_code: postalCode.value || null,
     country: country.value || null,
+    country_name: countryName.value || null,
     currency: currency.value || null,
     vat_number: vatNumber.value || null,
     payment_terms: paymentTerms.value || null,
@@ -170,6 +176,14 @@ async function submit() {
         :error="errors.type?.[0]"
       />
       <FormInput
+        id="qc-salutation"
+        v-model="salutation"
+        :label="t('contact_salutation')"
+        :placeholder="t('contact_salutation_placeholder')"
+        :error="errors.salutation?.[0]"
+        maxlength="50"
+      />
+      <FormInput
         id="qc-name"
         v-model="name"
         :label="t('name')"
@@ -201,7 +215,10 @@ async function submit() {
             <MaskedInput id="qc-postal-code" v-model="postalCode" mask="postal" :label="t('postal_code')" :error="errors.postal_code?.[0]" />
           </div>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <SearchableSelect id="qc-country" v-model="country" :label="t('country')" :options="countryOptions(t)" :error="errors.country?.[0]" :force-searchable="true" />
+            <SearchableSelect id="qc-country" v-model="country" :label="t('contact_country')" :options="countryOptions(t)" :error="errors.country?.[0]" :force-searchable="true" />
+            <FormInput id="qc-country-name" v-model="countryName" :label="t('invoice_country_name')" :placeholder="t('invoice_country_name_placeholder')" :hint="t('invoice_country_name_hint')" :error="errors.country_name?.[0]" maxlength="100" />
+          </div>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <FormSelect id="qc-currency" v-model="currency" :label="t('currency')" :options="currencyOptions(t)" :error="errors.currency?.[0]" />
           </div>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">

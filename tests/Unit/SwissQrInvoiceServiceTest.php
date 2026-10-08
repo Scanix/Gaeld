@@ -4,10 +4,12 @@ namespace Tests\Unit;
 
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Contact;
+use App\Domains\Invoicing\Actions\RefreshInvoiceCustomerSnapshotAction;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\SwissQrInvoiceService;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Sprain\SwissQrBill\DataGroup\Element\StructuredAddress;
 use Tests\TestCase;
 
 class SwissQrInvoiceServiceTest extends TestCase
@@ -193,5 +195,110 @@ class SwissQrInvoiceServiceTest extends TestCase
         $this->assertEquals('QRR', $invoice->qr_type);
         $this->assertEquals(27, strlen($invoice->qr_reference));
         $this->assertCount(0, $violations, 'Auto-generated QR ref violations: '.implode(', ', array_map(fn ($v) => $v->getMessage(), iterator_to_array($violations))));
+    }
+
+    public function test_keeps_the_qr_debtor_snapshot_until_the_invoice_is_explicitly_refreshed(): void
+    {
+        $invoice = Invoice::factory()->for($this->org)->create([
+            'customer_id' => $this->client->id,
+            'customer_snapshot' => $this->client->toInvoiceSnapshot(),
+        ]);
+        $invoice->load('customer');
+
+        $this->client->update([
+            'name' => 'Maël Bächtold',
+            'salutation' => 'Monsieur',
+            'address' => "Rue de l'Ecluse 66a",
+            'postal_code' => '2000',
+            'city' => 'Neuchâtel',
+            'country' => 'FR',
+            'country_name' => 'Nom complet du pays saisi librement par le destinataire',
+        ]);
+
+        $debtor = $this->service->buildQrBill($invoice, $this->org)->getUltimateDebtor();
+
+        $this->assertInstanceOf(StructuredAddress::class, $debtor);
+        $this->assertSame('Client AG', $debtor->getName());
+        $this->assertSame('Lagerstrasse 5', $debtor->getStreet());
+        $this->assertSame('8004', $debtor->getPostalCode());
+        $this->assertSame('Zürich', $debtor->getCity());
+        $this->assertSame('CH', $debtor->getCountry());
+
+        $invoice = app(RefreshInvoiceCustomerSnapshotAction::class)->execute($invoice);
+        $debtor = $this->service->buildQrBill($invoice, $this->org)->getUltimateDebtor();
+
+        $this->assertInstanceOf(StructuredAddress::class, $debtor);
+        $this->assertSame('Maël Bächtold', $debtor->getName());
+        $this->assertSame("Rue de l'Ecluse 66a", $debtor->getStreet());
+        $this->assertSame('2000', $debtor->getPostalCode());
+        $this->assertSame('Neuchâtel', $debtor->getCity());
+        $this->assertSame('FR', $debtor->getCountry());
+    }
+
+    public function test_uses_a_legacy_snapshot_when_the_contact_is_missing(): void
+    {
+        $invoice = Invoice::factory()->for($this->org)->create([
+            'customer_id' => null,
+            'customer_snapshot' => [
+                'name' => 'Archived AG',
+                'email' => null,
+                'address' => 'Old Street 1',
+                'postal_code' => '1000',
+                'city' => 'Lausanne',
+                'country' => 'CH',
+                'vat_number' => null,
+            ],
+        ]);
+
+        $debtor = $this->service->buildQrBill($invoice, $this->org)->getUltimateDebtor();
+
+        $this->assertInstanceOf(StructuredAddress::class, $debtor);
+        $this->assertSame('Archived AG', $debtor->getName());
+        $this->assertSame('Old Street 1', $debtor->getStreet());
+        $this->assertSame('1000', $debtor->getPostalCode());
+        $this->assertSame('Lausanne', $debtor->getCity());
+        $this->assertSame('CH', $debtor->getCountry());
+    }
+
+    public function test_uses_the_snapshot_when_the_contact_has_been_deleted(): void
+    {
+        $invoice = Invoice::factory()->for($this->org)->create([
+            'customer_id' => $this->client->id,
+            'customer_snapshot' => $this->client->toInvoiceSnapshot(),
+        ]);
+        $this->client->update(['name' => 'Changed before deletion', 'address' => 'New Street 9']);
+        $this->client->delete();
+
+        $debtor = $this->service->buildQrBill($invoice, $this->org)->getUltimateDebtor();
+
+        $this->assertInstanceOf(StructuredAddress::class, $debtor);
+        $this->assertSame('Client AG', $debtor->getName());
+        $this->assertSame('Lagerstrasse 5', $debtor->getStreet());
+        $this->assertSame('8004', $debtor->getPostalCode());
+        $this->assertSame('Zürich', $debtor->getCity());
+        $this->assertSame('CH', $debtor->getCountry());
+    }
+
+    public function test_keeps_the_snapshot_address_after_contact_fields_are_cleared_until_explicit_refresh(): void
+    {
+        $invoice = Invoice::factory()->for($this->org)->create([
+            'customer_id' => $this->client->id,
+            'customer_snapshot' => $this->client->toInvoiceSnapshot(),
+        ]);
+        $this->client->update(['address' => null, 'postal_code' => null, 'city' => null]);
+
+        $qrBill = $this->service->buildQrBill($invoice, $this->org);
+        $debtor = $qrBill->getUltimateDebtor();
+
+        $this->assertInstanceOf(StructuredAddress::class, $debtor);
+        $this->assertSame('Lagerstrasse 5', $debtor->getStreet());
+        $this->assertSame('8004', $debtor->getPostalCode());
+        $this->assertSame('Zürich', $debtor->getCity());
+
+        $invoice = app(RefreshInvoiceCustomerSnapshotAction::class)->execute($invoice);
+        $qrBill = $this->service->buildQrBill($invoice, $this->org);
+
+        $this->assertNull($qrBill->getUltimateDebtor());
+        $this->assertCount(0, $qrBill->getViolations());
     }
 }

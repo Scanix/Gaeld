@@ -6,13 +6,16 @@ use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
+use App\Domains\Invoicing\Actions\RefreshInvoiceCustomerSnapshotAction;
 use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
+use App\Domains\Invoicing\Services\InvoicePdfRenderer;
 use App\Domains\Invoicing\Services\SwissQrInvoiceService;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -106,6 +109,55 @@ class GenerateQrInvoicePdfActionTest extends TestCase
         $pdf = app(GenerateQrInvoicePdfAction::class)->execute($invoice, $this->org, 'en');
 
         $this->assertStringStartsWith('%PDF-', $pdf);
+    }
+
+    public function test_regenerating_the_pdf_keeps_the_snapshot_until_it_is_explicitly_refreshed(): void
+    {
+        $invoice = $this->makeInvoice('INV-PDF-CONTACT-UPDATE');
+        $snapshot = $this->customer->toInvoiceSnapshot();
+        $invoice->update(['customer_snapshot' => $snapshot]);
+        $renderedAddresses = [];
+
+        $this->partialMock(InvoicePdfRenderer::class, function (MockInterface $mock) use (&$renderedAddresses): void {
+            $mock->shouldReceive('renderInvoiceHeader')
+                ->times(3)
+                ->withArgs(function (\TCPDF $tcpdf, Invoice $candidate, Organization $organization) use (&$renderedAddresses): bool {
+                    $renderedAddresses[] = $candidate->customerDetailsForDocument();
+
+                    return true;
+                })
+                ->passthru();
+        });
+        $action = app(GenerateQrInvoicePdfAction::class);
+
+        $firstPdf = $action->execute($invoice, $this->org, 'fr');
+        $this->customer->update([
+            'salutation' => 'Monsieur',
+            'name' => 'Maël Bächtold',
+            'address' => "Rue de l'Ecluse 66a",
+            'postal_code' => '2000',
+            'city' => 'Neuchâtel',
+            'country_name' => 'Suisse',
+        ]);
+        $secondPdf = $action->execute($invoice, $this->org, 'fr');
+
+        $this->assertSame($snapshot, $renderedAddresses[1]);
+        $this->assertSame($snapshot, $invoice->fresh()->customer_snapshot);
+
+        $invoice = app(RefreshInvoiceCustomerSnapshotAction::class)->execute($invoice);
+        $thirdPdf = $action->execute($invoice, $this->org, 'fr');
+
+        $this->assertStringStartsWith('%PDF-', $firstPdf);
+        $this->assertStringStartsWith('%PDF-', $secondPdf);
+        $this->assertStringStartsWith('%PDF-', $thirdPdf);
+        $this->assertSame('Lagerstrasse 5', $renderedAddresses[0]['address']);
+        $this->assertSame('Monsieur', $renderedAddresses[2]['salutation']);
+        $this->assertSame('Maël Bächtold', $renderedAddresses[2]['name']);
+        $this->assertSame("Rue de l'Ecluse 66a", $renderedAddresses[2]['address']);
+        $this->assertSame('2000', $renderedAddresses[2]['postal_code']);
+        $this->assertSame('Neuchâtel', $renderedAddresses[2]['city']);
+        $this->assertSame('Suisse', $renderedAddresses[2]['country_name']);
+        $this->assertSame($this->customer->toInvoiceSnapshot(), $invoice->fresh()->customer_snapshot);
     }
 
     public function test_credit_notes_cannot_generate_a_qr_payment_slip(): void

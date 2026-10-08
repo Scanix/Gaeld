@@ -5,6 +5,30 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.27] - 2026-10-08
+
+### Fixed
+- **Invoice customer details:** preserve archived customer snapshots and allow
+  authorized users to explicitly refresh the details on one invoice, with an
+  audit trail and no change to its financial entries.
+- **Contact addresses:** support optional salutations and freely entered full
+  country names in forms, API payloads, and invoice PDFs. Swiss QR data keeps
+  its ISO country code.
+
+### Security
+- Update Laravel to `13.30.0`, Commonmark to `2.10.2`, Flysystem to `3.35.3`,
+  brace-expansion to `5.0.12`, and source-map-js to `1.2.2`.
+- Enforce Composer and pnpm security audits in public CI and install the frozen
+  JavaScript dependency lockfile.
+
+### Validation
+- Full CE suites: 1,566 passed and 26 conditional tests skipped.
+- EE `v2.9.31`: 123 passed and one private registry-consumer test skipped.
+- Clean CE acceptance: 25 passed, with standalone frontend build and source and
+  built-artifact boundary audits passing.
+- Composer and pnpm audits, PHPStan, Pint, API contract parsing, and edition
+  compatibility checks passed.
+
 ## [3.8.26] - 2026-09-30
 
 ### Fixed

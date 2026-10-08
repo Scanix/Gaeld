@@ -62,6 +62,47 @@ class BusinessDocumentApiTest extends SecurityTestCase
             ->assertJsonCount(1, 'data');
     }
 
+    public function test_contact_api_preserves_explicit_country_names_and_salutations(): void
+    {
+        $response = $this->withToken($this->tokenA)->postJson('/api/v1/contacts', [
+            'type' => ContactType::Individual->value,
+            'name' => 'Maël Bächtold',
+            'salutation' => 'Monsieur',
+            'country' => 'CH',
+            'country_name' => 'Suisse',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.salutation', 'Monsieur')
+            ->assertJsonPath('data.country_name', 'Suisse')
+            ->assertJsonPath('data.country', 'CH');
+
+        $contactId = $response->json('data.id');
+
+        $this->withToken($this->tokenA)->getJson("/api/v1/contacts/{$contactId}")
+            ->assertOk()
+            ->assertJsonPath('data.salutation', 'Monsieur')
+            ->assertJsonPath('data.country_name', 'Suisse');
+
+        $this->withToken($this->tokenA)->patchJson("/api/v1/contacts/{$contactId}", [
+            'salutation' => null,
+            'country_name' => null,
+        ])->assertOk()
+            ->assertJsonPath('data.salutation', null)
+            ->assertJsonPath('data.country_name', null)
+            ->assertJsonPath('data.country', 'CH');
+    }
+
+    public function test_contact_api_rejects_country_names_and_salutations_over_the_limit(): void
+    {
+        $this->withToken($this->tokenA)->postJson('/api/v1/contacts', [
+            'name' => 'Maël Bächtold',
+            'salutation' => str_repeat('x', 51),
+            'country_name' => str_repeat('x', 101),
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['salutation', 'country_name']);
+    }
+
     public function test_it_imports_camt053_and_replays_the_same_import(): void
     {
         $ledgerAccount = Account::create([

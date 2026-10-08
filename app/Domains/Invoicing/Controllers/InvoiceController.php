@@ -190,6 +190,7 @@ class InvoiceController extends Controller
             'canUpdatePayment' => $request->user()->can('updatePayment', $invoice),
             'canSend' => $request->user()->can('send', $invoice),
             'canSendReminder' => $request->user()->can('sendReminder', $invoice),
+            'canRefreshCustomerSnapshot' => $request->user()->can('refreshCustomerSnapshot', $invoice),
             'justificatifUrl' => $invoice->justificatif_path
                 ? route('invoices.justificatif.download', $invoice)
                 : null,

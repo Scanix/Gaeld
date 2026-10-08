@@ -114,7 +114,7 @@ class InvoicePdfRendererTest extends TestCase
         $this->assertGreaterThan(InvoicePdfStyle::MARGIN_TOP, $tcpdf->GetY());
     }
 
-    public function test_renders_the_invoice_snapshot_instead_of_the_current_contact_address(): void
+    public function test_renders_the_saved_invoice_address_instead_of_the_current_contact(): void
     {
         $organization = new Organization([
             'name' => 'Sender GmbH',
@@ -124,11 +124,13 @@ class InvoicePdfRendererTest extends TestCase
             'country' => 'CH',
         ]);
         $customer = new Contact([
-            'name' => 'Recipient AG',
+            'salutation' => 'Madame',
+            'name' => 'Updated recipient',
             'address' => 'New Street 9',
             'postal_code' => '8000',
             'city' => 'Zürich',
             'country' => 'CH',
+            'country_name' => 'Schweiz',
         ]);
         $invoice = new Invoice([
             'type' => InvoiceType::Invoice,
@@ -136,39 +138,76 @@ class InvoicePdfRendererTest extends TestCase
             'due_date' => Carbon::parse('2026-02-15'),
             'currency' => 'CHF',
             'customer_snapshot' => [
-                'name' => 'Recipient AG',
+                'salutation' => 'Monsieur',
+                'name' => 'Maël Bächtold',
                 'email' => null,
-                'address' => 'Old Street 1',
-                'postal_code' => '1000',
-                'city' => 'Lausanne',
+                'address' => "Rue de l'Ecluse 66a",
+                'postal_code' => '2000',
+                'city' => 'Neuchâtel',
                 'country' => 'CH',
+                'country_name' => 'Suisse',
                 'vat_number' => null,
             ],
         ]);
         $invoice->setRelation('customer', $customer);
 
-        $tcpdf = new class extends TCPDF
-        {
-            /** @var array<int, string> */
-            public array $cells = [];
+        $this->assertSame([
+            'Monsieur',
+            'Maël Bächtold',
+            "Rue de l'Ecluse 66a",
+            '2000 Neuchâtel',
+            'Suisse',
+        ], $this->renderCustomerAddress($invoice, $organization));
+    }
 
-            public function Cell($w, $h = 0, $txt = '', $border = 0, $ln = 0, $align = '', $fill = false, $link = '', $stretch = 0, $ignore_min_height = false, $calign = 'T', $valign = 'M'): void
-            {
-                $this->cells[] = (string) $txt;
+    public function test_keeps_the_entered_country_name_verbatim_without_inferring_a_country(): void
+    {
+        $customer = new Contact([
+            'name' => 'Recipient AG',
+            'country' => 'CH',
+            'country_name' => 'Confédération suisse',
+        ]);
+        $invoice = new Invoice(['issue_date' => '2026-01-15']);
+        $invoice->setRelation('customer', $customer);
+        $organization = new Organization(['name' => 'Sender GmbH']);
 
-                parent::Cell($w, $h, $txt, $border, $ln, $align, $fill, $link, $stretch, $ignore_min_height, $calign, $valign);
-            }
-        };
-        $tcpdf->setPrintHeader(false);
-        $tcpdf->setPrintFooter(false);
-        $tcpdf->AddPage();
+        $this->assertSame(['Recipient AG', 'Confédération suisse'], $this->renderCustomerAddress($invoice, $organization));
 
-        app(InvoicePdfRenderer::class)->renderInvoiceHeader($tcpdf, $invoice, $organization);
+        $customer->country_name = null;
 
-        $this->assertContains('Old Street 1', $tcpdf->cells);
-        $this->assertContains('1000 Lausanne', $tcpdf->cells);
-        $this->assertNotContains('New Street 9', $tcpdf->cells);
-        $this->assertNotContains('8000 Zürich', $tcpdf->cells);
+        $this->assertSame(['Recipient AG'], $this->renderCustomerAddress($invoice, $organization));
+    }
+
+    public function test_renders_the_snapshot_when_the_contact_is_unavailable(): void
+    {
+        $invoice = new Invoice([
+            'issue_date' => '2026-01-15',
+            'customer_snapshot' => [
+                'salutation' => 'Madame',
+                'name' => 'Archived recipient',
+                'email' => null,
+                'address' => 'Old Street 1',
+                'postal_code' => '1000',
+                'city' => 'Lausanne',
+                'country' => 'CH',
+                'country_name' => 'Suisse',
+                'vat_number' => null,
+            ],
+        ]);
+        $invoice->setRelation('customer', null);
+        $organization = new Organization(['name' => 'Sender GmbH']);
+
+        $this->assertSame([
+            'Madame', 'Archived recipient', 'Old Street 1', '1000 Lausanne', 'Suisse',
+        ], $this->renderCustomerAddress($invoice, $organization));
+
+        $snapshot = $invoice->customer_snapshot;
+        unset($snapshot['salutation'], $snapshot['country_name']);
+        $invoice->customer_snapshot = $snapshot;
+
+        $this->assertSame([
+            'Archived recipient', 'Old Street 1', '1000 Lausanne',
+        ], $this->renderCustomerAddress($invoice, $organization));
     }
 
     public function test_renders_a_light_gald_copyright_footer(): void
@@ -192,5 +231,33 @@ class InvoicePdfRendererTest extends TestCase
         app(InvoicePdfRenderer::class)->renderFooter($tcpdf);
 
         $this->assertContains('© '.now()->year.' Gäld', $tcpdf->cells);
+    }
+
+    /** @return list<string> */
+    private function renderCustomerAddress(Invoice $invoice, Organization $organization): array
+    {
+        $tcpdf = new class extends TCPDF
+        {
+            /** @var list<string> */
+            public array $customerAddress = [];
+
+            public function Cell($w, $h = 0, $txt = '', $border = 0, $ln = 0, $align = '', $fill = false, $link = '', $stretch = 0, $ignore_min_height = false, $calign = 'T', $valign = 'M'): void
+            {
+                if ($this->GetX() === (float) InvoicePdfStyle::CUSTOMER_X
+                    && $this->GetY() >= InvoicePdfStyle::CUSTOMER_INFO_Y
+                    && $this->GetY() < InvoicePdfStyle::INVOICE_TITLE_Y) {
+                    $this->customerAddress[] = (string) $txt;
+                }
+
+                parent::Cell($w, $h, $txt, $border, $ln, $align, $fill, $link, $stretch, $ignore_min_height, $calign, $valign);
+            }
+        };
+        $tcpdf->setPrintHeader(false);
+        $tcpdf->setPrintFooter(false);
+        $tcpdf->AddPage();
+
+        app(InvoicePdfRenderer::class)->renderInvoiceHeader($tcpdf, $invoice, $organization);
+
+        return $tcpdf->customerAddress;
     }
 }

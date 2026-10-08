@@ -71,7 +71,7 @@ jobs:
         run: corepack enable && corepack prepare pnpm@11.20.0 --activate
 
       - name: Install NPM dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build Vite assets
         run: pnpm build
@@ -83,11 +83,10 @@ jobs:
         run: composer stan
 
       - name: Audit Composer dependencies
-        continue-on-error: true
-        run: composer audit --no-dev --abandoned=report
+        run: composer audit --locked --abandoned=report
 
       - name: Audit NPM dependencies
-        run: pnpm audit --prod || true
+        run: pnpm audit
 
   test:
     name: Tests (${{ matrix.name }})
@@ -171,7 +170,7 @@ jobs:
         run: corepack enable && corepack prepare pnpm@11.20.0 --activate
 
       - name: Install NPM dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build Vite assets
         run: pnpm build
@@ -211,4 +210,3 @@ jobs:
             coverage/clover.xml
             junit.xml
           retention-days: 14
-

@@ -25,6 +25,7 @@ const props = defineProps({
 
 const form = useForm({
   type: props.contact.type ?? 'organization',
+  salutation: props.contact.salutation ?? '',
   name: props.contact.name,
   email: props.contact.email ?? '',
   phone: props.contact.phone ?? '',
@@ -32,6 +33,7 @@ const form = useForm({
   city: props.contact.city ?? '',
   postal_code: props.contact.postal_code ?? '',
   country: props.contact.country ?? 'CH',
+  country_name: props.contact.country_name ?? '',
   vat_number: props.contact.vat_number ?? '',
   currency: props.contact.currency ?? 'CHF',
   iban: props.contact.iban ?? '',
@@ -116,6 +118,14 @@ const tabs = [
                 :error="form.errors.type"
               />
               <FormInput
+                id="salutation"
+                v-model="form.salutation"
+                :label="t('contact_salutation')"
+                :placeholder="t('contact_salutation_placeholder')"
+                :error="form.errors.salutation"
+                maxlength="50"
+              />
+              <FormInput
                 id="name"
                 v-model="form.name"
                 :label="t('name')"
@@ -160,10 +170,18 @@ const tabs = [
               <FormSelect
                 id="country"
                 v-model="form.country"
-                :label="t('country')"
+                :label="t('contact_country')"
                 :options="countryOptions(t)"
                 :error="form.errors.country"
-                class="sm:col-span-2"
+              />
+              <FormInput
+                id="country_name"
+                v-model="form.country_name"
+                :label="t('invoice_country_name')"
+                :placeholder="t('invoice_country_name_placeholder')"
+                :hint="t('invoice_country_name_hint')"
+                :error="form.errors.country_name"
+                maxlength="100"
               />
             </div>
 
