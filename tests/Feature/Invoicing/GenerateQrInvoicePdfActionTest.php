@@ -133,8 +133,8 @@ class GenerateQrInvoicePdfActionTest extends TestCase
         $firstPdf = $action->execute($invoice, $this->org, 'fr');
         $this->customer->update([
             'salutation' => 'Monsieur',
-            'name' => 'Maël Bächtold',
-            'address' => "Rue de l'Ecluse 66a",
+            'name' => 'Maël Exemple',
+            'address' => "Rue de l'Exemple 10",
             'postal_code' => '2000',
             'city' => 'Neuchâtel',
             'country_name' => 'Suisse',
@@ -152,8 +152,8 @@ class GenerateQrInvoicePdfActionTest extends TestCase
         $this->assertStringStartsWith('%PDF-', $thirdPdf);
         $this->assertSame('Lagerstrasse 5', $renderedAddresses[0]['address']);
         $this->assertSame('Monsieur', $renderedAddresses[2]['salutation']);
-        $this->assertSame('Maël Bächtold', $renderedAddresses[2]['name']);
-        $this->assertSame("Rue de l'Ecluse 66a", $renderedAddresses[2]['address']);
+        $this->assertSame('Maël Exemple', $renderedAddresses[2]['name']);
+        $this->assertSame("Rue de l'Exemple 10", $renderedAddresses[2]['address']);
         $this->assertSame('2000', $renderedAddresses[2]['postal_code']);
         $this->assertSame('Neuchâtel', $renderedAddresses[2]['city']);
         $this->assertSame('Suisse', $renderedAddresses[2]['country_name']);
