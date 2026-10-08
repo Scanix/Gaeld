@@ -93,9 +93,18 @@ task('deploy:verify:assets', function () {
 
 task('deploy:assets:retain', function () {
     if (test('[ -d {{current_path}}/public/build/assets ]')) {
+        $currentManifest = trim(run('sha256sum {{current_path}}/public/build/manifest.json'));
+        $releaseManifest = trim(run('sha256sum {{release_path}}/public/build/manifest.json'));
+
         run('cp -an {{current_path}}/public/build/assets/. {{release_path}}/public/build/assets/');
+        run('cp -an {{release_path}}/public/build/assets/. {{current_path}}/public/build/assets/');
+
+        if (! hash_equals($currentManifest, trim(run('sha256sum {{current_path}}/public/build/manifest.json')))
+            || ! hash_equals($releaseManifest, trim(run('sha256sum {{release_path}}/public/build/manifest.json')))) {
+            throw new \RuntimeException('Asset retention must not alter either release manifest.');
+        }
     }
-})->desc('Retain prior asset URLs for browsers opened before activation');
+})->desc('Retain asset URLs in both active and rollback releases');
 
 task('deploy:legacy-worker:disable', function () {
     if (test("systemctl list-unit-files | grep -q '^gaeld-worker\\.service'")) {
