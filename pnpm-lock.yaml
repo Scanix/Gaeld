@@ -50,8 +50,8 @@ importers:
         version: 4.5.4
     devDependencies:
       '@inertiajs/vue3':
-        specifier: ^3.7.0
-        version: 3.7.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(vue@3.5.42(typescript@5.9.3))
+        specifier: ^3.7.1
+        version: 3.7.1(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(vue@3.5.42(typescript@5.9.3))
       '@playwright/test':
         specifier: ^1.55.0
         version: 1.62.1
@@ -305,16 +305,16 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@inertiajs/core@3.7.0':
-    resolution: {integrity: sha512-JzysXTPsOpKcnR7ohwpgKE+UWBrKwW7z23DydWHSxjfQ02tJAKmNnZJAxnX7zH3zUSTqbtPge6QC8XhvfjNXmw==}
+  '@inertiajs/core@3.7.1':
+    resolution: {integrity: sha512-shFvLhu/8R0QgYxsQVR5Pj9LvCnnodUSHZtg5b9yVfd9MG75zuw43/ZBy0iYxIzmI36HkFlmM94ji49Jcx9Q4Q==}
     peerDependencies:
       axios: ^1.15.2
     peerDependenciesMeta:
       axios:
         optional: true
 
-  '@inertiajs/vue3@3.7.0':
-    resolution: {integrity: sha512-RB3RPz0srHnsfo2CBXWF1Ox/l/ArKUIkVpwXwEZJ+U0xzlGfDTy+fFfocwLFsPoWSYfG+MHssTBMPZx82STkyw==}
+  '@inertiajs/vue3@3.7.1':
+    resolution: {integrity: sha512-QJBr18dBj1n43qGulZkE/4BOWA8klMvt/ximKdh+tQSJc3xSJaJ73HOXiQmJE9UhoBf+Pc1ZP05y24B9lAWWIA==}
     peerDependencies:
       vue: ^3.0.0
 
@@ -330,6 +330,9 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+
+  '@jridgewell/sourcemap-codec@1.6.0':
+    resolution: {integrity: sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw==}
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
@@ -782,8 +785,8 @@ packages:
     resolution: {integrity: sha512-j6vWzfrGVfyXxge+O0x5sh6cvxAog0a/4Rdd2K36zCMV5eJ+/+tOAngRO8cODMNWbVRdVlmGZQL2YS3yR8bIUA==}
     engines: {node: '>= 0.4'}
 
-  es-toolkit@1.51.0:
-    resolution: {integrity: sha512-zC2lQGkM7QX+Gm6iM3+WIdZJzthsEd14LvRNJneSO2hzyz/zNBENR8+YXWo1cKxgPBtV6ksPYHELbcwBRzmdCw==}
+  es-toolkit@1.52.0:
+    resolution: {integrity: sha512-XTNEJQh1tY1ZJVcf6ayP/2n4ZPyaHlW2FWs7xvw5ddPuhUVjLD3olQVQS7kf58JbAB48iL0uL/jerTrjtV3lDA==}
 
   esbuild@0.28.2:
     resolution: {integrity: sha512-HKVLS8dvII+xoKW9kmqxbRKrnWEXfJJr/FZhhJmiqIB0e053QNYFqOBouTMO/k5sID4MvCiUCvv8b9M4h32wIA==}
@@ -1507,18 +1510,18 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@inertiajs/core@3.7.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))':
+  '@inertiajs/core@3.7.1(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
-      es-toolkit: 1.51.0
+      es-toolkit: 1.52.0
       laravel-precognition: 2.0.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))
     optionalDependencies:
       axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
 
-  '@inertiajs/vue3@3.7.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(vue@3.5.42(typescript@5.9.3))':
+  '@inertiajs/vue3@3.7.1(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(vue@3.5.42(typescript@5.9.3))':
     dependencies:
-      '@inertiajs/core': 3.7.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))
-      es-toolkit: 1.51.0
+      '@inertiajs/core': 3.7.1(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))
+      es-toolkit: 1.52.0
       laravel-precognition: 2.0.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))
       vue: 3.5.42(typescript@5.9.3)
     transitivePeerDependencies:
@@ -1538,10 +1541,12 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
+  '@jridgewell/sourcemap-codec@1.6.0': {}
+
   '@jridgewell/trace-mapping@0.3.31':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
 
   '@kurkle/color@0.3.4': {}
 
@@ -1924,7 +1929,7 @@ snapshots:
       has-tostringtag: 1.0.2
       hasown: 2.0.4
 
-  es-toolkit@1.51.0: {}
+  es-toolkit@1.52.0: {}
 
   esbuild@0.28.2:
     optionalDependencies:
@@ -2053,7 +2058,7 @@ snapshots:
 
   laravel-precognition@2.0.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)):
     dependencies:
-      es-toolkit: 1.51.0
+      es-toolkit: 1.52.0
     optionalDependencies:
       axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
 
