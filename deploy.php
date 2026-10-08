@@ -91,6 +91,12 @@ task('deploy:verify:assets', function () {
     }
 })->desc('Verify frontend assets are retained with this release');
 
+task('deploy:assets:retain', function () {
+    if (test('[ -d {{current_path}}/public/build/assets ]')) {
+        run('cp -an {{current_path}}/public/build/assets/. {{release_path}}/public/build/assets/');
+    }
+})->desc('Retain prior asset URLs for browsers opened before activation');
+
 task('deploy:legacy-worker:disable', function () {
     if (test("systemctl list-unit-files | grep -q '^gaeld-worker\\.service'")) {
         run('sudo systemctl disable --now gaeld-worker');
@@ -227,6 +233,7 @@ task('deploy', [
     'deploy:verify:edition',
     'assets:build',
     'deploy:verify:assets',
+    'deploy:assets:retain',
     'deploy:storage:link',
     'artisan:migrate',
     'deploy:permissions',      // fix storage ownership/mode before artisan caches write to it
