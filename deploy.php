@@ -174,6 +174,13 @@ task('deploy:ee:plugin', function () {
 })->desc('Clone and install gaeld-ee plugin from private GitLab');
 
 task('deploy:verify:edition', function () {
+    $pluginPath = '{{release_path}}/plugins/gaeld-ee';
+    $actualDigest = trim(run("{{bin/php}} {$pluginPath}/scripts/content-digest.php {$pluginPath}"));
+
+    if (! hash_equals(getenv('DEPLOY_EE_CONTENT_DIGEST'), $actualDigest)) {
+        throw new \RuntimeException('The installed EE source changed during dependency installation.');
+    }
+
     run('cd {{release_path}} && {{bin/php}} artisan edition:verify --ee-version='.escapeshellarg(getenv('DEPLOY_EE_REF')));
 })->desc('Verify the CE/EE edition compatibility before activation');
 
