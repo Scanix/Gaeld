@@ -5,6 +5,34 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.27 Coordinated Candidate
+
+This patch preserves each invoice's stored customer details and adds an
+authorized, audited action to refresh that snapshot from its current contact.
+The action updates only the selected invoice, rejects archived invoices, and
+preserves accounting entries and amounts. Contacts gain nullable `salutation`
+and `country_name` fields. PDFs print the full country name entered by the user
+and retain the ISO country code for Swiss QR payment data. Older snapshots
+without a country name need an explicit refresh to display that new field.
+
+The release includes the compatible security updates to Laravel `13.30.0`,
+Commonmark `2.10.2`, Flysystem `3.35.3`, brace-expansion `5.0.12`, and
+source-map-js `1.2.2`. Public CI enforces the complete Composer and pnpm audits
+and installs the frozen JavaScript lockfile.
+
+The exact intended pair is CE `v3.8.27` with private EE `v2.9.31`. Validate that
+pair on staging before production promotion. The private deployment must
+select the EE tag and expected commit explicitly, verify edition compatibility
+before activation, and retain build assets within each release. Roll back by
+selecting the previous complete CE/EE release; do not roll back additive
+database migrations.
+
+Local validation: full CE suites passed (1,566 passed, 26 conditional skips),
+EE `v2.9.31` passed (123 passed, one private registry-consumer skip), and the
+clean CE installation passed 25 acceptance tests. Composer and pnpm audits,
+PHPStan, Pint, frontend builds with and without EE, source and built-artifact
+boundary audits, API contract parsing, and edition compatibility checks passed.
+
 ## v3.8.25 Staging Candidate
 
 This candidate introduces the first structured category/account foundation for
@@ -177,7 +205,7 @@ EE_SHA=8d91d37
 must not be inferred from the CE version or copied into the public repository.
 The deployment pair and the tested commit SHAs belong in the release record.
 
-The current coordinated production release (2026-09-03) is CE `v3.8.2` at
+The historical coordinated production release (2026-09-03) was CE `v3.8.2` at
 `29e657e` with deployment commit `8efc7313`, using EE `v2.9.20` at `3cdfd8d`.
 It is deployed as API release `257`, with web `v2.14.3` at `1e47ae3` and the
 documentation site at `v2.12.3` at `fd97bee`.

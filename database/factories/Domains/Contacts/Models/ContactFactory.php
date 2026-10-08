@@ -18,8 +18,10 @@ class ContactFactory extends Factory
         return [
             'organization_id' => Organization::factory(),
             'name' => fake()->company(),
+            'salutation' => null,
             'email' => fake()->unique()->companyEmail(),
             'country' => 'CH',
+            'country_name' => null,
             'currency' => 'CHF',
         ];
     }

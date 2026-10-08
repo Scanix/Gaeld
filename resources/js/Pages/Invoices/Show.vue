@@ -17,7 +17,7 @@ import FormSelect from '@/Components/UI/FormSelect.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail, Eye, X, RotateCcw } from 'lucide-vue-next'
+import { Pencil, Trash2, Copy, Download, Paperclip, Ban, FileMinus, Bell, Mail, Eye, X, RotateCcw, RefreshCw } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import HelpText from '@/Components/HelpText.vue'
 
@@ -29,6 +29,7 @@ const props = defineProps({
   canSend: { type: Boolean, default: false },
   canSendReminder: { type: Boolean, default: false },
   canRevertToDraft: { type: Boolean, default: false },
+  canRefreshCustomerSnapshot: { type: Boolean, default: false },
   justificatifUrl: { type: String, default: null },
   bankAccounts: { type: Array, default: () => [] },
   creditNotes: { type: Array, default: () => [] },
@@ -47,6 +48,7 @@ const showDeleteDialog = ref(false)
 const showReminderDialog = ref(false)
 const showCancelDialog = ref(false)
 const showRevertToDraftDialog = ref(false)
+const showRefreshCustomerSnapshotDialog = ref(false)
 const showPurgeDialog = ref(false)
 const showJustificatifPreview = ref(false)
 const deleting = ref(false)
@@ -57,6 +59,21 @@ const purging = ref(false)
 const creditNoteForm = useForm({})
 const sendForm = useForm({})
 const reminderForm = useForm({})
+const refreshCustomerSnapshotForm = useForm({})
+
+function requestCustomerSnapshotRefresh() {
+  refreshCustomerSnapshotForm.clearErrors()
+  showRefreshCustomerSnapshotDialog.value = true
+}
+
+function refreshCustomerSnapshot() {
+  refreshCustomerSnapshotForm.post(`/invoices/${props.invoice.id}/refresh-customer-snapshot`, {
+    preserveScroll: true,
+    onSuccess: () => {
+      showRefreshCustomerSnapshotDialog.value = false
+    },
+  })
+}
 
 function createCreditNote() {
   creditNoteForm.post(`/invoices/${props.invoice.id}/credit-note`)
@@ -271,7 +288,7 @@ const bankAccountOptions = computed(() =>
               {{ t('invoice_tax_treatment_reverse_charge') }}
             </Badge>
             <p class="text-sm text-[hsl(var(--muted-foreground))]">
-              {{ invoice?.customer?.name }} &middot; {{ t('issued') }} {{ formatDate(invoice?.issue_date) }} &middot; {{ t('due') }} {{ formatDate(invoice?.due_date) }}
+              {{ invoice?.customer_snapshot?.name ?? invoice?.customer?.name }} &middot; {{ t('issued') }} {{ formatDate(invoice?.issue_date) }} &middot; {{ t('due') }} {{ formatDate(invoice?.due_date) }}
             </p>
           </div>
         </div>
@@ -320,6 +337,15 @@ const bankAccountOptions = computed(() =>
               >
                 <Copy class="h-4 w-4 shrink-0" />
                 {{ t('duplicate') }}
+              </button>
+              <button
+                v-if="canRefreshCustomerSnapshot"
+                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+                :disabled="refreshCustomerSnapshotForm.processing"
+                @click="requestCustomerSnapshotRefresh(); close()"
+              >
+                <RefreshCw class="h-4 w-4 shrink-0" />
+                {{ t('refresh_customer_snapshot') }}
               </button>
               <button
                 v-if="canSend"
@@ -623,6 +649,18 @@ const bankAccountOptions = computed(() =>
         </div>
       </form>
     </Modal>
+
+    <ConfirmDialog
+      :open="showRefreshCustomerSnapshotDialog"
+      :title="t('refresh_customer_snapshot')"
+      :message="t('refresh_customer_snapshot_confirm', { number: invoice?.number })"
+      :confirm-label="t('refresh_customer_snapshot')"
+      confirm-variant="default"
+      :processing="refreshCustomerSnapshotForm.processing"
+      :errors="refreshCustomerSnapshotForm.errors"
+      @confirm="refreshCustomerSnapshot"
+      @cancel="showRefreshCustomerSnapshotDialog = false"
+    />
 
     <!-- Delete Confirmation -->
     <ConfirmDialog

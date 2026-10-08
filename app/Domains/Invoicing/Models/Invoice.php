@@ -35,7 +35,7 @@ use Laravel\Scout\Searchable;
  * @property InvoiceStatus $status
  * @property InvoiceTaxTreatment $tax_treatment
  * @property InvoiceType $type
- * @property array{name: string, email: string|null, address: string|null, postal_code: string|null, city: string|null, country: string, vat_number: string|null}|null $customer_snapshot
+ * @property array{name: string, email: string|null, address: string|null, postal_code: string|null, city: string|null, country: string, country_name?: string|null, salutation?: string|null, vat_number: string|null}|null $customer_snapshot
  * @property Carbon $issue_date
  * @property Carbon|null $due_date
  * @property string $subtotal
@@ -132,6 +132,14 @@ class Invoice extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Contact::class);
+    }
+
+    /**
+     * @return array{name: string, email: string|null, address: string|null, postal_code: string|null, city: string|null, country: string, country_name?: string|null, salutation?: string|null, vat_number: string|null}|null
+     */
+    public function customerDetailsForDocument(): ?array
+    {
+        return $this->customer_snapshot ?? $this->customer?->toInvoiceSnapshot();
     }
 
     /** @return BelongsTo<JournalEntry, $this> */

@@ -1,8 +1,15 @@
 # Installation Guide
 
-The latest public Community Edition release is `v3.8.2`. The coordinated SaaS
+The latest public Community Edition release is `v3.8.27`. The coordinated SaaS
 CE/EE production pair and its deployment procedure are documented in
 [RELEASE.md](RELEASE.md).
+
+Release `v3.8.27` adds nullable `salutation` and `country_name` contact fields.
+Run the normal migrations after updating. Existing invoice customer snapshots
+remain unchanged: enter the full country name on the contact and use the
+invoice's customer-details refresh action when that specific invoice should
+use the updated address. Invoice PDFs print the country name as entered;
+Swiss QR payment data continues to use the ISO country code.
 
 ## Docker Installation (Recommended)
 

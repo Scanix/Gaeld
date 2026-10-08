@@ -153,11 +153,7 @@ class SwissQrInvoiceService
 
     private function setDebtorInfo(QrBill $qrBill, Invoice $invoice): void
     {
-        $customer = $invoice->customer;
-        $customerDetails = $invoice->customer_snapshot;
-        if ($customerDetails === null && $customer !== null) {
-            $customerDetails = $customer->toInvoiceSnapshot();
-        }
+        $customerDetails = $invoice->customerDetailsForDocument();
 
         if ($customerDetails === null) {
             return;

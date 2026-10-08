@@ -9,7 +9,6 @@ import Badge from '@/Components/UI/Badge.vue'
 import ContactPersonsSection from '@/Components/Contacts/ContactPersonsSection.vue'
 import { useFormatters } from '@/lib/useFormatters'
 import { useTranslations } from '@/lib/useTranslations'
-import { countryLabel } from '@/lib/contactOptions'
 import { Pencil } from 'lucide-vue-next'
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue'
 import EmptyState from '@/Components/UI/EmptyState.vue'
@@ -72,11 +71,15 @@ const cp = useContactPersons('contacts', props.contact.uuid, props.contact.conta
             <span class="text-[hsl(var(--muted-foreground))]">{{ t('phone') }}:</span>
             <span class="ml-2">{{ contact.phone }}</span>
           </div>
-          <div v-if="contact.address || contact.city">
+          <div v-if="contact.salutation || contact.address || contact.postal_code || contact.city || contact.country_name">
             <span class="text-[hsl(var(--muted-foreground))]">{{ t('address') }}:</span>
-            <span class="ml-2">
-              {{ [contact.address, contact.postal_code, contact.city, countryLabel(contact.country, t)].filter(Boolean).join(', ') }}
-            </span>
+            <div class="mt-1">
+              <p v-if="contact.salutation">{{ contact.salutation }}</p>
+              <p>{{ contact.name }}</p>
+              <p v-if="contact.address">{{ contact.address }}</p>
+              <p v-if="contact.postal_code || contact.city">{{ [contact.postal_code, contact.city].filter(Boolean).join(' ') }}</p>
+              <p v-if="contact.country_name">{{ contact.country_name }}</p>
+            </div>
           </div>
           <div v-if="contact.vat_number">
             <span class="text-[hsl(var(--muted-foreground))]">{{ t('vat_number') }}:</span>

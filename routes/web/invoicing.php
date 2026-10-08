@@ -29,6 +29,7 @@ Route::post('/invoices/{invoice}/duplicate', [InvoiceLifecycleController::class,
 Route::post('/invoices/{invoice}/credit-note', [InvoiceLifecycleController::class, 'creditNote'])->name('invoices.creditNote');
 Route::post('/invoices/{invoice}/send', [InvoiceCommunicationController::class, 'sendInvoice'])->name('invoices.send');
 Route::get('/invoices/{invoice}/qr-pdf', [InvoiceDocumentController::class, 'downloadQrPdf'])->middleware('throttle:30,1')->name('invoices.qr-pdf');
+Route::post('/invoices/{invoice}/refresh-customer-snapshot', [InvoiceDocumentController::class, 'refreshCustomerSnapshot'])->name('invoices.refreshCustomerSnapshot');
 Route::delete('/invoices/{invoice}/justificatif', [InvoiceDocumentController::class, 'removeJustificatif'])->name('invoices.justificatif.remove');
 Route::get('/invoices/{invoice}/justificatif', [InvoiceDocumentController::class, 'downloadJustificatif'])->middleware('throttle:30,1')->name('invoices.justificatif.download');
 Route::post('/invoices/{invoice}/reminder', [InvoiceCommunicationController::class, 'sendReminder'])->name('invoices.reminder');

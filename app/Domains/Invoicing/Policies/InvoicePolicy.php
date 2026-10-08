@@ -54,6 +54,16 @@ class InvoicePolicy extends BasePolicy
             && $invoice->status->isDeletable();
     }
 
+    public function refreshCustomerSnapshot(User $user, Invoice $invoice): bool
+    {
+        return $invoice->archived_at === null
+            && $this->belongsToOrganization($user, $invoice)
+            && $user->hasPermissionTo(Permission::InvoicingEdit)
+            && $invoice->customer()
+                ->where('organization_id', $invoice->organization_id)
+                ->exists();
+    }
+
     public function finalize(User $user, Invoice $invoice): bool
     {
         return $this->belongsToOrganization($user, $invoice)

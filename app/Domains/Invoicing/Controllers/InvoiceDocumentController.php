@@ -3,6 +3,8 @@
 namespace App\Domains\Invoicing\Controllers;
 
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
+use App\Domains\Invoicing\Actions\RefreshInvoiceCustomerSnapshotAction;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Support\QrBillValidationMessageFormatter;
@@ -10,10 +12,12 @@ use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Organizations\Services\OrganizationDocumentStorageService;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -26,6 +30,24 @@ class InvoiceDocumentController extends Controller
     public function __construct(
         private OrganizationDocumentStorageService $documentStorage,
     ) {}
+
+    public function refreshCustomerSnapshot(Invoice $invoice, RefreshInvoiceCustomerSnapshotAction $action): RedirectResponse
+    {
+        $this->authorize('refreshCustomerSnapshot', $invoice);
+
+        try {
+            $action->execute($invoice);
+        } catch (InvalidInvoiceStateException $exception) {
+            return $this->backWithError($exception);
+        } catch (ModelNotFoundException) {
+            return $this->backWithError(__('app.invoice_customer_snapshot_contact_missing'));
+        } catch (ValidationException $exception) {
+            return $this->backWithError(collect($exception->errors())->flatten()->implode(' '));
+        }
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('success', __('app.invoice_customer_snapshot_refreshed'));
+    }
 
     public function removeJustificatif(Invoice $invoice): RedirectResponse
     {

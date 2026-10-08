@@ -23,6 +23,10 @@ readonly class UpdateContactData
         public ?string $paymentTerms = null,
         public ?string $internalNotes = null,
         public ?string $notes = null,
+        public ?string $salutation = null,
+        public ?string $countryName = null,
+        private bool $hasSalutation = false,
+        private bool $hasCountryName = false,
     ) {}
 
     /** @param  array<string, mixed>  $data */
@@ -42,14 +46,20 @@ readonly class UpdateContactData
             paymentTerms: $data['payment_terms'] ?? null,
             internalNotes: $data['internal_notes'] ?? null,
             notes: $data['notes'] ?? null,
+            salutation: $data['salutation'] ?? null,
+            countryName: $data['country_name'] ?? null,
+            hasSalutation: array_key_exists('salutation', $data),
+            hasCountryName: array_key_exists('country_name', $data),
         );
     }
 
     /** @return array<string, mixed> */
     public function toArray(): array
     {
-        return array_filter([
+        $data = array_filter([
             'name' => $this->name,
+            'salutation' => $this->salutation,
+            'country_name' => $this->countryName,
             'type' => $this->type,
             'email' => $this->email,
             'phone' => $this->phone,
@@ -62,5 +72,15 @@ readonly class UpdateContactData
             'internal_notes' => $this->internalNotes,
             'notes' => $this->notes ? ['default' => $this->notes] : null,
         ] + ($this->addressData?->toArray() ?? AddressData::empty()->toArray()), fn ($value) => $value !== null);
+
+        if ($this->hasSalutation) {
+            $data['salutation'] = $this->salutation;
+        }
+
+        if ($this->hasCountryName) {
+            $data['country_name'] = $this->countryName;
+        }
+
+        return $data;
     }
 }
