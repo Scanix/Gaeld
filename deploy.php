@@ -23,7 +23,7 @@ set('horizon_service', getenv('DEPLOY_HORIZON_SERVICE') ?: 'gaeld-horizon');
 
 // --- Shared files/dirs (persisted across releases) ---
 add('shared_files', ['.env']);
-add('shared_dirs', ['storage', 'public/build']);
+add('shared_dirs', ['storage']);
 
 // --- Writable dirs ---
 add('writable_dirs', ['bootstrap/cache', 'storage']);
@@ -51,6 +51,18 @@ host('staging')
 
 // --- Tasks ---
 
+task('deploy:verify:inputs', function () {
+    $eeRef = getenv('DEPLOY_EE_REF') ?: '';
+    $eeSha = getenv('DEPLOY_EE_SHA') ?: '';
+    $eeDigest = getenv('DEPLOY_EE_CONTENT_DIGEST') ?: '';
+
+    if (! preg_match('/^v[0-9]+\.[0-9]+\.[0-9]+$/', $eeRef)
+        || ! preg_match('/^[a-f0-9]{40}$/', $eeSha)
+        || ! preg_match('/^[a-f0-9]{64}$/', $eeDigest)) {
+        throw new \RuntimeException('DEPLOY_EE_REF, DEPLOY_EE_SHA and DEPLOY_EE_CONTENT_DIGEST must identify the tested immutable EE release.');
+    }
+})->desc('Require the tested EE tag, commit and content digest');
+
 // Build frontend assets on the server so Vite reads the production .env
 // (incl. VITE_COOKIE_DOMAIN) that is already symlinked via deploy:shared.
 task('assets:build', function () {
@@ -73,10 +85,11 @@ task('deploy:storage:link', function () {
     run('ln -s {{deploy_path}}/shared/storage/app/public {{release_path}}/public/storage');
 })->desc('Symlink public/storage to shared storage');
 
-task('deploy:build:link', function () {
-    run('rm -rf {{release_path}}/public/build');
-    run('ln -s {{deploy_path}}/shared/public/build {{release_path}}/public/build');
-})->desc('Symlink public/build to shared build assets');
+task('deploy:verify:assets', function () {
+    if (! test('[ -s {{release_path}}/public/build/manifest.json ] && [ ! -L {{release_path}}/public/build ]')) {
+        throw new \RuntimeException('The release must contain its own built frontend assets.');
+    }
+})->desc('Verify frontend assets are retained with this release');
 
 task('deploy:legacy-worker:disable', function () {
     if (test("systemctl list-unit-files | grep -q '^gaeld-worker\\.service'")) {
@@ -104,7 +117,9 @@ task('deploy:scheduler:restart', function () {
 
 task('deploy:ee:plugin', function () {
     $eeRepo = getenv('EE_REPO') ?: 'git@gitlab.nectoria.com:nectoria/products/gaeld/gaeld-ee.git';
-    $eeRef = getenv('DEPLOY_EE_REF') ?: 'v2.9.27';
+    $eeRef = getenv('DEPLOY_EE_REF');
+    $eeSha = getenv('DEPLOY_EE_SHA');
+    $eeDigest = getenv('DEPLOY_EE_CONTENT_DIGEST');
     $eeRefArg = escapeshellarg($eeRef);
     $cachePath = '{{deploy_path}}/shared/gaeld-ee';
     $pluginPath = '{{release_path}}/plugins/gaeld-ee';
@@ -114,13 +129,28 @@ task('deploy:ee:plugin', function () {
     if (test("[ -d {$cachePath} ]")) {
         run("cd {$cachePath} && git fetch --tags origin && git fetch origin {$eeRefArg} && git checkout --detach {$eeRefArg}");
     } else {
-        run("git clone --branch {$eeRefArg} --single-branch {$eeRepo} {$cachePath}");
+        run('git clone --branch '.$eeRefArg.' --single-branch '.escapeshellarg($eeRepo).' '.$cachePath);
+    }
+
+    $actualSha = trim(run("git -C {$cachePath} rev-parse HEAD"));
+
+    if (! hash_equals($eeSha, $actualSha)) {
+        throw new \RuntimeException('The EE tag does not resolve to the tested commit.');
     }
 
     writeln('<info>EE release:</info> '.trim(run("git -C {$cachePath} describe --tags --always --dirty")));
 
     // Copy cached repo into the release
     run("cp -a {$cachePath} {$pluginPath}");
+
+    $actualDigest = trim(run("{{bin/php}} {$pluginPath}/scripts/content-digest.php {$pluginPath}"));
+
+    if (! hash_equals($eeDigest, $actualDigest)) {
+        throw new \RuntimeException('The installed EE source does not match the tested content digest.');
+    }
+
+    run('printf %s '.escapeshellarg($actualSha).' > {{release_path}}/EE_REVISION');
+    run('printf %s '.escapeshellarg($actualDigest).' > {{release_path}}/EE_CONTENT_DIGEST');
 
     // Ensure PHP-FPM (www-data) can read the plugin tree. The shared cache may
     // have been cloned with a restrictive umask (resulting in 750 perms), which
@@ -142,6 +172,10 @@ task('deploy:ee:plugin', function () {
     // resolution fails with BindingResolutionException on first request.
     run('cd {{release_path}} && {{bin/composer}} dump-autoload --no-dev --optimize --classmap-authoritative');
 })->desc('Clone and install gaeld-ee plugin from private GitLab');
+
+task('deploy:verify:edition', function () {
+    run('cd {{release_path}} && {{bin/php}} artisan edition:verify --ee-version='.escapeshellarg(getenv('DEPLOY_EE_REF')));
+})->desc('Verify the CE/EE edition compatibility before activation');
 
 task('deploy:sync:permissions', function () {
     run('cd {{release_path}} && {{bin/php}} artisan gaeld:sync-permissions');
@@ -179,11 +213,13 @@ task('deploy:sentry:release', function () {
 
 // --- Deployment flow ---
 task('deploy', [
+    'deploy:verify:inputs',
     'deploy:prepare',
     'deploy:vendors',
     'deploy:ee:plugin',
+    'deploy:verify:edition',
     'assets:build',
-    'deploy:build:link',
+    'deploy:verify:assets',
     'deploy:storage:link',
     'artisan:migrate',
     'deploy:permissions',      // fix storage ownership/mode before artisan caches write to it
@@ -203,3 +239,6 @@ task('deploy', [
 
 // --- Hooks ---
 after('deploy:failed', 'deploy:unlock');
+after('rollback', 'deploy:fpm:restart');
+after('rollback', 'deploy:scheduler:restart');
+after('rollback', 'deploy:horizon:restart');
