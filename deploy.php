@@ -190,6 +190,11 @@ task('deploy:verify:edition', function () {
     run('cd {{release_path}} && {{bin/php}} artisan edition:verify --ee-version='.escapeshellarg(getenv('DEPLOY_EE_REF')));
 })->desc('Verify the CE/EE edition compatibility before activation');
 
+task('deploy:verify:migrations', function () {
+    run('cd {{release_path}} && {{bin/php}} artisan migrate:status --no-ansi');
+    run('cd {{release_path}} && {{bin/php}} artisan migrate --pretend --force --no-ansi');
+})->desc('Record pending migrations and their SQL before execution');
+
 task('deploy:sync:permissions', function () {
     run('cd {{release_path}} && {{bin/php}} artisan gaeld:sync-permissions');
 })->desc('Sync RBAC permissions');
@@ -235,6 +240,7 @@ task('deploy', [
     'deploy:verify:assets',
     'deploy:assets:retain',
     'deploy:storage:link',
+    'deploy:verify:migrations',
     'artisan:migrate',
     'deploy:permissions',      // fix storage ownership/mode before artisan caches write to it
     'artisan:config:cache',
