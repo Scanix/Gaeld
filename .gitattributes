@@ -2,3 +2,7 @@
 .gitlab-ci.yml merge=keep-ours
 docker/ci/Dockerfile merge=keep-ours
 deploy.php merge=keep-ours
+
+# Development tests and hostile fixtures must not ship in release archives.
+/tests export-ignore
+/phpunit.xml export-ignore

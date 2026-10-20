@@ -8,6 +8,7 @@ use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\VatEntryType;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatEntry;
+use App\Domains\Accounting\Services\CurrencyConversionService;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
@@ -31,6 +32,7 @@ class ExpenseService
     public function __construct(
         private LedgerService $ledgerService,
         private LedgerQueryService $ledgerQuery,
+        private CurrencyConversionService $currencies,
     ) {}
 
     /**
@@ -59,8 +61,19 @@ class ExpenseService
             $expenseAccount = $this->ledgerQuery->resolveAccount($orgId, $data->expenseAccountCode);
             $bankAccount = $this->ledgerQuery->resolveAccount($orgId, $bankAccountCode);
 
-            $netAmount = $data->amount;
-            $vatAmount = (string) ($expense->vat_amount ?? '0');
+            $expense->loadMissing('organization');
+            $ledgerCurrency = strtoupper((string) ($expense->organization->currency ?: 'CHF'));
+            $documentCurrency = strtoupper((string) ($expense->currency ?: $ledgerCurrency));
+            $rate = $this->currencies->rate(
+                $orgId,
+                $documentCurrency,
+                $ledgerCurrency,
+                $data->paymentDate,
+            );
+            $toLedger = fn (string $amount): string => Money::round(Money::multiply($amount, $rate));
+
+            $netAmount = $toLedger((string) $data->amount);
+            $vatAmount = $toLedger((string) ($expense->vat_amount ?? '0'));
             $hasVat = $expense->vat_rate_id && Money::isPositive($vatAmount);
             $grossAmount = $hasVat ? Money::add($netAmount, $vatAmount) : $netAmount;
 
@@ -132,7 +145,9 @@ class ExpenseService
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
                 date: $data->paymentDate,
                 reference: $data->reference,
-                description: $data->description,
+                description: $data->description.($documentCurrency === $ledgerCurrency
+                    ? ''
+                    : " [{$data->amount} {$documentCurrency} net @ {$rate} {$ledgerCurrency}]"),
                 lines: $lines,
             ));
 
