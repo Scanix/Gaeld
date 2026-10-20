@@ -5,6 +5,28 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.8.28 Coordinated Candidate
+
+This candidate integrates open CE PRs #63–68, #71, and #72, the missing bank
+description reconciliation fix, and staging QA corrections. Impact Accounting
+remains excluded. The immutable hosted pair is CE `v3.8.28` with the unchanged
+private EE `v2.9.31`.
+
+Foreign invoice settlement preserves the original posted receivable, allocates
+partial payments proportionally, clears the final rounding remainder, and
+records payment-date exchange differences against account `6900`. Missing
+rates or required accounts fail explicitly. Existing historical postings are
+not rewritten. Automatic bank matching requires document, bank, and ledger
+currencies to agree; foreign settlements must be recorded separately.
+
+The release archive excludes development tests and hostile-upload fixtures;
+Git checkouts retain them. Targeted Symfony HTTP Foundation and YAML security
+updates accompany the dependency PRs. No new schema migration is introduced.
+
+Validation and promotion status are recorded after the release gates complete.
+The normal staging host was unreachable during preparation on 2026-10-20;
+production must not be promoted until staging acceptance is available.
+
 ## v3.8.27 Coordinated Candidate
 
 This patch preserves each invoice's stored customer details and adds an

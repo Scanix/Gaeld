@@ -1,6 +1,6 @@
 # Installation Guide
 
-The latest public Community Edition release is `v3.8.27`. The coordinated SaaS
+The latest public Community Edition release is `v3.8.28`. The coordinated SaaS
 CE/EE production pair and its deployment procedure are documented in
 [RELEASE.md](RELEASE.md).
 
@@ -10,6 +10,20 @@ remain unchanged: enter the full country name on the contact and use the
 invoice's customer-details refresh action when that specific invoice should
 use the updated address. Invoice PDFs print the country name as entered;
 Swiss QR payment data continues to use the ISO country code.
+
+Release `v3.8.28` fixes expense reconciliation with missing bank descriptions and
+converts foreign-currency invoices and expenses into the organization's ledger
+currency. Add an exchange rate dated on or before the posting/payment date.
+Invoice settlement uses the original receivable and records exchange differences
+in financial expenses account `6900`; create that account if your chart lacks it.
+Existing ledger entries are not rewritten. Automatic bank reconciliation requires
+the bank account, document, and organization to use the same currency; record
+foreign settlements separately using their payment-date rate.
+
+Release archives exclude development tests and intentional hostile-upload
+fixtures. Contributors should use a Git checkout to obtain the test suite.
+No new database migration is introduced by this patch; normal upgrade migrations
+still apply when upgrading from an older release.
 
 ## Docker Installation (Recommended)
 

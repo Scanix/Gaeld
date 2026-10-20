@@ -96,6 +96,8 @@ class InvoiceReconciler
         BankAccount $bankAccount,
         ?string $bankAccountCode = null,
     ): void {
+        $this->validateDocumentCurrency($bankAccount, $invoice->currency);
+
         $paymentAmount = $this->resolvePaymentAmount($transaction, $invoice);
         $orgId = $bankAccount->organization_id;
 

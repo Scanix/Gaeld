@@ -8,6 +8,7 @@ readonly API_ROOT="$(CDPATH='' cd -- "$SCRIPT_DIR/../.." && pwd)"
 target="${1:-$API_ROOT}"
 temporary_directory=''
 check_root=''
+is_archive=false
 failures=0
 
 cleanup() {
@@ -44,11 +45,13 @@ resolve_archive_root() {
 prepare_target() {
     case "$target" in
         *.tar|*.tar.gz|*.tgz)
+            is_archive=true
             temporary_directory="$(mktemp -d)"
             tar -xf "$target" -C "$temporary_directory"
             resolve_archive_root "$temporary_directory"
             ;;
         *.zip)
+            is_archive=true
             temporary_directory="$(mktemp -d)"
             unzip -q "$target" -d "$temporary_directory"
             resolve_archive_root "$temporary_directory"
@@ -68,6 +71,14 @@ prepare_target
 
 if [[ -z "$check_root" ]]; then
     exit 1
+fi
+
+if [[ "$is_archive" == true ]]; then
+    for development_path in 'tests' 'phpunit.xml'; do
+        if [[ -e "$check_root/$development_path" || -L "$check_root/$development_path" ]]; then
+            fail "test suite, fixtures, or configuration must not be present in release archives: $development_path"
+        fi
+    done
 fi
 
 for forbidden_path in \
