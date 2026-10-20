@@ -1029,7 +1029,26 @@ async function exercisePermissions(browser, page, createdAccounts) {
 }
 
 async function exerciseYearEndClosing(page, year = 2026) {
-  const closingPage = await page.goto(`${BASE_URL}/accounting/year-end-closing?year=${year}`, { waitUntil: 'networkidle' })
+  let closingPage = await page.goto(`${BASE_URL}/accounting/year-end-closing?year=${year}`, { waitUntil: 'networkidle' })
+  const unsettledPeriods = await page.locator('a[href^="/reports/vat?period="]').evaluateAll(links =>
+    links.map(link => link.getAttribute('href')),
+  )
+  for (const periodPath of unsettledPeriods) {
+    await page.goto(`${BASE_URL}${periodPath}`, { waitUntil: 'networkidle' })
+    const settlementButton = page.getByRole('button', { name: /Post settlement entry|Comptabiliser le décompte/i })
+    if (!(await settlementButton.count())) throw new Error(`VAT settlement unavailable for ${periodPath}`)
+    await settlementButton.click()
+    const response = await submitAndCapturePost(
+      page,
+      page.getByRole('dialog').last().getByRole('button', { name: /^Post$|^Comptabiliser$/i }),
+      '/reports/vat/settlement',
+    )
+    if (response.status() !== 302) throw new Error(`VAT settlement failed for ${periodPath}: HTTP ${response.status()}`)
+    await page.waitForLoadState('networkidle')
+  }
+  if (unsettledPeriods.length) {
+    closingPage = await page.goto(`${BASE_URL}/accounting/year-end-closing?year=${year}`, { waitUntil: 'networkidle' })
+  }
   const next = page.getByRole('button', { name: /Next|Suivant|Continue|Continuer/i })
   if (await next.count() === 0) {
     throw new Error(`Year-end wizard unavailable: HTTP ${closingPage?.status() ?? 'unknown'}, URL ${page.url()}, buttons ${(await page.locator('button').allInnerTexts()).slice(-8).join(' | ')}`)
@@ -1336,8 +1355,17 @@ async function sendInvoiceCommunicationForReplay(page, invoiceId, reminder = fal
   const menu = page.getByRole('menu').last()
   const button = reminder
     ? menu.getByRole('button', { name: /Send reminder|Envoyer un rappel|Mahnung senden/i })
-    : menu.getByRole('button', { name: /Send by Email|Send invoice email|Envoyer la facture|Rechnung senden/i })
-  if (!(await button.count())) return { status: 'fail', sent: false, reason: 'Invoice communication action unavailable' }
+    : menu.getByRole('button', { name: /Send by Email|Send invoice email|Envoyer la facture|Envoyer par e-mail|Rechnung senden/i })
+  if (!(await button.count())) {
+    return {
+      status: 'fail',
+      sent: false,
+      reason: 'Invoice communication action unavailable',
+      pageUrl: page.url(),
+      menuText: await menu.innerText().catch(() => ''),
+      bodySample: (await page.locator('body').innerText().catch(() => '')).slice(-500),
+    }
+  }
 
   const suffix = reminder ? '/reminder' : '/send'
   const showResponsePromise = page.waitForResponse(response => {
@@ -1345,16 +1373,31 @@ async function sendInvoiceCommunicationForReplay(page, invoiceId, reminder = fal
     return response.request().method() === 'GET'
       && (!invoiceId || pathname === `/invoices/${invoiceId}`)
   }, { timeout: 30000 }).catch(() => null)
+  const recentRequests = []
+  const requestListener = request => {
+    recentRequests.push(`${request.method()} ${new URL(request.url()).pathname}`)
+    if (recentRequests.length > 20) recentRequests.shift()
+  }
+  page.on('request', requestListener)
   const requestPromise = page.waitForRequest(request => {
     const pathname = new URL(request.url()).pathname
     return request.method() === 'POST' && /\/invoices\/[^/]+\/(send|reminder)$/.test(pathname) && pathname.endsWith(suffix)
-  }, { timeout: 30000 })
+  }, { timeout: 30000 }).catch(error => {
+    throw new Error(`${error.message}; recent requests: ${recentRequests.join(' | ')}`)
+  })
   try {
-    await button.click()
+    await button.scrollIntoViewIfNeeded()
+    await button.click({ force: true })
+    if (reminder) {
+      const dialog = page.getByRole('dialog').last()
+      await dialog.getByRole('button', { name: /Send reminder|Envoyer un rappel|Mahnung senden|Invia promemoria/i }).click()
+    }
   } catch (error) {
+    page.off('request', requestListener)
     throw new Error(`Invoice communication button failed (${reminder ? 'reminder' : 'email'}, invoice ${invoiceId || 'unknown'}): ${error.message}`)
   }
   const request = await requestPromise
+  page.off('request', requestListener)
   const response = await request.response()
   const showResponse = await showResponsePromise
   const showPayload = showResponse
@@ -1476,6 +1519,10 @@ async function createInvoiceForReplay(page, customerName, period, index, taxTrea
     const pageInvoiceId = page.url().match(/\/invoices\/([^/?#]+)/i)?.[1]
     const redirectedInvoiceId = response.headers()['location']?.match(/\/invoices\/([^/?#]+)/i)?.[1]
     const invoiceId = [pageInvoiceId, redirectedInvoiceId].find(id => id && id !== 'create') || null
+
+    if (invoiceId && !page.url().includes(`/invoices/${invoiceId}`)) {
+      await page.goto(`${BASE_URL}/invoices/${invoiceId}`, { waitUntil: 'networkidle' })
+    }
 
     return {
       status: response.status(),

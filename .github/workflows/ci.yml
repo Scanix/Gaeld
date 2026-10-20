@@ -32,6 +32,7 @@ jobs:
 
       - name: Audit clean CE artifact
         run: |
+          bash ./scripts/qa/test-ce-artifact.sh
           git archive --format=tar.gz --output=/tmp/gaeld-ce.tar.gz HEAD
           ./scripts/qa/check-ce-artifact.sh /tmp/gaeld-ce.tar.gz
 

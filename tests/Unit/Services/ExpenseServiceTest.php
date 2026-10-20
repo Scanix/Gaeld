@@ -4,6 +4,7 @@ namespace Tests\Unit\Services;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\ExchangeRate;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Expenses\DTOs\RecordExpensePaymentData;
 use App\Domains\Expenses\Enums\ExpenseStatus;
@@ -87,6 +88,40 @@ class ExpenseServiceTest extends TestCase
         $this->assertSame(ExpenseStatus::Posted, $expense->status);
         $this->assertSame($journalEntry->id, $expense->journal_entry_id);
         $this->assertTrue($journalEntry->fresh('lines')->isBalanced());
+    }
+
+    public function test_foreign_expense_uses_payment_date_rate_for_cash(): void
+    {
+        foreach (['2026-03-01' => '0.95', '2026-03-08' => '0.96'] as $date => $rate) {
+            ExchangeRate::create([
+                'organization_id' => $this->organization->id,
+                'currency_from' => 'EUR',
+                'currency_to' => 'CHF',
+                'rate' => $rate,
+                'date' => $date,
+                'source' => 'manual',
+            ]);
+        }
+
+        $expense = Expense::factory()->create([
+            'organization_id' => $this->organization->id,
+            'currency' => 'EUR',
+            'amount' => '100.00',
+            'vat_amount' => '0',
+            'date' => '2026-03-01',
+        ]);
+
+        $entry = app(ExpenseService::class)->postToLedger($expense, new RecordExpensePaymentData(
+            amount: '100.00',
+            paymentDate: '2026-03-08',
+            reference: 'FOREIGN-EXPENSE',
+            description: 'Foreign expense',
+            expenseAccountCode: '6530',
+        ));
+
+        $this->assertSame('96.00', $entry->lines->firstWhere('description', 'Bank withdrawal')->credit);
+        $this->assertTrue($entry->isBalanced());
+        $this->assertStringContainsString('100.00 EUR net @ 0.96000000 CHF', $entry->description);
     }
 
     public function test_non_cash_chf_expense_credits_exact_gross_amount_without_revenue_residual(): void

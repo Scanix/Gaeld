@@ -4,7 +4,9 @@ namespace Tests\Feature\Invoicing;
 
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
+use App\Domains\Accounting\Models\ExchangeRate;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Contacts\Models\Contact;
@@ -18,12 +20,17 @@ use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
+use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Enums\PaymentMethod;
+use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
+use App\Support\Money;
+use DomainException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -141,6 +148,145 @@ class InvoiceFlowTest extends TestCase
             fn ($line) => $line->account?->code === '2200',
         ));
         $this->assertDatabaseCount('vat_entries', 0);
+    }
+
+    public function test_eur_invoice_is_booked_in_the_organization_currency(): void
+    {
+        ExchangeRate::create([
+            'organization_id' => $this->org->id,
+            'currency_from' => 'EUR',
+            'currency_to' => 'CHF',
+            'rate' => '0.95000000',
+            'date' => '2026-03-01',
+            'source' => 'manual',
+        ]);
+
+        $invoice = $this->createInvoice(['currency' => 'EUR', 'number' => 'INV-EUR-001']);
+
+        $this->assertSame('EUR', $invoice->currency);
+        $this->assertSame('1621.50', $invoice->total);
+
+        $posted = app(FinalizeInvoiceAction::class)->execute($invoice);
+        $receivable = $posted->journalEntry->lines->firstWhere('description', 'Accounts Receivable');
+
+        $this->assertNotNull($receivable);
+        $this->assertSame('1540.43', $receivable->debit);
+        $this->assertSame('0.00', $receivable->credit);
+        $this->assertStringContainsString('1621.50 EUR @ 0.95000000 CHF', $posted->journalEntry->description);
+    }
+
+    private function createForeignPaymentInvoice(): Invoice
+    {
+        ExchangeRate::create([
+            'organization_id' => $this->org->id, 'currency_from' => 'EUR', 'currency_to' => 'CHF',
+            'rate' => '0.95000000', 'date' => '2026-03-01', 'source' => 'manual',
+        ]);
+        Account::create([
+            'organization_id' => $this->org->id, 'code' => '6900',
+            'name' => 'Financial Expenses', 'type' => AccountType::Expense->value,
+        ]);
+
+        return app(FinalizeInvoiceAction::class)->execute($this->createInvoice(['currency' => 'EUR'], [[
+            'description' => 'Consulting', 'quantity' => 1, 'unit_price' => '100.01', 'vat_rate_id' => $this->vatRate->id,
+        ]]));
+    }
+
+    public function test_foreign_full_payment_clears_the_booked_receivable_including_rounding(): void
+    {
+        $invoice = $this->createForeignPaymentInvoice();
+        $payment = app(InvoiceAccountingService::class)->recordPayment($invoice, new RecordPaymentData(
+            amount: '108.11', paymentDate: '2026-04-01', paymentMethod: PaymentMethod::Bank, reference: null,
+        ));
+        $lines = $payment->journalEntry->lines;
+        $this->assertSame('102.71', $lines->firstWhere('description', 'Clear receivable')->credit);
+        $this->assertSame('102.70', $lines->firstWhere('description', 'Bank deposit')->debit);
+        $this->assertSame('0.01', $lines->firstWhere('description', 'Realized exchange difference')->debit);
+        $this->assertSame(InvoiceStatus::Paid, $invoice->fresh()->status);
+    }
+
+    public function test_foreign_partial_payments_preserve_booked_value_after_historical_rate_changes(): void
+    {
+        $invoice = $this->createForeignPaymentInvoice();
+        ExchangeRate::query()->update(['rate' => '1.00000000']);
+        $service = app(InvoiceAccountingService::class);
+        $first = $service->recordPayment($invoice, new RecordPaymentData(
+            amount: '50.00', paymentDate: '2026-04-01', paymentMethod: PaymentMethod::Bank, reference: null,
+        ));
+        $last = $service->recordPayment($invoice, new RecordPaymentData(
+            amount: '58.11', paymentDate: '2026-04-02', paymentMethod: PaymentMethod::Bank, reference: null,
+        ));
+        $firstCredit = $first->journalEntry->lines->firstWhere('description', 'Clear receivable')->credit;
+        $lastCredit = $last->journalEntry->lines->firstWhere('description', 'Clear receivable')->credit;
+        $this->assertSame('102.71', bcadd($firstCredit, $lastCredit, 2));
+        $this->assertSame('50.00', $first->journalEntry->lines->firstWhere('description', 'Bank deposit')->debit);
+        $this->assertSame('2.50', $first->journalEntry->lines->firstWhere('description', 'Realized exchange difference')->credit);
+        $this->assertSame(InvoiceStatus::Paid, $invoice->fresh()->status);
+    }
+
+    public function test_foreign_payment_uses_payment_date_rate_after_original_rate_is_deleted(): void
+    {
+        $invoice = $this->createForeignPaymentInvoice();
+        ExchangeRate::query()->delete();
+        ExchangeRate::create([
+            'organization_id' => $this->org->id, 'currency_from' => 'EUR', 'currency_to' => 'CHF',
+            'rate' => '1.00000000', 'date' => '2026-04-01', 'source' => 'manual',
+        ]);
+        $payment = app(InvoiceAccountingService::class)->recordPayment($invoice, new RecordPaymentData(
+            amount: '108.11', paymentDate: '2026-04-01', paymentMethod: PaymentMethod::Bank, reference: null,
+        ));
+        $this->assertSame('102.71', $payment->journalEntry->lines->firstWhere('description', 'Clear receivable')->credit);
+        $this->assertSame('108.11', $payment->journalEntry->lines->firstWhere('description', 'Bank deposit')->debit);
+    }
+
+    public function test_legacy_foreign_invoice_uses_its_original_unconverted_ledger_value(): void
+    {
+        $invoice = $this->createForeignPaymentInvoice();
+        $lines = $invoice->journalEntry->lines;
+        $lines->firstWhere('description', 'Accounts Receivable')->update(['debit' => '108.11']);
+        $lines->first(fn ($line) => str_starts_with($line->description, 'Revenue'))->update(['credit' => '100.01']);
+        $lines->first(fn ($line) => str_starts_with($line->description, 'VAT Output'))->update(['credit' => '8.10']);
+        $payment = app(InvoiceAccountingService::class)->recordPayment($invoice, new RecordPaymentData(
+            amount: '108.11', paymentDate: '2026-04-01', paymentMethod: PaymentMethod::Bank, reference: null,
+        ));
+        $this->assertSame('108.11', $payment->journalEntry->lines->firstWhere('description', 'Clear receivable')->credit);
+        $this->assertSame('102.70', $payment->journalEntry->lines->firstWhere('description', 'Bank deposit')->debit);
+    }
+
+    public function test_foreign_payment_without_settlement_rate_fails_without_writing(): void
+    {
+        $invoice = $this->createForeignPaymentInvoice();
+        ExchangeRate::query()->delete();
+        $count = JournalEntry::count();
+        try {
+            app(InvoiceAccountingService::class)->recordPayment($invoice, new RecordPaymentData(
+                amount: '108.11', paymentDate: '2026-04-01', paymentMethod: PaymentMethod::Bank, reference: null,
+            ));
+            $this->fail('Expected missing exchange rate to reject payment.');
+        } catch (InvalidPaymentException $exception) {
+            $this->assertStringContainsString('exchange rate', $exception->getMessage());
+        }
+        $this->assertSame($count, JournalEntry::count());
+        $this->assertSame(0, $invoice->payments()->count());
+    }
+
+    public function test_foreign_payment_without_exchange_difference_account_fails_without_writing(): void
+    {
+        $invoice = $this->createForeignPaymentInvoice();
+        Account::where('code', '6900')->delete();
+        $this->expectException(InvalidPaymentException::class);
+        $this->expectExceptionMessage('6900');
+        app(InvoiceAccountingService::class)->recordPayment($invoice, new RecordPaymentData(
+            amount: '108.11', paymentDate: '2026-04-01', paymentMethod: PaymentMethod::Bank, reference: null,
+        ));
+    }
+
+    public function test_foreign_invoice_without_an_exchange_rate_is_not_posted(): void
+    {
+        $invoice = $this->createInvoice(['currency' => 'EUR', 'number' => 'INV-EUR-002']);
+
+        $this->expectException(DomainException::class);
+
+        app(FinalizeInvoiceAction::class)->execute($invoice);
     }
 
     public function test_finalized_invoice_rejects_a_soft_deleted_customer(): void
@@ -367,6 +513,48 @@ class InvoiceFlowTest extends TestCase
 
         $this->assertEquals(InvoiceStatus::Sent, $invoice->status);
         $this->assertTrue($invoice->journalEntry->isBalanced());
+    }
+
+    #[DataProvider('mixedDiscountCases')]
+    public function test_mixed_vat_discount_groups_keep_receivables_and_tax_signed(bool $taxableDiscount, bool $creditNote): void
+    {
+        $invoice = $this->createInvoice(lines: [
+            ['description' => 'Service', 'quantity' => 1, 'unit_price' => '100.00', 'vat_rate_id' => $taxableDiscount ? null : $this->vatRate->id],
+            ['description' => 'Discount', 'quantity' => 1, 'unit_price' => '10.00', 'type' => 'discount', 'discount_type' => 'flat', 'vat_rate_id' => $taxableDiscount ? $this->vatRate->id : null],
+        ]);
+        $total = $taxableDiscount ? '89.19' : '98.10';
+        $this->assertSame($total, $invoice->total);
+        if ($creditNote) {
+            $invoice->update(['type' => InvoiceType::CreditNote, 'total' => '-'.$total]);
+        }
+        $posted = app(InvoiceAccountingService::class)->postToLedger($invoice);
+        $receivable = $posted->journalEntry->lines->firstWhere('description', 'Accounts Receivable');
+        $this->assertSame($total, $creditNote ? $receivable->credit : $receivable->debit);
+        $this->assertSame('0.00', $creditNote ? $receivable->debit : $receivable->credit);
+        $this->assertTrue($posted->journalEntry->isBalanced());
+        $discountLine = $posted->journalEntry->lines->first(fn ($line) => $line->description !== 'Accounts Receivable'
+            && ($creditNote ? $line->credit : $line->debit) === '10.00');
+        $this->assertNotNull($discountLine);
+        $tax = VatEntry::where('journal_entry_id', $posted->journal_entry_id)->firstOrFail();
+        $expectedTax = $taxableDiscount ? '-0.81' : '8.10';
+        $this->assertSame($creditNote ? Money::negate($expectedTax) : $expectedTax, $tax->vat_amount);
+        if (! $creditNote) {
+            $payment = app(InvoiceAccountingService::class)->recordPayment($posted, new RecordPaymentData(
+                amount: $total, paymentDate: '2026-04-01', paymentMethod: PaymentMethod::Bank, reference: null,
+            ));
+            $this->assertSame($receivable->debit, $payment->journalEntry->lines->firstWhere('description', 'Clear receivable')->credit);
+        }
+    }
+
+    /** @return array<string, array{bool, bool}> */
+    public static function mixedDiscountCases(): array
+    {
+        return [
+            'untaxed discount' => [false, false],
+            'taxed discount' => [true, false],
+            'untaxed discount credit note' => [false, true],
+            'taxed discount credit note' => [true, true],
+        ];
     }
 
     public function test_invoice_keeps_customer_snapshot_after_contact_address_changes(): void
