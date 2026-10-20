@@ -5,6 +5,35 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.28] - 2026-10-20
+
+### Fixed
+- Reconcile expenses whose bank transaction has no description, using its
+  reference or ID in the accounting description.
+- Convert foreign-currency invoices, credit notes, and expenses into the
+  organization currency, with explicit errors when exchange rates are missing.
+- Preserve booked receivables during foreign invoice settlement, clear rounding
+  remainders on final payments, and post realized exchange differences.
+- Reject ambiguous cross-currency bank matching instead of silently treating
+  the bank amount as a document-currency amount.
+- Display invoice values in their document currency and journal values in the
+  organization currency. Exchange-rate management is available in CE.
+- Exclude test suites and intentional hostile-upload fixtures from release
+  archives while retaining them in Git checkouts; audit tar and zip packaging.
+- Align the staging QA runner with invoice email/reminder actions.
+
+### Dependencies and security
+- Integrate the pending Autoprefixer, Zod, Playwright, Inertia Vue, Vite, and
+  ParaTest updates, including compatible locked transitive updates.
+- Patch Symfony HTTP Foundation and YAML advisories found during release audit.
+
+### Upgrade notes
+- Existing ledger entries remain unchanged. Foreign invoice settlement requires
+  payment-date rates and account `6900` when an exchange difference exists.
+- Automatic bank reconciliation supports matching document/bank/ledger
+  currencies; foreign settlements must be recorded separately.
+- Impact Accounting remains excluded from this release.
+
 ## [3.8.27] - 2026-10-08
 
 ### Fixed
