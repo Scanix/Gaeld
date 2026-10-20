@@ -86,39 +86,39 @@ class InvoiceAccountingService
                 $vatAmount = $toLedger($vatAmount);
 
                 // Revenue line: Credit for invoice, Debit for credit note
-                if (Money::isPositive($netAmount)) {
+                if (! Money::isZero($netAmount)) {
                     $vatLabel = $vatRateId !== 'none' && $invoiceLines->first()->vatRate
                         ? " ({$invoiceLines->first()->vatRate->name})"
                         : '';
                     $lines[] = new JournalLineData(
                         accountId: (string) $revenue->id,
-                        debit: $isCreditNote ? $netAmount : '0',
-                        credit: $isCreditNote ? '0' : $netAmount,
+                        debit: $isCreditNote !== Money::isNegative($netAmount) ? Money::absoluteAmount($netAmount) : '0',
+                        credit: $isCreditNote !== Money::isNegative($netAmount) ? '0' : Money::absoluteAmount($netAmount),
                         description: "Revenue{$vatLabel}",
                     );
                 }
 
                 // VAT line: Credit for invoice, Debit for credit note
-                if (Money::isPositive($vatAmount)) {
+                if (! Money::isZero($vatAmount)) {
                     $vatOutputAccount = $this->ledgerQuery->resolveAccount($orgId, AccountCode::VAT_OUTPUT);
                     $rateName = $invoiceLines->first()->vatRate->name ?? 'VAT';
                     $lines[] = new JournalLineData(
                         accountId: (string) $vatOutputAccount->id,
-                        debit: $isCreditNote ? $vatAmount : '0',
-                        credit: $isCreditNote ? '0' : $vatAmount,
+                        debit: $isCreditNote !== Money::isNegative($vatAmount) ? Money::absoluteAmount($vatAmount) : '0',
+                        credit: $isCreditNote !== Money::isNegative($vatAmount) ? '0' : Money::absoluteAmount($vatAmount),
                         description: "VAT Output — {$rateName}",
                     );
                 }
             }
 
             $invoiceTotal = '0';
-            foreach (array_slice($lines, 0) as $line) {
-                $invoiceTotal = Money::add($invoiceTotal, $isCreditNote ? $line->debit : $line->credit);
+            foreach ($lines as $line) {
+                $invoiceTotal = Money::add($invoiceTotal, Money::subtract($line->credit, $line->debit));
             }
             array_unshift($lines, new JournalLineData(
                 accountId: (string) $ar->id,
-                debit: $isCreditNote ? '0' : $invoiceTotal,
-                credit: $isCreditNote ? $invoiceTotal : '0',
+                debit: Money::isPositive($invoiceTotal) ? $invoiceTotal : '0',
+                credit: Money::isNegative($invoiceTotal) ? Money::absoluteAmount($invoiceTotal) : '0',
                 description: 'Accounts Receivable',
             ));
 
@@ -143,12 +143,12 @@ class InvoiceAccountingService
                 $netAmount = $toLedger($netAmount);
                 $vatAmount = $toLedger($vatAmount);
 
-                if (Money::isPositive($vatAmount)) {
+                if (! Money::isZero($vatAmount)) {
                     VatEntry::create([
                         'journal_entry_id' => $journalEntry->id,
                         'vat_rate_id' => $vatRateId,
-                        'base_amount' => $netAmount,
-                        'vat_amount' => $vatAmount,
+                        'base_amount' => $isCreditNote ? Money::negate($netAmount) : $netAmount,
+                        'vat_amount' => $isCreditNote ? Money::negate($vatAmount) : $vatAmount,
                         'type' => VatEntryType::Output,
                     ]);
                 }

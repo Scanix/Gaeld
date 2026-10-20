@@ -6,6 +6,7 @@ use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\ExchangeRate;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Contacts\Models\Contact;
@@ -19,14 +20,17 @@ use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
+use App\Domains\Invoicing\Enums\InvoiceType;
 use App\Domains\Invoicing\Enums\PaymentMethod;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoiceAccountingService;
+use App\Support\Money;
 use DomainException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -509,6 +513,48 @@ class InvoiceFlowTest extends TestCase
 
         $this->assertEquals(InvoiceStatus::Sent, $invoice->status);
         $this->assertTrue($invoice->journalEntry->isBalanced());
+    }
+
+    #[DataProvider('mixedDiscountCases')]
+    public function test_mixed_vat_discount_groups_keep_receivables_and_tax_signed(bool $taxableDiscount, bool $creditNote): void
+    {
+        $invoice = $this->createInvoice(lines: [
+            ['description' => 'Service', 'quantity' => 1, 'unit_price' => '100.00', 'vat_rate_id' => $taxableDiscount ? null : $this->vatRate->id],
+            ['description' => 'Discount', 'quantity' => 1, 'unit_price' => '10.00', 'type' => 'discount', 'discount_type' => 'flat', 'vat_rate_id' => $taxableDiscount ? $this->vatRate->id : null],
+        ]);
+        $total = $taxableDiscount ? '89.19' : '98.10';
+        $this->assertSame($total, $invoice->total);
+        if ($creditNote) {
+            $invoice->update(['type' => InvoiceType::CreditNote, 'total' => '-'.$total]);
+        }
+        $posted = app(InvoiceAccountingService::class)->postToLedger($invoice);
+        $receivable = $posted->journalEntry->lines->firstWhere('description', 'Accounts Receivable');
+        $this->assertSame($total, $creditNote ? $receivable->credit : $receivable->debit);
+        $this->assertSame('0.00', $creditNote ? $receivable->debit : $receivable->credit);
+        $this->assertTrue($posted->journalEntry->isBalanced());
+        $discountLine = $posted->journalEntry->lines->first(fn ($line) => $line->description !== 'Accounts Receivable'
+            && ($creditNote ? $line->credit : $line->debit) === '10.00');
+        $this->assertNotNull($discountLine);
+        $tax = VatEntry::where('journal_entry_id', $posted->journal_entry_id)->firstOrFail();
+        $expectedTax = $taxableDiscount ? '-0.81' : '8.10';
+        $this->assertSame($creditNote ? Money::negate($expectedTax) : $expectedTax, $tax->vat_amount);
+        if (! $creditNote) {
+            $payment = app(InvoiceAccountingService::class)->recordPayment($posted, new RecordPaymentData(
+                amount: $total, paymentDate: '2026-04-01', paymentMethod: PaymentMethod::Bank, reference: null,
+            ));
+            $this->assertSame($receivable->debit, $payment->journalEntry->lines->firstWhere('description', 'Clear receivable')->credit);
+        }
+    }
+
+    /** @return array<string, array{bool, bool}> */
+    public static function mixedDiscountCases(): array
+    {
+        return [
+            'untaxed discount' => [false, false],
+            'taxed discount' => [true, false],
+            'untaxed discount credit note' => [false, true],
+            'taxed discount credit note' => [true, true],
+        ];
     }
 
     public function test_invoice_keeps_customer_snapshot_after_contact_address_changes(): void
