@@ -44,6 +44,7 @@ class ExpenseReconciler
             $orgId = $bankAccount->organization_id;
 
             $this->validatePreconditions($transaction, $bankAccount);
+            $this->validateDocumentCurrency($bankAccount, $expense->currency);
 
             $amount = Money::absoluteAmount((string) $transaction->amount);
             $netAmount = Money::absoluteAmount((string) $expense->amount);

@@ -68,9 +68,9 @@ class ExpenseService
                 $orgId,
                 $documentCurrency,
                 $ledgerCurrency,
-                $expense->date->toDateString(),
+                $data->paymentDate,
             );
-            $toLedger = fn (string $amount): string => Money::round(bcmul($amount, $rate, 8));
+            $toLedger = fn (string $amount): string => Money::round(Money::multiply($amount, $rate));
 
             $netAmount = $toLedger((string) $data->amount);
             $vatAmount = $toLedger((string) ($expense->vat_amount ?? '0'));
@@ -145,7 +145,9 @@ class ExpenseService
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
                 date: $data->paymentDate,
                 reference: $data->reference,
-                description: $data->description,
+                description: $data->description.($documentCurrency === $ledgerCurrency
+                    ? ''
+                    : " [{$data->amount} {$documentCurrency} net @ {$rate} {$ledgerCurrency}]"),
                 lines: $lines,
             ));
 

@@ -15,6 +15,7 @@ use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceLineType;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceType;
+use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
 use App\Domains\Invoicing\Models\InvoicePayment;
@@ -67,7 +68,7 @@ class InvoiceAccountingService
                 $ledgerCurrency,
                 $invoice->issue_date->toDateString(),
             );
-            $toLedger = fn (string $amount): string => Money::round(bcmul($amount, $rate, 8));
+            $toLedger = fn (string $amount): string => Money::round(Money::multiply($amount, $rate));
 
             $ar = $this->ledgerQuery->resolveAccount($orgId, AccountCode::ACCOUNTS_RECEIVABLE);
             $revenue = $this->ledgerQuery->resolveAccount($orgId, AccountCode::REVENUE);
@@ -219,28 +220,80 @@ class InvoiceAccountingService
             $invoice->loadMissing('organization');
             $ledgerCurrency = strtoupper((string) ($invoice->organization->currency ?: 'CHF'));
             $documentCurrency = strtoupper((string) ($invoice->currency ?: $ledgerCurrency));
-            $converted = $this->currencies->convert(
-                $orgId,
-                $documentCurrency,
-                $ledgerCurrency,
-                (string) $data->amount,
-                $invoice->issue_date->toDateString(),
-            );
-            $ledgerAmount = $converted['amount'];
-            $fxNote = $documentCurrency === $ledgerCurrency
-                ? ''
-                : sprintf(' [%s %s @ %s]', $data->amount, $documentCurrency, $converted['rate']);
+            $receivableAmount = $data->amount;
+            $ledgerAmount = $data->amount;
+            $fxNote = '';
+
+            if ($documentCurrency !== $ledgerCurrency) {
+                $invoice = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
+                $invoice->load('journalEntry.lines', 'payments.journalEntry.lines');
+                $amountDue = $invoice->amountDue();
+                if (! Money::isPositive($data->amount) || Money::compare($data->amount, $amountDue) > 0) {
+                    throw new InvalidPaymentException('Payment must be positive and cannot exceed the invoice balance.');
+                }
+                if ($invoice->journalEntry === null) {
+                    throw new InvalidPaymentException('Cannot settle a foreign invoice without its original ledger entry.');
+                }
+
+                $remainingReceivable = '0.00';
+                $hasReceivable = false;
+                foreach ($invoice->journalEntry->lines as $line) {
+                    if ((string) $line->account_id === (string) $accountsReceivable->id) {
+                        $hasReceivable = true;
+                        $remainingReceivable = Money::add($remainingReceivable, Money::subtract($line->debit, $line->credit));
+                    }
+                }
+                if (! $hasReceivable) {
+                    throw new InvalidPaymentException('Cannot settle a foreign invoice without its original receivable posting.');
+                }
+                foreach ($invoice->payments as $payment) {
+                    if ($payment->journalEntry === null) {
+                        throw new InvalidPaymentException('Cannot settle a foreign invoice with a payment missing its ledger entry.');
+                    }
+                    foreach ($payment->journalEntry->lines as $line) {
+                        if ((string) $line->account_id === (string) $accountsReceivable->id) {
+                            $remainingReceivable = Money::subtract($remainingReceivable, Money::subtract($line->credit, $line->debit));
+                        }
+                    }
+                }
+                $receivableAmount = Money::compare($data->amount, $amountDue) === 0
+                    ? $remainingReceivable
+                    : Money::divideRounded(Money::multiply($remainingReceivable, $data->amount), $amountDue);
+
+                try {
+                    $converted = $this->currencies->convert($orgId, $documentCurrency, $ledgerCurrency, $data->amount, $data->paymentDate);
+                } catch (\DomainException $exception) {
+                    throw new InvalidPaymentException($exception->getMessage(), previous: $exception);
+                }
+                $ledgerAmount = $converted['amount'];
+                $fxNote = sprintf(' [%s %s @ %s]', $data->amount, $documentCurrency, $converted['rate']);
+            }
+
+            $lines = [
+                new JournalLineData(accountId: (string) $bankAccount->id, debit: $ledgerAmount, credit: '0', description: 'Bank deposit'),
+                new JournalLineData(accountId: (string) $accountsReceivable->id, debit: '0', credit: $receivableAmount, description: 'Clear receivable'),
+            ];
+            $difference = Money::subtract($ledgerAmount, $receivableAmount);
+            if (! Money::isZero($difference)) {
+                try {
+                    $financialExpenses = $this->ledgerQuery->resolveAccount($orgId, '6900');
+                } catch (ModelNotFoundException $exception) {
+                    throw new InvalidPaymentException('Add financial expenses account 6900 before recording a payment with an exchange difference.', previous: $exception);
+                }
+                $lines[] = new JournalLineData(
+                    accountId: (string) $financialExpenses->id,
+                    debit: Money::isNegative($difference) ? Money::absoluteAmount($difference) : '0',
+                    credit: Money::isPositive($difference) ? $difference : '0',
+                    description: 'Realized exchange difference',
+                );
+            }
 
             $paymentRef = $data->reference ?? 'PAY-'.$invoice->number.'-'.($invoice->payments()->count() + 1);
-
             $journalEntry = $this->ledgerService->postEntry($orgId, new JournalEntryData(
                 date: $data->paymentDate,
                 reference: $paymentRef,
                 description: "Payment received for {$invoice->number}{$fxNote}",
-                lines: [
-                    new JournalLineData(accountId: (string) $bankAccount->id, debit: $ledgerAmount, credit: '0', description: 'Bank deposit'),
-                    new JournalLineData(accountId: (string) $accountsReceivable->id, debit: '0', credit: $ledgerAmount, description: 'Clear receivable'),
-                ],
+                lines: $lines,
             ));
 
             $payment = InvoicePayment::create([

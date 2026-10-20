@@ -22,7 +22,7 @@ class CurrencyConversionService
         $rate = $this->rate($organizationId, $from, $to, $date);
 
         return [
-            'amount' => Money::round(bcmul($amount, $rate, 8)),
+            'amount' => Money::round(Money::multiply($amount, $rate)),
             'rate' => $rate,
         ];
     }
@@ -43,12 +43,12 @@ class CurrencyConversionService
 
         $direct = $this->lookup($organizationId, $from, $to, $date);
         if ($direct !== null) {
-            return $this->normalizeRate((string) $direct);
+            return $this->normalizeRate($direct);
         }
 
         $inverse = $this->lookup($organizationId, $to, $from, $date);
-        if ($inverse !== null && bccomp((string) $inverse, '0', 8) !== 0) {
-            return bcdiv('1', (string) $inverse, 8);
+        if ($inverse !== null) {
+            return bcdiv('1', $this->normalizeRate($inverse), 8);
         }
 
         throw new DomainException(
@@ -75,6 +75,10 @@ class CurrencyConversionService
      */
     private function normalizeRate(string $rate): string
     {
+        if (! is_numeric($rate) || bccomp($rate, '0', 8) <= 0) {
+            throw new DomainException('Exchange rates must be greater than zero.');
+        }
+
         return bcadd($rate, '0', 8);
     }
 }

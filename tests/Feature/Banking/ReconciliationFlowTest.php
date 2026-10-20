@@ -351,6 +351,80 @@ class ReconciliationFlowTest extends TestCase
             ->assertSessionHasErrors('expense_account_code');
     }
 
+    public static function foreignReconciliationCurrencies(): array
+    {
+        return [
+            'foreign document' => ['EUR', 'CHF'],
+            'foreign bank account' => ['CHF', 'EUR'],
+            'foreign document and bank' => ['EUR', 'EUR'],
+        ];
+    }
+
+    #[DataProvider('foreignReconciliationCurrencies')]
+    public function test_foreign_currency_expense_reconciliation_leaves_balances_unchanged(
+        string $documentCurrency,
+        string $bankCurrency,
+    ): void {
+        $this->bankAccount->update(['currency' => $bankCurrency]);
+        $expense = Expense::factory()->create([
+            'organization_id' => $this->organization->id,
+            'currency' => $documentCurrency,
+            'amount' => '100.00',
+            'vat_amount' => '0',
+        ]);
+        $transaction = BankTransaction::create([
+            'date' => '2026-03-15',
+            'bank_account_id' => $this->bankAccount->id,
+            'amount' => '-95.00',
+            'type' => BankTransactionType::Debit,
+            'is_reconciled' => false,
+        ]);
+
+        try {
+            app(ReconciliationService::class)->reconcileWithExpense($transaction, $expense, '6530');
+            $this->fail('Foreign currency reconciliation must require explicit settlement.');
+        } catch (ReconciliationFailedException $exception) {
+            $this->assertStringContainsString('same currency', $exception->getMessage());
+        }
+
+        $this->assertFalse($transaction->fresh()->is_reconciled);
+        $this->assertNull($transaction->fresh()->journal_entry_id);
+        $this->assertSame('10000.00', $this->bankAccount->fresh()->balance);
+    }
+
+    #[DataProvider('foreignReconciliationCurrencies')]
+    public function test_foreign_currency_invoice_reconciliation_leaves_balances_unchanged(
+        string $documentCurrency,
+        string $bankCurrency,
+    ): void {
+        $this->bankAccount->update(['currency' => $bankCurrency]);
+        $invoice = Invoice::factory()->create([
+            'organization_id' => $this->organization->id,
+            'currency' => $documentCurrency,
+            'total' => '100.00',
+            'status' => InvoiceStatus::Sent,
+        ]);
+        $transaction = BankTransaction::create([
+            'date' => '2026-03-15',
+            'bank_account_id' => $this->bankAccount->id,
+            'amount' => '95.00',
+            'type' => BankTransactionType::Credit,
+            'is_reconciled' => false,
+        ]);
+
+        try {
+            app(ReconciliationService::class)->reconcileWithInvoice($transaction, $invoice);
+            $this->fail('Foreign currency reconciliation must require explicit settlement.');
+        } catch (ReconciliationFailedException $exception) {
+            $this->assertStringContainsString('same currency', $exception->getMessage());
+        }
+
+        $this->assertFalse($transaction->fresh()->is_reconciled);
+        $this->assertNull($transaction->fresh()->journal_entry_id);
+        $this->assertSame(0, $invoice->payments()->count());
+        $this->assertSame('10000.00', $this->bankAccount->fresh()->balance);
+    }
+
     public function test_manual_reconciliation_rejects_an_unknown_account_code(): void
     {
         $transaction = BankTransaction::create([
