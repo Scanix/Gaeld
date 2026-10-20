@@ -23,9 +23,14 @@ The release archive excludes development tests and hostile-upload fixtures;
 Git checkouts retain them. Targeted Symfony HTTP Foundation and YAML security
 updates accompany the dependency PRs. No new schema migration is introduced.
 
-Validation and promotion status are recorded after the release gates complete.
-The normal staging host was unreachable during preparation on 2026-10-20;
-production must not be promoted until staging acceptance is available.
+Local CE validation passed 1,599 tests with 6,078 assertions and 13 conditional
+skips. The clean CE build and 30 standalone/boundary/API acceptance tests passed,
+as did Pint, PHPStan, dependency audits, the API contract parse, and source and
+compiled-asset boundary audits.
+
+The initial staging connectivity outage was resolved. Record staging acceptance,
+EE compatibility, exact immutable commits, backups, and production activation in
+the published release record before declaring the coordinated rollout complete.
 
 ## v3.8.27 Coordinated Candidate
 
