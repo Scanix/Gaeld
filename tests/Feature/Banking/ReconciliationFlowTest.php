@@ -27,6 +27,7 @@ use App\Domains\Organizations\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Mockery\MockInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 
@@ -267,8 +268,22 @@ class ReconciliationFlowTest extends TestCase
             ->assertSessionHasErrors('invoice_id');
     }
 
-    public function test_reconcile_transaction_with_expense(): void
+    public static function expenseTransactionDescriptions(): array
     {
+        return [
+            'description present' => ['GitHub Pro subscription', 'EXP-GITHUB', 'GitHub Pro subscription'],
+            'missing description' => [null, 'EXP-GITHUB', 'EXP-GITHUB'],
+            'missing description and reference' => [null, null, null],
+            'empty description' => ['', 'EXP-GITHUB', ''],
+        ];
+    }
+
+    #[DataProvider('expenseTransactionDescriptions')]
+    public function test_reconcile_transaction_with_expense(
+        ?string $description,
+        ?string $reference,
+        ?string $expectedDescription,
+    ): void {
         $reconciliationService = app(ReconciliationService::class);
         $suggestionService = app(SuggestionService::class);
 
@@ -287,10 +302,10 @@ class ReconciliationFlowTest extends TestCase
         $transaction = BankTransaction::create([
             'bank_account_id' => $this->bankAccount->id,
             'date' => '2026-03-12',
-            'description' => 'GitHub Pro subscription',
+            'description' => $description,
             'amount' => 200.00,
             'type' => BankTransactionType::Debit,
-            'reference' => 'EXP-GITHUB',
+            'reference' => $reference,
         ]);
 
         $result = $reconciliationService->reconcileWithExpense($transaction, $expense, '6530');
@@ -299,6 +314,11 @@ class ReconciliationFlowTest extends TestCase
         $this->assertNotNull($result->journal_entry_id);
         $this->assertEquals($expense->id, $result->matched_expense_id);
         $this->assertTrue($result->journalEntry->isBalanced());
+        $transactionDescription = $expectedDescription ?? (string) $transaction->id;
+        $this->assertSame(
+            "Reconciliation: {$transactionDescription} ↔ Expense GitHub Pro",
+            $result->journalEntry->description,
+        );
 
         // Bank balance should decrease
         $this->assertEquals('9800.00', $result->bankAccount->balance);
