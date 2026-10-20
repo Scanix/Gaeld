@@ -1029,7 +1029,26 @@ async function exercisePermissions(browser, page, createdAccounts) {
 }
 
 async function exerciseYearEndClosing(page, year = 2026) {
-  const closingPage = await page.goto(`${BASE_URL}/accounting/year-end-closing?year=${year}`, { waitUntil: 'networkidle' })
+  let closingPage = await page.goto(`${BASE_URL}/accounting/year-end-closing?year=${year}`, { waitUntil: 'networkidle' })
+  const unsettledPeriods = await page.locator('a[href^="/reports/vat?period="]').evaluateAll(links =>
+    links.map(link => link.getAttribute('href')),
+  )
+  for (const periodPath of unsettledPeriods) {
+    await page.goto(`${BASE_URL}${periodPath}`, { waitUntil: 'networkidle' })
+    const settlementButton = page.getByRole('button', { name: /Post settlement entry|Comptabiliser le décompte/i })
+    if (!(await settlementButton.count())) throw new Error(`VAT settlement unavailable for ${periodPath}`)
+    await settlementButton.click()
+    const response = await submitAndCapturePost(
+      page,
+      page.getByRole('dialog').last().getByRole('button', { name: /^Post$|^Comptabiliser$/i }),
+      '/reports/vat/settlement',
+    )
+    if (response.status() !== 302) throw new Error(`VAT settlement failed for ${periodPath}: HTTP ${response.status()}`)
+    await page.waitForLoadState('networkidle')
+  }
+  if (unsettledPeriods.length) {
+    closingPage = await page.goto(`${BASE_URL}/accounting/year-end-closing?year=${year}`, { waitUntil: 'networkidle' })
+  }
   const next = page.getByRole('button', { name: /Next|Suivant|Continue|Continuer/i })
   if (await next.count() === 0) {
     throw new Error(`Year-end wizard unavailable: HTTP ${closingPage?.status() ?? 'unknown'}, URL ${page.url()}, buttons ${(await page.locator('button').allInnerTexts()).slice(-8).join(' | ')}`)
