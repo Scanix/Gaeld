@@ -27,7 +27,7 @@
     },
     "require-dev": {
         "brianium/paratest": "^7.22",
-        "deployer/deployer": "^7.5",
+        "deployer/deployer": "^8.0",
         "fakerphp/faker": "^1.23",
         "knuckleswtf/scribe": "^5.9",
         "larastan/larastan": "^3.0",
