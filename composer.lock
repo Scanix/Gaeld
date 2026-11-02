@@ -5698,16 +5698,16 @@
         },
         {
             "name": "sprain/swiss-qr-bill",
-            "version": "v5.3",
+            "version": "v5.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sprain/php-swiss-qr-bill.git",
-                "reference": "2e5e4f16ae1832d2594ab288e401ede6a76eff2a"
+                "reference": "e139c4287bb55ceefc13b2773a0383c01a61c69e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sprain/php-swiss-qr-bill/zipball/2e5e4f16ae1832d2594ab288e401ede6a76eff2a",
-                "reference": "2e5e4f16ae1832d2594ab288e401ede6a76eff2a",
+                "url": "https://api.github.com/repos/sprain/php-swiss-qr-bill/zipball/e139c4287bb55ceefc13b2773a0383c01a61c69e",
+                "reference": "e139c4287bb55ceefc13b2773a0383c01a61c69e",
                 "shasum": ""
             },
             "require": {
@@ -5754,7 +5754,7 @@
             "description": "A PHP library to create Swiss QR bills",
             "support": {
                 "issues": "https://github.com/sprain/php-swiss-qr-bill/issues",
-                "source": "https://github.com/sprain/php-swiss-qr-bill/tree/v5.3"
+                "source": "https://github.com/sprain/php-swiss-qr-bill/tree/v5.3.1"
             },
             "funding": [
                 {
@@ -5762,7 +5762,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-01-28T11:45:53+00:00"
+            "time": "2026-09-29T08:48:18+00:00"
         },
         {
             "name": "stripe/stripe-php",
@@ -6652,16 +6652,16 @@
         },
         {
             "name": "symfony/intl",
-            "version": "v8.1.4",
+            "version": "v8.1.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/intl.git",
-                "reference": "85c3b3d8c48a95dc09ac1154b855957290254a09"
+                "reference": "19c82580068e56d126b3ef4e26c0fe9aa5b71ff7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/intl/zipball/85c3b3d8c48a95dc09ac1154b855957290254a09",
-                "reference": "85c3b3d8c48a95dc09ac1154b855957290254a09",
+                "url": "https://api.github.com/repos/symfony/intl/zipball/19c82580068e56d126b3ef4e26c0fe9aa5b71ff7",
+                "reference": "19c82580068e56d126b3ef4e26c0fe9aa5b71ff7",
                 "shasum": ""
             },
             "require": {
@@ -6717,7 +6717,7 @@
                 "localization"
             ],
             "support": {
-                "source": "https://github.com/symfony/intl/tree/v8.1.4"
+                "source": "https://github.com/symfony/intl/tree/v8.1.10"
             },
             "funding": [
                 {
@@ -6737,7 +6737,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-08-07T15:02:39+00:00"
+            "time": "2026-10-27T13:53:09+00:00"
         },
         {
             "name": "symfony/mailer",
@@ -7072,16 +7072,16 @@
         },
         {
             "name": "symfony/polyfill-intl-icu",
-            "version": "v1.38.0",
+            "version": "v1.43.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-icu.git",
-                "reference": "445c90e341fccda10311019cf82ff73bb7343945"
+                "reference": "aad9cd259a9a4d2810e7ba778ed093bbd76a5ab9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-intl-icu/zipball/445c90e341fccda10311019cf82ff73bb7343945",
-                "reference": "445c90e341fccda10311019cf82ff73bb7343945",
+                "url": "https://api.github.com/repos/symfony/polyfill-intl-icu/zipball/aad9cd259a9a4d2810e7ba778ed093bbd76a5ab9",
+                "reference": "aad9cd259a9a4d2810e7ba778ed093bbd76a5ab9",
                 "shasum": ""
             },
             "require": {
@@ -7136,7 +7136,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-icu/tree/v1.38.0"
+                "source": "https://github.com/symfony/polyfill-intl-icu/tree/v1.43.3"
             },
             "funding": [
                 {
@@ -7156,7 +7156,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-25T11:52:53+00:00"
+            "time": "2026-10-27T15:55:21+00:00"
         },
         {
             "name": "symfony/polyfill-intl-idn",
@@ -7332,16 +7332,16 @@
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.43.0",
+            "version": "v1.43.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "4d5d331bf731e0aedbc6b2f5e61135b7b7996a72"
+                "reference": "122889ed24dc000165bcbfd77ec412f15cbdfc6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/4d5d331bf731e0aedbc6b2f5e61135b7b7996a72",
-                "reference": "4d5d331bf731e0aedbc6b2f5e61135b7b7996a72",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/122889ed24dc000165bcbfd77ec412f15cbdfc6a",
+                "reference": "122889ed24dc000165bcbfd77ec412f15cbdfc6a",
                 "shasum": ""
             },
             "require": {
@@ -7393,7 +7393,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.43.0"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.43.3"
             },
             "funding": [
                 {
@@ -7413,7 +7413,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-24T15:19:04+00:00"
+            "time": "2026-10-28T09:35:49+00:00"
         },
         {
             "name": "symfony/polyfill-php80",
@@ -8907,16 +8907,16 @@
         },
         {
             "name": "symfony/validator",
-            "version": "v8.1.4",
+            "version": "v8.1.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/validator.git",
-                "reference": "1642533ef70c41781b8696163fcf0050c9fc68fe"
+                "reference": "bf9171dc59f33fe84da8a5ca0e75f354194be325"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/validator/zipball/1642533ef70c41781b8696163fcf0050c9fc68fe",
-                "reference": "1642533ef70c41781b8696163fcf0050c9fc68fe",
+                "url": "https://api.github.com/repos/symfony/validator/zipball/bf9171dc59f33fe84da8a5ca0e75f354194be325",
+                "reference": "bf9171dc59f33fe84da8a5ca0e75f354194be325",
                 "shasum": ""
             },
             "require": {
@@ -8980,7 +8980,7 @@
             "description": "Provides tools to validate values",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/validator/tree/v8.1.4"
+                "source": "https://github.com/symfony/validator/tree/v8.1.10"
             },
             "funding": [
                 {
@@ -9000,7 +9000,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-08-06T09:53:08+00:00"
+            "time": "2026-10-27T13:53:09+00:00"
         },
         {
             "name": "symfony/var-dumper",
