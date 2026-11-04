@@ -1,0 +1,104 @@
+name: gaeld
+
+x-app: &app
+  image: ${GAELD_IMAGE:?An immutable release image is required}
+  env_file:
+    - ${GAELD_ROOT:?}/shared/.env
+  environment:
+    GAELD_MANAGED_INSTALLATION: 'true'
+  volumes:
+    - ${GAELD_ROOT}/shared/storage:/var/www/html/storage
+    - ${GAELD_ROOT}/.gaeld/cache/${GAELD_VERSION:?}:/var/www/html/bootstrap/cache
+    - ${GAELD_ROOT}/.gaeld/runtime:/run/gaeld
+    - ${GAELD_ROOT}/shared/secrets:/run/gaeld-secrets:ro
+  restart: unless-stopped
+  stop_grace_period: 35m
+  networks: [private]
+
+services:
+  app:
+    <<: *app
+    healthcheck:
+      test: [CMD, php-fpm, -t]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      pgsql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  web:
+    image: ${GAELD_WEB_IMAGE:?An immutable web image is required}
+    ports:
+      - 127.0.0.1:${GAELD_PORT:-8080}:8080
+    volumes:
+      - ${GAELD_ROOT}/shared/storage/app/public:/var/www/html/public/storage:ro
+    restart: unless-stopped
+    stop_grace_period: 35m
+    networks: [private]
+    depends_on:
+      app: { condition: service_healthy }
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/healthz]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  horizon:
+    <<: *app
+    command: [php, artisan, horizon]
+    stop_signal: SIGTERM
+    depends_on:
+      app: { condition: service_healthy }
+    healthcheck:
+      test: [CMD, php, artisan, horizon:status]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+  scheduler:
+    <<: *app
+    command: [gaeld-scheduler]
+    stop_signal: SIGTERM
+    depends_on:
+      app: { condition: service_healthy }
+    healthcheck:
+      test: [CMD, php, -r, "exit(is_file('/run/gaeld/scheduler') && time() - filemtime('/run/gaeld/scheduler') < 120 ? 0 : 1);"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  pgsql:
+    image: ${GAELD_POSTGRES_IMAGE:?An immutable PostgreSQL image is required}
+    environment:
+      POSTGRES_DB: gaeld
+      POSTGRES_USER: gaeld
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks: [private]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U gaeld -d gaeld]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: ${GAELD_REDIS_IMAGE:?An immutable Redis image is required}
+    command: [redis-server, --appendonly, 'yes', --appendfsync, always]
+    volumes:
+      - redis:/data
+    restart: unless-stopped
+    networks: [private]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+networks:
+  private:
+volumes:
+  postgres:
+  redis:

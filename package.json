@@ -18,7 +18,7 @@
         "laravel-vite-plugin": "^3.2.0",
         "postcss": "^8.5.28",
         "tailwindcss": "^4.3.3",
-        "vite": "^8.3.0"
+        "vite": "^8.3.5"
     },
     "dependencies": {
         "@simplewebauthn/browser": "^14.0.0",
@@ -32,6 +32,6 @@
         "vanilla-cookieconsent": "^3.1.0",
         "vue": "^3.5.42",
         "vue-chartjs": "^5.3.4",
-        "zod": "^4.6.2"
+        "zod": "^4.6.7"
     }
 }

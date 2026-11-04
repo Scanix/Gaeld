@@ -25,8 +25,9 @@ return [
             'files' => [
                 /*
                  * The list of directories and files that will be included in the backup.
-                 * We back up only the database — code is versioned in Git.
-                 * Storage uploads are included for receipt attachments.
+                 * General-purpose database and document backups. Managed release
+                 * recovery uses ./gaeld backup, which also preserves the APP_KEY
+                 * and drains all writers before taking its encrypted snapshot.
                  */
                 'include' => [
                     storage_path('app'),
@@ -39,6 +40,7 @@ return [
                  */
                 'exclude' => [
                     storage_path('app/backup-temp'),
+                    env('BACKUP_PATH', '/var/backups/gaeld'),
                 ],
 
                 /*
@@ -198,7 +200,7 @@ return [
          * After creating the zip, verify it can be opened and contains files.
          * Recommended for critical backups but adds a small overhead.
          */
-        'verify_backup' => false,
+        'verify_backup' => true,
 
         /*
          * The number of attempts, in case the backup command encounters an exception

@@ -5,6 +5,32 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.9.0-rc.1 — R1 installation and recovery candidate
+
+Prepare this candidate from the exact v3.8.28 baseline on the dedicated R1
+branch. Its scope is managed installation, Sail adoption, controlled updates,
+encrypted recovery backups and restoration. There is no new database migration;
+accounting behaviour and CE/EE boundary contract 1.0.0 remain at the baseline.
+The subsequent conservation and cryptographic-proof releases are excluded.
+
+Use [the R1 candidate record](docs/rc-r1-3.9.0-rc.1.md) to retain the exact
+commit, image and source digests, test evidence and outstanding acceptance work.
+Results from the combined development workspace do not qualify this candidate.
+Complete a real adoption of a populated v3.8.28 Sail installation and recovery
+of its database, files, APP_KEY and queued work before recommending deployment.
+
+The public distribution workflow requires an immutable candidate tag, release
+signing material and an independently trusted public key. It builds and checks
+the application/web images, signs the release manifest and creates a draft
+release. Preserve its provenance and dependency inventory. Never mark a pending
+acceptance item passed based only on the availability of the workflow.
+
+Declare no compatible EE version until the exact CE/EE pair has a signed
+acceptance receipt. An unchanged private EE package may be reused after that
+check; the public installer remains CE-only. Stable promotion requires the
+applicable platform, source-installation, recovery and staging evidence, followed
+by an explicit release review.
+
 ## v3.8.28 Coordinated Candidate
 
 This candidate integrates open CE PRs #63–68, #71, and #72, the missing bank

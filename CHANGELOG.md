@@ -5,6 +5,29 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.9.0-rc.1] - Candidate draft
+
+### Added
+- Managed Docker and native Linux installation from exact signed release
+  artifacts, with immutable image digests, provenance and dependency inventory.
+- Adoption of a clean CE v3.8.28 Sail installation into a separate managed
+  destination, retaining the original installation as an explicit recovery option.
+- Controlled updates, encrypted verified database/files/Redis backups, explicit
+  restoration and recorded recovery states after interrupted operations.
+
+### Changed
+- Preserve existing APP_KEY values and require operator-supplied administrator
+  credentials for unattended production installation.
+- Validate managed worker, scheduler, storage and database health before reopening
+  the application after an installation or update.
+- Apply targeted PHP and frontend dependency security updates.
+
+This candidate is limited to installation and recovery (R1), with no new schema
+migration and no change to CE/EE boundary contract 1.0.0. The later conservation
+releases are not included. Validation of the exact candidate and its artifacts
+is tracked in [the candidate record](docs/rc-r1-3.9.0-rc.1.md); this entry does
+not declare a stable release or GeBüV compliance.
+
 ## [3.8.28] - 2026-10-20
 
 ### Fixed

@@ -19,7 +19,7 @@ class UpdateWebhookRequestTest extends TestCase
     public function test_valid_update_with_all_fields(): void
     {
         $validator = $this->validate([
-            'url' => 'https://example.com/webhook',
+            'url' => 'https://93.184.215.14/webhook',
             'events' => ['invoice.created', 'customer.updated'],
             'is_active' => true,
         ]);

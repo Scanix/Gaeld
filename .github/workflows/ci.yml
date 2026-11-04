@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_call:
   push:
     branches: [develop, main]
     tags: ['v*']
@@ -16,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -36,19 +37,25 @@ jobs:
           git archive --format=tar.gz --output=/tmp/gaeld-ce.tar.gz HEAD
           ./scripts/qa/check-ce-artifact.sh /tmp/gaeld-ce.tar.gz
 
+      - name: Distribution failure and encryption tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y age
+          python3 -m unittest discover -s tests/distribution -v
+
       - name: Secret scanning (Gitleaks)
-        uses: gitleaks/gitleaks-action@v3.0.0
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           extensions: pdo, pdo_pgsql, redis, mbstring, xml, curl, zip
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
@@ -64,7 +71,7 @@ jobs:
         run: php artisan key:generate
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '24'
 
@@ -111,7 +118,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16@sha256:5db6dac2ef5dcff512f4f00a009c3c332b9f2f28f24277175bf3e4a3d02ef83a
         env:
           POSTGRES_USER: gaeld
           POSTGRES_PASSWORD: password
@@ -125,7 +132,7 @@ jobs:
           --health-retries 5
 
       redis:
-        image: redis:7
+        image: redis:7@sha256:b6b6e3dc0c0952737748e55d5d885272840c7e42ba41ab1d5489f693419882f5
         ports:
           - 6379:6379
         options: >-
@@ -135,19 +142,19 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           extensions: pdo, pdo_pgsql, redis, mbstring, xml, curl, zip
           coverage: pcov
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
@@ -163,7 +170,7 @@ jobs:
         run: php artisan key:generate
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '24'
 
@@ -204,7 +211,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: test-results-${{ matrix.name }}
           path: |

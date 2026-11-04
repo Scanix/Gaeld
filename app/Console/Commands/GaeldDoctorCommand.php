@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Database\Migrations\Migrator;
+use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -43,6 +44,7 @@ class GaeldDoctorCommand extends Command
         $this->checkCache();
         $this->checkStorage();
         $this->checkPendingMigrations();
+        $this->checkManagedRuntime();
 
         $this->newLine();
 
@@ -73,7 +75,15 @@ class GaeldDoctorCommand extends Command
     private function checkAppKey(): void
     {
         if (empty(config('app.key'))) {
-            $this->errors[] = 'APP_KEY is not set. Run `php artisan key:generate` — without it sessions, cookies, and encrypted data cannot be secured.';
+            $this->errors[] = 'APP_KEY is not set. Restore the original key for an existing installation. Only a genuinely new installation may generate a new key through the installer.';
+
+            return;
+        }
+
+        $key = (string) config('app.key');
+        $key = str_starts_with($key, 'base64:') ? base64_decode(substr($key, 7), true) : $key;
+        if (! is_string($key) || ! Encrypter::supported($key, (string) config('app.cipher', 'AES-256-CBC'))) {
+            $this->errors[] = 'APP_KEY is invalid for the configured cipher. Recover the original valid key before continuing.';
 
             return;
         }
@@ -131,7 +141,7 @@ class GaeldDoctorCommand extends Command
         $sessionSecure = config('session.secure');
         $isHttps = parse_url($appUrl, PHP_URL_SCHEME) === 'https';
 
-        if ($sessionDomain !== null && $appHost !== null) {
+        if ($sessionDomain !== null && is_string($appHost)) {
             $normalizedSessionDomain = ltrim((string) $sessionDomain, '.');
             if ($normalizedSessionDomain !== $appHost && ! str_ends_with($appHost, ".{$normalizedSessionDomain}")) {
                 $this->warnings[] = "SESSION_DOMAIN ({$sessionDomain}) does not match the APP_URL host ({$appHost}). The session cookie will not be sent back by the browser, and users will appear logged out after login.";
@@ -162,12 +172,20 @@ class GaeldDoctorCommand extends Command
             Cache::put($key, true, 5);
             $ok = Cache::pull($key) === true;
             if (! $ok) {
-                $this->warnings[] = 'Cache store did not return the expected value on a write/read round-trip. Check your CACHE_STORE / Redis configuration.';
+                if (config('distribution.managed')) {
+                    $this->errors[] = 'Managed runtime cache round-trip failed.';
+                } else {
+                    $this->warnings[] = 'Cache store did not return the expected value on a write/read round-trip. Check your CACHE_STORE / Redis configuration.';
+                }
             } else {
                 $this->components->task('Cache store', fn () => true);
             }
         } catch (\Throwable $e) {
-            $this->warnings[] = 'Could not reach the cache store: '.$e->getMessage();
+            if (config('distribution.managed')) {
+                $this->errors[] = 'Managed runtime cache is unavailable.';
+            } else {
+                $this->warnings[] = 'Could not reach the cache store: '.$e->getMessage();
+            }
         }
     }
 
@@ -212,11 +230,31 @@ class GaeldDoctorCommand extends Command
         }
 
         if ($pending !== []) {
-            $this->warnings[] = 'There are pending database migrations. Run `php artisan migrate --force`.';
+            if (config('distribution.managed')) {
+                $this->errors[] = 'Managed installation has pending migrations; complete the recorded release operation.';
+            } else {
+                $this->warnings[] = 'There are pending database migrations. Run `php artisan migrate --force`.';
+            }
 
             return;
         }
 
         $this->components->task('Database migrations are up to date', fn () => true);
+    }
+
+    private function checkManagedRuntime(): void
+    {
+        if (! config('distribution.managed')) {
+            return;
+        }
+
+        $heartbeat = (string) config('distribution.scheduler_heartbeat');
+        if (! is_file($heartbeat) || time() - filemtime($heartbeat) > 180) {
+            $this->errors[] = 'Managed scheduler heartbeat is missing or stale.';
+        }
+
+        if ($this->callSilently('horizon:status') !== self::SUCCESS) {
+            $this->errors[] = 'Managed Horizon workers are not running.';
+        }
     }
 }

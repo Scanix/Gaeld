@@ -14,10 +14,7 @@ if [ ! -f public/build/manifest.json ]; then
     pnpm run build
 fi
 
-# Generate app key if not set
-if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:" ]; then
-    echo "APP_KEY not set — generating..."
-    php artisan key:generate --force
-fi
+# APP_KEY belongs to the installation. Only the explicit first-time setup may
+# generate it; worker/web restarts must never overwrite an existing .env key.
 
 exec "$@"
