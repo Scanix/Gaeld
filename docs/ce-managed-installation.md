@@ -25,7 +25,10 @@ initial protected administrator setup runs with the operator's privileges.
 
 Use a dedicated installation directory and allow enough free space for the
 current release, next release, retained previous release, a full recovery backup
-and temporary verification files. Check both host free space and Docker's own
+and temporary verification files. Native installation refuses existing global
+`gaeld-*` systemd services belonging to another installation before collecting
+administrator credentials or changing any service. Use a dedicated host for the
+public native installer. Check both host free space and Docker's own
 disk allocation. An external backup disk does not expand Docker's internal disk.
 
 Obtain the release verification public key independently from the release
@@ -213,6 +216,17 @@ the installation's Redis state. Writers are stopped for coherence. Age provides
 authenticated encryption; decryption and file-hash verification are mandatory.
 Copy only completed backups and their receipts to Time Machine, Proton Drive
 or a rotated off-site device.
+
+Database recovery replaces the entire `public` application schema in one SQL
+transaction. This also removes tables introduced by a later or partially failed
+migration. It verifies the exact writable PostgreSQL 16 database, database and
+schema ownership, and absence of other client sessions before replacement. A
+database containing other application schemas is refused and requires a separate
+reviewed recovery procedure. A SQL failure rolls back the complete schema change,
+and application writers remain stopped. Extensions stored in `public` are restored
+from the dump. The existing managed profile uses `--no-owner --no-acl`: the
+application role owns restored objects; custom role grants require their own
+operator procedure.
 
 Restore replaces the coherent database/files/keys/version set. It requires
 explicit confirmation because writes made after the backup would be lost.

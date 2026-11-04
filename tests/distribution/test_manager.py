@@ -242,6 +242,64 @@ class ManagerTest(unittest.TestCase):
                 self.installation.migrate('3.9.0-rc.1')
         artisan.assert_not_called()
 
+    def test_restore_never_connects_to_system_or_template_databases(self):
+        for name in ('postgres', 'template0', 'template1'):
+            (self.installation.shared / '.env').write_text('DB_DATABASE=' + name + '\nDB_USERNAME=test\nDB_PASSWORD=test\nDB_HOST=localhost\n')
+            with self.subTest(database=name), patch.object(self.installation, 'runner') as runner:
+                with self.assertRaisesRegex(manager.OperationError, 'system or template'):
+                    self.installation.postgres('psql')
+                runner.assert_not_called()
+
+    def test_native_empty_host_accepts_explicit_not_found_with_exit_one(self):
+        completed = subprocess.CompletedProcess([], 1, stdout='LoadState=not-found\nFragmentPath=\nDropInPaths=\n', stderr='')
+        with patch.object(manager.subprocess, 'run', return_value=completed) as process:
+            self.installation.preflight_native_services()
+            self.assertEqual(4, process.call_count)
+
+    def test_restore_refuses_when_writers_are_not_stopped(self):
+        with patch.object(self.installation, 'postgres') as postgres:
+            with self.assertRaisesRegex(manager.OperationError, 'Stop all writers'):
+                self.installation.database('pg_restore', archive=self.root / 'dump')
+            postgres.assert_not_called()
+
+    def test_native_install_refuses_foreign_units_before_secrets_or_source_changes(self):
+        fresh = manager.Installation(self.root / 'new-installation')
+        unit = self.root / 'foreign.service'
+        unit.write_text('WorkingDirectory=/srv/other-gaeld/current\n')
+        fresh.runner = lambda *args, **kwargs: 'LoadState=loaded\nFragmentPath=' + str(unit) + '\nDropInPaths=\n'
+        with patch.object(manager.platform, 'system', return_value='Linux'), patch.object(manager.os, 'geteuid', return_value=0):
+            with self.assertRaisesRegex(manager.OperationError, 'another installation'):
+                fresh.install('3.9.0-rc.2', 'https://example.test', '', 'native', '', 'http://localhost:8080', 8080)
+        self.assertFalse(fresh.meta.exists())
+        self.assertFalse(fresh.state)
+
+    def test_native_cli_collision_is_checked_before_prompt_or_temporary_secret(self):
+        with patch.object(manager.sys, 'argv', ['gaeld', 'install', '--mode', 'native', '--root', str(self.root / 'new')]), \
+             patch.object(manager.platform, 'system', return_value='Linux'), patch.object(manager.os, 'geteuid', return_value=0), \
+             patch.object(manager.Installation, 'preflight_native_services', side_effect=manager.OperationError('Foreign service')), \
+             patch('builtins.input') as prompt, patch.object(manager.tempfile, 'mkstemp') as secret:
+            self.assertEqual(1, manager.main())
+            prompt.assert_not_called()
+            secret.assert_not_called()
+        self.assertFalse((self.root / 'new').exists())
+
+    def test_native_preflight_accepts_only_attributable_units_without_overrides(self):
+        def existing_unit(command, **kwargs):
+            name = command[2].split('.')[0]
+            unit = self.root / (name + '.service')
+            service = name.removeprefix('gaeld-')
+            lines = {'fpm': 'ExecStart=/usr/sbin/php-fpm8.4 --fpm-config ' + str(self.installation.root) + '/.gaeld/fpm.conf --nodaemonize',
+                     'web': 'ExecStart=/usr/sbin/nginx -c ' + str(self.installation.root) + '/.gaeld/nginx-native.conf',
+                     'horizon': 'WorkingDirectory=' + str(self.installation.root) + '/current',
+                     'scheduler': 'WorkingDirectory=' + str(self.installation.root) + '/current'}
+            unit.write_text(lines[service] + '\n')
+            return 'LoadState=loaded\nFragmentPath=' + str(unit) + '\nDropInPaths=\n'
+        self.installation.runner = existing_unit
+        self.installation.preflight_native_services()
+        self.installation.runner = lambda command, **kwargs: existing_unit(command, **kwargs) + 'DropInPaths=/etc/systemd/system/foreign.conf\n'
+        with self.assertRaises(manager.OperationError):
+            self.installation.preflight_native_services()
+
     def test_restore_requires_explicit_confirmation_before_any_io(self):
         with self.assertRaises(manager.OperationError):
             self.installation.restore(self.root / 'missing', self.root / 'missing-key', False)

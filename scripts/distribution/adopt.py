@@ -209,6 +209,7 @@ class SailAdoption:
                 install.configure_runtime(release)
                 install.compose('pull', target=target)
                 install.compose('up', '-d', '--wait', 'pgsql', 'redis', target=target)
+                install.save('adoption-restoring')
                 install.database('pg_restore', archive=content / 'database.dump')
                 install.fix_permissions(target)
                 install.artisan('down', '--retry=60', target=target)

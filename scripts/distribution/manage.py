@@ -30,13 +30,13 @@ class OperationError(RuntimeError):
         self.diagnostics = diagnostics
 
 
-def run(command, *, cwd=None, env=None, output=None, capture=False, input_file=None):
+def run(command, *, cwd=None, env=None, output=None, capture=False, input_file=None, accepted_exit_codes=(0,)):
     with contextlib.ExitStack() as stack:
         source = stack.enter_context(Path(input_file).open('rb')) if input_file else None
         result = subprocess.run(command, cwd=cwd, env={**os.environ, **(env or {})}, stdin=source,
                                 stdout=output if output else (subprocess.PIPE if capture else None),
                                 stderr=subprocess.PIPE, text=not bool(output or source))
-    if result.returncode:
+    if result.returncode not in accepted_exit_codes:
         # Process output can contain database credentials; keep diagnostics local.
         details = result.stderr.decode(errors='replace') if isinstance(result.stderr, bytes) else result.stderr
         raise OperationError(f"{Path(command[0]).name} failed (exit {result.returncode}). Installation remains stopped; inspect the protected diagnostic log.", details)
@@ -460,28 +460,92 @@ class Installation:
         except (OperationError, OSError):
             self.save(status, service_stop_failed=True)
 
+    def postgres(self, command, *arguments, connect=True, **kwargs):
+        environment = env_values(self.shared / '.env')
+        for key in ('DB_DATABASE', 'DB_USERNAME'):
+            if not re.fullmatch(r'[a-zA-Z0-9_][a-zA-Z0-9_.-]*', environment.get(key, '')):
+                raise OperationError('Managed recovery requires literal database and role identifiers.')
+        if environment['DB_DATABASE'].lower() in ('postgres', 'template0', 'template1'):
+            raise OperationError('Managed recovery never targets PostgreSQL system or template databases.')
+        args = [command, *arguments]
+        if connect:
+            args += ['--username=' + environment['DB_USERNAME'], '--dbname=' + environment['DB_DATABASE']]
+        if self.state['mode'] == 'docker':
+            return self.compose('exec', '-T', 'pgsql', *args, **kwargs)
+        if connect:
+            args += ['--host=' + environment['DB_HOST'], '--port=' + environment.get('DB_PORT', '5432')]
+        return self.runner(args, env={'PGPASSWORD': environment['DB_PASSWORD']}, **kwargs)
+
     def database(self, command, *, output=None, archive=None):
         if command == 'pg_dump':
             return self.artisan('gaeld:database-snapshot', output=output)
-        env = env_values(self.shared / '.env')
-        args = [command, '--username=' + env['DB_USERNAME'], '--dbname=' + env['DB_DATABASE']]
-        if command == 'pg_dump':
-            args += ['--format=custom', '--no-owner', '--no-acl']
-        else:
-            args += ['--clean', '--if-exists', '--exit-on-error', '--single-transaction', '--no-owner', '--no-acl']
-        if self.state['mode'] == 'docker':
-            if archive:
-                # stdin is used by pg_restore; do not copy plaintext dumps into a running volume.
-                self.runner(['docker', 'compose', '--project-name', self.state['project'], '--env-file',
-                             str(self.meta / 'compose.env'), '-f', str(self.release_dir() / 'docker/production/compose.yml'),
-                             'exec', '-T', 'pgsql', *args], input_file=archive)
-            else:
-                self.compose('exec', '-T', 'pgsql', *args, output=output)
-        else:
-            args += ['--host=' + env['DB_HOST'], '--port=' + env.get('DB_PORT', '5432')]
-            if archive:
-                args.append(str(archive))
-            self.runner(args, env={'PGPASSWORD': env['DB_PASSWORD']}, output=output)
+        if command != 'pg_restore' or not archive:
+            raise OperationError('Unsupported managed database operation.')
+        self.restore_database(Path(archive))
+
+    def restore_database(self, archive):
+        if self.state.get('status') not in ('stopped', 'restoring', 'restore-failed', 'adoption-restoring'):
+            raise OperationError('Stop all writers before replacing the recovery database.')
+        environment = env_values(self.shared / '.env')
+        listing = self.postgres('pg_restore', '--list', connect=False, input_file=archive, capture=True)
+        if isinstance(listing, bytes):
+            listing = listing.decode('utf-8')
+        schemas = []
+        for line in listing.splitlines():
+            match = re.match(r'^\d+; \d+ \d+ SCHEMA - (.+) \S+$', line)
+            if match:
+                schemas.append(match.group(1))
+        if any(schema != 'public' for schema in schemas) or len(schemas) > 1:
+            raise OperationError('Recovery supports only the dedicated public application schema; review other schemas separately.')
+        # --clean only drops objects present in the old archive. Newer migrations
+        # can leave dependent tables behind. Replace the whole application schema
+        # and replay the dump in ONE transaction, retaining the original database.
+        expected_database = environment['DB_DATABASE'].replace("'", "''")
+        guard = """DO $gaeld_restore_guard$
+BEGIN
+    IF current_database() IN ('postgres', 'template0', 'template1')
+       OR current_database() <> '%s' OR pg_is_in_recovery()
+       OR current_setting('server_version_num')::integer / 10000 <> 16 THEN
+        RAISE EXCEPTION 'Recovery target is not the expected writable PostgreSQL 16 database';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = current_database()
+                   AND pg_has_role(datdba, 'USAGE')) THEN
+        RAISE EXCEPTION 'Recovery requires ownership of the dedicated application database';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname !~ '^pg_'
+               AND nspname NOT IN ('public', 'information_schema')) THEN
+        RAISE EXCEPTION 'Recovery refuses a database containing other application schemas';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'public'
+               AND NOT pg_has_role(nspowner, 'USAGE')) THEN
+        RAISE EXCEPTION 'Recovery requires ownership of the public application schema';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database()
+               AND pid <> pg_backend_pid() AND backend_type = 'client backend') THEN
+        RAISE EXCEPTION 'Recovery refuses while other database clients remain connected';
+    END IF;
+END
+$gaeld_restore_guard$;
+""" % expected_database
+        with tempfile.TemporaryDirectory(prefix='database-restore-', dir=self.meta) as temporary:
+            temporary = Path(temporary)
+            preflight = temporary / 'preflight.sql'
+            preflight.write_text(guard)
+            self.postgres('psql', '--no-psqlrc', '--set=ON_ERROR_STOP=1', '--file=-', input_file=preflight)
+            rendered = temporary / 'restored.sql'
+            with rendered.open('wb') as stream:
+                self.postgres('pg_restore', '--no-owner', '--no-acl', '--file=-', connect=False, input_file=archive, output=stream)
+            script = temporary / 'transaction.sql'
+            with script.open('wb') as stream:
+                stream.write(guard.encode())
+                stream.write(b'DROP SCHEMA IF EXISTS public CASCADE;\n')
+                # Some pg_dump versions omit the default public schema from the
+                # TOC. Otherwise pg_restore recreates it in dependency order.
+                if not schemas:
+                    stream.write(b'CREATE SCHEMA public AUTHORIZATION CURRENT_USER;\n')
+                with rendered.open('rb') as source:
+                    shutil.copyfileobj(source, stream)
+            self.postgres('psql', '--no-psqlrc', '--set=ON_ERROR_STOP=1', '--single-transaction', '--file=-', input_file=script)
 
     def backup_stopped(self):
         if self.state.get('status') != 'stopped':
@@ -691,6 +755,8 @@ class Installation:
             raise OperationError('Existing installation detected. APP_KEY and data will not be replaced.')
         if platform.system() == 'Linux' and os.geteuid() != 0:
             raise OperationError('Run managed Linux operations as root so recovery can read all application-owned files. macOS Docker uses the logged-in operator account.')
+        if mode == 'native':
+            self.preflight_native_services()
         if not self.admin_secret_file or not Path(self.admin_secret_file).is_file():
             raise OperationError('An administrator secret file is required; no generic production administrator is created.')
         admin = read_json(self.admin_secret_file)
@@ -776,7 +842,25 @@ class Installation:
         else:
             self.runner(['chown', '-R', 'www-data:www-data', str(self.shared / 'storage'), str(self.release_dir(target) / 'bootstrap/cache')])
 
+    def preflight_native_services(self):
+        for service in ('fpm', 'web', 'horizon', 'scheduler'):
+            unit = 'gaeld-' + service + '.service'
+            result = self.runner(['systemctl', 'show', unit, '--property=LoadState', '--property=FragmentPath', '--property=DropInPaths'], capture=True, accepted_exit_codes=(0, 1))
+            properties = dict(line.split('=', 1) for line in result.splitlines() if '=' in line)
+            if properties.get('LoadState') == 'not-found' and not properties.get('FragmentPath') and not properties.get('DropInPaths'):
+                continue
+            fragment = Path(properties.get('FragmentPath', ''))
+            if not fragment.is_file():
+                raise OperationError('An existing native service cannot be attributed safely: ' + unit)
+            content = {line.strip() for line in fragment.read_text().splitlines() if not line.lstrip().startswith('#')}
+            expected = ('WorkingDirectory=' + str(self.root) + '/current' if service in ('horizon', 'scheduler')
+                        else ('ExecStart=/usr/sbin/php-fpm8.4 --fpm-config ' + str(self.root) + '/.gaeld/fpm.conf --nodaemonize'
+                              if service == 'fpm' else 'ExecStart=/usr/sbin/nginx -c ' + str(self.root) + '/.gaeld/nginx-native.conf'))
+            if expected not in content or properties.get('DropInPaths'):
+                raise OperationError('Native service ' + unit + ' belongs to another installation. Use a dedicated host; existing services will not be overwritten.')
+
     def install_native_services(self):
+        self.preflight_native_services()
         self.runner(['id', 'www-data'])
         self.runner(['chown', '-R', 'www-data:www-data', str(self.shared), str(self.release_dir() / 'bootstrap/cache')])
         for service in ('fpm', 'web', 'horizon', 'scheduler'):
@@ -814,6 +898,10 @@ def main():
     installation.identity_file = args.identity_file
     temporary_admin = None
     try:
+        if args.command == 'install' and args.mode == 'native':
+            if platform.system() != 'Linux' or os.geteuid() != 0:
+                raise OperationError('Native installation supports Linux with systemd and requires root for dedicated services.')
+            installation.preflight_native_services()
         installation.admin_secret_file = args.admin_secret_file
         if args.command == 'install' and not args.admin_secret_file:
             if not sys.stdin.isatty():
