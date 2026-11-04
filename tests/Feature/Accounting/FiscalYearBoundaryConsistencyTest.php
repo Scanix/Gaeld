@@ -125,7 +125,7 @@ class FiscalYearBoundaryConsistencyTest extends TestCase
             'date' => '2025-05-15',
             'reference' => 'VAT-Q2-2025',
             'description' => 'VAT activity in long fiscal year',
-            'is_posted' => true,
+            'is_posted' => false,
         ]);
         TransactionLine::create([
             'journal_entry_id' => $entry->id,
@@ -139,6 +139,7 @@ class FiscalYearBoundaryConsistencyTest extends TestCase
             'debit' => '0.00',
             'credit' => '100.00',
         ]);
+        $entry->update(['is_posted' => true]);
         VatEntry::create([
             'journal_entry_id' => $entry->id,
             'vat_rate_id' => VatRate::factory()->for($this->organization)->create()->id,

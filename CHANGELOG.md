@@ -5,6 +5,29 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.10.0-rc.1] - Candidate draft
+
+### Added
+- Consistent, versioned accounting snapshots with a durable preparation outbox,
+  preserved original-document versions and append-only control/access records.
+- Company-scoped preservation UI and CLI, ordinary PDF/JSON/CSV packages,
+  complete content-integrity checks, exports, retention extensions and legal holds.
+- Explicit resumable historical capture with honest provenance, plus documented
+  annual recovery controls that keep each company's report separate.
+
+### Changed
+- Financial-year closing records a committed preparation request and builds files
+  afterward. Posted financial amounts and retained evidence require corrections
+  or new versions instead of replacement.
+- Preserve exact issued invoice and salary-slip PDFs and supporting documents;
+  report missing originals without regenerating evidence.
+
+R2 adds one forward migration to the R1 baseline. Features are identical in CE
+and EE, with boundary contract 1.0.0 unchanged. PDF/A, signatures, trusted
+timestamps and protected storage belong to R3 and are excluded here. See
+[the R2 operating guide](docs/preservation-r2.md). This candidate does not
+certify GeBüV compliance or declare a stable release.
+
 ## [3.9.0-rc.1] - Candidate draft
 
 ### Added

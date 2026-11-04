@@ -18,7 +18,7 @@ class LocksArchivedRecord
 
     public function updating(Model $model): void
     {
-        if ($this->isLocked($model) && ! $model->isDirty('archived_at')) {
+        if ($this->isLocked($model)) {
             throw ArchivedRecordException::locked(
                 $this->documentType,
                 (string) $model->getKey(),

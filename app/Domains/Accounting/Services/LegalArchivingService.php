@@ -90,7 +90,9 @@ class LegalArchivingService
             'checksum_sha256' => $checksum,
             'storage_path' => $relativePath,
             'archived_at' => $now,
-            'expires_at' => $now->copy()->addYears(self::RETENTION_YEARS),
+            'expires_at' => $period !== null
+                ? Carbon::parse($period->toDate)->endOfDay()->addYears(self::RETENTION_YEARS)
+                : $now->copy()->endOfYear()->addYears(self::RETENTION_YEARS),
             'verified_at' => null,
         ];
 
@@ -160,7 +162,7 @@ class LegalArchivingService
         $lock->block(10);
 
         try {
-            $invoices = Invoice::where('organization_id', $orgId)
+            $invoices = Invoice::with(['lines', 'payments'])->where('organization_id', $orgId)
                 ->whereBetween('issue_date', [$period->fromDate, $period->toDate]);
             if (! $preservePreviousVersion) {
                 $invoices->whereNull('archived_at');
@@ -168,7 +170,9 @@ class LegalArchivingService
             $invoices
                 ->each(function (Invoice $doc) use ($period): void {
                     $this->archiveDocument($doc, 'invoice', $period);
-                    $doc->update(['archived_at' => now()]);
+                    if ($doc->archived_at === null) {
+                        $doc->update(['archived_at' => now()]);
+                    }
                 });
 
             $expenses = Expense::where('organization_id', $orgId)
@@ -179,10 +183,12 @@ class LegalArchivingService
             $expenses
                 ->each(function (Expense $doc) use ($period): void {
                     $this->archiveDocument($doc, 'expense', $period);
-                    $doc->update(['archived_at' => now()]);
+                    if ($doc->archived_at === null) {
+                        $doc->update(['archived_at' => now()]);
+                    }
                 });
 
-            $journalEntries = JournalEntry::where('organization_id', $orgId)
+            $journalEntries = JournalEntry::with(['lines.account'])->where('organization_id', $orgId)
                 ->whereBetween('date', [$period->fromDate, $period->toDate]);
             if (! $preservePreviousVersion) {
                 $journalEntries->whereNull('archived_at');
@@ -190,7 +196,9 @@ class LegalArchivingService
             $journalEntries
                 ->each(function (JournalEntry $doc) use ($period): void {
                     $this->archiveDocument($doc, 'journal_entry', $period);
-                    $doc->update(['archived_at' => now()]);
+                    if ($doc->archived_at === null) {
+                        $doc->update(['archived_at' => now()]);
+                    }
                 });
 
             $startKey = (int) Carbon::parse($period->fromDate)->format('Ym');
@@ -205,7 +213,9 @@ class LegalArchivingService
             $salarySlips
                 ->each(function (SalarySlip $doc) use ($period): void {
                     $this->archiveDocument($doc, 'salary_slip', $period);
-                    $doc->update(['archived_at' => now()]);
+                    if ($doc->archived_at === null) {
+                        $doc->update(['archived_at' => now()]);
+                    }
                 });
 
             if ($preservePreviousVersion) {

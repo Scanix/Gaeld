@@ -5,6 +5,22 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.10.0-rc.1 — R2 content preservation candidate
+
+Build R2 from immutable R1 commit `1b50b592667439ec9d6551d5ac239d2d7182a268`.
+Keep the R1 distribution and recovery safeguards. R2 adds the forward evidence
+migration, snapshots/outbox, preservation UI/CLI and local integrity controls
+in both editions. It excludes R3 proof providers and dependencies; unsupported
+proof requests fail without creating a downgraded package.
+
+Follow [the R2 operating guide](docs/preservation-r2.md), run the populated
+legacy-schema upgrade and company-isolation/resumption tests, then build and
+audit exact source and image artifacts. Before staging, verify a complete
+recovery backup, retain APP_KEY, apply migrations forward, and validate worker,
+scheduler, three-company access and historical package operations. Record the
+actual staging results separately; unit tests do not establish staging success.
+The R2 migration must remain unchanged when R3 adds its proof columns and guards.
+
 ## v3.9.0-rc.1 — R1 installation and recovery candidate
 
 Prepare this candidate from the exact v3.8.28 baseline on the dedicated R1

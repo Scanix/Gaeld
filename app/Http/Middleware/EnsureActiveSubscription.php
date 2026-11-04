@@ -18,6 +18,11 @@ class EnsureActiveSubscription
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Preservation remains available in both editions after a subscription ends.
+        if ($request->routeIs('accounting.archives.*', 'accounting.conservation.*')) {
+            return $next($request);
+        }
+
         if (! FeatureFlag::isSaas()) {
             return $next($request);
         }

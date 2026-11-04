@@ -2,6 +2,8 @@
 
 namespace App\Domains\Payroll\Controllers;
 
+use App\Domains\Accounting\Services\ArchiveAccessLog;
+use App\Domains\Accounting\Services\IssuedDocumentPreservation;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Payroll\Actions\PostPayrollAction;
@@ -192,10 +194,20 @@ class SalarySlipController extends Controller
         $employeeData = $slip->employeeDocumentData();
         $slip->loadMissing('organization');
 
-        return $pdf->download(
+        $response = $pdf->download(
             'exports.salary-slip',
             ['slip' => $slip, 'employeeData' => $employeeData, 'organization' => $slip->organization],
             "salary-slip-{$employeeData['last_name']}-{$slip->period_year}-{$slip->period_month}.pdf",
         );
+        if ($slip->isPosted()) {
+            app(IssuedDocumentPreservation::class)->store(
+                $slip, 'salary_slip_pdf', (string) $response->getContent(),
+                sprintf('%04d-%02d-01', $slip->period_year, $slip->period_month),
+            );
+        }
+
+        app(ArchiveAccessLog::class)->record($slip->organization_id, null, 'document.downloaded', request()->user(), ['type' => 'salary_slip_pdf', 'document_id' => $slip->id, 'sha256' => hash('sha256', (string) $response->getContent())]);
+
+        return $response;
     }
 }

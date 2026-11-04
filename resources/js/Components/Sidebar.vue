@@ -167,8 +167,8 @@ const navigation = computed(() => {
       ...(features.value.fiduciary_export ? [
         { key: 'fiduciary_export', href: '/accounting/export' },
       ] : []),
-      ...(features.value.legal_archives && can('accounting.view') ? [
-        { key: 'legal_archives', href: '/accounting/archives' },
+      ...(can('accounting.view') ? [
+        { key: 'conservation_title', href: '/accounting/conservation' },
       ] : []),
       // Advanced (feature-gated)
       ...(features.value.analytical && accountingRoutes.value.costCenters ? [

@@ -2,6 +2,7 @@
 
 use App\Domains\Accounting\Controllers\AccountController;
 use App\Domains\Accounting\Controllers\AccountingController;
+use App\Domains\Accounting\Controllers\ArchivePackageController;
 use App\Domains\Accounting\Controllers\BudgetController;
 use App\Domains\Accounting\Controllers\ConsolidationController;
 use App\Domains\Accounting\Controllers\CostCenterController;
@@ -84,6 +85,11 @@ Route::delete('/accounting/account-matching/{lettrageLot}', [LettrageController:
 
 // Legal Archiving (10-year retention, Swiss CO Art. 958f) — CE feature
 Route::get('/accounting/archives', [LegalArchiveController::class, 'index'])->name('accounting.archives.index');
+Route::get('/accounting/conservation', [ArchivePackageController::class, 'index'])->name('accounting.conservation.index');
+Route::post('/accounting/conservation', [ArchivePackageController::class, 'store'])->name('accounting.conservation.store');
+Route::post('/accounting/conservation/{package}/resume', [ArchivePackageController::class, 'resume'])->whereUuid('package')->name('accounting.conservation.resume');
+Route::post('/accounting/conservation/{package}/verify', [ArchivePackageController::class, 'verify'])->whereUuid('package')->name('accounting.conservation.verify');
+Route::get('/accounting/conservation/{package}/export', [ArchivePackageController::class, 'export'])->whereUuid('package')->name('accounting.conservation.export');
 Route::post('/accounting/archives/{archive}/verify', [LegalArchiveController::class, 'verify'])->name('accounting.archives.verify');
 Route::get('/accounting/archives/{archive}/download', [LegalArchiveController::class, 'download'])->name('accounting.archives.download');
 

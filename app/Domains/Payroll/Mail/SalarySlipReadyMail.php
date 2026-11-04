@@ -2,6 +2,7 @@
 
 namespace App\Domains\Payroll\Mail;
 
+use App\Domains\Accounting\Services\IssuedDocumentPreservation;
 use App\Domains\Payroll\Models\SalarySlip;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Mail\Attachment;
@@ -52,6 +53,13 @@ class SalarySlipReadyMail extends Mailable
         ])
             ->setPaper('A4', 'portrait')
             ->output();
+
+        if ($slip->isPosted()) {
+            app(IssuedDocumentPreservation::class)->store(
+                $slip, 'salary_slip_pdf', $pdf,
+                sprintf('%04d-%02d-01', $slip->period_year, $slip->period_month),
+            );
+        }
 
         return [
             Attachment::fromData(

@@ -2,6 +2,8 @@
 
 namespace App\Domains\Invoicing\Actions;
 
+use App\Domains\Accounting\Services\IssuedDocumentPreservation;
+use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\QrBillValidationException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Services\InvoicePdfRenderer;
@@ -64,6 +66,12 @@ class GenerateQrInvoicePdfAction
         $displayOptions = (new DisplayOptions)->setPrintable(false);
         $output->setDisplayOptions($displayOptions)->getPaymentPart();
 
-        return $tcpdf->Output('', 'S');
+        $bytes = $tcpdf->Output('', 'S');
+        if ($invoice->status !== InvoiceStatus::Draft) {
+            app(IssuedDocumentPreservation::class)
+                ->store($invoice, 'invoice_pdf', $bytes, $invoice->issue_date->toDateString());
+        }
+
+        return $bytes;
     }
 }

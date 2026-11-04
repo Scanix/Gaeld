@@ -197,6 +197,18 @@ return [
     */
 
     'defaults' => [
+        'supervisor-archives' => [
+            'connection' => 'archives',
+            'queue' => ['archives'],
+            'balance' => null,
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 512,
+            'tries' => 3,
+            'timeout' => 1800,
+            'nice' => 5,
+        ],
         'supervisor-1' => [
             'connection' => 'redis',
             'queue' => ['default', 'exports', 'webhooks', 'processing', 'scheduled'],
@@ -226,6 +238,7 @@ return [
 
     'environments' => [
         'production' => [
+            'supervisor-archives' => ['maxProcesses' => 1],
             'supervisor-1' => [
                 'maxProcesses' => 10,
                 'balanceMaxShift' => 1,
@@ -237,6 +250,7 @@ return [
         ],
 
         'local' => [
+            'supervisor-archives' => ['maxProcesses' => 1],
             'supervisor-1' => [
                 'maxProcesses' => 3,
             ],
@@ -245,7 +259,7 @@ return [
             ],
         ],
 
-        'staging' => [],
+        'staging' => ['supervisor-archives' => ['maxProcesses' => 1]],
     ],
 
     /*

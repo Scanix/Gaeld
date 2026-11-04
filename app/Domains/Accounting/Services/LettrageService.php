@@ -60,6 +60,7 @@ class LettrageService
         }
 
         return DB::transaction(function () use ($account, $lineIds, $userId) {
+            DB::select("SELECT set_config('gaeld.actor_id', ?, true)", [(string) $userId]);
             $key = $this->nextLetterKey($account);
 
             $lot = LettrageLot::create([
@@ -96,6 +97,7 @@ class LettrageService
         }
 
         DB::transaction(function () use ($lot) {
+            DB::select("SELECT set_config('gaeld.actor_id', ?, true)", [(string) (auth()->id() ?? '')]);
             TransactionLine::whereIn('id', $lot->line_ids)
                 ->update(['lettrage_key' => null]);
 

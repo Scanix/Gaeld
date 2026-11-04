@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Controllers;
 
+use App\Domains\Accounting\Services\ArchiveAccessLog;
 use App\Domains\Invoicing\Actions\GenerateQrInvoicePdfAction;
 use App\Domains\Invoicing\Actions\RefreshInvoiceCustomerSnapshotAction;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
@@ -54,8 +55,9 @@ class InvoiceDocumentController extends Controller
         $this->authorize('update', $invoice);
 
         if ($invoice->justificatif_path) {
-            $this->documentStorage->delete($invoice->organization, $invoice->justificatif_path);
+            $path = $invoice->justificatif_path;
             $invoice->update(['justificatif_path' => null]);
+            $this->documentStorage->delete($invoice->organization, $path);
         }
 
         return redirect()->route('invoices.show', $invoice)
@@ -71,6 +73,7 @@ class InvoiceDocumentController extends Controller
         }
 
         $filename = basename($invoice->justificatif_path);
+        app(ArchiveAccessLog::class)->record($invoice->organization_id, null, $request->boolean('inline') ? 'document.viewed' : 'document.downloaded', $request->user(), ['type' => 'invoice_supporting_document', 'document_id' => $invoice->id, 'path' => $invoice->justificatif_path]);
 
         if ($request->boolean('inline')) {
             return Storage::disk('local')->response(
@@ -111,6 +114,7 @@ class InvoiceDocumentController extends Controller
         }
 
         $filename = 'invoice-'.($invoice->number ?? $invoice->id).'.pdf';
+        app(ArchiveAccessLog::class)->record($invoice->organization_id, null, 'document.downloaded', request()->user(), ['type' => 'invoice_pdf', 'document_id' => $invoice->id, 'sha256' => hash('sha256', $pdf)]);
 
         return new HttpResponse($pdf, 200, [
             'Content-Type' => 'application/pdf',

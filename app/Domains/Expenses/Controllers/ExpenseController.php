@@ -205,6 +205,7 @@ class ExpenseController extends Controller
 
     public function update(UpdateExpenseRequest $request, Expense $expense, UpdateExpenseAction $action): RedirectResponse
     {
+        $oldReceiptPath = $expense->receipt_path;
         $validated = array_merge([
             'category' => $expense->category,
             'amount' => $expense->amount,
@@ -252,8 +253,8 @@ class ExpenseController extends Controller
             throw $exception;
         }
 
-        if ($newReceiptPath && $expense->getOriginal('receipt_path')) {
-            $this->documentStorage->delete($expense->organization, $expense->getOriginal('receipt_path'));
+        if ($newReceiptPath && $oldReceiptPath) {
+            $this->documentStorage->delete($expense->organization, $oldReceiptPath);
         }
 
         return redirect()->route('expenses.show', $expense)
@@ -299,8 +300,8 @@ class ExpenseController extends Controller
         $orgId = $expense->organization_id;
 
         try {
-            $this->documentStorage->delete($expense->organization, $expense->receipt_path);
             $action->execute($expense);
+            $this->documentStorage->delete($expense->organization, $expense->receipt_path);
         } catch (InvalidExpenseStateException $e) {
             return $this->backWithError($e);
         }

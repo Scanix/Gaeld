@@ -2,6 +2,7 @@
 
 namespace App\Domains\Expenses\Controllers;
 
+use App\Domains\Accounting\Services\ArchiveAccessLog;
 use App\Domains\Expenses\Jobs\ProcessReceiptOcrJob;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Expenses\Models\ReceiptScan;
@@ -37,8 +38,9 @@ class ExpenseReceiptController extends Controller
         $this->authorize('update', $expense);
 
         if ($expense->receipt_path) {
-            $this->documentStorage->delete($expense->organization, $expense->receipt_path);
+            $path = $expense->receipt_path;
             $expense->update(['receipt_path' => null]);
+            $this->documentStorage->delete($expense->organization, $path);
         }
 
         return redirect()->route('expenses.show', $expense)
@@ -54,6 +56,7 @@ class ExpenseReceiptController extends Controller
         }
 
         $filename = basename($expense->receipt_path);
+        app(ArchiveAccessLog::class)->record($expense->organization_id, null, $request->boolean('inline') ? 'document.viewed' : 'document.downloaded', $request->user(), ['type' => 'expense_receipt', 'document_id' => $expense->id, 'path' => $expense->receipt_path]);
 
         if ($request->boolean('inline')) {
             return Storage::disk('local')->response(

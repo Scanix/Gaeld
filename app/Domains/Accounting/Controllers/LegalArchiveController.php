@@ -6,6 +6,7 @@ use App\Domains\Accounting\Actions\GenerateArchivePdfAction;
 use App\Domains\Accounting\DTOs\FiscalYearPeriod;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\LegalArchive;
+use App\Domains\Accounting\Services\ArchiveAccessLog;
 use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Services\CurrentOrganization;
@@ -41,6 +42,7 @@ class LegalArchiveController extends Controller
     public function index(Request $request, CurrentOrganization $currentOrg): Response
     {
         $this->authorize('viewAny', LegalArchive::class);
+        app(ArchiveAccessLog::class)->record($currentOrg->id(), null, 'historical_archives.viewed', $request->user());
 
         $archivedYears = DB::table('legal_archives')
             ->where('organization_id', $currentOrg->id())
@@ -169,6 +171,7 @@ class LegalArchiveController extends Controller
     public function download(LegalArchive $archive, CurrentOrganization $currentOrg): RedirectResponse
     {
         $this->authorize('view', $archive);
+        app(ArchiveAccessLog::class)->record($archive->organization_id, null, 'historical_archive.download_authorized', auth()->user(), ['archive_id' => $archive->id]);
 
         return redirect(URL::temporarySignedRoute(
             'accounting.archives.file',
@@ -188,6 +191,12 @@ class LegalArchiveController extends Controller
     {
         // Authorization is guaranteed by the signed URL generated in
         // download() or downloadPdf() after an authenticated policy check.
+        abort_unless(Storage::exists($archive->storage_path), 409, 'The historical original is missing. Restore it from a verified backup.');
+        abort_unless($this->service->verifyIntegrity($archive), 409, 'The historical original failed its integrity check.');
+        app(ArchiveAccessLog::class)->record($archive->organization_id, null, 'historical_archive.downloaded', auth()->user(), [
+            'archive_id' => $archive->id, 'access' => 'temporary_signed_link',
+        ]);
+
         return Storage::download(
             $archive->storage_path,
             basename($archive->storage_path)
@@ -215,7 +224,7 @@ class LegalArchiveController extends Controller
             ->first();
 
         if ($archive !== null && Storage::exists($archive->storage_path)) {
-            // Happy path — sealed file is on disk, serve it directly.
+            // Existing original is preserved; proof level is recorded separately.
         } elseif ($archive === null) {
             // First generation (open year or on-demand for a freelancer).
             $pdfAction->execute($currentOrg->id(), $period->label, $period->fiscalYearId);
@@ -224,11 +233,8 @@ class LegalArchiveController extends Controller
                 ->where('document_id', $documentId)
                 ->firstOrFail();
         } else {
-            // Archive row exists but file is missing (storage issue).
-            // Recover by regenerating; checksum is also updated because DomPDF
-            // is non-deterministic. The JSON companion archives remain the
-            // deterministic integrity anchor for the underlying accounting data.
-            $archive = $pdfAction->recoverFile($archive);
+            app(ArchiveAccessLog::class)->record($archive->organization_id, null, 'historical_archive.missing', $request->user(), ['archive_id' => $archive->id]);
+            abort(409, 'The historical original is missing. Restore the original; a new version cannot replace it.');
         }
 
         return redirect(URL::temporarySignedRoute(
@@ -246,7 +252,9 @@ class LegalArchiveController extends Controller
         $this->authorize('viewAny', LegalArchive::class);
 
         $period = $this->resolveRequestedPeriod($request, $currentOrg, $year);
-        $pdfAction->execute($currentOrg->id(), $period->label, $period->fiscalYearId);
+        if (! $this->periodQuery($period)->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])->exists()) {
+            $pdfAction->execute($currentOrg->id(), $period->label, $period->fiscalYearId);
+        }
 
         $archives = $this->periodQuery($period)
             ->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])
@@ -255,6 +263,11 @@ class LegalArchiveController extends Controller
             ->groupBy('document_type')
             ->map(fn ($versions) => $versions->sortByDesc('version')->first());
 
+        abort_unless($archives->count() === 3, 409, 'The historical report bundle is incomplete.');
+        foreach ($archives as $archive) {
+            abort_unless(Storage::exists($archive->storage_path) && $this->service->verifyIntegrity($archive), 409, 'A historical report is missing or altered.');
+        }
+
         $tmpPath = tempnam(sys_get_temp_dir(), 'archive-bundle-').'.zip';
         $zip = new \ZipArchive;
         if ($zip->open($tmpPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
@@ -262,13 +275,11 @@ class LegalArchiveController extends Controller
         }
 
         foreach ($archives as $archive) {
-            if (! Storage::exists($archive->storage_path)) {
-                continue;
-            }
             $zip->addFromString(basename($archive->storage_path), Storage::get($archive->storage_path));
         }
 
         $zip->close();
+        app(ArchiveAccessLog::class)->record($currentOrg->id(), null, 'historical_bundle.downloaded', $request->user(), ['archive_ids' => $archives->pluck('id')->all()]);
 
         return response()->download(
             $tmpPath,
@@ -300,10 +311,7 @@ class LegalArchiveController extends Controller
             return back()->with('success', __('app.archive_pdfs_regenerated'));
         }
 
-        // For sealed archives, re-derive the file from current accounting data
-        // and update the checksum. PDFs are non-deterministic (DomPDF embeds a
-        // timestamp), so the original checksum can never match a regeneration;
-        // the JSON companion archives remain the deterministic integrity anchor.
+        // Explicit regeneration creates new versions and preserves the historical originals.
         $archives->each(fn (LegalArchive $a) => $pdfAction->recoverFile($a));
 
         return back()->with('success', __('app.archive_pdfs_regenerated'));

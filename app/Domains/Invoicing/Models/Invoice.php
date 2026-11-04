@@ -3,6 +3,7 @@
 namespace App\Domains\Invoicing\Models;
 
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Services\SupportingDocumentPreservation;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
@@ -101,6 +102,21 @@ class Invoice extends Model
         'last_reminded_at',
         'archived_at',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function (self $invoice): void {
+            if ($invoice->wasChanged('justificatif_path') || $invoice->wasRecentlyCreated) {
+                app(SupportingDocumentPreservation::class)->preserve($invoice, 'justificatif_path', 'supporting_invoice');
+            }
+        });
+        static::updating(function (self $invoice): void {
+            if ($invoice->isDirty('justificatif_path')) {
+                app(SupportingDocumentPreservation::class)->preserve($invoice, 'justificatif_path', 'supporting_invoice', true);
+            }
+        });
+        static::deleting(fn (self $invoice) => app(SupportingDocumentPreservation::class)->preserve($invoice, 'justificatif_path', 'supporting_invoice', true));
+    }
 
     protected function casts(): array
     {
