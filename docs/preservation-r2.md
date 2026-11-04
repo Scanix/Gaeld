@@ -1,4 +1,4 @@
-# R2: accounting content preservation — 3.10.0-rc.1
+# R2: accounting content preservation — 3.10.0-rc.2
 
 This candidate adds dated, versioned accounting packages to the R1 installation and recovery baseline. The capability is the same in CE and EE and does not require a subscription or private registry. The CE/EE boundary contract remains 1.0.0.
 

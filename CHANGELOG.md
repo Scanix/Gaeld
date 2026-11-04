@@ -25,6 +25,21 @@ The CE/EE boundary contract remains 1.0.0. This candidate needs deployment-speci
 provider qualification and accounting/legal review before stable publication.
 See [the R3 operating guide](docs/preservation-r3.md).
 
+## [3.10.0-rc.2] - Staging candidate
+
+### Fixed
+- Restore an older release into the dedicated PostgreSQL application schema in
+  one transaction, including removal of tables introduced after the backup.
+  Refuse ambiguous databases, remaining clients and conflicting native services.
+- Keep company selection available for authorized archive readers when an EE
+  subscription expires; paid features and company isolation remain enforced.
+- Require explicit tested predecessor versions for publication, with forward
+  release stages, candidate updates and promotion to the matching stable version.
+
+RC1 remains unchanged. RC2 keeps its accounting migration and archive format;
+the CE/EE contract remains 1.0.0. Staging evidence is recorded separately from
+official artifact acceptance and the future R3 provider/legal review.
+
 ## [3.10.0-rc.1] - Candidate draft
 
 ### Added

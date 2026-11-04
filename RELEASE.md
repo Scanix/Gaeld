@@ -26,10 +26,11 @@ accounting/legal review and all supported platform results. A candidate may be
 staged with proofs disabled; such staging must not be described as a successful
 sealed-profile deployment. Do not publish or promote stable from unit tests alone.
 
-## v3.10.0-rc.1 — R2 content preservation candidate
+## v3.10.0-rc.2 — R2 content preservation candidate
 
 Build R2 from immutable R1 commit `1b50b592667439ec9d6551d5ac239d2d7182a268`.
-Keep the R1 distribution and recovery safeguards. R2 adds the forward evidence
+Include the reviewed transactional recovery correction from R1 and retain the
+original RC1 artifacts and backups. R2 adds the forward evidence
 migration, snapshots/outbox, preservation UI/CLI and local integrity controls
 in both editions. It excludes R3 proof providers and dependencies; unsupported
 proof requests fail without creating a downgraded package.
