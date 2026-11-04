@@ -184,6 +184,8 @@ def inside():
         return json.loads(old.compose('run', '--rm', '--no-deps', '-T', '--entrypoint', 'php', '-v', fixture + ':/tmp/fixture.php:ro',
                           '-v', '/work/rehearsal-owner.json:/tmp/rehearsal-owner.json:ro', 'laravel.test', '/tmp/fixture.php', operation, capture=True))
     before = legacy_fixture('seed')
+    if before['tables']['organizations']['count'] != 3 or before['tables']['legal_archives']['count'] != 3 or len(before['documents']) != 6 or len(before['redis']['delayed']) != 1:
+        raise AssertionError('The real baseline fixture is incomplete; adoption must not run.')
     old.compose('up', '-d', '--no-build', '--no-deps', '--wait', 'laravel.test', 'worker')
     login('http://localhost:18080', credentials)
     before = legacy_fixture('snapshot')

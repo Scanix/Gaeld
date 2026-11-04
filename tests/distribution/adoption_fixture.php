@@ -1,10 +1,5 @@
 <?php
 
-// Synthetic fixture used only by the opt-in, isolated real adoption rehearsal.
-require '/var/www/html/vendor/autoload.php';
-$app = require '/var/www/html/bootstrap/app.php';
-$app->make(Kernel::class)->bootstrap();
-
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Models\FiscalYear;
@@ -23,6 +18,11 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
+
+// Synthetic fixture used only by the opt-in, isolated real adoption rehearsal.
+require '/var/www/html/vendor/autoload.php';
+$app = require '/var/www/html/bootstrap/app.php';
+$app->make(Kernel::class)->bootstrap();
 
 $operation = $argv[1] ?? 'snapshot';
 if ($operation === 'seed') {
@@ -74,5 +74,5 @@ foreach (array_merge(Storage::disk('local')->allFiles('receipts'), Storage::disk
 ksort($result['documents']);
 $result['encrypted_value'] = hash('sha256', Crypt::decryptString(Storage::disk('local')->get('rehearsal/encrypted.txt')));
 $result['redis']['marker'] = Redis::connection('default')->get('rehearsal:marker');
-$result['redis']['delayed'] = Redis::connection('default')->zrange('queues:default:delayed', 0, -1);
+$result['redis']['delayed'] = Redis::connection('default')->zrange('queues:exports:delayed', 0, -1);
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)."\n";
