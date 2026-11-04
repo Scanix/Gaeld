@@ -101,8 +101,9 @@ def outer(args):
     images = {'app': args.app_image, 'web': args.web_image, 'postgres': args.postgres_image, 'redis': args.redis_image}
     image_ids = {role: execute(['docker', 'image', 'inspect', image, '--format', '{{.Id}}']).strip() for role, image in images.items()}
     baseline_id = execute(['docker', 'image', 'inspect', args.baseline_image, '--format', '{{.Id}}']).strip()
+    imported = {role: identifier + '/' + role + ':input' for role in ['baseline', *images]}
     json_file(workspace / 'input.json', {'candidate_commit': commit, 'version': args.version, 'images': images, 'image_ids': image_ids,
-              'baseline_image': baseline_id, 'platform': execute(['docker', 'image', 'inspect', args.app_image, '--format', '{{.Os}}/{{.Architecture}}']).strip()})
+              'imports': imported, 'baseline_image': imported['baseline'], 'platform': execute(['docker', 'image', 'inspect', args.app_image, '--format', '{{.Os}}/{{.Architecture}}']).strip()})
     try:
         execute(['docker', 'network', 'create', '--label', 'gaeld.rehearsal=' + identifier, network])
         execute(['docker', 'run', '-d', '--name', registry, '--label', 'gaeld.rehearsal=' + identifier, '--network', network,
@@ -114,11 +115,18 @@ def outer(args):
                  '--entrypoint', 'dockerd', 'docker:29-dind', '--host=unix:///var/run/docker.sock'])
         wait_until(lambda: execute(['docker', 'exec', daemon, 'docker', 'info']))
         execute(['docker', 'exec', daemon, 'apk', 'add', '--no-cache', 'python3', 'age', 'openssl', 'git', 'bash', 'curl'])
-        for image in dict.fromkeys([baseline_id, *image_ids.values()]):
+        for role, image in {'baseline': baseline_id, **image_ids}.items():
             archive = workspace / 'image-import.tar'
-            execute(['docker', 'save', '-o', archive, image])
-            execute(['docker', 'exec', daemon, 'docker', 'load', '-i', '/work/image-import.tar'])
-            archive.unlink()
+            # Classic Docker identifies images by configuration, containerd by OCI
+            # manifest. An explicit temporary tag preserves the import identity
+            # across both stores without guessing or rewriting either digest.
+            execute(['docker', 'tag', image, imported[role]])
+            try:
+                execute(['docker', 'save', '-o', archive, imported[role]])
+                execute(['docker', 'exec', daemon, 'docker', 'load', '-i', '/work/image-import.tar'])
+            finally:
+                execute(['docker', 'image', 'rm', imported[role]])
+                archive.unlink(missing_ok=True)
         execute(['docker', 'exec', daemon, 'python3', '/harness/adoption_rehearsal.py', '--inside'], capture=False)
         report = json.loads((workspace / 'report.json').read_text())
         report['isolated_daemon'] = True
@@ -191,7 +199,8 @@ def inside():
     execute(['openssl', 'genpkey', '-algorithm', 'ED25519', '-out', private])
     execute(['openssl', 'pkey', '-in', private, '-pubout', '-out', public])
     images = {}
-    for role, image in inputs['image_ids'].items():
+    for role in inputs['images']:
+        image = inputs['imports'][role]
         repository = 'registry.gaeld.test:5000/gaeld-rehearsal/' + role
         execute(['docker', 'tag', image, repository + ':candidate'])
         execute(['docker', 'push', repository + ':candidate'])
@@ -276,6 +285,7 @@ def inside():
     json_file(workspace / 'report.json', {'schema': 1, 'status': 'passed', 'candidate_commit': inputs['candidate_commit'], 'source_tree_clean': True, 'candidate_version': inputs['version'],
               'platform': inputs['platform'], 'baseline_commit': origin['source_commit'], 'channel': 'rehearsal', 'production_publication': False,
               'release_sha256': sha(release_dir / 'release.json'), 'source_sha256': sha(source), 'images': images, 'candidate_images': inputs['images'],
+              'candidate_image_ids': inputs['image_ids'],
               'signing_key_sha256': sha(public), 'policy_sha256': sha(target / '.gaeld/distribution-policy.json'),
               'checks': {name: True for name in ('baseline_3_8_28', 'signed_https_manifest', 'digest_pinned_pull', 'coherent_encrypted_backup',
                          'adoption', 'app_key_preserved', 'documents_preserved', 'queued_jobs_preserved', 'legacy_stopped', 'managed_health', 'restore', 'existing_owner_http_login', 'failed_backup_resume')}})
