@@ -110,7 +110,7 @@ def outer(args):
                  '-e', 'REGISTRY_HTTP_TLS_CERTIFICATE=/certificates/server.crt', '-e', 'REGISTRY_HTTP_TLS_KEY=/certificates/server.key', 'registry:3'])
         execute(['docker', 'run', '-d', '--privileged', '--name', daemon, '--label', 'gaeld.rehearsal=' + identifier,
                  '--network', network, '-v', str(workspace) + ':/work', '-v', str(candidate) + ':/candidate:ro',
-                 '-v', str(HERE) + ':/harness:ro', '-v', str(certificate) + ':/etc/docker/certs.d/registry.gaeld.test:5000:ro',
+                 '-v', str(HERE) + ':/harness:ro', '--mount', 'type=bind,source=' + str(certificate) + ',target=/etc/docker/certs.d/registry.gaeld.test:5000,readonly',
                  '--entrypoint', 'dockerd', 'docker:29-dind', '--host=unix:///var/run/docker.sock'])
         wait_until(lambda: execute(['docker', 'exec', daemon, 'docker', 'info']))
         execute(['docker', 'exec', daemon, 'apk', 'add', '--no-cache', 'python3', 'age', 'openssl', 'git', 'bash', 'curl'])
