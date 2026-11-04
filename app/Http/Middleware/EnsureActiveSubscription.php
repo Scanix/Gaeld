@@ -18,8 +18,9 @@ class EnsureActiveSubscription
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Preservation remains available in both editions after a subscription ends.
-        if ($request->routeIs('accounting.archives.*', 'accounting.conservation.*')) {
+        // Members must also be able to select the company whose records they need.
+        // The switch controller still verifies membership before changing context.
+        if ($request->routeIs('accounting.archives.*', 'accounting.conservation.*', 'organizations.switch')) {
             return $next($request);
         }
 

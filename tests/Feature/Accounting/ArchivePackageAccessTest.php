@@ -10,6 +10,7 @@ use App\Domains\Accounting\Services\ArchivePackageService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -71,6 +72,27 @@ class ArchivePackageAccessTest extends TestCase
         config(['features.saas' => true]);
         $this->actAsOrg()->get('/accounting/conservation')->assertOk();
         $this->actAsOrg()->get('/accounting/archives')->assertOk();
+    }
+
+    public function test_unsubscribed_member_can_switch_companies_for_preservation_but_not_open_paid_pages(): void
+    {
+        config(['features.saas' => true]);
+        Route::get('/qa-billing', fn () => 'billing')->name('billing.index');
+        Route::getRoutes()->refreshNameLookups();
+        $second = Organization::factory()->create();
+        $second->users()->attach($this->user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($this->user, $second, 'owner');
+        $own = $this->package($second);
+        $foreign = $this->package(Organization::factory()->create());
+        $this->actAsOrg()->post('/organizations/'.$second->id.'/switch')
+            ->assertRedirect('/dashboard')->assertSessionHas('current_organization_id', $second->id);
+        $this->get('/accounting/conservation')->assertOk()->assertInertia(fn ($page) => $page
+            ->has('packages.data', 1)->where('packages.data.0.id', $own->id));
+        $this->get('/dashboard')->assertRedirect('/qa-billing');
+        $this->post('/organizations/'.$foreign->organization_id.'/switch')->assertNotFound();
+        $this->get('/accounting/conservation/'.$foreign->id.'/export')->assertNotFound();
+        $this->post('/accounting/conservation/'.$foreign->id.'/verify')->assertNotFound();
+        $this->post('/accounting/conservation/'.$foreign->id.'/resume')->assertNotFound();
     }
 
     public function test_web_verification_reports_a_content_integrity_failure(): void
