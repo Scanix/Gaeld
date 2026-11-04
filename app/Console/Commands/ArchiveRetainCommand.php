@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Domains\Accounting\Models\ArchivePackage;
+use App\Domains\Accounting\Proof\Contracts\ProtectedArchiveStorage;
 use App\Domains\Accounting\Services\ArchiveAccessLog;
 use Carbon\Carbon;
 use Illuminate\Console\Attributes\Description;
@@ -18,7 +19,7 @@ class ArchiveRetainCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(ArchiveAccessLog $audit): int
+    public function handle(ProtectedArchiveStorage $storage, ArchiveAccessLog $audit): int
     {
         if (strlen(trim((string) $this->option('reason'))) < 10 || ($this->option('hold') && $this->option('release-hold'))
             || (! $this->option('until') && ! $this->option('hold') && ! $this->option('release-hold'))) {
@@ -26,15 +27,16 @@ class ArchiveRetainCommand extends Command
 
             return self::FAILURE;
         }
-        $lock = 'archive-package:'.$this->argument('package');
+        $lock = 'archive-proof:'.$this->argument('package');
         $acquired = DB::selectOne('SELECT pg_try_advisory_lock(hashtextextended(?, 0)) AS acquired', [$lock]);
         if (! $acquired->acquired) {
             $this->error('This package is already being processed.');
 
             return self::FAILURE;
         }
+        $remoteAttempted = false;
         try {
-            DB::transaction(function () use ($audit): void {
+            DB::transaction(function () use ($storage, $audit, &$remoteAttempted): void {
                 $package = ArchivePackage::withoutGlobalScopes()->lockForUpdate()->findOrFail($this->argument('package'));
                 $until = $package->retention_until;
                 if ($this->option('until')) {
@@ -48,15 +50,25 @@ class ArchiveRetainCommand extends Command
                     }
                 }
                 $hold = $this->option('hold') ? true : ($this->option('release-hold') ? false : $package->legal_hold);
-                if ($package->archival_pdf) {
-                    throw new \LogicException('This release cannot change retention for a sealed package.');
+                $proof = $package->proof_result;
+                if (isset($proof['storage'])) {
+                    $remoteAttempted = true;
+                    $proof['storage'] = $storage->protect($proof['storage'], $until->toIso8601String(), $hold);
                 }
-                $package->update(['retention_until' => $until, 'legal_hold' => $hold]);
+                $package->update(['retention_until' => $until, 'legal_hold' => $hold, 'proof_result' => $proof]);
                 $audit->record($package->organization_id, $package->id, 'package.retention_changed', null, [
                     'retention_until' => $until->toIso8601String(), 'legal_hold' => $hold, 'reason' => $this->option('reason'),
                 ]);
             });
         } catch (Throwable $exception) {
+            if ($remoteAttempted) {
+                $package = ArchivePackage::withoutGlobalScopes()->findOrFail($this->argument('package'));
+                $package->update(['state' => 'incident', 'failure' => 'Remote retention change must be reconciled before retry.']);
+                $audit->record($package->organization_id, $package->id, 'package.retention_incident', null, [
+                    'error' => $exception::class, 'requested_until' => $this->option('until'),
+                    'requested_hold' => (bool) $this->option('hold'), 'requested_release' => (bool) $this->option('release-hold'),
+                ]);
+            }
             $this->error($exception->getMessage());
 
             return self::FAILURE;

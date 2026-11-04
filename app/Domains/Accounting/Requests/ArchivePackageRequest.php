@@ -28,7 +28,7 @@ class ArchivePackageRequest extends FormRequest
         return [
             'fiscal_year_id' => ['required', 'uuid', Rule::exists('fiscal_years', 'id')
                 ->where('organization_id', app(CurrentOrganization::class)->id())],
-            'archival_pdf' => ['sometimes', 'boolean', 'declined'],
+            'archival_pdf' => ['sometimes', 'boolean'],
         ];
     }
 }

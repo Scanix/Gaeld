@@ -45,6 +45,8 @@ Gäld covers the full accounting workflow for a small Swiss business:
 
 ## Getting started
 
+The `v3.11.0-rc.1` candidate adds an optional public preservation proof profile: validated PDF/A-2b reports, detached CMS signatures, RFC 3161 timestamps, protected S3 retention, independent verification and evidence renewal. The same functions are available in CE and EE. Read the [R3 operating guide](docs/preservation-r3.md). It is not a general GeBüV certification; unconfigured or failed proof stages remain incomplete.
+
 The `v3.10.0-rc.1` candidate adds company-scoped accounting preservation,
 frozen content packages, original-document versions, durable preparation and
 local integrity controls on top of R1. Read the [R2 operating guide](docs/preservation-r2.md)

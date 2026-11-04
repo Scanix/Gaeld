@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       allowed_from:
-        description: Explicit JSON list of exact tested predecessors (R2 requires 3.9 versions; no stage may be skipped)
+        description: Explicit JSON list of exact tested R2 predecessors for this R3 update (no stage may be skipped)
         required: true
         type: string
       compatible_ee_versions:
@@ -122,6 +122,27 @@ jobs:
           mkdir -p release
           for platform in linux/amd64 linux/arm64; do
             docker run --rm --platform "$platform" --entrypoint php "ghcr.io/scanix/gaeld@$APP_DIGEST" -r 'require "vendor/autoload.php"; if (PHP_VERSION_ID < 80400 || !extension_loaded("pdo_pgsql") || !extension_loaded("redis")) { exit(1); }'
+            docker run --rm --platform "$platform" --entrypoint sh "ghcr.io/scanix/gaeld@$APP_DIGEST" -ec 'gs --version; java -version; /opt/verapdf/verapdf --version; test -r /usr/share/color/icc/ghostscript/srgb.icc'
+            # Validate a real conversion with the exact published image on each architecture.
+            docker run --rm -i --platform "$platform" --entrypoint php \
+              -e APP_ENV=testing -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+              -e CACHE_STORE=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=sync -e PLUGINS_ENABLED=false \
+              "ghcr.io/scanix/gaeld@$APP_DIGEST" <<'PHP'
+          <?php
+          require 'vendor/autoload.php';
+          $app = require 'bootstrap/app.php';
+          $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+          $directory = sys_get_temp_dir().'/gaeld-image-proof-'.bin2hex(random_bytes(12));
+          mkdir($directory, 0700);
+          $pdf = new Dompdf\Dompdf;
+          $pdf->loadHtml('<h1>R3 image acceptance</h1><p>CHF 100000.00</p>');
+          $pdf->render();
+          file_put_contents($directory.'/source.pdf', $pdf->output());
+          $converter = new App\Domains\Accounting\Proof\PdfArchivalConverter(new App\Domains\Accounting\Proof\ProcessRunner);
+          $result = $converter->convert($directory.'/source.pdf', $directory.'/archival.pdf');
+          if ($result['valid'] !== true || $result['profile'] !== 'PDF/A-2b') { exit(1); }
+          echo "Real PDF/A-2b image conversion validated\n";
+          PHP
             python3 tests/distribution/runtime_smoke.py --platform "$platform" \
               --app-image "ghcr.io/scanix/gaeld@$APP_DIGEST" --web-image "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" \
               --postgres-image "docker.io/library/postgres@$POSTGRES_DIGEST" --redis-image "docker.io/library/redis@$REDIS_DIGEST"

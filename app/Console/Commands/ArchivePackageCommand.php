@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Domains\Accounting\Models\ArchivePackage;
 use App\Domains\Accounting\Services\ArchiveAccessLog;
 use App\Domains\Accounting\Services\ArchivePackageService;
+use App\Domains\Accounting\Services\ArchiveProofService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -17,16 +18,19 @@ class ArchivePackageCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(ArchivePackageService $packages, ArchiveAccessLog $audit): int
+    public function handle(ArchivePackageService $packages, ArchiveProofService $proofs, ArchiveAccessLog $audit): int
     {
         try {
             $package = ArchivePackage::withoutGlobalScopes()->findOrFail($this->argument('package'));
             switch ($this->argument('operation')) {
                 case 'prepare':
                     $packages->prepare($package, $package->archival_pdf);
+                    if ($package->archival_pdf) {
+                        $proofs->seal($package);
+                    }
                     break;
                 case 'verify':
-                    $result = $packages->verify($package);
+                    $result = $proofs->check($package);
                     $audit->record($package->organization_id, $package->id, 'package.integrity_checked', null, ['channel' => 'cli', ...$result]);
                     $this->line(json_encode($result, JSON_THROW_ON_ERROR));
 

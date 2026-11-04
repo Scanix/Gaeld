@@ -5,6 +5,26 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.11.0-rc.1] - Candidate draft
+
+### Added
+- Public PDF/A-2b conversion and validation, detached CMS signing, RFC 3161
+  timestamps and configurable S3 Object Lock Compliance storage in CE and EE.
+- Independent verification without an application database or EE account,
+  protected completeness catalogs, evidence renewal and incident reporting.
+- TLS-verified timestamp Basic/Bearer authentication with protected credential
+  files, independent trust anchors and retained validation evidence.
+
+### Changed
+- Extend retention and legal holds to historical catalog versions. Detect a
+  restored older proof set against independently protected evidence inventories.
+- Preserve R2 content packages unchanged; add proof metadata with a separate
+  forward migration. No automatic legal archive disposal is introduced.
+
+The CE/EE boundary contract remains 1.0.0. This candidate needs deployment-specific
+provider qualification and accounting/legal review before stable publication.
+See [the R3 operating guide](docs/preservation-r3.md).
+
 ## [3.10.0-rc.1] - Candidate draft
 
 ### Added

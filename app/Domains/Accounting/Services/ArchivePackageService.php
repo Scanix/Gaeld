@@ -6,6 +6,8 @@ use App\Domains\Accounting\Contracts\ArchivePackageBuilder;
 use App\Domains\Accounting\Models\ArchiveOutbox;
 use App\Domains\Accounting\Models\ArchivePackage;
 use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Accounting\Proof\PdfArchivalConverter;
+use App\Domains\Accounting\Proof\StandaloneArchiveVerifier;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Carbon;
@@ -24,9 +26,6 @@ class ArchivePackageService implements ArchivePackageBuilder
 
     public function request(Organization $organization, FiscalYear $year, ?User $actor = null, string $provenance = 'native', bool $archivalPdf = false): ArchivePackage
     {
-        if ($archivalPdf) {
-            throw new \LogicException('PDF/A and sealed packages are not available in this release.');
-        }
         if ($year->organization_id !== $organization->id || ! in_array($provenance, ['native', 'historical_backfill'], true)) {
             throw new \InvalidArgumentException('Invalid archive scope or provenance.');
         }
@@ -66,9 +65,10 @@ class ArchivePackageService implements ArchivePackageBuilder
 
     public function prepare(ArchivePackage $package, bool $archivalPdf = false): ArchivePackage
     {
-        if ($archivalPdf || $package->archival_pdf) {
-            throw new \LogicException('PDF/A and sealed packages are not available in this release.');
+        if ($package->archival_pdf !== $archivalPdf) {
+            throw new \LogicException('The report profile is fixed at capture. Request a new version to change it.');
         }
+
         $lock = 'archive-package:'.$package->id;
         $acquired = DB::selectOne('SELECT pg_try_advisory_lock(hashtextextended(?, 0)) AS acquired', [$lock]);
         if (! $acquired->acquired) {
@@ -101,19 +101,19 @@ class ArchivePackageService implements ArchivePackageBuilder
                 'minimum_retention_until' => $minimumRetention,
                 'minimum_retention' => '10 years after the fiscal-year end',
                 'automatic_disposal' => false,
-                'subsequent_extensions_and_holds' => 'Consult subsequent conservation control records; this frozen policy is never rewritten.',
-                'content_profile' => 'Content integrity only; no signature, timestamp, PDF/A or protected-storage proof is asserted',
+                'subsequent_extensions_and_holds' => 'Consult protected-storage receipts and subsequent conservation control records; this frozen policy is never rewritten.',
+                'content_profile' => $archivalPdf ? 'PDF/A-2b with package signature, timestamp and protected-storage evidence required' : 'Content integrity only; no archival proof profile is asserted',
                 'historical_integrity_asserted' => false,
                 'responsible_roles' => [
                     'organization_administrator' => 'Assign named access rights, retain the written operating procedure, authorize retention changes and appoint a successor.',
-                    'installation_operator' => 'Monitor daily controls, investigate failures, protect recovery keys, maintain separate encrypted backups and test restoration.',
+                    'installation_operator' => 'Monitor daily controls, investigate failures, protect recovery keys, maintain separate encrypted backups and renew proof evidence before expiry.',
                     'accounting_reviewer' => 'Review accounting completeness and annual statements; preserve corrections as subsequent versions.',
                 ],
                 'controls' => ['daily_integrity_and_inventory_check', 'annual_completeness_check_and_documented_isolated_restoration'],
                 'control_and_access_records' => 'data/snapshot.json#archive_access_events',
                 'control_actions' => ['control.daily', 'control.annual'],
                 'backup_scope' => 'Database, original documents, packages and evidence, application key, configuration and required recovery secrets.',
-                'independent_trust' => 'Obtain the expected manifest hash from a trusted source outside this package. A local hash is not a signature or trusted timestamp.',
+                'independent_trust' => 'Obtain signer and TSA trust anchors, authorized signer fingerprints and the expected manifest hash from a trusted source outside this package.',
             ]), 'policy', $files);
             $this->write($package, 'data/snapshot.json', self::json($snapshot), 'snapshot', $files);
             $this->write($package, 'data/statements.json', self::json($this->reports->statements($snapshot)), 'data', $files);
@@ -137,7 +137,29 @@ class ArchivePackageService implements ArchivePackageBuilder
                 $target = 'reports/'.$filename;
                 $disk = Storage::disk('local');
                 $absolute = $disk->path($package->package_path.'/'.$target);
-                if (is_file($absolute)) {
+                if ($archivalPdf) {
+                    $input = $disk->path($package->package_path.'/working/'.$filename);
+                    $disk->makeDirectory($package->package_path.'/working');
+                    $disk->makeDirectory($package->package_path.'/reports');
+                    if (! is_file($input)) {
+                        file_put_contents($input, $bytes, LOCK_EX);
+                    }
+                    $converter = app(PdfArchivalConverter::class);
+                    $validationPath = 'validation/'.$filename.'.xml';
+                    if (is_file($absolute)) {
+                        $validation = $converter->validate($absolute);
+                        if ($disk->exists($package->package_path.'/'.$validationPath)) {
+                            $validation = $disk->get($package->package_path.'/'.$validationPath);
+                        }
+                    } else {
+                        $validation = $converter->convert($input, $absolute)['validation_report'];
+                    }
+                    $this->write($package, $validationPath, $validation, 'validation', $files);
+                    $bytes = file_get_contents($absolute);
+                    if ($bytes === false) {
+                        throw new \RuntimeException('Missing converted PDF.');
+                    }
+                } elseif (is_file($absolute)) {
                     // PDF metadata is nondeterministic; a resumed attempt keeps its first generated bytes.
                     $bytes = file_get_contents($absolute);
                 }
@@ -153,14 +175,14 @@ class ArchivePackageService implements ArchivePackageBuilder
             }
             $year = $snapshot['fiscal_year'][0];
             $manifest = [
-                'schema_version' => '1.0.0', 'proof_profile' => 'gaeld-content-package/1.0.0',
+                'schema_version' => '1.0.0', 'proof_profile' => $archivalPdf ? 'gaeld-sealed-package/1.0.0' : 'gaeld-content-package/1.0.0',
                 'package_id' => $package->id, 'organization_id' => $package->organization_id,
                 'fiscal_year' => ['id' => $package->fiscal_year_id, 'start_date' => substr($year['start_date'], 0, 10), 'end_date' => substr($year['end_date'], 0, 10)],
                 'version' => $package->version, 'provenance' => $package->provenance,
                 'captured_at' => $package->captured_at->toIso8601String(),
                 'retention_until' => $minimumRetention,
                 'snapshot_sha256' => $package->snapshot_sha256,
-                'report_profile' => 'PDF',
+                'report_profile' => $archivalPdf ? 'PDF/A-2b' : 'PDF',
                 'historical_integrity_asserted' => false,
                 'files' => $files,
             ];
@@ -194,9 +216,11 @@ class ArchivePackageService implements ArchivePackageBuilder
             if (($manifest['package_id'] ?? null) !== $package->id || ($manifest['organization_id'] ?? null) !== $package->organization_id || ($manifest['snapshot_sha256'] ?? null) !== $package->snapshot_sha256) {
                 throw new \RuntimeException('Manifest identity check failed.');
             }
-            if ($package->archival_pdf || ($manifest['proof_profile'] ?? null) !== 'gaeld-content-package/1.0.0' || ($manifest['report_profile'] ?? null) !== 'PDF') {
-                throw new \RuntimeException('This release can only verify content packages without archival proofs.');
+            if (($manifest['proof_profile'] ?? null) !== ($package->archival_pdf ? 'gaeld-sealed-package/1.0.0' : 'gaeld-content-package/1.0.0')
+                || ($manifest['report_profile'] ?? null) !== ($package->archival_pdf ? 'PDF/A-2b' : 'PDF')) {
+                throw new \RuntimeException('The manifest report profile differs from the immutable package profile.');
             }
+            (new StandaloneArchiveVerifier)->verifier()->inspect($disk->path($package->package_path), $package->manifest_sha256);
             $expectedPaths = [$package->package_path.'/manifest.json'];
             $root = realpath($disk->path($package->package_path));
             foreach ($manifest['files'] as $file) {
@@ -212,7 +236,7 @@ class ArchivePackageService implements ArchivePackageBuilder
                     $issues[] = 'Missing or changed package file: '.$file['path'];
                 }
             }
-            $actualPaths = $disk->allFiles($package->package_path);
+            $actualPaths = array_values(array_filter($disk->allFiles($package->package_path), fn (string $path): bool => ! $package->archival_pdf || ! str_starts_with($path, $package->package_path.'/evidence/')));
             sort($expectedPaths);
             sort($actualPaths);
             if ($expectedPaths !== $actualPaths) {
@@ -250,6 +274,11 @@ class ArchivePackageService implements ArchivePackageBuilder
                     throw new \RuntimeException('Cannot add archive export file.');
                 }
             }
+            foreach ($disk->allFiles($package->package_path.'/evidence') as $path) {
+                if (is_link($disk->path($path)) || ! $zip->addFile($disk->path($path), substr($path, strlen($package->package_path) + 1))) {
+                    throw new \RuntimeException('Cannot add proof evidence to export.');
+                }
+            }
             if (! $zip->close()) {
                 throw new \RuntimeException('Cannot finish archive export.');
             }
@@ -275,6 +304,7 @@ class ArchivePackageService implements ArchivePackageBuilder
 
     private function readme(ArchivePackage $package): string
     {
+        $profile = $package->archival_pdf ? 'PDF/A-2b; a complete signature, timestamp and protected-storage receipt are required.' : 'Ordinary PDF; content integrity only, without an archival proof claim.';
         $capturedAt = $package->captured_at->toIso8601String();
 
         return <<<TEXT
@@ -286,7 +316,7 @@ Fiscal year: {$package->fiscal_year_id}
 Version: {$package->version}
 Captured: {$capturedAt}
 Provenance: {$package->provenance}
-Report profile: ordinary PDF; content integrity only. No PDF/A, signature, trusted timestamp or protected-storage claim.
+Report profile: {$profile}
 
 READING THE PACKAGE
 manifest.json identifies this version and lists every preserved content file with its byte size and SHA-256 digest.
@@ -295,22 +325,27 @@ data/statements.json contains readable statement values; reports/ contains the j
 originals/ preserves source-document bytes. A generated report is not a replacement for a missing original document.
 data/archive_access_events.csv and the archive_access_events array in data/snapshot.json contain access records and control.daily/control.annual reports known at capture. Empty datasets have no CSV. journal_events records accounting changes.
 retention-policy.json contains the versioned retention policy and operating responsibilities. Later checks, extensions or legal holds are recorded separately and do not rewrite this package.
+evidence/ is reserved for append-only signature, timestamp, storage and renewal evidence. These files are outside the initial manifest to avoid circular references; their separate proof chain must also be verified.
 
-VERIFYING THE CONTENT
-Use a trusted installation of this Gäld release and run php artisan archive:package verify PACKAGE_UUID for the recorded package. The command compares the manifest hash with the database catalog and checks the complete local inventory.
-For an exported package, obtain its expected manifest SHA-256 from an independently protected catalog, compare manifest.json against that value, then check every listed relative path, byte size and SHA-256 digest. Reject missing, additional or altered files and unsafe paths.
-The manifest and content files are readable with standard JSON, CSV and PDF tools. Do not treat a hash copied from this same package as an independent trust anchor.
-Content integrity does not establish signature validity, historical authenticity, trusted time, protected storage or full conservation compliance. Preserve verification results and investigate failures without replacing evidence.
+VERIFYING INDEPENDENTLY
+Use a trusted copy of Gäld scripts/archive-verifier/verify.php and Verifier.php with PHP 8.4+, OpenSSL and, for the archival profile, veraPDF. Obtain these tools independently of this package.
+Obtain trusted signer and timestamp-authority CA bundles, authorized signer certificate SHA-256 fingerprints, and the expected manifest SHA-256 from an independently protected catalog. Certificates contained in this package do not establish trust on their own.
+For the archival profile, run:
+php verify.php --directory=/path/to/package --signer-trust=/trusted/signer-ca.pem --tsa-trust=/trusted/tsa-ca.pem --signer-fingerprint=AUTHORIZED_SHA256 --expected-manifest-sha256=INDEPENDENT_MANIFEST_SHA256 --verapdf=/path/to/verapdf
+For content-only inspection, run:
+php verify.php --directory=/path/to/package --integrity-only --expected-manifest-sha256=INDEPENDENT_MANIFEST_SHA256
+The manifest hash does not identify the latest renewal evidence. Offline verification reports latest_evidence_pinned=false; compare the complete evidence inventory with independently retained protected-storage catalog versions to detect an older proof set.
+Content-only success does not establish signature validity, trusted time, protected storage or full conservation compliance. Independently check the protected-storage inventory and retention/hold receipts. Preserve verification results and investigate failures without replacing evidence.
 
 OPERATING AND RECOVERING
 The organization appoints an administrator, installation operator and accounting reviewer, and keeps their names and access rights in its controlled operating procedure. Grant only the necessary company access and review it when responsibilities change.
 The operator monitors daily checks and failures, maintains a separate encrypted recovery backup, and keeps recovery keys separately accessible to authorized successors. A working backup is distinct from an immutable accounting archive.
-At least annually, restore a complete backup in an isolated environment, verify content, reconcile the package inventory and supporting documents, and retain a dated report identifying the operator, restored environment, package hashes and outcome.
-Restore the database, original documents, package files, original application key, configuration and required secrets together. Do not overwrite this package to repair accounting data; preserve corrections in a new version.
-Retain the package for at least the frozen policy period and honor any later extension or legal hold. No automatic disposal is authorized by these instructions.
+At least annually, restore a complete backup in an isolated environment, verify content and proof chains, reconcile the package inventory and supporting documents, and retain a dated report identifying the operator, restored environment, package hashes and outcome.
+Restore the database, original documents, package/evidence files, original application key, configuration and required secrets together. Do not overwrite this package to repair accounting data; preserve corrections in a new version.
+Retain the package for at least the frozen policy period and honor any later extension or legal hold. No automatic disposal is authorized by these instructions. Renew cryptographic evidence before its validity or algorithms become insufficient, without replacing the original manifest.
 
 LIMITS
-These instructions describe the package format and required operating steps; they do not certify the organization's legal compliance. Historical imports assert integrity only from capture onward. This release does not create sealed packages or claim compliance with GeBüV.
+These instructions describe the package format and required operating steps; they do not certify the organization's legal compliance. Historical imports assert integrity only from capture onward. Missing or failed proof stages remain incomplete even when the accounting PDFs can be read.
 
 TEXT;
     }

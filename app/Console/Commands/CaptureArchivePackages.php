@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 
 class CaptureArchivePackages extends Command
 {
-    protected $signature = 'archive:capture {--organization=} {--fiscal-year=} {--archival-pdf : Unsupported in R2; fails without creating a package} {--historical : Mark this as an explicit historical backfill}';
+    protected $signature = 'archive:capture {--organization=} {--fiscal-year=} {--archival-pdf : Convert and independently seal the package} {--historical : Mark this as an explicit historical backfill}';
 
     protected $description = 'Capture consistent accounting evidence and enqueue preparation, deduplicating unchanged snapshots';
 

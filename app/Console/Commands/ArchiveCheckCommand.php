@@ -4,26 +4,59 @@ namespace App\Console\Commands;
 
 use App\Domains\Accounting\Models\ArchivePackage;
 use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Accounting\Proof\Contracts\ProtectedArchiveStorage;
 use App\Domains\Accounting\Services\ArchiveAccessLog;
-use App\Domains\Accounting\Services\ArchivePackageService;
+use App\Domains\Accounting\Services\ArchiveProofService;
 use App\Domains\Organizations\Models\Organization;
 use Carbon\Carbon;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Throwable;
 
 #[Signature('archive:check {--organization= : Limit to one organization UUID} {--annual : Produce an annual completeness report} {--recovery-report= : JSON report from a separate recovery environment}')]
-#[Description('Check local package content and record a control report without asserting archival proofs')]
+#[Description('Check preserved files, proofs and protected inventories; retain a control report')]
 class ArchiveCheckCommand extends Command
 {
     /**
      * Execute the console command.
      */
-    public function handle(ArchivePackageService $packagesService, ArchiveAccessLog $audit): int
+    public function handle(ArchiveProofService $proofs, ProtectedArchiveStorage $storage, ArchiveAccessLog $audit): int
     {
         $organizations = Organization::withTrashed()->when($this->option('organization'), fn ($q) => $q->whereKey($this->option('organization')))->get();
+        $protectedInventory = null;
+        $globalIssues = [];
+        $hasProtectedStorage = config('archiving.proofs_enabled') || config('archiving.s3.bucket')
+            || ArchivePackage::withoutGlobalScopes()->whereNotNull('proof_result')->exists();
+        if (! $this->option('organization') && $hasProtectedStorage) {
+            try {
+                $protectedInventory = $storage->inventory();
+                $localIds = $organizations->pluck('id')->all();
+                foreach ($protectedInventory as $entry) {
+                    if (! in_array($entry['organization_id'], $localIds, true)) {
+                        $globalIssues[] = 'Organization missing from local catalog: '.$entry['organization_id'];
+                    }
+                }
+                $globalIssues = array_values(array_unique($globalIssues));
+            } catch (Throwable $exception) {
+                $globalIssues[] = 'Global protected inventory could not be checked: '.$exception->getMessage();
+            }
+            $globalReport = [
+                'report_id' => (string) Str::uuid(), 'type' => 'global-catalog', 'completed_at' => now()->toIso8601String(),
+                'valid' => $globalIssues === [], 'issues' => $globalIssues,
+                'local_organizations' => $organizations->pluck('id')->all(),
+                'protected_organizations' => $protectedInventory === null ? null : array_values(array_unique(array_column($protectedInventory, 'organization_id'))),
+            ];
+            $reportBytes = json_encode($globalReport, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+            if (! Storage::disk('local')->put('preservation-controls/global/'.$globalReport['report_id'].'.json', $reportBytes)) {
+                $this->error('The global completeness report could not be retained.');
+
+                return self::FAILURE;
+            }
+            $this->line($reportBytes);
+        }
         if ($organizations->isEmpty()) {
             $this->error('No matching organization.');
 
@@ -54,7 +87,7 @@ class ArchiveCheckCommand extends Command
                 return self::FAILURE;
             }
         }
-        $failed = false;
+        $failed = $globalIssues !== [];
         foreach ($organizations as $organization) {
             $packages = ArchivePackage::withoutGlobalScopes()->where('organization_id', $organization->id)->get();
             $checks = [];
@@ -71,12 +104,32 @@ class ArchiveCheckCommand extends Command
                     continue;
                 }
                 try {
-                    $checks[$package->id] = $packagesService->verify($package);
+                    $checks[$package->id] = $proofs->check($package);
                 } catch (Throwable $exception) {
                     $checks[$package->id] = ['valid' => false, 'issues' => [$exception->getMessage()]];
                 }
                 if (! $checks[$package->id]['valid']) {
                     $issues[] = 'Failed check: '.$package->id;
+                }
+            }
+            if ($hasProtectedStorage) {
+                try {
+                    $inventory = $protectedInventory === null
+                        ? $storage->inventory($organization->id)
+                        : array_values(array_filter($protectedInventory, fn (array $entry): bool => $entry['organization_id'] === $organization->id));
+                    foreach ($inventory as $entry) {
+                        $known = $packages->firstWhere('id', $entry['package_id']);
+                        if (! $known || $known->manifest_sha256 !== $entry['manifest_sha256']) {
+                            $issues[] = 'Protected inventory differs from local catalog: '.$entry['package_id'];
+                        }
+                    }
+                    foreach ($packages->filter(fn ($package) => $package->proof_result !== null) as $known) {
+                        if (! collect($inventory)->contains(fn ($entry) => $entry['package_id'] === $known->id && $entry['manifest_sha256'] === $known->manifest_sha256)) {
+                            $issues[] = 'Package missing from protected inventory: '.$known->id;
+                        }
+                    }
+                } catch (Throwable $exception) {
+                    $issues[] = 'Protected inventory could not be checked: '.$exception->getMessage();
                 }
             }
             if ($this->option('annual')) {
@@ -98,7 +151,7 @@ class ArchiveCheckCommand extends Command
             $report = [
                 'report_id' => (string) Str::uuid(), 'type' => $this->option('annual') ? 'annual' : 'daily',
                 'organization_id' => $organization->id, 'completed_at' => now()->toIso8601String(),
-                'scope' => 'local-catalog-integrity-and-recovery-attestation', 'proofs_checked' => false, 'valid' => $issues === [], 'checks' => $checks, 'issues' => $issues,
+                'scope' => 'integrity-and-completeness', 'proofs_checked' => collect($checks)->contains(fn (array $check): bool => $check['proof_checked'] ?? false), 'valid' => $issues === [], 'checks' => $checks, 'issues' => $issues,
                 'recovery_attestation' => $organizationRecovery, 'recovery_attestation_is_operator_supplied' => $recovery !== null,
             ];
             $audit->record($organization->id, null, 'control.'.$report['type'], null, $report);

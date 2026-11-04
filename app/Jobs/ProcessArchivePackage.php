@@ -6,6 +6,7 @@ use App\Domains\Accounting\Models\ArchiveOutbox;
 use App\Domains\Accounting\Models\ArchivePackage;
 use App\Domains\Accounting\Services\ArchiveAccessLog;
 use App\Domains\Accounting\Services\ArchivePackageService;
+use App\Domains\Accounting\Services\ArchiveProofService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -41,6 +42,9 @@ class ProcessArchivePackage implements ShouldBeUnique, ShouldQueue
     {
         $package = ArchivePackage::withoutGlobalScopes()->findOrFail($this->packageId);
         $package = $packages->prepare($package, $package->archival_pdf);
+        if ($package->archival_pdf) {
+            app(ArchiveProofService::class)->seal($package);
+        }
         ArchiveOutbox::query()->where('archive_package_id', $package->id)->update(['completed_at' => now()]);
     }
 
@@ -52,6 +56,6 @@ class ProcessArchivePackage implements ShouldBeUnique, ShouldQueue
         }
         $package->update(['state' => $package->manifest_sha256 === null ? 'failed' : 'incident', 'failure' => $exception?->getMessage() ?? 'Archive job failed.']);
         ArchiveOutbox::query()->where('archive_package_id', $package->id)->update(['available_at' => now()->addHour()]);
-        app(ArchiveAccessLog::class)->record($package->organization_id, $package->id, 'package.failed', metadata: ['stage' => $package->manifest_sha256 === null ? 'prepare' : 'integrity']);
+        app(ArchiveAccessLog::class)->record($package->organization_id, $package->id, 'package.failed', metadata: ['stage' => $package->manifest_sha256 === null ? 'prepare' : 'proof']);
     }
 }

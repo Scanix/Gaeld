@@ -75,6 +75,7 @@ Schedule::command('horizon:snapshot')->everyFiveMinutes();
 Schedule::command('archive:dispatch')->everyMinute()->withoutOverlapping();
 Schedule::command('archive:capture')->dailyAt('00:15')->withoutOverlapping();
 Schedule::command('archive:check')->dailyAt('04:00')->withoutOverlapping();
+Schedule::command('archive:renew --due')->dailyAt('04:30')->withoutOverlapping();
 Schedule::command('archive:check --annual')->yearlyOn(1, 15, '04:30')->withoutOverlapping();
 
 // ──────────────────────────────────────────────────────────────

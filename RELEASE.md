@@ -5,6 +5,27 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.11.0-rc.1 — R3 preservation proof candidate
+
+Build on R2 commit `f4e6ab823c49bbfa3f550c9adb017901f9f0f0cd` and record
+subsequent recovery/access corrections in the exact candidate commit. Keep the
+R2 migration unchanged; R3 adds proof columns and extends the existing immutable
+package guard through a separate additive migration.
+
+Follow [the R3 operating guide](docs/preservation-r3.md). Run content compatibility,
+real PDF/A/CMS/RFC 3161, protected storage, provider outage and historical-proof
+rollback tests. Preserve the exact CE/EE pair, source and image digests, operational
+backup/restoration result, public trust anchors and independent recovery report.
+The offline verifier reports that the newest renewal set is not independently
+pinned by the manifest hash alone; online protected-catalog reconciliation supplies
+that completeness check.
+
+A synthetic laboratory test does not qualify a commercial provider or establish
+legal compliance. Stable publication requires the real selected provider profile,
+accounting/legal review and all supported platform results. A candidate may be
+staged with proofs disabled; such staging must not be described as a successful
+sealed-profile deployment. Do not publish or promote stable from unit tests alone.
+
 ## v3.10.0-rc.1 — R2 content preservation candidate
 
 Build R2 from immutable R1 commit `1b50b592667439ec9d6551d5ac239d2d7182a268`.

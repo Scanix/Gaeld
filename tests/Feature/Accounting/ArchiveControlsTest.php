@@ -5,7 +5,10 @@ namespace Tests\Feature\Accounting;
 use App\Domains\Accounting\Models\ArchiveAccessEvent;
 use App\Domains\Accounting\Models\ArchivePackage;
 use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Accounting\Proof\Contracts\ProtectedArchiveStorage;
+use App\Domains\Accounting\Proof\ProofPipeline;
 use App\Domains\Accounting\Services\ArchivePackageService;
+use App\Domains\Accounting\Services\ArchiveProofService;
 use App\Domains\Accounting\Services\IssuedDocumentPreservation;
 use App\Domains\Invoicing\Models\Invoice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -70,15 +73,30 @@ class ArchiveControlsTest extends TestCase
         $this->assertFalse($report->metadata['valid']);
     }
 
-    public function test_r2_refuses_a_sealing_request_before_capturing_any_data(): void
+    public function test_sealing_refreshes_retention_and_hold_after_acquiring_the_package_lock(): void
     {
-        try {
-            $this->package(true);
-            $this->fail('A sealing request must not silently become an ordinary PDF package.');
-        } catch (\LogicException $exception) {
-            $this->assertStringContainsString('not available', $exception->getMessage());
-        }
-        $this->assertSame(0, ArchivePackage::query()->count());
+        $package = $this->package(true);
+        Storage::disk('local')->put($package->package_path.'/manifest.json', '{}');
+        $package->update(['manifest_sha256' => hash('sha256', '{}'), 'state' => 'prepared']);
+        $stale = ArchivePackage::query()->findOrFail($package->id);
+        $latest = ArchivePackage::query()->findOrFail($package->id);
+        $extended = $latest->retention_until->copy()->addYears(2);
+        $latest->update(['retention_until' => $extended, 'legal_hold' => true]);
+        $receipt = ['objects' => ['new-proof']];
+        $this->mock(ProofPipeline::class)->shouldReceive('process')->once()
+            ->withArgs(fn (string $directory, string $until, callable $stage): bool => $directory === Storage::disk('local')->path($package->package_path)
+                && $until === $extended->toIso8601String())
+            ->andReturn(['state' => 'verified', 'storage' => $receipt, 'next_renewal_at' => now()->addDays(300)->toIso8601String()]);
+        $this->mock(ProtectedArchiveStorage::class)->shouldReceive('protect')->once()
+            ->with($receipt, $extended->toIso8601String(), true)
+            ->andReturn(['objects' => ['new-proof'], 'legal_hold' => true]);
+
+        $result = app(ArchiveProofService::class)->seal($stale);
+
+        $this->assertSame('verified', $result->state);
+        $this->assertTrue($result->legal_hold);
+        $this->assertTrue($result->proof_result['storage']['legal_hold']);
+        $this->assertSame($extended->toIso8601String(), $result->retention_until->toIso8601String());
     }
 
     private function package(bool $archivalPdf = false): ArchivePackage

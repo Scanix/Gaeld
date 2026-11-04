@@ -3,6 +3,8 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
+    scanFiles:
+        - scripts/archive-verifier/Verifier.php
     paths:
         - app/
 

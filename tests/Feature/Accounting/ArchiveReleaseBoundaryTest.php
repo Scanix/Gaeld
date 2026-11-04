@@ -79,23 +79,25 @@ class ArchiveReleaseBoundaryTest extends TestCase
         $service->export($package);
     }
 
-    public function test_web_and_cli_cannot_silently_downgrade_a_sealing_request(): void
+    public function test_web_and_cli_capture_sealing_requests_without_silently_downgrading_them(): void
     {
         $year = FiscalYear::factory()->for($this->organization)->create(['start_date' => '2026-01-01', 'end_date' => '2026-12-31']);
         $this->actAsOrg()->post('/accounting/conservation', ['fiscal_year_id' => $year->id, 'archival_pdf' => true])
-            ->assertSessionHasErrors('archival_pdf');
-        $this->artisan('archive:capture', ['--fiscal-year' => $year->id, '--archival-pdf' => true])->assertFailed();
-        $this->assertSame(0, ArchivePackage::withoutGlobalScopes()->count());
-        $this->assertSame(0, ArchiveOutbox::query()->count());
+            ->assertSessionHasNoErrors()->assertRedirect();
+        $this->artisan('archive:capture', ['--fiscal-year' => $year->id, '--archival-pdf' => true])->assertSuccessful();
+        $this->assertGreaterThan(0, ArchivePackage::withoutGlobalScopes()->count());
+        $this->assertSame(0, ArchivePackage::withoutGlobalScopes()->where('archival_pdf', false)->count());
+        $this->assertSame(ArchivePackage::withoutGlobalScopes()->count(), ArchiveOutbox::query()->count());
     }
 
-    public function test_r2_does_not_ship_proof_columns_or_external_proof_services(): void
+    public function test_r3_adds_proof_stages_without_enabling_unconfigured_providers(): void
     {
         foreach (['sealed_at', 'deposited_at', 'check_due_at', 'proof_result'] as $column) {
-            $this->assertFalse(Schema::hasColumn('archive_packages', $column));
+            $this->assertTrue(Schema::hasColumn('archive_packages', $column));
         }
-        $this->assertDirectoryDoesNotExist(app_path('Domains/Accounting/Proof'));
-        $this->assertFileDoesNotExist(app_path('Console/Commands/ArchiveRenewCommand.php'));
+        $this->assertDirectoryExists(app_path('Domains/Accounting/Proof'));
+        $this->assertFileExists(app_path('Console/Commands/ArchiveRenewCommand.php'));
+        $this->assertFalse(config('archiving.proofs_enabled'));
     }
 
     public function test_daily_control_detects_an_uncaptured_financial_year(): void
