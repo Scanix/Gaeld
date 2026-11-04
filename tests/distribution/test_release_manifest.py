@@ -17,11 +17,18 @@ class ReleaseManifestTest(unittest.TestCase):
         self.assertEqual('3.9.0-rc.1', validated_upgrade_path('3.10.0-rc.1', ['3.9.0', '3.9.0-rc.1']))
         self.assertEqual('3.9.0', validated_upgrade_path('3.10.0', ['3.9.0']))
         self.assertEqual('3.10.0', validated_upgrade_path('3.11.0', ['3.10.0']))
+        self.assertEqual('3.10.0-rc.1', validated_upgrade_path('3.10.0-rc.2', ['3.10.0-rc.1']))
+        self.assertEqual('3.10.0-rc.2', validated_upgrade_path('3.10.0', ['3.10.0-rc.2']))
+        self.assertEqual('3.10.0', validated_upgrade_path('3.10.1', ['3.10.0']))
+        self.assertEqual('3.10.1-rc.1', validated_upgrade_path('3.10.1-rc.2', ['3.10.1-rc.1']))
+        self.assertEqual('3.9.0-rc.1', validated_upgrade_path('3.10.0-rc.2', ['3.10.0-rc.1', '3.9.0-rc.1']))
         rejected = [('3.10.0-rc.1', ['3.8.28']), ('3.11.0-rc.1', ['3.9.0']),
                     ('3.11.0', ['3.10.0-rc.1']), ('3.10.0', ['3.9.0-rc.1']),
                     ('3.10.0-rc.1', ['3.9.0', '3.8.28']), ('3.10.0-rc.1', []),
                     ('3.10.0-rc.1', ['3.9.0', '3.9.0']), ('3.10.0-rc.1', [None]),
-                    ('3.12.0', ['3.11.0'])]
+                    ('3.12.0', ['3.11.0']), ('3.10.1', ['3.10.0-rc.1']),
+                    ('3.10.0-rc.2', ['3.10.0-rc.3']), ('3.10.0', ['3.10.0']),
+                    ('3.10.0-rc.2', ['3.10.0']), ('3.10.1', ['3.10.2'])]
         for target, allowed in rejected:
             with self.subTest(target=target, allowed=allowed), self.assertRaises(ValueError):
                 validated_upgrade_path(target, allowed)

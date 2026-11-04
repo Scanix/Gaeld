@@ -19,7 +19,7 @@ def validated_upgrade_path(target, allowed):
     """Constrain explicit reviewed versions to the staged R1 -> R2 -> R3 rollout."""
     pattern = r'(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?'
     destination = re.fullmatch(pattern, target) if isinstance(target, str) else None
-    if destination is None or tuple(map(int, destination.groups()[:3])) not in ((3, 9, 0), (3, 10, 0), (3, 11, 0)):
+    if destination is None or tuple(map(int, destination.groups()[:2])) not in ((3, 9), (3, 10), (3, 11)):
         raise ValueError('This release needs an explicitly reviewed predecessor policy')
     if not isinstance(allowed, list) or not allowed or not all(isinstance(item, str) and re.fullmatch(pattern, item) for item in allowed) or len(set(allowed)) != len(allowed):
         raise ValueError('An explicit unique list of exact tested predecessor versions is required')
@@ -29,10 +29,14 @@ def validated_upgrade_path(target, allowed):
         return (*map(int, parts.groups()[:3]), parts.group(4) is None, int(parts.group(4) or 0))
     for previous in allowed:
         source = re.fullmatch(pattern, previous)
-        if (target_minor == 9 and previous != '3.8.28') or (target_minor != 9 and tuple(map(int, source.groups()[:2])) != (3, target_minor - 1)):
+        same_minor = tuple(map(int, source.groups()[:2])) == (3, target_minor)
+        preceding_stage = previous == '3.8.28' if target_minor == 9 else tuple(map(int, source.groups()[:2])) == (3, target_minor - 1)
+        if not (same_minor or preceding_stage):
             raise ValueError('Skipping a preservation release stage is not an authorized upgrade path')
-        if destination.group(4) is None and source.group(4) is not None:
-            raise ValueError('A stable release requires a tested stable predecessor')
+        if order(previous) >= order(target):
+            raise ValueError('A tested predecessor must be older than the target release')
+        if destination.group(4) is None and source.group(4) is not None and tuple(map(int, source.groups()[:3])) != tuple(map(int, destination.groups()[:3])):
+            raise ValueError('Only an explicitly tested RC of the same release may be promoted to stable')
     return min(allowed, key=order)
 
 

@@ -44,11 +44,14 @@ The R2 migration must remain unchanged when R3 adds its proof columns and guards
 
 The public manifest must list explicit, reviewed exact predecessors: R1 accepts
 3.8.28, R2 accepts qualified 3.9 versions, and R3 accepts qualified 3.10 versions.
-The workflow has no default `allowed_from`; its guard and the manifest builder
-reject skipped stages. Stable publication requires tested stable predecessors;
-RC predecessors are only eligible for RC targets. Retain actual update/recovery
-evidence for every version supplied by the release reviewer. The additional CI
-adoption regression from 3.8.28 does not authorize a direct upgrade to R2 or R3.
+Older versions of the same stage are also eligible, including RC1 to RC2 and
+stable patch upgrades. An explicitly validated RC may be promoted to the stable
+version with the same major, minor and patch numbers; an RC from another release
+cannot be used as a stable predecessor. The workflow has no default
+`allowed_from`; its guard and the manifest builder reject skipped stages,
+identical targets and downgrades. Retain actual update/recovery evidence for
+every exact version supplied by the release reviewer. The additional CI adoption
+regression from 3.8.28 does not authorize a direct upgrade to R2 or R3.
 
 ## v3.9.0-rc.1 — R1 installation and recovery candidate
 
