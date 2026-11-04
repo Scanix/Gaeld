@@ -2,8 +2,9 @@
 
 The R1 candidate provides managed Docker images and a native Linux installation
 built from the signed source artifact. Sail remains the development environment.
-The `v3.9.0-rc.1` candidate has a [pending acceptance record](rc-r1-3.9.0-rc.1.md)
-and must complete its publication checks before being recommended for production.
+The `v3.9.0-rc.1` candidate has a separate acceptance dossier and must complete
+its publication checks before being recommended for production. The acceptance
+record and evidence accompany the candidate separately from its runtime archive.
 Use an isolated installation for candidate validation. R1 adds no accounting
 migration or new legal-conservation functionality.
 
@@ -94,15 +95,83 @@ python3 scripts/distribution/adopt.py \
 Use `--legacy-project` if the original Compose project name is not the inferred
 one. The adoption process verifies the old checkout, stops its writers, backs
 up and verifies database/files/keys/queues, and transfers into new managed
-volumes. It preserves APP_KEY. The original installation and volumes remain
-intact and stopped; never run both as writable copies. Follow the recorded
+volumes. It preserves APP_KEY. The original tracked source and volumes remain
+intact, with its application services stopped. Its PostgreSQL and Redis services
+remain available; never run both applications as writable copies. Follow the recorded
 operation state after an interruption. `--resume` explicitly retries adoption
 into fresh managed volumes; it does not erase the old installation.
 If the failed attempt may already have accepted new writes, resume also requires
 `--confirm-replace-new-data` after reconciling those writes. A baseline adoption
 backup cannot be restored as an older managed release: retain the original
 checkout and volumes as the explicit fallback, and reconcile any new writes
-before restarting the original installation.
+before restarting the original installation. The two untracked Laravel
+maintenance files (`storage/framework/down` and `storage/framework/maintenance.php`)
+are expected while stopped; tracked changes and other untracked files still
+require review.
+
+### Explicit fallback to the retained v3.8.28 installation
+
+Keep the managed application's web, worker and scheduler services stopped, and
+reconcile any writes accepted by it before returning to the original database.
+Preserve its volumes, files and recovery evidence. A fallback does not merge
+changes from the two databases.
+
+The original v3.8.28 Sail entrypoint can regenerate APP_KEY on container startup
+when it is absent from the container environment, even when `.env` already has
+a key. **Do not simply restart the old containers.** First verify the retained
+`.env` against the original environment fingerprint in the adoption record, or
+recover the correct original environment from its verified backup. Never create
+a new key to make an existing database start.
+
+From the R1 launcher directory, create a protected override outside both
+installations. This reads the original key without printing it or evaluating
+the environment file as shell code. The destination must not already exist;
+replace the example paths with the recorded source and a secure directory.
+
+```sh
+umask 077
+python3 - /existing/gaeld-ce/.env /secure/sail-recovery.override.json <<'PY'
+import json
+import os
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path('scripts/distribution').resolve()))
+from manage import env_values, valid_application_key
+
+key = env_values(Path(sys.argv[1])).get('APP_KEY', '')
+if not valid_application_key(key):
+    raise SystemExit('Recover the original valid application key before fallback.')
+with Path(sys.argv[2]).open('x') as output:
+    os.chmod(sys.argv[2], 0o600)
+    json.dump({'services': {
+        service: {'environment': {'APP_KEY': key}}
+        for service in ('laravel.test', 'worker')
+    }}, output)
+PY
+```
+
+Use the original project name recorded during adoption. Supply both Compose
+files on every subsequent start; avoid `docker compose config` output because
+it would expose the injected key. Start the retained database and Redis first,
+then recreate the application services with the explicit original key:
+
+```sh
+docker compose --project-name ORIGINAL_PROJECT --env-file /existing/gaeld-ce/.env \
+  -f /existing/gaeld-ce/docker-compose.yml -f /secure/sail-recovery.override.json \
+  up -d --no-build --no-deps pgsql redis
+docker compose --project-name ORIGINAL_PROJECT --env-file /existing/gaeld-ce/.env \
+  -f /existing/gaeld-ce/docker-compose.yml -f /secure/sail-recovery.override.json \
+  up -d --no-build --no-deps laravel.test worker
+docker compose --project-name ORIGINAL_PROJECT --env-file /existing/gaeld-ce/.env \
+  -f /existing/gaeld-ce/docker-compose.yml -f /secure/sail-recovery.override.json \
+  exec -T laravel.test php artisan gaeld:doctor
+```
+
+Only after those checks and reconciliation, use the same Compose arguments to
+run `exec -T laravel.test php artisan up` and reopen the original application.
+Retain the protected override with the recovery procedure for any later restart.
+The failed managed installation remains stopped until explicitly recovered.
 
 ## Update and diagnose
 

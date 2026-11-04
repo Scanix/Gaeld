@@ -240,6 +240,16 @@ class Installation:
             raise OperationError('The release key does not match the independently supplied distribution policy.')
         return policy
 
+    def pin_release_policy(self):
+        if self.policy_path:
+            source = Path(self.policy_path).resolve()
+            destination = self.meta / 'distribution-policy.json'
+            if source != destination:
+                shutil.copy2(source, destination)
+            os.chmod(destination, 0o600)
+            self.state['distribution_policy_sha256'] = digest(destination)
+            self.policy_path = None
+
     @contextlib.contextmanager
     def lock(self):
         self.meta.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -366,9 +376,7 @@ class Installation:
             self.state['trust_key_sha256'] = trusted
             self.state['release_url'] = release_url
             if policy:
-                write_json(self.meta / 'distribution-policy.json', policy)
-                self.state['distribution_policy_sha256'] = digest(self.meta / 'distribution-policy.json')
-                self.policy_path = None
+                self.pin_release_policy()
             if trust_key != self.meta / 'release.pub':
                 shutil.copy2(trust_key, self.meta / 'release.pub')
             return release
@@ -542,7 +550,10 @@ class Installation:
 
     def migrate(self, target):
         self.save('migrating')
-        self.artisan('edition:verify', target=target)
+        if self.state.get('ee_version'):
+            self.artisan('edition:verify', '--ee-version=' + self.state['ee_version'], target=target)
+        elif env_values(self.shared / '.env').get('PLUGINS_ENABLED', 'false').lower() not in ('false', '0', ''):
+            raise OperationError('A CE migration requires PLUGINS_ENABLED=false; a private edition must retain its validated release pair.')
         self.artisan('migrate', '--force', '--no-interaction', target=target)
         for command in ('config:cache', 'route:cache', 'view:cache', 'event:cache'):
             self.artisan(command, target=target)

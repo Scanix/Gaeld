@@ -34,7 +34,9 @@ class LegacySail:
     def preflight(self, allow_stopped=False):
         if not (self.source / '.git').exists() or not (self.source / '.env').is_file():
             raise OperationError('Adoption requires the existing CE Git checkout and its original .env.')
-        if self.runner(['git', 'status', '--porcelain', '--untracked-files=all'], cwd=self.source, capture=True).strip():
+        changes = self.runner(['git', 'status', '--porcelain', '--untracked-files=all'], cwd=self.source, capture=True).splitlines()
+        maintenance_files = {'?? storage/framework/down', '?? storage/framework/maintenance.php'}
+        if any(change not in maintenance_files for change in changes):
             raise OperationError('Locally modified installations require the documented source installation procedure.')
         commit = self.runner(['git', 'rev-parse', 'HEAD'], cwd=self.source, capture=True).strip()
         baseline = self.runner(['git', 'rev-parse', 'v3.8.28^{commit}'], cwd=self.source, capture=True).strip()
@@ -246,6 +248,10 @@ def main(argv=None):
             installation.release_policy()
             SailAdoption(installation, LegacySail(args.source, args.legacy_project)).adopt(args.to, args.release_url, args.trust_key, args.backup_recipient, args.port, args.resume, args.confirm_replace_new_data)
     except (OperationError, OSError, ValueError) as error:
+        if isinstance(error, OperationError) and error.diagnostics and installation.meta.is_dir():
+            log = installation.meta / 'last-error.log'
+            log.write_text(error.diagnostics[-65536:])
+            os.chmod(log, 0o600)
         print('Gäld adoption: ' + str(error), file=sys.stderr)
         return 1
     return 0

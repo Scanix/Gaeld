@@ -28,6 +28,8 @@ import time
 import urllib.request
 import urllib.parse
 
+from image_payload import registry_image_payload, saved_image_payload
+
 HERE = Path(__file__).resolve().parent
 
 
@@ -89,10 +91,12 @@ def outer(args):
     certificate = workspace / 'certificates'
     certificate.mkdir()
     execute(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '2', '-subj', '/CN=Gaeld REHEARSAL ONLY CA',
-             '-addext', 'basicConstraints=critical,CA:TRUE', '-keyout', certificate / 'ca.key', '-out', certificate / 'ca.crt'])
+             '-addext', 'basicConstraints=critical,CA:TRUE', '-addext', 'keyUsage=critical,keyCertSign,cRLSign',
+             '-addext', 'subjectKeyIdentifier=hash', '-addext', 'authorityKeyIdentifier=keyid:always',
+             '-keyout', certificate / 'ca.key', '-out', certificate / 'ca.crt'])
     execute(['openssl', 'req', '-newkey', 'rsa:2048', '-nodes', '-subj', '/CN=registry.gaeld.test',
              '-keyout', certificate / 'server.key', '-out', certificate / 'server.csr'])
-    (certificate / 'extensions').write_text('subjectAltName=DNS:registry.gaeld.test,DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\n')
+    (certificate / 'extensions').write_text('subjectAltName=DNS:registry.gaeld.test,DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\nbasicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nsubjectKeyIdentifier=hash\nauthorityKeyIdentifier=keyid:always,issuer\n')
     execute(['openssl', 'x509', '-req', '-in', certificate / 'server.csr', '-CA', certificate / 'ca.crt', '-CAkey', certificate / 'ca.key',
              '-CAcreateserial', '-days', '2', '-extfile', certificate / 'extensions', '-out', certificate / 'server.crt'])
     execute(['git', 'clone', '--quiet', '--no-local', '--single-branch', '--branch', 'v3.8.28', candidate, workspace / 'legacy'])
@@ -102,8 +106,9 @@ def outer(args):
     image_ids = {role: execute(['docker', 'image', 'inspect', image, '--format', '{{.Id}}']).strip() for role, image in images.items()}
     baseline_id = execute(['docker', 'image', 'inspect', args.baseline_image, '--format', '{{.Id}}']).strip()
     imported = {role: identifier + '/' + role + ':input' for role in ['baseline', *images]}
-    json_file(workspace / 'input.json', {'candidate_commit': commit, 'version': args.version, 'images': images, 'image_ids': image_ids,
-              'imports': imported, 'baseline_image': imported['baseline'], 'platform': execute(['docker', 'image', 'inspect', args.app_image, '--format', '{{.Os}}/{{.Architecture}}']).strip()})
+    input_record = {'candidate_commit': commit, 'version': args.version, 'images': images, 'image_ids': image_ids,
+                    'imports': imported, 'baseline_image': imported['baseline'], 'platform': execute(['docker', 'image', 'inspect', args.app_image, '--format', '{{.Os}}/{{.Architecture}}']).strip(), 'payloads': {}}
+    json_file(workspace / 'input.json', input_record)
     try:
         execute(['docker', 'network', 'create', '--label', 'gaeld.rehearsal=' + identifier, network])
         execute(['docker', 'run', '-d', '--name', registry, '--label', 'gaeld.rehearsal=' + identifier, '--network', network,
@@ -122,11 +127,13 @@ def outer(args):
             # across both stores without guessing or rewriting either digest.
             execute(['docker', 'tag', image, imported[role]])
             try:
-                execute(['docker', 'save', '-o', archive, imported[role]])
+                execute(['docker', 'save', '--platform', input_record['platform'], '-o', archive, imported[role]])
+                input_record['payloads'][role] = saved_image_payload(archive)
                 execute(['docker', 'exec', daemon, 'docker', 'load', '-i', '/work/image-import.tar'])
             finally:
                 execute(['docker', 'image', 'rm', imported[role]])
                 archive.unlink(missing_ok=True)
+        json_file(workspace / 'input.json', input_record)
         execute(['docker', 'exec', daemon, 'python3', '/harness/adoption_rehearsal.py', '--inside'], capture=False)
         report = json.loads((workspace / 'report.json').read_text())
         report['isolated_daemon'] = True
@@ -212,7 +219,7 @@ def inside():
     private, public = workspace / 'TEST-ONLY-release.key', workspace / 'TEST-ONLY-release.pub'
     execute(['openssl', 'genpkey', '-algorithm', 'ED25519', '-out', private])
     execute(['openssl', 'pkey', '-in', private, '-pubout', '-out', public])
-    images = {}
+    images, payload_equivalence = {}, {}
     for role in inputs['images']:
         image = inputs['imports'][role]
         repository = 'registry.gaeld.test:5000/gaeld-rehearsal/' + role
@@ -221,6 +228,7 @@ def inside():
         reference = json.loads(execute(['docker', 'image', 'inspect', repository + ':candidate']))[0]['RepoDigests']
         images[role] = next(item for item in reference if item.startswith(repository + '@sha256:'))
         execute(['docker', 'pull', images[role]])
+        payload_equivalence[role] = registry_image_payload(images[role], inputs['payloads'][role])
     source = release_dir / 'gaeld-ce.tar.gz'
     if (workspace / 'provided-source.tar.gz').is_file():
         shutil.copy2(workspace / 'provided-source.tar.gz', source)
@@ -270,8 +278,7 @@ def inside():
         raise AssertionError('Adoption changed the legacy environment or APP_KEY.')
     if sha(legacy / 'secrets/rehearsal-signing-secret.txt') != sha(target / 'shared/secrets/rehearsal-signing-secret.txt'):
         raise AssertionError('Signing secret was not preserved.')
-    if execute(['git', 'status', '--porcelain', '--untracked-files=all'], cwd=legacy).strip():
-        raise AssertionError('Legacy tracked source changed.')
+    old.preflight(allow_stopped=True)
     for volume in old_volumes:
         execute(['docker', 'volume', 'inspect', volume['Name']])
     if old.compose('ps', '-q', 'laravel.test', 'worker', capture=True).strip():
@@ -300,9 +307,10 @@ def inside():
               'platform': inputs['platform'], 'baseline_commit': origin['source_commit'], 'channel': 'rehearsal', 'production_publication': False,
               'release_sha256': sha(release_dir / 'release.json'), 'source_sha256': sha(source), 'images': images, 'candidate_images': inputs['images'],
               'candidate_image_ids': inputs['image_ids'],
+              'candidate_payloads': {role: inputs['payloads'][role] for role in inputs['images']}, 'executed_payloads': payload_equivalence,
               'signing_key_sha256': sha(public), 'policy_sha256': sha(target / '.gaeld/distribution-policy.json'),
               'checks': {name: True for name in ('baseline_3_8_28', 'signed_https_manifest', 'digest_pinned_pull', 'coherent_encrypted_backup',
-                         'adoption', 'app_key_preserved', 'documents_preserved', 'queued_jobs_preserved', 'legacy_stopped', 'managed_health', 'restore', 'existing_owner_http_login', 'failed_backup_resume')}})
+                         'adoption', 'app_key_preserved', 'documents_preserved', 'queued_jobs_preserved', 'legacy_stopped', 'managed_health', 'restore', 'existing_owner_http_login', 'failed_backup_resume', 'candidate_payload_equivalence')}})
     server.shutdown()
 
 

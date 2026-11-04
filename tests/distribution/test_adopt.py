@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -20,7 +21,7 @@ class SailAdoptionTest(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.source = self.root / 'legacy'
         self.source.mkdir()
-        (self.source / '.gitignore').write_text('.env\nstorage/\n')
+        (self.source / '.gitignore').write_text('.env\nstorage/app/\n')
         (self.source / 'docker-compose.yml').write_text('services: {}\n')
         self.app_key = 'base64:' + base64.b64encode(b'k' * 32).decode()
         (self.source / '.env').write_text('APP_NAME=Gaeld\nAPP_KEY=' + self.app_key + '\nDB_CONNECTION=pgsql\nDB_HOST=pgsql\nDB_USERNAME=legacy\nDB_DATABASE=legacy\nDB_PASSWORD=test-secret\nREDIS_HOST=redis\n')
@@ -81,6 +82,17 @@ class SailAdoptionTest(unittest.TestCase):
             self.legacy.preflight()
         self.assertEqual('APP_KEY=\n', (self.source / '.env').read_text())
 
+    def test_resume_accepts_only_the_two_untracked_laravel_maintenance_markers(self):
+        framework = self.source / 'storage/framework'
+        framework.mkdir()
+        (framework / 'down').write_text('{}')
+        (framework / 'maintenance.php').write_text('<?php // Laravel maintenance response')
+        self.assertIn('?? storage/framework/down', self.git('status', '--porcelain', '--untracked-files=all'))
+        self.legacy.preflight(allow_stopped=True)
+        (framework / 'unexpected.php').write_text('<?php // Unexpected local code')
+        with self.assertRaisesRegex(manage.OperationError, 'modified'):
+            self.legacy.preflight(allow_stopped=True)
+
     def test_killed_legacy_writer_blocks_snapshot(self):
         self.legacy.preflight()
         self.exit_code = 137
@@ -88,6 +100,19 @@ class SailAdoptionTest(unittest.TestCase):
             self.legacy.stop_writers()
         self.assertFalse(self.legacy.stopped)
         self.assertFalse(any('pg_dump' in call for call in self.calls))
+
+    def test_cli_preserves_subprocess_diagnostics_only_in_a_protected_local_file(self):
+        destination = self.root / 'failed-cli'
+        old_mask = os.umask(0o077)
+        try:
+            with patch.object(adopt.SailAdoption, 'adopt', side_effect=manage.OperationError('Synthetic failure', 'Private diagnostic detail')):
+                self.assertEqual(1, adopt.main(['--source', str(self.source), '--root', str(destination), '--to', '3.9.0-rc.1',
+                                               '--trust-key', 'unused', '--backup-recipient', 'unused', '--identity-file', 'unused']))
+        finally:
+            os.umask(old_mask)
+        log = destination / '.gaeld/last-error.log'
+        self.assertEqual('Private diagnostic detail', log.read_text())
+        self.assertEqual(0, log.stat().st_mode & 0o077)
 
     @unittest.skipUnless(shutil.which('age') and shutil.which('age-keygen'), 'Real age tools required')
     def test_adoption_uses_verified_encrypted_backup_new_volumes_and_original_key(self):

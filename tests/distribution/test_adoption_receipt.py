@@ -58,6 +58,14 @@ class AdoptionReceiptTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'recovery checks'):
             self.check(changed)
 
+    def test_requires_real_payload_comparison_and_failed_backup_recovery(self):
+        for check in ('candidate_payload_equivalence', 'failed_backup_resume'):
+            with self.subTest(check=check):
+                changed = copy.deepcopy(self.receipt)
+                changed['checks'].pop(check)
+                with self.assertRaisesRegex(ValueError, 'recovery checks'):
+                    self.check(changed)
+
 
 if __name__ == '__main__':
     unittest.main()

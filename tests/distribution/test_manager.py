@@ -81,7 +81,13 @@ class ManagerTest(unittest.TestCase):
         self.assertIsNone(self.installation.release_policy())
         self.installation.policy_path = path
         self.assertEqual(policy, self.installation.release_policy())
-        self.installation.state['distribution_policy_sha256'] = manager.digest(path)
+        # Operators may pass the same original file on resume. Preserve its bytes,
+        # including formatting/newlines, instead of pinning a rewritten document.
+        path.write_text(json.dumps(policy) + '\n')
+        self.installation.pin_release_policy()
+        self.assertEqual(path.read_bytes(), (self.installation.meta / 'distribution-policy.json').read_bytes())
+        self.installation.policy_path = path
+        self.assertEqual(policy, self.installation.release_policy())
         policy['images']['app'] = 'another.test/app'
         manager.write_json(path, policy)
         with self.assertRaisesRegex(manager.OperationError, 'policy changed'):
@@ -214,6 +220,27 @@ class ManagerTest(unittest.TestCase):
                 self.installation.resume()
             stop.assert_called_once_with()
         self.assertEqual('failed', self.installation.state['status'])
+
+    def test_ce_migrations_do_not_require_an_absent_ee_plugin(self):
+        with patch.object(self.installation, 'artisan') as artisan:
+            self.installation.migrate('3.9.0-rc.1')
+        self.assertEqual(('migrate', '--force', '--no-interaction'), artisan.call_args_list[0].args)
+        self.assertFalse(any(call.args[0] == 'edition:verify' for call in artisan.call_args_list))
+
+    def test_ee_migration_verifies_the_exact_pair_before_touching_the_database(self):
+        self.installation.state['ee_version'] = '2.9.31'
+        with patch.object(self.installation, 'artisan', side_effect=manager.OperationError('Pair rejected')) as artisan:
+            with self.assertRaises(manager.OperationError):
+                self.installation.migrate('3.9.0-rc.1')
+        artisan.assert_called_once_with('edition:verify', '--ee-version=2.9.31', target='3.9.0-rc.1')
+
+    def test_ce_migration_refuses_an_enabled_private_plugin_configuration(self):
+        with (self.installation.shared / '.env').open('a') as environment:
+            environment.write('PLUGINS_ENABLED=true\n')
+        with patch.object(self.installation, 'artisan') as artisan:
+            with self.assertRaisesRegex(manager.OperationError, 'PLUGINS_ENABLED'):
+                self.installation.migrate('3.9.0-rc.1')
+        artisan.assert_not_called()
 
     def test_restore_requires_explicit_confirmation_before_any_io(self):
         with self.assertRaises(manager.OperationError):

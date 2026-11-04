@@ -16,6 +16,7 @@ CHECKS = (
     'coherent_encrypted_backup', 'adoption', 'app_key_preserved',
     'documents_preserved', 'queued_jobs_preserved', 'legacy_stopped',
     'managed_health', 'existing_owner_http_login', 'restore',
+    'failed_backup_resume', 'candidate_payload_equivalence',
 )
 
 
