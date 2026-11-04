@@ -183,10 +183,22 @@ def inside():
     def legacy_fixture(operation):
         return json.loads(old.compose('run', '--rm', '--no-deps', '-T', '--entrypoint', 'php', '-v', fixture + ':/tmp/fixture.php:ro',
                           '-v', '/work/rehearsal-owner.json:/tmp/rehearsal-owner.json:ro', 'laravel.test', '/tmp/fixture.php', operation, capture=True))
+    old.compose('up', '-d', '--no-build', '--no-deps', '--wait', 'laravel.test', 'worker')
+    # The original 3.8.28 entrypoint regenerates its key during first startup.
+    # Establish the running legacy system before creating encrypted user data.
+    observed_key, stable_since = None, time.monotonic()
+    def legacy_ready():
+        nonlocal observed_key, stable_since
+        current_key = manage.env_values(legacy / '.env')['APP_KEY']
+        if current_key != observed_key:
+            observed_key, stable_since = current_key, time.monotonic()
+        with urllib.request.urlopen('http://localhost:18080/up', timeout=5) as response:
+            return response.status == 200 and time.monotonic() - stable_since >= 5
+    wait_until(legacy_ready)
+    environment['APP_KEY'] = observed_key
     before = legacy_fixture('seed')
     if before['tables']['organizations']['count'] != 3 or before['tables']['legal_archives']['count'] != 3 or len(before['documents']) != 6 or len(before['redis']['delayed']) != 1:
         raise AssertionError('The real baseline fixture is incomplete; adoption must not run.')
-    old.compose('up', '-d', '--no-build', '--no-deps', '--wait', 'laravel.test', 'worker')
     login('http://localhost:18080', credentials)
     before = legacy_fixture('snapshot')
     origin = old.preflight()
