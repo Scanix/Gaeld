@@ -36,6 +36,8 @@ resources/js/Components/SaasAdmin/
 scripts/**
 !scripts/distribution/
 !scripts/distribution/**
+!scripts/archive-verifier/
+!scripts/archive-verifier/**
 !docs/
 docs/**
 !docs/ce-managed-installation.md

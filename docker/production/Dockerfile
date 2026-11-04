@@ -21,7 +21,8 @@ COPY --from=postgres:16-bookworm@sha256:e8a07d2c7579b038938cdba6c539e580e5001caf
 COPY --from=postgres:16-bookworm@sha256:e8a07d2c7579b038938cdba6c539e580e5001caf9ea203d397b5cc83e76bd938 /usr/lib/postgresql/16/bin/pg_restore /usr/local/bin/pg_restore
 WORKDIR /var/www/html
 COPY . .
-RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader \
+RUN test -f scripts/archive-verifier/Verifier.php && test -f scripts/archive-verifier/verify.php \
+    && composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader \
     && rm -rf node_modules tests phpunit.xml .git .github .env \
     && mkdir -p storage/app/private storage/app/public storage/framework/cache/data storage/framework/views storage/framework/sessions storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
