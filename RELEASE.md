@@ -21,6 +21,14 @@ scheduler, three-company access and historical package operations. Record the
 actual staging results separately; unit tests do not establish staging success.
 The R2 migration must remain unchanged when R3 adds its proof columns and guards.
 
+The public manifest must list explicit, reviewed exact predecessors: R1 accepts
+3.8.28, R2 accepts qualified 3.9 versions, and R3 accepts qualified 3.10 versions.
+The workflow has no default `allowed_from`; its guard and the manifest builder
+reject skipped stages. Stable publication requires tested stable predecessors;
+RC predecessors are only eligible for RC targets. Retain actual update/recovery
+evidence for every version supplied by the release reviewer. The additional CI
+adoption regression from 3.8.28 does not authorize a direct upgrade to R2 or R3.
+
 ## v3.9.0-rc.1 — R1 installation and recovery candidate
 
 Prepare this candidate from the exact v3.8.28 baseline on the dedicated R1

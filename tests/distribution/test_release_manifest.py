@@ -8,9 +8,24 @@ import unittest
 BUILDER = Path(__file__).resolve().parents[2] / 'scripts/distribution/release_manifest.py'
 sys.path.insert(0, str(BUILDER.parent))
 from verify_adoption_receipt import CHECKS, sha256
+from release_manifest import validated_upgrade_path
 
 
 class ReleaseManifestTest(unittest.TestCase):
+    def test_release_stages_require_exact_explicit_predecessors(self):
+        self.assertEqual('3.8.28', validated_upgrade_path('3.9.0-rc.1', ['3.8.28']))
+        self.assertEqual('3.9.0-rc.1', validated_upgrade_path('3.10.0-rc.1', ['3.9.0', '3.9.0-rc.1']))
+        self.assertEqual('3.9.0', validated_upgrade_path('3.10.0', ['3.9.0']))
+        self.assertEqual('3.10.0', validated_upgrade_path('3.11.0', ['3.10.0']))
+        rejected = [('3.10.0-rc.1', ['3.8.28']), ('3.11.0-rc.1', ['3.9.0']),
+                    ('3.11.0', ['3.10.0-rc.1']), ('3.10.0', ['3.9.0-rc.1']),
+                    ('3.10.0-rc.1', ['3.9.0', '3.8.28']), ('3.10.0-rc.1', []),
+                    ('3.10.0-rc.1', ['3.9.0', '3.9.0']), ('3.10.0-rc.1', [None]),
+                    ('3.12.0', ['3.11.0'])]
+        for target, allowed in rejected:
+            with self.subTest(target=target, allowed=allowed), self.assertRaises(ValueError):
+                validated_upgrade_path(target, allowed)
+
     def test_requires_attestations_and_exact_ee_acceptance_before_declaring_compatibility(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -41,6 +56,20 @@ class ReleaseManifestTest(unittest.TestCase):
             result = subprocess.run(command + ['--compatible-ee-versions', '["2.9.31"]'], capture_output=True)
             self.assertNotEqual(0, result.returncode)
             self.assertIn(b'signed exact-pair acceptance receipt', result.stderr)
+            receipt['candidate_version'] = '3.10.0-rc.1'
+            (root / 'adoption.json').write_text(json.dumps(receipt))
+            r2_command = command.copy()
+            r2_command[r2_command.index('--version') + 1] = '3.10.0-rc.1'
+            result = subprocess.run(r2_command, capture_output=True)
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn(b'Skipping a preservation release stage', result.stderr)
+            r2_command[r2_command.index('--allowed-from') + 1] = '["3.9.0-rc.1"]'
+            subprocess.run(r2_command, check=True, capture_output=True)
+            manifest = json.loads((root / 'release.json').read_text())
+            self.assertEqual('3.9.0-rc.1', manifest['minimum_version'])
+            self.assertEqual(['3.9.0-rc.1'], manifest['allowed_from'])
+            self.assertEqual('legacy-sail-3.8.28-regression-only', manifest['adoption_acceptance']['scope'])
+            receipt['candidate_version'] = '3.9.0'
             receipt['checks']['restore'] = False
             (root / 'adoption.json').write_text(json.dumps(receipt))
             result = subprocess.run(command, capture_output=True)
