@@ -90,7 +90,28 @@ class EnsureActiveSubscriptionTest extends TestCase
         }
     }
 
-    private function runMiddleware(?SubscriptionContract $subscription, string $routeName = 'dashboard'): Response
+    public function test_settings_page_remains_available_after_expiration_or_cancellation(): void
+    {
+        foreach (['trialing', 'canceled'] as $status) {
+            $response = $this->runMiddleware($this->subscription(status: $status, isTrialExpired: true), 'settings');
+
+            $this->assertSame(Response::HTTP_OK, $response->getStatusCode(), $status);
+        }
+
+        $this->assertSame(Response::HTTP_OK, $this->runMiddleware(null, 'settings')->getStatusCode());
+    }
+
+    public function test_settings_page_exemption_only_allows_get_requests(): void
+    {
+        foreach (['HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'] as $method) {
+            $response = $this->runMiddleware($this->subscription(status: 'canceled'), 'settings', $method);
+
+            $this->assertSame(Response::HTTP_FOUND, $response->getStatusCode(), $method);
+            $this->assertSame('/billing', parse_url($response->headers->get('Location'), PHP_URL_PATH));
+        }
+    }
+
+    private function runMiddleware(?SubscriptionContract $subscription, string $routeName = 'dashboard', string $method = 'GET'): Response
     {
         config()->set('features.saas', true);
         URL::partialMock()
@@ -109,8 +130,8 @@ class EnsureActiveSubscriptionTest extends TestCase
             }
         };
 
-        $request = Request::create('/dashboard');
-        $route = (new Route('GET', '/dashboard', fn () => null))->name($routeName);
+        $request = Request::create('/dashboard', $method);
+        $route = (new Route($method, '/dashboard', fn () => null))->name($routeName);
         $request->setRouteResolver(fn () => $route);
         $request->setUserResolver(fn () => $user);
         $this->app['url']->setRequest($request);

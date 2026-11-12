@@ -22,6 +22,10 @@ class EnsureActiveSubscription
             return $next($request);
         }
 
+        if ($request->isMethod('GET') && $request->routeIs('settings')) {
+            return $next($request);
+        }
+
         if (! FeatureFlag::isSaas()) {
             return $next($request);
         }

@@ -47,11 +47,16 @@ class OrganizationExportTest extends TestCase
     {
         Queue::fake();
 
+        $this->actAsOrg()->get(route('settings'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Organizations/Settings'));
+
         $response = $this->actAsOrg()
             ->post(route('settings.export'));
 
         $response->assertRedirect(route('settings'));
         $response->assertSessionHas('success');
+        $this->get(route('settings'))->assertOk();
 
         Queue::assertPushed(ExportOrganizationDataJob::class, function (ExportOrganizationDataJob $job) {
             return $job->organizationId === $this->org->id
@@ -73,6 +78,11 @@ class OrganizationExportTest extends TestCase
         $member = User::factory()->create();
         $this->organization->users()->attach($member->id, ['role' => 'viewer']);
         $this->assignOrganizationRole($member, $this->organization, 'viewer');
+
+        $this->actingAs($member)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get(route('settings'))
+            ->assertForbidden();
 
         $this->actingAs($member)
             ->withSession(['current_organization_id' => $this->organization->id])
