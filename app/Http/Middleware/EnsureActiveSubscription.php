@@ -18,6 +18,10 @@ class EnsureActiveSubscription
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->routeIs('settings.export', 'settings.export.download')) {
+            return $next($request);
+        }
+
         if (! FeatureFlag::isSaas()) {
             return $next($request);
         }

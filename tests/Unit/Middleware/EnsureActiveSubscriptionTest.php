@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureActiveSubscription;
 use App\Support\Contracts\FeatureResolver;
 use App\Support\Contracts\SubscriptionContract;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\URL;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
@@ -58,7 +59,38 @@ class EnsureActiveSubscriptionTest extends TestCase
         ];
     }
 
-    private function runMiddleware(SubscriptionContract $subscription): Response
+    #[DataProvider('exportRoutes')]
+    public function test_export_routes_remain_available_without_an_active_subscription(string $routeName): void
+    {
+        foreach (['trialing', 'past_due', 'paused', 'canceled'] as $status) {
+            $response = $this->runMiddleware($this->subscription(status: $status, isTrialExpired: true), $routeName);
+
+            $this->assertSame(Response::HTTP_OK, $response->getStatusCode(), $status);
+        }
+
+        $this->assertSame(Response::HTTP_OK, $this->runMiddleware(null, $routeName)->getStatusCode());
+    }
+
+    /** @return array<string, array{string}> */
+    public static function exportRoutes(): array
+    {
+        return [
+            'export request' => ['settings.export'],
+            'signed download' => ['settings.export.download'],
+        ];
+    }
+
+    public function test_export_exemption_does_not_open_accounting_or_settings_writes(): void
+    {
+        foreach (['accounting.chart', 'accounting.journal', 'settings.general', 'settings.export.other'] as $routeName) {
+            $response = $this->runMiddleware($this->subscription(status: 'canceled'), $routeName);
+
+            $this->assertSame(Response::HTTP_FOUND, $response->getStatusCode(), $routeName);
+            $this->assertSame('/billing', parse_url($response->headers->get('Location'), PHP_URL_PATH));
+        }
+    }
+
+    private function runMiddleware(?SubscriptionContract $subscription, string $routeName = 'dashboard'): Response
     {
         config()->set('features.saas', true);
         URL::partialMock()
@@ -78,6 +110,8 @@ class EnsureActiveSubscriptionTest extends TestCase
         };
 
         $request = Request::create('/dashboard');
+        $route = (new Route('GET', '/dashboard', fn () => null))->name($routeName);
+        $request->setRouteResolver(fn () => $route);
         $request->setUserResolver(fn () => $user);
         $this->app['url']->setRequest($request);
         $this->app->instance(FeatureResolver::class, new class implements FeatureResolver
@@ -105,7 +139,7 @@ class EnsureActiveSubscriptionTest extends TestCase
         bool $isTrialing = false,
         bool $isTrialExpired = false,
     ): SubscriptionContract {
-        $subscription = $this->createMock(SubscriptionContract::class);
+        $subscription = $this->createStub(SubscriptionContract::class);
         $subscription->method('isActive')->willReturn($isActive || $status === 'active');
         $subscription->method('isTrialing')->willReturn($isTrialing);
         $subscription->method('isTrialExpired')->willReturn($isTrialExpired);
