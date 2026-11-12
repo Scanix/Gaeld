@@ -190,7 +190,7 @@ export default defineConfig(({ mode }) => {
       gaeldPluginFrontendPages(frontends),
       tailwindcss(),
       laravel({
-        input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/cookieConsent.js'],
+        input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/cookieConsent.js', 'resources/js/googleAdsConversions.js'],
         refresh: true,
       }),
       vue({
