@@ -27,7 +27,7 @@ final class TokenPermissionMap
      */
     public static function abilities(): array
     {
-        $abilities = [];
+        $abilities = [Permission::ExpensesViewOwn->value => true, Permission::ReportingView->value => true];
 
         foreach (self::get() as $modelAbilities) {
             foreach ($modelAbilities as $permission) {

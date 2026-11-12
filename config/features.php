@@ -31,6 +31,7 @@ return [
 
     // Integration features available in Community and SaaS editions
     'api_access' => env('FEATURE_API_ACCESS', true),
+    'mcp_access' => env('FEATURE_MCP_ACCESS', false),
 
     // EE features (disabled by default)
     'auto_reconciliation' => env('FEATURE_AUTO_RECONCILIATION', false),

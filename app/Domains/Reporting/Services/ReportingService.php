@@ -42,7 +42,7 @@ class ReportingService
         ?string $compareFrom = null,
         ?string $compareTo = null,
     ): array {
-        $cacheKey = "pnl:{$organizationId}:{$fromDate}:{$toDate}";
+        $cacheKey = "pnl:v2:{$organizationId}:{$fromDate}:{$toDate}";
         if ($compareFrom && $compareTo) {
             $cacheKey .= ":vs:{$compareFrom}:{$compareTo}";
         }
@@ -52,8 +52,8 @@ class ReportingService
             $revenue = $this->accountsWithBalances($organizationId, AccountType::Revenue, $fromDate, $toDate);
             $expenses = $this->accountsWithBalances($organizationId, AccountType::Expense, $fromDate, $toDate);
 
-            $totalRevenue = $revenue->sum('balance');
-            $totalExpenses = $expenses->sum('balance');
+            $totalRevenue = $this->sumBalances($revenue);
+            $totalExpenses = $this->sumBalances($expenses);
 
             $result = [
                 'period' => ['from' => $fromDate, 'to' => $toDate],
@@ -89,7 +89,7 @@ class ReportingService
      */
     public function balanceSheet(string $organizationId, string $asOfDate, ?string $compareAsOfDate = null): array
     {
-        $cacheKey = "bs:{$organizationId}:{$asOfDate}";
+        $cacheKey = "bs:v2:{$organizationId}:{$asOfDate}";
         if ($compareAsOfDate) {
             $cacheKey .= ":vs:{$compareAsOfDate}";
         }
@@ -123,7 +123,7 @@ class ReportingService
 
             $sections[$type->value] = [
                 'accounts' => $accounts->values()->toArray(),
-                'total' => $accounts->sum('balance'),
+                'total' => $this->sumBalances($accounts),
             ];
         }
 
@@ -132,7 +132,7 @@ class ReportingService
         $fiscalYearStart = $this->resolveFiscalYearStart($organizationId, $asOfDate);
         $revenue = $this->accountsWithBalances($organizationId, AccountType::Revenue, $fiscalYearStart, $asOfDate);
         $expenses = $this->accountsWithBalances($organizationId, AccountType::Expense, $fiscalYearStart, $asOfDate);
-        $currentYearResult = Money::subtract((string) $revenue->sum('balance'), (string) $expenses->sum('balance'));
+        $currentYearResult = Money::subtract($this->sumBalances($revenue), $this->sumBalances($expenses));
 
         if (! Money::isZero($currentYearResult)) {
             $sections[AccountType::Equity->value]['accounts'][] = [
@@ -201,8 +201,8 @@ class ReportingService
         $compRevenue = $this->accountsWithBalances($organizationId, AccountType::Revenue, $compareFrom, $compareTo);
         $compExpenses = $this->accountsWithBalances($organizationId, AccountType::Expense, $compareFrom, $compareTo);
 
-        $compTotalRevenue = $compRevenue->sum('balance');
-        $compTotalExpenses = $compExpenses->sum('balance');
+        $compTotalRevenue = $this->sumBalances($compRevenue);
+        $compTotalExpenses = $this->sumBalances($compExpenses);
         $compNetProfit = Money::subtract((string) $compTotalRevenue, (string) $compTotalExpenses);
 
         $result['comparison'] = [
@@ -253,6 +253,12 @@ class ReportingService
                 'balance' => $this->ledgerService->accountBalance($account->id, $fromDate, $toDate),
             ])
             ->filter(fn ($accountRow) => ! Money::isZero((string) $accountRow['balance']));
+    }
+
+    /** @param Collection<int, mixed> $accounts */
+    private function sumBalances(Collection $accounts): string
+    {
+        return $accounts->reduce(fn (string $total, array $row): string => Money::add($total, (string) $row['balance']), '0.00');
     }
 
     /**

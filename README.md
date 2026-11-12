@@ -143,6 +143,79 @@ an empty array has the same effect. Older resource names such as
 `accounts:read` remain accepted and are normalized to their canonical
 permissions. Token expiration accepts 1 to 365 days and is stored as an exact
 expiration timestamp.
+Creating or revoking personal tokens through the REST API requires an
+unrestricted (`*`) token. Restricted tokens cannot mint broader credentials
+or revoke other credentials; token management through the authenticated web
+settings remains available.
+
+The shared CE/EE MCP server is available at `/mcp` when `FEATURE_MCP_ACCESS=true`
+and `FEATURE_API_ACCESS=true`. It is disabled by default. In SaaS mode, the
+organization must have both the dedicated `mcp_access` entitlement and API
+access. MCP is included in Team and in an unexpired Team trial, not Cloud Free,
+Solo or a Solo trial. A global flag cannot bypass the subscription check.
+The same server remains available in self-hosted CE without an EE subscription.
+Bearer-token clients are supported; OAuth onboarding is separate work.
+
+Every request checks the current organization and subscription again, including
+requests in an existing MCP session. A scheduled cancellation retains access
+until the paid end date; expiry, an immediate cancellation, or an effective
+downgrade removes hosted MCP access. Re-upgrading to Team restores access for
+otherwise valid tokens. Downgrades do not delete tokens, invoices, expenses or
+reports, and do not change the established data-export policy. Operators must
+deploy the EE plan migration before enabling the two installation flags.
+See [the public MCP contract](contract/mcp-contract.json) for the edition boundary.
+
+Create a personal read-only token for an organization owner with:
+
+```bash
+vendor/bin/sail artisan gaeld:token ORGANIZATION_UUID --mcp --name="AI assistant"
+```
+
+The token defaults to `invoicing.view` and `expenses.view`, expires after 30
+days (also subject to Sanctum's configured global expiration), and is shown
+only once. Use `--abilities=expenses.view-own` to restrict it to the owner's own
+expenses, or `--expires-in-days=7` for a shorter explicit lifetime. Existing
+personal API tokens with only these read abilities are also accepted.
+Organization tokens, wildcard tokens, and tokens with write abilities are rejected.
+
+Configure the client to use the installation's `/mcp` HTTP endpoint with
+`Authorization: Bearer YOUR_TOKEN`. The tools are `list_invoices`, `get_invoice`,
+`list_expenses`, `get_expense`, `get_profit_and_loss`, `get_balance_sheet`, and
+`get_aging_report`. Tools enforce both token scopes
+and the user's current organization permissions; removing membership or revoking
+the token removes access. Lists accept date ranges and document filters, use
+pages of at most 50 records, and do not calculate global monetary totals.
+Amounts are decimal strings with a currency on each document. Files and receipt
+paths are not returned. Requested accounting data is transmitted to the chosen
+AI provider; its data handling policy applies.
+
+Reports require the explicit token scope `reporting.view` and the user's
+`reporting.view` and `accounting.view` permissions. Existing tokens and the
+default `--mcp` scopes are unchanged. For example, create a report token with:
+
+```bash
+vendor/bin/sail artisan gaeld:token ORGANIZATION_UUID --mcp --name="Reports" --abilities=reporting.view --abilities=invoicing.view --abilities=expenses.view
+```
+
+Profit and loss accepts inclusive `from`/`to` dates (at most two years) or an
+authorized `fiscal_year_id`. The balance sheet accepts `as_of_date` or an
+authorized `fiscal_year_id` and includes the current fiscal year result. Both
+use posted ledger entries in the organization's base currency and share the
+application's report calculations. Monetary totals remain decimal strings.
+
+Aging accepts `type` (`receivables` or `payables`), `as_of_date`, optional
+`currency` (defaults to the organization's currency), `page`, and `per_page`.
+Receivables additionally require `invoicing.view`; payables require full
+`expenses.view` in both the token and the user's permissions. Own-expense
+access never grants organization-wide payable totals. The selected currency
+is filtered before calculating totals; no currencies are combined or converted.
+Totals cover all matching items, while details are paginated at 50 items at most.
+Receivables deduct recorded payments; payables include VAT. Aging uses current
+document statuses and recorded balances, with document dates filtered at the
+cutoff: it is not a historical reconstruction. Expense dates are used to age
+payables because expenses have no contractual due date. Responses identify
+these rules and the service cache lifetime of up to 30 minutes.
+
 
 ---
 

@@ -217,24 +217,6 @@ parameters:
 			path: app/Domains/Expenses/Models/Expense.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$supplier\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Expenses/Queries/ExpenseQuery.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$vendor\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/Expenses/Queries/ExpenseQuery.php
-
-		-
-			message: '#^Method App\\Domains\\Expenses\\Queries\\ExpenseQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Expenses\\Models\\Expense\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domains/Expenses/Queries/ExpenseQuery.php
-
-		-
 			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Expenses\\Models\\Expense\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -293,12 +275,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Domains/Invoicing/Models/Invoice.php
-
-		-
-			message: '#^Method App\\Domains\\Invoicing\\Queries\\InvoiceQuery\:\:list\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, App\\Domains\\Invoicing\\Models\\Invoice\> but returns Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domains/Invoicing/Queries/InvoiceQuery.php
 
 		-
 			message: '#^Parameter \#1 \$query of static method App\\Support\\QueryBuilder\<Illuminate\\Database\\Eloquent\\Model\>\:\:for\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Domains\\Invoicing\\Models\\Invoice\> given\.$#'
