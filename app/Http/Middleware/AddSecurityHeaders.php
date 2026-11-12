@@ -48,16 +48,26 @@ class AddSecurityHeaders
                 ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com https://hcaptcha.com https://*.hcaptcha.com"
                 : "script-src 'self' 'nonce-{$nonce}' https://js.stripe.com https://www.googletagmanager.com https://hcaptcha.com https://*.hcaptcha.com";
 
+            $adsImageSources = '';
+            $adsConnectSources = '';
+            $adsFrameSources = '';
+            if ($request->is('conversions/confirm')) {
+                $scriptSrc .= ' https://www.googleadservices.com https://www.google.com';
+                $adsImageSources = ' https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://www.google.ch';
+                $adsConnectSources = $adsImageSources.' https://www.googletagmanager.com https://ad.doubleclick.net';
+                $adsFrameSources = ' https://www.googletagmanager.com';
+            }
+
             $response->headers->set(
                 'Content-Security-Policy',
                 implode('; ', [
                     "default-src 'self'",
                     $scriptSrc,
                     "style-src 'self' 'unsafe-inline' https://tagmanager.google.com https://fonts.googleapis.com https://fonts.bunny.net https://hcaptcha.com https://*.hcaptcha.com",
-                    "img-src 'self' data: blob: https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.googletagmanager.com https://hcaptcha.com https://*.hcaptcha.com",
+                    "img-src 'self' data: blob: https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.googletagmanager.com https://hcaptcha.com https://*.hcaptcha.com".$adsImageSources,
                     "font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net",
-                    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://region1.google-analytics.com https://hcaptcha.com https://*.hcaptcha.com",
-                    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://docs.gaeld.ch https://hcaptcha.com https://*.hcaptcha.com",
+                    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://region1.google-analytics.com https://hcaptcha.com https://*.hcaptcha.com".$adsConnectSources,
+                    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://docs.gaeld.ch https://hcaptcha.com https://*.hcaptcha.com".$adsFrameSources,
                     "frame-ancestors 'self'",
                 ]),
             );
