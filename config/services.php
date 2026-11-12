@@ -44,6 +44,11 @@ return [
 
     'google' => [
         'gtm_id' => env('GTM_ID'),
+        'ads_id' => env('GOOGLE_ADS_ID'),
+        'ads_signup_label' => env('GOOGLE_ADS_SIGNUP_LABEL'),
+        'ads_first_payment_label' => env('GOOGLE_ADS_FIRST_PAYMENT_LABEL'),
+        'consent_revision' => 1,
+        'cookie_domain' => env('VITE_COOKIE_DOMAIN', ''),
         'ga4_id' => env('GA4_ID'),
     ],
 

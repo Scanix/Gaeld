@@ -1,8 +1,9 @@
+import { withMarketingTranslations } from '../lib/cookieCopy'
 const COOKIE_NAME = 'gaeld_cookie_consent'
 const COOKIE_DOMAIN = import.meta.env.VITE_COOKIE_DOMAIN || window.location.hostname
 
 export default function getTranslations() {
-  return {
+  return withMarketingTranslations({
     en: {
       consentModal: {
         title: 'Cookies & Privacy',
@@ -362,5 +363,5 @@ export default function getTranslations() {
         ],
       },
     },
-  }
+  }, COOKIE_DOMAIN)
 }
