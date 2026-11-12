@@ -18,11 +18,14 @@ import * as CookieConsent from 'vanilla-cookieconsent'
 import 'vanilla-cookieconsent/dist/cookieconsent.css'
 import './cookieConsent.css'
 import pluginConfig from './CookieConsentConfig'
+import { getGoogleRuntime } from '../lib/googleConsent'
+import { googleRuntimeConfig } from '../lib/googleRuntimeConfig'
 import { Cookie as CookieIcon } from 'lucide-vue-next'
 
 const isVisible = ref(false)
 
 onMounted(() => {
+  getGoogleRuntime(googleRuntimeConfig()).refresh()
   CookieConsent.run(pluginConfig)
     .then(() => {
       isVisible.value = CookieConsent.getCookie() !== null
