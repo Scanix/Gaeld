@@ -5,6 +5,25 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.11.0-rc.2] - Staging candidate
+
+### Added
+- Shared read-only MCP transport for authorized invoice and expense consultation,
+  profit and loss, balance sheets, and aged receivables and payables.
+- Coordinated staging pairing with the EE 2.10.0 candidate, including Team
+  entitlements and personal read-only tokens; self-hosted CE retains MCP access.
+
+### Fixed
+- Preserve access to archive reading, company selection and authorized data
+  export after an EE subscription expires, with permission and tenant checks.
+- Install the MCP SDK as a runtime dependency while retaining R3 dependencies
+  and all existing document-preservation, recovery and proof capabilities.
+
+This candidate combines R3 with the validated MCP and dependency fixes. It does
+not promote the conservation releases to stable or qualify a provider profile.
+The existing archive formats, original documents and proof metadata remain
+unchanged; continuity evidence is required before staging activation.
+
 ## [3.11.0-rc.1] - Candidate draft
 
 ### Added

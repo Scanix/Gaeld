@@ -15,6 +15,7 @@ use App\Domains\Api\Controllers\WebhookApiController;
 use App\Http\Middleware\Api\HandleApiIdempotency;
 use App\Http\Middleware\LogOrgTokenActivity;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,8 +41,8 @@ Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOr
 
     // Personal token management (user's own tokens)
     Route::get('/tokens', [ApiTokenController::class, 'index'])->name('api.tokens.index');
-    Route::post('/tokens', [ApiTokenController::class, 'store'])->name('api.tokens.store');
-    Route::delete('/tokens/{token}', [ApiTokenController::class, 'destroy'])->name('api.tokens.destroy');
+    Route::post('/tokens', [ApiTokenController::class, 'store'])->middleware(CheckAbilities::class.':*')->name('api.tokens.store');
+    Route::delete('/tokens/{token}', [ApiTokenController::class, 'destroy'])->middleware(CheckAbilities::class.':*')->name('api.tokens.destroy');
 
     // Organization token management (admin-managed, org-level tokens)
     Route::get('/org-tokens', [OrgTokenController::class, 'index'])->name('api.org-tokens.index');

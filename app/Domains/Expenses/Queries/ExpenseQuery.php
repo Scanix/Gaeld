@@ -8,8 +8,10 @@ use App\Domains\Organizations\Enums\Permission;
 use App\Support\DTOs\SummaryResult;
 use App\Support\QueryBuilder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
 
 class ExpenseQuery
 {
@@ -18,19 +20,7 @@ class ExpenseQuery
      */
     public static function list(Request $request, int $perPage = 20): LengthAwarePaginator
     {
-        $selfService = $request->user()->hasPermissionTo(Permission::ExpensesViewOwn)
-            && ! $request->user()->hasPermissionTo(Permission::ExpensesView);
-        $query = Expense::query()->when(! $selfService, fn ($query) => $query->with('supplier'));
-
-        if ($selfService) {
-            $query->where('user_id', $request->user()->id);
-        }
-
-        return QueryBuilder::for($query, $request)
-            ->allowedSorts(['date', 'amount', 'category', 'vendor', 'status'], 'date', 'desc')
-            ->allowedFilters(['status', 'category'])
-            ->searchable(['description', 'vendor', 'category'])
-            ->apply()
+        return self::filtered($request)
             ->paginate($perPage)
             ->withQueryString()
             ->through(function ($expense) {
@@ -42,6 +32,35 @@ class ExpenseQuery
 
                 return $expense;
             });
+    }
+
+    /** @return Builder<Expense> */
+    public static function filtered(Request $request): Builder
+    {
+        Validator::make($request->only(['from', 'to', 'supplier_id']), [
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d'],
+            'supplier_id' => ['nullable', 'uuid'],
+        ])->validate();
+
+        $selfService = $request->user()->hasPermissionTo(Permission::ExpensesViewOwn)
+            && ! $request->user()->hasPermissionTo(Permission::ExpensesView);
+        $query = Expense::query()->when(! $selfService, fn ($query) => $query->with('supplier'));
+
+        if ($selfService) {
+            $query->where('user_id', $request->user()->id);
+        }
+
+        QueryBuilder::for($query, $request)
+            ->allowedSorts(['date', 'amount', 'category', 'vendor', 'status'], 'date', 'desc')
+            ->allowedFilters(['status', 'category'])
+            ->searchable(['description', 'vendor', 'category'])
+            ->apply();
+
+        return $query
+            ->when($request->filled('from'), fn (Builder $query) => $query->where('date', '>=', $request->input('from')))
+            ->when($request->filled('to'), fn (Builder $query) => $query->where('date', '<=', $request->input('to')))
+            ->when($request->filled('supplier_id'), fn (Builder $query) => $query->whereHas('supplier', fn (Builder $supplier) => $supplier->where('uuid', $request->input('supplier_id'))));
     }
 
     public static function yearlyTotal(string $orgId, int $year): string

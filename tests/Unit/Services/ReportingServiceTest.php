@@ -56,6 +56,20 @@ class ReportingServiceTest extends TestCase
         $this->assertSame('849.50', $report['net_profit']);
     }
 
+    public function test_profit_and_loss_sums_decimal_balances_without_losing_cents(): void
+    {
+        $first = $this->makeAccount('3000', 'Revenue', AccountType::Revenue);
+        $second = $this->makeAccount('3200', 'Other Revenue', AccountType::Revenue);
+        $ledger = Mockery::mock(LedgerQueryService::class);
+        $ledger->shouldReceive('accountBalance')->with($first->id, '2026-01-01', '2026-03-31')->andReturn('90071992547409.91');
+        $ledger->shouldReceive('accountBalance')->with($second->id, '2026-01-01', '2026-03-31')->andReturn('0.02');
+
+        $report = (new ReportingService($ledger))->profitAndLoss($this->organization->id, '2026-01-01', '2026-03-31');
+
+        $this->assertSame('90071992547409.93', $report['total_revenue']);
+        $this->assertSame('90071992547409.93', $report['net_profit']);
+    }
+
     public function test_balance_sheet_groups_asset_liability_and_equity_sections(): void
     {
         $asset = $this->makeAccount('1020', 'Bank', AccountType::Asset);

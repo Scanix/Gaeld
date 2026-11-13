@@ -18,9 +18,19 @@ class EnsureActiveSubscription
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Members must also be able to select the company whose records they need.
-        // The switch controller still verifies membership before changing context.
-        if ($request->routeIs('accounting.archives.*', 'accounting.conservation.*', 'organizations.switch')) {
+        // Preservation and export remain available after subscription expiry.
+        // Controllers retain their membership, permission and signature checks.
+        if ($request->routeIs(
+            'accounting.archives.*',
+            'accounting.conservation.*',
+            'organizations.switch',
+            'settings.export',
+            'settings.export.download',
+        )) {
+            return $next($request);
+        }
+
+        if ($request->isMethod('GET') && $request->routeIs('settings')) {
             return $next($request);
         }
 

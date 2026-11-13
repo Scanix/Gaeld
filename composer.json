@@ -13,6 +13,7 @@
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/framework": "^13.0",
         "laravel/horizon": "^5.45",
+        "laravel/mcp": "^0.9.4",
         "laravel/passkeys": "^0.2",
         "laravel/sanctum": "^4.3",
         "laravel/scout": "^11.0",

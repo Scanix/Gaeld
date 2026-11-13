@@ -18,6 +18,14 @@ use Tests\Security\SecurityTestCase;
  */
 class InvoiceApiListTest extends SecurityTestCase
 {
+    public function test_it_rejects_malformed_date_filters_instead_of_querying_invalid_dates(): void
+    {
+        $token = $this->createApiToken($this->ownerA, $this->orgA);
+
+        $this->withToken($token)->getJson('/api/v1/invoices?from=not-a-date')
+            ->assertUnprocessable()->assertJsonValidationErrors('from');
+    }
+
     public function test_it_lists_invoices_with_vat_rated_lines(): void
     {
         config(['features.api_access' => true]);
