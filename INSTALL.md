@@ -4,6 +4,15 @@ The latest public Community Edition release is `v3.8.28`. The coordinated SaaS
 CE/EE production pair and its deployment procedure are documented in
 [RELEASE.md](RELEASE.md).
 
+Candidate `v3.9.0` includes the read-only MCP server, export access after expiry,
+year-end balance corrections, and dependency security updates, including Laravel
+`13.40.0`. Local validation passed; publication and staging gates are pending;
+see [RELEASE.md](RELEASE.md).
+It introduces no CE schema migration or automatic rewrite of posted entries.
+Review later opening entries that already contain inflated balances separately.
+MCP is disabled by default. Hosted operators must deploy the EE plan migration
+and validate their CE/EE pairing before enabling MCP; see [configuration](README.md#configuration).
+
 Release `v3.8.27` adds nullable `salutation` and `country_name` contact fields.
 Run the normal migrations after updating. Existing invoice customer snapshots
 remain unchanged: enter the full country name on the contact and use the

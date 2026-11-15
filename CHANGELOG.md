@@ -5,6 +5,50 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.9.0] - 2026-11-15 (candidate)
+
+### Added
+- Provide a shared read-only MCP endpoint at `/mcp` for invoice, expense,
+  profit-and-loss, balance-sheet, and aging queries. Access uses scoped personal
+  bearer tokens and checks current membership and permissions on every request.
+- Make MCP available to self-hosted CE when enabled. Hosted access checks MCP/API
+  entitlements for Team, unexpired Team trials, and eligible legacy Business
+  subscriptions, plus both installation flags. MCP remains disabled by default.
+- Extend public CI coverage for MCP access, reports, and edition boundaries.
+
+### Fixed
+- Keep authorized organization data exports and their settings page accessible
+  after subscription expiry.
+- Keep cumulative balances correct after year-end closing by starting from the
+  latest applicable full opening entry. CHF 2,568 income less CHF 2,500 expenses
+  remains CHF 68 after closing ([#99](https://github.com/Scanix/Gaeld/issues/99)).
+- Carry balances forward once across consecutive closings, filter drafts and
+  out-of-period entries from trial balances, and preserve explicit movement ranges.
+- Refresh affected ledger, dashboard, and report caches, and prevent failed
+  closings from caching balances from rolled-back entries.
+- Default both test configurations to the Sail Redis service and test database
+  15 while preserving explicit CI connection settings.
+
+### Dependencies and security
+- Apply the locked Composer and frontend dependency security updates from main.
+- Update Laravel to `13.40.0` to include the framework advisory fix.
+
+### Validation
+- Add eight accounting regressions covering closing continuity, historical
+  dates, zero balances, opening selection, trial-balance filters, and rollback.
+- Clean CE suite: 1,670 passed, 25 conditional tests skipped, 6,375 assertions.
+- PHPStan, Pint, frontend build, Composer and pnpm security audits, API/MCP
+  contract parsing, edition projections, documentation checks, and archive
+  packaging regressions passed.
+
+### Upgrade notes
+- This candidate introduces no CE schema migration or automatic rewrite of
+  posted entries. Review later opening entries that already contain inflated
+  balances; the update does not automatically repair their stored amounts.
+- Hosted operators must deploy the EE plan migration and validate the exact
+  CE/EE pairing before enabling MCP. See the [MCP contract](contract/mcp-contract.json)
+  and [configuration guidance](README.md#configuration).
+
 ## [3.8.28] - 2026-10-20
 
 ### Fixed

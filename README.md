@@ -15,6 +15,10 @@ Proper double-entry bookkeeping, Swiss QR-Bill invoicing, VAT reporting, and ban
 
 > Current public release: `v3.8.28`. Follow the versioned changelog and release runbook before upgrading a live instance.
 
+> Candidate in preparation: `v3.9.0`, adding the shared read-only MCP server,
+> preserving export access after expiry, and correcting year-end balances.
+> See the [candidate notes](RELEASE.md) and [upgrade notes](CHANGELOG.md).
+
 [Website](https://gaeld.ch) · [Documentation](https://docs.gaeld.ch) · [Hosted version](https://app.gaeld.ch) · [Release runbook](RELEASE.md)
 
 This repository contains the public Community Edition (CE). The hosted SaaS and

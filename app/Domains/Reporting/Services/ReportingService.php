@@ -89,7 +89,7 @@ class ReportingService
      */
     public function balanceSheet(string $organizationId, string $asOfDate, ?string $compareAsOfDate = null): array
     {
-        $cacheKey = "bs:v2:{$organizationId}:{$asOfDate}";
+        $cacheKey = "bs:v3:{$organizationId}:{$asOfDate}";
         if ($compareAsOfDate) {
             $cacheKey .= ":vs:{$compareAsOfDate}";
         }
@@ -338,7 +338,7 @@ class ReportingService
      */
     public function cashFlow(string $organizationId, string $fromDate, string $toDate): array
     {
-        $cacheKey = "cashflow:{$organizationId}:{$fromDate}:{$toDate}";
+        $cacheKey = "cashflow:v2:{$organizationId}:{$fromDate}:{$toDate}";
         $orgTag = "org:{$organizationId}:reports";
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $fromDate, $toDate) {
