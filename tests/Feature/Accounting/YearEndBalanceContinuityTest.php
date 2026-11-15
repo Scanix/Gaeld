@@ -12,15 +12,18 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 use Tests\Traits\CreatesAccountingFixtures;
+use Tests\Traits\WithOrganizationPermissions;
 
 class YearEndBalanceContinuityTest extends TestCase
 {
-    use CreatesAccountingFixtures, RefreshDatabase;
+    use CreatesAccountingFixtures, RefreshDatabase, WithOrganizationPermissions;
 
     private Organization $organization;
 
@@ -54,8 +57,13 @@ class YearEndBalanceContinuityTest extends TestCase
     public function test_year_end_closing_keeps_the_bank_balance_at_chf_68(): void
     {
         $this->recordIncomeAndExpense(2025, '2568.00', '2500.00');
+        $bankAccount = BankAccount::factory()->for($this->organization)->create([
+            'account_id' => $this->accounts['bank']->id,
+            'balance' => '999.00',
+        ]);
         $query = app(LedgerQueryService::class);
         $this->assertSame('68.00', $query->accountBalance($this->accounts['bank']->id));
+        $this->assertSame('68.00', $bankAccount->derivedBalance());
 
         $this->closeYear(2025);
 
@@ -64,10 +72,66 @@ class YearEndBalanceContinuityTest extends TestCase
         $this->assertSame('68.00', $query->accountBalance($this->accounts['bank']->id));
         $this->assertSame('68.00', $query->accountBalance($this->accounts['bank']->id, null, '2025-12-31'));
         $this->assertSame('68.00', $query->accountBalance($this->accounts['result']->id));
+        $this->assertSame('68.00', $bankAccount->derivedBalance());
 
         $trialBalance = collect($query->trialBalance($this->organization->id))->keyBy('account_code');
         $this->assertSame('68.00', $trialBalance['1020']['debit']);
         $this->assertSame('68.00', $trialBalance['2900']['credit']);
+    }
+
+    public function test_banking_pages_keep_the_closing_balance_and_exclude_drafts(): void
+    {
+        $this->seedPermissions();
+        $owner = User::factory()->create();
+        $this->organization->users()->attach($owner->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($owner, $this->organization);
+        $bankAccount = BankAccount::factory()->for($this->organization)->create([
+            'account_id' => $this->accounts['bank']->id,
+            'balance' => '999.00',
+        ]);
+        $this->recordIncomeAndExpense(2025, '2568.00', '2500.00');
+        $this->closeYear(2025);
+        $this->createBankEquityDraft('2026-02-01', 'DRAFT-DEPOSIT', '900.00');
+        $this->actingAs($owner)->withSession(['current_organization_id' => $this->organization->id]);
+
+        $this->get(route('banking.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Banking/Index')
+                ->where('bankAccounts.data.0.derived_balance', '68.00'));
+
+        $this->get(route('banking.show', $bankAccount))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Banking/Show')
+                ->where('bankAccount.derived_balance', '68.00'));
+    }
+
+    public function test_linked_credit_normal_accounts_keep_the_bank_balance_sign(): void
+    {
+        $bankAccount = BankAccount::factory()->for($this->organization)->create([
+            'account_id' => $this->accounts['loan']->id,
+        ]);
+        $this->postJournalEntry('2025-06-01', [
+            $this->journalLine($this->accounts['bank'], '100.00', '0'),
+            $this->journalLine($this->accounts['loan'], '0', '100.00'),
+        ], 'LOAN');
+        $this->assertSame('-100.00', $bankAccount->derivedBalance());
+
+        app(GenerateOpeningBalancesAction::class)->execute($this->organization->id, 2025);
+        $bankAccount->load('ledgerAccount:id,code');
+
+        $this->assertSame('-100.00', $bankAccount->derivedBalance());
+    }
+
+    public function test_unlinked_bank_accounts_keep_their_stored_balance(): void
+    {
+        $bankAccount = BankAccount::factory()->for($this->organization)->create([
+            'account_id' => null,
+            'balance' => '123.45',
+        ]);
+
+        $this->assertSame('123.45', $bankAccount->derivedBalance());
     }
 
     public function test_consecutive_closings_carry_forward_balances_only_once(): void

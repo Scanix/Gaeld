@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   out-of-period entries from trial balances, and preserve explicit movement ranges.
 - Refresh affected ledger, dashboard, and report caches, and prevent failed
   closings from caching balances from rolled-back entries.
+- Use the same corrected posted balance on banking list and detail pages,
+  preserving debit-minus-credit signs and stored balances for unlinked accounts.
 - Default both test configurations to the Sail Redis service and test database
   15 while preserving explicit CI connection settings.
 
@@ -34,12 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update Laravel to `13.40.0` to include the framework advisory fix.
 
 ### Validation
-- Add eight accounting regressions covering closing continuity, historical
-  dates, zero balances, opening selection, trial-balance filters, and rollback.
-- Clean CE suite: 1,670 passed, 25 conditional tests skipped, 6,375 assertions.
-- PHPStan, Pint, frontend build, Composer and pnpm security audits, API/MCP
-  contract parsing, edition projections, documentation checks, and archive
-  packaging regressions passed.
+- Add eleven accounting and banking regressions covering closing continuity,
+  historical dates, zero balances, opening selection, trial-balance filters,
+  rollback, banking pages, linked-account signs, and unlinked balances.
+- Record the exact release commit and final suite, staging, static-analysis,
+  build, audit, and packaging results in the published release notes.
 
 ### Upgrade notes
 - This release introduces no CE schema migration or automatic rewrite of

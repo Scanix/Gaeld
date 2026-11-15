@@ -29,12 +29,11 @@ closings. This release introduces no CE schema migration or automatic rewrite
 of posted entries. Later opening entries that already contain inflated amounts
 require separate review; their stored amounts are not repaired automatically.
 
-Local clean-checkout validation passed: 1,670 CE tests, 6,375 assertions, and
-25 conditional skips. PHPStan, Pint, the frontend build, Composer and pnpm
-security audits, API/MCP contract parsing, edition projections, documentation
-checks, and archive packaging regressions passed. The full suite includes all
-eight new accounting regressions. Verify the final source archive and public CI,
-then complete the applicable staging and release gates before promotion.
+The full suite includes eleven new accounting and banking regressions, including
+the banking list/detail balance, draft exclusion, and linked-account signs.
+Record the final clean-suite, static-analysis, formatting, build, dependency,
+contract, archive, and isolated staging results in the published release record.
+Verify public CI on the exact merge commit before creating the release tag.
 
 ## v3.8.28 Coordinated Candidate
 
