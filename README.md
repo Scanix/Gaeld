@@ -13,7 +13,11 @@
 
 Proper double-entry bookkeeping, Swiss QR-Bill invoicing, VAT reporting, and bank reconciliation — built with Laravel and Vue, AGPL-3.0-or-later licensed, fully self-hostable.
 
-> Current public release: `v3.8.28`. Follow the versioned changelog and release runbook before upgrading a live instance.
+> Current public release: `v3.9.0`. Follow the versioned changelog and release runbook before upgrading a live instance.
+
+> `v3.9.0` adds the shared read-only MCP server, preserves export access after
+> expiry, and corrects year-end balances. See the [release notes](RELEASE.md)
+> and [upgrade notes](CHANGELOG.md).
 
 [Website](https://gaeld.ch) · [Documentation](https://docs.gaeld.ch) · [Hosted version](https://app.gaeld.ch) · [Release runbook](RELEASE.md)
 

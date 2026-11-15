@@ -5,6 +5,36 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.9.0 MCP and Accounting Release
+
+This release includes the changes committed on public `main` after `v3.8.28`,
+the year-end balance correction in [issue #99](https://github.com/Scanix/Gaeld/issues/99),
+the Redis test defaults, and the Laravel `13.40.0` advisory fix. Its release scope
+covers the shared read-only MCP server, export access after subscription expiry,
+locked dependency security updates, accounting balance/carry-forward corrections,
+cache handling, and the associated regression coverage.
+
+MCP serves invoice, expense, profit-and-loss, balance-sheet, and aging queries
+through scoped personal bearer tokens. It is disabled by default and requires
+both MCP and API installation flags. Self-hosted CE can enable it independently;
+hosted access requires the MCP/API entitlements supplied by Team, an unexpired
+Team trial, or an eligible legacy Business subscription. Every request checks
+current organization membership, permissions, and token scopes. Deploy the EE
+plan migration before enabling hosted access and record the exact validated
+CE/EE pairing.
+
+The accounting correction keeps CHF 2,568 income less CHF 2,500 expenses at
+CHF 68 after closing, and carries balances forward once across successive
+closings. This release introduces no CE schema migration or automatic rewrite
+of posted entries. Later opening entries that already contain inflated amounts
+require separate review; their stored amounts are not repaired automatically.
+
+The full suite includes eleven new accounting and banking regressions, including
+the banking list/detail balance, draft exclusion, and linked-account signs.
+Record the final clean-suite, static-analysis, formatting, build, dependency,
+contract, archive, and isolated staging results in the published release record.
+Verify public CI on the exact merge commit before creating the release tag.
+
 ## v3.8.28 Coordinated Candidate
 
 This candidate integrates open CE PRs #63–68, #71, and #72, the missing bank

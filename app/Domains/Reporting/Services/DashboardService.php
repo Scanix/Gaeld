@@ -44,7 +44,7 @@ class DashboardService
     public function metrics(string $organizationId): array
     {
         return Cache::tags(["org:{$organizationId}:dashboard"])->remember(
-            "dashboard_metrics:{$organizationId}",
+            "dashboard_metrics:v2:{$organizationId}",
             300, // 5 minutes
             fn () => $this->computeMetrics($organizationId)
         );

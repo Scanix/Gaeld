@@ -26,6 +26,8 @@ class LedgerQueryService
      * Asset and expense accounts return debit-normal balances (debits − credits).
      * Liability, equity, and revenue accounts return credit-normal (credits − debits).
      * Only posted entries are included.
+     * Cumulative balances start at the latest full opening entry, which
+     * replaces the preceding ledger history. Explicit ranges return movements.
      *
      * Results are cached per account + date range (tag: org:{orgId}:ledger).
      *
@@ -37,14 +39,15 @@ class LedgerQueryService
     public function accountBalance(int $accountId, ?string $fromDate = null, ?string $toDate = null): string
     {
         $account = Account::findOrFail($accountId);
-        $cacheKey = "account_balance:{$accountId}:{$fromDate}:{$toDate}";
+        $cacheKey = "account_balance:v2:{$accountId}:{$fromDate}:{$toDate}";
         $orgTag = "org:{$account->organization_id}:ledger";
 
-        return Cache::tags([$orgTag])->remember($cacheKey, now()->addHour(), function () use ($accountId, $account, $fromDate, $toDate) {
+        $calculateBalance = function () use ($accountId, $account, $fromDate, $toDate): string {
+            $balanceFrom = $fromDate ?? $this->openingBalanceDate($account->organization_id, $toDate);
             $query = TransactionLine::where('account_id', $accountId)
-                ->whereHas('journalEntry', function ($q) use ($fromDate, $toDate) {
+                ->whereHas('journalEntry', function ($q) use ($balanceFrom, $toDate) {
                     $q->where('is_posted', true)
-                        ->when($fromDate, fn ($q, $date) => $q->where('date', '>=', $date))
+                        ->when($balanceFrom, fn ($q, $date) => $q->where('date', '>=', $date))
                         ->when($toDate, fn ($q, $date) => $q->where('date', '<=', $date));
                 });
 
@@ -54,7 +57,13 @@ class LedgerQueryService
             return $this->isDebitNormalAccount($account->type)
                 ? bcsub($debits, $credits, 2)
                 : bcsub($credits, $debits, 2);
-        });
+        };
+
+        if ($account->getConnection()->transactionLevel() > 0) {
+            return $calculateBalance();
+        }
+
+        return Cache::tags([$orgTag])->remember($cacheKey, now()->addHour(), $calculateBalance);
     }
 
     /**
@@ -95,7 +104,7 @@ class LedgerQueryService
      */
     public function trialBalance(string $organizationId, ?string $asOfDate = null): array
     {
-        $cacheKey = "trial_balance:{$organizationId}:{$asOfDate}";
+        $cacheKey = "trial_balance:v2:{$organizationId}:{$asOfDate}";
         $orgTag = "org:{$organizationId}:ledger";
 
         return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($organizationId, $asOfDate) {
@@ -143,12 +152,17 @@ class LedgerQueryService
      */
     private function buildTrialBalanceQuery(string $organizationId, ?string $asOfDate): Builder
     {
+        $balanceFrom = $this->openingBalanceDate($organizationId, $asOfDate);
+
         return Account::where('accounts.organization_id', $organizationId)
             ->where('accounts.is_active', true)
-            ->leftJoin('transaction_lines', 'transaction_lines.account_id', '=', 'accounts.id')
-            ->leftJoin('journal_entries', function ($join) use ($asOfDate) {
+            ->join('transaction_lines', 'transaction_lines.account_id', '=', 'accounts.id')
+            ->join('journal_entries', function ($join) use ($balanceFrom, $asOfDate) {
                 $join->on('journal_entries.id', '=', 'transaction_lines.journal_entry_id')
                     ->where('journal_entries.is_posted', true);
+                if ($balanceFrom) {
+                    $join->where('journal_entries.date', '>=', $balanceFrom);
+                }
                 if ($asOfDate) {
                     $join->where('journal_entries.date', '<=', $asOfDate);
                 }
@@ -156,6 +170,24 @@ class LedgerQueryService
             ->groupBy('accounts.id', 'accounts.code', 'accounts.name', 'accounts.type')
             ->orderBy('accounts.code')
             ->selectRaw('accounts.id, accounts.code, accounts.name, accounts.type, COALESCE(SUM(transaction_lines.debit), 0) as total_debit, COALESCE(SUM(transaction_lines.credit), 0) as total_credit');
+    }
+
+    /**
+     * Full opening entries replace prior balances for the whole organization,
+     * including accounts omitted because their balance was zero.
+     * Restatement entries are deltas and must not replace the opening date.
+     */
+    private function openingBalanceDate(string $organizationId, ?string $asOfDate): ?string
+    {
+        $opening = JournalEntry::where('organization_id', $organizationId)
+            ->where('is_posted', true)
+            ->where('reference', 'like', 'OPENING-%')
+            ->when($asOfDate, fn ($query, $date) => $query->where('date', '<=', $date))
+            ->orderByDesc('date')
+            ->get(['date', 'reference'])
+            ->first(fn (JournalEntry $entry): bool => preg_match('/^OPENING-\d{4}(?:-v\d+)?$/D', $entry->reference) === 1);
+
+        return $opening?->date->toDateString();
     }
 
     /**
