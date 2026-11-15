@@ -5,9 +5,9 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
-## v3.9.0 MCP and Accounting Candidate
+## v3.9.0 MCP and Accounting Release
 
-This candidate includes the changes committed on public `main` after `v3.8.28`,
+This release includes the changes committed on public `main` after `v3.8.28`,
 the year-end balance correction in [issue #99](https://github.com/Scanix/Gaeld/issues/99),
 the Redis test defaults, and the Laravel `13.40.0` advisory fix. Its release scope
 covers the shared read-only MCP server, export access after subscription expiry,
@@ -25,17 +25,16 @@ CE/EE pairing.
 
 The accounting correction keeps CHF 2,568 income less CHF 2,500 expenses at
 CHF 68 after closing, and carries balances forward once across successive
-closings. This candidate introduces no CE schema migration or automatic rewrite
+closings. This release introduces no CE schema migration or automatic rewrite
 of posted entries. Later opening entries that already contain inflated amounts
 require separate review; their stored amounts are not repaired automatically.
 
-Local clean-candidate validation passed: 1,670 CE tests, 6,375 assertions, and
+Local clean-checkout validation passed: 1,670 CE tests, 6,375 assertions, and
 25 conditional skips. PHPStan, Pint, the frontend build, Composer and pnpm
 security audits, API/MCP contract parsing, edition projections, documentation
 checks, and archive packaging regressions passed. The full suite includes all
 eight new accounting regressions. Verify the final source archive and public CI,
 then complete the applicable staging and release gates before promotion.
-`v3.8.28` remains the current public release until publication.
 
 ## v3.8.28 Coordinated Candidate
 

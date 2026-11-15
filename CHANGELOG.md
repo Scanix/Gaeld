@@ -5,7 +5,7 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.9.0] - 2026-11-15 (candidate)
+## [3.9.0] - 2026-11-15
 
 ### Added
 - Provide a shared read-only MCP endpoint at `/mcp` for invoice, expense,
@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   packaging regressions passed.
 
 ### Upgrade notes
-- This candidate introduces no CE schema migration or automatic rewrite of
+- This release introduces no CE schema migration or automatic rewrite of
   posted entries. Review later opening entries that already contain inflated
   balances; the update does not automatically repair their stored amounts.
 - Hosted operators must deploy the EE plan migration and validate the exact

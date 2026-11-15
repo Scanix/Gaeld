@@ -1,13 +1,13 @@
 # Installation Guide
 
-The latest public Community Edition release is `v3.8.28`. The coordinated SaaS
+The latest public Community Edition release is `v3.9.0`. The coordinated SaaS
 CE/EE production pair and its deployment procedure are documented in
 [RELEASE.md](RELEASE.md).
 
-Candidate `v3.9.0` includes the read-only MCP server, export access after expiry,
+Release `v3.9.0` includes the read-only MCP server, export access after expiry,
 year-end balance corrections, and dependency security updates, including Laravel
-`13.40.0`. Local validation passed; publication and staging gates are pending;
-see [RELEASE.md](RELEASE.md).
+`13.40.0`. Local validation passed; follow the staging and release gates in
+[RELEASE.md](RELEASE.md) before promotion.
 It introduces no CE schema migration or automatic rewrite of posted entries.
 Review later opening entries that already contain inflated balances separately.
 MCP is disabled by default. Hosted operators must deploy the EE plan migration
