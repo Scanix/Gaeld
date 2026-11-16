@@ -30,7 +30,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         {{-- Without analytics only strictly necessary cookies are set, so no consent banner is needed. --}}
-        @if(config('services.google.gtm_id'))
+        @if(config('services.google.gtm_id') || config('services.google.ads_id'))
             @vite('resources/js/cookieConsent.js')
             @include('partials.google-analytics')
         @endif
