@@ -17,6 +17,7 @@ class CookieConsentTest extends TestCase
     public function test_cookie_consent_is_not_loaded_without_analytics(): void
     {
         config(['services.google.gtm_id' => null]);
+        config(['services.google.ads_id' => null]);
 
         $response = $this->get('/login');
 
@@ -33,6 +34,19 @@ class CookieConsentTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('cookieConsent');
-        $response->assertSee('googletagmanager.com/gtm.js?id=GTM-TEST123', false);
+        $response->assertDontSee('googletagmanager.com/gtm.js', false);
+        $response->assertSee('gaeld-google-config', false);
+        $response->assertSee('consentRevision', false);
+    }
+
+    public function test_ads_configuration_enables_preferences_without_loading_google_on_application_pages(): void
+    {
+        config(['services.google.gtm_id' => null, 'services.google.ads_id' => 'AW-123456']);
+
+        $response = $this->get('/login');
+
+        $response->assertOk()->assertSee('cookieConsent')->assertSee('gaeld-google-config', false);
+        $response->assertDontSee('googletagmanager.com/gtag/js', false);
+        $response->assertDontSee('googleadservices.com', false);
     }
 }

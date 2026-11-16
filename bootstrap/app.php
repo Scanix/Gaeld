@@ -53,6 +53,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->prepend(AddSecurityHeaders::class);
 
+        $middleware->encryptCookies(except: ['gaeld_cookie_consent']);
+
         $middleware->web(append: [
             SetGuestLocale::class,
             HandleInertiaRequests::class,
