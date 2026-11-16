@@ -124,3 +124,150 @@ test('both labels and a valid Ads ID are required before consuming a server fact
     assert.deepEqual(tab.actions, [['navigate', '/welcome']])
   }
 })
+
+const waitingConfig = { ...config, statusUrl: '/conversions/status' }
+const instantDelays = (tab) => { tab.browser.setTimeout = (callback) => { queueMicrotask(callback); return 1 } }
+
+test('delayed verified webhook is polled internally before any SDK or claim', async () => {
+  const tab = fixture(); instantDelays(tab); tab.resolveLoad(true)
+  let polls = 0
+  tab.browser.fetch = async (url) => {
+    if (url === '/conversions/status') {
+      tab.actions.push(['status'])
+      assert.equal(tab.actions.some(([name]) => name === 'sdk'), false)
+      return { ok: true, json: async () => ({ ready: ++polls === 3, waiting: polls < 3 }) }
+    }
+    tab.actions.push(['claim'])
+    return { ok: true, json: async () => ({ conversions: [fact] }) }
+  }
+  await confirmGoogleAds(waitingConfig, '/billing', '/conversions/claim', tab.browser)
+  assert.deepEqual(tab.actions.map(([name]) => name), ['status', 'status', 'status', 'refresh', 'sdk', 'claim', 'conversion', 'navigate'])
+})
+
+test('waiting is bounded, has no Google load and cannot manufacture payment', async () => {
+  const tab = fixture(); instantDelays(tab)
+  let polls = 0
+  tab.browser.fetch = async () => { polls++; return { ok: true, json: async () => ({ ready: false, waiting: true }) } }
+  await confirmGoogleAds(waitingConfig, '/billing', '/conversions/claim', tab.browser)
+  assert.equal(polls, 20)
+  assert.deepEqual(tab.actions, [['navigate', '/billing']])
+})
+
+test('withdrawal while waiting stops polling without SDK, claim or conversion', async () => {
+  const tab = fixture(); instantDelays(tab)
+  tab.browser.fetch = async () => {
+    tab.browser.document.cookie = consent([])
+    return { ok: true, json: async () => ({ ready: true, waiting: false }) }
+  }
+  await confirmGoogleAds(waitingConfig, '/billing', '/conversions/claim', tab.browser)
+  assert.deepEqual(tab.actions, [['navigate', '/billing']])
+})
+
+test('lost claim response retries internally and emits the same server fact once', async () => {
+  const tab = fixture(); instantDelays(tab); tab.resolveLoad(true)
+  let claims = 0
+  tab.browser.fetch = async (url, options) => {
+    tab.actions.push(['claim', options.headers['X-Gaeld-Ads-Retry']])
+    if (++claims === 1) throw new Error('Synthetic lost response after server delivery')
+    return { ok: true, json: async () => ({ conversions: [fact] }) }
+  }
+  await confirmGoogleAds(config, '/billing', '/conversions/claim', tab.browser)
+  assert.equal(claims, 2)
+  assert.deepEqual(tab.actions.filter(([name]) => name === 'claim'), [['claim', undefined], ['claim', '1']])
+  assert.deepEqual(tab.actions.filter(([name]) => name === 'conversion'), [['conversion', fact]])
+})
+
+test('temporary claim failures stop after three attempts and 4xx are not retried', async () => {
+  for (const status of [503, 419]) {
+    const tab = fixture(); instantDelays(tab); tab.resolveLoad(true)
+    let claims = 0
+    tab.browser.fetch = async () => { claims++; return { ok: false, status } }
+    await confirmGoogleAds(config, '/billing', '/conversions/claim', tab.browser)
+    assert.equal(claims, status === 503 ? 3 : 1)
+    assert.equal(tab.actions.some(([name]) => name === 'conversion'), false)
+  }
+})
+
+test('withdrawal before a claim retry stops every later attempt', async () => {
+  const tab = fixture(); instantDelays(tab); tab.resolveLoad(true)
+  let claims = 0
+  tab.browser.fetch = async () => {
+    claims++; tab.browser.document.cookie = consent([])
+    throw new Error('Synthetic offline response')
+  }
+  await confirmGoogleAds(config, '/billing', '/conversions/claim', tab.browser)
+  assert.equal(claims, 1)
+  assert.equal(tab.actions.some(([name]) => name === 'conversion'), false)
+})
+
+
+test('real shared runtime and bridge preserve official queue, labels, values and clean context with a no-transport SDK', async () => {
+  const tab = fixture()
+  delete tab.browser.__gaeldGoogleRuntime
+  Object.assign(tab.browser.location, { href: 'https://app.gaeld.ch/conversions/confirm', hostname: 'app.gaeld.ch' })
+  tab.browser.history = { state: null, replaceState() { throw new Error('Clean URL must not change') } }
+  tab.browser.localStorage = { removeItem() {} }
+  tab.browser.document.querySelector = (selector) => selector.includes('csrf-token') ? { content: 'local-test-csrf' } : null
+  tab.browser.document.createElement = () => ({ remove() {} })
+  tab.browser.document.head = { appendChild(element) {
+    tab.actions.push(['sdk-request-intercepted', element.src])
+    queueMicrotask(() => { tab.actions.push(['sdk-onload']); element.onload() })
+  } }
+  tab.browser.gtag = function () {
+    tab.browser.dataLayer.push(arguments)
+    if (arguments[0] === 'event' && arguments[1] === 'conversion') queueMicrotask(arguments[2].event_callback)
+  }
+  const paid = { event: 'first_payment', transaction_id: 'b'.repeat(32), value: 15.25, currency: 'CHF' }
+  tab.browser.fetch = async (url) => {
+    tab.actions.push(['internal-request', url])
+    return { ok: true, json: async () => url === '/conversions/status' ? { ready: true, waiting: false } : { conversions: [fact, paid] } }
+  }
+  await confirmGoogleAds(waitingConfig, '/billing', '/conversions/claim', tab.browser)
+  const commands = tab.browser.dataLayer
+  assert.equal(commands.every((item) => Object.prototype.toString.call(item) === '[object Arguments]'), true)
+  const init = commands.find((item) => item[0] === 'config')
+  assert.equal(init[1], config.adsId)
+  assert.equal(init[2].page_location, 'https://app.gaeld.ch/conversions/confirm')
+  assert.equal(init[2].page_referrer, '')
+  const events = commands.filter((item) => item[0] === 'event')
+  assert.deepEqual(events.map((item) => [item[2].send_to, item[2].value, item[2].transaction_id]), [
+    [`${config.adsId}/${config.signupLabel}`, 0, fact.transaction_id],
+    [`${config.adsId}/${config.firstPaymentLabel}`, 15.25, paid.transaction_id],
+  ])
+  assert.equal(tab.actions.filter(([name]) => name === 'sdk-request-intercepted').length, 1)
+  assert.deepEqual(tab.actions.filter(([name]) => name === 'internal-request').map((item) => item[1]), ['/conversions/status', '/conversions/claim'])
+  assert.deepEqual(tab.actions.at(-1), ['navigate', '/billing'])
+})
+
+
+test('an unclaimed signup does not end the wait for a new first payment', async () => {
+  const tab = fixture(); instantDelays(tab); tab.resolveLoad(true)
+  const paid = { event: 'first_payment', transaction_id: 'c'.repeat(32), value: 15, currency: 'CHF' }
+  let polls = 0
+  tab.browser.fetch = async (url) => {
+    if (url === '/conversions/status') {
+      tab.actions.push(['status'])
+      assert.equal(tab.actions.some(([name]) => name === 'sdk'), false)
+      return { ok: true, json: async () => ({ ready: true, waiting: ++polls < 3 }) }
+    }
+    tab.actions.push(['claim'])
+    return { ok: true, json: async () => ({ conversions: [fact, paid] }) }
+  }
+  await confirmGoogleAds(waitingConfig, '/billing', '/conversions/claim', tab.browser)
+  assert.equal(polls, 3)
+  assert.deepEqual(tab.actions.filter(([name]) => name === 'conversion').map((item) => item[1]), [fact, paid])
+})
+
+test('at the bounded end only available signup facts are delivered without inventing payment', async () => {
+  const tab = fixture(); instantDelays(tab); tab.resolveLoad(true)
+  let polls = 0
+  tab.browser.fetch = async (url) => {
+    if (url === '/conversions/status') {
+      polls++; return { ok: true, json: async () => ({ ready: true, waiting: true }) }
+    }
+    return { ok: true, json: async () => ({ conversions: [fact] }) }
+  }
+  await confirmGoogleAds(waitingConfig, '/billing', '/conversions/claim', tab.browser)
+  assert.equal(polls, 20)
+  assert.deepEqual(tab.actions.filter(([name]) => name === 'conversion'), [['conversion', fact]])
+})

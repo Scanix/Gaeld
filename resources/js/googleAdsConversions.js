@@ -32,19 +32,55 @@ export async function confirmGoogleAds(config, continueUrl, claimUrl, browser = 
     return
   }
   const runtime = getGoogleRuntime({ ...config, gtmId: '', allowedPaths: ['/conversions/confirm'] }, browser)
-  runtime.refresh()
+  if (!config.statusUrl) runtime.refresh()
   if (!readConsent(browser.document.cookie).marketing) { proceed(); return }
+  const delay = (milliseconds) => new Promise((resolve) => browser.setTimeout(resolve, milliseconds))
   try {
+    if (config.statusUrl) {
+      const status = new URL(config.statusUrl, browser.location.origin)
+      if (status.origin !== browser.location.origin || status.pathname !== '/conversions/status' || status.search || status.hash) {
+        proceed(); return
+      }
+      const deadline = Date.now() + 60000
+      let ready = false
+      let available = false
+      for (let attempt = 0; attempt < 20 && Date.now() < deadline; attempt++) {
+        if (!readConsent(browser.document.cookie).marketing) { proceed(); return }
+        const response = await browser.fetch(status.pathname, {
+          credentials: 'same-origin', headers: { Accept: 'application/json' },
+          signal: AbortSignal.timeout(Math.max(1, Math.min(5000, deadline - Date.now()))),
+        })
+        if (!response.ok || !readConsent(browser.document.cookie).marketing) { proceed(); return }
+        const payload = await response.json()
+        available = payload.ready === true
+        if (payload.waiting !== true) { ready = available; break }
+        await delay(Math.min(3000, Math.max(0, deadline - Date.now())))
+      }
+      // An older signup may remain available at the bounded end of the wait.
+      // The claim still decides which verified server facts can be delivered.
+      if (!ready && !available) { proceed(); return }
+    }
+    if (config.statusUrl) runtime.refresh()
     if (!await runtime.loadAds() || !readConsent(browser.document.cookie).marketing) { proceed(); return }
     const csrf = browser.document.querySelector('meta[name="csrf-token"]')?.content
     if (!csrf) { proceed(); return }
-    const response = await browser.fetch(claim, {
-      method: 'POST', credentials: 'same-origin',
-      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
-      body: '{}', signal: AbortSignal.timeout(18000),
-    })
-    if (!response.ok || !readConsent(browser.document.cookie).marketing) { proceed(); return }
-    const payload = await response.json()
+    let payload = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (!readConsent(browser.document.cookie).marketing) { proceed(); return }
+      try {
+        const response = await browser.fetch(claim, {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf,
+            ...(attempt ? { 'X-Gaeld-Ads-Retry': '1' } : {}) },
+          body: '{}', signal: AbortSignal.timeout(18000),
+        })
+        if (!readConsent(browser.document.cookie).marketing) { proceed(); return }
+        if (!response.ok && response.status < 500) { proceed(); return }
+        if (response.ok) { payload = await response.json(); break }
+      } catch { /* A lost response can be retried with the same server transaction ID. */ }
+      if (attempt < 2) await delay(500)
+    }
+    if (!payload || !readConsent(browser.document.cookie).marketing) { proceed(); return }
     const events = Array.isArray(payload.conversions) ? payload.conversions.slice(0, 2) : []
     await Promise.all(events.map((event) => new Promise((resolve) => {
       const timeout = browser.setTimeout(resolve, 1700)
