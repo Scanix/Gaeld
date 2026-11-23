@@ -25,6 +25,26 @@ class CamtParserTest extends TestCase
         $this->assertNotNull($parser->getCreationDate());
     }
 
+    public function test_normal_statements_keep_their_declared_character_encodings(): void
+    {
+        $fixture = file_get_contents(__DIR__.'/../fixtures/camt053_sample.xml');
+        foreach (['UTF-16LE', 'UTF-16BE', 'ISO-8859-1', 'WINDOWS-1252'] as $encoding) {
+            $xml = str_replace(['encoding="UTF-8"', 'STMT-2026-001'], ['encoding="'.$encoding.'"', 'Vérification'], $fixture);
+            $encoded = mb_convert_encoding($xml, $encoding, 'UTF-8');
+            $parsed = (new Camt053Parser)->parse($encoded);
+            $this->assertSame('Vérification', $parsed->getStatementId(), $encoding);
+        }
+    }
+
+    public function test_statement_rejects_an_ordinary_document_type(): void
+    {
+        $fixture = file_get_contents(__DIR__.'/../fixtures/camt053_sample.xml');
+        $document = str_replace('<Document ', "<!DOCTYPE Document>\n<Document ", $fixture);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Document type');
+        (new Camt053Parser)->parse($document);
+    }
+
     public function test_camt053_parses_credit_entry_with_details(): void
     {
         $xml = file_get_contents(__DIR__.'/../fixtures/camt053_sample.xml');

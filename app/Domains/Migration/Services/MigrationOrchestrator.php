@@ -13,6 +13,7 @@ use App\Domains\Migration\Enums\ImportStatus;
 use App\Domains\Migration\Enums\Platform;
 use App\Domains\Migration\Models\MigrationSession;
 use App\Domains\Organizations\Models\Organization;
+use App\Support\InvalidImportedXml;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -80,7 +81,11 @@ class MigrationOrchestrator
             return new ParseResult(collect(), ["Platform {$source} does not support {$dataType->value}"]);
         }
 
-        $rows = $parser->parse($file, $dataType);
+        try {
+            $rows = $parser->parse($file, $dataType);
+        } catch (InvalidImportedXml $exception) {
+            return new ParseResult(collect(), [$exception->getMessage()]);
+        }
 
         return new ParseResult($rows);
     }

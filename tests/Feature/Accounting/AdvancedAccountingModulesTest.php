@@ -307,6 +307,19 @@ XML, 200),
         $this->assertDatabaseMissing('exchange_rates', ['id' => $manualRate->id]);
     }
 
+    public function test_ecb_feed_rejects_an_ordinary_document_type_before_import(): void
+    {
+        $feed = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Envelope>
+<Envelope><Cube><Cube time="2026-04-02"><Cube currency="CHF" rate="0.95"/><Cube currency="USD" rate="1.10"/></Cube></Cube></Envelope>
+XML;
+        Http::fake(['www.ecb.europa.eu/*' => Http::response($feed)]);
+        $this->actAsOrg()->post('/accounting/exchange-rates/fetch-ecb')
+            ->assertRedirect()->assertSessionHas('error');
+        $this->assertDatabaseMissing('exchange_rates', ['source' => 'ecb']);
+    }
+
     public function test_exchange_rates_reject_same_currency_pair(): void
     {
         $this->actAsOrg()->post('/accounting/exchange-rates', [

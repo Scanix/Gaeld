@@ -9,6 +9,8 @@ use App\Domains\Migration\DTOs\InvoiceImportRow;
 use App\Domains\Migration\Enums\DataType;
 use App\Domains\Migration\Parsers\BexioParser;
 use Illuminate\Http\UploadedFile;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 use Tests\TestCase;
 
 class BexioParserTest extends TestCase
@@ -35,6 +37,27 @@ class BexioParserTest extends TestCase
         $this->assertContains(DataType::Invoices, $types);
         $this->assertContains(DataType::Expenses, $types);
         $this->assertNotContains(DataType::JournalEntries, $types);
+    }
+
+    public function test_workbook_with_a_real_worksheet_is_preserved_and_an_ordinary_dtd_is_rejected(): void
+    {
+        $file = UploadedFile::fake()->create('contacts.xlsx');
+        $writer = new Writer;
+        $writer->openToFile($file->getPathname());
+        $writer->addRow(Row::fromValues(['Contact no.', 'Company name', 'City']));
+        $writer->addRow(Row::fromValues(['42', 'Vérification SA', 'Genève']));
+        $writer->close();
+        $this->assertSame(DataType::Contacts, $this->parser->detectDataType($file));
+        $this->assertSame('Vérification SA', $this->parser->parse($file, DataType::Contacts)->sole()->name);
+
+        $zip = new \ZipArchive;
+        $this->assertTrue($zip->open($file->getPathname()));
+        $part = '<?xml version="1.0" encoding="UTF-16"?><!DOCTYPE note><note/>';
+        $zip->addFromString('xl/alternate-part.dat', "\xff\xfe".mb_convert_encoding($part, 'UTF-16LE', 'UTF-8'));
+        $zip->close();
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Document type');
+        $this->parser->detectDataType($file);
     }
 
     public function test_parse_accounts_with_german_headers(): void
