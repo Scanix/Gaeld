@@ -22,6 +22,7 @@ class AdoptionReceiptTest(unittest.TestCase):
         self.receipt = {'schema': 1, 'status': 'passed', 'candidate_version': '3.9.0-rc.1',
                         'candidate_commit': 'a' * 40, 'source_tree_clean': True,
                         'source_sha256': sha256(self.source), 'candidate_images': self.images,
+                        'baseline_version': '3.8.28', 'baseline_commit': 'e' * 40, 'source_kind': 'git',
                         'platform': 'linux/amd64', 'checks': dict.fromkeys(CHECKS, True)}
 
     def check(self, receipt=None):

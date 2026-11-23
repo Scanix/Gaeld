@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Adopt an unmodified CE v3.8.28 Sail installation without replacing its files or volumes."""
+"""Adopt an unmodified CE Sail installation without replacing its files or volumes."""
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -10,16 +11,77 @@ import re
 import secrets
 import shutil
 import sys
+import tarfile
 import tempfile
 
 from manage import Installation, OperationError, digest, env_values, run, verify_release, version
 
 
+SAIL_RELEASES = ('3.8.28', '3.9.0', '3.10.0')
+
+
+def archived_source(source, archive, expected_digest):
+    """Verify installed code against the independently authenticated public release archive."""
+    source = Path(source).resolve()
+    if not re.fullmatch(r'[0-9a-f]{64}', expected_digest or '') or digest(archive) != expected_digest:
+        raise OperationError('The source archive checksum does not match the trusted release checksum.')
+    tracked = set()
+    with tarfile.open(archive, 'r:gz') as package:
+        commit = package.pax_headers.get('comment', '')
+        if not re.fullmatch(r'[0-9a-f]{40}', commit):
+            raise OperationError('The source archive lacks its public release commit.')
+        release_version = None
+        for member in package:
+            path = Path(member.name)
+            if path.is_absolute() or '..' in path.parts or not path.parts or not (member.isdir() or member.isfile()):
+                raise OperationError('Unsupported source archive entry.')
+            prefix = path.parts[0]
+            matches = [item for item in SAIL_RELEASES if prefix == 'gaeld-ce-' + item]
+            if len(matches) != 1 or release_version not in (None, matches[0]):
+                raise OperationError('Unsupported or inconsistent source archive version.')
+            release_version = matches[0]
+            if member.isdir():
+                continue
+            relative = Path(*path.parts[1:])
+            installed = source / relative
+            if (relative in tracked or not installed.is_file() or installed.resolve() != installed
+                    or bool(installed.stat().st_mode & 0o111) != bool(member.mode & 0o111)):
+                raise OperationError('The installation differs from the public source archive: ' + str(relative))
+            with package.extractfile(member) as stream:
+                hasher = hashlib.sha256()
+                for block in iter(lambda: stream.read(1024 * 1024), b''):
+                    hasher.update(block)
+            if digest(installed) != hasher.hexdigest():
+                raise OperationError('The installation differs from the public source archive: ' + str(relative))
+            tracked.add(relative)
+    if Path('docker-compose.yml') not in tracked or Path('artisan') not in tracked:
+        raise OperationError('The archive is missing the CE Sail application.')
+    # Only application-generated data and dependency directories may supplement the release.
+    runtime = {'vendor', 'node_modules', 'public/build', 'storage/app', 'storage/framework',
+               'storage/logs', 'secrets', 'bootstrap/cache'}
+    for directory, dirs, files in os.walk(source, followlinks=False):
+        parent = Path(directory).relative_to(source)
+        for name in dirs.copy():
+            relative = parent / name
+            if relative.as_posix() in runtime and not (source / relative).is_symlink():
+                dirs.remove(name)
+            elif (source / relative).is_symlink():
+                if relative != Path('public/storage') or (source / relative).resolve() != source / 'storage/app/public':
+                    raise OperationError('Unexpected local link: ' + str(relative))
+        for name in files:
+            relative = parent / name
+            if relative != Path('.env') and relative not in tracked:
+                raise OperationError('Unexpected local source file: ' + str(relative))
+    return release_version, commit
+
+
 class LegacySail:
-    def __init__(self, source, project=None, runner=run):
+    def __init__(self, source, project=None, runner=run, *, source_archive=None, source_sha256=None):
         self.source = Path(source).resolve()
         self.project = project
         self.runner = runner
+        self.source_archive = source_archive
+        self.source_sha256 = source_sha256
         self.configuration = {}
         self.environment = {}
         self.stopped = False
@@ -32,16 +94,27 @@ class LegacySail:
         return self.runner(command, cwd=self.source, **kwargs)
 
     def preflight(self, allow_stopped=False):
-        if not (self.source / '.git').exists() or not (self.source / '.env').is_file():
-            raise OperationError('Adoption requires the existing CE Git checkout and its original .env.')
-        changes = self.runner(['git', 'status', '--porcelain', '--untracked-files=all'], cwd=self.source, capture=True).splitlines()
-        maintenance_files = {'?? storage/framework/down', '?? storage/framework/maintenance.php'}
-        if any(change not in maintenance_files for change in changes):
-            raise OperationError('Locally modified installations require the documented source installation procedure.')
-        commit = self.runner(['git', 'rev-parse', 'HEAD'], cwd=self.source, capture=True).strip()
-        baseline = self.runner(['git', 'rev-parse', 'v3.8.28^{commit}'], cwd=self.source, capture=True).strip()
-        if commit != baseline:
-            raise OperationError('First upgrade the original installation to the exact CE v3.8.28 tag.')
+        if not (self.source / '.env').is_file() or (self.source / '.env').is_symlink():
+            raise OperationError('Adoption requires the original regular .env file.')
+        if (self.source / '.git').exists():
+            if self.source_archive or self.source_sha256:
+                raise OperationError('The source archive options require an extracted source installation.')
+            changes = self.runner(['git', 'status', '--porcelain', '--untracked-files=all'], cwd=self.source, capture=True).splitlines()
+            maintenance_files = {'?? storage/framework/down', '?? storage/framework/maintenance.php'}
+            if any(change not in maintenance_files for change in changes):
+                raise OperationError('Locally modified installations require the documented source installation procedure.')
+            commit = self.runner(['git', 'rev-parse', 'HEAD'], cwd=self.source, capture=True).strip()
+            tags = self.runner(['git', 'tag', '--points-at', 'HEAD'], cwd=self.source, capture=True).splitlines()
+            versions = [item for item in SAIL_RELEASES if 'v' + item in tags]
+            if len(versions) != 1:
+                raise OperationError('Expected an exact CE Sail release tag: ' + ', '.join(SAIL_RELEASES))
+            source_version = versions[0]
+            kind = 'git'
+        elif self.source_archive and self.source_sha256:
+            source_version, commit = archived_source(self.source, self.source_archive, self.source_sha256)
+            kind = 'archive'
+        else:
+            raise OperationError('Source installations require the original release archive and verified SHA-256.')
         if (self.source / 'plugins/gaeld-ee/composer.json').exists():
             raise OperationError('This adoption command is for CE. An EE installation requires its separately validated edition pair.')
         self.environment = env_values(self.source / '.env')
@@ -73,7 +146,7 @@ class LegacySail:
         redis = self.compose('exec', '-T', 'redis', 'redis-server', '--version', capture=True)
         if not re.search(r'\b16\.', postgres) or not re.search(r'\bv=7\.', redis):
             raise OperationError('Adoption requires PostgreSQL 16 and Redis 7. Major-version migrations are separate.')
-        return {'source': str(self.source), 'source_commit': commit, 'source_version': '3.8.28',
+        return {'source': str(self.source), 'source_commit': commit, 'source_version': source_version, 'source_kind': kind,
                 'legacy_project': self.project or self.configuration.get('name'), 'environment_sha256': digest(self.source / '.env')}
 
     def stop_writers(self):
@@ -118,7 +191,7 @@ class LegacyBackup(Installation):
 
     def __init__(self, destination, legacy, command_path):
         super().__init__(destination.root, runner=destination.runner)
-        self.state = dict(destination.state, version='3.8.28', status='stopped')
+        self.state = dict(destination.state, version=destination.state['adoption']['source_version'], status='stopped')
         self.identity_file = destination.identity_file
         self.shared = legacy.source
         self.legacy = legacy
@@ -147,14 +220,14 @@ class SailAdoption:
             raise OperationError('Adoption requires a new, empty destination. Existing installations are never overwritten.')
         if source == install.root or install.root.is_relative_to(source) or source.is_relative_to(install.root):
             raise OperationError('Source and destination must be separate, non-nested directories.')
-        if version(target) <= version('3.8.28'):
-            raise OperationError('Choose a signed release newer than CE v3.8.28.')
         identity = Path(install.identity_file or '').resolve()
         if not identity.is_file() or identity.is_relative_to(install.root) or identity.is_relative_to(source):
             raise OperationError('Keep the age recovery identity in a separate location outside both installations.')
         if not re.fullmatch(r'age1[0-9a-z]{58}', recipient) or install.runner(['age-keygen', '-y', str(identity)], capture=True).strip() != recipient:
             raise OperationError('The recovery identity must match the configured age recipient.')
         origin = self.legacy.preflight(allow_stopped=resume)
+        if version(target) <= version(origin['source_version']):
+            raise OperationError('Choose a signed release newer than the recorded source version.')
         if resume:
             if install.state.get('status') != 'adoption-failed' or install.state.get('target') != target or install.state.get('adoption') != origin:
                 raise OperationError('Only the recorded failed adoption with an unchanged legacy source can be resumed.')
@@ -169,7 +242,7 @@ class SailAdoption:
                 install.shared.rename(install.meta / ('failed-shared-' + secrets.token_hex(8)))
             install.save('adoption-prepared', project='gaeld-' + secrets.token_hex(5), abandoned_projects=previous_projects, adoption_may_have_writes=False)
         else:
-            install.state = {'mode': 'docker', 'version': '3.8.28', 'target': target, 'project': 'gaeld-' + secrets.token_hex(5),
+            install.state = {'mode': 'docker', 'version': origin['source_version'], 'target': target, 'project': 'gaeld-' + secrets.token_hex(5),
                              'port': port, 'backup_recipient': recipient, 'recovery_identity': str(identity), 'ee_version': None, 'adoption': origin}
             release = install.stage(target, release_url, trust_key)
             install.save('adoption-prepared')
@@ -185,7 +258,7 @@ class SailAdoption:
             install.save('adoption-backed-up', backup=backup)
             with tempfile.TemporaryDirectory(prefix='adoption-recovery-', dir=install.meta) as temporary:
                 manifest, content = install.verify_backup(Path(backup['path']), identity, Path(temporary))
-                if manifest['version'] != '3.8.28':
+                if manifest['version'] != origin['source_version']:
                     raise OperationError('The adoption backup does not identify the baseline version.')
                 install.shared.mkdir(mode=0o700, parents=True, exist_ok=True)
                 shutil.copytree(content / 'files', install.shared / 'storage/app')
@@ -226,11 +299,13 @@ class SailAdoption:
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Adopt a clean CE v3.8.28 Sail installation into a separate managed destination')
+    parser = argparse.ArgumentParser(description='Adopt a clean CE Sail installation into a separate managed destination')
     parser.add_argument('--source', required=True)
     parser.add_argument('--root', required=True)
     parser.add_argument('--to', required=True)
     parser.add_argument('--legacy-project')
+    parser.add_argument('--source-archive', help='Original published source archive for an extracted CE installation')
+    parser.add_argument('--source-sha256', help='SHA-256 from the independently verified CE release checksums')
     parser.add_argument('--release-url', default='https://github.com/Scanix/Gaeld/releases/download')
     parser.add_argument('--trust-key', required=True)
     parser.add_argument('--distribution-policy', help='Independently supplied, pinned policy for an isolated RC rehearsal')
@@ -247,7 +322,7 @@ def main(argv=None):
     try:
         with installation.lock():
             installation.release_policy()
-            SailAdoption(installation, LegacySail(args.source, args.legacy_project)).adopt(args.to, args.release_url, args.trust_key, args.backup_recipient, args.port, args.resume, args.confirm_replace_new_data)
+            SailAdoption(installation, LegacySail(args.source, args.legacy_project, source_archive=args.source_archive, source_sha256=args.source_sha256)).adopt(args.to, args.release_url, args.trust_key, args.backup_recipient, args.port, args.resume, args.confirm_replace_new_data)
     except (OperationError, OSError, ValueError) as error:
         if isinstance(error, OperationError) and error.diagnostics and installation.meta.is_dir():
             log = installation.meta / 'last-error.log'

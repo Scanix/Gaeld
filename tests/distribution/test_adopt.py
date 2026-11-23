@@ -70,6 +70,39 @@ class SailAdoptionTest(unittest.TestCase):
         with self.assertRaisesRegex(manage.OperationError, 'modified'):
             self.legacy.preflight()
 
+    def test_adoption_identifies_each_supported_release_and_records_its_commit(self):
+        for previous in adopt.SAIL_RELEASES:
+            self.git('tag', '-d', *self.git('tag').splitlines())
+            self.git('tag', 'v' + previous)
+            origin = self.legacy.preflight()
+            self.assertEqual(previous, origin['source_version'])
+            self.assertEqual(self.git('rev-parse', 'HEAD').strip(), origin['source_commit'])
+            self.assertEqual('git', origin['source_kind'])
+
+    def test_installed_archive_verifies_original_release_code_and_ignores_runtime_data(self):
+        (self.source / 'artisan').write_text('official release launcher')
+        self.git('add', 'artisan')
+        self.git('commit', '-qm', 'Source release')
+        archive = self.root / 'official.tar.gz'
+        self.git('archive', '--format=tar.gz', '--prefix=gaeld-ce-3.9.0/', '-o', str(archive), 'HEAD')
+        extracted = self.root / 'extracted'
+        manage.extract_tar(archive, extracted)
+        source = extracted / 'gaeld-ce-3.9.0'
+        (source / '.env').write_bytes((self.source / '.env').read_bytes())
+        (source / 'storage/app').mkdir(parents=True)
+        (source / 'storage/app/file.pdf').write_bytes(b'document')
+        expected = manage.digest(archive)
+        self.assertEqual(('3.9.0', self.git('rev-parse', 'HEAD').strip()), adopt.archived_source(source, archive, expected))
+        with self.assertRaisesRegex(manage.OperationError, 'checksum'):
+            adopt.archived_source(source, archive, '0' * 64)
+        (source / 'local.php').write_text('local change')
+        with self.assertRaisesRegex(manage.OperationError, 'Unexpected local'):
+            adopt.archived_source(source, archive, expected)
+        (source / 'local.php').unlink()
+        (source / 'artisan').write_text('modified launcher')
+        with self.assertRaisesRegex(manage.OperationError, 'differs'):
+            adopt.archived_source(source, archive, expected)
+
     def test_preflight_refuses_other_tag_and_never_generates_a_key(self):
         (self.source / 'new.txt').write_text('new commit')
         self.git('add', 'new.txt')

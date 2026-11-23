@@ -49,12 +49,7 @@ Gäld covers the full accounting workflow for a small Swiss business:
 
 ## Getting started
 
-The `v3.9.0-rc.1` candidate adds managed Docker and native Linux installation,
-adoption of a clean CE v3.8.28 Sail installation, verified encrypted backups,
-controlled updates and recovery. It introduces no accounting-schema migration.
-See the [installation guide](docs/ce-managed-installation.md) and
-[candidate validation record](docs/rc-r1-3.9.0-rc.1.md). Acceptance is pending;
-use an isolated test installation until the candidate has been approved.
+The v3.11 managed installer is in qualification for fresh installations and adoption from CE v3.8.28, v3.9.0 and v3.10.0. Its Docker and native Linux installation guide covers verified release artifacts, source installations, encrypted backups and recovery. Use an isolated system while qualification is in progress. [Managed installation and recovery](docs/ce-managed-installation.md)
 
 ### Sail development environment
 

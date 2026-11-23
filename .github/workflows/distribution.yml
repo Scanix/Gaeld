@@ -10,7 +10,7 @@ on:
       allowed_from:
         description: JSON list of exact previous versions validated for this release
         required: true
-        default: '["3.8.28"]'
+        default: '["3.8.28","3.9.0","3.10.0"]'
         type: string
       compatible_ee_versions:
         description: JSON list of exact EE versions backed by a signed acceptance receipt
@@ -121,7 +121,7 @@ jobs:
           mkdir -p release
           for platform in linux/amd64 linux/arm64; do
             docker run --rm --platform "$platform" --entrypoint php "ghcr.io/scanix/gaeld@$APP_DIGEST" -r 'require "vendor/autoload.php"; if (PHP_VERSION_ID < 80400 || !extension_loaded("pdo_pgsql") || !extension_loaded("redis")) { exit(1); }'
-            python3 tests/distribution/runtime_smoke.py --platform "$platform" \
+            python3 tests/distribution/runtime_smoke.py --version "$RELEASE_VERSION" --platform "$platform" \
               --app-image "ghcr.io/scanix/gaeld@$APP_DIGEST" --web-image "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" \
               --postgres-image "docker.io/library/postgres@$POSTGRES_DIGEST" --redis-image "docker.io/library/redis@$REDIS_DIGEST"
           done
@@ -130,6 +130,7 @@ jobs:
           python3 -c 'import sys,tempfile; sys.path.insert(0,"scripts/distribution"); from manage import extract_tar; temporary=tempfile.TemporaryDirectory(); extract_tar(sys.argv[1],temporary.name)' "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
       - name: Rehearse real Sail adoption and recovery against the exact candidate
         env:
+          GH_TOKEN: ${{ github.token }}
           APP_DIGEST: ${{ steps.app.outputs.digest }}
           WEB_DIGEST: ${{ steps.web.outputs.digest }}
           POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
@@ -138,32 +139,48 @@ jobs:
         run: |
           set -euo pipefail
           candidate_dir="$RUNNER_TEMP/gaeld-r1-adoption-candidate"
-          baseline_dir="$RUNNER_TEMP/gaeld-r1-adoption-baseline"
           git worktree add --detach "$candidate_dir" "$GITHUB_SHA"
-          git worktree add --detach "$baseline_dir" v3.8.28
-          docker build --file "$baseline_dir/docker/php/Dockerfile" --tag gaeld-sail/app:rehearsal "$baseline_dir"
-          docker pull "ghcr.io/scanix/gaeld@$APP_DIGEST"
-          docker pull "ghcr.io/scanix/gaeld-web@$WEB_DIGEST"
-          docker pull "docker.io/library/postgres@$POSTGRES_DIGEST"
-          docker pull "docker.io/library/redis@$REDIS_DIGEST"
-          python3 "$candidate_dir/tests/distribution/adoption_rehearsal.py" \
-            --candidate "$candidate_dir" --version "$RELEASE_VERSION" \
-            --app-image "ghcr.io/scanix/gaeld@$APP_DIGEST" --web-image "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" \
-            --postgres-image "docker.io/library/postgres@$POSTGRES_DIGEST" --redis-image "docker.io/library/redis@$REDIS_DIGEST" \
-            --baseline-image gaeld-sail/app:rehearsal \
-            --source-artifact "$GITHUB_WORKSPACE/release/gaeld-ce-${RELEASE_VERSION}.tar.gz" \
-            --report "$GITHUB_WORKSPACE/release/adoption-acceptance.json"
-          python3 scripts/distribution/verify_adoption_receipt.py \
-            --receipt release/adoption-acceptance.json --version "$RELEASE_VERSION" --commit "$GITHUB_SHA" \
-            --source "release/gaeld-ce-${RELEASE_VERSION}.tar.gz" --platform linux/amd64 \
-            --app-image "ghcr.io/scanix/gaeld@$APP_DIGEST" --web-image "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" \
-            --postgres-image "docker.io/library/postgres@$POSTGRES_DIGEST" --redis-image "docker.io/library/redis@$REDIS_DIGEST"
+          mkdir -p "$RUNNER_TEMP/baselines" release/receipts
+          for version in 3.8.28 3.9.0 3.10.0; do
+            git worktree add --detach "$RUNNER_TEMP/baselines/$version" "refs/tags/v$version"
+          done
+          gh release download v3.9.0 -R "$GITHUB_REPOSITORY" -p gaeld-ce-v3.9.0.tar.gz -D "$RUNNER_TEMP"
+          archive_digest=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/v3.9.0" --jq '.assets[] | select(.name=="gaeld-ce-v3.9.0.tar.gz") | .digest | sub("^sha256:";"")')
+          for platform in linux/amd64 linux/arm64; do
+            arch=${platform#linux/}
+            for image in "ghcr.io/scanix/gaeld@$APP_DIGEST" "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" "docker.io/library/postgres@$POSTGRES_DIGEST" "docker.io/library/redis@$REDIS_DIGEST"; do
+              docker pull --platform "$platform" "$image"
+            done
+            for version in 3.8.28 3.9.0 3.10.0; do
+              baseline_dir="$RUNNER_TEMP/baselines/$version"
+              baseline_image="gaeld-sail/rehearsal:$version-$arch"
+              docker build --platform "$platform" -f "$baseline_dir/docker/php/Dockerfile" -t "$baseline_image" "$baseline_dir"
+              formats=(git)
+              if [[ "$version" == "3.9.0" && "$arch" == "amd64" ]]; then formats+=(archive); fi
+              for kind in "${formats[@]}"; do
+                archive_args=()
+                if [[ "$kind" == "archive" ]]; then
+                  archive_args=(--baseline-archive "$RUNNER_TEMP/gaeld-ce-v3.9.0.tar.gz" --baseline-sha256 "$archive_digest")
+                fi
+                python3 "$candidate_dir/tests/distribution/adoption_rehearsal.py" \
+                  --candidate "$candidate_dir" --version "$RELEASE_VERSION" --platform "$platform" \
+                  --baseline-version "$version" --baseline-image "$baseline_image" "${archive_args[@]}" \
+                  --app-image "ghcr.io/scanix/gaeld@$APP_DIGEST" --web-image "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" \
+                  --postgres-image "docker.io/library/postgres@$POSTGRES_DIGEST" --redis-image "docker.io/library/redis@$REDIS_DIGEST" \
+                  --source-artifact "$GITHUB_WORKSPACE/release/gaeld-ce-${RELEASE_VERSION}.tar.gz" \
+                  --report "$GITHUB_WORKSPACE/release/receipts/$version-$arch-$kind.json"
+              done
+            done
+          done
+          jq --slurp '.' release/receipts/*.json > release/adoption-acceptance.json
       - name: Retain the adoption acceptance evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ce-adoption-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: release/adoption-acceptance.json
+          path: |
+            release/adoption-acceptance.json
+            release/receipts/
           retention-days: 90
           if-no-files-found: warn
       - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
@@ -221,4 +238,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
-          gh release create "v${RELEASE_VERSION}" release/* --verify-tag --draft --title "Gäld CE ${RELEASE_VERSION}" --generate-notes
+          find release -maxdepth 1 -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum | sed 's|  release/|  |' > release/SHA256SUMS
+          gh release create "v${RELEASE_VERSION}" release/*.json release/*.gz release/*.pub release/*.sig release/SHA256SUMS --verify-tag --draft --title "Gäld CE ${RELEASE_VERSION}" --generate-notes

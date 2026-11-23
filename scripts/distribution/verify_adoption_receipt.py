@@ -12,7 +12,7 @@ import re
 
 
 CHECKS = (
-    'baseline_3_8_28', 'signed_https_manifest', 'digest_pinned_pull',
+    'fresh_install_owner_login', 'baseline_identity', 'signed_https_manifest', 'digest_pinned_pull',
     'coherent_encrypted_backup', 'adoption', 'app_key_preserved',
     'documents_preserved', 'queued_jobs_preserved', 'legacy_stopped',
     'managed_health', 'existing_owner_http_login', 'restore',
@@ -28,8 +28,19 @@ def sha256(path):
     return hasher.hexdigest()
 
 
-def verify(receipt_path, *, version, commit, source, images, platform=None):
-    receipt = json.loads(Path(receipt_path).read_text())
+def verify(receipt, *, version, commit, source, images, baseline_version=None, baseline_commit=None, platform=None):
+    if not isinstance(receipt, dict):
+        receipt = json.loads(Path(receipt).read_text())
+    if not re.fullmatch(r'[0-9a-f]{40}', receipt.get('baseline_commit', '')):
+        raise ValueError('A committed baseline is required.')
+    if not re.fullmatch(r'\d+\.\d+\.\d+', receipt.get('baseline_version', '')):
+        raise ValueError('An exact stable baseline version is required.')
+    if baseline_version and receipt['baseline_version'] != baseline_version:
+        raise ValueError('Adoption receipt belongs to a different baseline version.')
+    if baseline_commit and receipt['baseline_commit'] != baseline_commit:
+        raise ValueError('Adoption receipt belongs to a different baseline commit.')
+    if receipt.get('source_kind') not in ('git', 'archive'):
+        raise ValueError('Identify the verified baseline source format.')
     if not isinstance(receipt, dict) or receipt.get('schema') != 1 or receipt.get('status') != 'passed':
         raise ValueError('A successful real adoption rehearsal receipt is required.')
     if not re.fullmatch(r'[a-f0-9]{40}', commit) or receipt.get('candidate_commit') != commit:
@@ -58,10 +69,12 @@ def main():
     for name in ('receipt', 'version', 'commit', 'source', 'app-image', 'web-image', 'postgres-image', 'redis-image'):
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--platform', choices=('linux/amd64', 'linux/arm64'))
+    parser.add_argument('--baseline-version', required=True)
+    parser.add_argument('--baseline-commit', required=True)
     args = parser.parse_args()
     receipt = verify(args.receipt, version=args.version, commit=args.commit, source=args.source,
                      images={role: getattr(args, role + '_image') for role in ('app', 'web', 'postgres', 'redis')},
-                     platform=args.platform)
+                     baseline_version=args.baseline_version, baseline_commit=args.baseline_commit, platform=args.platform)
     print(json.dumps({'status': 'passed', 'platform': receipt['platform'], 'receipt_sha256': sha256(args.receipt)}))
 
 

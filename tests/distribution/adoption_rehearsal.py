@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Opt-in real CE v3.8.28 -> RC adoption and recovery, in a disposable Docker daemon.
+"""Opt-in real CE Sail adoption and recovery, in a disposable Docker daemon.
 
 No registry publication or global daemon trust changes. Only synthetic data is used.
 The nested daemon performs genuine TLS registry pulls by digest and the actual CLI.
@@ -13,6 +13,7 @@ import http.server
 import importlib.util
 import json
 import os
+import platform
 from pathlib import Path
 import secrets
 import re
@@ -99,22 +100,40 @@ def outer(args):
     (certificate / 'extensions').write_text('subjectAltName=DNS:registry.gaeld.test,DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\nbasicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nsubjectKeyIdentifier=hash\nauthorityKeyIdentifier=keyid:always,issuer\n')
     execute(['openssl', 'x509', '-req', '-in', certificate / 'server.csr', '-CA', certificate / 'ca.crt', '-CAkey', certificate / 'ca.key',
              '-CAcreateserial', '-days', '2', '-extfile', certificate / 'extensions', '-out', certificate / 'server.crt'])
-    execute(['git', 'clone', '--quiet', '--no-local', '--single-branch', '--branch', 'v3.8.28', candidate, workspace / 'legacy'])
+    sys.path.insert(0, str(candidate / 'scripts/distribution'))
+    from adopt import SAIL_RELEASES
+    from manage import extract_tar
+    if args.baseline_version not in SAIL_RELEASES:
+        raise RuntimeError('Choose a supported CE Sail baseline.')
+    baseline_tag = 'v' + args.baseline_version
+    baseline_commit = execute(['git', 'rev-parse', baseline_tag + '^{commit}'], cwd=candidate).strip()
+    if args.baseline_archive:
+        original = Path(args.baseline_archive).resolve()
+        if sha(original) != args.baseline_sha256:
+            raise RuntimeError('Baseline archive checksum mismatch.')
+        shutil.copy2(original, workspace / 'baseline.tar.gz')
+        extracted = workspace / 'baseline-extracted'
+        extract_tar(workspace / 'baseline.tar.gz', extracted)
+        (extracted / ('gaeld-ce-' + args.baseline_version)).rename(workspace / 'legacy')
+    else:
+        execute(['git', 'clone', '--quiet', '--no-local', '--single-branch', '--branch', baseline_tag, candidate, workspace / 'legacy'])
     if args.source_artifact:
         shutil.copy2(Path(args.source_artifact).resolve(), workspace / 'provided-source.tar.gz')
     images = {'app': args.app_image, 'web': args.web_image, 'postgres': args.postgres_image, 'redis': args.redis_image}
-    image_ids = {role: execute(['docker', 'image', 'inspect', image, '--format', '{{.Id}}']).strip() for role, image in images.items()}
-    baseline_id = execute(['docker', 'image', 'inspect', args.baseline_image, '--format', '{{.Id}}']).strip()
+    image_ids = {role: execute(['docker', 'image', 'inspect', '--platform', args.platform, image, '--format', '{{.Id}}']).strip() for role, image in images.items()}
+    baseline_id = execute(['docker', 'image', 'inspect', '--platform', args.platform, args.baseline_image, '--format', '{{.Id}}']).strip()
     imported = {role: identifier + '/' + role + ':input' for role in ['baseline', *images]}
     input_record = {'candidate_commit': commit, 'version': args.version, 'images': images, 'image_ids': image_ids,
-                    'imports': imported, 'baseline_image': imported['baseline'], 'platform': execute(['docker', 'image', 'inspect', args.app_image, '--format', '{{.Os}}/{{.Architecture}}']).strip(), 'payloads': {}}
+                    'imports': imported, 'baseline_image': imported['baseline'], 'platform': execute(['docker', 'image', 'inspect', '--platform', args.platform, args.app_image, '--format', '{{.Os}}/{{.Architecture}}']).strip(), 'payloads': {}}
+    input_record.update(baseline_version=args.baseline_version, baseline_commit=baseline_commit,
+                        baseline_sha256=args.baseline_sha256, host_system=platform.system(), host_machine=platform.machine())
     json_file(workspace / 'input.json', input_record)
     try:
         execute(['docker', 'network', 'create', '--label', 'gaeld.rehearsal=' + identifier, network])
         execute(['docker', 'run', '-d', '--name', registry, '--label', 'gaeld.rehearsal=' + identifier, '--network', network,
                  '--network-alias', 'registry.gaeld.test', '-v', str(certificate) + ':/certificates:ro',
                  '-e', 'REGISTRY_HTTP_TLS_CERTIFICATE=/certificates/server.crt', '-e', 'REGISTRY_HTTP_TLS_KEY=/certificates/server.key', 'registry:3'])
-        execute(['docker', 'run', '-d', '--privileged', '--name', daemon, '--label', 'gaeld.rehearsal=' + identifier,
+        execute(['docker', 'run', '-d', '--privileged', '--name', daemon, '--platform', args.platform, '--label', 'gaeld.rehearsal=' + identifier,
                  '--network', network, '-v', str(workspace) + ':/work', '-v', str(candidate) + ':/candidate:ro',
                  '-v', str(HERE) + ':/harness:ro', '--mount', 'type=bind,source=' + str(certificate) + ',target=/etc/docker/certs.d/registry.gaeld.test:5000,readonly',
                  '--entrypoint', 'dockerd', 'docker:29-dind', '--host=unix:///var/run/docker.sock'])
@@ -162,7 +181,9 @@ def inside():
     os.environ['GIT_CONFIG_VALUE_0'] = '/work/legacy'
     legacy = workspace / 'legacy'
     execute(['docker', 'tag', inputs['baseline_image'], 'gaeld-sail/app:latest'])
-    old = adopt.LegacySail(legacy, 'gaeld-rehearsal-baseline')
+    archived = (workspace / 'baseline.tar.gz').is_file()
+    archive_options = {'source_archive': workspace / 'baseline.tar.gz', 'source_sha256': inputs['baseline_sha256']} if archived else {}
+    old = adopt.LegacySail(legacy, 'gaeld-rehearsal-baseline', **archive_options)
     environment = {'APP_NAME': 'GaeldRehearsal', 'APP_ENV': 'local', 'APP_DEBUG': 'false', 'APP_KEY': 'base64:' + base64.b64encode(secrets.token_bytes(32)).decode(),
                    'APP_URL': 'http://localhost:18080', 'APP_PORT': '18080', 'DB_CONNECTION': 'pgsql', 'DB_HOST': 'pgsql', 'DB_PORT': '5432',
                    'DB_DATABASE': 'legacy', 'DB_USERNAME': 'legacy', 'DB_PASSWORD': secrets.token_hex(24), 'REDIS_HOST': 'redis',
@@ -175,8 +196,9 @@ def inside():
     (legacy / 'secrets').mkdir()
     (legacy / 'secrets/rehearsal-signing-secret.txt').write_text(secrets.token_hex(32))
     # The baseline ignores runtime dependencies and data. Its tracked files stay byte-for-byte unchanged.
-    with (legacy / '.git/info/exclude').open('a') as excluded:
-        excluded.write('\nsecrets/\n')
+    if not archived:
+        with (legacy / '.git/info/exclude').open('a') as excluded:
+            excluded.write('\nsecrets/\n')
     execute(['docker', 'run', '--rm', '-v', str(legacy) + ':/var/www/html', '-e', 'COMPOSER_ALLOW_SUPERUSER=1',
              '--entrypoint', 'composer', inputs['baseline_image'], 'install', '--prefer-dist', '--no-interaction'], capture=False)
     old.compose('run', '--rm', '--no-deps', '-T', '--entrypoint', 'sh', 'laravel.test', '-c', 'pnpm install --frozen-lockfile && SENTRY_AUTH_TOKEN= pnpm run build')
@@ -209,6 +231,8 @@ def inside():
     login('http://localhost:18080', credentials)
     before = legacy_fixture('snapshot')
     origin = old.preflight()
+    if origin['source_version'] != inputs['baseline_version'] or origin['source_commit'] != inputs['baseline_commit']:
+        raise AssertionError('The installation does not match the exact baseline release tag.')
     old_volumes = [json.loads(line) for line in execute(['docker', 'volume', 'ls', '--filter', 'label=com.docker.compose.project=gaeld-rehearsal-baseline', '--format', 'json']).splitlines()]
     identity = workspace / 'recovery.identity'
     execute(['age-keygen', '-o', identity])
@@ -255,16 +279,32 @@ def inside():
               'images': {role: image.split('@')[0] for role, image in images.items()}}
     json_file(workspace / 'operator-policy.json', policy)
     release = {'schema': 1, 'version': inputs['version'], 'channel': 'rehearsal', 'commit': inputs['candidate_commit'], 'edition': 'ce',
-               'boundary_contract': '1.0.0', 'minimum_version': '3.8.28', 'allowed_from': ['3.8.28'], 'migration_policy': 'forward-only',
+               'boundary_contract': '1.0.0', 'minimum_version': inputs['baseline_version'], 'allowed_from': [inputs['baseline_version']], 'migration_policy': 'forward-only',
                'compatible_ee_versions': [], 'postgres_major': 16, 'redis_major': 7, 'images': images}
     for name, file in [('source', source), ('provenance', release_dir / 'provenance.json'), ('sbom', release_dir / 'sbom.json')]:
         release[name] = {'url': origin_url + '/v' + inputs['version'] + '/' + file.name, 'sha256': sha(file)}
     json_file(release_dir / 'release.json', release)
     execute(['openssl', 'pkeyutl', '-sign', '-inkey', private, '-rawin', '-in', release_dir / 'release.json', '-out', release_dir / 'release.json.sig'])
+    fresh = workspace / 'fresh'
+    admin_file = workspace / 'fresh-admin.json'
+    new_owner = {'name': 'Qualification owner', 'email': 'fresh-owner@example.invalid',
+                 'password': secrets.token_urlsafe(32) + 'A7', 'organization': 'Qualification company',
+                 'currency': 'CHF', 'locale': 'en'}
+    json_file(admin_file, new_owner)
+    admin_file.chmod(0o600)
+    execute(['/candidate/gaeld', 'install', '--mode', 'docker', '--root', fresh, '--to', inputs['version'],
+             '--release-url', origin_url, '--trust-key', public, '--distribution-policy', workspace / 'operator-policy.json',
+             '--backup-recipient', recipient, '--identity-file', identity, '--admin-secret-file', admin_file,
+             '--url', 'http://localhost:18082', '--port', '18082'], capture=False)
+    execute(['/candidate/gaeld', 'doctor', '--root', fresh], capture=False)
+    login('http://localhost:18082', {key: new_owner[key] for key in ('email', 'password')})
+    manage.Installation(fresh).stop_runtime()
     target = workspace / 'managed'
     command = ['/candidate/gaeld', 'adopt', '--source', legacy, '--root', target, '--to', inputs['version'], '--legacy-project', old.project,
                '--release-url', origin_url, '--trust-key', public, '--distribution-policy', workspace / 'operator-policy.json',
                '--backup-recipient', recipient, '--identity-file', identity, '--port', '18081']
+    if archived:
+        command += ['--source-archive', workspace / 'baseline.tar.gz', '--source-sha256', inputs['baseline_sha256']]
     execute(command, capture=False)
     installation = manage.Installation(target)
     def managed_fixture(operation):
@@ -304,12 +344,13 @@ def inside():
         raise AssertionError('Resuming after a refused backup changed accounting data.')
     execute(['/candidate/gaeld', 'doctor', '--root', target], capture=False)
     json_file(workspace / 'report.json', {'schema': 1, 'status': 'passed', 'candidate_commit': inputs['candidate_commit'], 'source_tree_clean': True, 'candidate_version': inputs['version'],
-              'platform': inputs['platform'], 'baseline_commit': origin['source_commit'], 'channel': 'rehearsal', 'production_publication': False,
+              'platform': inputs['platform'], 'baseline_commit': origin['source_commit'], 'baseline_version': origin['source_version'],
+              'source_kind': origin['source_kind'], 'host_system': inputs['host_system'], 'host_machine': inputs['host_machine'], 'channel': 'rehearsal', 'production_publication': False,
               'release_sha256': sha(release_dir / 'release.json'), 'source_sha256': sha(source), 'images': images, 'candidate_images': inputs['images'],
               'candidate_image_ids': inputs['image_ids'],
               'candidate_payloads': {role: inputs['payloads'][role] for role in inputs['images']}, 'executed_payloads': payload_equivalence,
               'signing_key_sha256': sha(public), 'policy_sha256': sha(target / '.gaeld/distribution-policy.json'),
-              'checks': {name: True for name in ('baseline_3_8_28', 'signed_https_manifest', 'digest_pinned_pull', 'coherent_encrypted_backup',
+              'checks': {name: True for name in ('fresh_install_owner_login', 'baseline_identity', 'signed_https_manifest', 'digest_pinned_pull', 'coherent_encrypted_backup',
                          'adoption', 'app_key_preserved', 'documents_preserved', 'queued_jobs_preserved', 'legacy_stopped', 'managed_health', 'restore', 'existing_owner_http_login', 'failed_backup_resume', 'candidate_payload_equivalence')}})
     server.shutdown()
 
@@ -323,7 +364,11 @@ def main():
     parser.add_argument('--baseline-image', default='gaeld-sail/app:latest')
     parser.add_argument('--postgres-image', default='postgres:16-alpine')
     parser.add_argument('--redis-image', default='redis:7-alpine')
-    parser.add_argument('--version', default='3.9.0-rc.1')
+    parser.add_argument('--version')
+    parser.add_argument('--platform', choices=('linux/amd64', 'linux/arm64'))
+    parser.add_argument('--baseline-version')
+    parser.add_argument('--baseline-archive')
+    parser.add_argument('--baseline-sha256')
     parser.add_argument('--report')
     parser.add_argument('--source-artifact', help='Serve and verify these exact prebuilt source artifact bytes')
     parser.add_argument('--workspace')
@@ -331,8 +376,8 @@ def main():
     args = parser.parse_args()
     if args.inside:
         inside()
-    elif not all((args.candidate, args.app_image, args.web_image, args.report)):
-        parser.error('--candidate, --app-image, --web-image and --report are required')
+    elif not all((args.candidate, args.app_image, args.web_image, args.report, args.version, args.baseline_version, args.platform)):
+        parser.error('--candidate, --app-image, --web-image, --report, --platform, --version and --baseline-version are required')
     else:
         outer(args)
 

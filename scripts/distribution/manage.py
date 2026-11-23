@@ -188,8 +188,8 @@ def verify_release(directory, expected_version, trust_key, policy=None):
         raise OperationError('Release must identify its exact source commit.')
     repositories = policy['images'] if policy else OFFICIAL_IMAGES
     if policy:
-        if '-rc.' not in expected_version or release.get('channel') != 'rehearsal' or digest(trust_key) != policy['release_key_sha256']:
-            raise OperationError('A rehearsal requires an RC manifest explicitly identified as rehearsal and its pinned test key.')
+        if release.get('channel') != 'rehearsal' or digest(trust_key) != policy['release_key_sha256']:
+            raise OperationError('A rehearsal requires an explicitly identified rehearsal manifest and its pinned test key.')
     elif release.get('channel', 'public') != 'public':
         raise OperationError('A rehearsal release requires an independently supplied distribution policy.')
     for image, repository in repositories.items():

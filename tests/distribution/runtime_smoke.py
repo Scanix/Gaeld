@@ -23,7 +23,7 @@ spec.loader.exec_module(manager)
 
 def main():
     parser = argparse.ArgumentParser()
-    for option in ('app-image', 'web-image', 'postgres-image', 'redis-image', 'platform'):
+    for option in ('app-image', 'web-image', 'postgres-image', 'redis-image', 'platform', 'version'):
         parser.add_argument('--' + option, required=True)
     args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix='gaeld-runtime-test-') as directory:
@@ -36,7 +36,7 @@ def main():
         with socket.socket() as listener:
             listener.bind(('127.0.0.1', 0))
             port = listener.getsockname()[1]
-        installation.state = {'mode': 'docker', 'project': 'gaeld-runtime-' + secrets.token_hex(6), 'version': '3.9.0', 'port': port}
+        installation.state = {'mode': 'docker', 'project': 'gaeld-runtime-' + secrets.token_hex(6), 'version': args.version, 'port': port}
         runtime = installation.release_dir() / 'docker/production'
         shutil.copytree(REPOSITORY / 'docker/production', runtime)
         compose = runtime / 'compose.yml'
@@ -54,7 +54,7 @@ def main():
                        'SESSION_SECURE_COOKIE': 'false', 'MAIL_MAILER': 'log', 'FILESYSTEM_DISK': 'local',
                        'PLUGINS_ENABLED': 'false', 'SCOUT_DRIVER': 'null', 'APP_MAINTENANCE_DRIVER': 'file'}
         (installation.shared / '.env').write_text(''.join(f'{key}={value}\n' for key, value in environment.items()))
-        release = {'version': '3.9.0', 'images': {'app': args.app_image, 'web': args.web_image,
+        release = {'version': args.version, 'images': {'app': args.app_image, 'web': args.web_image,
                                                 'postgres': args.postgres_image, 'redis': args.redis_image}}
         installation.configure_runtime(release)
         administrator = {'name': 'QA Administrator', 'email': 'runtime-qa@example.invalid',
@@ -64,7 +64,7 @@ def main():
         secret.chmod(0o400)
         try:
             installation.compose('up', '-d', '--wait', '--wait-timeout', '120', 'pgsql', 'redis')
-            installation.fix_permissions('3.9.0')
+            installation.fix_permissions(args.version)
             installation.artisan('gaeld:install', '--admin-secret-file=/run/gaeld-admin.json', '--no-interaction', secret_file=secret)
             secret.unlink()
             installation.artisan('down')

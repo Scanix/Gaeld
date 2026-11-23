@@ -1,16 +1,6 @@
 # Managed CE installation and recovery
 
-The R1 candidate provides managed Docker images and a native Linux installation
-built from the signed source artifact. Sail remains the development environment.
-The `v3.9.0-rc.1` candidate has a separate acceptance dossier and must complete
-its publication checks before being recommended for production. The acceptance
-record and evidence accompany the candidate separately from its runtime archive.
-Use an isolated installation for candidate validation. R1 adds no accounting
-migration or new legal-conservation functionality.
-
-Supported validation targets are Linux AMD64/ARM64 with Docker, Mac Apple
-Silicon with Docker, and native Linux with systemd. macOS source checkouts can
-build Docker images; native macOS PHP services are not a supported production path.
+The v3.11 installer is in qualification on Linux Docker (AMD64 and ARM64), Apple Silicon Docker and a clean Linux host using systemd. Its release record will identify the precise platform, source version and source format exercised. Use the candidate only on an isolated system with a verified recovery copy.
 
 ## Prepare the host
 
@@ -48,7 +38,7 @@ The `gaeld` entry point and `scripts/distribution` must remain together. Replace
 the example version with the exact approved release; floating tags are refused.
 
 ```sh
-./gaeld install --to 3.9.0-rc.1 --mode docker --root /srv/gaeld \
+./gaeld install --to 3.11.0-rc.2 --mode docker --root /srv/gaeld \
   --trust-key /trusted/gaeld-release.pub \
   --backup-recipient AGE_RECIPIENT \
   --identity-file /secure/gaeld-recovery.key
@@ -83,13 +73,11 @@ The installer does not publish a server directly to the internet.
 
 ## Adopt an existing Sail installation
 
-The initial supported source is the clean CE `v3.8.28` tag. Older installations
-must first follow the previous release upgrade procedure to reach that version.
-Locally modified installations require an explicit source migration review.
+The adoption command recognizes clean, exactly tagged CE Sail installations at v3.8.28, v3.9.0 and v3.10.0. The target's signed manifest must include the installed version in its tested upgrade paths. Keep a copy of the release verification key and recovery identity outside both installations.
 
 ```sh
 python3 scripts/distribution/adopt.py \
-  --source /existing/gaeld-ce --root /srv/gaeld --to 3.9.0-rc.1 \
+  --source /existing/gaeld-ce --root /srv/gaeld --to 3.11.0-rc.2 \
   --trust-key /trusted/gaeld-release.pub \
   --backup-recipient AGE_RECIPIENT \
   --identity-file /secure/gaeld-recovery.key
@@ -112,7 +100,13 @@ maintenance files (`storage/framework/down` and `storage/framework/maintenance.p
 are expected while stopped; tracked changes and other untracked files still
 require review.
 
-### Explicit fallback to the retained v3.8.28 installation
+### Migrate an installation unpacked from a public source archive
+
+Obtain the **original** versioned CE archive from the published release assets. Verify its SHA-256 against the published digest using a separate trusted copy of the release record. Keep the archive outside the running source directory. For example, a source installation unpacked from v3.9.0 uses `gaeld-ce-v3.9.0.tar.gz`.
+
+Run the same adoption command with `--source-archive /secure/gaeld-ce-v3.9.0.tar.gz --source-sha256 VERIFIED_SHA256`. The installer reads the archive's version and source commit, compares each packaged application file with the running copy, checks the Sail services and backs up the original database, files, environment and queues before transfer. Keep both installations and the recovery key until a restore has been tested on a separate system. If a packaged file has changed, reconcile it against the original release in an isolated copy before attempting adoption again.
+
+### Return to the retained Sail installation
 
 Keep the managed application's web, worker and scheduler services stopped, and
 reconcile any writes accepted by it before returning to the original database.
@@ -126,7 +120,7 @@ a key. **Do not simply restart the old containers.** First verify the retained
 recover the correct original environment from its verified backup. Never create
 a new key to make an existing database start.
 
-From the R1 launcher directory, create a protected override outside both
+From the managed launcher directory, create a protected override outside both
 installations. This reads the original key without printing it or evaluating
 the environment file as shell code. The destination must not already exist;
 replace the example paths with the recorded source and a secure directory.
@@ -193,7 +187,7 @@ The updater verifies the signed manifest and artifact hashes, prepares the next
 release, locks the operation, enters maintenance, stops scheduled triggers and
 drains active workers. It creates and decrypts a coherent encrypted recovery
 backup and verifies its contents before running forward migrations. It then
-checks services and application health before reopening writes. R1 introduces
+checks services and application health before reopening writes. The managed installer introduces
 no accounting-data backfill or new schema migration.
 
 Any failed stage returns non-zero status and leaves an operation record for

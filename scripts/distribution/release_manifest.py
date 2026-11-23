@@ -7,6 +7,8 @@ from pathlib import Path
 import re
 import subprocess
 
+from adopt import SAIL_RELEASES
+from manage import version as version_order
 from verify_adoption_receipt import verify as verify_adoption_receipt
 
 
@@ -33,11 +35,26 @@ def main():
               'web': 'ghcr.io/scanix/gaeld-web@' + args.web_digest,
               'postgres': 'docker.io/library/postgres@' + args.postgres_digest,
               'redis': 'docker.io/library/redis@' + args.redis_digest}
-    verify_adoption_receipt(args.adoption_receipt, version=args.version, commit=args.commit,
-                            source=args.source, images=images)
     allowed = json.loads(args.allowed_from)
-    if not isinstance(allowed, list) or not allowed or not all(re.fullmatch(r'\d+\.\d+\.\d+(?:-rc\.\d+)?', item) for item in allowed):
-        raise ValueError('An exact tested upgrade path is required')
+    if args.version.split('-')[0] != '3.11.0' or not isinstance(allowed, list) or sorted(allowed) != sorted(SAIL_RELEASES):
+        raise ValueError('The v3.11 installer requires exact rehearsals from every supported Sail release.')
+    evidence = json.loads(Path(args.adoption_receipt).read_text())
+    if not isinstance(evidence, list):
+        raise ValueError('A complete adoption matrix is required.')
+    observed = set()
+    for receipt in evidence:
+        if not isinstance(receipt, dict) or receipt.get('baseline_version') not in allowed:
+            raise ValueError('The adoption matrix contains an unknown baseline.')
+        previous = receipt['baseline_version']
+        tag_commit = subprocess.check_output(['git', 'rev-parse', f'refs/tags/v{previous}^{{commit}}'], text=True).strip()
+        verify_adoption_receipt(receipt, version=args.version, commit=args.commit, source=args.source,
+                                images=images, baseline_version=previous, baseline_commit=tag_commit)
+        observed.add((previous, receipt['platform'], receipt['source_kind']))
+    required = {(previous, platform, 'git') for previous in allowed for platform in ('linux/amd64', 'linux/arm64')}
+    if not required.issubset(observed):
+        raise ValueError('The adoption matrix is missing a supported Git baseline or Docker architecture.')
+    if not any(kind == 'archive' for _, _, kind in observed):
+        raise ValueError('A published source-archive adoption rehearsal is required.')
     compatible_ee = json.loads(args.compatible_ee_versions)
     if not isinstance(compatible_ee, list) or not all(re.fullmatch(r'\d+\.\d+\.\d+(?:-rc\.\d+)?', item) for item in compatible_ee):
         raise ValueError('EE versions must be exact')
@@ -51,7 +68,7 @@ def main():
             raise ValueError('EE receipt does not prove these exact CE/EE pairs')
     base = f'https://github.com/Scanix/Gaeld/releases/download/v{args.version}/'
     result = {'schema': 1, 'version': args.version, 'commit': args.commit, 'edition': 'ce',
-              'boundary_contract': '1.0.0', 'minimum_version': '3.8.28', 'allowed_from': allowed,
+              'boundary_contract': '1.0.0', 'minimum_version': min(allowed, key=version_order), 'allowed_from': allowed,
               'migration_policy': 'forward-only', 'compatible_ee_versions': compatible_ee, 'postgres_major': 16, 'redis_major': 7,
               'images': images,
               'source': {'url': base + Path(args.source).name, 'sha256': sha256(args.source)},

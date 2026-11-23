@@ -46,7 +46,6 @@ strix_runs/
 /.scribe
 /docs/*
 !/docs/ce-managed-installation.md
-!/docs/rc-r1-3.9.0-rc.1.md
 
 # EE proprietary plugin — distributed via private GitLab repo, cloned on deploy
 /plugins/gaeld-ee/
