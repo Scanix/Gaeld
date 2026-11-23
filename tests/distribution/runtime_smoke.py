@@ -2,9 +2,11 @@
 """Exercise the actual production services in isolated, disposable Docker volumes."""
 import argparse
 import base64
+import contextlib
 import http.cookiejar
 import importlib.util
 import json
+import os
 from pathlib import Path
 import re
 import secrets
@@ -21,12 +23,28 @@ manager = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(manager)
 
 
+@contextlib.contextmanager
+def cleanup_after(action, *arguments):
+    try:
+        yield
+    except BaseException:
+        try:
+            action(*arguments)
+        except Exception as error:
+            print(f'Smoke test cleanup also failed: {error}', file=sys.stderr)
+        raise
+    else:
+        action(*arguments)
+
+
 def main():
     parser = argparse.ArgumentParser()
     for option in ('app-image', 'web-image', 'postgres-image', 'redis-image', 'platform', 'version'):
         parser.add_argument('--' + option, required=True)
     args = parser.parse_args()
-    with tempfile.TemporaryDirectory(prefix='gaeld-runtime-test-') as directory:
+    with contextlib.ExitStack() as cleanup:
+        directory = tempfile.mkdtemp(prefix='gaeld-runtime-test-')
+        cleanup.enter_context(cleanup_after(shutil.rmtree, directory))
         installation = manager.Installation(directory)
         installation.meta.mkdir()
         installation.shared.mkdir()
@@ -62,7 +80,14 @@ def main():
         secret = installation.meta / 'admin.json'
         secret.write_text(json.dumps(administrator))
         secret.chmod(0o400)
-        try:
+        # The real installer gives container services ownership of their bind mounts.
+        # Return only this test's temporary tree to the invoking user after shutdown.
+        cleanup.enter_context(cleanup_after(manager.run, [
+            'docker', 'run', '--rm', '--network', 'none', '--read-only', '--platform', args.platform,
+            '--user', '0:0', '--mount', f'type=bind,source={directory},target=/smoke',
+            '--entrypoint', 'chown', args.app_image, '-Rh', f'{os.getuid()}:{os.getgid()}', '/smoke',
+        ]))
+        with cleanup_after(installation.compose, 'down', '--volumes', '--remove-orphans'):
             installation.compose('up', '-d', '--wait', '--wait-timeout', '120', 'pgsql', 'redis')
             installation.fix_permissions(args.version)
             installation.artisan('gaeld:install', '--admin-secret-file=/run/gaeld-admin.json', '--no-interaction', secret_file=secret)
@@ -81,8 +106,6 @@ def main():
                     raise AssertionError('The installation owner cannot access the application: ' + landing)
             installation.stop_writers()
             print(json.dumps({'platform': args.platform, 'install': 'passed', 'login': 'passed', 'drain': 'passed'}))
-        finally:
-            installation.compose('down', '--volumes', '--remove-orphans')
 
 
 if __name__ == '__main__':
