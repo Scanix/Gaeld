@@ -1,0 +1,237 @@
+{
+  "status": "passed",
+  "ce_version": "3.12.0",
+  "published_baseline": {
+    "version": "3.11.0",
+    "tag": "v3.11.0",
+    "signed_tag_object": "72c6f90e785ef06e5fb118b353e2c885f7ab6722",
+    "tag_signature_verified_by_github": true,
+    "commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+    "manifest_sha256": "f439bf064144ce675c6161c4fc891388be9357329e3335701a933a251928c26d",
+    "signature_sha256": "cfa64f0d8588865bb23d613a4202cea887ec6cc7f0cedbf711b56777621cb46c",
+    "release_key_sha256": "a8fc25a937ba95210f64d75ae361ce20ed30c828b3712990c958f93224a3653c",
+    "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+    "images": {
+      "app": "ghcr.io/scanix/gaeld@sha256:04cc242f785fcca89d01f34eb44abdc4cc4a9ab1d67d130c413e4c63ef9d0f28",
+      "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+      "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+      "web": "ghcr.io/scanix/gaeld-web@sha256:5a31e9ec07d2d1fdf80e201157f4d11e000e9ee17d618ded077b06c68e63472b"
+    }
+  },
+  "qualification_artifacts": {
+    "3.11.0": {
+      "qualified": {
+        "version": "3.11.0",
+        "commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+        "build_ref": "refs/heads/release/v3.11.0",
+        "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45251261459",
+        "build_attempt": 1,
+        "artifact_kind": "qualified",
+        "artifact_id": 14860024679,
+        "artifact_sha256": "sha256:6dcdd035799f4025051f694f74819d126877ccf738c2c2c507bd06728da8bcb4",
+        "inventory_sha256": "39a024651fdd76b82863c4118c80e7e3db060e57b57172d2eb3ade1a9e756575",
+        "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+        "qualification_attempt": 2
+      },
+      "exercised": [
+        {
+          "version": "3.11.0",
+          "commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+          "build_ref": "refs/heads/release/v3.11.0",
+          "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45251261459",
+          "build_attempt": 1,
+          "artifact_kind": "qualified",
+          "artifact_id": 14860024679,
+          "artifact_sha256": "sha256:6dcdd035799f4025051f694f74819d126877ccf738c2c2c507bd06728da8bcb4",
+          "inventory_sha256": "39a024651fdd76b82863c4118c80e7e3db060e57b57172d2eb3ade1a9e756575",
+          "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+          "qualification_attempt": 2
+        }
+      ]
+    },
+    "3.12.0": {
+      "qualified": {
+        "version": "3.12.0",
+        "commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+        "build_ref": "refs/heads/release/v3.12.0",
+        "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45278838131",
+        "build_attempt": 1,
+        "artifact_kind": "qualified",
+        "artifact_id": 14869414445,
+        "artifact_sha256": "sha256:4e5b6945156a628e4ec7be9da0c4974e9318634f4b7825e43c1ba57487c0cfb1",
+        "inventory_sha256": "1f4d5422db09cf3d73de0af74799a1ae6ddad4420552736c7b14c2ae27e38bbc",
+        "source_sha256": "5199262223aac7530b176972ab4696bf1b2d25e8e24ac71006fb28586b7d1d2c",
+        "qualification_attempt": 1
+      },
+      "exercised": [
+        {
+          "version": "3.12.0",
+          "commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+          "build_ref": "refs/heads/release/v3.12.0",
+          "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45278838131",
+          "build_attempt": 1,
+          "artifact_kind": "early",
+          "artifact_id": 14870289814,
+          "artifact_sha256": "sha256:74310477a41675d2aa767ce46f97618bf16571b8cd1312260f8027ecdc44a3c0",
+          "inventory_sha256": "7ed6e9176f7eb28784d5651526022c2d74831722433fbfdacde958b1f11e6fdb",
+          "source_sha256": "5199262223aac7530b176972ab4696bf1b2d25e8e24ac71006fb28586b7d1d2c",
+          "qualification_attempt": 1
+        }
+      ],
+      "early": {
+        "version": "3.12.0",
+        "commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+        "build_ref": "refs/heads/release/v3.12.0",
+        "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45278838131",
+        "build_attempt": 1,
+        "artifact_kind": "early",
+        "artifact_id": 14870289814,
+        "artifact_sha256": "sha256:74310477a41675d2aa767ce46f97618bf16571b8cd1312260f8027ecdc44a3c0",
+        "inventory_sha256": "7ed6e9176f7eb28784d5651526022c2d74831722433fbfdacde958b1f11e6fdb",
+        "source_sha256": "5199262223aac7530b176972ab4696bf1b2d25e8e24ac71006fb28586b7d1d2c",
+        "qualification_attempt": 1
+      }
+    }
+  },
+  "ce_commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+  "ee_versions": [
+    "2.10.1"
+  ],
+  "ee_packages": [
+    {
+      "version": "2.10.1",
+      "commit": "c10fa0ebd3f8811261fe93d1c2bdbb6f83c639d3",
+      "content_sha256": "6c3353309f2521552befc8c2367be0e8649735d96d1866697888c1d72115c98f"
+    }
+  ],
+  "source_sha256": "5199262223aac7530b176972ab4696bf1b2d25e8e24ac71006fb28586b7d1d2c",
+  "candidate_images": {
+    "app": "ghcr.io/scanix/gaeld@sha256:dfc2a43a459b91e0b90e339088bc4770b34a7c8f7cb25b6c099f85859080a929",
+    "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+    "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+    "web": "ghcr.io/scanix/gaeld-web@sha256:1d4dd9e11dec0e3934038ab9e437921c21484f0287c254d2c08872b6a8ed5ab9"
+  },
+  "baseline_images": {
+    "app": "ghcr.io/scanix/gaeld@sha256:04cc242f785fcca89d01f34eb44abdc4cc4a9ab1d67d130c413e4c63ef9d0f28",
+    "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+    "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+    "web": "ghcr.io/scanix/gaeld-web@sha256:5a31e9ec07d2d1fdf80e201157f4d11e000e9ee17d618ded077b06c68e63472b"
+  },
+  "baseline_source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+  "allowed_from": [
+    "3.11.0"
+  ],
+  "boundary_contract": "1.0.0",
+  "archive_upgrades": [
+    {
+      "edition": "CE",
+      "baseline_version": "3.11.0",
+      "baseline_commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+      "candidate_version": "3.12.0",
+      "candidate_commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+      "checks": {
+        "capture": true,
+        "deduplication": true,
+        "missing_source_incident": true,
+        "retry": true,
+        "export": true,
+        "access_controls": true,
+        "existing_rows_unchanged": true,
+        "existing_files_unchanged": true,
+        "recovery_rows_unchanged": true,
+        "recovery_files_unchanged": true
+      },
+      "baseline_tables": 67,
+      "baseline_rows": 840,
+      "baseline_files": 9,
+      "restored_tables": 72,
+      "restored_rows": 1575,
+      "restored_files": 119,
+      "recovery_inventory_sha256": "ce75920de4cd68d1f4abd1bf34b658aa8db6d4298321c93dd2812bd851a16dee",
+      "backup_sha256": "2422d65a3a5207e012248034119445b56980aa27753c58761aad6c6df3908690",
+      "authenticated_http_after_restore": true,
+      "separate_empty_restore_database": true,
+      "rehearsal_trust_channel": true,
+      "elapsed_seconds": 323.99,
+      "web_invoice_originals": {
+        "authenticated_create_download": true,
+        "authenticated_replacement_download": true,
+        "first_pdf_in_original_package": true,
+        "replacement_pdf_in_successor_package": true,
+        "first_package_unchanged_after_replacement": true,
+        "queued_capture_survived_replacement": true,
+        "versioned_originals_present_in_successor": true,
+        "restored_download_and_both_archives": true,
+        "first_pdf_sha256": "d650e5dfc9385ed7494e6d0b4647abc6cc4ed092f44fd643893273fdf1e3d5df",
+        "replacement_pdf_sha256": "349f25302f987e459e43d5102db63ed79344cf46b48767e4b4ed4bc0a487eaec",
+        "legacy_unlinked_file_preserved": true,
+        "legacy_unlinked_file_sha256": "fd6c3b224f9950966f39941f3d13c3ffe22d0dc765890adb75f2c0d1b571a212"
+      },
+      "scheduled_capture_regressions": {
+        "soft_deleted_native_capture": true,
+        "failed_original_scheduled_deduplication": true,
+        "recovered_original_creates_prepared_successor": true,
+        "unchanged_failed_recaptures": 2,
+        "soft_deleted_transaction_lines": 2,
+        "soft_deleted_outbox_records": 1
+      }
+    },
+    {
+      "edition": "EE",
+      "baseline_version": "3.11.0",
+      "baseline_commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+      "candidate_version": "3.12.0",
+      "candidate_commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+      "checks": {
+        "capture": true,
+        "deduplication": true,
+        "missing_source_incident": true,
+        "retry": true,
+        "export": true,
+        "access_controls": true,
+        "existing_rows_unchanged": true,
+        "existing_files_unchanged": true,
+        "recovery_rows_unchanged": true,
+        "recovery_files_unchanged": true
+      },
+      "baseline_tables": 85,
+      "baseline_rows": 875,
+      "baseline_files": 9,
+      "restored_tables": 90,
+      "restored_rows": 1611,
+      "restored_files": 119,
+      "recovery_inventory_sha256": "3781b7bfb0d2d8352ff2981e28181bd80f10e5c0e31fe49d7ff76ffa392d9b68",
+      "backup_sha256": "dff3bb1b4b72e633a67e07e8329926ef7a6a5f627dcb82b69398662de7d1bfa7",
+      "authenticated_http_after_restore": true,
+      "separate_empty_restore_database": true,
+      "rehearsal_trust_channel": true,
+      "elapsed_seconds": 323.62,
+      "ee_version": "2.10.1",
+      "ee_commit": "c10fa0ebd3f8811261fe93d1c2bdbb6f83c639d3",
+      "ee_content_sha256": "6c3353309f2521552befc8c2367be0e8649735d96d1866697888c1d72115c98f",
+      "web_invoice_originals": {
+        "authenticated_create_download": true,
+        "authenticated_replacement_download": true,
+        "first_pdf_in_original_package": true,
+        "replacement_pdf_in_successor_package": true,
+        "first_package_unchanged_after_replacement": true,
+        "queued_capture_survived_replacement": true,
+        "versioned_originals_present_in_successor": true,
+        "restored_download_and_both_archives": true,
+        "first_pdf_sha256": "d650e5dfc9385ed7494e6d0b4647abc6cc4ed092f44fd643893273fdf1e3d5df",
+        "replacement_pdf_sha256": "349f25302f987e459e43d5102db63ed79344cf46b48767e4b4ed4bc0a487eaec",
+        "legacy_unlinked_file_preserved": true,
+        "legacy_unlinked_file_sha256": "fd6c3b224f9950966f39941f3d13c3ffe22d0dc765890adb75f2c0d1b571a212"
+      },
+      "scheduled_capture_regressions": {
+        "soft_deleted_native_capture": true,
+        "failed_original_scheduled_deduplication": true,
+        "recovered_original_creates_prepared_successor": true,
+        "unchanged_failed_recaptures": 2,
+        "soft_deleted_transaction_lines": 2,
+        "soft_deleted_outbox_records": 1
+      }
+    }
+  ],
+  "prepublication_manifests": "ephemeral isolated rehearsal trust; public and private release signatures are separate"
+}
