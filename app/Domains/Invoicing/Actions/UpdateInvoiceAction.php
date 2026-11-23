@@ -19,6 +19,23 @@ class UpdateInvoiceAction
 
     public function execute(Invoice $invoice, UpdateInvoiceData $data): Invoice
     {
+        if ($data->commercialReferences === []) {
+            return $this->updateDraft($invoice, $data);
+        }
+
+        return $invoice->getConnection()->transaction(function () use ($invoice, $data) {
+            $locked = Invoice::query()->where('organization_id', $invoice->organization_id)->lockForUpdate()->findOrFail($invoice->id);
+
+            if ($locked->archived_at !== null) {
+                throw new InvalidInvoiceStateException('Archived invoices cannot be updated.');
+            }
+
+            return $this->updateDraft($locked, $data);
+        });
+    }
+
+    private function updateDraft(Invoice $invoice, UpdateInvoiceData $data): Invoice
+    {
         if (! $invoice->status->isEditable()) {
             throw new InvalidInvoiceStateException('Only draft invoices can be updated.');
         }
@@ -31,6 +48,7 @@ class UpdateInvoiceAction
             'currency' => $data->currency,
             'notes' => $data->notes,
             'payment_terms' => $data->paymentTerms,
+            ...$data->commercialReferences,
         ];
 
         $organizationId = $invoice->getAttribute('organization_id');
