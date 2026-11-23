@@ -428,12 +428,6 @@ parameters:
 			path: app/Domains/Reporting/Services/ReportingService.php
 
 		-
-			message: '#^Parameter \#3 \$accountIdsByCode of method App\\Domains\\Reporting\\Services\\ReportingService\:\:applyBudgetToAccounts\(\) expects array\<string, string\>, Illuminate\\Support\\Collection\<\(int\|string\), mixed\> given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Domains/Reporting/Services/ReportingService.php
-
-		-
 			message: '#^Argument of an invalid type array\|string supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 1
