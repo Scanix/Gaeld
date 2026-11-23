@@ -28,6 +28,8 @@ class ContactApiController extends Controller
      *
      * @queryParam external_source string External system name. Example: shopify
      * @queryParam external_id string Exact identifier from that system. Example: order-12345
+     *
+     * @response 200 {"data":[{"id":"e57e49f9-b176-4484-9d13-8ed4d832b133","name":"Example AG","type":"company","external_source":"shop","external_id":"customer-517"}],"links":{},"meta":{"current_page":1,"total":1}}
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -58,6 +60,8 @@ class ContactApiController extends Controller
      * Returns a single contact by UUID.
      *
      * @urlParam contact string required The contact UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     *
+     * @response 200 {"data":{"id":"e57e49f9-b176-4484-9d13-8ed4d832b133","name":"Example AG","type":"company","external_source":"shop","external_id":"customer-517"}}
      */
     public function show(Contact $contact, CurrentOrganization $currentOrganization): ContactResource
     {
@@ -71,6 +75,8 @@ class ContactApiController extends Controller
      * Create contact
      *
      * Creates a contact in the current organisation.
+     *
+     * @response 201 {"data":{"id":"e57e49f9-b176-4484-9d13-8ed4d832b133","name":"Example AG","type":"company","external_source":"shop","external_id":"customer-517"}}
      */
     public function store(
         ContactApiRequest $request,
@@ -122,6 +128,8 @@ class ContactApiController extends Controller
      * Updates an existing contact in the current organisation.
      *
      * @urlParam contact string required The contact UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
+     *
+     * @response 200 {"data":{"id":"e57e49f9-b176-4484-9d13-8ed4d832b133","name":"Example AG","type":"company","external_source":"shop","external_id":"customer-517"}}
      */
     public function update(
         ContactApiRequest $request,

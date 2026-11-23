@@ -19,6 +19,8 @@ class InvoiceReferenceDataApiController extends Controller
     /**
      * List VAT rates
      *
+     * @response 200 {"data":[{"id":"437c3f2e-7d20-48ba-afd8-8b60ea170ac1","name":"Standard","code":"NORMAL","rate":"8.10","is_default":true,"is_active":true}],"links":{},"meta":{"current_page":1,"per_page":20,"total":1}}
+     *
      * @queryParam per_page integer Page size, between 1 and 100. Example: 20
      */
     public function vatRates(Request $request): AnonymousResourceCollection
@@ -31,6 +33,8 @@ class InvoiceReferenceDataApiController extends Controller
 
     /**
      * Show a VAT rate by its public UUID
+     *
+     * @response 200 {"data":{"id":"437c3f2e-7d20-48ba-afd8-8b60ea170ac1","name":"Standard","code":"NORMAL","rate":"8.10","is_default":true,"is_active":true}}
      */
     public function vatRate(VatRate $vatRate, CurrentOrganization $organization): VatRateResource
     {
@@ -42,6 +46,8 @@ class InvoiceReferenceDataApiController extends Controller
 
     /**
      * List invoice catalogue items
+     *
+     * @response 200 {"data":[{"id":"8fc1f733-cdc5-4e2d-9731-563c9cbbaeab","name":"Consultation","description":null,"default_unit_price":"100.00","default_vat_rate_id":"437c3f2e-7d20-48ba-afd8-8b60ea170ac1","is_active":true}],"links":{},"meta":{"current_page":1,"per_page":20,"total":1}}
      *
      * @queryParam per_page integer Page size, between 1 and 100. Example: 20
      */
@@ -56,6 +62,8 @@ class InvoiceReferenceDataApiController extends Controller
 
     /**
      * Show an invoice catalogue item
+     *
+     * @response 200 {"data":{"id":"8fc1f733-cdc5-4e2d-9731-563c9cbbaeab","name":"Consultation","description":null,"default_unit_price":"100.00","default_vat_rate_id":"437c3f2e-7d20-48ba-afd8-8b60ea170ac1","is_active":true}}
      */
     public function catalogItem(InvoiceCatalogItem $catalogItem, CurrentOrganization $organization): InvoiceCatalogItemResource
     {

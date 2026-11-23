@@ -266,6 +266,11 @@ class ExpenseApiController extends Controller
         return new ExpenseResource($expense->fresh(['journalEntry.lines.account', 'expenseCategory', 'expenseAccount']));
     }
 
+    /**
+     * Cancel expense
+     *
+     * Cancels an eligible expense in the current organization.
+     */
     public function cancel(
         Expense $expense,
         CancelExpenseAction $action,

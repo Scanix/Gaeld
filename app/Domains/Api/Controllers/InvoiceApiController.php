@@ -59,7 +59,7 @@ class InvoiceApiController extends Controller
      * @queryParam filter[type] string Filter by type (e.g. `invoice`, `credit_note`). Example: invoice
      * @queryParam search string Search by invoice number or customer name. Example: INV-2025
      *
-     * @response 200 scenario="Success" {"data":[{"id":"9c8f...","number":"INV-2025-001","status":"sent","type":"invoice","related_invoice_id":null,"customer":{"id":"9c8f...","type":"company","name":"ACME GmbH"},"issue_date":"2025-01-15","due_date":"2025-02-14","subtotal":"1000.00","vat_amount":"81.00","total":"1081.00","currency":"CHF","notes":null,"payment_terms":"30 days net","amount_paid":"0.00","amount_due":"1081.00","lines":[],"payments":[],"created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"}],"links":{"first":"...","last":"...","prev":null,"next":"..."},"meta":{"current_page":1,"from":1,"last_page":1,"per_page":20,"to":1,"total":1}}
+     * @response 200 scenario="Success" {"data":[{"id":"9c8f...","number":"INV-2025-001","status":"sent","type":"invoice","related_invoice_id":null,"customer":{"id":"9c8f...","type":"company","name":"ACME GmbH"},"issue_date":"2025-01-15","due_date":"2025-02-14","subtotal":"1000.00","vat_amount":"81.00","total":"1081.00","currency":"CHF","notes":null,"payment_terms":"30 days net","amount_paid":"0.00","amount_due":"1081.00","lines":[],"payments":[],"created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z","external_source":"shop","external_id":"invoice-937","customer_reference":"ACCOUNTS-7","purchase_order_reference":"PO-1032","delivery_reference":"DEL-88"}],"links":{"first":"...","last":"...","prev":null,"next":"..."},"meta":{"current_page":1,"from":1,"last_page":1,"per_page":20,"to":1,"total":1}}
      *
      * @queryParam external_source string External system name. Example: shopify
      * @queryParam external_id string Exact identifier from that system. Example: order-12345
@@ -82,7 +82,7 @@ class InvoiceApiController extends Controller
      *
      * @urlParam invoice string required The UUID of the invoice. Example: 9c8f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b
      *
-     * @response 200 scenario="Success" {"data":{"id":"9c8f...","number":"INV-2025-001","status":"sent","type":"invoice","related_invoice_id":null,"customer":{"id":"9c8f...","type":"company","name":"ACME GmbH","email":"info@acme.ch"},"issue_date":"2025-01-15","due_date":"2025-02-14","subtotal":"1000.00","vat_amount":"81.00","total":"1081.00","currency":"CHF","notes":null,"payment_terms":"30 days net","amount_paid":"0.00","amount_due":"1081.00","lines":[{"id":"uuid","description":"Consulting","quantity":"10.00","unit_price":"100.00","amount":"1000.00","vat_rate_id":"uuid","vat_amount":"81.00","sort_order":1}],"payments":[],"created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"}}
+     * @response 200 scenario="Success" {"data":{"id":"9c8f...","number":"INV-2025-001","status":"sent","type":"invoice","related_invoice_id":null,"customer":{"id":"9c8f...","type":"company","name":"ACME GmbH","email":"info@acme.ch"},"issue_date":"2025-01-15","due_date":"2025-02-14","subtotal":"1000.00","vat_amount":"81.00","total":"1081.00","currency":"CHF","notes":null,"payment_terms":"30 days net","amount_paid":"0.00","amount_due":"1081.00","lines":[{"id":"uuid","description":"Consulting","quantity":"10.00","unit_price":"100.00","amount":"1000.00","vat_rate_id":"uuid","vat_amount":"81.00","sort_order":1}],"payments":[],"created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z","external_source":"shop","external_id":"invoice-937","customer_reference":"ACCOUNTS-7","purchase_order_reference":"PO-1032","delivery_reference":"DEL-88"}}
      * @response 404 scenario="Not found" {"message":"No query results for model [Invoice]."}
      */
     public function show(Invoice $invoice): InvoiceResource
@@ -115,7 +115,7 @@ class InvoiceApiController extends Controller
      * @bodyParam lines[].unit_price number required Unit price (min 0). Example: 100.00
      * @bodyParam lines[].vat_rate_id string UUID of a VAT rate in your organisation.
      *
-     * @response 201 scenario="Created" {"data":{"id":"9c8f...","number":"INV-2025-042","status":"draft","type":"invoice","total":"1081.00","currency":"CHF","created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"}}
+     * @response 201 scenario="Created" {"data":{"id":"9c8f...","number":"INV-2025-042","status":"draft","type":"invoice","total":"1081.00","currency":"CHF","created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z","external_source":"shop","external_id":"invoice-937","customer_reference":"ACCOUNTS-7","purchase_order_reference":"PO-1032","delivery_reference":"DEL-88"}}
      * @response 422 scenario="Validation error" {"message":"The given data was invalid.","errors":{"customer_id":["The customer id field is required."]}}
      */
     public function store(
@@ -254,7 +254,7 @@ class InvoiceApiController extends Controller
      * @bodyParam lines[].unit_price number required Unit price (min 0).
      * @bodyParam lines[].vat_rate_id string UUID of a VAT rate.
      *
-     * @response 200 scenario="Updated" {"data":{"id":"9c8f...","number":"INV-2025-042","status":"draft","total":"2162.00","currency":"CHF"}}
+     * @response 200 scenario="Updated" {"data":{"id":"9c8f...","number":"INV-2025-042","status":"draft","total":"2162.00","currency":"CHF","external_source":"shop","external_id":"invoice-937","customer_reference":"ACCOUNTS-7","purchase_order_reference":"PO-1032","delivery_reference":"DEL-88"}}
      */
     public function update(
         UpdateInvoiceApiRequest $request,
