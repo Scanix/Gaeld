@@ -43,7 +43,7 @@ def main():
         raise ValueError('A complete adoption matrix is required.')
     observed = set()
     for receipt in evidence:
-        if not isinstance(receipt, dict) or receipt.get('baseline_version') not in allowed:
+        if not isinstance(receipt, dict) or receipt.get('host_system') != 'Linux' or receipt.get('baseline_version') not in allowed:
             raise ValueError('The adoption matrix contains an unknown baseline.')
         previous = receipt['baseline_version']
         tag_commit = subprocess.check_output(['git', 'rev-parse', f'refs/tags/v{previous}^{{commit}}'], text=True).strip()

@@ -24,7 +24,7 @@ class ReleaseManifestTest(unittest.TestCase):
             for baseline in SAIL_RELEASES:
                 subprocess.run(['git', 'tag', 'v' + baseline], cwd=root, check=True)
             receipt = {'schema': 1, 'status': 'passed', 'candidate_version': '3.11.0-rc.2',
-                       'baseline_commit': previous_commit,
+                       'baseline_commit': previous_commit, 'host_system': 'Linux',
                        'candidate_commit': 'a' * 40, 'source_tree_clean': True,
                        'source_sha256': sha256(root / 'source.tar.gz'), 'platform': 'linux/amd64',
                        'candidate_images': {'app': 'ghcr.io/scanix/gaeld@sha256:' + 'b' * 64,

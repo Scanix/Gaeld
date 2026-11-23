@@ -7,19 +7,9 @@ on:
         description: Exact existing CE tag version, without v
         required: true
         type: string
-      allowed_from:
-        description: JSON list of exact previous versions validated for this release
+      expected_commit:
+        description: Full reviewed CE commit to build
         required: true
-        default: '["3.8.28","3.9.0","3.10.0"]'
-        type: string
-      compatible_ee_versions:
-        description: JSON list of exact EE versions backed by a signed acceptance receipt
-        required: true
-        default: '[]'
-        type: string
-      ee_receipt_base_url:
-        description: HTTPS directory containing ee-acceptance.json and its Ed25519 signature (required for EE pairs)
-        required: false
         type: string
 
 permissions:
@@ -32,9 +22,8 @@ jobs:
   candidate:
     needs: quality
     runs-on: ubuntu-latest
-    environment: public-release
     permissions:
-      contents: write
+      contents: read
       packages: write
       id-token: write
       attestations: write
@@ -42,17 +31,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-      - name: Require reviewed immutable tag and signing material
+      - name: Verify the reviewed source ref and commit
         env:
           RELEASE_VERSION: ${{ inputs.version }}
-          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_ED25519_PRIVATE_KEY }}
-          RELEASE_PUBLIC_KEY: ${{ vars.RELEASE_ED25519_PUBLIC_KEY }}
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
         run: |
           set -euo pipefail
           [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
-          test "$(git rev-parse HEAD)" = "$(git rev-parse "v${RELEASE_VERSION}^{commit}")"
-          test -n "$RELEASE_SIGNING_KEY" && test -n "$RELEASE_PUBLIC_KEY"
-          printf '%s\n' "$RELEASE_PUBLIC_KEY" | cmp - docs/keys/release.pub
+          [[ "$EXPECTED_COMMIT" =~ ^[a-f0-9]{40}$ && "$GITHUB_SHA" == "$EXPECTED_COMMIT" ]]
+          [[ "$GITHUB_REF" == "refs/tags/v$RELEASE_VERSION" || "$GITHUB_REF" == "refs/heads/release/v$RELEASE_VERSION" ]]
           bash scripts/qa/test-ce-artifact.sh
           git archive --format=tar.gz HEAD -o /tmp/ce-source.tar.gz
           bash scripts/qa/check-ce-artifact.sh /tmp/ce-source.tar.gz
@@ -198,46 +185,35 @@ jobs:
           format: spdx-json
           output-file: release/sbom.spdx.json
           upload-artifact: false
-      - name: Sign release only after verification and attestations succeed
+      - name: Bind qualification to the built candidate
         env:
+          RELEASE_VERSION: ${{ inputs.version }}
           APP_DIGEST: ${{ steps.app.outputs.digest }}
           WEB_DIGEST: ${{ steps.web.outputs.digest }}
           POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
           REDIS_DIGEST: ${{ steps.databases.outputs.redis }}
-          RELEASE_VERSION: ${{ inputs.version }}
-          ALLOWED_FROM: ${{ inputs.allowed_from }}
-          COMPATIBLE_EE: ${{ inputs.compatible_ee_versions }}
-          EE_RECEIPT_BASE_URL: ${{ inputs.ee_receipt_base_url }}
-          EE_RECEIPT_KEY: ${{ vars.EE_TEST_RECEIPT_PUBLIC_KEY }}
-          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_ED25519_PRIVATE_KEY }}
-          RELEASE_PUBLIC_KEY: ${{ vars.RELEASE_ED25519_PUBLIC_KEY }}
-        run: |
-          set -euo pipefail
-          umask 077
-          signing_key=$(mktemp)
-          trap 'rm -f "$signing_key"' EXIT
-          printf '%s\n' "$RELEASE_SIGNING_KEY" > "$signing_key"
-          printf '%s\n' "$RELEASE_PUBLIC_KEY" > release/release.pub
-          ee_arguments=()
-          if [ "$COMPATIBLE_EE" != '[]' ]; then
-            [[ "$EE_RECEIPT_BASE_URL" == https://* ]] && test -n "$EE_RECEIPT_KEY"
-            curl --fail --location --proto '=https' --proto-redir '=https' "${EE_RECEIPT_BASE_URL%/}/ee-acceptance.json" -o release/ee-acceptance.json
-            curl --fail --location --proto '=https' --proto-redir '=https' "${EE_RECEIPT_BASE_URL%/}/ee-acceptance.json.sig" -o release/ee-acceptance.json.sig
-            printf '%s\n' "$EE_RECEIPT_KEY" > release/ee-acceptance.pub
-            ee_arguments=(--ee-receipt release/ee-acceptance.json --ee-receipt-signature release/ee-acceptance.json.sig --ee-receipt-key release/ee-acceptance.pub)
-          fi
-          python3 scripts/distribution/release_manifest.py --version "$RELEASE_VERSION" --commit "$GITHUB_SHA" \
-            --source "release/gaeld-ce-${RELEASE_VERSION}.tar.gz" --app-digest "$APP_DIGEST" --web-digest "$WEB_DIGEST" \
-            --postgres-digest "$POSTGRES_DIGEST" --redis-digest "$REDIS_DIGEST" --allowed-from "$ALLOWED_FROM" \
-            --provenance release/provenance.json --sbom release/sbom.spdx.json --output release/release.json \
-            --adoption-receipt release/adoption-acceptance.json \
-            --compatible-ee-versions "$COMPATIBLE_EE" "${ee_arguments[@]}"
-          openssl pkeyutl -sign -inkey "$signing_key" -rawin -in release/release.json -out release/release.json.sig
-          openssl pkeyutl -verify -pubin -inkey release/release.pub -rawin -in release/release.json -sigfile release/release.json.sig
-      - name: Create a draft for the final publication review
+        run: python3 scripts/distribution/qualification_bundle.py create release
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        id: qualification
+        with:
+          subject-path: release/qualification-inputs.json
+      - name: Preserve the qualification attestation
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_VERSION: ${{ inputs.version }}
+          BUNDLE: ${{ steps.qualification.outputs.bundle-path }}
+        run: cp "$BUNDLE" release/qualification-provenance.jsonl
+      - name: Retain exact artifacts for qualification and promotion
+        id: artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: managed-ce-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Record the immutable candidate artifact
+        env:
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.artifact.outputs.artifact-digest }}
+          ARTIFACT_URL: ${{ steps.artifact.outputs.artifact-url }}
         run: |
-          find release -maxdepth 1 -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum | sed 's|  release/|  |' > release/SHA256SUMS
-          gh release create "v${RELEASE_VERSION}" release/*.json release/*.gz release/*.pub release/*.sig release/SHA256SUMS --verify-tag --draft --title "Gäld CE ${RELEASE_VERSION}" --generate-notes
+          printf 'Artifact ID %s. SHA-256 %s. [Download the exact qualification inputs](%s).\n' \
+            "$ARTIFACT_ID" "$ARTIFACT_DIGEST" "$ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
