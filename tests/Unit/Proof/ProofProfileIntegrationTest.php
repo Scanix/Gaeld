@@ -101,6 +101,26 @@ class ProofProfileIntegrationTest extends TestCase
         $renewal = (new RenewArchiveEvidence($verifier, $authority, $storage))->renew($package, gmdate('Ymd\THis\Z').'-aabbccdd', $manifest['retention_until'], $result['manifest_sha256']);
         $this->assertSame(1, $renewal['verification']['renewals_checked']);
         $this->assertSame($signature, file_get_contents($package.'/evidence/manifest.p7s'));
+
+        $validator = $this->directory.'/test-validator';
+        file_put_contents($validator, "#!/bin/sh\ncat \"\$0.json\"\n");
+        chmod($validator, 0700);
+        config(['archiving.pdfa.verapdf' => $validator]);
+        $wrongProfile = ['jobEndStatus' => 'normal', 'profileName' => 'PDF/A-1b validation profile', 'compliant' => true];
+        $job = ['validationResult' => [$wrongProfile]];
+        foreach ([
+            ['<report/>', 'Invalid PDF/A validation report.'],
+            [json_encode(['report' => ['jobs' => [$job, $job]]], JSON_THROW_ON_ERROR), 'Invalid PDF/A validation report.'],
+            [json_encode(['report' => ['jobs' => [$job]]], JSON_THROW_ON_ERROR), 'A report is not valid PDF/A-2b.'],
+        ] as [$invalid, $expected]) {
+            file_put_contents($validator.'.json', $invalid);
+            try {
+                $verifier->verify($package, $result['manifest_sha256']);
+                $this->fail('The independent verifier accepted an invalid validator response.');
+            } catch (RuntimeException $error) {
+                $this->assertSame($expected, $error->getMessage());
+            }
+        }
     }
 
     public function test_invalid_timestamp_fails_closed_with_existing_content_readable(): void

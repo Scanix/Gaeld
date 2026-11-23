@@ -289,14 +289,23 @@ final class Verifier
 
     private function verifyPdf(string $path): void
     {
-        $report = $this->run([$this->options['verapdf'] ?? 'verapdf', '--format', 'xml', '--flavour', '2b', $path]);
-        $xml = new \DOMDocument;
-        if (! @$xml->loadXML($report, LIBXML_NONET) || $xml->doctype !== null) {
+        $output = $this->run([$this->options['verapdf'] ?? 'verapdf', '--format', 'json', '--flavour', '2b', $path]);
+        try {
+            $report = json_decode($output, true, flags: JSON_THROW_ON_ERROR);
+        } catch (\JsonException $error) {
+            throw new RuntimeException('Invalid PDF/A validation report.', previous: $error);
+        }
+        $jobs = $report['report']['jobs'] ?? null;
+        if (! is_array($jobs) || count($jobs) !== 1) {
             throw new RuntimeException('Invalid PDF/A validation report.');
         }
-        $reports = (new \DOMXPath($xml))->query('//*[local-name()="validationReport"]');
-        $report = $reports === false ? null : $reports->item(0);
-        if ($reports === false || $reports->length !== 1 || ! $report instanceof \DOMElement || $report->getAttribute('isCompliant') !== 'true' || ! str_contains(strtoupper($report->getAttribute('profileName')), 'PDF/A-2B')) {
+        $results = $jobs[0]['validationResult'] ?? null;
+        if (! is_array($results) || count($results) !== 1) {
+            throw new RuntimeException('Invalid PDF/A validation report.');
+        }
+        $validation = $results[0] ?? null;
+        if (($validation['jobEndStatus'] ?? null) !== 'normal' || ($validation['compliant'] ?? null) !== true
+            || ! is_string($validation['profileName'] ?? null) || strcasecmp($validation['profileName'], 'PDF/A-2b validation profile') !== 0) {
             throw new RuntimeException('A report is not valid PDF/A-2b.');
         }
     }
