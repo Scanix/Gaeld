@@ -1,0 +1,13 @@
+{
+  "source": "597385869e151a3e67fb6880cfe306f51117620e",
+  "version": "3.11.0-rc.2",
+  "build_run": 45217778962,
+  "build_attempt": 2,
+  "artifact_name": "managed-qualification-inputs-3.11.0-rc.2-45217778962-2",
+  "baseline_archive_sha256": "537bdd64d100b1483ea559b8239585ec60ad3c6b5df2ae9f6e0cc3824fd0cc83",
+  "baselines": {
+    "3.8.28": "2da064e1e5630c48c508f5af669a5d42009620d3",
+    "3.9.0": "319cb1199b725d25b03461d8a31e7814860f8e4c",
+    "3.10.0": "5fa1ce7f006e4fe9cfbf4de294bbcc69695cb600"
+  }
+}

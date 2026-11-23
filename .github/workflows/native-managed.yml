@@ -1,0 +1,77 @@
+name: Native Linux managed release qualification
+
+on:
+  push:
+    branches: [qa/managed-native-linux-20261123]
+    paths:
+      - .github/workflows/native-managed.yml
+      - .github/qa/native-managed.py
+      - .github/qa/native-managed-inputs.json
+
+permissions:
+  contents: read
+  actions: read
+  packages: read
+
+jobs:
+  qualify:
+    name: ${{ matrix.arch }} v${{ matrix.baseline }} ${{ matrix.kind }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+        baseline: [3.8.28, 3.9.0, 3.10.0]
+        kind: [git]
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+          - runner: ubuntu-24.04
+            arch: amd64
+            baseline: 3.9.0
+            kind: archive
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            baseline: 3.9.0
+            kind: archive
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: driver
+          persist-credentials: false
+      - name: Resolve the pinned candidate
+        id: identity
+        run: |
+          set -euo pipefail
+          source=$(jq -er '.source|select(test("^[0-9a-f]{40}$"))' driver/.github/qa/native-managed-inputs.json)
+          echo "source=$source" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: candidate
+          ref: ${{ steps.identity.outputs.source }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Build the real tagged Sail baseline and resolve the retained candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QA_ARCH: ${{ matrix.arch }}
+          QA_BASELINE: ${{ matrix.baseline }}
+        run: python3 driver/.github/qa/native-managed.py --prepare-native candidate driver/.github/qa/native-managed-inputs.json "$RUNNER_TEMP/qualified-inputs.json"
+      - name: Qualify the published candidate on its native CPU
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QA_ARCH: ${{ matrix.arch }}
+          QA_BASELINE: ${{ matrix.baseline }}
+          QA_KIND: ${{ matrix.kind }}
+        run: python3 driver/.github/qa/native-managed.py candidate "$RUNNER_TEMP/qualified-inputs.json" receipts
+      - name: Retain native runtime and adoption receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: managed-linux-${{ matrix.arch }}-${{ matrix.baseline }}-${{ matrix.kind }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: receipts/
+          if-no-files-found: warn
+          retention-days: 90
