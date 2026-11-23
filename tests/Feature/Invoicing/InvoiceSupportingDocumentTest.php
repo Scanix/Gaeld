@@ -5,12 +5,24 @@ namespace Tests\Feature\Invoicing;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\IssuedDocumentFile;
 use App\Domains\Accounting\Services\ArchivePackageService;
+use App\Domains\Api\Jobs\DispatchWebhookJob;
+use App\Domains\Api\Models\Webhook;
 use App\Domains\Invoicing\Actions\SyncInvoiceLinesAction;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Services\CurrentOrganization;
+use App\Domains\Organizations\Services\OrganizationDocumentStorageService;
+use App\Support\Contracts\OrganizationQuotaResolver;
+use App\Support\Exceptions\FileUploadFailedException;
+use App\Support\Services\FileUploadService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Testing\Fakes\QueueFake;
 use Illuminate\Testing\TestResponse;
+use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Tests\Security\SecurityTestCase;
 use ZipArchive;
@@ -110,6 +122,125 @@ class InvoiceSupportingDocumentTest extends SecurityTestCase
         $this->assertDatabaseCount('invoices', 0);
         $this->assertDatabaseCount('issued_document_files', 0);
         $this->assertSame([], Storage::disk('local')->allFiles());
+    }
+
+    public function test_storage_quota_refusal_releases_the_monthly_invoice_slot(): void
+    {
+        $this->limits(storage: 0);
+        $this->post(route('invoices.store'), $this->form(self::FIRST))->assertSessionHasErrors('document');
+
+        $this->assertSame(0, $this->usedSlots());
+        $this->assertSame(0, app(OrganizationDocumentStorageService::class)->bytesUsed($this->orgA));
+        $this->assertDatabaseCount('invoices', 0);
+        $this->assertSame([], Storage::disk('local')->allFiles());
+
+        $this->post(route('invoices.store'), $this->form())->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('invoices', 1);
+        $this->assertSame(1, $this->usedSlots());
+    }
+
+    public function test_disk_write_failure_releases_the_storage_and_monthly_invoice_reservations(): void
+    {
+        $this->limits();
+        $this->mock(FileUploadService::class)->shouldReceive('store')->once()->andThrow(new FileUploadFailedException);
+        $this->withoutExceptionHandling();
+        try {
+            $this->post(route('invoices.store'), $this->form(self::FIRST));
+            $this->fail('The upload failure must abort creation.');
+        } catch (FileUploadFailedException) {
+            $this->assertDatabaseCount('invoices', 0);
+        }
+
+        $this->assertSame(0, $this->usedSlots());
+        $this->assertSame(0, app(OrganizationDocumentStorageService::class)->bytesUsed($this->orgA));
+        $this->assertSame([], Storage::disk('local')->allFiles());
+    }
+
+    public function test_a_post_commit_listener_failure_during_replacement_retains_the_committed_link_and_releases_only_the_old_live_file(): void
+    {
+        $this->limits();
+        $invoice = $this->createWithDocument();
+        $previous = $invoice->justificatif_path;
+        Invoice::updated(fn () => DB::afterCommit(static fn () => throw new RuntimeException('Post-commit listener interrupted')));
+        $this->edit($invoice, self::SECOND)->assertSessionHasNoErrors()->assertRedirect(route('invoices.show', $invoice));
+
+        $this->assertNotSame($previous, $invoice->fresh()->justificatif_path);
+        Storage::disk('local')->assertMissing($previous);
+        $this->assertSame(self::SECOND, $this->get(route('invoices.justificatif.download', $invoice))->assertOk()->streamedContent());
+        $this->assertSame(strlen(self::SECOND), app(OrganizationDocumentStorageService::class)->bytesUsed($this->orgA));
+        $this->assertSame(1, $this->usedSlots());
+        $this->assertDatabaseCount('issued_document_files', 2);
+    }
+
+    public static function commitFailures(): array
+    {
+        return ['webhook queue push' => [false], 'earlier post-commit listener' => [true]];
+    }
+
+    #[DataProvider('commitFailures')]
+    public function test_queue_unavailability_after_commit_preserves_the_draft_its_original_and_both_reservations(bool $interruptBeforeWebhook): void
+    {
+        $this->limits();
+        config(['features.api_access' => true]);
+        $webhook = Webhook::create([
+            'organization_id' => $this->orgA->id, 'url' => 'https://93.184.216.34/hook',
+            'secret' => 'synthetic-test-signing-key', 'events' => ['invoice.created'], 'is_active' => true,
+        ]);
+        if ($interruptBeforeWebhook) {
+            Invoice::created(fn () => DB::afterCommit(static fn () => throw new RuntimeException('Post-commit listener interrupted')));
+        } else {
+            Queue::swap(new class($this->app) extends QueueFake
+            {
+                public function push($job, $data = '', $queue = null)
+                {
+                    if ($job instanceof DispatchWebhookJob) {
+                        throw new RuntimeException('Queue unavailable');
+                    }
+
+                    return parent::push($job, $data, $queue);
+                }
+            });
+        }
+
+        $invoice = $this->createWithDocument();
+        $call = $webhook->calls()->sole();
+        $eventId = $call->payload['event_id'];
+        $this->assertSame($invoice->id, $call->payload['invoice_id']);
+        $this->assertSame('pending', $call->status);
+        $this->assertNotNull($call->next_retry_at);
+        $this->assertSame(self::FIRST, $this->get(route('invoices.justificatif.download', $invoice))->assertOk()->streamedContent());
+        $this->assertSame(hash('sha256', self::FIRST), IssuedDocumentFile::query()->sole()->checksum_sha256);
+        $this->assertSame(1, $this->usedSlots());
+        $this->assertSame(strlen(self::FIRST), app(OrganizationDocumentStorageService::class)->bytesUsed($this->orgA));
+
+        Queue::fake([DispatchWebhookJob::class]);
+        if (! $interruptBeforeWebhook) {
+            $this->artisan('webhooks:dispatch-pending')->assertSuccessful();
+            Queue::assertNothingPushed();
+        }
+        $this->travel(2)->minutes();
+        $this->artisan('webhooks:dispatch-pending')->assertSuccessful();
+        $this->artisan('webhooks:dispatch-pending')->assertSuccessful();
+        Queue::assertPushed(DispatchWebhookJob::class, 1);
+        Http::fake(['*' => Http::response('', 204)]);
+        Queue::pushed(DispatchWebhookJob::class)->sole()->withFakeQueueInteractions()->handle();
+        $this->assertSame('success', $call->fresh()->status);
+        $this->assertNull($call->fresh()->next_retry_at);
+        Http::assertSent(fn ($request) => $request->hasHeader('X-Webhook-Id', $call->id)
+            && $request->hasHeader('X-Webhook-Event-Id', $eventId));
+    }
+
+    private function limits(int $storage = -1): void
+    {
+        $quotas = $this->mock(OrganizationQuotaResolver::class);
+        $quotas->shouldReceive('maxOrganizations', 'maxUsers', 'maxOcrScansPerDay', 'maxOcrScansPerMonth')->andReturn(-1);
+        $quotas->shouldReceive('maxInvoicesPerMonth')->andReturn(1);
+        $quotas->shouldReceive('maxStorageBytes')->andReturn($storage);
+    }
+
+    private function usedSlots(): int
+    {
+        return (int) Cache::get('invoices_monthly:'.$this->orgA->id.':'.now()->format('Y-m'));
     }
 
     private function edit(Invoice $invoice, ?string $bytes = null): TestResponse
