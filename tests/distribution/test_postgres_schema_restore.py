@@ -85,6 +85,16 @@ class PostgresSchemaRestoreTest(unittest.TestCase):
         self.assertEqual('newer-data', self.sql('SELECT evidence FROM journal'))
         self.assertEqual('1|1', self.sql('SELECT (SELECT count(*) FROM newer_fk), (SELECT count(*) FROM newer_independent)'))
 
+    def test_restore_of_a_new_backup_after_previous_recovery(self):
+        self.installation.database('pg_restore', archive=self.dump)
+        self.sql("COMMENT ON SCHEMA public IS 'recovered application';")
+        self.process(['pg_dump', *self.connection, '--dbname=' + self.name, '--format=custom', '--no-owner', '--no-acl', '--file=' + str(self.dump)])
+        self.add_new_schema_objects()
+        self.installation.database('pg_restore', archive=self.dump)
+        self.assertEqual('original', self.sql('SELECT evidence FROM journal'))
+        self.assertEqual('recovered application', self.sql("SELECT obj_description('public'::regnamespace, 'pg_namespace')"))
+        self.assertEqual('t', self.sql("SELECT to_regclass('public.newer_fk') IS NULL"))
+
     def test_other_application_schema_is_refused_without_changes(self):
         self.add_new_schema_objects()
         self.sql('CREATE SCHEMA unrelated_customer')

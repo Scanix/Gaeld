@@ -20,6 +20,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -53,6 +54,23 @@ def _digest(stream):
     for block in iter(lambda: stream.read(1024 * 1024), b''):
         hasher.update(block)
     return hasher.hexdigest()
+
+
+def dump_creates_public_schema(rendered):
+    # pg_dump can list the default public schema to restore its comment while
+    # leaving creation to initdb. Inspect only its pre-data schema definition.
+    with rendered.open('rb') as source:
+        in_public_schema = False
+        for line in source:
+            if line.startswith(b'-- Data for Name:'):
+                break
+            if line.startswith(b'-- Name: '):
+                if in_public_schema:
+                    break
+                in_public_schema = line.startswith(b'-- Name: public; Type: SCHEMA; Schema: -;')
+            elif in_public_schema and line.rstrip() == b'CREATE SCHEMA public;':
+                return True
+    return False
 
 
 def write_json(path, value):
@@ -452,12 +470,19 @@ class Installation:
                 time.sleep(1)
         self.artisan('gaeld:doctor', target=target)
         self.artisan('up', target=target)
-        try:
-            with urllib.request.urlopen(f'http://127.0.0.1:{self.state.get("port", 8080)}/up', timeout=15) as response:
-                if response.status != 200:
-                    raise OperationError('Application HTTP health check failed.')
-        except OSError as error:
-            raise OperationError('Application HTTP health check failed; services remain stopped.') from error
+        url = f'http://127.0.0.1:{self.state.get("port", 8080)}/up'
+        deadline = time.monotonic() + 30
+        while True:
+            try:
+                with urllib.request.urlopen(url, timeout=5) as response:
+                    if response.status != 200:
+                        raise OperationError('Application HTTP health check failed.')
+                return
+            except OSError as error:
+                transient = not isinstance(error, urllib.error.HTTPError) or error.code in (502, 503, 504)
+                if not transient or time.monotonic() >= deadline:
+                    raise OperationError('Application HTTP health check failed; services remain stopped.') from error
+                time.sleep(1)
 
     def fail_closed(self, status='failed'):
         self.save(status)
@@ -545,9 +570,7 @@ $gaeld_restore_guard$;
             with script.open('wb') as stream:
                 stream.write(guard.encode())
                 stream.write(b'DROP SCHEMA IF EXISTS public CASCADE;\n')
-                # Some pg_dump versions omit the default public schema from the
-                # TOC. Otherwise pg_restore recreates it in dependency order.
-                if not schemas:
+                if not schemas or not dump_creates_public_schema(rendered):
                     stream.write(b'CREATE SCHEMA public AUTHORIZATION CURRENT_USER;\n')
                 with rendered.open('rb') as source:
                     shutil.copyfileobj(source, stream)

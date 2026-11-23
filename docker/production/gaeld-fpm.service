@@ -2,7 +2,8 @@
 Description=Gaeld dedicated PHP-FPM
 After=network.target postgresql.service redis-server.service
 [Service]
-Type=simple
+Type=notify
+TimeoutStartSec=90
 ExecStart=/usr/sbin/php-fpm8.4 --fpm-config @ROOT@/.gaeld/fpm.conf --nodaemonize
 KillSignal=SIGQUIT
 TimeoutStopSec=2100

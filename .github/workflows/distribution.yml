@@ -143,6 +143,27 @@ jobs:
           docker run --rm --entrypoint tar "ghcr.io/scanix/gaeld@$APP_DIGEST" --hard-dereference -czhf - -C /var/www/html . > "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
           bash scripts/qa/check-ce-artifact.sh "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
           python3 -c 'import sys,tempfile; sys.path.insert(0,"scripts/distribution"); from manage import extract_tar; temporary=tempfile.TemporaryDirectory(); extract_tar(sys.argv[1],temporary.name)' "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
+          source_sha=$(sha256sum "release/gaeld-ce-${RELEASE_VERSION}.tar.gz" | cut -d' ' -f1)
+          jq -n --arg version "$RELEASE_VERSION" --arg commit "$GITHUB_SHA" --arg sha "$source_sha" \
+            --arg app "ghcr.io/scanix/gaeld@$APP_DIGEST" --arg web "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" \
+            --arg postgres "docker.io/library/postgres@$POSTGRES_DIGEST" --arg redis "docker.io/library/redis@$REDIS_DIGEST" \
+            '{schema:1,version:$version,commit:$commit,source:{name:("gaeld-ce-"+$version+".tar.gz"),sha256:$sha},images:{app:$app,web:$web,postgres:$postgres,redis:$redis}}' \
+            > release/qualification-inputs.json
+      - name: Retain exact source and image references for independent platform tests
+        id: inputs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: managed-qualification-inputs-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            release/gaeld-ce-*.tar.gz
+            release/qualification-inputs.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Record qualification input artifact
+        env:
+          ARTIFACT_URL: ${{ steps.inputs.outputs.artifact-url }}
+          ARTIFACT_DIGEST: ${{ steps.inputs.outputs.artifact-digest }}
+        run: echo "[Download the original qualification inputs]($ARTIFACT_URL), artifact SHA-256 \`$ARTIFACT_DIGEST\`." >> "$GITHUB_STEP_SUMMARY"
       - name: Rehearse real Sail adoption and recovery against the exact candidate
         env:
           GH_TOKEN: ${{ github.token }}
