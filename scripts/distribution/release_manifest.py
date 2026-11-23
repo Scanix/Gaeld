@@ -76,6 +76,26 @@ def verify_archive_upgrade(args, allowed, images, ee):
         raise ValueError('Archive evidence is missing an exact CE or EE upgrade path.')
 
 
+def verify_preservation_candidate(args, allowed, images, ee):
+    if not re.fullmatch(r'3\.13\.0-rc\.[1-9][0-9]*', args.version):
+        raise ValueError('The preservation profile is in qualification. Stable publication requires provider, operational and accounting/legal approval.')
+    if allowed != ['3.12.0'] or not ee or not args.ee_receipt:
+        raise ValueError('Preservation qualification requires the archive predecessor and the signed exact EE pair.')
+    receipt = json.loads(Path(args.ee_receipt).read_text())
+    if receipt.get('source_sha256') != sha256(args.source) or receipt.get('candidate_images') != images:
+        raise ValueError('Preservation qualification must cover the selected source artifact and images.')
+    proof = receipt.get('preservation_qualification', {})
+    previous = subprocess.check_output(['git', 'rev-parse', 'refs/tags/v3.12.0^{commit}'], text=True).strip()
+    if (proof.get('baseline_commit') != previous or proof.get('profile') != 'gaeld-sealed-package/1.0.0'
+            or proof.get('status') != 'passed' or proof.get('qualification_only') is not True
+            or not re.fullmatch(r'[a-f0-9]{64}', proof.get('evidence_sha256', ''))):
+        raise ValueError('The signed proof profile must identify its exact predecessor and qualification report.')
+    checks = ('pdfa_2b', 'cms_signature', 'rfc3161_https', 'compliance_retention', 'renewal',
+              'independent_recovery', 'prior_archive_continuity', 'ce_ee_compatibility')
+    if any(proof.get('checks', {}).get(name) is not True for name in checks):
+        raise ValueError('Preservation qualification checks are incomplete.')
+
+
 def main():
     parser = argparse.ArgumentParser()
     for name in ('version', 'commit', 'source', 'app-digest', 'web-digest', 'postgres-digest', 'redis-digest', 'allowed-from', 'provenance', 'sbom', 'output'):
@@ -106,6 +126,9 @@ def main():
     elif stage == '3.12.0':
         verify_archive_upgrade(args, allowed, images, compatible_ee)
         acceptance_name, acceptance_file = 'archive_upgrade_acceptance', args.ee_receipt
+    elif stage == '3.13.0':
+        verify_preservation_candidate(args, allowed, images, compatible_ee)
+        acceptance_name, acceptance_file = 'preservation_qualification', args.ee_receipt
     else:
         raise ValueError('A qualified release stage and its matching acceptance evidence are required.')
     if compatible_ee:

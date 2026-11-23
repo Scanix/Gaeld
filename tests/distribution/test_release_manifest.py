@@ -9,12 +9,35 @@ import unittest
 BUILDER = Path(__file__).resolve().parents[2] / 'scripts/distribution/release_manifest.py'
 sys.path.insert(0, str(BUILDER.parent))
 from adopt import SAIL_RELEASES
-from release_manifest import verify_archive_upgrade
+from release_manifest import verify_archive_upgrade, verify_preservation_candidate
 from unittest.mock import patch
 from verify_adoption_receipt import CHECKS, sha256
 
 
 class ReleaseManifestTest(unittest.TestCase):
+    def test_preservation_qualification_excludes_stable_and_requires_independent_recovery(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'source'
+            source.write_bytes(b'qualification')
+            path = root / 'receipt.json'
+            args = SimpleNamespace(version='3.13.0', source=source, ee_receipt=path)
+            with self.assertRaisesRegex(ValueError, 'Stable publication'):
+                verify_preservation_candidate(args, ['3.12.0'], {}, ['2.10.1'])
+            args.version = '3.13.0-rc.1'
+            checks = dict.fromkeys(('pdfa_2b', 'cms_signature', 'rfc3161_https', 'compliance_retention',
+                                    'renewal', 'independent_recovery', 'prior_archive_continuity', 'ce_ee_compatibility'), True)
+            proof = {'profile': 'gaeld-sealed-package/1.0.0', 'baseline_commit': 'a' * 40, 'status': 'passed',
+                     'qualification_only': True, 'evidence_sha256': 'b' * 64, 'checks': checks}
+            receipt = {'source_sha256': sha256(source), 'candidate_images': {}, 'preservation_qualification': proof}
+            with patch('release_manifest.subprocess.check_output', return_value='a' * 40):
+                path.write_text(json.dumps(receipt))
+                verify_preservation_candidate(args, ['3.12.0'], {}, ['2.10.1'])
+                checks['independent_recovery'] = False
+                path.write_text(json.dumps(receipt))
+                with self.assertRaisesRegex(ValueError, 'incomplete'):
+                    verify_preservation_candidate(args, ['3.12.0'], {}, ['2.10.1'])
+
     def test_archive_receipt_binds_both_editions_to_the_same_predecessor_and_complete_recovery(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
