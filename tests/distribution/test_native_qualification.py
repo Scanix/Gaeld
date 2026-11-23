@@ -3,14 +3,31 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/distribution"))
+from docker_platform import inspect_image, platform_options, supports_platform
 from qualification_bundle import IMAGES, build_inventory
 from qualify_native import BASELINES, HOSTS, collect, matrix
 from verify_adoption_receipt import CHECKS
 
 
 class NativeQualificationTest(unittest.TestCase):
+    def test_old_cli_uses_the_verified_native_image_without_platform_flags(self):
+        local = {"Os": "linux", "Architecture": "arm64", "Id": "sha256:" + "c" * 64}
+        def output(args, text):
+            if args[-1] == "--help":
+                return "Options: --format -o --output"
+            self.assertEqual(["docker", "image", "inspect", "candidate"], args)
+            return json.dumps([local])
+        supports_platform.cache_clear()
+        self.addCleanup(supports_platform.cache_clear)
+        with patch("docker_platform.subprocess.check_output", side_effect=output):
+            self.assertEqual([], platform_options("save", "linux/arm64"))
+            self.assertEqual(local, inspect_image("candidate", "linux/arm64"))
+            with self.assertRaisesRegex(ValueError, "wrong platform"):
+                inspect_image("candidate", "linux/amd64")
+
     def test_installer_matrix_includes_each_released_route_and_architecture(self):
         rows = matrix("3.11.0-rc.5")
         expected = {(arch, "", "smoke") for arch in HOSTS}
