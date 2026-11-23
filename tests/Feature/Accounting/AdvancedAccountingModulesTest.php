@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Accounting;
 
+use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Enums\TaxDeclarationStatus;
 use App\Domains\Accounting\Models\Account;
@@ -12,6 +13,7 @@ use App\Domains\Accounting\Models\ExchangeRate;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TaxDeclaration;
 use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -179,19 +181,20 @@ class AdvancedAccountingModulesTest extends TestCase
 
         $this->assertSame('Marketing & Ads', $center->fresh()->name);
 
-        $this->postJournalEntry('2026-03-10', [
+        app(LedgerService::class)->createDraft($this->organization->id, new JournalEntryData(date: '2026-03-10', reference: 'AR-REV', description: 'Analytical fixture', lines: [
             $this->journalLine($this->bankAccount, '500.00', '0.00', 'Receipt'),
             $this->journalLine($this->revenueAccount, '0.00', '500.00', 'Revenue'),
-        ], 'AR-REV');
+        ]));
 
-        $this->postJournalEntry('2026-03-11', [
+        app(LedgerService::class)->createDraft($this->organization->id, new JournalEntryData(date: '2026-03-11', reference: 'AR-EXP', description: 'Analytical fixture', lines: [
             $this->journalLine($this->expenseAccount, '200.00', '0.00', 'Expense'),
             $this->journalLine($this->bankAccount, '0.00', '200.00', 'Payment'),
-        ], 'AR-EXP');
+        ]));
 
         TransactionLine::query()
             ->whereIn('account_id', [$this->revenueAccount->id, $this->expenseAccount->id])
             ->update(['cost_center_id' => (string) $center->id]);
+        JournalEntry::whereIn('reference', ['AR-REV', 'AR-EXP'])->each(fn (JournalEntry $entry) => app(LedgerService::class)->postDraft($entry));
 
         $this->actAsOrg()->get('/accounting/analytical-report?from=2026-01-01&to=2026-12-31&cost_center_id='.$center->id)
             ->assertStatus(200)
@@ -374,7 +377,7 @@ XML;
             'date' => '2026-05-10',
             'reference' => 'MC-1',
             'description' => 'Member sale',
-            'is_posted' => true,
+            'is_posted' => false,
         ]);
 
         TransactionLine::create([
@@ -392,6 +395,7 @@ XML;
             'credit' => '900.00',
             'description' => 'Member revenue line',
         ]);
+        $memberEntry->update(['is_posted' => true]);
 
         $this->postJournalEntry('2026-05-08', [
             $this->journalLine($this->bankAccount, '700.00', '0.00', 'Org sale'),
@@ -508,7 +512,7 @@ XML;
             'date' => '2026-05-10',
             'reference' => 'SIG-1',
             'description' => 'Sign check',
-            'is_posted' => true,
+            'is_posted' => false,
         ]);
 
         TransactionLine::create([
@@ -526,6 +530,7 @@ XML;
             'credit' => '100.00',
             'description' => 'Offset line',
         ]);
+        $entry->update(['is_posted' => true]);
 
         $this->actAsOrg()->post('/accounting/consolidation/groups', [
             'name' => 'Sign Group',
@@ -566,7 +571,7 @@ XML;
             'date' => '2026-05-10',
             'reference' => 'FX-1',
             'description' => 'FX conversion check',
-            'is_posted' => true,
+            'is_posted' => false,
         ]);
 
         TransactionLine::create([
@@ -584,6 +589,7 @@ XML;
             'credit' => '100.00',
             'description' => 'USD revenue line',
         ]);
+        $entry->update(['is_posted' => true]);
 
         ExchangeRate::create([
             'organization_id' => $this->organization->id,
@@ -636,7 +642,7 @@ XML;
             'date' => '2026-05-10',
             'reference' => 'FX-MISS-1',
             'description' => 'Missing FX check',
-            'is_posted' => true,
+            'is_posted' => false,
         ]);
 
         TransactionLine::create([
@@ -654,6 +660,7 @@ XML;
             'credit' => '100.00',
             'description' => 'USD revenue line',
         ]);
+        $entry->update(['is_posted' => true]);
 
         $this->actAsOrg()->post('/accounting/consolidation/groups', [
             'name' => 'FX Missing Group',

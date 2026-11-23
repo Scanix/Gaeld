@@ -127,6 +127,9 @@ class YearEndClosingActionTest extends TestCase
         // Fiscal year should be closed
         $this->organization->refresh();
         $this->assertTrue($this->organization->isFiscalYearClosed(2025));
+        $this->assertDatabaseCount('archive_packages', 1);
+        $this->assertDatabaseCount('archive_outbox', 1);
+        $this->assertDatabaseCount('legal_archives', 0);
     }
 
     public function test_closing_skips_zero_balance_accounts(): void

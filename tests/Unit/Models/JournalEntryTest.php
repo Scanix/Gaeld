@@ -114,7 +114,7 @@ class JournalEntryTest extends TestCase
             'date' => '2026-03-20',
             'reference' => 'JE-1',
             'description' => 'Journal entry test',
-            'is_posted' => true,
+            'is_posted' => false,
         ]);
 
         foreach ($lines as $line) {

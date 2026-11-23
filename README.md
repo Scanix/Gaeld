@@ -45,6 +45,8 @@ Gäld covers the full accounting workflow for a small Swiss business:
 
 ## Getting started
 
+Archive fiscal-year records and original supporting documents by company. Each dated package includes an inventory with hashes and can be exported for recovery. [Archive package operating guide](docs/preservation-r2.md)
+
 Install self-hosted CE on Linux Docker, Apple Silicon Docker or a dedicated Ubuntu 24.04 LTS ARM64 host using systemd. Existing CE Sail installations on v3.8.28, v3.9.0 and v3.10.0 can adopt the managed Docker setup. [Managed installation and recovery](docs/ce-managed-installation.md)
 
 ### Sail development environment

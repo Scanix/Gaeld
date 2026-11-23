@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -114,6 +114,9 @@ function generateArchive(period) {
 
 <template>
   <AppLayout :title="t('legal_archives')">
+    <div class="mb-4 text-right">
+      <Link href="/accounting/conservation" class="text-sm underline">{{ t('conservation_title') }}</Link>
+    </div>
     <HelpText :title="t('legal_archives')" class="mb-6">
       <p>{{ t('legal_archives_desc') }}</p>
     </HelpText>

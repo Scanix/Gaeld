@@ -11,8 +11,11 @@ class HorizonConfigurationTest extends TestCase
         $environments = config('horizon.environments');
 
         $this->assertArrayHasKey('staging', $environments);
-        $this->assertSame([], $environments['staging']);
+        $this->assertSame(['supervisor-archives' => ['maxProcesses' => 1]], $environments['staging']);
         $this->assertArrayHasKey('supervisor-1', config('horizon.defaults'));
         $this->assertArrayHasKey('supervisor-ocr', config('horizon.defaults'));
+        $archives = config('horizon.defaults.supervisor-archives');
+        $this->assertSame(['archives'], $archives['queue']);
+        $this->assertGreaterThan($archives['timeout'], config('queue.connections.archives.retry_after'));
     }
 }

@@ -9,10 +9,10 @@ use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatEntry;
+use App\Domains\Accounting\Services\ArchivePackageService;
 use App\Domains\Accounting\Services\ClosingAccountsService;
 use App\Domains\Accounting\Services\FiscalYearService;
 use App\Domains\Accounting\Services\LedgerService;
-use App\Domains\Accounting\Services\LegalArchivingService;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use App\Support\Money;
@@ -31,8 +31,8 @@ class YearEndClosingAction
         private readonly ClosingAccountsService $closingAccounts,
         private readonly FiscalYearService $fiscalYears,
         private readonly LedgerService $ledger,
-        private readonly LegalArchivingService $archiving,
         private readonly GenerateOpeningBalancesAction $openingBalances,
+        private readonly ArchivePackageService $packages,
     ) {}
 
     /**
@@ -48,7 +48,6 @@ class YearEndClosingAction
         $year = (int) $validated['year'];
 
         $fiscalYear = $this->resolveFiscalYear($orgId, $year, $validated['fiscal_year_id'] ?? null);
-        $preservePreviousArchiveVersion = $fiscalYear?->status === FiscalYearStatus::Expired;
 
         if ($fiscalYear !== null) {
             $year = (int) $fiscalYear->start_date->year;
@@ -104,9 +103,11 @@ class YearEndClosingAction
             $fiscalYear,
             $actingUser,
             $closingReference,
-            $preservePreviousArchiveVersion,
+            $from,
+            $to,
             &$nextYearCreated,
         ): void {
+            Organization::withoutGlobalScopes()->whereKey($orgId)->lockForUpdate()->firstOrFail();
             $lines = [];
             $netDebitOnResult = '0';
             $netCreditOnResult = '0';
@@ -160,13 +161,19 @@ class YearEndClosingAction
                 $nextYearCreated = $this->fiscalYears->close($fiscalYear, $actingUser);
             }
 
-            $this->archiving->archiveFiscalYear(
-                $orgId,
-                $year,
-                $fiscalYear?->id,
-                preservePreviousVersion: $preservePreviousArchiveVersion,
-            );
             $this->openingBalances->execute($orgId, $year, $fiscalYear);
+            foreach (['invoices' => 'issue_date', 'expenses' => 'date', 'journal_entries' => 'date'] as $table => $dateColumn) {
+                DB::table($table)->where('organization_id', $orgId)->whereBetween($dateColumn, [$from, $to])
+                    ->whereNull('archived_at')->update(['archived_at' => now()]);
+            }
+            DB::table('salary_slips')->where('organization_id', $orgId)->whereNull('archived_at')
+                ->whereRaw('(period_year * 100 + period_month) BETWEEN ? AND ?', [(int) Carbon::parse($from)->format('Ym'), (int) Carbon::parse($to)->format('Ym')])
+                ->update(['archived_at' => now()]);
+            $capturePeriod = $fiscalYear ?? FiscalYear::create([
+                'organization_id' => $orgId, 'name' => (string) $year, 'start_date' => $from, 'end_date' => $to,
+                'status' => FiscalYearStatus::Closed, 'locked_at' => now(), 'locked_by_user_id' => $actingUser->id,
+            ]);
+            $this->packages->request($org, $capturePeriod, $actingUser, archivalPdf: (bool) config('archiving.proofs_enabled'));
         });
 
         Log::info('Year-end closing completed', [

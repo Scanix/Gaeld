@@ -56,7 +56,7 @@ class ManualJournalEntryTest extends TestCase
             'date' => '2026-03-15',
             'reference' => 'JE-SHOW-1',
             'description' => 'Visible journal entry',
-            'is_posted' => true,
+            'is_posted' => false,
         ]);
         TransactionLine::create([
             'journal_entry_id' => $entry->id,
@@ -70,6 +70,7 @@ class ManualJournalEntryTest extends TestCase
             'debit' => '0.00',
             'credit' => '250.00',
         ]);
+        $entry->update(['is_posted' => true]);
 
         $this->actAsOrg()
             ->get(route('accounting.journal-entries.show', $entry))

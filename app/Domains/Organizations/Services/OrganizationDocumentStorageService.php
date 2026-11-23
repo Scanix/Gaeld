@@ -75,11 +75,22 @@ final class OrganizationDocumentStorageService
             return;
         }
 
-        $storage = Storage::disk($disk);
-        $bytes = $storage->exists($path) ? (int) $storage->size($path) : 0;
-        $storage->delete($path);
-
-        $this->release($organization, $bytes);
+        DB::transaction(function () use ($organization, $path, $disk): void {
+            Organization::withoutGlobalScopes()->whereKey($organization->id)->lockForUpdate()->firstOrFail();
+            $retained = DB::table('archive_source_files')->where('organization_id', $organization->id)->where('source_path', $path)->exists()
+                || DB::table('issued_document_files')->where('organization_id', $organization->id)->where('storage_path', $path)->exists()
+                || DB::table('expenses')->where('organization_id', $organization->id)->where('receipt_path', $path)->whereNotNull('archived_at')->exists()
+                || DB::table('invoices')->where('organization_id', $organization->id)->where('justificatif_path', $path)->whereNotNull('archived_at')->exists();
+            if ($retained) {
+                return;
+            }
+            $storage = Storage::disk($disk);
+            $bytes = $storage->exists($path) ? (int) $storage->size($path) : 0;
+            if (! $storage->delete($path)) {
+                throw new \RuntimeException('Unable to delete document.');
+            }
+            $this->release($organization, $bytes);
+        });
     }
 
     private function ensureUsageRow(Organization $organization): void

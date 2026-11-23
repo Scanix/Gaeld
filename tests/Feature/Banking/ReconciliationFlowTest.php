@@ -460,7 +460,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-31',
             'reference' => 'VAT-SETTLEMENT-2026-Q1',
             'description' => 'VAT settlement',
-            'is_posted' => true,
+            'is_posted' => false,
             'type' => 'vat_settlement',
         ]);
         TransactionLine::create([
@@ -485,6 +485,7 @@ class ReconciliationFlowTest extends TestCase
             'reference' => 'VAT-PAYMENT-001',
         ]);
 
+        $journalEntry->update(['is_posted' => true]);
         $result = app(ReconciliationService::class)->reconcileWithVatSettlement($transaction, $journalEntry);
 
         $this->assertTrue($result->is_reconciled);
@@ -503,7 +504,7 @@ class ReconciliationFlowTest extends TestCase
             'date' => '2026-03-31',
             'reference' => 'VAT-SETTLEMENT-2026-Q1',
             'description' => 'VAT settlement',
-            'is_posted' => true,
+            'is_posted' => false,
             'type' => 'vat_settlement',
         ]);
         TransactionLine::create([
@@ -528,6 +529,7 @@ class ReconciliationFlowTest extends TestCase
             'reference' => 'VAT-PAYMENT-002',
         ]);
 
+        $journalEntry->update(['is_posted' => true]);
         $this->expectException(ReconciliationFailedException::class);
         app(ReconciliationService::class)->reconcileWithVatSettlement($transaction, $journalEntry);
     }

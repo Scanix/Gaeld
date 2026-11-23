@@ -18,7 +18,7 @@ class EnsureActiveSubscription
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->routeIs('settings.export', 'settings.export.download')) {
+        if ($request->routeIs('settings.export', 'settings.export.download', 'accounting.archives.*', 'accounting.conservation.*', 'organizations.switch')) {
             return $next($request);
         }
 
