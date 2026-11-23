@@ -288,10 +288,9 @@ class LegalArchiveController extends Controller
         $archives = $this->periodQuery($period)
             ->whereIn('document_type', ['pdf_pnl', 'pdf_balance_sheet', 'pdf_journal'])
             ->where('document_id', $this->pdfDocumentId($period))
+            ->orderByDesc('version')
             ->get()
-            ->groupBy('document_type')
-            ->map(fn ($versions) => $versions->sortByDesc('version')->first())
-            ->keyBy('document_type');
+            ->unique('document_type');
 
         if ($archives->isEmpty()) {
             // Nothing archived yet — generate fresh.

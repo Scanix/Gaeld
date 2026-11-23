@@ -103,7 +103,7 @@ class ExchangeRateController extends Controller
             }
         }
 
-        if (! $chfRate || $chfRate <= 0) {
+        if ($chfRate === null || ! is_finite($chfRate) || $chfRate <= 0) {
             return $this->backWithError(__('app.unexpected_error'));
         }
 
@@ -111,7 +111,7 @@ class ExchangeRateController extends Controller
         foreach ($dateNode->Cube as $currencyNode) {
             $currency = (string) $currencyNode['currency'];
             $rate = (float) $currencyNode['rate'];
-            if ($rate > 0) {
+            if (is_finite($rate) && $rate > 0) {
                 $rates[$currency] = $rate;
             }
         }
@@ -126,7 +126,7 @@ class ExchangeRateController extends Controller
                 $rateToChf = $chfRate / $rates[$currency];
             }
 
-            if (! $rateToChf || $rateToChf <= 0) {
+            if ($rateToChf === null || ! is_finite($rateToChf) || $rateToChf === 0.0) {
                 continue;
             }
 

@@ -523,19 +523,11 @@ class ReportingService
      * Annotate each account row with budget amount, variance, and variance percentage.
      *
      * @param  array<int, array<string, mixed>>  $accounts
-     * @param  Collection<string, Budget>  $budgets
-     * @param  Collection<string, string>  $accountIdsByCode
-     */
-    /**
+     * @param  Collection<int, Budget>  $budgets
+     * @param  Collection<int|string, int>  $accountIdsByCode
      * @return array<int, array<string, mixed>>
      */
-    /**
-     * @param  array<string, mixed>  $accounts
-     * @param  Collection<int, mixed>  $budgets
-     * @param  array<string, string>  $accountIdsByCode
-     * @return array<string, mixed>
-     */
-    private function applyBudgetToAccounts(array $accounts, $budgets, $accountIdsByCode, int $months): array
+    private function applyBudgetToAccounts(array $accounts, Collection $budgets, Collection $accountIdsByCode, int $months): array
     {
         return array_map(function (array $account) use ($budgets, $accountIdsByCode, $months): array {
             $accountId = $accountIdsByCode[$account['code']] ?? null;

@@ -9,6 +9,7 @@ use App\Domains\Api\Controllers\ContactApiController;
 use App\Domains\Api\Controllers\ExpenseApiController;
 use App\Domains\Api\Controllers\InvoiceApiController;
 use App\Domains\Api\Controllers\InvoicePdfApiController;
+use App\Domains\Api\Controllers\InvoiceReferenceDataApiController;
 use App\Domains\Api\Controllers\JournalEntryApiController;
 use App\Domains\Api\Controllers\OrgTokenController;
 use App\Domains\Api\Controllers\WebhookApiController;
@@ -50,6 +51,10 @@ Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOr
     Route::delete('/org-tokens/{token}', [OrgTokenController::class, 'destroy'])->name('api.org-tokens.destroy');
 
     // Reference data
+    Route::get('/vat-rates', [InvoiceReferenceDataApiController::class, 'vatRates'])->name('api.vat-rates.index');
+    Route::get('/vat-rates/{vatRate}', [InvoiceReferenceDataApiController::class, 'vatRate'])->whereUuid('vatRate')->name('api.vat-rates.show');
+    Route::get('/invoice-catalog-items', [InvoiceReferenceDataApiController::class, 'catalogItems'])->name('api.invoice-catalog-items.index');
+    Route::get('/invoice-catalog-items/{catalogItem}', [InvoiceReferenceDataApiController::class, 'catalogItem'])->whereUuid('catalogItem')->name('api.invoice-catalog-items.show');
     Route::get('/meta/abilities', [ApiTokenController::class, 'abilities'])->name('api.meta.abilities');
     Route::get('/meta/webhook-events', [ApiTokenController::class, 'webhookEvents'])->name('api.meta.webhook-events');
 
