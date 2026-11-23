@@ -40,13 +40,14 @@ class ArchivePdfLargeJournalTest extends TestCase
                 'date' => sprintf('2024-%02d-01', (($index - 1) % 12) + 1),
                 'reference' => "LARGE-{$index}",
                 'description' => 'Large journal entry',
-                'is_posted' => true,
+                'is_posted' => false,
             ]);
 
             $entry->lines()->createMany([
                 ['account_id' => $bank->id, 'debit' => '100.00', 'credit' => '0.00'],
                 ['account_id' => $revenue->id, 'debit' => '0.00', 'credit' => '100.00'],
             ]);
+            $entry->update(['is_posted' => true]);
         }
 
         $results = app(GenerateArchivePdfAction::class)->execute($this->organization->id, 2024);

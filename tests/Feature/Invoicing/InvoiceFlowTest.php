@@ -175,20 +175,25 @@ class InvoiceFlowTest extends TestCase
         $this->assertStringContainsString('1621.50 EUR @ 0.95000000 CHF', $posted->journalEntry->description);
     }
 
-    private function createForeignPaymentInvoice(): Invoice
+    private function createForeignPaymentInvoice(bool $legacyUnconverted = false): Invoice
     {
         ExchangeRate::create([
             'organization_id' => $this->org->id, 'currency_from' => 'EUR', 'currency_to' => 'CHF',
-            'rate' => '0.95000000', 'date' => '2026-03-01', 'source' => 'manual',
+            'rate' => $legacyUnconverted ? '1.00000000' : '0.95000000', 'date' => '2026-03-01', 'source' => 'manual',
         ]);
         Account::create([
             'organization_id' => $this->org->id, 'code' => '6900',
             'name' => 'Financial Expenses', 'type' => AccountType::Expense->value,
         ]);
 
-        return app(FinalizeInvoiceAction::class)->execute($this->createInvoice(['currency' => 'EUR'], [[
+        $invoice = app(FinalizeInvoiceAction::class)->execute($this->createInvoice(['currency' => 'EUR'], [[
             'description' => 'Consulting', 'quantity' => 1, 'unit_price' => '100.01', 'vat_rate_id' => $this->vatRate->id,
         ]]));
+        if ($legacyUnconverted) {
+            ExchangeRate::query()->update(['rate' => '0.95000000']);
+        }
+
+        return $invoice;
     }
 
     public function test_foreign_full_payment_clears_the_booked_receivable_including_rounding(): void
@@ -240,11 +245,7 @@ class InvoiceFlowTest extends TestCase
 
     public function test_legacy_foreign_invoice_uses_its_original_unconverted_ledger_value(): void
     {
-        $invoice = $this->createForeignPaymentInvoice();
-        $lines = $invoice->journalEntry->lines;
-        $lines->firstWhere('description', 'Accounts Receivable')->update(['debit' => '108.11']);
-        $lines->first(fn ($line) => str_starts_with($line->description, 'Revenue'))->update(['credit' => '100.01']);
-        $lines->first(fn ($line) => str_starts_with($line->description, 'VAT Output'))->update(['credit' => '8.10']);
+        $invoice = $this->createForeignPaymentInvoice(legacyUnconverted: true);
         $payment = app(InvoiceAccountingService::class)->recordPayment($invoice, new RecordPaymentData(
             amount: '108.11', paymentDate: '2026-04-01', paymentMethod: PaymentMethod::Bank, reference: null,
         ));

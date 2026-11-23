@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 import subprocess
 import sys
 import tempfile
@@ -8,10 +9,61 @@ import unittest
 BUILDER = Path(__file__).resolve().parents[2] / 'scripts/distribution/release_manifest.py'
 sys.path.insert(0, str(BUILDER.parent))
 from adopt import SAIL_RELEASES
+from release_manifest import verify_archive_upgrade
+from unittest.mock import patch
 from verify_adoption_receipt import CHECKS, sha256
 
 
 class ReleaseManifestTest(unittest.TestCase):
+    def test_archive_receipt_binds_both_editions_to_the_same_predecessor_and_complete_recovery(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'app.tar.gz'
+            source.write_bytes(b'exact release payload')
+            path = root / 'integrated.json'
+            manifest = root / 'release.json'
+            args = SimpleNamespace(source=source, ee_receipt=path, ee_receipt_signature='sig', ee_receipt_key='key', baseline_manifest=manifest)
+            images = {'app': 'test@sha256:' + 'd' * 64}
+            baseline_images = {name: 'original@sha256:' + 'c' * 64 for name in ('app','web','postgres','redis')}
+            predecessor = {'version':'3.11.0','commit':'a' * 40,'edition':'ce','source':{'sha256':'f' * 64},'images':baseline_images}
+            manifest.write_text(json.dumps(predecessor))
+            key = root / 'test.key'
+            public = root / 'test.pub'
+            subprocess.run(['openssl','genpkey','-algorithm','ED25519','-out',key],check=True)
+            subprocess.run(['openssl','pkey','-in',key,'-pubout','-out',public],check=True)
+            subprocess.run(['openssl','pkeyutl','-sign','-inkey',key,'-rawin','-in',manifest,
+                            '-out',manifest.with_name('release.json.sig')],check=True)
+            checks = dict.fromkeys(('capture','deduplication','missing_source_incident','retry','export','access_controls',
+                                    'existing_rows_unchanged','existing_files_unchanged','recovery_rows_unchanged','recovery_files_unchanged'), True)
+            row = {'baseline_version':'3.11.0','baseline_commit':'a' * 40,'checks':checks}
+            report = {'source_sha256':sha256(source),'candidate_images':images,'baseline_source_sha256':'f' * 64,'baseline_images':baseline_images,
+                      'ee_packages':[{'version':'2.10.0', 'commit':'b' * 40, 'content_sha256':'c' * 64}],
+                      'archive_upgrades':[dict(row, edition='CE'),dict(row,edition='EE',ee_version='2.10.0',
+                                                                     ee_commit='b' * 40,ee_content_sha256='c' * 64)]}
+            with (patch('release_manifest.subprocess.check_output',return_value='a' * 40),
+                  patch('release_manifest.RELEASE_PUBLIC_KEY',public),
+                  patch('release_manifest.RELEASE_KEY_SHA256',sha256(public))):
+                path.write_text(json.dumps(report))
+                verify_archive_upgrade(args,['3.11.0'],images,['2.10.0'])
+                report['baseline_source_sha256'] = 'e' * 64
+                path.write_text(json.dumps(report))
+                with self.assertRaisesRegex(ValueError,'signed predecessor'):
+                    verify_archive_upgrade(args,['3.11.0'],images,['2.10.0'])
+                report['baseline_source_sha256'] = 'f' * 64
+                report['archive_upgrades'][1]['ee_commit'] = 'e' * 40
+                path.write_text(json.dumps(report))
+                with self.assertRaisesRegex(ValueError,'signed commit'):
+                    verify_archive_upgrade(args,['3.11.0'],images,['2.10.0'])
+                report['archive_upgrades'][1]['ee_commit'] = 'b' * 40
+                report['archive_upgrades'][1]['checks'] = dict(checks,recovery_files_unchanged=False)
+                path.write_text(json.dumps(report))
+                with self.assertRaisesRegex(ValueError,'incomplete'):
+                    verify_archive_upgrade(args,['3.11.0'],images,['2.10.0'])
+                report['archive_upgrades'].pop()
+                path.write_text(json.dumps(report))
+                with self.assertRaisesRegex(ValueError,'missing an exact'):
+                    verify_archive_upgrade(args,['3.11.0'],images,['2.10.0'])
+
     def test_requires_attestations_and_exact_ee_acceptance_before_declaring_compatibility(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

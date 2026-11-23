@@ -2,6 +2,7 @@
 
 namespace App\Domains\Organizations\Services;
 
+use App\Domains\Accounting\Services\ArchiveAccessLog;
 use App\Domains\Expenses\Models\ExpenseCategory;
 use App\Domains\Organizations\DTOs\CreateOrganizationData;
 use App\Domains\Organizations\DTOs\UpdateCommunicationsData;
@@ -91,13 +92,16 @@ class OrganizationService
      */
     public function addMember(Organization $organization, User $user, string $role = 'member'): void
     {
-        $organization->users()->syncWithoutDetaching([
-            $user->id => ['role' => $role],
-        ]);
+        DB::transaction(function () use ($organization, $user, $role): void {
+            $organization->users()->syncWithoutDetaching([
+                $user->id => ['role' => $role],
+            ]);
 
-        $spatieRole = Role::tryFrom($role) ?? Role::Member;
-        $this->assignSpatieRole($user, $organization, $spatieRole);
-        $this->syncEmployeeLink($organization, $user, $spatieRole);
+            $spatieRole = Role::tryFrom($role) ?? Role::Member;
+            $this->assignSpatieRole($user, $organization, $spatieRole);
+            $this->syncEmployeeLink($organization, $user, $spatieRole);
+            app(ArchiveAccessLog::class)->record($organization->id, null, 'access.member_added', auth()->user(), ['user_id' => $user->id, 'role' => $spatieRole->value]);
+        });
     }
 
     /**
@@ -105,12 +109,15 @@ class OrganizationService
      */
     public function removeMember(Organization $organization, User $user): void
     {
-        $organization->users()->detach($user->id);
+        DB::transaction(function () use ($organization, $user): void {
+            $organization->users()->detach($user->id);
 
-        app()[PermissionRegistrar::class]->setPermissionsTeamId($organization->id);
-        $user->roles()->detach();
+            app()[PermissionRegistrar::class]->setPermissionsTeamId($organization->id);
+            $user->roles()->detach();
 
-        MemberRemoved::dispatch($organization, $user);
+            MemberRemoved::dispatch($organization, $user);
+            app(ArchiveAccessLog::class)->record($organization->id, null, 'access.member_removed', auth()->user(), ['user_id' => $user->id]);
+        });
     }
 
     /**
@@ -125,9 +132,13 @@ class OrganizationService
             ]);
         }
 
-        $organization->users()->updateExistingPivot($user->id, ['role' => $role->value]);
-        $this->assignSpatieRole($user, $organization, $role);
-        $this->syncEmployeeLink($organization, $user, $role, $employee);
+        DB::transaction(function () use ($organization, $user, $role, $employee): void {
+            $previousRole = $organization->users()->where('users.id', $user->id)->first()?->pivot?->getAttribute('role');
+            $organization->users()->updateExistingPivot($user->id, ['role' => $role->value]);
+            $this->assignSpatieRole($user, $organization, $role);
+            $this->syncEmployeeLink($organization, $user, $role, $employee);
+            app(ArchiveAccessLog::class)->record($organization->id, null, 'access.role_changed', auth()->user(), ['user_id' => $user->id, 'previous_role' => $previousRole, 'role' => $role->value]);
+        });
     }
 
     // ──────────────────────────────────────────────────────────────

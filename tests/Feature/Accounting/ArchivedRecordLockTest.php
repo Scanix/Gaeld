@@ -54,6 +54,13 @@ class ArchivedRecordLockTest extends TestCase
         $invoice->delete();
     }
 
+    public function test_archive_marker_cannot_be_cleared_to_bypass_the_lock(): void
+    {
+        $invoice = Invoice::factory()->for($this->organization)->create(['archived_at' => now()]);
+        $this->expectException(ArchivedRecordException::class);
+        $invoice->update(['archived_at' => null, 'notes' => 'changed']);
+    }
+
     public function test_expense_lock_blocks_update(): void
     {
         $expense = Expense::factory()->for($this->organization)->create();

@@ -5,6 +5,7 @@ namespace App\Domains\Expenses\Models;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\VatRate;
+use App\Domains\Accounting\Services\SupportingDocumentPreservation;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Enums\ExpenseStatus;
 use App\Domains\Expenses\Enums\ExpenseType;
@@ -88,6 +89,21 @@ class Expense extends Model
     ];
 
     protected $appends = ['gross_amount'];
+
+    protected static function booted(): void
+    {
+        static::saved(function (self $expense): void {
+            if ($expense->wasChanged('receipt_path') || $expense->wasRecentlyCreated) {
+                app(SupportingDocumentPreservation::class)->preserve($expense, 'receipt_path', 'supporting_expense');
+            }
+        });
+        static::updating(function (self $expense): void {
+            if ($expense->isDirty('receipt_path')) {
+                app(SupportingDocumentPreservation::class)->preserve($expense, 'receipt_path', 'supporting_expense', true);
+            }
+        });
+        static::deleting(fn (self $expense) => app(SupportingDocumentPreservation::class)->preserve($expense, 'receipt_path', 'supporting_expense', true));
+    }
 
     protected function casts(): array
     {

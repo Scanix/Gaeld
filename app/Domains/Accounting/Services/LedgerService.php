@@ -273,7 +273,7 @@ class LedgerService
                     'date' => $entry->date,
                     'reference' => $entry->reference,
                     'description' => $entry->description,
-                    'is_posted' => $isPosted,
+                    'is_posted' => false,
                     'type' => $entry->type,
                 ]);
 
@@ -288,6 +288,7 @@ class LedgerService
                 }
 
                 if ($isPosted) {
+                    $journalEntry->update(['is_posted' => true]);
                     $this->flushCache($organizationId);
                 }
 
