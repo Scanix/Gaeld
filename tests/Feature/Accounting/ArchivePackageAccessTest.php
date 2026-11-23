@@ -77,8 +77,10 @@ class ArchivePackageAccessTest extends TestCase
     public function test_unsubscribed_member_can_switch_companies_for_preservation_but_not_open_paid_pages(): void
     {
         config(['features.saas' => true]);
-        Route::get('/qa-billing', fn () => 'billing')->name('billing.index');
-        Route::getRoutes()->refreshNameLookups();
+        if (! Route::has('billing.index')) {
+            Route::get('/qa-billing', fn () => 'billing')->name('billing.index');
+            Route::getRoutes()->refreshNameLookups();
+        }
         $second = Organization::factory()->create();
         $second->users()->attach($this->user->id, ['role' => 'owner']);
         $this->assignOrganizationRole($this->user, $second, 'owner');
@@ -88,7 +90,7 @@ class ArchivePackageAccessTest extends TestCase
             ->assertRedirect('/dashboard')->assertSessionHas('current_organization_id', $second->id);
         $this->get('/accounting/conservation')->assertOk()->assertInertia(fn ($page) => $page
             ->has('packages.data', 1)->where('packages.data.0.id', $own->id));
-        $this->get('/dashboard')->assertRedirect('/qa-billing');
+        $this->get('/dashboard')->assertRedirect(route('billing.index'));
         $this->post('/organizations/'.$foreign->organization_id.'/switch')->assertNotFound();
         $this->get('/accounting/conservation/'.$foreign->id.'/export')->assertNotFound();
         $this->post('/accounting/conservation/'.$foreign->id.'/verify')->assertNotFound();
