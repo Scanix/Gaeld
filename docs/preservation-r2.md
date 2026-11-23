@@ -1,6 +1,6 @@
 # Accounting archive packages in v3.12
 
-This candidate adds dated, versioned accounting packages to the R1 installation and recovery baseline. The capability is the same in CE and EE and does not require a subscription or private registry. The CE/EE boundary contract remains 1.0.0.
+Community Edition and the supported Enterprise Edition package share the same dated, versioned accounting archives. Self-hosted CE includes this feature. The managed upgrade starts from v3.11.0.
 
 R2 checks content integrity. It does not create PDF/A, digital signatures, trusted timestamps, protected remote storage or cryptographic renewals. It does not certify GeBüV compliance. An explicit request for the unsupported archival-proof profile fails before a snapshot is created; it is never downgraded to ordinary PDF. Keep `ARCHIVE_PROOFS_ENABLED=false` for this release.
 
@@ -58,6 +58,6 @@ The report needs `environment`, `operator`, `completed_at` and a `packages` obje
 
 Apply the new migration forward after taking and verifying a complete R1 recovery backup. It adds evidence/outbox tables and PostgreSQL mutation guards without rewriting old ledger rows, UUIDs, dates, files or APP_KEY. The migration's reverse operation drops preservation data and protections; it is for isolated tests, not a production rollback strategy. Recover an earlier installation only by the explicit complete-restore procedure.
 
-The nullable cryptographic-proof columns are not part of R2. R3 must add them in a separate migration and update the package mutation guard additively; it must never edit an already deployed R2 migration. The immutable `archival_pdf` flag remains false in R2 for forward compatibility. No proof services or cryptographic-provider dependencies are shipped in this candidate.
+The immutable `archival_pdf` flag stays false for v3.12 content packages. Later proof profiles use separate package versions.
 
 Acceptance covers populated legacy-schema migration, exact amounts and extended financial years, original/version preservation, missing/tampered files, durable recovery after interrupted dispatch, three-company separation, historical resumption, access roles and local controls. A staging deployment and its operational acceptance are separate steps; this document does not claim they have already occurred.
