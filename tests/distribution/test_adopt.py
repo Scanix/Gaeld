@@ -91,6 +91,8 @@ class SailAdoptionTest(unittest.TestCase):
         (source / '.env').write_bytes((self.source / '.env').read_bytes())
         (source / 'storage/app').mkdir(parents=True)
         (source / 'storage/app/file.pdf').write_bytes(b'document')
+        (source / '.pnpm-store/v11').mkdir(parents=True)
+        (source / '.pnpm-store/v11/index.db').write_bytes(b'package manager cache')
         expected = manage.digest(archive)
         self.assertEqual(('3.9.0', self.git('rev-parse', 'HEAD').strip()), adopt.archived_source(source, archive, expected))
         with self.assertRaisesRegex(manage.OperationError, 'checksum'):

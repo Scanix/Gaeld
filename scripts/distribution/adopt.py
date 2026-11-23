@@ -57,7 +57,7 @@ def archived_source(source, archive, expected_digest):
     if Path('docker-compose.yml') not in tracked or Path('artisan') not in tracked:
         raise OperationError('The archive is missing the CE Sail application.')
     # Only application-generated data and dependency directories may supplement the release.
-    runtime = {'vendor', 'node_modules', 'public/build', 'storage/app', 'storage/framework',
+    runtime = {'vendor', 'node_modules', '.pnpm-store', 'public/build', 'storage/app', 'storage/framework',
                'storage/logs', 'secrets', 'bootstrap/cache'}
     for directory, dirs, files in os.walk(source, followlinks=False):
         parent = Path(directory).relative_to(source)
