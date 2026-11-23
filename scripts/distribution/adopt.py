@@ -20,6 +20,10 @@ from manage import Installation, OperationError, digest, env_values, run, verify
 SAIL_RELEASES = ('3.8.28', '3.9.0', '3.10.0')
 
 
+def inertia_debug_record(relative):
+    return re.fullmatch(r'storage/inertia-devtools/[0-9A-HJKMNP-TV-Z]{26}\.json', relative) is not None
+
+
 def archived_source(source, archive, expected_digest):
     """Verify installed code against the independently authenticated public release archive."""
     source = Path(source).resolve()
@@ -70,6 +74,8 @@ def archived_source(source, archive, expected_digest):
                     raise OperationError('Unexpected local link: ' + str(relative))
         for name in files:
             relative = parent / name
+            if inertia_debug_record(relative.as_posix()) and not (source / relative).is_symlink():
+                continue
             if relative != Path('.env') and relative not in tracked:
                 raise OperationError('Unexpected local source file: ' + str(relative))
     return release_version, commit
@@ -101,7 +107,8 @@ class LegacySail:
                 raise OperationError('The source archive options require an extracted source installation.')
             changes = self.runner(['git', 'status', '--porcelain', '--untracked-files=all'], cwd=self.source, capture=True).splitlines()
             maintenance_files = {'?? storage/framework/down', '?? storage/framework/maintenance.php'}
-            if any(change not in maintenance_files for change in changes):
+            if any(change not in maintenance_files and not (change.startswith('?? ') and inertia_debug_record(change[3:])
+                       and not (self.source / change[3:]).is_symlink()) for change in changes):
                 raise OperationError('Locally modified installations require the documented source installation procedure.')
             commit = self.runner(['git', 'rev-parse', 'HEAD'], cwd=self.source, capture=True).strip()
             tags = self.runner(['git', 'tag', '--points-at', 'HEAD'], cwd=self.source, capture=True).splitlines()

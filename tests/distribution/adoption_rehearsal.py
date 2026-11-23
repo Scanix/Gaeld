@@ -129,7 +129,8 @@ def outer(args):
                         baseline_sha256=args.baseline_sha256, host_system=platform.system(), host_machine=platform.machine())
     json_file(workspace / 'input.json', input_record)
     try:
-        execute(['docker', 'network', 'create', '--label', 'gaeld.rehearsal=' + identifier, network])
+        network_args = ['--subnet', args.network_subnet] if args.network_subnet else []
+        execute(['docker', 'network', 'create', *network_args, '--label', 'gaeld.rehearsal=' + identifier, network])
         execute(['docker', 'run', '-d', '--name', registry, '--label', 'gaeld.rehearsal=' + identifier, '--network', network,
                  '--network-alias', 'registry.gaeld.test', '-v', str(certificate) + ':/certificates:ro',
                  '-e', 'REGISTRY_HTTP_TLS_CERTIFICATE=/certificates/server.crt', '-e', 'REGISTRY_HTTP_TLS_KEY=/certificates/server.key', 'registry:3'])
@@ -366,6 +367,7 @@ def main():
     parser.add_argument('--redis-image', default='redis:7-alpine')
     parser.add_argument('--version')
     parser.add_argument('--platform', choices=('linux/amd64', 'linux/arm64'))
+    parser.add_argument('--network-subnet', help='Dedicated free IPv4 CIDR for the two outer rehearsal containers')
     parser.add_argument('--baseline-version')
     parser.add_argument('--baseline-archive')
     parser.add_argument('--baseline-sha256')
