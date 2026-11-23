@@ -73,6 +73,7 @@ Schedule::command('horizon:snapshot')->everyFiveMinutes();
 
 // The PostgreSQL outbox is authoritative; loss of Redis must not lose an archive request.
 Schedule::command('archive:dispatch')->everyMinute()->withoutOverlapping();
+Schedule::command('webhooks:dispatch-pending')->everyMinute()->withoutOverlapping();
 Schedule::command('archive:capture')->dailyAt('00:15')->withoutOverlapping();
 Schedule::command('archive:check')->dailyAt('04:00')->withoutOverlapping();
 Schedule::command('archive:check --annual')->yearlyOn(1, 15, '04:30')->withoutOverlapping();

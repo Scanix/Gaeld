@@ -59,9 +59,31 @@ class WebhookService
                 'event' => $event,
                 'payload' => $payload,
                 'status' => 'pending',
+                'next_retry_at' => now(),
             ]);
 
-            DB::afterCommit(static fn () => DispatchWebhookJob::dispatch($call));
+            DB::afterCommit(fn () => $this->enqueuePending($call));
+        }
+    }
+
+    /** Enqueue a committed delivery once, with a lease for an interrupted publisher. */
+    public function enqueuePending(WebhookCall $call): bool
+    {
+        try {
+            $pending = WebhookCall::query()->whereKey($call->id)->where('status', 'pending');
+            $lease = now()->addMinute();
+            if ((clone $pending)->where('next_retry_at', '<=', now())->update(['next_retry_at' => $lease]) === 0) {
+                return true;
+            }
+
+            DispatchWebhookJob::dispatch($call);
+            $pending->where('next_retry_at', $lease)->update(['next_retry_at' => null]);
+
+            return true;
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return false;
         }
     }
 }

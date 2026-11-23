@@ -24,17 +24,35 @@ class UpdateInvoiceAction
         }
 
         return $invoice->getConnection()->transaction(function () use ($invoice, $data, $syncLines) {
-            $locked = Invoice::query()->where('organization_id', $invoice->organization_id)->lockForUpdate()->findOrFail($invoice->id);
-
-            if ($locked->archived_at !== null) {
-                throw new InvalidInvoiceStateException('Archived invoices cannot be updated.');
-            }
+            $locked = $this->lockUnarchived($invoice);
 
             return $this->updateDraft($locked, $data, $syncLines);
         });
     }
 
-    private function updateDraft(Invoice $invoice, UpdateInvoiceData $data, bool $syncLines): Invoice
+    public function replaceSupportingDocument(Invoice $invoice, UpdateInvoiceData $data, string $path): ?string
+    {
+        return $invoice->getConnection()->transaction(function () use ($invoice, $data, $path) {
+            $locked = $this->lockUnarchived($invoice);
+            $previous = $locked->justificatif_path;
+            $this->updateDraft($locked, $data, true, $path);
+
+            return $previous;
+        });
+    }
+
+    private function lockUnarchived(Invoice $invoice): Invoice
+    {
+        $locked = Invoice::query()->where('organization_id', $invoice->organization_id)->lockForUpdate()->findOrFail($invoice->id);
+
+        if ($locked->archived_at !== null) {
+            throw new InvalidInvoiceStateException('Archived invoices cannot be updated.');
+        }
+
+        return $locked;
+    }
+
+    private function updateDraft(Invoice $invoice, UpdateInvoiceData $data, bool $syncLines, ?string $justificatifPath = null): Invoice
     {
         if (! $invoice->status->isEditable()) {
             throw new InvalidInvoiceStateException('Only draft invoices can be updated.');
@@ -51,6 +69,10 @@ class UpdateInvoiceAction
             'payment_terms' => $data->paymentTerms,
             ...$data->commercialReferences,
         ];
+
+        if ($justificatifPath !== null) {
+            $invoiceData['justificatif_path'] = $justificatifPath;
+        }
 
         $organizationId = $invoice->getAttribute('organization_id');
         $storedTaxTreatment = $invoice->getRawOriginal('tax_treatment');

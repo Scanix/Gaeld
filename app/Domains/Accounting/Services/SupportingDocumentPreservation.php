@@ -53,6 +53,8 @@ class SupportingDocumentPreservation
             if (! $disk->put($target, $bytes)) {
                 throw new \RuntimeException('Cannot preserve the original supporting document.');
             }
+            // Remove this version's new file if the surrounding document transaction rolls back.
+            DB::afterRollBack(static fn () => $disk->delete($target));
             $dateField = $field === 'receipt_path' ? 'date' : 'issue_date';
             $date = Carbon::parse($document->getRawOriginal($dateField) ?? $document->getAttribute($dateField))->toDateString();
             IssuedDocumentFile::create([
