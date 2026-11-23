@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Capture a fiscal year as a dated company archive containing a frozen accounting snapshot, document versions, original files and an inventory with hashes. Repeating capture with unchanged data reuses the existing package.
 - Missing source files create a visible incident. Restore the original file and resume preparation to continue from the frozen snapshot. Accounting permissions and company access apply to inspection, retry and export.
+- Scheduled capture includes archived organizations. Repeated capture of the same missing original preserves its existing incident, and keeps its evidence available for review.
 - Upgrade managed CE v3.11.0 with the signed v3.12.0 artifacts. Operators using EE can check the signed compatibility receipt for the exact supported private package. Preserve a verified backup and recovery identity before the upgrade. [Archive package operating guide](https://github.com/Scanix/Gaeld/blob/v3.12.0/docs/preservation-r2.md)
 
 ## [3.11.0]
