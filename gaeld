@@ -303,7 +303,7 @@ cmd_help() {
             '  update --to X.Y.Z  Verify, back up and install an immutable release' \
             '  backup             Create an encrypted, consistent recovery backup' \
             '  restore            Restore a verified recovery backup (explicit confirmation)' \
-            '  adopt               Adopt a clean CE v3.8.28 Sail installation' \
+            '  adopt               Adopt a supported CE Sail installation' \
             '  resume             Resume services after a failed backup' \
             '  setup [--demo]     Full first-time setup (build, start, install)' \
             '  up                 Start all containers' \
