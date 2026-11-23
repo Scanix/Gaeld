@@ -3,7 +3,7 @@
 namespace App\Domains\Banking\Models;
 
 use App\Domains\Accounting\Models\Account;
-use App\Domains\Accounting\Models\TransactionLine;
+use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Organizations\Models\Organization;
 use App\Support\Money;
 use App\Support\Traits\Auditable;
@@ -95,9 +95,8 @@ class BankAccount extends Model
     }
 
     /**
-     * Derive the current balance from the linked GL account's journal lines.
+     * Derive the debit-minus-credit balance from the linked GL account's posted entries.
      *
-     * Asset (debit-normal): balance = SUM(debit) − SUM(credit).
      * Falls back to the denormalized `balance` column when no GL account is linked.
      */
     public function derivedBalance(): string
@@ -106,15 +105,9 @@ class BankAccount extends Model
             return (string) ($this->balance ?? '0');
         }
 
-        /** @var object{debit_total: string|null, credit_total: string|null}|null $row */
-        $row = TransactionLine::query()
-            ->where('account_id', $this->account_id)
-            ->selectRaw('COALESCE(SUM(debit), 0) AS debit_total, COALESCE(SUM(credit), 0) AS credit_total')
-            ->first();
+        $account = $this->ledgerAccount()->firstOrFail(['id', 'type']);
+        $balance = app(LedgerQueryService::class)->accountBalance($account->id);
 
-        $debit = (string) ($row->debit_total ?? '0');
-        $credit = (string) ($row->credit_total ?? '0');
-
-        return Money::subtract($debit, $credit);
+        return $account->type->isDebitNormal() ? $balance : Money::negate($balance);
     }
 }

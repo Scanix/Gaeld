@@ -45,6 +45,8 @@
         <env name="DB_DATABASE" value="testing"/>
         <env name="DB_USERNAME" value="gaeld"/>
         <env name="DB_PASSWORD" value="password"/>
+        <env name="REDIS_HOST" value="redis"/>
+        <env name="REDIS_DB" value="15"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array" force="true"/>

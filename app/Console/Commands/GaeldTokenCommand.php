@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Domains\Api\Enums\TokenType;
+use App\Domains\Api\Mcp\McpAccess;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Users\Models\User;
@@ -16,6 +17,7 @@ class GaeldTokenCommand extends Command
         {organization : Organization UUID}
         {--user= : Owner email address; defaults to the first organization owner}
         {--name=Provisioning token : Descriptive token name}
+        {--mcp : Create a personal read-only MCP token instead of an organization token}
         {--abilities=* : Token ability; repeat the option for multiple abilities}
         {--expires-in-days= : Number of days until the token expires (1-365)}';
 
@@ -65,11 +67,25 @@ class GaeldTokenCommand extends Command
         $abilities = TokenPermissionMap::normalize($requestedAbilities);
         $abilities = $abilities === [] ? ['*'] : $abilities;
 
+        if ($this->option('mcp')) {
+            if (! $this->input->hasParameterOption('--abilities')) {
+                $abilities = ['invoicing.view', 'expenses.view'];
+            }
+
+            if (array_diff($abilities, McpAccess::READ_ABILITIES) !== []) {
+                $this->components->error('MCP tokens accept only '.implode(', ', McpAccess::READ_ABILITIES).'.');
+
+                return self::FAILURE;
+            }
+
+            $expiresAt ??= now()->addDays(30);
+        }
+
         app(CurrentOrganization::class)->set($organization);
         $token = $user->createToken($name, $abilities, $expiresAt);
         $token->accessToken->update([
             'organization_id' => $organization->id,
-            'type' => TokenType::Organization,
+            'type' => $this->option('mcp') ? TokenType::Personal : TokenType::Organization,
         ]);
 
         $this->components->info('API token created successfully.');

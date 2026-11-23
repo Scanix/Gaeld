@@ -13,6 +13,7 @@ use App\Domains\Organizations\Jobs\ExportOrganizationDataJob;
 use App\Domains\Organizations\Mail\OrganizationExportReadyMail;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\OrganizationExportService;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
@@ -46,11 +47,16 @@ class OrganizationExportTest extends TestCase
     {
         Queue::fake();
 
+        $this->actAsOrg()->get(route('settings'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Organizations/Settings'));
+
         $response = $this->actAsOrg()
             ->post(route('settings.export'));
 
         $response->assertRedirect(route('settings'));
         $response->assertSessionHas('success');
+        $this->get(route('settings'))->assertOk();
 
         Queue::assertPushed(ExportOrganizationDataJob::class, function (ExportOrganizationDataJob $job) {
             return $job->organizationId === $this->org->id
@@ -64,6 +70,26 @@ class OrganizationExportTest extends TestCase
             ->get(route('settings.export.download', ['path' => 'something.zip']));
 
         $response->assertStatus(403);
+    }
+
+    public function test_a_member_without_organization_edit_permission_cannot_request_an_export(): void
+    {
+        Queue::fake();
+        $member = User::factory()->create();
+        $this->organization->users()->attach($member->id, ['role' => 'viewer']);
+        $this->assignOrganizationRole($member, $this->organization, 'viewer');
+
+        $this->actingAs($member)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->get(route('settings'))
+            ->assertForbidden();
+
+        $this->actingAs($member)
+            ->withSession(['current_organization_id' => $this->organization->id])
+            ->post(route('settings.export'))
+            ->assertForbidden();
+
+        Queue::assertNothingPushed();
     }
 
     public function test_download_returns_file_with_valid_signed_url(): void

@@ -100,7 +100,7 @@ jobs:
           - name: 'Feature (Group 1)'
             test-paths: 'tests/Feature/Accounting tests/Feature/Migration tests/Feature/Console'
           - name: 'Feature (Group 2)'
-            test-paths: 'tests/Feature/Organizations tests/Feature/Invoicing tests/Feature/Api tests/Feature/Reporting tests/Feature/Expenses tests/Feature/Banking tests/Feature/Users tests/Feature/Payroll tests/Feature/Contacts tests/Feature/Auth tests/Feature/Assets tests/Feature/Seeders tests/Feature/Security tests/Feature/Dashboard tests/Feature/Billing tests/Feature/SaasAdmin'
+            test-paths: 'tests/Feature/Organizations tests/Feature/Invoicing tests/Feature/Api tests/Feature/Mcp tests/Feature/EditionBoundary tests/Feature/Reporting tests/Feature/Expenses tests/Feature/Banking tests/Feature/Users tests/Feature/Payroll tests/Feature/Contacts tests/Feature/Auth tests/Feature/Assets tests/Feature/Seeders tests/Feature/Security tests/Feature/Dashboard tests/Feature/Billing tests/Feature/SaasAdmin'
           # Non-Feature suites
           - name: 'Unit'
             test-paths: 'tests/Unit'
