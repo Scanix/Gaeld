@@ -15,6 +15,7 @@ import platform
 import re
 import secrets
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -40,6 +41,10 @@ def run(command, *, cwd=None, env=None, output=None, capture=False, input_file=N
     if result.returncode not in accepted_exit_codes:
         # Process output can contain database credentials; keep diagnostics local.
         details = result.stderr.decode(errors='replace') if isinstance(result.stderr, bytes) else result.stderr
+        for name in ('DB_PASSWORD', 'PGPASSWORD'):
+            value = (env or {}).get(name)
+            if value and details:
+                details = details.replace(value, '[redacted]')
         raise OperationError(f"{Path(command[0]).name} failed (exit {result.returncode}). Installation remains stopped; inspect the protected diagnostic log.", details)
     return result.stdout if capture else None
 
@@ -73,21 +78,38 @@ def dump_creates_public_schema(rendered):
     return False
 
 
-def write_json(path, value):
+def write_private_file(path, contents):
+    """Publish complete owner-only bytes, including when replacing an older file."""
     path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    temporary = path.with_suffix(path.suffix + '.new')
-    with temporary.open('w') as stream:
-        os.chmod(temporary, 0o600)
-        json.dump(value, stream, indent=2, sort_keys=True)
-        stream.flush()
-        os.fsync(stream.fileno())
-    temporary.replace(path)
+    handle, temporary = tempfile.mkstemp(dir=path.parent, prefix='.' + path.name + '-')
+    try:
+        with os.fdopen(handle, 'wb') as stream:
+            try:
+                previous = path.lstat()
+            except FileNotFoundError:
+                previous = None
+            if previous and stat.S_ISREG(previous.st_mode):
+                owner = os.fstat(handle)
+                if (owner.st_uid, owner.st_gid) != (previous.st_uid, previous.st_gid):
+                    os.fchown(handle, previous.st_uid, previous.st_gid)
+            stream.write(contents)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
     directory = os.open(path.parent, os.O_RDONLY)
     try:
         os.fsync(directory)
     finally:
         os.close(directory)
+
+
+def write_json(path, value):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    write_private_file(path, json.dumps(value, indent=2, sort_keys=True).encode())
+
 
 
 def read_json(path):
@@ -149,8 +171,29 @@ def env_values(path):
         key, separator, value = line.partition('=')
         if not separator or not re.fullmatch(r'[A-Z][A-Z0-9_]*', key):
             raise OperationError('Invalid managed .env line.')
-        values[key] = value.strip().strip('"').strip("'")
+        value = value.strip()
+        if len(value) >= 2 and value[0] in ("'", '"') and value[-1] == value[0]:
+            value = value[1:-1]
+        values[key] = value
     return values
+
+
+def record_diagnostics(installation, error, *environment_files):
+    if not isinstance(error, OperationError) or not error.diagnostics or not installation.meta.is_dir():
+        return
+    detail = error.diagnostics
+    for path in (installation.shared / '.env', *environment_files):
+        if not path.is_file():
+            continue
+        try:
+            fields = env_values(path)
+        except (OperationError, OSError, UnicodeError):
+            detail = 'Diagnostic detail withheld because the environment could not be read safely.'
+            break
+        for name, value in fields.items():
+            if value and (name == 'APP_KEY' or name.endswith(('_PASSWORD', '_SECRET', '_TOKEN'))):
+                detail = detail.replace(value, '[redacted]')
+    write_private_file(installation.meta / 'last-error.log', detail[-65536:].encode())
 
 
 def valid_application_key(value):
@@ -282,6 +325,13 @@ class Installation:
                 fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
                 raise OperationError('Another installation operation is already running.')
+            # Earlier managers duplicated the application password in this generated file.
+            compose_env = self.meta / 'compose.env'
+            if compose_env.is_file():
+                lines = compose_env.read_bytes().splitlines(keepends=True)
+                metadata = [line for line in lines if not line.startswith(b'DB_PASSWORD=')]
+                if len(metadata) != len(lines):
+                    write_private_file(compose_env, b''.join(metadata))
             yield
 
     def save(self, status, **values):
@@ -298,9 +348,10 @@ class Installation:
 
     def compose(self, *arguments, target=None, **kwargs):
         directory = self.release_dir(target)
+        process_env = dict(kwargs.pop('env', {}), DB_PASSWORD=env_values(self.shared / '.env')['DB_PASSWORD'])
         return self.runner(['docker', 'compose', '--project-name', self.state['project'],
                             '--env-file', str(self.meta / 'compose.env'), '-f',
-                            str(directory / 'docker/production/compose.yml'), *arguments], **kwargs)
+                            str(directory / 'docker/production/compose.yml'), *arguments], env=process_env, **kwargs)
 
     def artisan(self, *arguments, target=None, secret_file=None, **kwargs):
         if self.state['mode'] == 'docker':
@@ -410,11 +461,9 @@ class Installation:
             config = {'GAELD_ROOT': str(self.root), 'GAELD_IMAGE': release['images']['app'],
                       'GAELD_WEB_IMAGE': release['images']['web'], 'GAELD_PORT': str(self.state.get('port', 8080)),
                       'GAELD_POSTGRES_IMAGE': release['images']['postgres'], 'GAELD_REDIS_IMAGE': release['images']['redis'],
-                      'GAELD_VERSION': release['version'],
-                      'DB_PASSWORD': env_values(self.shared / '.env')['DB_PASSWORD']}
+                      'GAELD_VERSION': release['version']}
             text = ''.join(f'{key}={value}\n' for key, value in config.items())
-            (self.meta / 'compose.env').write_text(text)
-            os.chmod(self.meta / 'compose.env', 0o600)
+            write_private_file(self.meta / 'compose.env', text.encode())
             for directory in (self.meta / 'runtime', self.meta / 'cache' / release['version']):
                 directory.mkdir(parents=True, exist_ok=True)
         else:
@@ -597,7 +646,7 @@ $gaeld_restore_guard$;
                 self.database('pg_dump', output=output)
             if (staging / 'database.dump').stat().st_size < 5:
                 raise OperationError('Database dump is empty.')
-            shutil.copy2(self.shared / '.env', staging / 'environment')
+            write_private_file(staging / 'environment', (self.shared / '.env').read_bytes())
             release_metadata = staging / 'release'
             release_metadata.mkdir()
             for name in ('release.json', 'release.json.sig', 'release-provenance.json', 'release-sbom.json'):
@@ -730,7 +779,7 @@ $gaeld_restore_guard$;
                 current_lines = {line.partition('=')[0]: line for line in (self.shared / '.env').read_text().splitlines()
                                  if line.partition('=')[0] in infrastructure}
                 restored_lines = [current_lines.get(line.partition('=')[0], line) for line in (content / 'environment').read_text().splitlines()]
-                (self.shared / '.env').write_text('\n'.join(restored_lines) + '\n')
+                write_private_file(self.shared / '.env', ('\n'.join(restored_lines) + '\n').encode())
                 self.configure_runtime(release)
                 old_files = self.shared / ('files-before-restore-' + secrets.token_hex(4))
                 (self.shared / 'storage/app').rename(old_files)
@@ -825,7 +874,7 @@ $gaeld_restore_guard$;
         for name in ('app/private', 'app/public', 'framework/cache/data', 'framework/sessions', 'framework/views', 'logs'):
             (self.shared / 'storage' / name).mkdir(parents=True, exist_ok=True)
         if environment_file:
-            shutil.copy2(environment_file, self.shared / '.env')
+            write_private_file(self.shared / '.env', Path(environment_file).read_bytes())
             env = env_values(self.shared / '.env')
             if not valid_application_key(env.get('APP_KEY', '')):
                 raise OperationError('Environment file requires an existing valid APP_KEY.')
@@ -840,8 +889,7 @@ $gaeld_restore_guard$;
             env['SESSION_SECURE_COOKIE'] = 'true' if url.startswith('https://') else 'false'
             env['REDIS_PREFIX'] = self.state['project'] + '-database-'
             env['HORIZON_PREFIX'] = self.state['project'] + '-horizon:'
-            (self.shared / '.env').write_text(''.join(f'{key}={value}\n' for key, value in env.items()))
-        os.chmod(self.shared / '.env', 0o600)
+            write_private_file(self.shared / '.env', ''.join(f'{key}={value}\n' for key, value in env.items()).encode())
         os.chmod(self.root, 0o755)
         self.save('installing')
         try:
@@ -966,10 +1014,7 @@ def main():
             else:
                 installation.doctor()
     except (OperationError, OSError, ValueError) as error:
-        if isinstance(error, OperationError) and error.diagnostics and installation.meta.is_dir():
-            log = installation.meta / 'last-error.log'
-            log.write_text(error.diagnostics[-65536:])
-            os.chmod(log, 0o600)
+        record_diagnostics(installation, error)
         print('Gäld: ' + str(error), file=sys.stderr)
         return 1
     finally:
