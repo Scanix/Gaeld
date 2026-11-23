@@ -222,10 +222,10 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y ghostscript openjdk-21-jre-headless unzip
-          curl --fail --location --proto '=https' --proto-redir '=https' https://software.verapdf.org/releases/1.30/verapdf-greenfield-1.30.3-installer.zip -o /tmp/verapdf.zip
-          echo 'b512bf24945503a33fc10738ecffc1f2dccaaf8593a448e94ee9ac86a9559a59  /tmp/verapdf.zip' | sha256sum -c -
+          curl --fail --location --proto '=https' --proto-redir '=https' https://software.verapdf.org/releases/1.30/verapdf-greenfield-1.30.4-installer.zip -o /tmp/verapdf.zip
+          echo '04415ef3f149526a3048b9889723e81320ddf013bd891bcc7f0f297f3eadcc23  /tmp/verapdf.zip' | sha256sum -c -
           unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer
-          sudo java -jar /tmp/verapdf-installer/verapdf-greenfield-1.30.3/verapdf-izpack-installer-1.30.3.jar docker/production/verapdf-install.xml
+          sudo java -jar /tmp/verapdf-installer/verapdf-greenfield-1.30.4/verapdf-izpack-installer-1.30.4.jar docker/production/verapdf-install.xml
           test -x /opt/verapdf/verapdf
           test -f /usr/share/color/icc/ghostscript/srgb.icc
           gs --version

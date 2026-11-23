@@ -35,14 +35,14 @@ COPY docker/production/zz-gaeld.conf /usr/local/etc/php-fpm.d/zz-gaeld.conf
 RUN chmod +x /usr/local/bin/gaeld-entrypoint /usr/local/bin/gaeld-scheduler
 # Proof tools are public dependencies; signer keys and trust material are operator-mounted.
 # Pin veraPDF independently of the base images; a failed download/hash/install fails the build.
-ARG VERAPDF_URL=https://software.verapdf.org/releases/1.30/verapdf-greenfield-1.30.3-installer.zip
-ARG VERAPDF_SHA256=b512bf24945503a33fc10738ecffc1f2dccaaf8593a448e94ee9ac86a9559a59
+ARG VERAPDF_URL=https://software.verapdf.org/releases/1.30/verapdf-greenfield-1.30.4-installer.zip
+ARG VERAPDF_SHA256=04415ef3f149526a3048b9889723e81320ddf013bd891bcc7f0f297f3eadcc23
 COPY docker/production/verapdf-install.xml /tmp/verapdf-install.xml
 RUN test -n "$VERAPDF_URL" && test -n "$VERAPDF_SHA256" && echo "$VERAPDF_URL" | grep -Eq '^https://' \
     && curl --fail --location --proto '=https' --proto-redir '=https' "$VERAPDF_URL" -o /tmp/verapdf.zip \
     && echo "$VERAPDF_SHA256  /tmp/verapdf.zip" | sha256sum -c - \
     && unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer \
-    && java -jar /tmp/verapdf-installer/verapdf-greenfield-1.30.3/verapdf-izpack-installer-1.30.3.jar /tmp/verapdf-install.xml \
+    && java -jar /tmp/verapdf-installer/verapdf-greenfield-1.30.4/verapdf-izpack-installer-1.30.4.jar /tmp/verapdf-install.xml \
     && /opt/verapdf/verapdf --version \
     && test -r /usr/share/color/icc/ghostscript/srgb.icc \
     && rm -rf /tmp/verapdf.zip /tmp/verapdf-installer /tmp/verapdf-install.xml
