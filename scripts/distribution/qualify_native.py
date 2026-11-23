@@ -10,6 +10,7 @@ import re
 import subprocess
 import sys
 
+from docker_platform import inspect_image
 from qualification_bundle import IMAGES, digest
 from verify_adoption_receipt import verify
 
@@ -68,7 +69,7 @@ def pull_images(images, arch):
                 "Expected one immutable native platform manifest: " + role)
         leaf = json.loads(output("docker", "buildx", "imagetools", "inspect", repo + "@" + children[0], "--raw"))
         run("docker", "pull", "--platform", "linux/" + arch, image)
-        local = json.loads(output("docker", "image", "inspect", "--platform", "linux/" + arch, image))[0]
+        local = inspect_image(image, "linux/" + arch)
         require(local["Os"] == "linux" and local["Architecture"] == arch and local["Id"] == leaf["config"]["digest"],
                 "Local image does not match the native platform manifest: " + role)
         qualified[role] = {"index": image, "platform_manifest": children[0], "config": local["Id"]}
