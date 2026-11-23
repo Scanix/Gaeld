@@ -11,6 +11,7 @@ use App\Domains\Banking\Parsers\Camt\Camt054Parser;
 use App\Domains\Banking\Parsers\Camt\CamtEntry;
 use App\Domains\Banking\Parsers\CsvBankParser;
 use App\Domains\Banking\Parsers\Mt940Parser;
+use App\Support\ImportedXml;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -44,6 +45,7 @@ class BankImportService
         string $xml,
         string $filename,
     ): BankImport {
+        $xml = ImportedXml::document($xml);
         $format = $this->detectFormat($xml);
         $parsedStatement = $this->parseEntries($xml, $format);
 

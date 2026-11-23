@@ -119,6 +119,17 @@ class ReconciliationFlowTest extends TestCase
         }
     }
 
+    public function test_import_detects_a_utf16_bank_statement_before_persisting_it(): void
+    {
+        $fixture = file_get_contents(__DIR__.'/../../fixtures/camt053_sample.xml');
+        $xml = mb_convert_encoding(str_replace('encoding="UTF-8"', 'encoding="UTF-16"', $fixture), 'UTF-16LE', 'UTF-8');
+        $import = app(BankImportService::class)->importCamtFile($this->bankAccount, "\xff\xfe".$xml, 'statement.xml');
+
+        $this->assertSame(CamtFormat::Camt053, $import->format);
+        $this->assertSame('STMT-2026-001', $import->statement_id);
+        $this->assertCount(3, $import->transactions);
+    }
+
     public function test_import_camt054_creates_transactions(): void
     {
         $importService = app(BankImportService::class);

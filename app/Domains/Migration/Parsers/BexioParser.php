@@ -10,6 +10,7 @@ use App\Domains\Migration\DTOs\ExpenseImportRow;
 use App\Domains\Migration\DTOs\InvoiceImportRow;
 use App\Domains\Migration\Enums\DataType;
 use App\Domains\Migration\Enums\Platform;
+use App\Support\ImportedXml;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
@@ -134,6 +135,7 @@ class BexioParser implements PlatformParserInterface
      */
     private function parseXlsx(UploadedFile $file): array
     {
+        ImportedXml::checkWorkbook($file->getPathname());
         $reader = new XlsxReader;
         $reader->open($file->getPathname());
 
