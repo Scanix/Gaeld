@@ -76,7 +76,12 @@ class WebhookSsrfTest extends SecurityTestCase
             $errors = $response->json('errors.url', []);
             $ssrfErrors = array_filter($errors, fn ($e) => str_contains(strtolower($e), 'private') || str_contains(strtolower($e), 'internal'));
             $this->assertEmpty($ssrfErrors, "Valid external URL [{$url}] should not be rejected by SSRF validator");
+
+            return;
         }
+
+        $response->assertCreated()->assertJsonPath('data.url', $url);
+        $this->assertDatabaseHas('webhooks', ['id' => $response->json('data.id'), 'organization_id' => $this->orgA->id]);
     }
 
     public static function validExternalUrls(): array

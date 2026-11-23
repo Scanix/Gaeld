@@ -69,6 +69,7 @@ class TesseractOcrService implements ReceiptOcrInterface
             return null;
         }
 
+        $tmpPath = null;
         try {
             $info = @getimagesize($imagePath);
             if ($info === false) {
@@ -101,17 +102,22 @@ class TesseractOcrService implements ReceiptOcrInterface
             imagefilter($image, IMG_FILTER_GRAYSCALE);
             imagefilter($image, IMG_FILTER_CONTRAST, -25);
 
-            $tmpPath = sys_get_temp_dir().'/gaeld_ocr_'.uniqid().'.png';
-            if (! imagepng($image, $tmpPath)) {
-                imagedestroy($image);
-
+            $tmpPath = tempnam(sys_get_temp_dir(), 'gaeld_ocr_');
+            if ($tmpPath === false) {
                 return null;
+            }
+            if (! imagepng($image, $tmpPath)) {
+                throw new \RuntimeException('Could not write the temporary receipt image.');
             }
 
             imagedestroy($image);
 
             return $tmpPath;
         } catch (\Throwable) {
+            if (is_string($tmpPath)) {
+                @unlink($tmpPath);
+            }
+
             return null;
         }
     }

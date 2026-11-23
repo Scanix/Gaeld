@@ -71,11 +71,15 @@ class AccountingExportService
             throw new \RuntimeException('Unable to make accounting exports readable by the web process.');
         }
 
-        $tmpDir = sys_get_temp_dir().'/gaeld-export-'.uniqid();
-        mkdir($tmpDir, 0700, true);
-        mkdir($tmpDir.'/vat-reports', 0700, true);
+        $tmpDir = sys_get_temp_dir().'/gaeld-export-'.bin2hex(random_bytes(16));
+        if (! mkdir($tmpDir, 0700)) {
+            throw new \RuntimeException('Unable to create a private accounting export directory.');
+        }
 
         try {
+            if (! mkdir($tmpDir.'/vat-reports', 0700)) {
+                throw new \RuntimeException('Unable to prepare the VAT report directory.');
+            }
             $this->buildChartOfAccounts($tmpDir, $orgId);
             $this->buildJournalEntries($tmpDir, $orgId, $fromDate, $toDate);
             $this->buildTrialBalance($tmpDir, $orgId, $toDate);
@@ -320,8 +324,11 @@ class AccountingExportService
         );
 
         foreach ($iterator as $file) {
+            if ($file->isLink() || ! $file->isFile()) {
+                throw new \RuntimeException('Unexpected file in the accounting export directory.');
+            }
             $relativePath = $iterator->getSubPathname();
-            $zip->addFile($file->getRealPath(), $relativePath);
+            $zip->addFile($file->getPathname(), $relativePath);
         }
 
         $zip->close();
@@ -339,7 +346,11 @@ class AccountingExportService
         );
 
         foreach ($iterator as $item) {
-            $item->isDir() ? rmdir($item->getRealPath()) : unlink($item->getRealPath());
+            if ($item->isDir() && ! $item->isLink()) {
+                rmdir($item->getPathname());
+            } else {
+                unlink($item->getPathname());
+            }
         }
 
         rmdir($dir);
