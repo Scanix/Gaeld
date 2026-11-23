@@ -130,13 +130,13 @@ jobs:
           provenance: mode=max
           sbom: true
       - name: Sign application provenance with the release workflow identity
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-name: ghcr.io/scanix/gaeld
           subject-digest: ${{ steps.app.outputs.digest }}
           push-to-registry: true
       - name: Sign web provenance with the release workflow identity
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-name: ghcr.io/scanix/gaeld-web
           subject-digest: ${{ steps.web.outputs.digest }}
@@ -272,7 +272,7 @@ jobs:
           digest-mismatch: error
       - name: Verify every native architecture and upgrade case
         run: python3 scripts/distribution/qualify_native.py collect release "$RUNNER_TEMP/native-receipts"
-      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         id: provenance
         with:
           subject-path: release/*.tar.gz
@@ -288,7 +288,7 @@ jobs:
           upload-artifact: false
       - name: Bind qualification to the built candidate
         run: python3 scripts/distribution/qualification_bundle.py create release
-      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         id: qualification
         with:
           subject-path: release/qualification-inputs.json
