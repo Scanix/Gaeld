@@ -44,22 +44,41 @@ jobs:
           persist-credentials: false
       - name: Resolve the pinned candidate
         id: identity
+        env:
+          BASELINE_VERSION: ${{ matrix.baseline }}
         run: |
           set -euo pipefail
           source=$(jq -er '.source|select(test("^[0-9a-f]{40}$"))' driver/.github/qa/native-managed-inputs.json)
           echo "source=$source" >> "$GITHUB_OUTPUT"
+          baseline=$(jq -er --arg name "$BASELINE_VERSION" '.baselines[$name]|select(test("^[0-9a-f]{40}$"))' driver/.github/qa/native-managed-inputs.json)
+          echo "baseline=$baseline" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: candidate
           ref: ${{ steps.identity.outputs.source }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Build the real tagged Sail baseline and resolve the retained candidate
+      - name: Restore the exact saved historical image
+        id: saved
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ${{ runner.temp }}/gaeld-baseline-cache
+          key: gaeld-sail-native-v1-${{ matrix.arch }}-${{ steps.identity.outputs.baseline }}
+      - name: Build or verify the tagged Sail baseline on the native runner
         env:
-          GH_TOKEN: ${{ github.token }}
           QA_ARCH: ${{ matrix.arch }}
           QA_BASELINE: ${{ matrix.baseline }}
-        run: python3 driver/.github/qa/native-managed.py --prepare-native candidate driver/.github/qa/native-managed-inputs.json "$RUNNER_TEMP/qualified-inputs.json"
+        run: python3 driver/.github/qa/native-managed.py --prepare-baseline candidate driver/.github/qa/native-managed-inputs.json "$RUNNER_TEMP/gaeld-baseline-cache"
+      - name: Retain the historical image before qualifying the candidate
+        if: steps.saved.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ${{ runner.temp }}/gaeld-baseline-cache
+          key: gaeld-sail-native-v1-${{ matrix.arch }}-${{ steps.identity.outputs.baseline }}
+      - name: Verify the exact retained source archive and image digests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 driver/.github/qa/native-managed.py --resolve-inputs candidate driver/.github/qa/native-managed-inputs.json "$RUNNER_TEMP/qualified-inputs.json"
       - name: Qualify the published candidate on its native CPU
         env:
           GH_TOKEN: ${{ github.token }}

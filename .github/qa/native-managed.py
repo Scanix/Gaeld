@@ -41,7 +41,7 @@ def github(endpoint):
     return json.loads(result("gh", "api", "repos/Scanix/Gaeld/" + endpoint))
 
 
-def prepare_native(candidate, inputs, output):
+def prepare_baseline(candidate, inputs, cache):
     q = json.loads(inputs.read_text())
     arch = os.environ["QA_ARCH"]
     baseline = os.environ["QA_BASELINE"]
@@ -53,6 +53,27 @@ def prepare_native(candidate, inputs, output):
     commit = result("git", "rev-parse", "v" + baseline + "^{commit}", cwd=candidate)
     require(commit == q["baselines"][baseline], "Immutable baseline tag differs")
     tag = "gaeld-native-legacy:" + baseline + "-" + arch
+    cache.mkdir(parents=True, exist_ok=True)
+    saved = cache / "legacy-image.tar.zst"
+    record = cache / "legacy-image.json"
+    if saved.is_file() and record.is_file():
+        metadata = json.loads(record.read_text())
+        require(
+            metadata["commit"] == commit
+            and metadata["arch"] == arch
+            and sha(saved) == metadata["sha256"],
+            "Historical image cache integrity mismatch",
+        )
+        execute("docker", "load", "-i", str(saved))
+        restored = json.loads(result("docker", "image", "inspect", tag))[0]
+        require(
+            restored["Id"] == metadata["image_id"]
+            and restored["Architecture"] == arch
+            and restored["Config"]["Labels"]["org.gaeld.qa.baseline-commit"] == commit,
+            "Restored historical image identity mismatch",
+        )
+        print("Restored and verified the native Sail baseline", flush=True)
+        return
     with tempfile.TemporaryDirectory(dir=os.environ["RUNNER_TEMP"]) as temp:
         old = Path(temp) / "baseline"
         execute("git", "worktree", "add", "--detach", str(old), commit, cwd=candidate)
@@ -70,6 +91,18 @@ def prepare_native(candidate, inputs, output):
             str(old),
         )
     print("Built the pinned Sail baseline on native " + arch, flush=True)
+    with subprocess.Popen(["docker", "save", tag], stdout=subprocess.PIPE) as stream:
+        subprocess.run(["zstd", "-q", "-T0", "-3", "-o", str(saved)], stdin=stream.stdout, check=True)
+        require(stream.wait() == 0, "Could not export the historical runtime")
+    image = json.loads(result("docker", "image", "inspect", tag))[0]
+    save(record, {"arch": arch, "commit": commit, "sha256": sha(saved), "image_id": image["Id"]})
+
+
+def resolve_inputs(candidate, inputs, output):
+    q = json.loads(inputs.read_text())
+    require(
+        result("git", "rev-parse", "HEAD", cwd=candidate) == q["source"], "Candidate checkout mismatch"
+    )
     artifact = None
     for _ in range(120):
         attempt = github("actions/runs/" + str(q["build_run"]) + "/attempts/" + str(q["build_attempt"]))
@@ -116,7 +149,7 @@ def prepare_native(candidate, inputs, output):
     require(
         inventory["commit"] == q["source"]
         and inventory["version"] == q["version"]
-        and inventory["source_ref"] == "refs/heads/release/v" + q["version"],
+        and inventory["source_ref"] == q["build_ref"],
         "Inventory source identity mismatch",
     )
     require(
@@ -383,7 +416,9 @@ def main(candidate, inputs, output):
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "--prepare-native":
-        prepare_native(*(Path(a).resolve() for a in sys.argv[2:]))
+    if sys.argv[1] == "--prepare-baseline":
+        prepare_baseline(*(Path(a).resolve() for a in sys.argv[2:]))
+    elif sys.argv[1] == "--resolve-inputs":
+        resolve_inputs(*(Path(a).resolve() for a in sys.argv[2:]))
     else:
         main(*(Path(a).resolve() for a in sys.argv[1:]))

@@ -1,13 +1,14 @@
 {
-  "source": "597385869e151a3e67fb6880cfe306f51117620e",
-  "version": "3.11.0-rc.2",
-  "build_run": 45217778962,
-  "build_attempt": 2,
-  "artifact_name": "managed-qualification-inputs-3.11.0-rc.2-45217778962-2",
+  "source": "f57fa65579bd1cf0c01234f6d63aac434b750a8b",
+  "version": "3.11.0-rc.3",
+  "build_run": 45226354535,
+  "build_attempt": 1,
+  "artifact_name": "managed-qualification-inputs-3.11.0-rc.3-45226354535-1",
   "baseline_archive_sha256": "537bdd64d100b1483ea559b8239585ec60ad3c6b5df2ae9f6e0cc3824fd0cc83",
   "baselines": {
     "3.8.28": "2da064e1e5630c48c508f5af669a5d42009620d3",
     "3.9.0": "319cb1199b725d25b03461d8a31e7814860f8e4c",
     "3.10.0": "5fa1ce7f006e4fe9cfbf4de294bbcc69695cb600"
-  }
+  },
+  "build_ref": "refs/heads/release/v3.11.0-rc.3"
 }
