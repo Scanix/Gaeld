@@ -1,0 +1,66 @@
+name: Native archived-install diagnostic
+on:
+  push:
+    branches: [qa/managed-native-linux-20261123]
+    paths: [.github/workflows/native-adoption-diagnostic.yml]
+permissions:
+  contents: read
+  packages: read
+  actions: read
+jobs:
+  archived:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    env:
+      CANDIDATE: 789fb02ecdbad2339794f2b655c3fd7f2f0e0098
+      VERSION: 3.11.0-rc.4
+      BASELINE_SHA: 537bdd64d100b1483ea559b8239585ec60ad3c6b5df2ae9f6e0cc3824fd0cc83
+      APP: ghcr.io/scanix/gaeld@sha256:ab561a46b863751ebc4472c004def452d65478e21c011467c6790fd1fb39edd4
+      WEB: ghcr.io/scanix/gaeld-web@sha256:509554d79693992f7a59a0815e934cb5d13ef13439d18489e5072b0d60c32509
+      PG: docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175
+      REDIS: docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: driver
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: candidate
+          ref: 789fb02ecdbad2339794f2b655c3fd7f2f0e0098
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          key: gaeld-sail-native-v1-arm64-319cb1199b725d25b03461d8a31e7814860f8e4c
+          path: ${{ runner.temp }}/gaeld-baseline-cache
+      - name: Load the checked historical Sail runtime
+        env:
+          QA_ARCH: arm64
+          QA_BASELINE: 3.9.0
+        run: |
+          set -eu
+          test "$(uname -m)" = aarch64
+          mkdir "$RUNNER_TEMP/diagnostic"
+          df -h "$RUNNER_TEMP" > "$RUNNER_TEMP/diagnostic/free-before.txt"
+          python3 driver/.github/qa/native-managed.py --prepare-baseline candidate driver/.github/qa/native-managed-inputs.json "$RUNNER_TEMP/gaeld-baseline-cache"
+      - name: Qualify nested native Docker, archived upgrade and restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for image in "$APP" "$WEB" "$PG" "$REDIS"; do docker pull --platform linux/arm64 "$image"; done
+          docker run --rm --platform linux/arm64 --network none --entrypoint tar "$APP" --hard-dereference -czhf - -C /var/www/html . > "$RUNNER_TEMP/exported-for-diagnostic.tar.gz"
+          gh release download v3.9.0 --repo Scanix/Gaeld --pattern gaeld-ce-v3.9.0.tar.gz --dir "$RUNNER_TEMP"
+          test "$(sha256sum "$RUNNER_TEMP/gaeld-ce-v3.9.0.tar.gz" | cut -d' ' -f1)" = "$BASELINE_SHA"
+          df -h "$RUNNER_TEMP" > "$RUNNER_TEMP/diagnostic/free-before-adoption.txt"
+          python3 candidate/tests/distribution/adoption_rehearsal.py --candidate "$PWD/candidate" --version "$VERSION" --platform linux/arm64 --app-image "$APP" --web-image "$WEB" --postgres-image "$PG" --redis-image "$REDIS" --baseline-version 3.9.0 --baseline-image gaeld-native-legacy:3.9.0-arm64 --baseline-archive "$RUNNER_TEMP/gaeld-ce-v3.9.0.tar.gz" --baseline-sha256 "$BASELINE_SHA" --source-artifact "$RUNNER_TEMP/exported-for-diagnostic.tar.gz" --report "$RUNNER_TEMP/diagnostic/adoption.json"
+      - name: Record final runner capacity
+        if: always()
+        run: df -h "$RUNNER_TEMP" > "$RUNNER_TEMP/diagnostic/free-after.txt"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: archive-diagnostic-arm64-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/diagnostic/
+          retention-days: 14
