@@ -21,11 +21,7 @@ administrator credentials or changing any service. Use a dedicated host for the
 public native installer. Check both host free space and Docker's own
 disk allocation. An external backup disk does not expand Docker's internal disk.
 
-Obtain the release verification public key independently from the release
-archive, confirm its fingerprint through the project's published trusted
-channel, and retain it outside the installation. A public key downloaded next
-to an untrusted archive is not an independent trust anchor. Key rotation requires
-a separate reviewed operation.
+Download the [managed release public key](https://docs.gaeld.ch/keys/release.pub) from the independently hosted project documentation. Verify its SHA-256 against the fingerprint in your previously trusted copy of the public launcher or through your operator. Keep the verified file outside the installation and pass its path to `--trust-key`. For the November 2026 key, `sha256sum gaeld-release.pub` must print `a8fc25a937ba95210f64d75ae361ce20ed30c828b3712990c958f93224a3653c`. On macOS, use `shasum -a 256 gaeld-release.pub`. The signer for private EE acceptance has its own [public key](https://docs.gaeld.ch/keys/ee-acceptance.pub) and fingerprint `81c9d5e200e21fd0d6f0df020a5be0f97b31215d6237899e29e708fb56bf8f4c`.
 
 Create an age recovery identity outside the installation, record its recipient,
 and store a second copy off-site. The installer verifies that identity and

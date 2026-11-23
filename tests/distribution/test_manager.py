@@ -112,8 +112,9 @@ class ManagerTest(unittest.TestCase):
                             str(self.root / 'release.json'), '-out', str(self.root / 'release.json.sig')], check=True)
         release['images']['app'] = release['images']['web']
         sign()
-        with self.assertRaisesRegex(manager.OperationError, 'trust policy'):
-            manager.verify_release(self.root, release['version'], public)
+        with patch.object(manager, 'RELEASE_KEY_SHA256', manager.digest(public)):
+            with self.assertRaisesRegex(manager.OperationError, 'trust policy'):
+                manager.verify_release(self.root, release['version'], public)
         policy = {'schema': 1, 'channel': 'rehearsal', 'release_origin': 'https://localhost:4443',
                   'release_key_sha256': manager.digest(public),
                   'images': {role: 'registry.gaeld.test:5000/' + role for role in manager.OFFICIAL_IMAGES}}
@@ -142,12 +143,15 @@ class ManagerTest(unittest.TestCase):
         manager.write_json(self.root / 'release.json', self.release())
         subprocess.run(['openssl', 'pkeyutl', '-sign', '-inkey', str(private), '-rawin', '-in',
                         str(self.root / 'release.json'), '-out', str(self.root / 'release.json.sig')], check=True)
-        self.assertEqual('3.10.0', manager.verify_release(self.root, '3.10.0', public)['version'])
-        with self.assertRaises(manager.OperationError):
-            manager.verify_release(self.root, '3.11.0', public)
-        (self.root / 'release.json').write_text(json.dumps(self.release('3.11.0')))
-        with self.assertRaises(manager.OperationError):
-            manager.verify_release(self.root, '3.11.0', public)
+        with self.assertRaisesRegex(manager.OperationError, 'fingerprint'):
+            manager.verify_release(self.root, '3.10.0', public)
+        with patch.object(manager, 'RELEASE_KEY_SHA256', manager.digest(public)):
+            self.assertEqual('3.10.0', manager.verify_release(self.root, '3.10.0', public)['version'])
+            with self.assertRaises(manager.OperationError):
+                manager.verify_release(self.root, '3.11.0', public)
+            (self.root / 'release.json').write_text(json.dumps(self.release('3.11.0')))
+            with self.assertRaises(manager.OperationError):
+                manager.verify_release(self.root, '3.11.0', public)
 
     def instrument_update(self, fail=None):
         self.installation.verify_source_tree = lambda: None

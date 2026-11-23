@@ -8,7 +8,7 @@ import re
 import subprocess
 
 from adopt import SAIL_RELEASES
-from manage import version as version_order
+from manage import EE_ACCEPTANCE_KEY_SHA256, version as version_order
 from verify_adoption_receipt import verify as verify_adoption_receipt
 
 
@@ -61,6 +61,8 @@ def main():
     if compatible_ee:
         if not all((args.ee_receipt, args.ee_receipt_signature, args.ee_receipt_key)):
             raise ValueError('A signed exact-pair acceptance receipt is required before declaring EE compatibility')
+        if sha256(args.ee_receipt_key) != EE_ACCEPTANCE_KEY_SHA256:
+            raise ValueError('The EE acceptance key fingerprint differs from the pinned project key.')
         subprocess.run(['openssl', 'pkeyutl', '-verify', '-pubin', '-inkey', args.ee_receipt_key,
                         '-rawin', '-in', args.ee_receipt, '-sigfile', args.ee_receipt_signature], check=True)
         receipt = json.loads(Path(args.ee_receipt).read_text())

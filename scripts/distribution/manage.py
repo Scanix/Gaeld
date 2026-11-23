@@ -143,6 +143,10 @@ def valid_application_key(value):
         return False
 
 
+RELEASE_KEY_SHA256 = 'a8fc25a937ba95210f64d75ae361ce20ed30c828b3712990c958f93224a3653c'
+EE_ACCEPTANCE_KEY_SHA256 = '81c9d5e200e21fd0d6f0df020a5be0f97b31215d6237899e29e708fb56bf8f4c'
+
+
 OFFICIAL_IMAGES = {'app': 'ghcr.io/scanix/gaeld', 'web': 'ghcr.io/scanix/gaeld-web',
                    'postgres': 'docker.io/library/postgres', 'redis': 'docker.io/library/redis'}
 
@@ -192,6 +196,8 @@ def verify_release(directory, expected_version, trust_key, policy=None):
             raise OperationError('A rehearsal requires an explicitly identified rehearsal manifest and its pinned test key.')
     elif release.get('channel', 'public') != 'public':
         raise OperationError('A rehearsal release requires an independently supplied distribution policy.')
+    elif digest(trust_key) != RELEASE_KEY_SHA256:
+        raise OperationError('The public release signing key fingerprint differs from the pinned project key.')
     for image, repository in repositories.items():
         if not re.fullmatch(re.escape(repository) + r'@sha256:[a-f0-9]{64}', release.get('images', {}).get(image, '')):
             raise OperationError('Release image repository or immutable digest does not match the operator trust policy: ' + image)
