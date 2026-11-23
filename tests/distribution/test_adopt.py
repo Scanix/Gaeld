@@ -97,8 +97,14 @@ class SailAdoptionTest(unittest.TestCase):
         (source / 'storage/inertia-devtools/01M84HDJSRERMH86GM8SMB3FSG.json').write_text('{}')
         (source / 'storage/inertia-devtools/_meta.json').write_text('{}')
         (source / 'storage/inertia-devtools/_last_prune').write_text('0')
+        ignore_file = source / 'storage/inertia-devtools/.gitignore'
+        ignore_file.write_bytes(b'*\n')
         expected = manage.digest(archive)
         self.assertEqual(('3.9.0', self.git('rev-parse', 'HEAD').strip()), adopt.archived_source(source, archive, expected))
+        ignore_file.write_bytes(b'local changes\n')
+        with self.assertRaisesRegex(manage.OperationError, 'Unexpected local'):
+            adopt.archived_source(source, archive, expected)
+        ignore_file.write_bytes(b'*\n')
         with self.assertRaisesRegex(manage.OperationError, 'checksum'):
             adopt.archived_source(source, archive, '0' * 64)
         (source / 'local.php').write_text('local change')

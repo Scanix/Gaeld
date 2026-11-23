@@ -19,10 +19,14 @@ class QualificationBundleTest(unittest.TestCase):
             images = {name: repo + "@sha256:" + "b" * 64 for name, repo in IMAGES.items()}
             source = root / ("gaeld-ce-" + version + ".tar.gz")
             source.write_bytes(b"exact bytes retained by the build")
+            arguments = (root, version, commit, "refs/heads/release/v" + version, "1234", "1", images)
+            initial = build_inventory(*arguments, source_only=True)
+            self.assertEqual({source.name}, set(initial["files"]))
             for name in ("provenance.json", "sbom.spdx.json"):
                 (root / name).write_text("{}")
-            arguments = (root, version, commit, "refs/heads/release/v" + version, "1234", "1", images)
             inventory = build_inventory(*arguments)
+            self.assertEqual(initial["candidate_images"], inventory["candidate_images"])
+            self.assertEqual(initial["files"][source.name], inventory["files"][source.name])
             (root / "qualification-inputs.json").write_text(json.dumps(inventory))
             receipt = {
                 "ce_version": version,

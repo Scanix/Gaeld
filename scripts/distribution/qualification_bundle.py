@@ -21,7 +21,7 @@ def digest(file):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def build_inventory(root, version, commit, source_ref, run, attempt, images):
+def build_inventory(root, version, commit, source_ref, run, attempt, images, *, source_only=False):
     if not re.fullmatch(r"\d+\.\d+\.\d+(?:-rc\.\d+)?", version) or not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ValueError("An exact version and source commit are required.")
     if source_ref not in ("refs/tags/v" + version, "refs/heads/release/v" + version):
@@ -30,9 +30,11 @@ def build_inventory(root, version, commit, source_ref, run, attempt, images):
         re.fullmatch(re.escape(repo) + r"@sha256:[a-f0-9]{64}", images[key]) for key, repo in IMAGES.items()
     ):
         raise ValueError("Unexpected image repository or digest.")
-    required = ["gaeld-ce-" + version + ".tar.gz", "provenance.json", "sbom.spdx.json"]
-    if version.split("-")[0] == "3.11.0":
-        required.append("adoption-acceptance.json")
+    required = ["gaeld-ce-" + version + ".tar.gz"]
+    if not source_only:
+        required.extend(["provenance.json", "sbom.spdx.json"])
+        if version.split("-")[0] == "3.11.0":
+            required.append("adoption-acceptance.json")
     files = {name: digest(root / name) for name in required}
     return {
         "schema": 1,
@@ -48,13 +50,13 @@ def build_inventory(root, version, commit, source_ref, run, attempt, images):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("create", "verify"))
+    parser.add_argument("mode", choices=("inputs", "create", "verify"))
     parser.add_argument("directory", type=Path)
     args = parser.parse_args()
     root = args.directory
     file = root / "qualification-inputs.json"
     env = os.environ
-    if args.mode == "create":
+    if args.mode != "verify":
         images = {
             name: repository + "@" + env[name.upper() + "_DIGEST"] for name, repository in IMAGES.items()
         }
@@ -66,6 +68,7 @@ def main():
             env["GITHUB_RUN_ID"],
             env["GITHUB_RUN_ATTEMPT"],
             images,
+            source_only=args.mode == "inputs",
         )
         file.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
     else:
