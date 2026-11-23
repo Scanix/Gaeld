@@ -5,6 +5,29 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.12.0]
+
+### Accounting archive packages
+
+- Capture a fiscal year as a dated company archive containing a frozen accounting snapshot, document versions, original files and an inventory with hashes. Repeating capture with unchanged data reuses the existing package.
+- Missing source files create a visible incident. Restore the original file and resume preparation to continue from the frozen snapshot. Accounting permissions and company access apply to inspection, retry and export.
+- Scheduled capture includes archived organizations. Repeated capture of the same missing original preserves its existing incident, and keeps its evidence available for review.
+- Upgrade managed CE v3.11.0 with the signed v3.12.0 artifacts. Operators using EE can check the signed compatibility receipt for the exact supported private package. Preserve a verified backup and recovery identity before the upgrade. [Archive package operating guide](https://github.com/Scanix/Gaeld/blob/v3.12.0/docs/preservation-r2.md)
+
+## [3.11.0]
+
+### Installation and upgrades
+
+- Self-hosted Community Edition can now install a signed managed release on Linux Docker for AMD64 and ARM64, Apple Silicon Docker, or a dedicated Ubuntu 24.04 LTS ARM64 host using systemd.
+- Existing CE Sail installations on v3.8.28, v3.9.0 or v3.10.0 can adopt the managed Docker setup. The installer carries over the database, original files, queued jobs and application key. Existing users retain their logins.
+- For a source-archive installation, obtain the original release archive and verify its published SHA-256. Supply both to `./gaeld adopt` so the installer can verify the installed source before it transfers data. [Installation and source-archive migration guide](https://github.com/Scanix/Gaeld/blob/v3.11.0/docs/ce-managed-installation.md)
+- Managed backup encrypts the database and files after the application stops its writers. Restore verifies the backup before returning the installation to service. Keep the recovery identity outside the installation and store a separate recovery copy.
+
+### Security
+
+- The managed Docker release uses PHP 8.4.28, nginx 1.30.7, PostgreSQL 16.16 and Redis 7.4.12. Its signed manifest identifies the exact application, web, database and queue images. The application and web images include the Debian and Alpine security packages installed at build time.
+- CAMT bank statements, Bexio XLSX imports and ECB exchange-rate updates now check incoming XML before parsing. CAMT imports also recognize supported encodings before identifying the statement format. If you run v3.10.0, use a vendor-patched libxml2 build for PHP or apply the reviewed Gäld import patch while you upgrade. Debian lists affected packages under CVE-2026-6653. [Debian advisory](https://security-tracker.debian.org/tracker/CVE-2026-6653) · [Gäld application patch](https://github.com/Scanix/Gaeld/commit/4eac115bf3ec85359498be812482bfac0326a356)
+
 ## [3.10.0] - 2026-11-23
 
 ### Added

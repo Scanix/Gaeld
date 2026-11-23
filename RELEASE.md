@@ -5,6 +5,14 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.12.0 accounting archive packages
+
+Qualify the upgrade from the signed v3.11.0 manifest with populated databases and original files on CE and the exact supported EE package. Record database and file comparisons before and after the upgrade and after an independent recovery. Check capture, deduplication, missing-source incidents, retry, export and access with real HTTP sessions. Use the signed acceptance receipt and the original source and image digests for publication.
+
+## v3.11.0 managed installer
+
+Use the same retained source archive and image digests for platform qualification, the private EE check and the signed release. Compare the public key from the documentation with the copy pinned by the installer. Confirm the release notes name the supported Sail versions and link to the procedure for source archives. The signed release and backup procedure are described in the [managed installation guide](docs/ce-managed-installation.md).
+
 ## v3.10.0 integration API
 
 Apply the new nullable contact and invoice fields with the normal Laravel migrations. Existing invoices and stored archive documents retain their original data. Review the draft-invoice and soft-delete rules before switching an integration to the upsert routes. Customers migrating an existing integration can continue using the original create and update endpoints.

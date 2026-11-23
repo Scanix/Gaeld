@@ -1,6 +1,6 @@
 # Managed CE installation and recovery
 
-The v3.11 installer is in qualification on Linux Docker (AMD64 and ARM64), Apple Silicon Docker and a clean Linux host using systemd. Its release record will identify the precise platform, source version and source format exercised. Use the candidate only on an isolated system with a verified recovery copy.
+Use the v3.11 installer for a fresh CE installation on Linux Docker (AMD64 or ARM64), Apple Silicon Docker or dedicated Ubuntu 24.04 LTS ARM64 with systemd. For an existing CE Sail installation, follow the adoption procedure below and keep a recovery copy. The signed release record identifies the source and image digests and the supported upgrade paths.
 
 ## Prepare the host
 

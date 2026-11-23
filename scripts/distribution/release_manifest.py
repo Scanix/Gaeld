@@ -8,8 +8,11 @@ import re
 import subprocess
 
 from adopt import SAIL_RELEASES
-from manage import EE_ACCEPTANCE_KEY_SHA256, version as version_order
+from manage import EE_ACCEPTANCE_KEY_SHA256, RELEASE_KEY_SHA256, version as version_order
 from verify_adoption_receipt import verify as verify_adoption_receipt
+
+
+RELEASE_PUBLIC_KEY = Path(__file__).resolve().parents[2] / 'docs/keys/release.pub'
 
 
 def sha256(path):
@@ -35,8 +38,9 @@ def verify_installer(args, allowed, images):
     required = {(previous, platform, 'git') for previous in allowed for platform in ('linux/amd64', 'linux/arm64')}
     if not required.issubset(observed):
         raise ValueError('The adoption matrix is missing a supported Git baseline or Docker architecture.')
-    if not any(kind == 'archive' for _, _, kind in observed):
-        raise ValueError('A published source-archive adoption rehearsal is required.')
+    required.update(('3.9.0', platform, 'archive') for platform in ('linux/amd64', 'linux/arm64'))
+    if observed != required or len(evidence) != len(required):
+        raise ValueError('The published v3.9.0 archive must pass on each architecture, with one receipt per required route.')
 
 
 def verify_archive_upgrade(args, allowed, images, ee):
@@ -48,6 +52,19 @@ def verify_archive_upgrade(args, allowed, images, ee):
     previous = subprocess.check_output(['git', 'rev-parse', 'refs/tags/v3.11.0^{commit}'], text=True).strip()
     if receipt.get('source_sha256') != sha256(args.source) or receipt.get('candidate_images') != images:
         raise ValueError('Archive qualification must cover the exact source bytes and images.')
+    if not args.baseline_manifest:
+        raise ValueError('The signed v3.11.0 predecessor manifest is required.')
+    manifest = Path(args.baseline_manifest)
+    key = RELEASE_PUBLIC_KEY
+    if sha256(key) != RELEASE_KEY_SHA256:
+        raise ValueError('Unexpected public release signing key.')
+    subprocess.run(['openssl', 'pkeyutl', '-verify', '-pubin', '-inkey', key, '-rawin', '-in', manifest,
+                    '-sigfile', manifest.with_name(manifest.name + '.sig')], check=True)
+    baseline = json.loads(manifest.read_text())
+    if (baseline.get('version') != '3.11.0' or baseline.get('edition') != 'ce' or baseline.get('commit') != previous
+            or receipt.get('baseline_source_sha256') != baseline['source']['sha256']
+            or receipt.get('baseline_images') != baseline['images']):
+        raise ValueError('Archive qualification must use the signed predecessor source and image digests.')
     attempts = receipt.get('archive_upgrades')
     if not isinstance(attempts, list):
         raise ValueError('Both CE and EE archive upgrade and recovery results are required.')
@@ -102,6 +119,7 @@ def main():
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--compatible-ee-versions', default='[]')
     parser.add_argument('--adoption-receipt')
+    parser.add_argument('--baseline-manifest')
     parser.add_argument('--ee-receipt')
     parser.add_argument('--ee-receipt-signature')
     parser.add_argument('--ee-receipt-key')

@@ -54,8 +54,9 @@ jobs:
           name=$(jq -r .name "$RUNNER_TEMP/artifact.json")
           prefix="managed-ce-$RELEASE_VERSION-$run_id-"
           [[ "$name" == "$prefix"* ]]
-          attempt=${name#"$prefix"}
-          [[ "$attempt" =~ ^[1-9][0-9]*$ ]]
+          suffix=${name#"$prefix"}
+          [[ "$suffix" =~ ^([1-9][0-9]*)(-qualified-[1-9][0-9]*)?$ ]]
+          attempt=${BASH_REMATCH[1]}
           expected=$(jq -r '.digest' "$RUNNER_TEMP/artifact.json")
           [[ "$expected" =~ ^sha256:[a-f0-9]{64}$ ]]
           gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip" > "$RUNNER_TEMP/qualified.zip"
@@ -95,6 +96,12 @@ jobs:
           ee_versions=$(jq -ce '.ee_versions | select(type=="array" and length>0)' release/ee-acceptance.json)
           allowed=$(jq -ce '.allowed_from | select(type=="array" and length>0)' release/ee-acceptance.json)
           arguments=()
+          if [[ "${RELEASE_VERSION%%-*}" == 3.12.0 ]]; then
+            baseline="$RUNNER_TEMP/signed-predecessor"
+            mkdir "$baseline"
+            gh release download v3.11.0 --repo "$GITHUB_REPOSITORY" --dir "$baseline" --pattern release.json --pattern release.json.sig
+            arguments+=(--baseline-manifest "$baseline/release.json")
+          fi
           if [[ -f release/adoption-acceptance.json ]]; then arguments+=(--adoption-receipt release/adoption-acceptance.json); fi
           for name in app web postgres redis; do
             image=$(jq -r --arg name "$name" '.candidate_images[$name]' release/qualification-inputs.json)
@@ -113,6 +120,19 @@ jobs:
           (cd release && find . -maxdepth 1 -type f ! -name 'SHA256SUMS*' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
           openssl pkeyutl -sign -inkey "$signing_key" -rawin -in release/SHA256SUMS -out release/SHA256SUMS.sig
           openssl pkeyutl -verify -pubin -inkey release/release.pub -rawin -in release/SHA256SUMS -sigfile release/SHA256SUMS.sig
+          notes="$RUNNER_TEMP/public-release-notes.md"
+          flags=()
+          if [[ "$RELEASE_VERSION" == *-rc.* ]]; then
+            flags+=(--prerelease)
+            printf 'This is a release candidate for qualification on an isolated installation. Review the signed manifest, compatibility evidence and checksums before testing.\n' > "$notes"
+          else
+            awk -v heading="## [$RELEASE_VERSION]" '
+              index($0, heading) == 1 { found = 1; next }
+              found && /^## / { exit }
+              found { print }
+            ' CHANGELOG.md > "$notes"
+            grep -q '[[:alnum:]]' "$notes"
+          fi
           shopt -s nullglob
           gh release create "v$RELEASE_VERSION" release/*.json release/*.jsonl release/*.gz release/*.pub release/*.sig release/SHA256SUMS \
-            --verify-tag --draft --title "Gäld CE $RELEASE_VERSION" --generate-notes
+            --verify-tag --draft "${flags[@]}" --title "Gäld CE $RELEASE_VERSION" --notes-file "$notes"
