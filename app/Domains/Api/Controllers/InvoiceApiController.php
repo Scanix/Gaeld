@@ -60,6 +60,9 @@ class InvoiceApiController extends Controller
      * @queryParam search string Search by invoice number or customer name. Example: INV-2025
      *
      * @response 200 scenario="Success" {"data":[{"id":"9c8f...","number":"INV-2025-001","status":"sent","type":"invoice","related_invoice_id":null,"customer":{"id":"9c8f...","type":"company","name":"ACME GmbH"},"issue_date":"2025-01-15","due_date":"2025-02-14","subtotal":"1000.00","vat_amount":"81.00","total":"1081.00","currency":"CHF","notes":null,"payment_terms":"30 days net","amount_paid":"0.00","amount_due":"1081.00","lines":[],"payments":[],"created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"}],"links":{"first":"...","last":"...","prev":null,"next":"..."},"meta":{"current_page":1,"from":1,"last_page":1,"per_page":20,"to":1,"total":1}}
+     *
+     * @queryParam external_source string External system name. Example: shopify
+     * @queryParam external_id string Exact identifier from that system. Example: order-12345
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -201,6 +204,14 @@ class InvoiceApiController extends Controller
      * Create or update a draft invoice by its external reference
      *
      * Supply the invoice creation payload and both reference fields.
+     *
+     * @bodyParam external_source string required External system name, up to 100 characters. Example: shopify
+     * @bodyParam external_id string required External identifier, up to 255 characters. Example: order-12345
+     *
+     * @response 200 scenario="Updated" {"data":{"id":"9c8f1b2a-3d4e-4f67-8901-abcdef123456","external_source":"shopify","external_id":"order-12345"}}
+     * @response 201 scenario="Created" {"data":{"id":"9c8f1b2a-3d4e-4f67-8901-abcdef123456","external_source":"shopify","external_id":"order-12345"}}
+     * @response 409 scenario="Reserved reference" {"message":"This external reference is reserved.","code":"external_reference_conflict"}
+     * @response 403 scenario="Insufficient permission" {"message":"This action is unauthorized."}
      */
     public function upsert(
         StoreInvoiceApiRequest $request,

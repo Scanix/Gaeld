@@ -57,6 +57,7 @@
   "route_aliases": [
     { "route_name": "api.contacts.index", "path": "/api/v1/contacts", "alias_of": "api.customers.index" },
     { "route_name": "api.contacts.show", "path": "/api/v1/contacts/{contact}", "alias_of": "api.customers.show" },
+    { "route_name": "api.contacts.upsert", "path": "/api/v1/contacts/upsert", "alias_of": "api.customers.upsert" },
     { "route_name": "api.contacts.store", "path": "/api/v1/contacts", "alias_of": "api.customers.store" },
     { "route_name": "api.contacts.update", "path": "/api/v1/contacts/{contact}", "alias_of": "api.customers.update" },
     { "route_name": "api.contacts.destroy", "path": "/api/v1/contacts/{contact}", "alias_of": "api.customers.destroy" }
@@ -319,6 +320,8 @@
       "policy": "viewAny on Customer",
       "request": {
         "query": {
+          "external_source": { "type": "string", "required": false, "max": 100 },
+          "external_id": { "type": "string", "required": false, "max": 255 },
           "page": { "type": "integer", "required": false },
           "per_page": { "type": "integer", "required": false },
           "search": { "type": "string", "required": false },
@@ -345,6 +348,8 @@
       },
       "response_200": {
         "data": {
+          "external_source": "string|null",
+          "external_id": "string|null",
           "id": "uuid",
           "type": "string|null (enum)",
           "salutation": "string|null",
@@ -367,6 +372,37 @@
     },
 
     {
+      "name": "api.customers.upsert",
+      "method": "POST",
+      "path": "/api/v1/customers/upsert",
+      "controller": "ContactApiController@upsert",
+      "auth_required": true,
+      "abilities_by_operation": {
+        "create": "contacts.create",
+        "update": "contacts.edit"
+      },
+      "request": {
+        "body_inherits": "api.customers.store",
+        "required": [
+          "external_source",
+          "external_id"
+        ]
+      },
+      "response_201": {
+        "data": "ContactResource"
+      },
+      "response_200": {
+        "data": "ContactResource"
+      },
+      "errors": {
+        "403": "Insufficient current permission",
+        "409": "external_reference_conflict, idempotency_conflict",
+        "422": "validation_error"
+      },
+      "notes": "Explicit keys are bound to the original credential and operation. Soft-deleted references remain reserved within the organization."
+    },
+
+    {
       "name": "api.customers.store",
       "method": "POST",
       "path": "/api/v1/customers",
@@ -377,6 +413,8 @@
       "request": {
         "validation_class": "StoreCustomerApiRequest",
         "body": {
+          "external_source": { "type": "string", "required_with": "external_id", "max": 100 },
+          "external_id": { "type": "string", "required_with": "external_source", "max": 255 },
           "name": { "type": "string", "required": true, "max": 255 },
           "salutation": { "type": "string|null", "required": false, "max": 50 },
           "email": { "type": "email|null", "required": false, "max": 255 },
@@ -407,6 +445,8 @@
         "validation_class": "UpdateCustomerApiRequest",
         "params": { "customer": "uuid" },
         "body": {
+          "external_source": { "type": "string", "required_with": "external_id", "max": 100 },
+          "external_id": { "type": "string", "required_with": "external_source", "max": 255 },
           "name": { "type": "string", "required": false, "max": 255 },
           "salutation": { "type": "string|null", "required": false, "max": 50 },
           "email": { "type": "email|null", "required": false, "max": 255 },
@@ -451,6 +491,8 @@
       "policy": "viewAny on Invoice",
       "request": {
         "query": {
+          "external_source": { "type": "string", "required": false, "max": 100 },
+          "external_id": { "type": "string", "required": false, "max": 255 },
           "page": { "type": "integer", "required": false },
           "per_page": { "type": "integer", "required": false },
           "status": { "type": "string", "required": false },
@@ -479,6 +521,8 @@
       },
       "response_200": {
         "data": {
+          "external_source": "string|null",
+          "external_id": "string|null",
           "id": "uuid",
           "number": "string",
           "status": "string (enum: draft|finalized|sent|paid|overdue|cancelled)",
@@ -541,6 +585,37 @@
     },
 
     {
+      "name": "api.invoices.upsert",
+      "method": "POST",
+      "path": "/api/v1/invoices/upsert",
+      "controller": "InvoiceApiController@upsert",
+      "auth_required": true,
+      "abilities_by_operation": {
+        "create": "invoicing.create",
+        "update": "invoicing.edit"
+      },
+      "request": {
+        "body_inherits": "api.invoices.store",
+        "required": [
+          "external_source",
+          "external_id"
+        ]
+      },
+      "response_201": {
+        "data": "InvoiceResource"
+      },
+      "response_200": {
+        "data": "InvoiceResource"
+      },
+      "errors": {
+        "403": "Insufficient current permission",
+        "409": "external_reference_conflict, idempotency_conflict, invalid_invoice_state",
+        "422": "validation_error"
+      },
+      "notes": "Explicit keys are bound to the original credential and operation. Soft-deleted references remain reserved within the organization."
+    },
+
+    {
       "name": "api.invoices.store",
       "method": "POST",
       "path": "/api/v1/invoices",
@@ -551,6 +626,8 @@
       "request": {
         "validation_class": "StoreInvoiceApiRequest",
         "body": {
+          "external_source": { "type": "string", "required_with": "external_id", "max": 100 },
+          "external_id": { "type": "string", "required_with": "external_source", "max": 255 },
           "customer_id": { "type": "uuid", "required": true, "note": "Must exist in customers table for current org" },
           "number": { "type": "string|null", "required": false, "max": 50, "note": "Auto-generated if omitted (format: PREFIX-YYYY-NNN)" },
           "issue_date": { "type": "date", "required": true },
@@ -587,6 +664,8 @@
         "validation_class": "UpdateInvoiceApiRequest",
         "params": { "invoice": "uuid" },
         "body": {
+          "external_source": { "type": "string", "required_with": "external_id", "max": 100 },
+          "external_id": { "type": "string", "required_with": "external_source", "max": 255 },
           "customer_id": { "type": "uuid", "required": false },
           "number": { "type": "string|null", "required": false, "max": 50 },
           "issue_date": { "type": "date", "required": false },

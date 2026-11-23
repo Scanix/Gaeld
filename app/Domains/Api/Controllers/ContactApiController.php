@@ -25,6 +25,9 @@ class ContactApiController extends Controller
      * List contacts
      *
      * Returns a paginated list of contacts for the current organisation.
+     *
+     * @queryParam external_source string External system name. Example: shopify
+     * @queryParam external_id string Exact identifier from that system. Example: order-12345
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -82,6 +85,14 @@ class ContactApiController extends Controller
      * Create or update a contact by its external reference
      *
      * The customers alias shares the same organization-scoped references.
+     *
+     * @bodyParam external_source string required External system name, up to 100 characters. Example: shopify
+     * @bodyParam external_id string required External identifier, up to 255 characters. Example: order-12345
+     *
+     * @response 200 scenario="Updated" {"data":{"id":"9c8f1b2a-3d4e-4f67-8901-abcdef123456","external_source":"shopify","external_id":"order-12345"}}
+     * @response 201 scenario="Created" {"data":{"id":"9c8f1b2a-3d4e-4f67-8901-abcdef123456","external_source":"shopify","external_id":"order-12345"}}
+     * @response 409 scenario="Reserved reference" {"message":"This external reference is reserved.","code":"external_reference_conflict"}
+     * @response 403 scenario="Insufficient permission" {"message":"This action is unauthorized."}
      */
     public function upsert(ContactApiRequest $request, CurrentOrganization $organization, ExternalReferenceUpsert $upsert): JsonResponse
     {

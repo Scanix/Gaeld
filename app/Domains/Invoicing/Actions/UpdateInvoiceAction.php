@@ -20,21 +20,21 @@ class UpdateInvoiceAction
     public function execute(Invoice $invoice, UpdateInvoiceData $data, bool $syncLines = true): Invoice
     {
         if ($data->commercialReferences === []) {
-            return $this->updateDraft($invoice, $data);
+            return $this->updateDraft($invoice, $data, $syncLines);
         }
 
-        return $invoice->getConnection()->transaction(function () use ($invoice, $data) {
+        return $invoice->getConnection()->transaction(function () use ($invoice, $data, $syncLines) {
             $locked = Invoice::query()->where('organization_id', $invoice->organization_id)->lockForUpdate()->findOrFail($invoice->id);
 
             if ($locked->archived_at !== null) {
                 throw new InvalidInvoiceStateException('Archived invoices cannot be updated.');
             }
 
-            return $this->updateDraft($locked, $data);
+            return $this->updateDraft($locked, $data, $syncLines);
         });
     }
 
-    private function updateDraft(Invoice $invoice, UpdateInvoiceData $data): Invoice
+    private function updateDraft(Invoice $invoice, UpdateInvoiceData $data, bool $syncLines): Invoice
     {
         if (! $invoice->status->isEditable()) {
             throw new InvalidInvoiceStateException('Only draft invoices can be updated.');

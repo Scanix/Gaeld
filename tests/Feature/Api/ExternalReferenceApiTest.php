@@ -112,11 +112,13 @@ class ExternalReferenceApiTest extends SecurityTestCase
             'customer_id' => $customer->uuid, 'issue_date' => '2026-11-01',
             'lines' => [['description' => 'Service', 'quantity' => 1, 'unit_price' => 25]],
         ];
-        $created = $this->postJson('/api/v1/invoices/upsert', $payload)->assertCreated();
+        $created = $this->postJson('/api/v1/invoices/upsert', $payload + ['customer_reference' => 'Client 55', 'purchase_order_reference' => 'PO-61'])->assertCreated();
         $id = $created->json('data.id');
-        $this->postJson('/api/v1/invoices/upsert', [...$payload, 'notes' => 'Synced'])->assertOk()
+        $this->postJson('/api/v1/invoices/upsert', [...$payload, 'notes' => 'Synced', 'delivery_reference' => 'Delivery 3'])->assertOk()
             ->assertJsonPath('data.id', $id)->assertJsonPath('data.notes', 'Synced')
-            ->assertJsonPath('data.lines.0.id', $created->json('data.lines.0.id'));
+            ->assertJsonPath('data.lines.0.id', $created->json('data.lines.0.id'))
+            ->assertJsonPath('data.customer_reference', 'Client 55')->assertJsonPath('data.purchase_order_reference', 'PO-61')
+            ->assertJsonPath('data.delivery_reference', 'Delivery 3');
         $this->getJson('/api/v1/invoices?'.http_build_query(self::REFERENCE))->assertOk()
             ->assertJsonCount(1, 'data')->assertJsonPath('data.0.external_id', 'customer-0');
         $this->getJson('/api/v1/invoices?external_id=other')->assertOk()->assertJsonCount(0, 'data');
