@@ -2,3 +2,6 @@
 # docs/keys/release.pub and docs/keys/ee-acceptance.pub. Both files are public.
 e59ea04c3760ac18c0a0f9a80e85883b0ae28152:scripts/distribution/manage.py:generic-api-key:146
 e59ea04c3760ac18c0a0f9a80e85883b0ae28152:scripts/distribution/manage.py:generic-api-key:147
+
+# API_REF in this historical staging record is a verified Git commit identifier.
+a67725ab6a6c24776eb7215b09eaf05f863d608b:RELEASE.md:generic-api-key:35
