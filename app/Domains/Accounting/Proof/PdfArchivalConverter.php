@@ -2,6 +2,8 @@
 
 namespace App\Domains\Accounting\Proof;
 
+use App\Support\ImportedXml;
+use App\Support\InvalidImportedXml;
 use DOMDocument;
 use DOMXPath;
 use RuntimeException;
@@ -43,10 +45,15 @@ class PdfArchivalConverter
     public function validate(string $path): string
     {
         $report = $this->runner->run([(string) config('archiving.pdfa.verapdf'), '--format', 'xml', '--flavour', '2b', EvidenceFiles::required($path)]);
+        try {
+            $document = ImportedXml::document($report);
+        } catch (InvalidImportedXml $error) {
+            throw new RuntimeException('veraPDF did not return a valid validation report.', previous: $error);
+        }
         $xml = new DOMDocument;
         $previous = libxml_use_internal_errors(true);
         try {
-            if (! $xml->loadXML($report, LIBXML_NONET) || $xml->doctype !== null) {
+            if (! $xml->loadXML($document, LIBXML_NONET) || $xml->doctype !== null) {
                 throw new RuntimeException('veraPDF did not return a valid validation report.');
             }
             $reports = (new DOMXPath($xml))->query('//*[local-name()="validationReport"]');

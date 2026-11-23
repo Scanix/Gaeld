@@ -151,6 +151,21 @@ class ArchiveProofTest extends TestCase
         (new PdfArchivalConverter($runner))->validate($this->directory.'/package/journal.pdf');
     }
 
+    public function test_pdfa_validation_preserves_report_bytes_and_rejects_a_document_type(): void
+    {
+        $this->fixtureManifest($this->directory.'/package');
+        $body = '<report><validationReport isCompliant="true" profileName="PDF/A-2b validation profile"/></report>';
+        $encoded = "\xff\xfe".mb_convert_encoding('<?xml version="1.0" encoding="UTF-16"?>'.$body, 'UTF-16LE', 'UTF-8');
+        $runner = $this->createMock(ProcessRunner::class);
+        $runner->expects($this->exactly(2))->method('run')->willReturnOnConsecutiveCalls($encoded, '<!DOCTYPE report>'.$body);
+        $converter = new PdfArchivalConverter($runner);
+        $file = $this->directory.'/package/journal.pdf';
+        $this->assertSame($encoded, $converter->validate($file));
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('veraPDF did not return a valid validation report.');
+        $converter->validate($file);
+    }
+
     public function test_standalone_cli_needs_no_laravel_or_ee(): void
     {
         $this->fixtureManifest($this->directory.'/package');
