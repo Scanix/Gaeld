@@ -4,6 +4,7 @@ namespace App\Domains\Invoicing\DTOs;
 
 use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Support\ValidatesFromArray;
+use Illuminate\Support\Arr;
 
 /**
  * Abstract base DTO shared by CreateInvoiceData and UpdateInvoiceData.
@@ -14,8 +15,14 @@ abstract readonly class InvoicePayloadData
 {
     use ValidatesFromArray;
 
+    public const COMMERCIAL_REFERENCE_FIELDS = ['customer_reference', 'purchase_order_reference', 'delivery_reference'];
+
+    /** @var array<string, string|null> */
+    public array $commercialReferences;
+
     /**
      * @param  array<int, InvoiceLineData>  $lines
+     * @param  array<string, string|null>  $commercialReferences
      */
     public function __construct(
         public string $organizationId,
@@ -28,7 +35,10 @@ abstract readonly class InvoicePayloadData
         public ?string $paymentTerms,
         public array $lines,
         public InvoiceTaxTreatment $taxTreatment = InvoiceTaxTreatment::Standard,
-    ) {}
+        array $commercialReferences = [],
+    ) {
+        $this->commercialReferences = Arr::only($commercialReferences, self::COMMERCIAL_REFERENCE_FIELDS);
+    }
 
     /** @param  array<string, mixed>  $data */
     public static function fromArray(array $data): static
@@ -37,6 +47,7 @@ abstract readonly class InvoicePayloadData
 
         return new static(
             organizationId: $data['organization_id'],
+            commercialReferences: Arr::only($data, self::COMMERCIAL_REFERENCE_FIELDS),
             customerId: $data['customer_id'] ?? null,
             number: $data['number'],
             issueDate: $data['issue_date'],
@@ -54,6 +65,7 @@ abstract readonly class InvoicePayloadData
     public function toArray(): array
     {
         return [
+            ...$this->commercialReferences,
             'organization_id' => $this->organizationId,
             'customer_id' => $this->customerId,
             'number' => $this->number,

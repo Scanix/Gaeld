@@ -78,6 +78,7 @@ class CreateInvoiceAction
                 'currency' => $data->currency,
                 'notes' => $data->notes,
                 'payment_terms' => $data->paymentTerms,
+                ...$data->commercialReferences,
             ]);
 
             $this->syncInvoiceLines->create($invoice, $data->lines, $data->taxTreatment->appliesSwissVat());

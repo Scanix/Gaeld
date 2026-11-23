@@ -33,6 +33,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -93,6 +94,9 @@ class InvoiceApiController extends Controller
      * @bodyParam issue_date string required Date in YYYY-MM-DD format. Example: 2025-01-15
      * @bodyParam due_date string Date in YYYY-MM-DD format, must be ≥ issue_date. Example: 2025-02-14
      * @bodyParam currency string ISO 4217 currency code. Example: CHF
+     * @bodyParam customer_reference string Customer reference printed on the invoice (up to 120 characters).
+     * @bodyParam purchase_order_reference string Purchase-order reference printed on the invoice (up to 120 characters).
+     * @bodyParam delivery_reference string Delivery reference printed on the invoice (up to 120 characters).
      * @bodyParam notes string Notes displayed on the invoice.
      * @bodyParam payment_terms string Payment terms text. Example: 30 days net
      * @bodyParam lines object[] required At least one line item.
@@ -187,6 +191,9 @@ class InvoiceApiController extends Controller
      * @bodyParam issue_date string Date in YYYY-MM-DD format.
      * @bodyParam due_date string Date in YYYY-MM-DD format.
      * @bodyParam currency string ISO 4217 currency code.
+     * @bodyParam customer_reference string Customer reference printed on the invoice (up to 120 characters).
+     * @bodyParam purchase_order_reference string Purchase-order reference printed on the invoice (up to 120 characters).
+     * @bodyParam delivery_reference string Delivery reference printed on the invoice (up to 120 characters).
      * @bodyParam notes string Notes displayed on the invoice.
      * @bodyParam payment_terms string Payment terms text.
      * @bodyParam lines object[] Line items (replaces all existing lines).
@@ -440,6 +447,7 @@ class InvoiceApiController extends Controller
             'notes' => array_key_exists('notes', $validated)
                 ? $validated['notes']
                 : $invoice->notes,
+            ...Arr::only($validated, UpdateInvoiceData::COMMERCIAL_REFERENCE_FIELDS),
             'payment_terms' => array_key_exists('payment_terms', $validated)
                 ? $validated['payment_terms']
                 : $invoice->payment_terms,

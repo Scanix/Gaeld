@@ -44,6 +44,9 @@ use Laravel\Scout\Searchable;
  * @property string $currency
  * @property string|null $notes
  * @property string|null $payment_terms
+ * @property string|null $customer_reference
+ * @property string|null $purchase_order_reference
+ * @property string|null $delivery_reference
  * @property string|null $qr_reference
  * @property string|null $qr_type
  * @property string|null $qr_iban
@@ -93,6 +96,9 @@ class Invoice extends Model
         'currency',
         'notes',
         'payment_terms',
+        'customer_reference',
+        'purchase_order_reference',
+        'delivery_reference',
         'qr_reference',
         'qr_type',
         'qr_iban',
