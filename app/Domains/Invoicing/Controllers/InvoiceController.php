@@ -119,7 +119,6 @@ class InvoiceController extends Controller
 
             try {
                 $newJustificatifPath = $this->uploadService->store($document, "justificatifs/{$currentOrg->id()}");
-                $validated['justificatif_path'] = $newJustificatifPath;
             } catch (Throwable $exception) {
                 $this->documentStorage->release($organization, $documentBytes);
 
@@ -143,7 +142,7 @@ class InvoiceController extends Controller
 
                 try {
                     $dto = CreateInvoiceData::fromArray($validated);
-                    $invoice = $action->execute($dto);
+                    $invoice = $action->execute($dto, $newJustificatifPath);
                     break;
                 } catch (QueryException $e) {
                     $sqlState = $e->errorInfo[0] ?? (string) $e->getCode();
@@ -243,8 +242,6 @@ class InvoiceController extends Controller
 
             try {
                 $newJustificatifPath = $this->uploadService->store($document, "justificatifs/{$invoice->organization_id}");
-                $validated['justificatif_path'] = $newJustificatifPath;
-                $oldJustificatifPath = $invoice->justificatif_path;
             } catch (Throwable $exception) {
                 $this->documentStorage->release($organization, $documentBytes);
 
@@ -252,10 +249,13 @@ class InvoiceController extends Controller
             }
         }
 
-        $dto = UpdateInvoiceData::fromArray($validated);
-
         try {
-            $action->execute($invoice, $dto);
+            $dto = UpdateInvoiceData::fromArray($validated);
+            if ($newJustificatifPath !== null) {
+                $oldJustificatifPath = $action->replaceSupportingDocument($invoice, $dto, $newJustificatifPath);
+            } else {
+                $action->execute($invoice, $dto);
+            }
         } catch (InvalidInvoiceStateException $e) {
             if ($newJustificatifPath) {
                 $this->documentStorage->delete($invoice->organization, $newJustificatifPath);
@@ -291,7 +291,7 @@ class InvoiceController extends Controller
         }
 
         if ($oldJustificatifPath) {
-            $this->documentStorage->delete($invoice->organization, $oldJustificatifPath);
+            $invoice->getConnection()->afterCommit(fn () => $this->documentStorage->delete($invoice->organization, $oldJustificatifPath));
         }
 
         return redirect()->route('invoices.show', $invoice)
