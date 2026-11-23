@@ -23,7 +23,7 @@
         "spatie/laravel-backup": "^10.2",
         "spatie/laravel-permission": "^8.3",
         "sprain/swiss-qr-bill": "^5.3",
-        "stripe/stripe-php": "^22.0",
+        "stripe/stripe-php": "^23.1",
         "tecnickcom/tcpdf": "^7.0"
     },
     "require-dev": {
