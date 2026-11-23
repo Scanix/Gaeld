@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6da4e8f3f57b3bfe86e9490723f38bf0",
+    "content-hash": "393f2cee787a9e513e4424a828da37ac",
     "packages": [
         {
             "name": "appstract/laravel-opcache",
@@ -5843,23 +5843,23 @@
         },
         {
             "name": "stripe/stripe-php",
-            "version": "v21.2.0",
+            "version": "v23.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/stripe/stripe-php.git",
-                "reference": "edf8118f0b96d69f06f372da9168d613d1aed072"
+                "reference": "6694b4d8826927896c9a1e57a26a8dbffb69f732"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/edf8118f0b96d69f06f372da9168d613d1aed072",
-                "reference": "edf8118f0b96d69f06f372da9168d613d1aed072",
+                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/6694b4d8826927896c9a1e57a26a8dbffb69f732",
+                "reference": "6694b4d8826927896c9a1e57a26a8dbffb69f732",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-json": "*",
                 "ext-mbstring": "*",
-                "php": ">=7.2.0"
+                "php": ">=7.4.0"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "3.94.0",
@@ -5874,8 +5874,7 @@
             },
             "autoload": {
                 "files": [
-                    "lib/version_check.php",
-                    "lib/agent_plugin_hint.php"
+                    "lib/version_check.php"
                 ],
                 "psr-4": {
                     "Stripe\\": "lib/"
@@ -5900,9 +5899,9 @@
             ],
             "support": {
                 "issues": "https://github.com/stripe/stripe-php/issues",
-                "source": "https://github.com/stripe/stripe-php/tree/v21.2.0"
+                "source": "https://github.com/stripe/stripe-php/tree/v23.1.0"
             },
-            "time": "2026-08-10T22:11:35+00:00"
+            "time": "2026-11-19T03:46:04+00:00"
         },
         {
             "name": "symfony/clock",
