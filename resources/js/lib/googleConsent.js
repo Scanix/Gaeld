@@ -187,11 +187,13 @@ export function getGoogleRuntime(config, browser = window) {
     return result
   }
 
-  function script(id, src) {
+  function script(id, endpoint, trackingId) {
+    const url = new URL(endpoint)
+    url.searchParams.set('id', trackingId)
     const element = browser.document.createElement('script')
     element.id = id
     element.async = true
-    element.src = src
+    element.src = url.href
     if (nonce) element.nonce = nonce
     return element
   }
@@ -201,7 +203,7 @@ export function getGoogleRuntime(config, browser = window) {
     gtmLoaded = true
     browser.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' })
     browser.document.head.appendChild(
-      script('gaeld-gtm', `https://www.googletagmanager.com/gtm.js?id=${gtmId}`)
+      script('gaeld-gtm', 'https://www.googletagmanager.com/gtm.js', gtmId)
     )
   }
 
@@ -220,7 +222,8 @@ export function getGoogleRuntime(config, browser = window) {
     adsPromise = new Promise((resolve) => {
       const element = script(
         'gaeld-google-ads',
-        `https://www.googletagmanager.com/gtag/js?id=${adsId}`
+        'https://www.googletagmanager.com/gtag/js',
+        adsId
       )
       const timer = browser.setTimeout(() => {
         element.remove()
