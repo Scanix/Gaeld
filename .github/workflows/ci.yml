@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [develop, main]
 
+permissions:
+  contents: read
+  pull-requests: read
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -67,6 +71,9 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '24'
+
+      - name: Check staging URL handling
+        run: node --test scripts/qa/staging-urls.test.mjs
 
       - name: Install pnpm
         run: corepack enable && corepack prepare pnpm@11.20.0 --activate
