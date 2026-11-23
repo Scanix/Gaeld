@@ -1,0 +1,74 @@
+name: Native image smoke diagnostic
+on:
+  push:
+    branches: [qa/managed-native-linux-20261123]
+    paths: [.github/workflows/native-image-diagnostic.yml]
+permissions:
+  contents: read
+  packages: read
+jobs:
+  smoke:
+    name: Native ${{ matrix.arch }} smoke
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04, arch: amd64, machine: x86_64}
+          - {runner: ubuntu-24.04-arm, arch: arm64, machine: aarch64}
+    env:
+      CANDIDATE: f57fa65579bd1cf0c01234f6d63aac434b750a8b
+      VERSION: 3.11.0-rc.3
+      APP: ghcr.io/scanix/gaeld@sha256:ec72a043699262042cad4e6228502524b187d5bf71b9875cbf3922c38eb95d35
+      WEB: ghcr.io/scanix/gaeld-web@sha256:a0ee03c74022025d50de4b6d8ca56724f4965fa458337d429b993b010721adad
+      PG: docker.io/library/postgres@sha256:e8a07d2c7579b038938cdba6c539e580e5001caf9ea203d397b5cc83e76bd938
+      REDIS: docker.io/library/redis@sha256:8da19c7399dca900c6822a1cf30f9d2285585e2c4b457ff4095b0f4500054d3f
+      NATIVE_ARCH: ${{ matrix.arch }}
+      NATIVE_MACHINE: ${{ matrix.machine }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: f57fa65579bd1cf0c01234f6d63aac434b750a8b
+          persist-credentials: false
+      - name: Verify native CPU and four immutable images
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE"
+          test "$(uname -s)" = Linux
+          test "$(uname -m)" = "$NATIVE_MACHINE"
+          mkdir receipts
+          for image in "$APP" "$WEB" "$PG" "$REDIS"; do
+            docker pull --platform "linux/$NATIVE_ARCH" "$image"
+            test "$(docker image inspect --format '{{.Architecture}}' "$image")" = "$NATIVE_ARCH"
+          done
+          jq -n --arg source "$CANDIDATE" --arg version "$VERSION" --arg machine "$NATIVE_MACHINE" --arg arch "$NATIVE_ARCH" --arg app "$APP" --arg web "$WEB" --arg postgres "$PG" --arg redis "$REDIS" '{source:$source,version:$version,native_machine:$machine,architecture:$arch,images:{app:$app,web:$web,postgres:$postgres,redis:$redis},scope:"previous candidate diagnostic"}' > receipts/identity.json
+      - name: Verify native Redis service startup
+        run: |
+          set -euo pipefail
+          name="diagnostic-redis-${GITHUB_RUN_ID}"
+          docker run --detach --name "$name" --network none "$REDIS"
+          trap 'docker rm -f "$name" >/dev/null' EXIT
+          for i in $(seq 1 30); do
+            if docker exec "$name" redis-cli ping | grep -qx PONG; then break; fi
+            sleep 1
+          done
+          test "$(docker exec "$name" redis-cli ping)" = PONG
+          docker exec "$name" redis-server --version > receipts/redis-version.txt
+      - name: Run actual fresh install, login and drain
+        run: |
+          set -euo pipefail
+          python3 tests/distribution/runtime_smoke.py --version "$VERSION" --platform "linux/$NATIVE_ARCH" --app-image "$APP" --web-image "$WEB" --postgres-image "$PG" --redis-image "$REDIS" | tee receipts/runtime.log
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          rows = [json.loads(s) for s in Path('receipts/runtime.log').read_text().splitlines() if s.startswith('{')]
+          assert any(r.get('platform') == 'linux/' + os.environ['NATIVE_ARCH'] and all(r.get(k) == 'passed' for k in ('install','login','drain')) for r in rows)
+          PY
+      - name: Retain native evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: image-diagnostic-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: receipts/
+          retention-days: 30
