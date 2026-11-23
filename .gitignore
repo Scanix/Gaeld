@@ -48,6 +48,8 @@ strix_runs/
 !/docs/ce-managed-installation.md
 !/docs/keys/
 !/docs/keys/*.pub
+!/docs/preservation-r2.md
+!/docs/preservation-r3.md
 
 # EE proprietary plugin — distributed via private GitLab repo, cloned on deploy
 /plugins/gaeld-ee/

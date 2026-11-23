@@ -7,6 +7,7 @@ use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Requests\ArchivePackageRequest;
 use App\Domains\Accounting\Services\ArchiveAccessLog;
 use App\Domains\Accounting\Services\ArchivePackageService;
+use App\Domains\Accounting\Services\ArchiveProofService;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +43,7 @@ class ArchivePackageController extends Controller
                     'captured_at' => $package->captured_at->toIso8601String(),
                     'verified_at' => $package->verified_at?->toIso8601String(),
                     'retention_until' => $package->retention_until->toIso8601String(),
+                    'check_due_at' => $package->check_due_at?->toIso8601String(),
                     'legal_hold' => $package->legal_hold,
                     'available' => $package->manifest_sha256 !== null,
                     'has_incident' => $package->failure !== null,
@@ -50,12 +52,15 @@ class ArchivePackageController extends Controller
                 ->orderByDesc('start_date')->get(['id', 'name', 'start_date', 'end_date']),
             'canManage' => $request->user()->can('create', ArchivePackage::class),
             'summary' => [
-                'pending' => (clone $query)->whereIn('state', ['pending', 'preparing'])->count(),
+                'pending' => (clone $query)->whereIn('state', ['pending', 'preparing', 'validated', 'sealing', 'sealed', 'depositing', 'deposited'])->count(),
                 'incidents' => (clone $query)->whereIn('state', ['failed', 'incident'])->count(),
                 'overdue' => (clone $query)->where(function ($query): void {
-                    $query->whereNotNull('manifest_sha256')->where(function ($query): void {
-                        $query->whereNull('verified_at')->orWhere('verified_at', '<', now()->subDay());
-                    });
+                    $query->where('check_due_at', '<', now())
+                        ->orWhere(function ($query): void {
+                            $query->whereNotNull('manifest_sha256')->where(function ($query): void {
+                                $query->whereNull('verified_at')->orWhere('verified_at', '<', now()->subDay());
+                            });
+                        });
                 })->count(),
             ],
         ]);
@@ -79,10 +84,10 @@ class ArchivePackageController extends Controller
         return back()->with('success', __('app.conservation_requested'));
     }
 
-    public function verify(ArchivePackage $package, Request $request, CurrentOrganization $organization): RedirectResponse
+    public function verify(ArchivePackage $package, Request $request, CurrentOrganization $organization, ArchiveProofService $proofs): RedirectResponse
     {
         $this->authorizePackage($package, $organization);
-        $result = $this->packages->verify($package);
+        $result = $proofs->check($package);
         $this->audit->record($organization->id(), $package->id, 'package.integrity_checked', $request->user(), $result);
         $valid = $result['valid'];
 

@@ -26,6 +26,10 @@ use Illuminate\Support\Carbon;
  * @property Carbon $retention_until
  * @property Carbon|null $prepared_at
  * @property Carbon|null $verified_at
+ * @property Carbon|null $sealed_at
+ * @property Carbon|null $deposited_at
+ * @property Carbon|null $check_due_at
+ * @property array<string, mixed>|null $proof_result
  * @property bool $legal_hold
  * @property string|null $failure
  */
@@ -44,7 +48,8 @@ class ArchivePackage extends Model
         return [
             'snapshot' => 'array', 'version' => 'integer', 'archival_pdf' => 'boolean',
             'retention_until' => 'datetime', 'captured_at' => 'datetime', 'prepared_at' => 'datetime',
-            'verified_at' => 'datetime', 'legal_hold' => 'boolean',
+            'verified_at' => 'datetime', 'legal_hold' => 'boolean', 'proof_result' => 'array',
+            'sealed_at' => 'datetime', 'deposited_at' => 'datetime', 'check_due_at' => 'datetime',
         ];
     }
 

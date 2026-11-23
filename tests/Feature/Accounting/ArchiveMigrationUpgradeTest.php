@@ -21,6 +21,8 @@ class ArchiveMigrationUpgradeTest extends TestCase
 
     private const PRESERVATION_MIGRATION = '2026_11_04_193239_create_archive_packages_and_outbox_tables.php';
 
+    private const PROOF_MIGRATION = '2026_11_04_222429_add_proof_stages_to_archive_packages.php';
+
     protected function beforeRefreshingDatabase(): void
     {
         $this->assertTrue(app()->environment('testing'));
@@ -30,7 +32,7 @@ class ArchiveMigrationUpgradeTest extends TestCase
     /** @return array<string, mixed> */
     protected function migrateFreshUsing(): array
     {
-        $existing = array_values(array_filter(glob(database_path('migrations/*.php')), fn (string $path): bool => basename($path) !== self::PRESERVATION_MIGRATION));
+        $existing = array_values(array_filter(glob(database_path('migrations/*.php')), fn (string $path): bool => ! in_array(basename($path), [self::PRESERVATION_MIGRATION, self::PROOF_MIGRATION], true)));
 
         return ['--realpath' => true, '--path' => $existing, '--force' => true];
     }
@@ -128,5 +130,18 @@ class ArchiveMigrationUpgradeTest extends TestCase
             $this->assertSame($expected, Storage::disk('local')->get($package->package_path.'/'.$source['package_path']));
         }
         $this->assertDatabaseCount('archive_outbox', 1);
+        $manifestBytes = Storage::disk('local')->get($package->package_path.'/manifest.json');
+        $snapshot = $package->snapshot;
+        $this->assertFalse(Schema::hasColumn('archive_packages', 'proof_result'));
+        $this->artisan('migrate', [
+            '--realpath' => true, '--path' => database_path('migrations/'.self::PROOF_MIGRATION), '--force' => true,
+        ])->assertSuccessful();
+        $package->refresh();
+        $this->assertNull($package->proof_result);
+        $this->assertFalse($package->archival_pdf);
+        $this->assertSame($snapshot, $package->snapshot);
+        $this->assertSame($manifestBytes, Storage::disk('local')->get($package->package_path.'/manifest.json'));
+        $this->assertTrue($packages->verify($package)['valid']);
+        $this->assertSame($applicationKey, config('app.key'));
     }
 }

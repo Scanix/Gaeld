@@ -36,10 +36,13 @@ resources/js/Components/SaasAdmin/
 scripts/**
 !scripts/distribution/
 !scripts/distribution/**
+!scripts/archive-verifier/
+!scripts/archive-verifier/**
 !docs/
 docs/**
 !docs/ce-managed-installation.md
 !docs/preservation-r2.md
+!docs/preservation-r3.md
 !composer.json
 !.env.example
 !.env.production.example
