@@ -1,0 +1,332 @@
+{
+  "allowed_from": [
+    "3.8.28",
+    "3.9.0",
+    "3.10.0"
+  ],
+  "apple_docker": [
+    {
+      "baseline_commit": "2da064e1e5630c48c508f5af669a5d42009620d3",
+      "baseline_version": "3.8.28",
+      "candidate_commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+      "candidate_images": {
+        "app": "ghcr.io/scanix/gaeld@sha256:04cc242f785fcca89d01f34eb44abdc4cc4a9ab1d67d130c413e4c63ef9d0f28",
+        "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+        "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+        "web": "ghcr.io/scanix/gaeld-web@sha256:5a31e9ec07d2d1fdf80e201157f4d11e000e9ee17d618ded077b06c68e63472b"
+      },
+      "candidate_version": "3.11.0",
+      "checks": {
+        "adoption": true,
+        "app_key_preserved": true,
+        "baseline_identity": true,
+        "candidate_payload_equivalence": true,
+        "coherent_encrypted_backup": true,
+        "digest_pinned_pull": true,
+        "documents_preserved": true,
+        "existing_owner_http_login": true,
+        "failed_backup_resume": true,
+        "fresh_install_owner_login": true,
+        "legacy_stopped": true,
+        "managed_health": true,
+        "queued_jobs_preserved": true,
+        "restore": true,
+        "signed_https_manifest": true
+      },
+      "host_machine": "arm64",
+      "host_system": "Darwin",
+      "platform": "linux/arm64",
+      "schema": 1,
+      "source_kind": "git",
+      "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+      "source_tree_clean": true,
+      "status": "passed"
+    },
+    {
+      "baseline_commit": "319cb1199b725d25b03461d8a31e7814860f8e4c",
+      "baseline_version": "3.9.0",
+      "candidate_commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+      "candidate_images": {
+        "app": "ghcr.io/scanix/gaeld@sha256:04cc242f785fcca89d01f34eb44abdc4cc4a9ab1d67d130c413e4c63ef9d0f28",
+        "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+        "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+        "web": "ghcr.io/scanix/gaeld-web@sha256:5a31e9ec07d2d1fdf80e201157f4d11e000e9ee17d618ded077b06c68e63472b"
+      },
+      "candidate_version": "3.11.0",
+      "checks": {
+        "adoption": true,
+        "app_key_preserved": true,
+        "baseline_identity": true,
+        "candidate_payload_equivalence": true,
+        "coherent_encrypted_backup": true,
+        "digest_pinned_pull": true,
+        "documents_preserved": true,
+        "existing_owner_http_login": true,
+        "failed_backup_resume": true,
+        "fresh_install_owner_login": true,
+        "legacy_stopped": true,
+        "managed_health": true,
+        "queued_jobs_preserved": true,
+        "restore": true,
+        "signed_https_manifest": true
+      },
+      "host_machine": "arm64",
+      "host_system": "Darwin",
+      "platform": "linux/arm64",
+      "schema": 1,
+      "source_kind": "git",
+      "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+      "source_tree_clean": true,
+      "status": "passed"
+    },
+    {
+      "baseline_commit": "5fa1ce7f006e4fe9cfbf4de294bbcc69695cb600",
+      "baseline_version": "3.10.0",
+      "candidate_commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+      "candidate_images": {
+        "app": "ghcr.io/scanix/gaeld@sha256:04cc242f785fcca89d01f34eb44abdc4cc4a9ab1d67d130c413e4c63ef9d0f28",
+        "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+        "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+        "web": "ghcr.io/scanix/gaeld-web@sha256:5a31e9ec07d2d1fdf80e201157f4d11e000e9ee17d618ded077b06c68e63472b"
+      },
+      "candidate_version": "3.11.0",
+      "checks": {
+        "adoption": true,
+        "app_key_preserved": true,
+        "baseline_identity": true,
+        "candidate_payload_equivalence": true,
+        "coherent_encrypted_backup": true,
+        "digest_pinned_pull": true,
+        "documents_preserved": true,
+        "existing_owner_http_login": true,
+        "failed_backup_resume": true,
+        "fresh_install_owner_login": true,
+        "legacy_stopped": true,
+        "managed_health": true,
+        "queued_jobs_preserved": true,
+        "restore": true,
+        "signed_https_manifest": true
+      },
+      "host_machine": "arm64",
+      "host_system": "Darwin",
+      "platform": "linux/arm64",
+      "schema": 1,
+      "source_kind": "git",
+      "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+      "source_tree_clean": true,
+      "status": "passed"
+    },
+    {
+      "baseline_commit": "319cb1199b725d25b03461d8a31e7814860f8e4c",
+      "baseline_version": "3.9.0",
+      "candidate_commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+      "candidate_images": {
+        "app": "ghcr.io/scanix/gaeld@sha256:04cc242f785fcca89d01f34eb44abdc4cc4a9ab1d67d130c413e4c63ef9d0f28",
+        "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+        "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+        "web": "ghcr.io/scanix/gaeld-web@sha256:5a31e9ec07d2d1fdf80e201157f4d11e000e9ee17d618ded077b06c68e63472b"
+      },
+      "candidate_version": "3.11.0",
+      "checks": {
+        "adoption": true,
+        "app_key_preserved": true,
+        "baseline_identity": true,
+        "candidate_payload_equivalence": true,
+        "coherent_encrypted_backup": true,
+        "digest_pinned_pull": true,
+        "documents_preserved": true,
+        "existing_owner_http_login": true,
+        "failed_backup_resume": true,
+        "fresh_install_owner_login": true,
+        "legacy_stopped": true,
+        "managed_health": true,
+        "queued_jobs_preserved": true,
+        "restore": true,
+        "signed_https_manifest": true
+      },
+      "host_machine": "arm64",
+      "host_system": "Darwin",
+      "platform": "linux/arm64",
+      "schema": 1,
+      "source_kind": "archive",
+      "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+      "source_tree_clean": true,
+      "status": "passed"
+    }
+  ],
+  "apple_fresh_install": {
+    "build_attempt": "1",
+    "build_run": "45251261459",
+    "commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+    "native_platform": "macOS-27.2.1-arm64-arm-64bit",
+    "result": {
+      "drain": "passed",
+      "install": "passed",
+      "login": "passed",
+      "platform": "linux/arm64"
+    },
+    "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+    "version": "3.11.0"
+  },
+  "boundary_contract": "1.0.0",
+  "candidate_images": {
+    "app": "ghcr.io/scanix/gaeld@sha256:04cc242f785fcca89d01f34eb44abdc4cc4a9ab1d67d130c413e4c63ef9d0f28",
+    "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+    "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+    "web": "ghcr.io/scanix/gaeld-web@sha256:5a31e9ec07d2d1fdf80e201157f4d11e000e9ee17d618ded077b06c68e63472b"
+  },
+  "ce_commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+  "ce_version": "3.11.0",
+  "ee_packages": [
+    {
+      "commit": "c10fa0ebd3f8811261fe93d1c2bdbb6f83c639d3",
+      "content_sha256": "6c3353309f2521552befc8c2367be0e8649735d96d1866697888c1d72115c98f",
+      "registry_zip_sha256": "29c46a7927fc9495fc105e17d8ec0173c7011b00140188b5803866e23c06078d",
+      "version": "2.10.1"
+    }
+  ],
+  "ee_versions": [
+    "2.10.1"
+  ],
+  "enterprise_runtime_checks": {
+    "billing_login_form": true,
+    "billing_owner_signed_in": true,
+    "edition_tables": true,
+    "enterprise_billing_asset_served_by_pinned_web_image": true,
+    "expired_team_denied": true,
+    "hosted_owner_billing_page": true,
+    "immutable_ee_manifest": true,
+    "installed_owner_membership": true,
+    "installed_single_owner_and_organization": true,
+    "loopback_http_health": true,
+    "mcp_disallows_wildcard_token": true,
+    "mcp_negotiation": true,
+    "mcp_scoped_owner_read": true,
+    "mcp_seven_tools": true,
+    "owner_reads_swiss_accounts": true,
+    "private_billing_assets_match_edition": true,
+    "production_dependencies": true,
+    "release_archive_boundary": true,
+    "rest_requires_authentication": true,
+    "restored_team_access": true,
+    "swiss_accounts_installed": true
+  },
+  "linux_docker": {
+    "cases": {
+      "amd64-3.10.0-git": {
+        "adoption_and_recovery": "passed",
+        "baseline_commit": "5fa1ce7f006e4fe9cfbf4de294bbcc69695cb600",
+        "cpu": "x86_64",
+        "fresh_install_login_drain": "passed",
+        "runner": "ubuntu-24.04",
+        "runner_artifact_sha256": "sha256:e6267ce2f0213953a28990e35ab400cf2b3a8e686eda28e10ee1e94eb2ffdcee",
+        "source_kind": "git"
+      },
+      "amd64-3.8.28-git": {
+        "adoption_and_recovery": "passed",
+        "baseline_commit": "2da064e1e5630c48c508f5af669a5d42009620d3",
+        "cpu": "x86_64",
+        "fresh_install_login_drain": "passed",
+        "runner": "ubuntu-24.04",
+        "runner_artifact_sha256": "sha256:75cb5fa62d2c0788f1efa608f6a530704adf2d8e59f7cadd823cffc911263bb9",
+        "source_kind": "git"
+      },
+      "amd64-3.9.0-archive": {
+        "adoption_and_recovery": "passed",
+        "baseline_commit": "319cb1199b725d25b03461d8a31e7814860f8e4c",
+        "cpu": "x86_64",
+        "fresh_install_login_drain": "passed",
+        "runner": "ubuntu-24.04",
+        "runner_artifact_sha256": "sha256:c419ca9c76a0f7fb16fbdf29f4a657ca1e64a42d7a7448f639a7396de3374d98",
+        "source_kind": "archive"
+      },
+      "amd64-3.9.0-git": {
+        "adoption_and_recovery": "passed",
+        "baseline_commit": "319cb1199b725d25b03461d8a31e7814860f8e4c",
+        "cpu": "x86_64",
+        "fresh_install_login_drain": "passed",
+        "runner": "ubuntu-24.04",
+        "runner_artifact_sha256": "sha256:6369b836fbb4c805b48815ee18814a30aa474b740ee992b20ddbe2d5fdf2e37e",
+        "source_kind": "git"
+      },
+      "arm64-3.10.0-git": {
+        "adoption_and_recovery": "passed",
+        "baseline_commit": "5fa1ce7f006e4fe9cfbf4de294bbcc69695cb600",
+        "cpu": "aarch64",
+        "fresh_install_login_drain": "passed",
+        "runner": "ubuntu-24.04-arm",
+        "runner_artifact_sha256": "sha256:ddd8379bad228d7655ab09e6f14cd62390c77323ee5ce6a4229924a3dbf1e3ca",
+        "source_kind": "git"
+      },
+      "arm64-3.8.28-git": {
+        "adoption_and_recovery": "passed",
+        "baseline_commit": "2da064e1e5630c48c508f5af669a5d42009620d3",
+        "cpu": "aarch64",
+        "fresh_install_login_drain": "passed",
+        "runner": "ubuntu-24.04-arm",
+        "runner_artifact_sha256": "sha256:bf5058faaa3d8c0bcff0abff6c551072e002c2b61983b47cfd51c06b7bfa9533",
+        "source_kind": "git"
+      },
+      "arm64-3.9.0-archive": {
+        "adoption_and_recovery": "passed",
+        "baseline_commit": "319cb1199b725d25b03461d8a31e7814860f8e4c",
+        "cpu": "aarch64",
+        "fresh_install_login_drain": "passed",
+        "runner": "ubuntu-24.04-arm",
+        "runner_artifact_sha256": "sha256:2579fea6425d8952c9188c1a6081ececaabbf74917de76e01599dfa48b4e8b3b",
+        "source_kind": "archive"
+      },
+      "arm64-3.9.0-git": {
+        "adoption_and_recovery": "passed",
+        "baseline_commit": "319cb1199b725d25b03461d8a31e7814860f8e4c",
+        "cpu": "aarch64",
+        "fresh_install_login_drain": "passed",
+        "runner": "ubuntu-24.04-arm",
+        "runner_artifact_sha256": "sha256:9fb40a599489aa518fd777b0e9dd940f79ee30a975387ff0d4596ef6e75aa103",
+        "source_kind": "git"
+      }
+    },
+    "matrix": "https://github.com/Scanix/Gaeld/actions/runs/45251261459"
+  },
+  "native_systemd": {
+    "architecture": "aarch64",
+    "candidate_commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+    "candidate_images": {
+      "app": "ghcr.io/scanix/gaeld@sha256:04cc242f785fcca89d01f34eb44abdc4cc4a9ab1d67d130c413e4c63ef9d0f28",
+      "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+      "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+      "web": "ghcr.io/scanix/gaeld-web@sha256:5a31e9ec07d2d1fdf80e201157f4d11e000e9ee17d618ded077b06c68e63472b"
+    },
+    "candidate_version": "3.11.0",
+    "checks": {
+      "all_four_services": true,
+      "encrypted_backup": true,
+      "existing_owner_login": true,
+      "fresh_install": true,
+      "fresh_systemd_host": true,
+      "original_file_recovered": true,
+      "owner_login": true,
+      "restore": true
+    },
+    "kind": "native-systemd",
+    "os": "PRETTY_NAME=\"Ubuntu 24.04.5 LTS\"",
+    "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+    "status": "passed"
+  },
+  "official_artifact_id": 14859427974,
+  "official_build_run": 45251261459,
+  "retained_artifacts": {
+    "original": {
+      "id": 14859427974,
+      "name": "managed-qualification-inputs-3.11.0-45251261459-1",
+      "zip_sha256": "bf628932ee174ef81360b9b6a5056265115aa8e5ed314d03d35ba49ca2447ffb"
+    },
+    "qualified": {
+      "id": 14860024679,
+      "name": "managed-ce-3.11.0-45251261459-1-qualified-2",
+      "zip_sha256": "6dcdd035799f4025051f694f74819d126877ccf738c2c2c507bd06728da8bcb4"
+    }
+  },
+  "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+  "status": "passed"
+}
