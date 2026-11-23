@@ -18,6 +18,7 @@ use App\Domains\Invoicing\Queries\InvoiceQuery;
 use App\Domains\Invoicing\Requests\StoreInvoiceRequest;
 use App\Domains\Invoicing\Requests\UpdateInvoiceRequest;
 use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
+use App\Domains\Organizations\Models\Organization;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Domains\Organizations\Services\OrganizationDocumentStorageService;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
@@ -27,6 +28,7 @@ use App\Support\Services\FileUploadService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
@@ -90,87 +92,59 @@ class InvoiceController extends Controller
 
     public function store(StoreInvoiceRequest $request, CreateInvoiceAction $action, CurrentOrganization $currentOrg, FinalizeInvoiceAction $finalizeAction, InvoiceNumberGenerator $numberGenerator, OrganizationQuotaResolver $quotaResolver): RedirectResponse
     {
-        $orgId = $currentOrg->id();
-        $monthlyKey = 'invoices_monthly:'.$orgId.':'.now()->format('Y-m');
-        $limit = $quotaResolver->maxInvoicesPerMonth($currentOrg->get());
-        $invoiceQuotaReserved = false;
-
-        if ($limit !== -1) {
-            Cache::add($monthlyKey, 0, now()->startOfMonth()->addMonth());
-            $newCount = Cache::increment($monthlyKey);
-            if ($newCount > $limit) {
-                Cache::decrement($monthlyKey);
-
-                return $this->backWithError(__('app.invoice_monthly_limit_reached'));
-            }
-
-            $invoiceQuotaReserved = true;
-        }
-
+        $organization = $currentOrg->get();
+        $connection = $organization->getConnection();
         $validated = $request->validated();
-        $validated['organization_id'] = $orgId;
-        $newJustificatifPath = null;
+        $validated['organization_id'] = $organization->id;
 
-        if ($request->hasFile('justificatif')) {
-            $organization = $currentOrg->get();
-            $document = $request->file('justificatif');
-            $documentBytes = (int) $document->getSize();
-            $this->documentStorage->reserve($organization, $documentBytes);
-
-            try {
-                $newJustificatifPath = $this->uploadService->store($document, "justificatifs/{$currentOrg->id()}");
-                $validated['justificatif_path'] = $newJustificatifPath;
-            } catch (Throwable $exception) {
-                $this->documentStorage->release($organization, $documentBytes);
-
-                throw $exception;
-            }
-        }
-
-        // Auto-generate the invoice number, retrying up to 3 times on a unique
-        // constraint race condition (two concurrent requests picking the same sequence).
         $invoice = null;
         try {
-            for ($attempt = 1; $attempt <= 3; $attempt++) {
-                $forYear = null;
-                if (! empty($validated['issue_date'])) {
+            $connection->transaction(function () use ($request, $action, $numberGenerator, $quotaResolver, $organization, $connection, $validated, &$invoice): void {
+                $monthlyKey = 'invoices_monthly:'.$organization->id.':'.now()->format('Y-m');
+                $limit = $quotaResolver->maxInvoicesPerMonth($organization);
+                if ($limit !== -1) {
+                    Cache::add($monthlyKey, 0, now()->startOfMonth()->addMonth());
+                    if (Cache::increment($monthlyKey) > $limit) {
+                        Cache::decrement($monthlyKey);
+
+                        return;
+                    }
+                    $connection->afterRollBack(static fn () => Cache::decrement($monthlyKey));
+                }
+
+                $path = null;
+                if ($request->hasFile('justificatif')) {
+                    $path = $this->storeSupportingDocument($organization, $request->file('justificatif'));
+                }
+
+                $forYear = Carbon::parse($validated['issue_date'])->year;
+                for ($attempt = 1; ; $attempt++) {
+                    $validated['number'] = $numberGenerator->next($organization->id, null, $forYear);
                     try {
-                        $forYear = Carbon::parse($validated['issue_date'])->year;
-                    } catch (Throwable) {
+                        $invoice = $action->execute(CreateInvoiceData::fromArray($validated), $path);
+
+                        return;
+                    } catch (QueryException $exception) {
+                        $sqlState = $exception->errorInfo[0] ?? (string) $exception->getCode();
+                        if ($attempt === 3 || $sqlState !== '23505' || ! str_contains($exception->getMessage(), 'invoices_organization_id_number_unique')) {
+                            throw $exception;
+                        }
                     }
                 }
-                $validated['number'] = $numberGenerator->next($orgId, null, $forYear);
-
-                try {
-                    $dto = CreateInvoiceData::fromArray($validated);
-                    $invoice = $action->execute($dto);
-                    break;
-                } catch (QueryException $e) {
-                    $sqlState = $e->errorInfo[0] ?? (string) $e->getCode();
-                    $isNumberConflict = $sqlState === '23505'
-                        && str_contains($e->getMessage(), 'invoices_organization_id_number_unique');
-
-                    if (! $isNumberConflict || $attempt === 3) {
-                        throw $e;
-                    }
-                }
-            }
-
-            if ($request->boolean('finalize')) {
-                $finalizeAction->execute($invoice);
-            }
+            });
         } catch (Throwable $exception) {
-            if ($invoice === null) {
-                if ($newJustificatifPath) {
-                    $this->documentStorage->delete($currentOrg->get(), $newJustificatifPath);
-                }
-
-                if ($invoiceQuotaReserved) {
-                    Cache::decrement($monthlyKey);
-                }
+            // A post-commit listener can fail after the customer already owns this invoice.
+            if ($invoice === null || ! Invoice::withoutGlobalScopes()->useWritePdo()->where('organization_id', $organization->id)->whereKey($invoice->id)->exists()) {
+                throw $exception;
             }
+            report($exception);
+        }
 
-            throw $exception;
+        if ($invoice === null) {
+            return $this->backWithError(__('app.invoice_monthly_limit_reached'));
+        }
+        if ($request->boolean('finalize')) {
+            $finalizeAction->execute($invoice);
         }
 
         return redirect()->route('invoices.show', $invoice)
@@ -232,70 +206,60 @@ class InvoiceController extends Controller
     {
         $validated = $request->validated();
         $validated['organization_id'] = $invoice->organization_id;
-        $oldJustificatifPath = null;
-        $newJustificatifPath = null;
-
-        if ($request->hasFile('justificatif')) {
-            $organization = $invoice->organization;
-            $document = $request->file('justificatif');
-            $documentBytes = (int) $document->getSize();
-            $this->documentStorage->reserve($organization, $documentBytes);
-
-            try {
-                $newJustificatifPath = $this->uploadService->store($document, "justificatifs/{$invoice->organization_id}");
-                $validated['justificatif_path'] = $newJustificatifPath;
-                $oldJustificatifPath = $invoice->justificatif_path;
-            } catch (Throwable $exception) {
-                $this->documentStorage->release($organization, $documentBytes);
-
-                throw $exception;
-            }
-        }
-
         $dto = UpdateInvoiceData::fromArray($validated);
-
         try {
-            $action->execute($invoice, $dto);
-        } catch (InvalidInvoiceStateException $e) {
-            if ($newJustificatifPath) {
-                $this->documentStorage->delete($invoice->organization, $newJustificatifPath);
+            if ($request->hasFile('justificatif')) {
+                $this->replaceSupportingDocument($invoice, $dto, $request->file('justificatif'), $action);
+            } else {
+                $action->execute($invoice, $dto);
             }
-
-            return $this->backWithError($e);
-        } catch (QueryException $e) {
-            $sqlState = $e->errorInfo[0] ?? (string) $e->getCode();
-            $isNumberConflict = $sqlState === '23505'
-                && str_contains($e->getMessage(), 'invoices_organization_id_number_unique');
-
-            if (! $isNumberConflict) {
-                if ($newJustificatifPath) {
-                    $this->documentStorage->delete($invoice->organization, $newJustificatifPath);
-                }
-
-                throw $e;
-            }
-
-            if ($newJustificatifPath) {
-                $this->documentStorage->delete($invoice->organization, $newJustificatifPath);
+        } catch (InvalidInvoiceStateException $exception) {
+            return $this->backWithError($exception);
+        } catch (QueryException $exception) {
+            $sqlState = $exception->errorInfo[0] ?? (string) $exception->getCode();
+            if ($sqlState !== '23505' || ! str_contains($exception->getMessage(), 'invoices_organization_id_number_unique')) {
+                throw $exception;
             }
 
             return back()
                 ->withErrors(['number' => __('validation.unique', ['attribute' => 'number'])])
                 ->withInput();
-        } catch (Throwable $exception) {
-            if ($newJustificatifPath) {
-                $this->documentStorage->delete($invoice->organization, $newJustificatifPath);
-            }
-
-            throw $exception;
-        }
-
-        if ($oldJustificatifPath) {
-            $this->documentStorage->delete($invoice->organization, $oldJustificatifPath);
         }
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', __('app.invoice_updated'));
+    }
+
+    private function replaceSupportingDocument(Invoice $invoice, UpdateInvoiceData $data, UploadedFile $document, UpdateInvoiceAction $action): void
+    {
+        $organization = $invoice->organization;
+        $connection = $invoice->getConnection();
+        $previous = null;
+        $path = null;
+        try {
+            $connection->transaction(function () use ($invoice, $data, $document, $action, $organization, &$previous, &$path): void {
+                $path = $this->storeSupportingDocument($organization, $document);
+                $previous = $action->replaceSupportingDocument($invoice, $data, $path);
+            });
+        } catch (Throwable $exception) {
+            if ($path === null || ! Invoice::withoutGlobalScopes()->useWritePdo()->where('organization_id', $organization->id)->whereKey($invoice->id)->where('justificatif_path', $path)->exists()) {
+                throw $exception;
+            }
+            report($exception);
+        }
+
+        if ($previous !== null) {
+            $connection->afterCommit(fn () => $this->documentStorage->delete($organization, $previous));
+        }
+    }
+
+    private function storeSupportingDocument(Organization $organization, UploadedFile $document): string
+    {
+        $this->documentStorage->reserve($organization, (int) $document->getSize());
+        $path = $this->uploadService->store($document, "justificatifs/{$organization->id}");
+        $organization->getConnection()->afterRollBack(fn () => $this->uploadService->delete($path));
+
+        return $path;
     }
 
     public function destroy(Invoice $invoice, DeleteInvoiceAction $action): RedirectResponse
