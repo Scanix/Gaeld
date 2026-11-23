@@ -5,3 +5,7 @@ e59ea04c3760ac18c0a0f9a80e85883b0ae28152:scripts/distribution/manage.py:generic-
 
 # API_REF in this historical staging record is a verified Git commit identifier.
 a67725ab6a6c24776eb7215b09eaf05f863d608b:RELEASE.md:generic-api-key:35
+
+# The signed v3.12 compatibility receipts identify the v3.11 release public key by its SHA-256 digest.
+790dd21b0fc7b73910f8cb8378a1c44f156d258d:v3.12.0-rc.6/f65d256114dea9e3a22025e0430f97eb3856e1c7/ee-acceptance.json:generic-api-key:12
+36f92d50aaac0b43812a20fefa7b58fa23ffc8e0:v3.12.0/f65d256114dea9e3a22025e0430f97eb3856e1c7/ee-acceptance.json:generic-api-key:12
