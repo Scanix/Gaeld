@@ -5,6 +5,19 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.10.0] - 2026-11-23
+
+### Added
+
+- Synchronize contacts and draft invoices through organization-scoped external references and explicit upsert endpoints. Deleted records reserve their references.
+- Read VAT rates and invoice catalogue items through the API, including public VAT IDs accepted by invoice lines.
+- Print customer, purchase-order and delivery references on invoices in the invoice language.
+- Deliver signed invoice creation, finalization, payment and cancellation events from API and web actions after commit. Retries preserve event and delivery IDs.
+
+### Changed
+
+- Update Stripe PHP to 23.1, TCPDF to 7.0, Laravel Permission to 8.5, Deployer to 8.0 and Laravel to 13.42. Upgrade the locked frontend and development dependencies.
+
 ## [3.9.0] - 2026-11-15
 
 ### Added
