@@ -2205,6 +2205,7 @@ return [
     'webhook_event_invoice_updated' => 'Invoice Updated',
     'webhook_event_invoice_deleted' => 'Invoice Deleted',
     'webhook_event_invoice_finalized' => 'Invoice Finalized',
+    'webhook_event_invoice_cancelled' => 'Invoice Cancelled',
     'webhook_event_invoice_payment_recorded' => 'Invoice Payment Recorded',
     'webhook_event_customer_created' => 'Customer Created',
     'webhook_event_customer_updated' => 'Customer Updated',

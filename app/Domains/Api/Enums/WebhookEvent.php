@@ -9,6 +9,7 @@ enum WebhookEvent: string
     case InvoiceUpdated = 'invoice.updated';
     case InvoiceDeleted = 'invoice.deleted';
     case InvoiceFinalized = 'invoice.finalized';
+    case InvoiceCancelled = 'invoice.cancelled';
     case InvoicePaymentRecorded = 'invoice.payment_recorded';
 
     case CustomerCreated = 'customer.created';
@@ -43,6 +44,7 @@ enum WebhookEvent: string
             self::InvoiceUpdated => __('app.webhook_event_invoice_updated'),
             self::InvoiceDeleted => __('app.webhook_event_invoice_deleted'),
             self::InvoiceFinalized => __('app.webhook_event_invoice_finalized'),
+            self::InvoiceCancelled => __('app.webhook_event_invoice_cancelled'),
             self::InvoicePaymentRecorded => __('app.webhook_event_invoice_payment_recorded'),
             self::CustomerCreated => __('app.webhook_event_customer_created'),
             self::CustomerUpdated => __('app.webhook_event_customer_updated'),

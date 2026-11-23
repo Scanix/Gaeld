@@ -127,7 +127,7 @@ class ApiTokenController extends Controller
      *
      * Returns all possible webhook event types that can be subscribed to.
      *
-     * @response 200 scenario="Success" {"data":["invoice.created","invoice.updated","invoice.deleted","invoice.paid","customer.created","customer.updated","customer.deleted","expense.created","expense.updated","expense.deleted","payment.received","payment.deleted"]}
+     * @response 200 scenario="Success" {"data":["invoice.created","invoice.updated","invoice.deleted","invoice.finalized","invoice.cancelled","invoice.payment_recorded","customer.created","customer.updated","customer.deleted","expense.created","expense.updated","expense.deleted","expense.approved","journal_entry.posted","journal_entry.reversed"]}
      */
     public function webhookEvents(): JsonResponse
     {

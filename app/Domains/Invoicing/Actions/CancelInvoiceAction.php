@@ -3,6 +3,8 @@
 namespace App\Domains\Invoicing\Actions;
 
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Api\Enums\WebhookEvent;
+use App\Domains\Api\Services\WebhookService;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Models\Invoice;
@@ -14,16 +16,18 @@ use Illuminate\Support\Facades\DB;
 class CancelInvoiceAction
 {
     public function __construct(
+        private WebhookService $webhooks,
         private LedgerService $ledgerService,
     ) {}
 
     public function execute(Invoice $invoice): Invoice
     {
-        if (! $invoice->status->canTransitionTo(InvoiceStatus::Cancelled)) {
-            throw new InvalidInvoiceStateException("Cannot cancel an invoice with status: {$invoice->status->value}.");
-        }
-
         return DB::transaction(function () use ($invoice) {
+            $invoice->refreshForUpdate();
+            if ($invoice->trashed() || ! $invoice->status->canTransitionTo(InvoiceStatus::Cancelled)) {
+                throw new InvalidInvoiceStateException("Cannot cancel an invoice with status: {$invoice->status->value}.");
+            }
+
             if ($invoice->journal_entry_id) {
                 $invoice->loadMissing('journalEntry.lines');
                 $reversal = $this->ledgerService->reverseEntry(
@@ -35,6 +39,8 @@ class CancelInvoiceAction
             }
 
             $invoice->update(['status' => InvoiceStatus::Cancelled]);
+
+            $this->webhooks->dispatchInvoice($invoice, WebhookEvent::InvoiceCancelled);
 
             return $invoice->fresh();
         });

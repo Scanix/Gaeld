@@ -22,10 +22,18 @@ class WebhookApiController extends Controller
      * List webhooks
      *
      * Returns a paginated list of webhook endpoints for the current organisation.
+     * Invoice subscribers receive `invoice.created`, `invoice.finalized`, `invoice.cancelled`, and
+     * `invoice.payment_recorded` (once per recorded payment, including partial payments).
+     * After the change commits, each matching active endpoint receives an HTTPS POST with
+     * `event`, `event_id`, `timestamp`, `organization_id`, `invoice_id`, and, for payments, `payment_id`.
+     * Match `X-Webhook-Signature` to the HMAC-SHA256 hex digest of the raw body using the endpoint secret.
+     * A 2xx response acknowledges delivery. Other responses and transport errors can be retried up to
+     * three attempts. Deduplicate on `event_id` (also sent as `X-Webhook-Event-Id`).
+     * `X-Webhook-Id` identifies the delivery to one subscription and is stable across its retries.
      *
      * @queryParam page integer Page number. Example: 1
      *
-     * @response 200 scenario="Success" {"data":[{"id":"9c8f...","url":"https://example.com/webhook","events":["invoice.created","invoice.paid"],"is_active":true,"last_triggered_at":"2025-03-01T12:00:00.000000Z","created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"}],"links":{},"meta":{"current_page":1,"per_page":15,"total":1}}
+     * @response 200 scenario="Success" {"data":[{"id":"9c8f...","url":"https://example.com/webhook","events":["invoice.created","invoice.payment_recorded"],"is_active":true,"last_triggered_at":"2025-03-01T12:00:00.000000Z","created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"}],"links":{},"meta":{"current_page":1,"per_page":15,"total":1}}
      */
     public function index(): AnonymousResourceCollection
     {
@@ -45,7 +53,7 @@ class WebhookApiController extends Controller
      *
      * @urlParam webhook string required The webhook UUID. Example: 9c8f1b2a-3d4e-5f67-8901-abcdef123456
      *
-     * @response 200 scenario="Success" {"data":{"id":"9c8f1b2a-3d4e-5f67-8901-abcdef123456","url":"https://example.com/webhook","events":["invoice.created","invoice.paid"],"is_active":true,"last_triggered_at":"2025-03-01T12:00:00.000000Z","created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"}}
+     * @response 200 scenario="Success" {"data":{"id":"9c8f1b2a-3d4e-5f67-8901-abcdef123456","url":"https://example.com/webhook","events":["invoice.created","invoice.payment_recorded"],"is_active":true,"last_triggered_at":"2025-03-01T12:00:00.000000Z","created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"}}
      * @response 404 scenario="Not found" {"message":"Webhook not found."}
      */
     public function show(Webhook $webhook): WebhookResource
@@ -62,10 +70,10 @@ class WebhookApiController extends Controller
      * of this endpoint — store it securely.
      *
      * @bodyParam url string required The endpoint URL (must be HTTPS). Example: https://example.com/webhook
-     * @bodyParam events string[] required Events to subscribe to. Example: ["invoice.created","invoice.paid"]
+     * @bodyParam events string[] required Events to subscribe to. Example: ["invoice.created","invoice.payment_recorded"]
      * @bodyParam is_active boolean Whether the webhook is active. Default: true. Example: true
      *
-     * @response 201 scenario="Created" {"data":{"id":"9c8f1b2a-3d4e-5f67-8901-abcdef123456","url":"https://example.com/webhook","events":["invoice.created","invoice.paid"],"is_active":true,"last_triggered_at":null,"created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"},"secret":"whsec_abc123..."}
+     * @response 201 scenario="Created" {"data":{"id":"9c8f1b2a-3d4e-5f67-8901-abcdef123456","url":"https://example.com/webhook","events":["invoice.created","invoice.payment_recorded"],"is_active":true,"last_triggered_at":null,"created_at":"2025-01-15T10:00:00.000000Z","updated_at":"2025-01-15T10:00:00.000000Z"},"secret":"whsec_abc123..."}
      * @response 422 scenario="Validation error" {"message":"The url field is required.","errors":{"url":["The url field is required."]}}
      */
     public function store(StoreWebhookRequest $request, CurrentOrganization $currentOrg): JsonResponse

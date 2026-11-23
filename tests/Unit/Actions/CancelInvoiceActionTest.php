@@ -4,6 +4,7 @@ namespace Tests\Unit\Actions;
 
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Domains\Api\Services\WebhookService;
 use App\Domains\Invoicing\Actions\CancelInvoiceAction;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
@@ -23,7 +24,7 @@ class CancelInvoiceActionTest extends TestCase
         parent::setUp();
 
         $this->ledgerService = Mockery::mock(LedgerService::class);
-        $this->action = new CancelInvoiceAction($this->ledgerService);
+        $this->action = new CancelInvoiceAction(Mockery::spy(WebhookService::class), $this->ledgerService);
     }
 
     public function test_rejects_paid_invoice(): void
@@ -106,6 +107,7 @@ class CancelInvoiceActionTest extends TestCase
     private function makeInvoice(InvoiceStatus $status, ?string $journalEntryId = null, $journalEntry = null): Invoice
     {
         $invoice = Mockery::mock(Invoice::class)->makePartial();
+        $invoice->shouldReceive('refreshForUpdate')->once();
         $invoice->status = $status;
         $invoice->number = 'INV-TEST';
         $invoice->journal_entry_id = $journalEntryId;
