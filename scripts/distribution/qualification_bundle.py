@@ -32,7 +32,7 @@ def build_inventory(root, version, commit, source_ref, run, attempt, images, *, 
         raise ValueError("Unexpected image repository or digest.")
     required = ["gaeld-ce-" + version + ".tar.gz"]
     if not source_only:
-        required.extend(["provenance.json", "sbom.spdx.json"])
+        required.extend(["provenance.json", "sbom.spdx.json", "native-runtime.json"])
         if version.split("-")[0] == "3.11.0":
             required.append("adoption-acceptance.json")
     files = {name: digest(root / name) for name in required}
@@ -50,7 +50,7 @@ def build_inventory(root, version, commit, source_ref, run, attempt, images, *, 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("inputs", "create", "verify"))
+    parser.add_argument("mode", choices=("inputs", "verify-inputs", "create", "verify"))
     parser.add_argument("directory", type=Path)
     args = parser.parse_args()
     root = args.directory
@@ -66,10 +66,19 @@ def main():
             env["GITHUB_SHA"],
             env["GITHUB_REF"],
             env["GITHUB_RUN_ID"],
-            env["GITHUB_RUN_ATTEMPT"],
+            env.get("BUILD_ATTEMPT", env["GITHUB_RUN_ATTEMPT"]),
             images,
-            source_only=args.mode == "inputs",
+            source_only=args.mode in ("inputs", "verify-inputs"),
         )
+        if args.mode == "verify-inputs":
+            if data != json.loads(file.read_text()):
+                raise ValueError("Retained source bytes, images or build identity changed.")
+            return
+        if args.mode == "create":
+            source = "gaeld-ce-" + data["version"] + ".tar.gz"
+            initial = dict(data, files={source: data["files"][source]})
+            if initial != json.loads(file.read_text()):
+                raise ValueError("The final inventory differs from the original build inputs.")
         file.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
     else:
         saved = json.loads(file.read_text())

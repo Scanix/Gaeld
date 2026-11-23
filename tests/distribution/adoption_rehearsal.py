@@ -102,6 +102,7 @@ def outer(args):
              '-CAcreateserial', '-days', '2', '-extfile', certificate / 'extensions', '-out', certificate / 'server.crt'])
     sys.path.insert(0, str(candidate / 'scripts/distribution'))
     from adopt import SAIL_RELEASES
+    from docker_platform import inspect_image, platform_options
     from manage import extract_tar
     if args.baseline_version not in SAIL_RELEASES:
         raise RuntimeError('Choose a supported CE Sail baseline.')
@@ -120,11 +121,11 @@ def outer(args):
     if args.source_artifact:
         shutil.copy2(Path(args.source_artifact).resolve(), workspace / 'provided-source.tar.gz')
     images = {'app': args.app_image, 'web': args.web_image, 'postgres': args.postgres_image, 'redis': args.redis_image}
-    image_ids = {role: execute(['docker', 'image', 'inspect', '--platform', args.platform, image, '--format', '{{.Id}}']).strip() for role, image in images.items()}
-    baseline_id = execute(['docker', 'image', 'inspect', '--platform', args.platform, args.baseline_image, '--format', '{{.Id}}']).strip()
+    image_ids = {role: inspect_image(image, args.platform)['Id'] for role, image in images.items()}
+    baseline_id = inspect_image(args.baseline_image, args.platform)['Id']
     imported = {role: identifier + '/' + role + ':input' for role in ['baseline', *images]}
     input_record = {'candidate_commit': commit, 'version': args.version, 'images': images, 'image_ids': image_ids,
-                    'imports': imported, 'baseline_image': imported['baseline'], 'platform': execute(['docker', 'image', 'inspect', '--platform', args.platform, args.app_image, '--format', '{{.Os}}/{{.Architecture}}']).strip(), 'payloads': {}}
+                    'imports': imported, 'baseline_image': imported['baseline'], 'platform': args.platform, 'payloads': {}}
     input_record.update(baseline_version=args.baseline_version, baseline_commit=baseline_commit,
                         baseline_sha256=args.baseline_sha256, host_system=platform.system(), host_machine=platform.machine())
     json_file(workspace / 'input.json', input_record)
@@ -147,8 +148,11 @@ def outer(args):
             # across both stores without guessing or rewriting either digest.
             execute(['docker', 'tag', image, imported[role]])
             try:
-                execute(['docker', 'save', '--platform', input_record['platform'], '-o', archive, imported[role]])
-                input_record['payloads'][role] = saved_image_payload(archive)
+                execute(['docker', 'image', 'save', *platform_options('save', args.platform), '-o', archive, imported[role]])
+                payload = saved_image_payload(archive)
+                if payload['platform'] != args.platform or payload['config_digest'] != image:
+                    raise RuntimeError('Exported Docker payload differs from the selected local image: ' + role)
+                input_record['payloads'][role] = payload
                 execute(['docker', 'exec', daemon, 'docker', 'load', '-i', '/work/image-import.tar'])
             finally:
                 execute(['docker', 'image', 'rm', imported[role]])

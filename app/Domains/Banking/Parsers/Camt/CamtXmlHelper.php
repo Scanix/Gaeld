@@ -3,6 +3,7 @@
 namespace App\Domains\Banking\Parsers\Camt;
 
 use App\Domains\Banking\Enums\BankTransactionType;
+use App\Support\ImportedXml;
 use Illuminate\Support\Facades\Log;
 
 trait CamtXmlHelper
@@ -156,8 +157,7 @@ trait CamtXmlHelper
 
     private function loadXml(string $xml): \DOMDocument
     {
-        // Strip any DOCTYPE declaration to prevent XXE even with LIBXML_NONET
-        $xml = (string) preg_replace('/<!DOCTYPE[^>]*>/i', '', $xml);
+        $xml = ImportedXml::document($xml);
 
         $previousUseErrors = libxml_use_internal_errors(true);
         $doc = new \DOMDocument;

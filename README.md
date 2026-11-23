@@ -13,11 +13,7 @@
 
 Proper double-entry bookkeeping, Swiss QR-Bill invoicing, VAT reporting, and bank reconciliation — built with Laravel and Vue, AGPL-3.0-or-later licensed, fully self-hostable.
 
-> Current public release: `v3.9.0`. Follow the versioned changelog and release runbook before upgrading a live instance.
-
-> `v3.9.0` adds the shared read-only MCP server, preserves export access after
-> expiry, and corrects year-end balances. See the [release notes](RELEASE.md)
-> and [upgrade notes](CHANGELOG.md).
+Download the current Community Edition and its signed artifacts from [GitHub Releases](https://github.com/Scanix/Gaeld/releases/latest). Before upgrading, read the [versioned changelog](CHANGELOG.md) and [release runbook](RELEASE.md).
 
 [Website](https://gaeld.ch) · [Documentation](https://docs.gaeld.ch) · [Hosted version](https://app.gaeld.ch) · [Release runbook](RELEASE.md)
 
@@ -49,7 +45,7 @@ Gäld covers the full accounting workflow for a small Swiss business:
 
 ## Getting started
 
-The v3.11 managed installer is in qualification for fresh installations and adoption from CE v3.8.28, v3.9.0 and v3.10.0. Its Docker and native Linux installation guide covers verified release artifacts, source installations, encrypted backups and recovery. Use an isolated system while qualification is in progress. [Managed installation and recovery](docs/ce-managed-installation.md)
+Install self-hosted CE on Linux Docker, Apple Silicon Docker or a dedicated Ubuntu 24.04 LTS ARM64 host using systemd. Existing CE Sail installations on v3.8.28, v3.9.0 and v3.10.0 can adopt the managed Docker setup. [Managed installation and recovery](docs/ce-managed-installation.md)
 
 ### Sail development environment
 
@@ -88,7 +84,7 @@ Other useful commands:
 ```
 
 For manual installation, upgrades, reverse-proxy configuration, and backup
-requirements for the managed candidate, use the [installation guide](docs/ce-managed-installation.md).
+requirements for managed CE, use the [installation guide](docs/ce-managed-installation.md).
 [INSTALL.md](INSTALL.md) describes the existing source and development workflows.
 
 ---
