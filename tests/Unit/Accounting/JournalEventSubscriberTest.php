@@ -64,7 +64,7 @@ class JournalEventSubscriberTest extends TestCase
             'date' => '2026-05-01',
             'reference' => $reference,
             'description' => 'Test entry',
-            'is_posted' => true,
+            'is_posted' => false,
         ]);
 
         TransactionLine::create([
@@ -81,6 +81,8 @@ class JournalEventSubscriberTest extends TestCase
             'credit' => '100.00',
             'description' => 'Revenue line',
         ]);
+
+        $entry->update(['is_posted' => true]);
 
         return $entry->fresh('lines');
     }

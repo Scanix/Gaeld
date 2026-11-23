@@ -49,6 +49,8 @@ Gäld covers the full accounting workflow for a small Swiss business:
 
 ## Getting started
 
+The v3.12 archive candidate captures company-scoped, frozen packages with original document versions, integrity verification and recoverable exports. Qualification includes upgrades from v3.11 on CE and the supported EE pair. [Archive package operating guide](docs/preservation-r2.md)
+
 The v3.11 managed installer is in qualification for fresh installations and adoption from CE v3.8.28, v3.9.0 and v3.10.0. Its Docker and native Linux installation guide covers verified release artifacts, source installations, encrypted backups and recovery. Use an isolated system while qualification is in progress. [Managed installation and recovery](docs/ce-managed-installation.md)
 
 ### Sail development environment

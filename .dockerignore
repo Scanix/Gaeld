@@ -39,6 +39,7 @@ scripts/**
 !docs/
 docs/**
 !docs/ce-managed-installation.md
+!docs/preservation-r2.md
 !composer.json
 !.env.example
 !.env.production.example
