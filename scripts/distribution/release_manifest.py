@@ -51,6 +51,7 @@ def verify_archive_upgrade(args, allowed, images, ee):
     attempts = receipt.get('archive_upgrades')
     if not isinstance(attempts, list):
         raise ValueError('Both CE and EE archive upgrade and recovery results are required.')
+    packages = {package['version']: package for package in receipt.get('ee_packages', [])}
     tested = set()
     checks = ('capture', 'deduplication', 'missing_source_incident', 'retry', 'export', 'access_controls',
               'existing_rows_unchanged', 'existing_files_unchanged', 'recovery_rows_unchanged', 'recovery_files_unchanged')
@@ -62,7 +63,12 @@ def verify_archive_upgrade(args, allowed, images, ee):
         edition = row.get('edition')
         if edition == 'CE':
             tested.add('CE')
-        elif edition == 'EE' and row.get('ee_version') in ee and re.fullmatch(r'[a-f0-9]{40}', row.get('ee_commit', '')):
+        elif edition == 'EE' and row.get('ee_version') in ee:
+            package = packages.get(row['ee_version'], {})
+            commit, content = row.get('ee_commit', ''), row.get('ee_content_sha256', '')
+            if (not re.fullmatch(r'[a-f0-9]{40}', commit) or not re.fullmatch(r'[a-f0-9]{64}', content)
+                    or commit != package.get('commit') or content != package.get('content_sha256')):
+                raise ValueError('The restored EE package must match the signed commit and content digest.')
             tested.add(row['ee_version'])
         else:
             raise ValueError('The archive receipt contains an unrecognized edition pair.')

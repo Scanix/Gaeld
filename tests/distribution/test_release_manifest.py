@@ -27,10 +27,17 @@ class ReleaseManifestTest(unittest.TestCase):
                                     'existing_rows_unchanged','existing_files_unchanged','recovery_rows_unchanged','recovery_files_unchanged'), True)
             row = {'baseline_version':'3.11.0','baseline_commit':'a' * 40,'checks':checks}
             report = {'source_sha256':sha256(source),'candidate_images':images,
-                      'archive_upgrades':[dict(row, edition='CE'),dict(row,edition='EE',ee_version='2.10.0',ee_commit='b' * 40)]}
+                      'ee_packages':[{'version':'2.10.0', 'commit':'b' * 40, 'content_sha256':'c' * 64}],
+                      'archive_upgrades':[dict(row, edition='CE'),dict(row,edition='EE',ee_version='2.10.0',
+                                                                     ee_commit='b' * 40,ee_content_sha256='c' * 64)]}
             with patch('release_manifest.subprocess.check_output',return_value='a' * 40):
                 path.write_text(json.dumps(report))
                 verify_archive_upgrade(args,['3.11.0'],images,['2.10.0'])
+                report['archive_upgrades'][1]['ee_commit'] = 'e' * 40
+                path.write_text(json.dumps(report))
+                with self.assertRaisesRegex(ValueError,'signed commit'):
+                    verify_archive_upgrade(args,['3.11.0'],images,['2.10.0'])
+                report['archive_upgrades'][1]['ee_commit'] = 'b' * 40
                 report['archive_upgrades'][1]['checks'] = dict(checks,recovery_files_unchanged=False)
                 path.write_text(json.dumps(report))
                 with self.assertRaisesRegex(ValueError,'incomplete'):
