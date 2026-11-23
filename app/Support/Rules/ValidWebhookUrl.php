@@ -36,7 +36,8 @@ class ValidWebhookUrl implements ValidationRule
             return null;
         }
 
-        $records = $literal ? [['ip' => $host]] : dns_get_record($host, DNS_A | DNS_AAAA);
+        // Temporary resolver failures also mean that no public address can be verified.
+        $records = $literal ? [['ip' => $host]] : @dns_get_record($host, DNS_A | DNS_AAAA);
         foreach ($records ?: [] as $record) {
             $ip = $record['ip'] ?? $record['ipv6'] ?? '';
             if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_GLOBAL_RANGE) === false) {

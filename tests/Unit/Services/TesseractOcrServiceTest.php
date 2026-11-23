@@ -3,6 +3,9 @@
 namespace Tests\Unit\Services;
 
 use App\Domains\Expenses\Services\TesseractOcrService;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Process\PendingProcess;
+use Illuminate\Support\Facades\Process;
 use Tests\TestCase;
 
 class TesseractOcrServiceTest extends TestCase
@@ -13,6 +16,29 @@ class TesseractOcrServiceTest extends TestCase
     {
         parent::setUp();
         $this->service = new TesseractOcrService;
+    }
+
+    public function test_processed_receipt_is_private_during_ocr_and_removed_afterwards(): void
+    {
+        if (! function_exists('imagecreatefromjpeg')) {
+            $this->markTestSkipped('Receipt preprocessing requires GD.');
+        }
+        $receipt = UploadedFile::fake()->image('receipt.png', 12, 12);
+        $processed = null;
+        Process::fake(function (PendingProcess $process) use ($receipt, &$processed) {
+            $processed = $process->command[1];
+            $this->assertNotSame($receipt->getPathname(), $processed);
+            $this->assertSame(0600, fileperms($processed) & 0777);
+            $this->assertSame('image/png', getimagesize($processed)['mime']);
+
+            return Process::result();
+        });
+
+        $this->service->extract($receipt->getPathname());
+
+        $this->assertIsString($processed);
+        $this->assertFileDoesNotExist($processed);
+        $this->assertFileExists($receipt->getPathname());
     }
 
     public function test_extracts_amount_with_chf_prefix(): void
