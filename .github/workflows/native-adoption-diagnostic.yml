@@ -30,6 +30,12 @@ jobs:
           ref: 789fb02ecdbad2339794f2b655c3fd7f2f0e0098
           fetch-depth: 0
           persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: harness
+          ref: 555226383a897d519fc532737036ff89f22ae688
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           key: gaeld-sail-native-v1-arm64-319cb1199b725d25b03461d8a31e7814860f8e4c
@@ -65,22 +71,16 @@ jobs:
               local=fetch('image','inspect',ref)[0]
               assert local['Os']=='linux' and local['Architecture']=='arm64' and local['Id']==child['config']['digest']
           PYIN
-          mkdir "$RUNNER_TEMP/native-cli"
-          export QA_REAL_DOCKER="$(command -v docker)"
-          cat > "$RUNNER_TEMP/native-cli/docker" <<'PYWRAPPER'
-          #!/usr/bin/env python3
-          import os,sys
-          args=sys.argv[1:]
-          if '--platform' in args and (args[:2]==['image','inspect'] or args[:1]==['save']):
-              i=args.index('--platform')
-              assert args[i+1]=='linux/arm64'
-              del args[i:i+2]
-          os.execv(os.environ['QA_REAL_DOCKER'],[os.environ['QA_REAL_DOCKER'],*args])
-          PYWRAPPER
-          chmod +x "$RUNNER_TEMP/native-cli/docker"
-          export PATH="$RUNNER_TEMP/native-cli:$PATH"
+          python3 - <<'PYIN'
+          import json,os,sys
+          sys.path.insert(0,'harness/scripts/distribution')
+          from docker_platform import inspect_image,supports_platform
+          from pathlib import Path
+          checks={k:inspect_image(os.environ[k], 'linux/arm64')['Id'] for k in ('APP','WEB','PG','REDIS')}
+          Path(os.environ['RUNNER_TEMP']+'/diagnostic/capabilities.json').write_text(json.dumps({'ci_harness':'555226383a897d519fc532737036ff89f22ae688','image_source':os.environ['CANDIDATE'],'source_kind':'local native export for CI diagnostics','inspect_platform':supports_platform('inspect'),'save_platform':supports_platform('save'),'native_config_ids':checks}))
+          PYIN
           df -h "$RUNNER_TEMP" > "$RUNNER_TEMP/diagnostic/free-before-adoption.txt"
-          python3 candidate/tests/distribution/adoption_rehearsal.py --candidate "$PWD/candidate" --version "$VERSION" --platform linux/arm64 --app-image "$APP" --web-image "$WEB" --postgres-image "$PG" --redis-image "$REDIS" --baseline-version 3.9.0 --baseline-image gaeld-native-legacy:3.9.0-arm64 --baseline-archive "$RUNNER_TEMP/gaeld-ce-v3.9.0.tar.gz" --baseline-sha256 "$BASELINE_SHA" --source-artifact "$RUNNER_TEMP/exported-for-diagnostic.tar.gz" --report "$RUNNER_TEMP/diagnostic/adoption.json"
+          python3 harness/tests/distribution/adoption_rehearsal.py --candidate "$PWD/harness" --version "$VERSION" --platform linux/arm64 --app-image "$APP" --web-image "$WEB" --postgres-image "$PG" --redis-image "$REDIS" --baseline-version 3.9.0 --baseline-image gaeld-native-legacy:3.9.0-arm64 --baseline-archive "$RUNNER_TEMP/gaeld-ce-v3.9.0.tar.gz" --baseline-sha256 "$BASELINE_SHA" --source-artifact "$RUNNER_TEMP/exported-for-diagnostic.tar.gz" --report "$RUNNER_TEMP/diagnostic/adoption.json"
       - name: Record final runner capacity
         if: always()
         run: df -h "$RUNNER_TEMP" > "$RUNNER_TEMP/diagnostic/free-after.txt"
