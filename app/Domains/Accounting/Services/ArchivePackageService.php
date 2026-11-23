@@ -16,6 +16,8 @@ use ZipArchive;
 
 class ArchivePackageService implements ArchivePackageBuilder
 {
+    private const MISSING_ORIGINAL = 'Required original document is missing: ';
+
     public function __construct(
         private readonly ArchiveSnapshotService $snapshots,
         private readonly ArchiveReportRenderer $reports,
@@ -39,7 +41,8 @@ class ArchivePackageService implements ArchivePackageBuilder
             $snapshotHash = hash('sha256', self::json($snapshot));
             $latest = ArchivePackage::withoutGlobalScopes()->where('organization_id', $organization->id)
                 ->where('fiscal_year_id', $year->id)->orderByDesc('version')->first();
-            if ($latest && $latest->snapshot_sha256 === $snapshotHash && $latest->provenance === $provenance && $latest->archival_pdf === $archivalPdf) {
+            if ($latest && $latest->provenance === $provenance && $latest->archival_pdf === $archivalPdf
+                && ($latest->snapshot_sha256 === $snapshotHash || $this->isRepeatedMissingOriginal($latest, $snapshot))) {
                 return $latest;
             }
             $id = (string) Str::uuid();
@@ -62,6 +65,42 @@ class ArchivePackageService implements ArchivePackageBuilder
 
             return $package;
         });
+    }
+
+    /** @param array<string, mixed> $snapshot */
+    private function isRepeatedMissingOriginal(ArchivePackage $latest, array $snapshot): bool
+    {
+        if ($latest->state !== 'failed' || ! str_starts_with((string) $latest->failure, self::MISSING_ORIGINAL)) {
+            return false;
+        }
+
+        // New automated observations of an unresolved incident stay in the audit log.
+        // Compare with the frozen version without changing the snapshot we would publish.
+        $events = $latest->snapshot['archive_access_events'] ?? null;
+        if (! is_array($events)) {
+            return false;
+        }
+        $frozenIds = array_column($events, 'id', 'id');
+        $lastControl = collect($events)->where('action', 'control.daily')->sortByDesc('occurred_at')->first();
+        $unprepared = 'Unprepared package: '.$latest->id;
+        $knownIssues = [...($lastControl['metadata']['issues'] ?? []), $unprepared];
+        $snapshot['archive_access_events'] = array_values(array_filter(
+            $snapshot['archive_access_events'],
+            static function (array $event) use ($frozenIds, $knownIssues, $unprepared, $latest): bool {
+                if (isset($frozenIds[$event['id']]) || $event['actor_id'] !== null) {
+                    return true;
+                }
+                if ($event['action'] === 'control.daily') {
+                    $issues = $event['metadata']['issues'] ?? [];
+
+                    return ! in_array($unprepared, $issues, true) || array_diff($issues, $knownIssues) !== [];
+                }
+
+                return $event['action'] !== 'package.failed' || $event['archive_package_id'] !== $latest->id;
+            },
+        ));
+
+        return hash('sha256', self::json($snapshot)) === $latest->snapshot_sha256;
     }
 
     public function prepare(ArchivePackage $package, bool $archivalPdf = false): ArchivePackage
@@ -125,7 +164,7 @@ class ArchivePackageService implements ArchivePackageBuilder
             foreach ($snapshot['original_sources'] as $source) {
                 $disk = Storage::disk('local');
                 if ($source['sha256'] === null || ! $disk->exists($source['source_path'])) {
-                    throw new \RuntimeException('Required original document is missing: '.$source['type'].'/'.$source['id']);
+                    throw new \RuntimeException(self::MISSING_ORIGINAL.$source['type'].'/'.$source['id']);
                 }
                 $bytes = $disk->get($source['source_path']);
                 if (! hash_equals($source['sha256'], hash('sha256', $bytes)) || strlen($bytes) !== $source['size']) {
