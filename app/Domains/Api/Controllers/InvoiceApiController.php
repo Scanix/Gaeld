@@ -7,6 +7,8 @@ use App\Domains\Api\Requests\RecordPaymentApiRequest;
 use App\Domains\Api\Requests\StoreInvoiceApiRequest;
 use App\Domains\Api\Requests\UpdateInvoiceApiRequest;
 use App\Domains\Api\Resources\InvoiceResource;
+use App\Domains\Api\Services\ExternalReferenceUpsert;
+use App\Domains\Api\Support\ExternalReference;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Actions\CancelInvoiceAction;
 use App\Domains\Invoicing\Actions\CreateCreditNoteAction;
@@ -16,6 +18,7 @@ use App\Domains\Invoicing\Actions\FinalizeInvoiceAction;
 use App\Domains\Invoicing\Actions\RecordPaymentAction;
 use App\Domains\Invoicing\Actions\UpdateInvoiceAction;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
+use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\DTOs\UpdateInvoiceData;
 use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
@@ -28,6 +31,7 @@ use App\Domains\Invoicing\Services\InvoiceNumberGenerator;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use App\Support\Contracts\OrganizationQuotaResolver;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -35,6 +39,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @group Invoices
@@ -60,7 +65,9 @@ class InvoiceApiController extends Controller
     {
         $this->authorize('viewAny', Invoice::class);
 
-        $invoices = InvoiceQuery::list($request);
+        $query = InvoiceQuery::filtered($request);
+        ExternalReference::filter($query, $request);
+        $invoices = $query->paginate(20)->withQueryString();
 
         return InvoiceResource::collection($invoices);
     }
@@ -117,6 +124,17 @@ class InvoiceApiController extends Controller
     ): JsonResponse {
         $this->authorize('create', Invoice::class);
 
+        return $this->createInvoice($request->validated(), $action, $currentOrg, $numberGenerator, $quotaResolver);
+    }
+
+    /** @param  array<string, mixed>  $validated */
+    private function createInvoice(
+        array $validated,
+        CreateInvoiceAction $action,
+        CurrentOrganization $currentOrg,
+        InvoiceNumberGenerator $numberGenerator,
+        OrganizationQuotaResolver $quotaResolver,
+    ): JsonResponse {
         $orgId = $currentOrg->id();
         $monthlyKey = 'invoices_monthly:'.$orgId.':'.now()->format('Y-m');
         $limit = $quotaResolver->maxInvoicesPerMonth($currentOrg->get());
@@ -131,7 +149,6 @@ class InvoiceApiController extends Controller
             }
         }
 
-        $validated = $request->validated();
         $validated['organization_id'] = $orgId;
 
         $shouldAutoGenerateNumber = empty($validated['number']);
@@ -181,6 +198,30 @@ class InvoiceApiController extends Controller
     }
 
     /**
+     * Create or update a draft invoice by its external reference
+     *
+     * Supply the invoice creation payload and both reference fields.
+     */
+    public function upsert(
+        StoreInvoiceApiRequest $request,
+        CurrentOrganization $organization,
+        ExternalReferenceUpsert $upsert,
+        CreateInvoiceAction $create,
+        UpdateInvoiceAction $update,
+        InvoiceNumberGenerator $numbers,
+        OrganizationQuotaResolver $quota,
+    ): JsonResponse {
+        return $upsert->execute($request, $organization->id(), Invoice::withTrashed(), function (?Invoice $invoice) use ($request, $organization, $create, $update, $numbers, $quota): JsonResponse {
+            $payload = $request->validated();
+            if ($invoice === null) {
+                return $this->createInvoice($payload, $create, $organization, $numbers, $quota);
+            }
+
+            return $this->updateInvoice($payload, $invoice, $update, $organization, preserveMatchingLines: true)->response();
+        });
+    }
+
+    /**
      * Update invoice
      *
      * Updates an existing invoice. Only draft invoices can be modified.
@@ -212,7 +253,12 @@ class InvoiceApiController extends Controller
     ): InvoiceResource {
         $this->authorize('update', $invoice);
 
-        $validated = $request->validated();
+        return $this->updateInvoice($request->validated(), $invoice, $action, $currentOrg);
+    }
+
+    /** @param  array<string, mixed>  $validated */
+    private function updateInvoice(array $validated, Invoice $invoice, UpdateInvoiceAction $action, CurrentOrganization $currentOrg, bool $preserveMatchingLines = false): InvoiceResource
+    {
         $validated['organization_id'] = $currentOrg->id();
 
         // Resolve customer UUID to internal integer FK
@@ -230,9 +276,32 @@ class InvoiceApiController extends Controller
         $validated = $this->completeUpdatePayload($invoice, $validated);
 
         $dto = UpdateInvoiceData::fromArray($validated);
-        $action->execute($invoice, $dto);
+        $syncLines = ! $preserveMatchingLines || $dto->taxTreatment !== $invoice->tax_treatment || ! $this->sameLines($invoice, $dto->lines);
+        DB::transaction(fn () => $action->execute($invoice, $dto, $syncLines));
 
         return new InvoiceResource($invoice->fresh(['customer', 'lines.vatRate']));
+    }
+
+    /** @param  array<int, InvoiceLineData>  $lines */
+    private function sameLines(Invoice $invoice, array $lines): bool
+    {
+        $stored = $invoice->lines->sortBy('sort_order')->values();
+        if ($stored->count() !== count($lines)) {
+            return false;
+        }
+
+        foreach ($lines as $index => $line) {
+            $existing = $stored[$index];
+            if ($existing->type !== $line->type || $existing->description !== $line->description
+                || $existing->discount_type !== $line->discountType
+                || ($existing->vat_rate_id === null ? null : (string) $existing->vat_rate_id) !== $line->vatRateId
+                || $existing->sort_order !== ($line->sortOrder ?? $index)
+                || $existing->quantity !== Money::round($line->quantity) || $existing->unit_price !== Money::round($line->unitPrice)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -436,6 +505,8 @@ class InvoiceApiController extends Controller
         $invoice->loadMissing('lines');
 
         return [
+            'external_source' => $validated['external_source'] ?? null,
+            'external_id' => $validated['external_id'] ?? null,
             'organization_id' => $invoice->organization_id,
             'customer_id' => $validated['customer_id'] ?? $invoice->customer_id,
             'number' => $validated['number'] ?? $invoice->number,

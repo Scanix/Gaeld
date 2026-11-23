@@ -38,7 +38,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/', ApiInfoController::class)->name('api.info');
 });
 
-Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOrgTokenActivity::class, 'feature:api_access', 'throttle:api'])->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum', 'api-org', 'feature:api_access', 'throttle:api', LogOrgTokenActivity::class, HandleApiIdempotency::class])->prefix('v1')->group(function () {
 
     // Personal token management (user's own tokens)
     Route::get('/tokens', [ApiTokenController::class, 'index'])->name('api.tokens.index');
@@ -59,6 +59,7 @@ Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOr
     Route::get('/meta/webhook-events', [ApiTokenController::class, 'webhookEvents'])->name('api.meta.webhook-events');
 
     // Invoices
+    Route::post('/invoices/upsert', [InvoiceApiController::class, 'upsert'])->name('api.invoices.upsert');
     Route::apiResource('invoices', InvoiceApiController::class)->names([
         'index' => 'api.invoices.index',
         'show' => 'api.invoices.show',
@@ -91,6 +92,8 @@ Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOr
     Route::post('/expenses/{expense}/cancel', [ExpenseApiController::class, 'cancel'])->name('api.expenses.cancel');
 
     // Contacts
+    Route::post('/contacts/upsert', [ContactApiController::class, 'upsert'])->name('api.contacts.upsert');
+    Route::post('/customers/upsert', [ContactApiController::class, 'upsert'])->name('api.customers.upsert');
     Route::apiResource('contacts', ContactApiController::class)->names([
         'index' => 'api.contacts.index',
         'show' => 'api.contacts.show',

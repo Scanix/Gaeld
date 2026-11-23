@@ -4,12 +4,15 @@ namespace App\Domains\Api\Controllers;
 
 use App\Domains\Api\Requests\ContactApiRequest;
 use App\Domains\Api\Resources\ContactResource;
+use App\Domains\Api\Services\ExternalReferenceUpsert;
+use App\Domains\Api\Support\ExternalReference;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * JSON API access to organization contacts used by invoices and expenses.
@@ -28,7 +31,9 @@ class ContactApiController extends Controller
         $this->authorize('viewAny', Contact::class);
 
         $perPage = min(max((int) $request->input('per_page', 20), 1), 100);
-        $contacts = Contact::query()
+        $query = Contact::query();
+        ExternalReference::filter($query, $request);
+        $contacts = $query
             ->when($request->input('search'), function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('name', 'ilike', "%{$search}%")
@@ -70,14 +75,34 @@ class ContactApiController extends Controller
     ): ContactResource|JsonResponse {
         $this->authorize('create', Contact::class);
 
-        $contact = Contact::create([
-            ...$request->validated(),
-            'organization_id' => $currentOrganization->id(),
-        ]);
+        return $this->writeContact($request, $currentOrganization->id(), null);
+    }
 
-        return (new ContactResource($contact->load('contactPersons')))
-            ->response()
-            ->setStatusCode(201);
+    /**
+     * Create or update a contact by its external reference
+     *
+     * The customers alias shares the same organization-scoped references.
+     */
+    public function upsert(ContactApiRequest $request, CurrentOrganization $organization, ExternalReferenceUpsert $upsert): JsonResponse
+    {
+        return $upsert->execute($request, $organization->id(), Contact::withTrashed(),
+            fn (?Contact $contact) => $this->writeContact($request, $organization->id(), $contact));
+    }
+
+    private function writeContact(ContactApiRequest $request, string $organizationId, ?Contact $contact): JsonResponse
+    {
+        $created = $contact === null;
+        $contact = DB::transaction(function () use ($request, $organizationId, $contact): Contact {
+            if ($contact === null) {
+                return Contact::create([...$request->validated(), 'organization_id' => $organizationId]);
+            }
+
+            $contact->update($request->validated());
+
+            return $contact;
+        });
+
+        return (new ContactResource($contact->load('contactPersons')))->response()->setStatusCode($created ? 201 : 200);
     }
 
     /**
@@ -94,7 +119,7 @@ class ContactApiController extends Controller
     ): ContactResource {
         $this->ensureOrganization($contact, $currentOrganization->id());
         $this->authorize('update', $contact);
-        $contact->update($request->validated());
+        DB::transaction(fn () => $contact->update($request->validated()));
 
         return new ContactResource($contact->fresh('contactPersons'));
     }

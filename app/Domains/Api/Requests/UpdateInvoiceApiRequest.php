@@ -2,6 +2,7 @@
 
 namespace App\Domains\Api\Requests;
 
+use App\Domains\Api\Support\ExternalReference;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Models\Invoice;
@@ -25,6 +26,7 @@ class UpdateInvoiceApiRequest extends FormRequest
         $orgId = $org->isBound() ? $org->id() : 0;
 
         return [
+            ...ExternalReference::rules($this),
             'customer_id' => [
                 'sometimes',
                 'uuid',

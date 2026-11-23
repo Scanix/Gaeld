@@ -17,7 +17,7 @@ class UpdateInvoiceAction
         private SyncInvoiceLinesAction $syncInvoiceLines,
     ) {}
 
-    public function execute(Invoice $invoice, UpdateInvoiceData $data): Invoice
+    public function execute(Invoice $invoice, UpdateInvoiceData $data, bool $syncLines = true): Invoice
     {
         if ($data->commercialReferences === []) {
             return $this->updateDraft($invoice, $data);
@@ -41,6 +41,7 @@ class UpdateInvoiceAction
         }
 
         $invoiceData = [
+            ...($data->externalSource !== null ? ['external_source' => $data->externalSource, 'external_id' => $data->externalId] : []),
             'customer_id' => $data->customerId,
             'number' => $data->number,
             'issue_date' => $data->issueDate,
@@ -69,6 +70,10 @@ class UpdateInvoiceAction
         }
 
         $invoice->update($invoiceData);
+
+        if (! $syncLines) {
+            return $invoice->load('lines');
+        }
 
         if ($data->taxTreatment->appliesSwissVat()) {
             $this->syncInvoiceLines->replace($invoice, $data->lines);

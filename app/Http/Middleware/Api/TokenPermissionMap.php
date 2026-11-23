@@ -142,6 +142,7 @@ final class TokenPermissionMap
                 'view' => Permission::InvoicingView,
                 'create' => Permission::InvoicingCreate,
                 'update' => Permission::InvoicingEdit,
+                'editExternalReference' => Permission::InvoicingEdit,
                 'delete' => Permission::InvoicingDelete,
                 'finalize' => Permission::InvoicingFinalize,
                 'recordPayment' => Permission::InvoicingRecordPayment,

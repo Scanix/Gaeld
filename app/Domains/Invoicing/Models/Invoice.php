@@ -30,6 +30,8 @@ use Laravel\Scout\Searchable;
  * Swiss QR payment data, reminder history, and links to the accounting
  * journal entry created on posting.
  *
+ * @property string|null $external_source
+ * @property string|null $external_id
  * @property string $id
  * @property string|null $number
  * @property InvoiceStatus $status
@@ -79,6 +81,8 @@ class Invoice extends Model
     ];
 
     protected $fillable = [
+        'external_source',
+        'external_id',
         'organization_id',
         'customer_id',
         'customer_snapshot',
