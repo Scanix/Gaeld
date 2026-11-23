@@ -48,7 +48,7 @@ jobs:
           run_id=$(jq -r '.workflow_run.id' "$RUNNER_TEMP/artifact.json")
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" > "$RUNNER_TEMP/build-run.json"
           jq -e --arg sha "$GITHUB_SHA" --arg repo "$GITHUB_REPOSITORY" '
-            .path == ".github/workflows/distribution.yml" and .event == "workflow_dispatch" and
+            .path == ".github/workflows/distribution.yml" and (.event == "workflow_dispatch" or .event == "push") and
             .status == "completed" and .conclusion == "success" and
             .head_repository.full_name == $repo and .head_sha == $sha' "$RUNNER_TEMP/build-run.json"
           name=$(jq -r .name "$RUNNER_TEMP/artifact.json")

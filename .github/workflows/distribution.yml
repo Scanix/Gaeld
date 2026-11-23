@@ -1,6 +1,11 @@
 name: Public CE release candidate
 
 on:
+  push:
+    branches:
+      - 'release/v3.11.0-rc.*'
+      - 'release/v3.12.0-rc.*'
+      - 'release/v3.13.0-rc.*'
   workflow_dispatch:
     inputs:
       version:
@@ -16,11 +21,33 @@ permissions:
   contents: read
 
 jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ref.outputs.version }}
+    steps:
+      - id: ref
+        env:
+          REQUESTED: ${{ inputs.version }}
+          EXPECTED: ${{ inputs.expected_commit }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            version=${GITHUB_REF#refs/heads/release/v}
+            [[ "$version" =~ ^3\.(11|12|13)\.0-rc\.[1-9][0-9]*$ ]]
+          else
+            version="$REQUESTED"
+            [[ "$GITHUB_SHA" == "$EXPECTED" ]]
+          fi
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
+          [[ "$GITHUB_REF" == "refs/tags/v$version" || "$GITHUB_REF" == "refs/heads/release/v$version" ]]
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+
   quality:
     uses: ./.github/workflows/ci.yml
 
   candidate:
-    needs: quality
+    needs: [quality, metadata]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,8 +60,8 @@ jobs:
           fetch-depth: 0
       - name: Verify the reviewed source ref and commit
         env:
-          RELEASE_VERSION: ${{ inputs.version }}
-          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+          EXPECTED_COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
           [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
@@ -70,7 +97,7 @@ jobs:
           target: app
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/scanix/gaeld:candidate-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          tags: ghcr.io/scanix/gaeld:candidate-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
           provenance: mode=max
           sbom: true
       - name: Build immutable multiarch web image with SBOM and provenance
@@ -82,7 +109,7 @@ jobs:
           target: web
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/scanix/gaeld-web:candidate-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          tags: ghcr.io/scanix/gaeld-web:candidate-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
           provenance: mode=max
           sbom: true
       - name: Sign application provenance with the release workflow identity
@@ -103,7 +130,7 @@ jobs:
           WEB_DIGEST: ${{ steps.web.outputs.digest }}
           POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
           REDIS_DIGEST: ${{ steps.databases.outputs.redis }}
-          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
         run: |
           set -euo pipefail
           mkdir -p release
@@ -123,7 +150,7 @@ jobs:
           WEB_DIGEST: ${{ steps.web.outputs.digest }}
           POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
           REDIS_DIGEST: ${{ steps.databases.outputs.redis }}
-          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
         run: |
           set -euo pipefail
           candidate_dir="$RUNNER_TEMP/gaeld-r1-adoption-candidate"
@@ -165,7 +192,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: ce-adoption-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ce-adoption-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             release/adoption-acceptance.json
             release/receipts/
@@ -187,7 +214,7 @@ jobs:
           upload-artifact: false
       - name: Bind qualification to the built candidate
         env:
-          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
           APP_DIGEST: ${{ steps.app.outputs.digest }}
           WEB_DIGEST: ${{ steps.web.outputs.digest }}
           POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
@@ -205,7 +232,7 @@ jobs:
         id: artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: managed-ce-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: managed-ce-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: release/
           retention-days: 90
           if-no-files-found: error
