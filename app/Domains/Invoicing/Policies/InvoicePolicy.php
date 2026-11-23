@@ -34,13 +34,14 @@ class InvoicePolicy extends BasePolicy
 
     public function update(User $user, Invoice $invoice): bool
     {
-        if ($invoice->archived_at !== null) {
-            return false;
-        }
+        return $this->editExternalReference($user, $invoice)
+            && $invoice->archived_at === null && $invoice->status->isEditable();
+    }
 
+    public function editExternalReference(User $user, Invoice $invoice): bool
+    {
         return $this->belongsToOrganization($user, $invoice)
-            && $user->hasPermissionTo(Permission::InvoicingEdit)
-            && $invoice->status->isEditable();
+            && $user->hasPermissionTo(Permission::InvoicingEdit);
     }
 
     public function delete(User $user, Invoice $invoice): bool

@@ -36,6 +36,8 @@ abstract readonly class InvoicePayloadData
         public array $lines,
         public InvoiceTaxTreatment $taxTreatment = InvoiceTaxTreatment::Standard,
         array $commercialReferences = [],
+        public ?string $externalSource = null,
+        public ?string $externalId = null,
     ) {
         $this->commercialReferences = Arr::only($commercialReferences, self::COMMERCIAL_REFERENCE_FIELDS);
     }
@@ -56,6 +58,8 @@ abstract readonly class InvoicePayloadData
             notes: $data['notes'] ?? null,
             paymentTerms: $data['payment_terms'] ?? null,
             lines: array_map(fn (array $line) => InvoiceLineData::fromArray($line), $data['lines']),
+            externalSource: $data['external_source'] ?? null,
+            externalId: $data['external_id'] ?? null,
             taxTreatment: InvoiceTaxTreatment::tryFrom($data['tax_treatment'] ?? InvoiceTaxTreatment::Standard->value)
                 ?? InvoiceTaxTreatment::Standard,
         );
@@ -66,6 +70,7 @@ abstract readonly class InvoicePayloadData
     {
         return [
             ...$this->commercialReferences,
+            ...($this->externalSource !== null ? ['external_source' => $this->externalSource, 'external_id' => $this->externalId] : []),
             'organization_id' => $this->organizationId,
             'customer_id' => $this->customerId,
             'number' => $this->number,

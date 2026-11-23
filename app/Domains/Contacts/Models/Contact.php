@@ -23,6 +23,8 @@ use Laravel\Scout\Searchable;
 /**
  * Unified contact record: may be a customer, a supplier, or both.
  *
+ * @property string|null $external_source
+ * @property string|null $external_id
  * @property int $id
  * @property string $uuid
  * @property string $organization_id
@@ -60,6 +62,8 @@ class Contact extends Model
     protected $table = 'contacts';
 
     protected $fillable = [
+        'external_source',
+        'external_id',
         'uuid',
         'organization_id',
         'type',

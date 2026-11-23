@@ -66,6 +66,7 @@ class CreateInvoiceAction
             $customerSnapshot = $customer?->toInvoiceSnapshot();
 
             $invoice = Invoice::create([
+                ...($data->externalSource !== null ? ['external_source' => $data->externalSource, 'external_id' => $data->externalId] : []),
                 'organization_id' => $data->organizationId,
                 'customer_id' => $data->customerId,
                 'customer_snapshot' => $customerSnapshot,

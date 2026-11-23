@@ -9,10 +9,11 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 
 class ApiIdempotencyService
 {
-    public function reserve(Request $request, string $organizationId, ?string $fallbackReference): ?ApiIdempotencyReservation
+    public function reserve(Request $request, string $organizationId, ?string $fallbackReference, ?string $principal = null): ?ApiIdempotencyReservation
     {
         $headerKey = trim((string) $request->header('Idempotency-Key'));
         $route = (string) ($request->route()?->getName() ?? $request->path());
@@ -33,7 +34,8 @@ class ApiIdempotencyService
         $payloadHash = hash('sha256', json_encode([
             'method' => $request->method(),
             'route' => $route,
-            'payload' => $this->payloadForHash($request),
+            ...($principal === null ? [] : ['principal' => $principal]),
+            'payload' => $principal === null ? $this->payloadForHash($request) : $this->orderedPayload($this->payloadForHash($request)),
         ], JSON_THROW_ON_ERROR));
 
         $existing = ApiIdempotencyKey::query()
@@ -50,14 +52,14 @@ class ApiIdempotencyService
         }
 
         try {
-            $record = ApiIdempotencyKey::create([
+            $record = DB::transaction(fn () => ApiIdempotencyKey::create([
                 'organization_id' => $organizationId,
                 'request_key' => $requestKey,
                 'http_method' => $request->method(),
                 'route' => $route,
                 'payload_hash' => $payloadHash,
                 'expires_at' => now()->addDay(),
-            ]);
+            ]));
         } catch (QueryException $exception) {
             if (! $this->isDuplicateKeyException($exception)) {
                 throw $exception;
@@ -122,6 +124,24 @@ class ApiIdempotencyService
     {
         return ($exception->errorInfo[0] ?? null) === '23505'
             && str_contains($exception->getMessage(), 'api_idempotency_keys');
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $payload
+     * @return array<array-key, mixed>
+     */
+    private function orderedPayload(array $payload): array
+    {
+        if (! array_is_list($payload)) {
+            ksort($payload);
+        }
+        foreach ($payload as $key => $value) {
+            if (is_array($value)) {
+                $payload[$key] = $this->orderedPayload($value);
+            }
+        }
+
+        return $payload;
     }
 
     /**

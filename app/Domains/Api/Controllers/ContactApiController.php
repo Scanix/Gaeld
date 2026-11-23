@@ -4,12 +4,15 @@ namespace App\Domains\Api\Controllers;
 
 use App\Domains\Api\Requests\ContactApiRequest;
 use App\Domains\Api\Resources\ContactResource;
+use App\Domains\Api\Services\ExternalReferenceUpsert;
+use App\Domains\Api\Support\ExternalReference;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * JSON API access to organization contacts used by invoices and expenses.
@@ -22,13 +25,18 @@ class ContactApiController extends Controller
      * List contacts
      *
      * Returns a paginated list of contacts for the current organisation.
+     *
+     * @queryParam external_source string External system name. Example: shopify
+     * @queryParam external_id string Exact identifier from that system. Example: order-12345
      */
     public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Contact::class);
 
         $perPage = min(max((int) $request->input('per_page', 20), 1), 100);
-        $contacts = Contact::query()
+        $query = Contact::query();
+        ExternalReference::filter($query, $request);
+        $contacts = $query
             ->when($request->input('search'), function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('name', 'ilike', "%{$search}%")
@@ -70,14 +78,42 @@ class ContactApiController extends Controller
     ): ContactResource|JsonResponse {
         $this->authorize('create', Contact::class);
 
-        $contact = Contact::create([
-            ...$request->validated(),
-            'organization_id' => $currentOrganization->id(),
-        ]);
+        return $this->writeContact($request, $currentOrganization->id(), null);
+    }
 
-        return (new ContactResource($contact->load('contactPersons')))
-            ->response()
-            ->setStatusCode(201);
+    /**
+     * Create or update a contact by its external reference
+     *
+     * The customers alias shares the same organization-scoped references.
+     *
+     * @bodyParam external_source string required External system name, up to 100 characters. Example: shopify
+     * @bodyParam external_id string required External identifier, up to 255 characters. Example: order-12345
+     *
+     * @response 200 scenario="Updated" {"data":{"id":"9c8f1b2a-3d4e-4f67-8901-abcdef123456","external_source":"shopify","external_id":"order-12345"}}
+     * @response 201 scenario="Created" {"data":{"id":"9c8f1b2a-3d4e-4f67-8901-abcdef123456","external_source":"shopify","external_id":"order-12345"}}
+     * @response 409 scenario="Reserved reference" {"message":"This external reference is reserved.","code":"external_reference_conflict"}
+     * @response 403 scenario="Insufficient permission" {"message":"This action is unauthorized."}
+     */
+    public function upsert(ContactApiRequest $request, CurrentOrganization $organization, ExternalReferenceUpsert $upsert): JsonResponse
+    {
+        return $upsert->execute($request, $organization->id(), Contact::withTrashed(),
+            fn (?Contact $contact) => $this->writeContact($request, $organization->id(), $contact));
+    }
+
+    private function writeContact(ContactApiRequest $request, string $organizationId, ?Contact $contact): JsonResponse
+    {
+        $created = $contact === null;
+        $contact = DB::transaction(function () use ($request, $organizationId, $contact): Contact {
+            if ($contact === null) {
+                return Contact::create([...$request->validated(), 'organization_id' => $organizationId]);
+            }
+
+            $contact->update($request->validated());
+
+            return $contact;
+        });
+
+        return (new ContactResource($contact->load('contactPersons')))->response()->setStatusCode($created ? 201 : 200);
     }
 
     /**
@@ -94,7 +130,7 @@ class ContactApiController extends Controller
     ): ContactResource {
         $this->ensureOrganization($contact, $currentOrganization->id());
         $this->authorize('update', $contact);
-        $contact->update($request->validated());
+        DB::transaction(fn () => $contact->update($request->validated()));
 
         return new ContactResource($contact->fresh('contactPersons'));
     }

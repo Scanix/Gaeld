@@ -93,6 +93,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Convert invalid UUID queries (e.g. /banking/6 instead of /banking/{uuid})
         // into 404 responses instead of 500 errors.
         $exceptions->renderable(function (QueryException $e) {
+            if (request()->is('api/v1/*') && $e->getCode() === '23505'
+                && (str_contains($e->getMessage(), 'contacts_external_reference_unique')
+                    || str_contains($e->getMessage(), 'invoices_external_reference_unique'))) {
+                return response()->json(['message' => 'This external reference is reserved.', 'code' => 'external_reference_conflict'], 409);
+            }
+
             if ($e->getCode() === '22P02' && str_contains($e->getMessage(), 'uuid')) {
                 abort(404);
             }
