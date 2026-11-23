@@ -30,14 +30,14 @@ class CreateInvoiceAction
         private InvoiceNumberGenerator $numberGenerator,
     ) {}
 
-    public function execute(CreateInvoiceData $data): Invoice
+    public function execute(CreateInvoiceData $data, ?string $justificatifPath = null): Invoice
     {
         $number = $data->number;
         $attempts = 0;
 
         while (true) {
             try {
-                return $this->createWithNumber($data, $number);
+                return $this->createWithNumber($data, $number, $justificatifPath);
             } catch (UniqueConstraintViolationException $e) {
                 if (! $this->isInvoiceNumberCollision($e)) {
                     throw $e;
@@ -54,9 +54,9 @@ class CreateInvoiceAction
         }
     }
 
-    private function createWithNumber(CreateInvoiceData $data, string $number): Invoice
+    private function createWithNumber(CreateInvoiceData $data, string $number, ?string $justificatifPath): Invoice
     {
-        return DB::transaction(function () use ($data, $number) {
+        return DB::transaction(function () use ($data, $number, $justificatifPath) {
             $customer = $data->customerId === null
                 ? null
                 : Contact::withoutGlobalScope('organization')
@@ -68,6 +68,7 @@ class CreateInvoiceAction
             $invoice = Invoice::create([
                 ...($data->externalSource !== null ? ['external_source' => $data->externalSource, 'external_id' => $data->externalId] : []),
                 'organization_id' => $data->organizationId,
+                'justificatif_path' => $justificatifPath,
                 'customer_id' => $data->customerId,
                 'customer_snapshot' => $customerSnapshot,
                 'number' => $number,
