@@ -3,6 +3,7 @@ import { execFile } from 'node:child_process'
 import { createHmac } from 'node:crypto'
 import { promisify } from 'node:util'
 import { chromium } from '@playwright/test'
+import { isAmazonPaymentsUrl, stagingMailLink } from './staging-urls.mjs'
 
 const execFileAsync = promisify(execFile)
 
@@ -119,15 +120,13 @@ function diagnosticClassification(consoleErrors, requestFailures) {
   const expectedConsoleErrors = consoleErrors.filter(message =>
     message.includes('responded with a status of 409')
     || message.includes('responded with a status of 403')
-    || message.includes('payments-eu.amazon.com')
-    || message.includes('net::ERR_FAILED') && message.includes('amazon')
-    || message === 'Failed to load resource: net::ERR_FAILED' && requestFailures.some(failure => failure.url.includes('payments-eu.amazon.com')),
+    || (message.match(/https?:\/\/[^\s<>"']+/g) ?? []).some(isAmazonPaymentsUrl)
+    || message === 'Failed to load resource: net::ERR_FAILED' && requestFailures.some(failure => isAmazonPaymentsUrl(failure.url)),
   )
   const actionableConsoleErrors = consoleErrors.filter(message => !expectedConsoleErrors.includes(message))
   const expectedRequestFailures = requestFailures.filter(failure =>
-    failure.url.includes('.hcaptcha.com') && failure.error === 'net::ERR_ABORTED'
-    || failure.error === 'net::ERR_ABORTED'
-    || failure.url.includes('payments-eu.amazon.com'),
+    failure.error === 'net::ERR_ABORTED'
+    || isAmazonPaymentsUrl(failure.url),
   )
   const actionableRequestFailures = requestFailures.filter(failure => !expectedRequestFailures.includes(failure))
 
@@ -231,7 +230,9 @@ async function createAccount(page, options = {}) {
   const submitResponse = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/signup'), { timeout: 30000 })
   await page.getByRole('button', { name: /Create.*account|Start.*trial|Créer.*compte|Commencer.*essai/ }).click()
   const response = await submitResponse
-  await page.waitForURL(url => /\/email\/verify|\/welcome|\/billing/.test(new URL(url.toString()).pathname) || new URL(url.toString()).hostname.endsWith('stripe.com'), { timeout: 30000 })
+  await page.waitForURL(url =>
+    (url.origin === new URL(BASE_URL).origin && /^\/(?:email\/verify|welcome|billing)(?:\/|$)/.test(url.pathname))
+    || url.origin === 'https://checkout.stripe.com', { timeout: 30000 })
   await page.waitForLoadState('domcontentloaded')
 
   return {
@@ -843,7 +844,7 @@ async function verifyAccountFromMailpit(page, email) {
       const detailResponse = await fetch(`${MAILPIT_URL}/api/v1/message/${message.ID}`)
       if (!detailResponse.ok) throw new Error(`Mailpit message returned HTTP ${detailResponse.status}`)
       const detail = await detailResponse.json()
-      verificationUrl = detail.Text?.match(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/email/verify/[^\\s<]+`))?.[0] || null
+      verificationUrl = stagingMailLink(detail.Text, BASE_URL, /^\/email\/verify\/.+/)
     }
     if (!verificationUrl) await new Promise(resolve => setTimeout(resolve, 1000))
   }
@@ -857,8 +858,6 @@ async function findMailpitLink(email, pathPattern) {
   if (!MAILPIT_URL) throw new Error('QA_MAILPIT_URL is required for invitation checks')
 
   const deadline = Date.now() + 30000
-  const escapedBaseUrl = BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const linkPattern = new RegExp(`${escapedBaseUrl}${pathPattern}`)
 
   while (Date.now() < deadline) {
     const messagesResponse = await fetch(`${MAILPIT_URL}/api/v1/messages?limit=100`)
@@ -870,8 +869,8 @@ async function findMailpitLink(email, pathPattern) {
       if (!detailResponse.ok) throw new Error(`Mailpit message returned HTTP ${detailResponse.status}`)
       const detail = await detailResponse.json()
       const content = `${detail.Text || ''}\n${detail.HTML || ''}`
-      const match = content.match(linkPattern)
-      if (match) return match[0]
+      const link = stagingMailLink(content, BASE_URL, pathPattern)
+      if (link) return link
     }
     await new Promise(resolve => setTimeout(resolve, 1000))
   }
@@ -976,7 +975,7 @@ async function exercisePermissions(browser, page, createdAccounts) {
       )
       if (invitation.status() !== 302) throw new Error(`Invitation returned HTTP ${invitation.status()}`)
 
-      const invitationUrl = await findMailpitLink(persona.email, '/invitations/[A-Za-z0-9]+/accept')
+      const invitationUrl = await findMailpitLink(persona.email, /^\/invitations\/[A-Za-z0-9]+\/accept$/)
       const accepted = await persona.page.goto(invitationUrl, { waitUntil: 'networkidle' })
       const personaText = await persona.page.locator('body').innerText()
       const targetOrganization = personaText.includes(`${ACCOUNT_NAME} ${RUN_ID} Organization`)

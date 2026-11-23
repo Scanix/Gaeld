@@ -149,11 +149,16 @@ function discoverPluginFrontends(root, environment) {
         alias: `@plugins/${manifest.slug}`,
         root: resolve(pluginDirectory, 'resources/js'),
         pages: pageFiles.map((file) => ({
-          key: `./Pages/${relative(pagesDirectory, file).replaceAll('\\', '/').replace(/\.vue$/, '.vue')}`,
+          key: `./Pages/${relative(pagesDirectory, file).replaceAll('\\', '/')}`,
           file,
         })),
       }]
     })
+}
+
+function moduleStringLiteral(value) {
+  return JSON.stringify(value).replace(/[<>\u2028\u2029]/g, character =>
+    `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`)
 }
 
 function gaeldPluginFrontendPages(frontends) {
@@ -172,7 +177,7 @@ function gaeldPluginFrontendPages(frontends) {
 
       const entries = frontends.flatMap((frontend) => frontend.pages.map((page) => [page.key, page.file]))
       const serializedEntries = entries
-        .map(([key, file]) => `${JSON.stringify(key)}: () => import(${JSON.stringify(file)})`)
+        .map(([key, file]) => `${moduleStringLiteral(key)}: () => import(${moduleStringLiteral(file)})`)
         .join(',\n')
 
       return `export default {\n${serializedEntries}\n}`
@@ -190,7 +195,7 @@ export default defineConfig(({ mode }) => {
       gaeldPluginFrontendPages(frontends),
       tailwindcss(),
       laravel({
-        input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/cookieConsent.js'],
+        input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/cookieConsent.js', 'resources/js/googleAdsConversions.js'],
         refresh: true,
       }),
       vue({
