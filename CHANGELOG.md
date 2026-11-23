@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Accounting archive packages
 
+- New and replaced invoice supporting PDFs stay linked to their invoices. Archive capture retains each version. On v3.11, uploading a PDF could save its bytes without linking them to the draft invoice. Keep the original files and backups, verify each document against the intended invoice, then re-upload it there after upgrading if the download is missing. Historical upload names do not identify the invoice.
+
+- Failed uploads release their monthly invoice and file-storage reservations. If a webhook queue becomes unavailable after an invoice is saved, the form still confirms the saved invoice. Due webhook deliveries retry with their original event and delivery IDs.
+
 - Capture a fiscal year as a dated company archive containing a frozen accounting snapshot, document versions, original files and an inventory with hashes. Repeating capture with unchanged data reuses the existing package.
 - Missing source files create a visible incident. Restore the original file and resume preparation to continue from the frozen snapshot. Accounting permissions and company access apply to inspection, retry and export.
 - Scheduled capture includes archived organizations. Repeated capture of the same missing original preserves its existing incident, and keeps its evidence available for review.
