@@ -51,6 +51,7 @@ use App\Domains\Payroll\Services\NullSourceTaxService;
 use App\Domains\Reporting\Jobs\GenerateReportsJob;
 use App\Domains\Users\Jobs\ExportUserDataJob;
 use App\Domains\Users\Models\User;
+use App\Http\Middleware\ValidateGaeldMcpHeaders;
 use App\Http\Services\GlobalSearchService;
 use App\Listeners\SendHorizonTelegramAlert;
 use App\Support\Contracts\EditionCompatibility;
@@ -74,6 +75,7 @@ use Illuminate\Validation\Rules\Password;
 use Knuckles\Camel\Extraction\ExtractedEndpointData;
 use Knuckles\Scribe\Scribe;
 use Laravel\Horizon\Events\LongWaitDetected;
+use Laravel\Mcp\Server\Middleware\ValidateMcpHeaders;
 use Laravel\Passkeys\Passkeys;
 use Laravel\Sanctum\Sanctum;
 
@@ -86,6 +88,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->commands([BackfillOrganizationDocumentStorageCommand::class]);
         $this->app->scoped(CurrentOrganization::class);
+        $this->app->bind(ValidateMcpHeaders::class, ValidateGaeldMcpHeaders::class);
         $this->app->singleton(EditionCompatibility::class, EditionCompatibilityService::class);
         $this->app->singleton(
             EditionReleasePair::class,
