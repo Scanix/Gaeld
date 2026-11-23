@@ -61,6 +61,62 @@ class GaeldTokenCommandTest extends TestCase
         $this->assertSame(TokenType::Organization, $token->type);
     }
 
+    public function test_mcp_tokens_are_personal_read_only_and_expire_by_default(): void
+    {
+        $this->seedPermissions();
+        $user = User::factory()->create();
+        $organization = Organization::factory()->create();
+        $organization->users()->attach($user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($user, $organization, 'owner');
+
+        $this->runTokenCommand(['organization' => $organization->id, '--mcp' => true])->assertSuccessful();
+
+        $token = PersonalAccessToken::query()->where('tokenable_id', $user->id)->firstOrFail();
+        $this->assertSame(TokenType::Personal, $token->type);
+        $this->assertSame(['invoicing.view', 'expenses.view'], $token->abilities);
+        $this->assertSame($token->created_at->copy()->addDays(30)->toDateString(), $token->expires_at->toDateString());
+    }
+
+    public function test_mcp_tokens_reject_wildcard_and_write_abilities(): void
+    {
+        $this->seedPermissions();
+        $user = User::factory()->create();
+        $organization = Organization::factory()->create();
+        $organization->users()->attach($user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($user, $organization, 'owner');
+
+        foreach ([['*'], ['invoicing.create']] as $abilities) {
+            $this->runTokenCommand(['organization' => $organization->id, '--mcp' => true, '--abilities' => $abilities])->assertFailed();
+        }
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
+    public function test_mcp_tokens_support_the_own_expenses_scope(): void
+    {
+        $this->seedPermissions();
+        $user = User::factory()->create();
+        $organization = Organization::factory()->create();
+        $organization->users()->attach($user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($user, $organization, 'owner');
+
+        $this->runTokenCommand([
+            'organization' => $organization->id, '--mcp' => true, '--abilities' => ['expenses.view-own'],
+        ])->assertSuccessful();
+
+        $this->assertSame(['expenses.view-own'], PersonalAccessToken::query()->firstOrFail()->abilities);
+    }
+
+    public function test_mcp_tokens_accept_the_explicit_report_scope(): void
+    {
+        $this->seedPermissions();
+        $user = User::factory()->create();
+        $organization = Organization::factory()->create();
+        $organization->users()->attach($user->id, ['role' => 'owner']);
+        $this->assignOrganizationRole($user, $organization, 'owner');
+        $this->runTokenCommand(['organization' => $organization->id, '--mcp' => true, '--abilities' => ['reporting.view']])->assertSuccessful();
+        $this->assertSame(['reporting.view'], PersonalAccessToken::query()->firstOrFail()->abilities);
+    }
+
     public function test_it_rejects_invalid_abilities_and_expiration_without_creating_a_token(): void
     {
         $this->seedPermissions();

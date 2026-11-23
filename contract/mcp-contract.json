@@ -1,0 +1,32 @@
+{
+  "_meta": {
+    "contract": "mcp",
+    "version": "1.0.0",
+    "visibility": "public",
+    "description": "Shared read-only MCP interface, owned by CE; hosted entitlements are implemented in EE."
+  },
+  "owner": "ce",
+  "license": "AGPL-3.0-or-later",
+  "transport": "streamable-http",
+  "endpoint": "/mcp",
+  "authentication": "organization-scoped-personal-bearer-token",
+  "installation_flags": ["mcp_access", "api_access"],
+  "enabled_by_default": false,
+  "oauth_available": false,
+  "tools": ["list_invoices", "get_invoice", "list_expenses", "get_expense", "get_profit_and_loss", "get_balance_sheet", "get_aging_report"],
+  "read_only": true,
+  "self_hosted_ce": {
+    "requires_commercial_subscription": false,
+    "requires_private_registry": false
+  },
+  "hosted": {
+    "entitlement": "mcp_access",
+    "plans": ["team"],
+    "legacy_compatibility": "Business plans retaining API access also retain MCP without changing subscription identifiers or prices",
+    "trial": "unexpired-team-trial-only",
+    "checks": "installation-flags-and-current-subscription-and-user-permissions-and-token-scopes-on-every-request",
+    "scheduled_cancellation": "until-paid-end-date",
+    "expired_or_downgraded": "deny-mcp-without-deleting-accounting-data-or-tokens",
+    "upgrade": "otherwise-valid-tokens-work-again-after-team-entitlement-is-restored"
+  }
+}

@@ -10,7 +10,6 @@ use App\Domains\Accounting\Enums\FiscalYearStatus;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\FiscalYear;
 use App\Domains\Accounting\Models\JournalEntry;
-use App\Domains\Accounting\Models\TransactionLine;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Support\Money;
@@ -71,7 +70,7 @@ class GenerateOpeningBalancesAction
                 continue;
             }
 
-            $balance = $this->computeBalance($account, $asOfDate);
+            $balance = $this->ledgerQuery->accountBalance($account->id, null, $asOfDate);
             $desiredBalances['account:'.(string) $account->id] = $balance;
 
             if (Money::isZero($balance)) {
@@ -296,21 +295,5 @@ class GenerateOpeningBalancesAction
             description: "Restatement des soldes d'ouverture {$targetYear}",
             lines: $lines,
         ), $targetFiscalYear->id);
-    }
-
-    private function computeBalance(Account $account, string $asOfDate): string
-    {
-        $query = TransactionLine::where('account_id', $account->id)
-            ->whereHas('journalEntry', fn ($q) => $q
-                ->where('is_posted', true)
-                ->where('date', '<=', $asOfDate)
-            );
-
-        $debits = (string) (clone $query)->sum('debit');
-        $credits = (string) (clone $query)->sum('credit');
-
-        return $account->type->isDebitNormal()
-            ? Money::subtract($debits, $credits)
-            : Money::subtract($credits, $debits);
     }
 }

@@ -27,18 +27,18 @@ class AgingReportService
     /**
      * @return array<string, mixed>
      */
-    public function generate(string $orgId, string $type, ?string $asOfDate = null): array
+    public function generate(string $orgId, string $type, ?string $asOfDate = null, ?string $currency = null): array
     {
         $asOf = $asOfDate ? Carbon::parse($asOfDate) : Carbon::now();
         $asOfString = $asOf->toDateString();
 
-        $cacheKey = "aging:v3:{$orgId}:{$type}:{$asOfString}";
+        $cacheKey = "aging:v4:{$orgId}:{$type}:{$asOfString}:".($currency ?? 'all');
         $orgTag = "org:{$orgId}:reports";
 
-        return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($orgId, $type, $asOf, $asOfString) {
+        return Cache::tags([$orgTag])->remember($cacheKey, now()->addMinutes(30), function () use ($orgId, $type, $asOf, $asOfString, $currency) {
             $items = $type === 'receivables'
-                ? $this->receivableItems($orgId, $asOf)
-                : $this->payableItems($orgId, $asOf);
+                ? $this->receivableItems($orgId, $asOf, $currency)
+                : $this->payableItems($orgId, $asOf, $currency);
 
             $brackets = [
                 'current' => ['items' => [], 'total' => '0.00'],
@@ -104,29 +104,41 @@ class AgingReportService
     /**
      * @return array<int, mixed>
      */
-    private function receivableItems(string $orgId, Carbon $asOf): array
+    private function receivableItems(string $orgId, Carbon $asOf, ?string $currency): array
     {
         $invoices = Invoice::withoutGlobalScope('organization')
             ->where('organization_id', $orgId)
+            ->when($currency !== null, fn ($query) => $query->where('currency', $currency))
             ->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])
             ->where('issue_date', '<=', $asOf->toDateString())
-            ->where('due_date', '<=', $asOf->toDateString())
+            ->where(fn ($query) => $query->where('due_date', '<=', $asOf->toDateString())->orWhereNull('due_date'))
             ->with('customer')
+            ->withSum('payments', 'amount')
+            ->orderBy('id')
             ->get();
 
         // Also include invoices not yet due (current bucket — due_date > asOf)
         $notYetDue = Invoice::withoutGlobalScope('organization')
             ->where('organization_id', $orgId)
+            ->when($currency !== null, fn ($query) => $query->where('currency', $currency))
             ->where('status', InvoiceStatus::Sent->value)
             ->where('issue_date', '<=', $asOf->toDateString())
             ->where('due_date', '>', $asOf->toDateString())
             ->with('customer')
+            ->withSum('payments', 'amount')
+            ->orderBy('id')
             ->get();
 
         return $invoices->merge($notYetDue)
+            ->each(function (Invoice $invoice): void {
+                if ($invoice->getAttribute('payments_sum_amount') === null) {
+                    $invoice->setAttribute('payments_sum_amount', '0.00');
+                }
+            })
+            ->filter(fn (Invoice $invoice): bool => ! Money::isZero($invoice->amountDue()))
             ->map(function (Invoice $invoice) use ($asOf) {
                 $dueDate = $invoice->due_date;
-                $daysOverdue = $dueDate->isBefore($asOf->startOfDay())
+                $daysOverdue = $dueDate !== null && $dueDate->isBefore($asOf->startOfDay())
                     ? (int) $dueDate->diffInDays($asOf)
                     : 0;
 
@@ -134,11 +146,13 @@ class AgingReportService
                 $customer = $invoice->customer;
 
                 return [
+                    'id' => $invoice->id,
+                    'currency' => $invoice->currency,
                     'document_number' => $invoice->number ?? $invoice->id,
                     'name' => $customer ? $customer->name : '-',
                     'date' => $invoice->issue_date->toDateString(),
-                    'due_date' => $dueDate->toDateString(),
-                    'amount' => (string) $invoice->total,
+                    'due_date' => $dueDate?->toDateString(),
+                    'amount' => $invoice->amountDue(),
                     'days_overdue' => $daysOverdue,
                 ];
             })
@@ -148,13 +162,15 @@ class AgingReportService
     /**
      * @return array<int, mixed>
      */
-    private function payableItems(string $orgId, Carbon $asOf): array
+    private function payableItems(string $orgId, Carbon $asOf, ?string $currency): array
     {
         $expenses = Expense::withoutGlobalScope('organization')
             ->where('organization_id', $orgId)
+            ->when($currency !== null, fn ($query) => $query->where('currency', $currency))
             ->whereIn('status', [ExpenseStatus::Pending->value, ExpenseStatus::Approved->value])
             ->where('date', '<=', $asOf->toDateString())
             ->with('supplier')
+            ->orderBy('id')
             ->get();
 
         return $expenses->map(function (Expense $expense) use ($asOf) {
@@ -167,11 +183,13 @@ class AgingReportService
             $supplier = $expense->supplier;
 
             return [
+                'id' => $expense->id,
+                'currency' => $expense->currency,
                 'document_number' => $expense->id,
                 'name' => $supplier ? $supplier->name : ($expense->vendor ?? '-'),
                 'date' => $expenseDate->toDateString(),
                 'due_date' => $expenseDate->toDateString(),
-                'amount' => (string) $expense->amount,
+                'amount' => $expense->gross_amount,
                 'days_overdue' => $daysOverdue,
             ];
         })->all();

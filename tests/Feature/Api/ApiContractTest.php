@@ -83,12 +83,12 @@ class ApiContractTest extends SecurityTestCase
         $response->assertCreated()->assertJsonPath('abilities.0', 'accounting.view');
     }
 
-    public function test_contact_aliases_are_available_and_abilities_match_the_live_map(): void
+    public function test_contact_aliases_are_available_and_abilities_include_the_live_map_and_own_expense_scope(): void
     {
         $this->withToken($this->tokenA)->getJson('/api/v1/contacts')->assertOk();
         $this->withToken($this->tokenA)->getJson('/api/v1/customers')->assertOk();
 
-        $abilities = [];
+        $abilities = ['expenses.view-own' => true, 'reporting.view' => true];
         foreach (TokenPermissionMap::get() as $modelAbilities) {
             foreach ($modelAbilities as $permission) {
                 $abilities[$permission->value] = true;
@@ -100,6 +100,15 @@ class ApiContractTest extends SecurityTestCase
             ->getJson('/api/v1/meta/abilities')
             ->assertOk()
             ->json('data'));
+    }
+
+    public function test_personal_tokens_can_be_limited_to_own_expenses_for_mcp(): void
+    {
+        $this->withToken($this->tokenA)->postJson('/api/v1/tokens', [
+            'name' => 'Personal expense assistant',
+            'abilities' => ['expenses.view-own'],
+        ])->assertCreated()->assertJsonPath('abilities', ['expenses.view-own'])
+            ->assertJsonPath('type', 'personal');
     }
 
     public function test_rate_limit_headers_are_present_when_testing_does_not_disable_throttling(): void

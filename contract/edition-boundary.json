@@ -73,6 +73,20 @@
       "deployment": "versioned with the CE contract"
     },
     {
+      "id": "ce-mcp-contract",
+      "owner": "ce",
+      "source_paths": ["app/Domains/Api/Mcp", "routes/ai.php", "contract/mcp-contract.json"],
+      "runtime_ownership": "community-edition-with-hosted-entitlement-in-ee",
+      "license": "AGPL-3.0-or-later",
+      "packaging": "public-ce-artifact",
+      "dependencies": ["laravel/mcp", "laravel/sanctum"],
+      "data_ownership": "organization-scoped CE invoices, expenses and financial reports",
+      "feature_flags": "opt-in in CE; mcp_access and api_access entitlements checked in hosted mode",
+      "tests": ["tests/Feature/Mcp", "tests/Feature/EditionBoundary/CeMcpContractTest.php"],
+      "documentation": ["README.md", "contract/mcp-contract.json", "docs/docs/mcp.md"],
+      "deployment": "public CE implementation; private EE plan lifecycle and hosted operation"
+    },
+    {
       "id": "shared-runtime-contracts",
       "owner": "shared",
       "source_paths": ["app/Support/Contracts", "contract/app-contract.json", "contract/edition-boundary.json"],

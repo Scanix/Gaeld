@@ -146,8 +146,8 @@ class ReportingFlowTest extends TestCase
         $profitAndLoss->assertStatus(200);
         $profitAndLoss->assertInertia(fn ($page) => $page
             ->component('Reports/ProfitAndLoss')
-            ->where('report.total_revenue', 1000)
-            ->where('report.total_expenses', 200)
+            ->where('report.total_revenue', '1000.00')
+            ->where('report.total_expenses', '200.00')
             ->where('report.net_profit', '800.00'));
     }
 
