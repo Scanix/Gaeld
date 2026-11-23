@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - The managed Docker release uses PHP 8.4.28, nginx 1.30.7, PostgreSQL 16.16 and Redis 7.4.12. Its signed manifest identifies the exact application, web, database and queue images. The application and web images include the Debian and Alpine security packages installed at build time.
+- CAMT bank statements, Bexio XLSX imports and ECB exchange-rate updates now check incoming XML before parsing. CAMT imports also recognize supported encodings before identifying the statement format. If you run v3.10.0, use a vendor-patched libxml2 build for PHP or apply the reviewed Gäld import patch while you upgrade. Debian lists affected packages under CVE-2026-6653. [Debian advisory](https://security-tracker.debian.org/tracker/CVE-2026-6653) · [Gäld application patch](https://github.com/Scanix/Gaeld/commit/4eac115bf3ec85359498be812482bfac0326a356)
 
 ## [3.10.0] - 2026-11-23
 
