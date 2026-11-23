@@ -5,80 +5,54 @@ namespace App\Support\Rules;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
-/**
- * Validation rule that ensures a webhook URL uses HTTPS and points to a public host.
- */
 class ValidWebhookUrl implements ValidationRule
 {
-    /**
-     * Blocked IPv4 ranges (RFC 1918, loopback, link-local, cloud metadata).
-     */
-    private const BLOCKED_CIDRS = [
-        '127.0.0.0/8',       // Loopback
-        '10.0.0.0/8',        // RFC 1918
-        '172.16.0.0/12',     // RFC 1918
-        '192.168.0.0/16',    // RFC 1918
-        '169.254.0.0/16',    // Link-local / cloud metadata
-        '0.0.0.0/8',         // "This" network
-        '100.64.0.0/10',     // Shared address space (RFC 6598)
-    ];
-
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $host = parse_url($value, PHP_URL_HOST);
-
-        if (! $host) {
-            $fail('The :attribute must contain a valid host.');
-
-            return;
-        }
-
-        // Block common localhost names
-        $lower = strtolower($host);
-        if (in_array($lower, ['localhost', 'host.docker.internal', 'kubernetes.default.svc'], true)) {
-            $fail('The :attribute must not point to an internal address.');
-
-            return;
-        }
-
-        // Resolve hostname to IP
-        $ip = filter_var($host, FILTER_VALIDATE_IP) ? $host : gethostbyname($host);
-
-        // If DNS resolution failed gethostbyname returns the input
-        if ($ip === $host && ! filter_var($host, FILTER_VALIDATE_IP)) {
-            $fail('The :attribute could not be resolved to an IP address.');
-
-            return;
-        }
-
-        if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            // For IPv6, block loopback ::1 and link-local fe80::/10
-            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-                if ($ip === '::1' || str_starts_with(strtolower($ip), 'fe80')) {
-                    $fail('The :attribute must not point to an internal address.');
-                }
-            }
-
-            return;
-        }
-
-        foreach (self::BLOCKED_CIDRS as $cidr) {
-            if ($this->ipInCidr($ip, $cidr)) {
-                $fail('The :attribute must not point to an internal or reserved address.');
-
-                return;
-            }
+        if (! is_string($value) || self::transportOptions($value) === null) {
+            $fail('The :attribute must be an HTTPS URL resolving to a public address.');
         }
     }
 
-    private function ipInCidr(string $ip, string $cidr): bool
+    /**
+     * Pin the validated address for this HTTP attempt. Keep TLS hostname checks
+     * on the original URL and prevent redirects or a proxy from resolving it again.
+     *
+     * @return array{allow_redirects: false, curl: array<int, mixed>}|null
+     */
+    public static function transportOptions(string $url): ?array
     {
-        [$subnet, $bits] = explode('/', $cidr);
+        if (! extension_loaded('curl') || filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return null;
+        }
 
-        $ipLong = ip2long($ip);
-        $subnetLong = ip2long($subnet);
-        $mask = -1 << (32 - (int) $bits);
+        $parts = parse_url($url);
+        if (! is_array($parts) || strtolower($parts['scheme'] ?? '') !== 'https' || isset($parts['user']) || isset($parts['pass'])) {
+            return null;
+        }
+        $host = trim($parts['host'] ?? '', '[]');
+        $literal = filter_var($host, FILTER_VALIDATE_IP) !== false;
+        if (! $literal && ! filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+            return null;
+        }
 
-        return ($ipLong & $mask) === ($subnetLong & $mask);
+        $records = $literal ? [['ip' => $host]] : dns_get_record($host, DNS_A | DNS_AAAA);
+        foreach ($records ?: [] as $record) {
+            $ip = $record['ip'] ?? $record['ipv6'] ?? '';
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_GLOBAL_RANGE) === false) {
+                continue;
+            }
+
+            $curl = [CURLOPT_PROXY => ''];
+            if (! $literal) {
+                $port = $parts['port'] ?? 443;
+                $address = str_contains($ip, ':') ? "[{$ip}]" : $ip;
+                $curl[CURLOPT_RESOLVE] = ["{$host}:{$port}:{$address}"];
+            }
+
+            return ['allow_redirects' => false, 'curl' => $curl];
+        }
+
+        return null;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Domains\Invoicing\Actions;
 
+use App\Domains\Api\Enums\WebhookEvent;
+use App\Domains\Api\Services\WebhookService;
 use App\Domains\Invoicing\DTOs\InvoiceLineData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
@@ -15,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 class DuplicateInvoiceAction
 {
     public function __construct(
+        private WebhookService $webhooks,
         private SyncInvoiceLinesAction $syncInvoiceLines,
         private InvoiceNumberGenerator $numberGenerator,
     ) {}
@@ -50,6 +53,8 @@ class DuplicateInvoiceAction
             )->all(), ($invoice->tax_treatment ?? InvoiceTaxTreatment::Standard)->appliesSwissVat());
 
             $newInvoice->recalculate();
+
+            $this->webhooks->dispatchInvoice($newInvoice, WebhookEvent::InvoiceCreated);
 
             return $newInvoice->load('lines');
         });

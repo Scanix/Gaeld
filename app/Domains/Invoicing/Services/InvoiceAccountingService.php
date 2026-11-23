@@ -11,10 +11,13 @@ use App\Domains\Accounting\Services\CurrencyConversionService;
 use App\Domains\Accounting\Services\LedgerQueryService;
 use App\Domains\Accounting\Services\LedgerService;
 use App\Domains\Accounting\Services\VatPeriodLockService;
+use App\Domains\Api\Enums\WebhookEvent;
+use App\Domains\Api\Services\WebhookService;
 use App\Domains\Invoicing\DTOs\RecordPaymentData;
 use App\Domains\Invoicing\Enums\InvoiceLineType;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
 use App\Domains\Invoicing\Enums\InvoiceType;
+use App\Domains\Invoicing\Exceptions\InvalidInvoiceStateException;
 use App\Domains\Invoicing\Exceptions\InvalidPaymentException;
 use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Invoicing\Models\InvoiceLine;
@@ -32,6 +35,7 @@ use Illuminate\Support\Str;
 class InvoiceAccountingService
 {
     public function __construct(
+        private WebhookService $webhooks,
         private LedgerService $ledgerService,
         private LedgerQueryService $ledgerQuery,
         private VatPeriodLockService $vatPeriodLocks,
@@ -56,6 +60,11 @@ class InvoiceAccountingService
     public function postToLedger(Invoice $invoice): Invoice
     {
         return DB::transaction(function () use ($invoice) {
+            $invoice->refreshForUpdate();
+            if ($invoice->trashed() || $invoice->status !== InvoiceStatus::Draft) {
+                throw new InvalidInvoiceStateException("Only draft invoices can be finalized (current: {$invoice->status->value}).");
+            }
+
             $orgId = $invoice->organization_id;
             $invoice->load('lines.vatRate', 'organization');
 
@@ -159,6 +168,8 @@ class InvoiceAccountingService
                 'journal_entry_id' => $journalEntry->id,
             ]);
 
+            $this->webhooks->dispatchInvoice($invoice, WebhookEvent::InvoiceFinalized);
+
             return $invoice->fresh(['lines', 'customer', 'journalEntry.lines']);
         });
     }
@@ -212,6 +223,16 @@ class InvoiceAccountingService
         $bankAccountCode = $data->bankAccountCode ?? AccountCode::BANK_CASH;
 
         return DB::transaction(function () use ($invoice, $data, $bankAccountCode) {
+            $invoice->refreshForUpdate();
+            if ($invoice->trashed() || ! $invoice->status->canTransitionTo(InvoiceStatus::Paid)) {
+                throw new InvalidPaymentException('Payments can only be recorded for sent or overdue invoices.');
+            }
+
+            $amountDue = $invoice->amountDue();
+            if (! Money::isPositive($data->amount) || Money::compare($data->amount, $amountDue) > 0) {
+                throw new InvalidPaymentException('Payment must be positive and cannot exceed the invoice balance.');
+            }
+
             $orgId = $invoice->organization_id;
 
             $bankAccount = $this->ledgerQuery->resolveAccount($orgId, $bankAccountCode);
@@ -225,12 +246,7 @@ class InvoiceAccountingService
             $fxNote = '';
 
             if ($documentCurrency !== $ledgerCurrency) {
-                $invoice = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
                 $invoice->load('journalEntry.lines', 'payments.journalEntry.lines');
-                $amountDue = $invoice->amountDue();
-                if (! Money::isPositive($data->amount) || Money::compare($data->amount, $amountDue) > 0) {
-                    throw new InvalidPaymentException('Payment must be positive and cannot exceed the invoice balance.');
-                }
                 if ($invoice->journalEntry === null) {
                     throw new InvalidPaymentException('Cannot settle a foreign invoice without its original ledger entry.');
                 }
@@ -310,6 +326,8 @@ class InvoiceAccountingService
             if ($invoice->fresh()->isFullyPaid()) {
                 $invoice->update(['status' => InvoiceStatus::Paid]);
             }
+
+            $this->webhooks->dispatchInvoice($invoice, WebhookEvent::InvoicePaymentRecorded, $payment);
 
             return $payment->load('journalEntry');
         });

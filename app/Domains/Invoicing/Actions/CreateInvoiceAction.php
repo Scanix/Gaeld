@@ -2,6 +2,8 @@
 
 namespace App\Domains\Invoicing\Actions;
 
+use App\Domains\Api\Enums\WebhookEvent;
+use App\Domains\Api\Services\WebhookService;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\DTOs\CreateInvoiceData;
 use App\Domains\Invoicing\Enums\InvoiceStatus;
@@ -23,6 +25,7 @@ class CreateInvoiceAction
     private const MAX_NUMBER_RETRIES = 5;
 
     public function __construct(
+        private WebhookService $webhooks,
         private SyncInvoiceLinesAction $syncInvoiceLines,
         private InvoiceNumberGenerator $numberGenerator,
     ) {}
@@ -83,6 +86,8 @@ class CreateInvoiceAction
             $this->syncInvoiceLines->create($invoice, $data->lines, $data->taxTreatment->appliesSwissVat());
 
             $invoice->recalculate();
+
+            $this->webhooks->dispatchInvoice($invoice, WebhookEvent::InvoiceCreated);
 
             return $invoice->load('lines');
         });

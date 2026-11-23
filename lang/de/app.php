@@ -2127,6 +2127,7 @@ return [
     'webhook_event_invoice_updated' => 'Rechnung aktualisiert',
     'webhook_event_invoice_deleted' => 'Rechnung gelöscht',
     'webhook_event_invoice_finalized' => 'Rechnung abgeschlossen',
+    'webhook_event_invoice_cancelled' => 'Rechnung storniert',
     'webhook_event_invoice_payment_recorded' => 'Rechnungszahlung verbucht',
     'webhook_event_customer_created' => 'Kunde erstellt',
     'webhook_event_customer_updated' => 'Kunde aktualisiert',

@@ -2,10 +2,15 @@
 
 namespace App\Domains\Api\Services;
 
+use App\Domains\Api\Enums\WebhookEvent;
 use App\Domains\Api\Jobs\DispatchWebhookJob;
 use App\Domains\Api\Models\Webhook;
 use App\Domains\Api\Models\WebhookCall;
+use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Models\InvoicePayment;
 use App\Support\FeatureFlag;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Dispatches webhook events to all active subscribers of an organization
@@ -13,44 +18,50 @@ use App\Support\FeatureFlag;
  */
 class WebhookService
 {
-    /**
-     * Dispatch a webhook event for a given organization.
-     *
-     * @param  string  $organizationId  The organization UUID
-     * @param  string  $event  The event name (e.g. 'invoice.created')
-     * @param  array  $payload  The data to send
-     */
+    public function dispatchInvoice(Invoice $invoice, WebhookEvent $event, ?InvoicePayment $payment = null): void
+    {
+        $payload = ['invoice_id' => $invoice->id, 'organization_id' => $invoice->organization_id];
+
+        if ($payment !== null) {
+            $payload['payment_id'] = $payment->id;
+        }
+
+        $this->dispatch($invoice->organization_id, $event->value, $payload);
+    }
+
     /**
      * @param  array<string, mixed>  $payload
      */
     public function dispatch(string $organizationId, string $event, array $payload): void
     {
-        if (FeatureFlag::disabled('api_access')) {
+        $webhooks = Webhook::query()
+            ->withoutGlobalScope('organization')
+            ->with('organization')
+            ->where('organization_id', $organizationId)
+            ->where('is_active', true)
+            ->whereJsonContains('events', $event)
+            ->get();
+
+        $subscriber = $webhooks->first();
+        if ($subscriber === null || ! FeatureFlag::enabledForOrg('api_access', $subscriber->organization)) {
             return;
         }
 
-        $webhooks = Webhook::query()
-            ->withoutGlobalScope('organization')
-            ->where('organization_id', $organizationId)
-            ->where('is_active', true)
-            ->get();
+        $payload = array_merge($payload, [
+            'event' => $event,
+            'event_id' => (string) Str::uuid(),
+            'timestamp' => now()->toIso8601String(),
+        ]);
 
         foreach ($webhooks as $webhook) {
-            if (! in_array($event, $webhook->events, true)) {
-                continue;
-            }
-
             $call = WebhookCall::create([
                 'webhook_id' => $webhook->id,
                 'event' => $event,
-                'payload' => array_merge($payload, [
-                    'event' => $event,
-                    'timestamp' => now()->toIso8601String(),
-                ]),
+                'payload' => $payload,
                 'status' => 'pending',
             ]);
 
-            DispatchWebhookJob::dispatch($call);
+            DB::afterCommit(static fn () => DispatchWebhookJob::dispatch($call));
         }
     }
 }

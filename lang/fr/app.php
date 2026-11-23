@@ -2134,6 +2134,7 @@ return [
     'webhook_event_invoice_updated' => 'Facture mise à jour',
     'webhook_event_invoice_deleted' => 'Facture supprimée',
     'webhook_event_invoice_finalized' => 'Facture finalisée',
+    'webhook_event_invoice_cancelled' => 'Facture annulée',
     'webhook_event_invoice_payment_recorded' => 'Paiement de facture enregistré',
     'webhook_event_customer_created' => 'Client créé',
     'webhook_event_customer_updated' => 'Client mis à jour',
