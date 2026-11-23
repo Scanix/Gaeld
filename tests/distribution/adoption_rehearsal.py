@@ -276,6 +276,7 @@ def inside():
             pass
     server = http.server.ThreadingHTTPServer(('127.0.0.1', 18443), functools.partial(QuietHandler, directory=str(release_root)))
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
     context.load_cert_chain(certs / 'server.crt', certs / 'server.key')
     server.socket = context.wrap_socket(server.socket, server_side=True)
     threading.Thread(target=server.serve_forever, daemon=True).start()

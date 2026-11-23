@@ -14,7 +14,7 @@ import sys
 import tarfile
 import tempfile
 
-from manage import Installation, OperationError, digest, env_values, run, verify_release, version
+from manage import Installation, OperationError, digest, env_values, record_diagnostics, run, verify_release, version, write_private_file
 
 
 SAIL_RELEASES = ('3.8.28', '3.9.0', '3.10.0')
@@ -288,8 +288,8 @@ class SailAdoption:
                                 'REDIS_HOST': 'redis', 'REDIS_PORT': '6379', 'REDIS_USERNAME': 'null', 'REDIS_PASSWORD': 'null',
                                 'GAELD_MANAGED_INSTALLATION': 'true', 'LOG_CHANNEL': 'stderr', 'SCOUT_DRIVER': 'null'}
                 lines = [line for line in environment.splitlines() if line.partition('=')[0] not in replacements]
-                (install.shared / '.env').write_text('\n'.join(lines) + '\n' + ''.join(f'{key}={value}\n' for key, value in replacements.items()))
-                os.chmod(install.shared / '.env', 0o600)
+                preserved = '\n'.join(lines) + '\n' + ''.join(f'{key}={value}\n' for key, value in replacements.items())
+                write_private_file(install.shared / '.env', preserved.encode())
                 if env_values(install.shared / '.env')['APP_KEY'] != self.legacy.environment['APP_KEY']:
                     raise OperationError('The original APP_KEY was not preserved.')
                 install.state['version'] = target
@@ -338,10 +338,7 @@ def main(argv=None):
             installation.release_policy()
             SailAdoption(installation, LegacySail(args.source, args.legacy_project, source_archive=args.source_archive, source_sha256=args.source_sha256)).adopt(args.to, args.release_url, args.trust_key, args.backup_recipient, args.port, args.resume, args.confirm_replace_new_data)
     except (OperationError, OSError, ValueError) as error:
-        if isinstance(error, OperationError) and error.diagnostics and installation.meta.is_dir():
-            log = installation.meta / 'last-error.log'
-            log.write_text(error.diagnostics[-65536:])
-            os.chmod(log, 0o600)
+        record_diagnostics(installation, error, Path(args.source) / '.env')
         print('Gäld adoption: ' + str(error), file=sys.stderr)
         return 1
     return 0

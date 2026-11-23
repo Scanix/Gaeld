@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -30,6 +31,65 @@ class ManagerTest(unittest.TestCase):
         self.installation.state = {'mode': 'native', 'version': '3.9.0', 'status': 'ready',
                                    'backup_recipient': 'age1' + 'a' * 58, 'ee_version': None}
         self.operations = []
+
+    def test_docker_settings_migrate_old_password_and_use_the_shared_credential(self):
+        self.installation.state.update(mode='docker', project='gaeld-security-fixture')
+        release = self.release(self.installation.state['version'])
+        canonical = "fixture $ amount # literal=ok"
+        environment = self.installation.shared / '.env'
+        manager.write_private_file(environment, ("DB_PASSWORD='" + canonical + "'\n").encode())
+        self.installation.configure_runtime(release)
+        settings = self.installation.meta / 'compose.env'
+        metadata = settings.read_bytes()
+        self.assertNotIn(b'DB_PASSWORD', metadata)
+        settings.write_bytes(metadata + b'DB_PASSWORD=previous-fixture-value\n')
+        with self.installation.lock(), patch.dict(os.environ, {'DB_PASSWORD': 'unrelated-shell-fixture'}):
+            self.assertEqual(metadata, settings.read_bytes())
+            self.assertEqual(0o600, settings.stat().st_mode & 0o777)
+            self.installation.runner = lambda args, **kwargs: (args, kwargs)
+            command, options = self.installation.compose('ps')
+            self.assertEqual(canonical, options['env']['DB_PASSWORD'])
+            self.assertNotIn(canonical, ' '.join(command))
+        with self.installation.lock():
+            self.assertEqual(metadata, settings.read_bytes())
+
+    def test_manager_and_adoption_diagnostics_remove_credentials_before_storage(self):
+        legacy = self.root / 'legacy-env'
+        legacy.write_text('DB_PASSWORD="legacy = # value"\n')
+        current = self.installation.shared / '.env'
+        current.write_text('DB_PASSWORD=managed-fixture\nAPP_KEY=fixture-key\n')
+        failure = manager.OperationError('Failed', 'db: legacy = # value / managed-fixture / fixture-key')
+        manager.record_diagnostics(self.installation, failure, legacy)
+        log = self.installation.meta / 'last-error.log'
+        self.assertEqual('db: [redacted] / [redacted] / [redacted]', log.read_text())
+        self.assertEqual(0o600, log.stat().st_mode & 0o777)
+
+    def test_private_settings_are_owner_only_before_the_first_byte(self):
+        path = self.installation.shared / 'permissions-test'
+        descriptor_open = os.fdopen
+        modes = []
+        def observe(fd, mode):
+            modes.append(os.fstat(fd).st_mode & 0o777)
+            return descriptor_open(fd, mode)
+        original_mask = os.umask(0)
+        try:
+            with patch.object(manager.os, 'fdopen', side_effect=observe):
+                manager.write_private_file(path, b'first')
+                path.chmod(0o644)
+                manager.write_private_file(path, b'second')
+        finally:
+            os.umask(original_mask)
+        self.assertEqual([0o600, 0o600], modes)
+        self.assertEqual(0o600, path.stat().st_mode & 0o777)
+        self.assertEqual(b'second', path.read_bytes())
+
+    def test_credential_supplied_to_subprocess_is_redacted_in_diagnostics(self):
+        credential = 'example # = $ ()'
+        script = "import os,sys; print('database: ' + os.environ['DB_PASSWORD'], file=sys.stderr); sys.exit(2)"
+        with self.assertRaises(manager.OperationError) as observed:
+            manager.run([sys.executable, '-c', script], env={'DB_PASSWORD': credential}, capture=True)
+        self.assertNotIn(credential, str(observed.exception))
+        self.assertEqual('database: [redacted]\n', observed.exception.diagnostics)
 
     def release(self, version='3.10.0'):
         return {'schema': 1, 'version': version, 'commit': 'a' * 40, 'edition': 'ce',
