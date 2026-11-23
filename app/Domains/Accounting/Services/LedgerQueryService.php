@@ -6,6 +6,7 @@ use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Models\TransactionLine;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
@@ -55,8 +56,8 @@ class LedgerQueryService
             $credits = (string) (clone $query)->sum('credit');
 
             return $this->isDebitNormalAccount($account->type)
-                ? bcsub($debits, $credits, 2)
-                : bcsub($credits, $debits, 2);
+                ? Money::subtract($debits, $credits)
+                : Money::subtract($credits, $debits);
         };
 
         if ($account->getConnection()->transactionLevel() > 0) {

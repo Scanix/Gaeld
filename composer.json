@@ -13,7 +13,7 @@
         "laravel/framework": "^13.0",
         "laravel/horizon": "^5.45",
         "laravel/mcp": "^0.9.4",
-        "laravel/passkeys": "^0.2",
+        "laravel/passkeys": "^0.3",
         "laravel/sanctum": "^4.3",
         "laravel/scout": "^11.0",
         "meilisearch/meilisearch-php": "^1.16",
@@ -21,7 +21,7 @@
         "pragmarx/google2fa-laravel": "^3.0",
         "spatie/laravel-activitylog": "^4.12|^5.0",
         "spatie/laravel-backup": "^10.2",
-        "spatie/laravel-permission": "^7.2",
+        "spatie/laravel-permission": "^8.3",
         "sprain/swiss-qr-bill": "^5.3",
         "stripe/stripe-php": "^21.0",
         "tecnickcom/tcpdf": "^6.11"
