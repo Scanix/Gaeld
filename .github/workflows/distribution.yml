@@ -1,0 +1,265 @@
+name: Public CE release candidate
+
+on:
+  push:
+    branches:
+      - 'release/v3.11.0-rc.*'
+      - 'release/v3.12.0-rc.*'
+      - 'release/v3.13.0-rc.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact existing CE tag version, without v
+        required: true
+        type: string
+      expected_commit:
+        description: Full reviewed CE commit to build
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ref.outputs.version }}
+    steps:
+      - id: ref
+        env:
+          REQUESTED: ${{ inputs.version }}
+          EXPECTED: ${{ inputs.expected_commit }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            version=${GITHUB_REF#refs/heads/release/v}
+            [[ "$version" =~ ^3\.(11|12|13)\.0-rc\.[1-9][0-9]*$ ]]
+          else
+            version="$REQUESTED"
+            [[ "$GITHUB_SHA" == "$EXPECTED" ]]
+          fi
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
+          [[ "$GITHUB_REF" == "refs/tags/v$version" || "$GITHUB_REF" == "refs/heads/release/v$version" ]]
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+
+  quality:
+    permissions:
+      contents: read
+      pull-requests: read
+    uses: ./.github/workflows/ci.yml
+
+  candidate:
+    needs: [quality, metadata]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Verify the reviewed source ref and commit
+        env:
+          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
+          [[ "$EXPECTED_COMMIT" =~ ^[a-f0-9]{40}$ && "$GITHUB_SHA" == "$EXPECTED_COMMIT" ]]
+          [[ "$GITHUB_REF" == "refs/tags/v$RELEASE_VERSION" || "$GITHUB_REF" == "refs/heads/release/v$RELEASE_VERSION" ]]
+          bash scripts/qa/test-ce-artifact.sh
+          git archive --format=tar.gz HEAD -o /tmp/ce-source.tar.gz
+          bash scripts/qa/check-ce-artifact.sh /tmp/ce-source.tar.gz
+      - name: Verify distribution and recovery tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y age
+          python3 -m unittest discover -s tests/distribution -v
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Select reviewed database image digests for tests and release
+        id: databases
+        run: |
+          # postgres:16-bookworm and redis:7-alpine, resolved 2026-11-04.
+          echo 'postgres=sha256:e8a07d2c7579b038938cdba6c539e580e5001caf9ea203d397b5cc83e76bd938' >> "$GITHUB_OUTPUT"
+          echo 'redis=sha256:8da19c7399dca900c6822a1cf30f9d2285585e2c4b457ff4095b0f4500054d3f' >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build immutable multiarch application with SBOM and provenance
+        id: app
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/production/Dockerfile
+          target: app
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/scanix/gaeld:candidate-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          provenance: mode=max
+          sbom: true
+      - name: Build immutable multiarch web image with SBOM and provenance
+        id: web
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/production/Dockerfile
+          target: web
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/scanix/gaeld-web:candidate-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          provenance: mode=max
+          sbom: true
+      - name: Sign application provenance with the release workflow identity
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-name: ghcr.io/scanix/gaeld
+          subject-digest: ${{ steps.app.outputs.digest }}
+          push-to-registry: true
+      - name: Sign web provenance with the release workflow identity
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-name: ghcr.io/scanix/gaeld-web
+          subject-digest: ${{ steps.web.outputs.digest }}
+          push-to-registry: true
+      - name: Smoke both architectures and package the exact image sources
+        env:
+          APP_DIGEST: ${{ steps.app.outputs.digest }}
+          WEB_DIGEST: ${{ steps.web.outputs.digest }}
+          POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
+          REDIS_DIGEST: ${{ steps.databases.outputs.redis }}
+          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          for platform in linux/amd64 linux/arm64; do
+            docker run --rm --platform "$platform" --entrypoint php "ghcr.io/scanix/gaeld@$APP_DIGEST" -r 'require "vendor/autoload.php"; if (PHP_VERSION_ID < 80400 || !extension_loaded("pdo_pgsql") || !extension_loaded("redis")) { exit(1); }'
+            python3 tests/distribution/runtime_smoke.py --version "$RELEASE_VERSION" --platform "$platform" \
+              --app-image "ghcr.io/scanix/gaeld@$APP_DIGEST" --web-image "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" \
+              --postgres-image "docker.io/library/postgres@$POSTGRES_DIGEST" --redis-image "docker.io/library/redis@$REDIS_DIGEST"
+          done
+          docker run --rm --entrypoint tar "ghcr.io/scanix/gaeld@$APP_DIGEST" --hard-dereference -czhf - -C /var/www/html . > "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
+          bash scripts/qa/check-ce-artifact.sh "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
+          python3 -c 'import sys,tempfile; sys.path.insert(0,"scripts/distribution"); from manage import extract_tar; temporary=tempfile.TemporaryDirectory(); extract_tar(sys.argv[1],temporary.name)' "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
+          python3 scripts/distribution/qualification_bundle.py inputs release
+      - name: Retain exact source and image references for independent platform tests
+        id: inputs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: managed-qualification-inputs-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            release/gaeld-ce-*.tar.gz
+            release/qualification-inputs.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Record qualification input artifact
+        env:
+          ARTIFACT_URL: ${{ steps.inputs.outputs.artifact-url }}
+          ARTIFACT_DIGEST: ${{ steps.inputs.outputs.artifact-digest }}
+        run: echo "[Download the original qualification inputs]($ARTIFACT_URL), artifact SHA-256 \`$ARTIFACT_DIGEST\`." >> "$GITHUB_STEP_SUMMARY"
+      - name: Rehearse real Sail adoption and recovery against the exact candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APP_DIGEST: ${{ steps.app.outputs.digest }}
+          WEB_DIGEST: ${{ steps.web.outputs.digest }}
+          POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
+          REDIS_DIGEST: ${{ steps.databases.outputs.redis }}
+          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          candidate_dir="$RUNNER_TEMP/gaeld-r1-adoption-candidate"
+          git worktree add --detach "$candidate_dir" "$GITHUB_SHA"
+          mkdir -p "$RUNNER_TEMP/baselines" release/receipts
+          for version in 3.8.28 3.9.0 3.10.0; do
+            git worktree add --detach "$RUNNER_TEMP/baselines/$version" "refs/tags/v$version"
+          done
+          gh release download v3.9.0 -R "$GITHUB_REPOSITORY" -p gaeld-ce-v3.9.0.tar.gz -D "$RUNNER_TEMP"
+          archive_digest=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/v3.9.0" --jq '.assets[] | select(.name=="gaeld-ce-v3.9.0.tar.gz") | .digest | sub("^sha256:";"")')
+          for platform in linux/amd64 linux/arm64; do
+            arch=${platform#linux/}
+            for image in "ghcr.io/scanix/gaeld@$APP_DIGEST" "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" "docker.io/library/postgres@$POSTGRES_DIGEST" "docker.io/library/redis@$REDIS_DIGEST"; do
+              docker pull --platform "$platform" "$image"
+            done
+            for version in 3.8.28 3.9.0 3.10.0; do
+              baseline_dir="$RUNNER_TEMP/baselines/$version"
+              baseline_image="gaeld-sail/rehearsal:$version-$arch"
+              docker build --platform "$platform" -f "$baseline_dir/docker/php/Dockerfile" -t "$baseline_image" "$baseline_dir"
+              formats=(git)
+              if [[ "$version" == "3.9.0" && "$arch" == "amd64" ]]; then formats+=(archive); fi
+              for kind in "${formats[@]}"; do
+                archive_args=()
+                if [[ "$kind" == "archive" ]]; then
+                  archive_args=(--baseline-archive "$RUNNER_TEMP/gaeld-ce-v3.9.0.tar.gz" --baseline-sha256 "$archive_digest")
+                fi
+                python3 "$candidate_dir/tests/distribution/adoption_rehearsal.py" \
+                  --candidate "$candidate_dir" --version "$RELEASE_VERSION" --platform "$platform" \
+                  --baseline-version "$version" --baseline-image "$baseline_image" "${archive_args[@]}" \
+                  --app-image "ghcr.io/scanix/gaeld@$APP_DIGEST" --web-image "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" \
+                  --postgres-image "docker.io/library/postgres@$POSTGRES_DIGEST" --redis-image "docker.io/library/redis@$REDIS_DIGEST" \
+                  --source-artifact "$GITHUB_WORKSPACE/release/gaeld-ce-${RELEASE_VERSION}.tar.gz" \
+                  --report "$GITHUB_WORKSPACE/release/receipts/$version-$arch-$kind.json"
+              done
+            done
+          done
+          jq --slurp '.' release/receipts/*.json > release/adoption-acceptance.json
+      - name: Retain the adoption acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ce-adoption-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            release/adoption-acceptance.json
+            release/receipts/
+          retention-days: 90
+          if-no-files-found: warn
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        id: provenance
+        with:
+          subject-path: release/*.tar.gz
+      - name: Preserve provenance bundle
+        env:
+          BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+        run: cp "$BUNDLE" release/provenance.json
+      - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: ghcr.io/scanix/gaeld@${{ steps.app.outputs.digest }}
+          format: spdx-json
+          output-file: release/sbom.spdx.json
+          upload-artifact: false
+      - name: Bind qualification to the built candidate
+        env:
+          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+          APP_DIGEST: ${{ steps.app.outputs.digest }}
+          WEB_DIGEST: ${{ steps.web.outputs.digest }}
+          POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
+          REDIS_DIGEST: ${{ steps.databases.outputs.redis }}
+        run: python3 scripts/distribution/qualification_bundle.py create release
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        id: qualification
+        with:
+          subject-path: release/qualification-inputs.json
+      - name: Preserve the qualification attestation
+        env:
+          BUNDLE: ${{ steps.qualification.outputs.bundle-path }}
+        run: cp "$BUNDLE" release/qualification-provenance.jsonl
+      - name: Retain exact artifacts for qualification and promotion
+        id: artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: managed-ce-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Record the immutable candidate artifact
+        env:
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.artifact.outputs.artifact-digest }}
+          ARTIFACT_URL: ${{ steps.artifact.outputs.artifact-url }}
+        run: |
+          printf 'Artifact ID %s. SHA-256 %s. [Download the exact qualification inputs](%s).\n' \
+            "$ARTIFACT_ID" "$ARTIFACT_DIGEST" "$ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"

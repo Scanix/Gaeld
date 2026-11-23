@@ -1,0 +1,15 @@
+[Unit]
+Description=Gaeld queue workers
+After=network.target postgresql.service redis-server.service
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=@ROOT@/current
+ExecStart=/usr/bin/php artisan horizon
+KillSignal=SIGTERM
+KillMode=mixed
+TimeoutStopSec=2100
+Restart=always
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+[Unit]
+Description=Gaeld scheduled tasks
+After=network.target postgresql.service redis-server.service
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=@ROOT@/current
+RuntimeDirectory=gaeld
+RuntimeDirectoryMode=0750
+ExecStart=/bin/sh @ROOT@/current/docker/production/scheduler.sh
+KillSignal=SIGTERM
+KillMode=mixed
+TimeoutStopSec=2100
+Restart=always
+[Install]
+WantedBy=multi-user.target

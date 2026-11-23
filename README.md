@@ -49,7 +49,9 @@ Gäld covers the full accounting workflow for a small Swiss business:
 
 ## Getting started
 
-### Docker (recommended)
+The v3.11 managed installer is in qualification for fresh installations and adoption from CE v3.8.28, v3.9.0 and v3.10.0. Its Docker and native Linux installation guide covers verified release artifacts, source installations, encrypted backups and recovery. Use an isolated system while qualification is in progress. [Managed installation and recovery](docs/ce-managed-installation.md)
+
+### Sail development environment
 
 Install Docker Engine with Docker Compose v2 and start Docker Desktop or the
 Docker service before running setup. The command checks Docker immediately and
@@ -79,7 +81,6 @@ Other useful commands:
 ```bash
 ./gaeld artisan migrate    # Run migrations
 ./gaeld doctor             # Diagnose configuration and service health
-./gaeld update             # Apply migrations and rebuild application caches
 ./gaeld logs               # Tail application logs
 ./gaeld worker             # Tail queue worker logs
 ./gaeld status             # Show container status
@@ -87,7 +88,8 @@ Other useful commands:
 ```
 
 For manual installation, upgrades, reverse-proxy configuration, and backup
-requirements, see [INSTALL.md](INSTALL.md).
+requirements for the managed candidate, use the [installation guide](docs/ce-managed-installation.md).
+[INSTALL.md](INSTALL.md) describes the existing source and development workflows.
 
 ---
 

@@ -1,0 +1,118 @@
+name: Promote a qualified managed CE candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact release version without v
+        required: true
+        type: string
+      artifact_id:
+        description: Immutable artifact ID from the managed CE build
+        required: true
+        type: string
+      ee_receipt_base_url:
+        description: HTTPS directory containing the signed acceptance receipt and signature
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    environment: public-release
+    permissions:
+      actions: read
+      attestations: read
+      packages: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ inputs.version }}
+      ARTIFACT_ID: ${{ inputs.artifact_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Retrieve the original immutable workflow artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ && "$ARTIFACT_ID" =~ ^[0-9]+$ ]]
+          [[ "$GITHUB_REF" == "refs/tags/v$RELEASE_VERSION" ]]
+          test "$(git rev-parse "refs/tags/v$RELEASE_VERSION^{commit}")" = "$GITHUB_SHA"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" > "$RUNNER_TEMP/artifact.json"
+          jq -e --arg sha "$GITHUB_SHA" '.expired == false and .workflow_run.head_sha == $sha' "$RUNNER_TEMP/artifact.json"
+          run_id=$(jq -r '.workflow_run.id' "$RUNNER_TEMP/artifact.json")
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" > "$RUNNER_TEMP/build-run.json"
+          jq -e --arg sha "$GITHUB_SHA" --arg repo "$GITHUB_REPOSITORY" '
+            .path == ".github/workflows/distribution.yml" and (.event == "workflow_dispatch" or .event == "push") and
+            .status == "completed" and .conclusion == "success" and
+            .head_repository.full_name == $repo and .head_sha == $sha' "$RUNNER_TEMP/build-run.json"
+          name=$(jq -r .name "$RUNNER_TEMP/artifact.json")
+          prefix="managed-ce-$RELEASE_VERSION-$run_id-"
+          [[ "$name" == "$prefix"* ]]
+          attempt=${name#"$prefix"}
+          [[ "$attempt" =~ ^[1-9][0-9]*$ ]]
+          expected=$(jq -r '.digest' "$RUNNER_TEMP/artifact.json")
+          [[ "$expected" =~ ^sha256:[a-f0-9]{64}$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip" > "$RUNNER_TEMP/qualified.zip"
+          printf '%s  %s\n' "${expected#sha256:}" "$RUNNER_TEMP/qualified.zip" | sha256sum --check --status
+          mkdir release
+          unzip -q "$RUNNER_TEMP/qualified.zip" -d release
+          build_ref=$(jq -r '.source_ref' release/qualification-inputs.json)
+          [[ "$build_ref" == "refs/tags/v$RELEASE_VERSION" || "$build_ref" == "refs/heads/release/v$RELEASE_VERSION" ]]
+          verification=(--repo "$GITHUB_REPOSITORY" --source-ref "$build_ref" --source-digest "$GITHUB_SHA"
+                        --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/distribution.yml")
+          gh attestation verify release/qualification-inputs.json --bundle release/qualification-provenance.jsonl "${verification[@]}"
+          gh attestation verify "release/gaeld-ce-$RELEASE_VERSION.tar.gz" --bundle release/provenance.json "${verification[@]}"
+          BUILD_RUN="$run_id" BUILD_ATTEMPT="$attempt" BUILD_REF="$build_ref" python3 scripts/distribution/qualification_bundle.py verify release
+          for name in app web; do
+            image=$(jq -r --arg name "$name" '.candidate_images[$name]' release/qualification-inputs.json)
+            gh attestation verify "oci://$image" "${verification[@]}"
+          done
+      - name: Verify the signed private acceptance and sign the retained release files
+        shell: bash
+        env:
+          RECEIPT_BASE: ${{ inputs.ee_receipt_base_url }}
+          EE_RECEIPT_KEY: ${{ vars.EE_TEST_RECEIPT_PUBLIC_KEY }}
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_ED25519_PRIVATE_KEY }}
+          RELEASE_PUBLIC_KEY: ${{ vars.RELEASE_ED25519_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$RECEIPT_BASE" == https://* ]]
+          printf '%s\n' "$EE_RECEIPT_KEY" | cmp - docs/keys/ee-acceptance.pub
+          printf '%s\n' "$RELEASE_PUBLIC_KEY" | cmp - docs/keys/release.pub
+          cp docs/keys/release.pub release/release.pub
+          for name in ee-acceptance.json ee-acceptance.json.sig; do
+            curl --fail --location --proto '=https' --proto-redir '=https' "${RECEIPT_BASE%/}/$name" -o "release/$name"
+          done
+          openssl pkeyutl -verify -pubin -inkey docs/keys/ee-acceptance.pub -rawin -in release/ee-acceptance.json -sigfile release/ee-acceptance.json.sig
+          python3 scripts/distribution/verify_promotion.py release
+          ee_versions=$(jq -ce '.ee_versions | select(type=="array" and length>0)' release/ee-acceptance.json)
+          allowed=$(jq -ce '.allowed_from | select(type=="array" and length>0)' release/ee-acceptance.json)
+          arguments=()
+          if [[ -f release/adoption-acceptance.json ]]; then arguments+=(--adoption-receipt release/adoption-acceptance.json); fi
+          for name in app web postgres redis; do
+            image=$(jq -r --arg name "$name" '.candidate_images[$name]' release/qualification-inputs.json)
+            arguments+=("--$name-digest" "${image#*@}")
+          done
+          python3 scripts/distribution/release_manifest.py --version "$RELEASE_VERSION" --commit "$GITHUB_SHA" \
+            --source "release/gaeld-ce-$RELEASE_VERSION.tar.gz" --provenance release/provenance.json --sbom release/sbom.spdx.json \
+            --allowed-from "$allowed" --compatible-ee-versions "$ee_versions" --ee-receipt release/ee-acceptance.json \
+            --ee-receipt-signature release/ee-acceptance.json.sig --ee-receipt-key docs/keys/ee-acceptance.pub \
+            --output release/release.json "${arguments[@]}"
+          signing_key=$(mktemp)
+          trap 'rm -f "$signing_key"' EXIT
+          printf '%s\n' "$RELEASE_SIGNING_KEY" > "$signing_key"
+          openssl pkeyutl -sign -inkey "$signing_key" -rawin -in release/release.json -out release/release.json.sig
+          openssl pkeyutl -verify -pubin -inkey release/release.pub -rawin -in release/release.json -sigfile release/release.json.sig
+          (cd release && find . -maxdepth 1 -type f ! -name 'SHA256SUMS*' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
+          openssl pkeyutl -sign -inkey "$signing_key" -rawin -in release/SHA256SUMS -out release/SHA256SUMS.sig
+          openssl pkeyutl -verify -pubin -inkey release/release.pub -rawin -in release/SHA256SUMS -sigfile release/SHA256SUMS.sig
+          shopt -s nullglob
+          gh release create "v$RELEASE_VERSION" release/*.json release/*.jsonl release/*.gz release/*.pub release/*.sig release/SHA256SUMS \
+            --verify-tag --draft --title "Gäld CE $RELEASE_VERSION" --generate-notes
