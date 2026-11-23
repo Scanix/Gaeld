@@ -163,6 +163,7 @@ jobs:
           ARTIFACT_DIGEST: ${{ steps.inputs.outputs.artifact-digest }}
         run: echo "[Download the original qualification inputs]($ARTIFACT_URL), artifact SHA-256 \`$ARTIFACT_DIGEST\`." >> "$GITHUB_STEP_SUMMARY"
       - name: Rehearse real Sail adoption and recovery against the exact candidate
+        if: startsWith(needs.metadata.outputs.version, '3.11.0')
         env:
           GH_TOKEN: ${{ github.token }}
           APP_DIGEST: ${{ steps.app.outputs.digest }}

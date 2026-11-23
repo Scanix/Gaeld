@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 import subprocess
 import sys
 import tempfile
@@ -8,10 +9,37 @@ import unittest
 BUILDER = Path(__file__).resolve().parents[2] / 'scripts/distribution/release_manifest.py'
 sys.path.insert(0, str(BUILDER.parent))
 from adopt import SAIL_RELEASES
+from release_manifest import verify_archive_upgrade
+from unittest.mock import patch
 from verify_adoption_receipt import CHECKS, sha256
 
 
 class ReleaseManifestTest(unittest.TestCase):
+    def test_archive_receipt_binds_both_editions_to_the_same_predecessor_and_complete_recovery(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'app.tar.gz'
+            source.write_bytes(b'exact release payload')
+            path = root / 'integrated.json'
+            args = SimpleNamespace(source=source, ee_receipt=path, ee_receipt_signature='sig', ee_receipt_key='key')
+            images = {'app': 'test@sha256:' + 'd' * 64}
+            checks = dict.fromkeys(('capture','deduplication','missing_source_incident','retry','export','access_controls',
+                                    'existing_rows_unchanged','existing_files_unchanged','recovery_rows_unchanged','recovery_files_unchanged'), True)
+            row = {'baseline_version':'3.11.0','baseline_commit':'a' * 40,'checks':checks}
+            report = {'source_sha256':sha256(source),'candidate_images':images,
+                      'archive_upgrades':[dict(row, edition='CE'),dict(row,edition='EE',ee_version='2.10.0',ee_commit='b' * 40)]}
+            with patch('release_manifest.subprocess.check_output',return_value='a' * 40):
+                path.write_text(json.dumps(report))
+                verify_archive_upgrade(args,['3.11.0'],images,['2.10.0'])
+                report['archive_upgrades'][1]['checks'] = dict(checks,recovery_files_unchanged=False)
+                path.write_text(json.dumps(report))
+                with self.assertRaisesRegex(ValueError,'incomplete'):
+                    verify_archive_upgrade(args,['3.11.0'],images,['2.10.0'])
+                report['archive_upgrades'].pop()
+                path.write_text(json.dumps(report))
+                with self.assertRaisesRegex(ValueError,'missing an exact'):
+                    verify_archive_upgrade(args,['3.11.0'],images,['2.10.0'])
+
     def test_requires_attestations_and_exact_ee_acceptance_before_declaring_compatibility(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
