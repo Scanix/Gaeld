@@ -9,6 +9,15 @@ class GaeldDoctorCommandTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_missing_key_requires_recovery_instead_of_replacement(): void
+    {
+        config()->set('app.key', '');
+
+        $this->artisan('gaeld:doctor')
+            ->assertFailed()
+            ->expectsOutputToContain('Restore the original key');
+    }
+
     public function test_runs_successfully_with_healthy_default_config(): void
     {
         // phpunit.xml sets TRUSTED_PROXIES=* globally for the test suite (other

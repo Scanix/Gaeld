@@ -1,0 +1,12 @@
+[Unit]
+Description=Gaeld dedicated web server
+After=gaeld-fpm.service
+Requires=gaeld-fpm.service
+[Service]
+Type=simple
+ExecStart=/usr/sbin/nginx -c @ROOT@/.gaeld/nginx-native.conf
+KillSignal=SIGQUIT
+TimeoutStopSec=2100
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target

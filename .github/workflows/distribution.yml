@@ -1,0 +1,224 @@
+name: Public CE release candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact existing CE tag version, without v
+        required: true
+        type: string
+      allowed_from:
+        description: JSON list of exact previous versions validated for this release
+        required: true
+        default: '["3.8.28"]'
+        type: string
+      compatible_ee_versions:
+        description: JSON list of exact EE versions backed by a signed acceptance receipt
+        required: true
+        default: '[]'
+        type: string
+      ee_receipt_base_url:
+        description: HTTPS directory containing ee-acceptance.json and its Ed25519 signature (required for EE pairs)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    uses: ./.github/workflows/ci.yml
+
+  candidate:
+    needs: quality
+    runs-on: ubuntu-latest
+    environment: public-release
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Require reviewed immutable tag and signing material
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_ED25519_PRIVATE_KEY }}
+          RELEASE_PUBLIC_KEY: ${{ vars.RELEASE_ED25519_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "v${RELEASE_VERSION}^{commit}")"
+          test -n "$RELEASE_SIGNING_KEY" && test -n "$RELEASE_PUBLIC_KEY"
+          bash scripts/qa/test-ce-artifact.sh
+          git archive --format=tar.gz HEAD -o /tmp/ce-source.tar.gz
+          bash scripts/qa/check-ce-artifact.sh /tmp/ce-source.tar.gz
+      - name: Verify distribution and recovery tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y age
+          python3 -m unittest discover -s tests/distribution -v
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Select reviewed database image digests for tests and release
+        id: databases
+        run: |
+          # postgres:16-bookworm and redis:7-alpine, resolved 2026-11-04.
+          echo 'postgres=sha256:e8a07d2c7579b038938cdba6c539e580e5001caf9ea203d397b5cc83e76bd938' >> "$GITHUB_OUTPUT"
+          echo 'redis=sha256:8da19c7399dca900c6822a1cf30f9d2285585e2c4b457ff4095b0f4500054d3f' >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build immutable multiarch application with SBOM and provenance
+        id: app
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/production/Dockerfile
+          target: app
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/scanix/gaeld:candidate-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          provenance: mode=max
+          sbom: true
+      - name: Build immutable multiarch web image with SBOM and provenance
+        id: web
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/production/Dockerfile
+          target: web
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/scanix/gaeld-web:candidate-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          provenance: mode=max
+          sbom: true
+      - name: Sign application provenance with the release workflow identity
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-name: ghcr.io/scanix/gaeld
+          subject-digest: ${{ steps.app.outputs.digest }}
+          push-to-registry: true
+      - name: Sign web provenance with the release workflow identity
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-name: ghcr.io/scanix/gaeld-web
+          subject-digest: ${{ steps.web.outputs.digest }}
+          push-to-registry: true
+      - name: Smoke both architectures and package the exact image sources
+        env:
+          APP_DIGEST: ${{ steps.app.outputs.digest }}
+          WEB_DIGEST: ${{ steps.web.outputs.digest }}
+          POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
+          REDIS_DIGEST: ${{ steps.databases.outputs.redis }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          for platform in linux/amd64 linux/arm64; do
+            docker run --rm --platform "$platform" --entrypoint php "ghcr.io/scanix/gaeld@$APP_DIGEST" -r 'require "vendor/autoload.php"; if (PHP_VERSION_ID < 80400 || !extension_loaded("pdo_pgsql") || !extension_loaded("redis")) { exit(1); }'
+            python3 tests/distribution/runtime_smoke.py --platform "$platform" \
+              --app-image "ghcr.io/scanix/gaeld@$APP_DIGEST" --web-image "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" \
+              --postgres-image "docker.io/library/postgres@$POSTGRES_DIGEST" --redis-image "docker.io/library/redis@$REDIS_DIGEST"
+          done
+          docker run --rm --entrypoint tar "ghcr.io/scanix/gaeld@$APP_DIGEST" --hard-dereference -czhf - -C /var/www/html . > "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
+          bash scripts/qa/check-ce-artifact.sh "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
+          python3 -c 'import sys,tempfile; sys.path.insert(0,"scripts/distribution"); from manage import extract_tar; temporary=tempfile.TemporaryDirectory(); extract_tar(sys.argv[1],temporary.name)' "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
+      - name: Rehearse real Sail adoption and recovery against the exact candidate
+        env:
+          APP_DIGEST: ${{ steps.app.outputs.digest }}
+          WEB_DIGEST: ${{ steps.web.outputs.digest }}
+          POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
+          REDIS_DIGEST: ${{ steps.databases.outputs.redis }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          candidate_dir="$RUNNER_TEMP/gaeld-r1-adoption-candidate"
+          baseline_dir="$RUNNER_TEMP/gaeld-r1-adoption-baseline"
+          git worktree add --detach "$candidate_dir" "$GITHUB_SHA"
+          git worktree add --detach "$baseline_dir" v3.8.28
+          docker build --file "$baseline_dir/docker/php/Dockerfile" --tag gaeld-sail/app:rehearsal "$baseline_dir"
+          docker pull "ghcr.io/scanix/gaeld@$APP_DIGEST"
+          docker pull "ghcr.io/scanix/gaeld-web@$WEB_DIGEST"
+          docker pull "docker.io/library/postgres@$POSTGRES_DIGEST"
+          docker pull "docker.io/library/redis@$REDIS_DIGEST"
+          python3 "$candidate_dir/tests/distribution/adoption_rehearsal.py" \
+            --candidate "$candidate_dir" --version "$RELEASE_VERSION" \
+            --app-image "ghcr.io/scanix/gaeld@$APP_DIGEST" --web-image "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" \
+            --postgres-image "docker.io/library/postgres@$POSTGRES_DIGEST" --redis-image "docker.io/library/redis@$REDIS_DIGEST" \
+            --baseline-image gaeld-sail/app:rehearsal \
+            --source-artifact "$GITHUB_WORKSPACE/release/gaeld-ce-${RELEASE_VERSION}.tar.gz" \
+            --report "$GITHUB_WORKSPACE/release/adoption-acceptance.json"
+          python3 scripts/distribution/verify_adoption_receipt.py \
+            --receipt release/adoption-acceptance.json --version "$RELEASE_VERSION" --commit "$GITHUB_SHA" \
+            --source "release/gaeld-ce-${RELEASE_VERSION}.tar.gz" --platform linux/amd64 \
+            --app-image "ghcr.io/scanix/gaeld@$APP_DIGEST" --web-image "ghcr.io/scanix/gaeld-web@$WEB_DIGEST" \
+            --postgres-image "docker.io/library/postgres@$POSTGRES_DIGEST" --redis-image "docker.io/library/redis@$REDIS_DIGEST"
+      - name: Retain the adoption acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ce-adoption-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release/adoption-acceptance.json
+          retention-days: 90
+          if-no-files-found: warn
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        id: provenance
+        with:
+          subject-path: release/*.tar.gz
+      - name: Preserve provenance bundle
+        env:
+          BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+        run: cp "$BUNDLE" release/provenance.json
+      - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: ghcr.io/scanix/gaeld@${{ steps.app.outputs.digest }}
+          format: spdx-json
+          output-file: release/sbom.spdx.json
+          upload-artifact: false
+      - name: Sign release only after verification and attestations succeed
+        env:
+          APP_DIGEST: ${{ steps.app.outputs.digest }}
+          WEB_DIGEST: ${{ steps.web.outputs.digest }}
+          POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
+          REDIS_DIGEST: ${{ steps.databases.outputs.redis }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          ALLOWED_FROM: ${{ inputs.allowed_from }}
+          COMPATIBLE_EE: ${{ inputs.compatible_ee_versions }}
+          EE_RECEIPT_BASE_URL: ${{ inputs.ee_receipt_base_url }}
+          EE_RECEIPT_KEY: ${{ vars.EE_TEST_RECEIPT_PUBLIC_KEY }}
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_ED25519_PRIVATE_KEY }}
+          RELEASE_PUBLIC_KEY: ${{ vars.RELEASE_ED25519_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          signing_key=$(mktemp)
+          trap 'rm -f "$signing_key"' EXIT
+          printf '%s\n' "$RELEASE_SIGNING_KEY" > "$signing_key"
+          printf '%s\n' "$RELEASE_PUBLIC_KEY" > release/release.pub
+          ee_arguments=()
+          if [ "$COMPATIBLE_EE" != '[]' ]; then
+            [[ "$EE_RECEIPT_BASE_URL" == https://* ]] && test -n "$EE_RECEIPT_KEY"
+            curl --fail --location --proto '=https' --proto-redir '=https' "${EE_RECEIPT_BASE_URL%/}/ee-acceptance.json" -o release/ee-acceptance.json
+            curl --fail --location --proto '=https' --proto-redir '=https' "${EE_RECEIPT_BASE_URL%/}/ee-acceptance.json.sig" -o release/ee-acceptance.json.sig
+            printf '%s\n' "$EE_RECEIPT_KEY" > release/ee-acceptance.pub
+            ee_arguments=(--ee-receipt release/ee-acceptance.json --ee-receipt-signature release/ee-acceptance.json.sig --ee-receipt-key release/ee-acceptance.pub)
+          fi
+          python3 scripts/distribution/release_manifest.py --version "$RELEASE_VERSION" --commit "$GITHUB_SHA" \
+            --source "release/gaeld-ce-${RELEASE_VERSION}.tar.gz" --app-digest "$APP_DIGEST" --web-digest "$WEB_DIGEST" \
+            --postgres-digest "$POSTGRES_DIGEST" --redis-digest "$REDIS_DIGEST" --allowed-from "$ALLOWED_FROM" \
+            --provenance release/provenance.json --sbom release/sbom.spdx.json --output release/release.json \
+            --adoption-receipt release/adoption-acceptance.json \
+            --compatible-ee-versions "$COMPATIBLE_EE" "${ee_arguments[@]}"
+          openssl pkeyutl -sign -inkey "$signing_key" -rawin -in release/release.json -out release/release.json.sig
+          openssl pkeyutl -verify -pubin -inkey release/release.pub -rawin -in release/release.json -sigfile release/release.json.sig
+      - name: Create a draft for the final publication review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          gh release create "v${RELEASE_VERSION}" release/* --verify-tag --draft --title "Gäld CE ${RELEASE_VERSION}" --generate-notes

@@ -18,12 +18,13 @@ class GaeldUpdateCommandTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_it_succeeds_when_migrations_and_cache_are_skipped(): void
+    public function test_it_refuses_an_update_that_bypasses_the_recovery_backup(): void
     {
         $this->artisan('gaeld:update', [
             '--skip-migrations' => true,
             '--skip-cache' => true,
-        ])->assertSuccessful();
+        ])->assertFailed();
+        $this->assertFalse(app()->isDownForMaintenance());
     }
 
     public function test_it_exposes_expected_command_metadata(): void
@@ -34,5 +35,6 @@ class GaeldUpdateCommandTest extends TestCase
         $this->assertStringContainsString('Update Gäld', $command->getDescription());
         $this->assertTrue($command->getDefinition()->hasOption('skip-migrations'));
         $this->assertTrue($command->getDefinition()->hasOption('skip-cache'));
+        $this->assertTrue($command->getDefinition()->hasOption('to'));
     }
 }

@@ -5,13 +5,39 @@
 #        ./gaeld up               Start containers
 #        ./gaeld down             Stop containers
 #        ./gaeld doctor           Diagnose the running installation
-#        ./gaeld update            Apply migrations and rebuild caches
+#        ./gaeld update --to ...   Install a verified managed release
 #        ./gaeld artisan ...      Run artisan inside the container
 #        ./gaeld logs [service]   Tail container logs
 #        ./gaeld worker           Tail queue worker logs
 #        ./gaeld status           Show container status
 # ─────────────────────────────────────────────────────────────
 set -euo pipefail
+
+# Dispatch production operations before reading the development environment.
+cli_directory="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
+managed_command="${1:-help}"
+managed_root="${GAELD_ROOT:-$PWD}"
+previous_argument=''
+for argument in "$@"; do
+    if [ "$previous_argument" = '--root' ]; then managed_root="$argument"; fi
+    case "$argument" in --root=*) managed_root="${argument#--root=}" ;; esac
+    previous_argument="$argument"
+done
+managed=0
+case "$managed_command" in install|update|backup|restore|resume|adopt) managed=1 ;; esac
+case " $* " in *' --to '*|*' --to='*) managed=1 ;; esac
+if [ -f "$managed_root/.gaeld/state.json" ]; then
+    case "$managed_command" in update|doctor|setup) managed=1 ;; esac
+fi
+if [ "$managed" -eq 1 ]; then
+    command -v python3 >/dev/null 2>&1 || { echo 'Python 3.10+ is required by the managed installer.' >&2; exit 1; }
+    shift
+    if [ "$managed_command" = adopt ]; then
+        exec python3 "$cli_directory/scripts/distribution/adopt.py" "$@"
+    fi
+    if [ "$managed_command" = setup ]; then managed_command=install; fi
+    exec python3 "$cli_directory/scripts/distribution/manage.py" "$managed_command" "$@"
+fi
 
 # ── Colors ──────────────────────────────────────────────────
 GREEN='\033[0;32m'
@@ -171,6 +197,10 @@ cmd_setup() {
         docker compose exec -T redis redis-cli ping
 
     # Start app + worker (depend on healthy services)
+    if ! grep -Eq '^APP_KEY=.+$' .env; then
+        run_step "Creating the initial application key" \
+            docker compose run --rm --no-deps -T laravel.test php artisan key:generate --force
+    fi
     run_step "Starting web server and queue worker" \
         docker compose up -d laravel.test worker
 
@@ -269,11 +299,16 @@ cmd_help() {
             'Usage: ./gaeld <command> [options]' \
             '' \
             'Commands:' \
+            '  install --to X.Y.Z Managed production installation (Docker or native Linux)' \
+            '  update --to X.Y.Z  Verify, back up and install an immutable release' \
+            '  backup             Create an encrypted, consistent recovery backup' \
+            '  restore            Restore a verified recovery backup (explicit confirmation)' \
+            '  adopt               Adopt a clean CE v3.8.28 Sail installation' \
+            '  resume             Resume services after a failed backup' \
             '  setup [--demo]     Full first-time setup (build, start, install)' \
             '  up                 Start all containers' \
             '  down               Stop all containers' \
             '  doctor             Diagnose the running installation' \
-            '  update             Apply migrations and rebuild application caches' \
             '  restart [service]  Restart all or specific service' \
             '  artisan <cmd>      Run artisan command in the app container' \
             '  pnpm <cmd>         Run pnpm command in the app container' \
@@ -287,7 +322,7 @@ cmd_help() {
             '  ./gaeld setup --demo       Non-interactive setup with demo data' \
             '  ./gaeld artisan migrate    Run database migrations' \
             '  ./gaeld doctor             Diagnose configuration and service health' \
-            '  ./gaeld update             Apply pending migrations and rebuild caches' \
+            '  ./gaeld update --to X.Y.Z  Install an approved managed release' \
             '  ./gaeld restart worker     Restart queue worker' \
             '  ./gaeld logs worker        Tail worker logs' \
             '  ./gaeld pnpm build         Run pnpm build inside the container' \
