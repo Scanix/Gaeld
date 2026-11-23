@@ -57,38 +57,33 @@ class WebhookSsrfTest extends SecurityTestCase
         ];
     }
 
-    #[DataProvider('validExternalUrls')]
-    public function test_webhook_creation_accepts_valid_external_url(string $url): void
+    #[DataProvider('externalUrls')]
+    public function test_webhook_creation_validates_external_url(string $url, int $expectedStatus): void
     {
-        // A valid external URL should pass the SSRF check (may fail for other reasons
-        // like DNS resolution, but must not return 422 for the URL validation itself)
         $token = $this->createApiToken($this->ownerA, $this->orgA);
-
         $response = $this->withToken($token)
             ->postJson('/api/v1/webhooks', [
                 'url' => $url,
                 'events' => ['invoice.created'],
-            ]);
+            ])
+            ->assertStatus($expectedStatus);
 
-        // 422 is only acceptable if it's NOT about the URL field specifically failing SSRF check
-        // We accept 200/201 (created), or 422 with errors on fields OTHER than url's network check
-        if ($response->status() === 422) {
-            $errors = $response->json('errors.url', []);
-            $ssrfErrors = array_filter($errors, fn ($e) => str_contains(strtolower($e), 'private') || str_contains(strtolower($e), 'internal'));
-            $this->assertEmpty($ssrfErrors, "Valid external URL [{$url}] should not be rejected by SSRF validator");
+        if ($expectedStatus === 422) {
+            $response->assertJsonValidationErrors('url');
 
             return;
         }
 
-        $response->assertCreated()->assertJsonPath('data.url', $url);
+        $response->assertJsonPath('data.url', $url);
         $this->assertDatabaseHas('webhooks', ['id' => $response->json('data.id'), 'organization_id' => $this->orgA->id]);
     }
 
-    public static function validExternalUrls(): array
+    public static function externalUrls(): array
     {
         return [
-            'https external' => ['https://webhook.example.com/endpoint'],
-            'http external' => ['http://webhook.example.com/endpoint'],
+            'public HTTPS address' => ['https://93.184.216.34/endpoint', 201],
+            'external HTTP address' => ['http://example.com/endpoint', 422],
+            'unresolvable HTTPS hostname' => ['https://webhook.invalid/endpoint', 422],
         ];
     }
 
