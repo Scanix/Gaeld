@@ -1,0 +1,4 @@
+# The two values at these exact historical lines are SHA-256 fingerprints of
+# docs/keys/release.pub and docs/keys/ee-acceptance.pub. Both files are public.
+e59ea04c3760ac18c0a0f9a80e85883b0ae28152:scripts/distribution/manage.py:generic-api-key:146
+e59ea04c3760ac18c0a0f9a80e85883b0ae28152:scripts/distribution/manage.py:generic-api-key:147

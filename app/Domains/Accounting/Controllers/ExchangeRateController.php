@@ -8,6 +8,8 @@ use App\Domains\Accounting\Requests\StoreExchangeRateRequest;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use App\Http\Controllers\Concerns\HandlesFlashErrorResponses;
 use App\Http\Controllers\Controller;
+use App\Support\ImportedXml;
+use App\Support\InvalidImportedXml;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
@@ -77,7 +79,12 @@ class ExchangeRateController extends Controller
             return $this->backWithError(__('app.unexpected_error'));
         }
 
-        $xml = @simplexml_load_string($response->body());
+        try {
+            $document = ImportedXml::document($response->body());
+        } catch (InvalidImportedXml) {
+            return $this->backWithError(__('app.unexpected_error'));
+        }
+        $xml = @simplexml_load_string($document, options: LIBXML_NONET);
         if (! $xml) {
             return $this->backWithError(__('app.unexpected_error'));
         }

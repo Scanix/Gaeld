@@ -1,0 +1,314 @@
+name: Public CE release candidate
+
+on:
+  push:
+    branches:
+      - 'release/v3.11.0-rc.*'
+      - 'release/v3.12.0-rc.*'
+      - 'release/v3.13.0-rc.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact CE release branch or tag version, without v
+        required: true
+        type: string
+      expected_commit:
+        description: Full reviewed CE commit to build
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ref.outputs.version }}
+      matrix: ${{ steps.ref.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - id: ref
+        env:
+          REQUESTED: ${{ inputs.version }}
+          EXPECTED: ${{ inputs.expected_commit }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            version=${GITHUB_REF#refs/heads/release/v}
+            [[ "$version" =~ ^3\.(11|12|13)\.0-rc\.[1-9][0-9]*$ ]]
+          else
+            version="$REQUESTED"
+            [[ "$GITHUB_SHA" == "$EXPECTED" ]]
+          fi
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
+          [[ "$GITHUB_REF" == "refs/tags/v$version" || "$GITHUB_REF" == "refs/heads/release/v$version" ]]
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+
+          printf 'matrix=%s\n' "$(python3 scripts/distribution/qualify_native.py matrix "$version")" >> "$GITHUB_OUTPUT"
+
+  quality:
+    permissions:
+      contents: read
+      pull-requests: read
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: [quality, metadata]
+    runs-on: ubuntu-24.04
+    outputs:
+      artifact: ${{ steps.inputs.outputs.artifact-id }}
+      attempt: ${{ steps.databases.outputs.attempt }}
+      app: ${{ steps.app.outputs.digest }}
+      web: ${{ steps.web.outputs.digest }}
+      postgres: ${{ steps.databases.outputs.postgres }}
+      redis: ${{ steps.databases.outputs.redis }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Verify the reviewed source ref and commit
+        env:
+          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
+          [[ "$EXPECTED_COMMIT" =~ ^[a-f0-9]{40}$ && "$GITHUB_SHA" == "$EXPECTED_COMMIT" ]]
+          [[ "$GITHUB_REF" == "refs/tags/v$RELEASE_VERSION" || "$GITHUB_REF" == "refs/heads/release/v$RELEASE_VERSION" ]]
+          bash scripts/qa/test-ce-artifact.sh
+          git archive --format=tar.gz HEAD -o /tmp/ce-source.tar.gz
+          bash scripts/qa/check-ce-artifact.sh /tmp/ce-source.tar.gz
+      - name: Verify distribution and recovery tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y age
+          python3 -m unittest discover -s tests/distribution -v
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Select reviewed database image digests for tests and release
+        id: databases
+        run: |
+          printf 'attempt=%s\n' "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+          # PostgreSQL 16.16 and Redis 7.4.12, reviewed on 2026-11-23.
+          echo 'postgres=sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175' >> "$GITHUB_OUTPUT"
+          echo 'redis=sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe' >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build immutable multiarch application with SBOM and provenance
+        id: app
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/production/Dockerfile
+          target: app
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/scanix/gaeld:candidate-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          provenance: mode=max
+          sbom: true
+      - name: Build immutable multiarch web image with SBOM and provenance
+        id: web
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/production/Dockerfile
+          target: web
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/scanix/gaeld-web:candidate-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          provenance: mode=max
+          sbom: true
+      - name: Sign application provenance with the release workflow identity
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-name: ghcr.io/scanix/gaeld
+          subject-digest: ${{ steps.app.outputs.digest }}
+          push-to-registry: true
+      - name: Sign web provenance with the release workflow identity
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-name: ghcr.io/scanix/gaeld-web
+          subject-digest: ${{ steps.web.outputs.digest }}
+          push-to-registry: true
+      - name: Package source from the immutable AMD64 application image
+        env:
+          APP_DIGEST: ${{ steps.app.outputs.digest }}
+          WEB_DIGEST: ${{ steps.web.outputs.digest }}
+          POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
+          REDIS_DIGEST: ${{ steps.databases.outputs.redis }}
+          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          docker run --rm --platform linux/amd64 --entrypoint tar "ghcr.io/scanix/gaeld@$APP_DIGEST" --hard-dereference -czhf - -C /var/www/html . > "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
+          bash scripts/qa/check-ce-artifact.sh "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
+          python3 -c 'import sys,tempfile; sys.path.insert(0,"scripts/distribution"); from manage import extract_tar; temporary=tempfile.TemporaryDirectory(); extract_tar(sys.argv[1],temporary.name)' "release/gaeld-ce-${RELEASE_VERSION}.tar.gz"
+          python3 scripts/distribution/qualification_bundle.py inputs release
+      - name: Retain exact source and image references for independent platform tests
+        id: inputs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: managed-qualification-inputs-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            release/gaeld-ce-*.tar.gz
+            release/qualification-inputs.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Record qualification input artifact
+        env:
+          ARTIFACT_URL: ${{ steps.inputs.outputs.artifact-url }}
+          ARTIFACT_DIGEST: ${{ steps.inputs.outputs.artifact-digest }}
+        run: echo "[Download the original qualification inputs]($ARTIFACT_URL), artifact SHA-256 \`$ARTIFACT_DIGEST\`." >> "$GITHUB_STEP_SUMMARY"
+
+  native:
+    name: Native ${{ matrix.case }}
+    needs: [metadata, build]
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.metadata.outputs.matrix) }}
+    timeout-minutes: 100
+    permissions:
+      contents: read
+      packages: read
+      actions: read
+    env:
+      RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+      APP_DIGEST: ${{ needs.build.outputs.app }}
+      WEB_DIGEST: ${{ needs.build.outputs.web }}
+      POSTGRES_DIGEST: ${{ needs.build.outputs.postgres }}
+      REDIS_DIGEST: ${{ needs.build.outputs.redis }}
+      BUILD_ATTEMPT: ${{ needs.build.outputs.attempt }}
+      NATIVE_CASE: ${{ matrix.case }}
+      NATIVE_ARCH: ${{ matrix.arch }}
+      BASELINE: ${{ matrix.baseline }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Download the original sources by immutable artifact ID
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact }}
+          merge-multiple: true
+          digest-mismatch: error
+          path: ${{ runner.temp }}/qualified
+      - name: Verify the original source checksum, commit and four OCI indices
+        run: python3 scripts/distribution/qualification_bundle.py verify-inputs "$RUNNER_TEMP/qualified"
+      - name: Restore the historical Sail runtime for adoption
+        if: matrix.kind != 'smoke'
+        id: cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          key: gaeld-sail-native-v1-${{ matrix.arch }}-${{ matrix.baseline_commit }}
+          path: ${{ runner.temp }}/gaeld-baseline-cache
+      - name: Verify or build the exact historical Sail runtime
+        if: matrix.kind != 'smoke'
+        run: python3 scripts/distribution/qualify_native.py baseline "$RUNNER_TEMP/gaeld-baseline-cache"
+      - name: Cache the verified historical image
+        if: matrix.kind != 'smoke' && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          key: gaeld-sail-native-v1-${{ matrix.arch }}-${{ matrix.baseline_commit }}
+          path: ${{ runner.temp }}/gaeld-baseline-cache
+      - name: Run the release case on its native CPU
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/distribution/qualify_native.py run "$RUNNER_TEMP/qualified" "$RUNNER_TEMP/receipts"
+      - name: Retain the native platform receipt
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ce-native-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ needs.build.outputs.attempt }}-${{ matrix.case }}-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/receipts/${{ matrix.case }}.json
+          retention-days: 90
+          if-no-files-found: error
+
+  candidate:
+    needs: [metadata, build, native]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+      id-token: write
+      attestations: write
+    env:
+      RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+      APP_DIGEST: ${{ needs.build.outputs.app }}
+      WEB_DIGEST: ${{ needs.build.outputs.web }}
+      POSTGRES_DIGEST: ${{ needs.build.outputs.postgres }}
+      REDIS_DIGEST: ${{ needs.build.outputs.redis }}
+      BUILD_ATTEMPT: ${{ needs.build.outputs.attempt }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Download the original sources by immutable artifact ID
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact }}
+          merge-multiple: true
+          digest-mismatch: error
+          path: release
+      - name: Verify the original inputs before assembling the release
+        run: python3 scripts/distribution/qualification_bundle.py verify-inputs release
+      - name: Download the successful native receipts for this build
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: ce-native-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ needs.build.outputs.attempt }}-*
+          path: ${{ runner.temp }}/native-receipts
+          digest-mismatch: error
+      - name: Verify every native architecture and upgrade case
+        run: python3 scripts/distribution/qualify_native.py collect release "$RUNNER_TEMP/native-receipts"
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        id: provenance
+        with:
+          subject-path: release/*.tar.gz
+      - name: Preserve provenance bundle
+        env:
+          BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+        run: cp "$BUNDLE" release/provenance.json
+      - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: ghcr.io/scanix/gaeld@${{ needs.build.outputs.app }}
+          format: spdx-json
+          output-file: release/sbom.spdx.json
+          upload-artifact: false
+      - name: Bind qualification to the built candidate
+        run: python3 scripts/distribution/qualification_bundle.py create release
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        id: qualification
+        with:
+          subject-path: release/qualification-inputs.json
+      - name: Preserve the qualification attestation
+        env:
+          BUNDLE: ${{ steps.qualification.outputs.bundle-path }}
+        run: cp "$BUNDLE" release/qualification-provenance.jsonl
+      - name: Retain exact artifacts for qualification and promotion
+        id: artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: managed-ce-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ needs.build.outputs.attempt }}-qualified-${{ github.run_attempt }}
+          path: release/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Record the immutable candidate artifact
+        env:
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.artifact.outputs.artifact-digest }}
+          ARTIFACT_URL: ${{ steps.artifact.outputs.artifact-url }}
+        run: |
+          printf 'Artifact ID %s. SHA-256 %s. [Download the exact qualification inputs](%s).\n' \
+            "$ARTIFACT_ID" "$ARTIFACT_DIGEST" "$ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"

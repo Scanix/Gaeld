@@ -213,7 +213,8 @@ export default defineConfig(({ mode }) => {
         sourcemaps: {
           assets: ['./public/build/**'],
         },
-        disable: !environment.SENTRY_AUTH_TOKEN,
+        disable: !environment.SENTRY_AUTH_TOKEN || environment.SENTRY_DISABLE_UPLOAD === 'true',
+        telemetry: false,
       }),
     ],
     build: {

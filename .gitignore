@@ -44,7 +44,10 @@ strix_runs/
 # Scribe API docs (generated output)
 /public/docs
 /.scribe
-/docs/
+/docs/*
+!/docs/ce-managed-installation.md
+!/docs/keys/
+!/docs/keys/*.pub
 
 # EE proprietary plugin — distributed via private GitLab repo, cloned on deploy
 /plugins/gaeld-ee/
@@ -66,6 +69,8 @@ docker/nginx/default.conf
 docker/supervisor/gaeld-worker.conf
 docker/systemd/gaeld-worker.service
 .venv/
+__pycache__/
+*.pyc
 
 .pnpm-store/
 
