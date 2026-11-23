@@ -1,8 +1,8 @@
 {
   "_meta": {
-    "generated": "2026-09-03",
+    "generated": "2026-11-23",
     "method": "source-code-audit",
-    "note": "Strict contract derived from reading every controller, request, resource, model, middleware. Nothing assumed — all verified in code.",
+    "note": "API contract from the application source, with v3.10 integration paths covered by feature tests.",
     "base_url": "/api/v1",
     "auth_note": "All routes except GET /api/v1/ require Sanctum token with api-org middleware + feature:api_access flag. Mutations also use the shared idempotency boundary when applicable."
   },
@@ -57,6 +57,7 @@
   "route_aliases": [
     { "route_name": "api.contacts.index", "path": "/api/v1/contacts", "alias_of": "api.customers.index" },
     { "route_name": "api.contacts.show", "path": "/api/v1/contacts/{contact}", "alias_of": "api.customers.show" },
+    { "route_name": "api.contacts.upsert", "path": "/api/v1/contacts/upsert", "alias_of": "api.customers.upsert" },
     { "route_name": "api.contacts.store", "path": "/api/v1/contacts", "alias_of": "api.customers.store" },
     { "route_name": "api.contacts.update", "path": "/api/v1/contacts/{contact}", "alias_of": "api.customers.update" },
     { "route_name": "api.contacts.destroy", "path": "/api/v1/contacts/{contact}", "alias_of": "api.customers.destroy" }
@@ -300,7 +301,7 @@
       "request": {},
       "response_200": {
         "data": [
-          "invoice.created", "invoice.updated", "invoice.deleted", "invoice.finalized", "invoice.payment_recorded",
+          "invoice.created", "invoice.updated", "invoice.deleted", "invoice.finalized", "invoice.cancelled", "invoice.payment_recorded",
           "customer.created", "customer.updated", "customer.deleted",
           "expense.created", "expense.updated", "expense.deleted", "expense.approved",
           "journal_entry.posted", "journal_entry.reversed"
@@ -319,6 +320,8 @@
       "policy": "viewAny on Customer",
       "request": {
         "query": {
+          "external_source": { "type": "string", "required": false, "max": 100 },
+          "external_id": { "type": "string", "required": false, "max": 255 },
           "page": { "type": "integer", "required": false },
           "per_page": { "type": "integer", "required": false },
           "search": { "type": "string", "required": false },
@@ -345,6 +348,8 @@
       },
       "response_200": {
         "data": {
+          "external_source": "string|null",
+          "external_id": "string|null",
           "id": "uuid",
           "type": "string|null (enum)",
           "salutation": "string|null",
@@ -367,6 +372,37 @@
     },
 
     {
+      "name": "api.customers.upsert",
+      "method": "POST",
+      "path": "/api/v1/customers/upsert",
+      "controller": "ContactApiController@upsert",
+      "auth_required": true,
+      "abilities_by_operation": {
+        "create": "contacts.create",
+        "update": "contacts.edit"
+      },
+      "request": {
+        "body_inherits": "api.customers.store",
+        "required": [
+          "external_source",
+          "external_id"
+        ]
+      },
+      "response_201": {
+        "data": "ContactResource"
+      },
+      "response_200": {
+        "data": "ContactResource"
+      },
+      "errors": {
+        "403": "Insufficient current permission",
+        "409": "external_reference_conflict, idempotency_conflict",
+        "422": "validation_error"
+      },
+      "notes": "Explicit keys are bound to the original credential and operation. Soft-deleted references remain reserved within the organization."
+    },
+
+    {
       "name": "api.customers.store",
       "method": "POST",
       "path": "/api/v1/customers",
@@ -377,6 +413,8 @@
       "request": {
         "validation_class": "StoreCustomerApiRequest",
         "body": {
+          "external_source": { "type": "string", "required_with": "external_id", "max": 100 },
+          "external_id": { "type": "string", "required_with": "external_source", "max": 255 },
           "name": { "type": "string", "required": true, "max": 255 },
           "salutation": { "type": "string|null", "required": false, "max": 50 },
           "email": { "type": "email|null", "required": false, "max": 255 },
@@ -407,6 +445,8 @@
         "validation_class": "UpdateCustomerApiRequest",
         "params": { "customer": "uuid" },
         "body": {
+          "external_source": { "type": "string", "required_with": "external_id", "max": 100 },
+          "external_id": { "type": "string", "required_with": "external_source", "max": 255 },
           "name": { "type": "string", "required": false, "max": 255 },
           "salutation": { "type": "string|null", "required": false, "max": 50 },
           "email": { "type": "email|null", "required": false, "max": 255 },
@@ -442,6 +482,134 @@
     },
 
     {
+      "name": "api.vat-rates.index",
+      "method": "GET",
+      "path": "/api/v1/vat-rates",
+      "controller": "InvoiceReferenceDataApiController@vatRates",
+      "auth_required": true,
+      "abilities_required": [
+        "accounting.view"
+      ],
+      "request": {
+        "query": {
+          "page": "integer",
+          "per_page": "integer from 1 to 100, default 20"
+        }
+      },
+      "response_200": {
+        "data": [
+          {
+            "id": "public UUID",
+            "name": "string",
+            "code": "string",
+            "rate": "decimal string",
+            "is_default": "boolean",
+            "is_active": "boolean"
+          }
+        ],
+        "links": {},
+        "meta": {
+          "current_page": "integer",
+          "per_page": "integer",
+          "total": "integer"
+        }
+      }
+    },
+
+    {
+      "name": "api.vat-rates.show",
+      "method": "GET",
+      "path": "/api/v1/vat-rates/{vatRate}",
+      "controller": "InvoiceReferenceDataApiController@vatRate",
+      "auth_required": true,
+      "abilities_required": [
+        "accounting.view"
+      ],
+      "request": {
+        "params": {
+          "vatRate": "UUID"
+        }
+      },
+      "response_200": {
+        "data": {
+          "id": "public UUID",
+          "name": "string",
+          "code": "string",
+          "rate": "decimal string",
+          "is_default": "boolean",
+          "is_active": "boolean"
+        }
+      },
+      "response_404": {
+        "message": "string"
+      }
+    },
+
+    {
+      "name": "api.invoice-catalog-items.index",
+      "method": "GET",
+      "path": "/api/v1/invoice-catalog-items",
+      "controller": "InvoiceReferenceDataApiController@catalogItems",
+      "auth_required": true,
+      "abilities_required": [
+        "invoicing.view"
+      ],
+      "request": {
+        "query": {
+          "page": "integer",
+          "per_page": "integer from 1 to 100, default 20"
+        }
+      },
+      "response_200": {
+        "data": [
+          {
+            "id": "UUID",
+            "name": "string",
+            "description": "string|null",
+            "default_unit_price": "decimal string|null",
+            "default_vat_rate_id": "public VAT UUID|null",
+            "is_active": "boolean"
+          }
+        ],
+        "links": {},
+        "meta": {
+          "current_page": "integer",
+          "per_page": "integer",
+          "total": "integer"
+        }
+      }
+    },
+
+    {
+      "name": "api.invoice-catalog-items.show",
+      "method": "GET",
+      "path": "/api/v1/invoice-catalog-items/{catalogItem}",
+      "controller": "InvoiceReferenceDataApiController@catalogItem",
+      "auth_required": true,
+      "abilities_required": [
+        "invoicing.view"
+      ],
+      "request": {
+        "params": {
+          "catalogItem": "UUID"
+        }
+      },
+      "response_200": {
+        "data": {
+          "id": "UUID",
+          "name": "string",
+          "description": "string|null",
+          "default_unit_price": "decimal string|null",
+          "default_vat_rate_id": "public VAT UUID|null",
+          "is_active": "boolean"
+        }
+      },
+      "response_404": {
+        "message": "string"
+      }
+    },
+
+    {
       "name": "api.invoices.index",
       "method": "GET",
       "path": "/api/v1/invoices",
@@ -451,6 +619,8 @@
       "policy": "viewAny on Invoice",
       "request": {
         "query": {
+          "external_source": { "type": "string", "required": false, "max": 100 },
+          "external_id": { "type": "string", "required": false, "max": 255 },
           "page": { "type": "integer", "required": false },
           "per_page": { "type": "integer", "required": false },
           "status": { "type": "string", "required": false },
@@ -479,7 +649,12 @@
       },
       "response_200": {
         "data": {
+          "external_source": "string|null",
+          "external_id": "string|null",
           "id": "uuid",
+          "customer_reference": "string|null",
+          "purchase_order_reference": "string|null",
+          "delivery_reference": "string|null",
           "number": "string",
           "status": "string (enum: draft|finalized|sent|paid|overdue|cancelled)",
           "type": "string (enum: invoice|credit_note)",
@@ -541,6 +716,37 @@
     },
 
     {
+      "name": "api.invoices.upsert",
+      "method": "POST",
+      "path": "/api/v1/invoices/upsert",
+      "controller": "InvoiceApiController@upsert",
+      "auth_required": true,
+      "abilities_by_operation": {
+        "create": "invoicing.create",
+        "update": "invoicing.edit"
+      },
+      "request": {
+        "body_inherits": "api.invoices.store",
+        "required": [
+          "external_source",
+          "external_id"
+        ]
+      },
+      "response_201": {
+        "data": "InvoiceResource"
+      },
+      "response_200": {
+        "data": "InvoiceResource"
+      },
+      "errors": {
+        "403": "Insufficient current permission",
+        "409": "external_reference_conflict, idempotency_conflict, invalid_invoice_state",
+        "422": "validation_error"
+      },
+      "notes": "Explicit keys are bound to the original credential and operation. Soft-deleted references remain reserved within the organization."
+    },
+
+    {
       "name": "api.invoices.store",
       "method": "POST",
       "path": "/api/v1/invoices",
@@ -551,6 +757,11 @@
       "request": {
         "validation_class": "StoreInvoiceApiRequest",
         "body": {
+          "customer_reference": { "type": "string|null", "max": 120, "required": false, "printed": true },
+          "purchase_order_reference": { "type": "string|null", "max": 120, "required": false, "printed": true },
+          "delivery_reference": { "type": "string|null", "max": 120, "required": false, "printed": true },
+          "external_source": { "type": "string", "required_with": "external_id", "max": 100 },
+          "external_id": { "type": "string", "required_with": "external_source", "max": 255 },
           "customer_id": { "type": "uuid", "required": true, "note": "Must exist in customers table for current org" },
           "number": { "type": "string|null", "required": false, "max": 50, "note": "Auto-generated if omitted (format: PREFIX-YYYY-NNN)" },
           "issue_date": { "type": "date", "required": true },
@@ -587,6 +798,11 @@
         "validation_class": "UpdateInvoiceApiRequest",
         "params": { "invoice": "uuid" },
         "body": {
+          "customer_reference": { "type": "string|null", "max": 120, "required": false, "printed": true },
+          "purchase_order_reference": { "type": "string|null", "max": 120, "required": false, "printed": true },
+          "delivery_reference": { "type": "string|null", "max": 120, "required": false, "printed": true },
+          "external_source": { "type": "string", "required_with": "external_id", "max": 100 },
+          "external_id": { "type": "string", "required_with": "external_source", "max": 255 },
           "customer_id": { "type": "uuid", "required": false },
           "number": { "type": "string|null", "required": false, "max": 50 },
           "issue_date": { "type": "date", "required": false },
@@ -1431,8 +1647,8 @@
       },
       {
         "id": "IF-5",
-        "title": "Webhook event dispatching not wired for all events",
-        "description": "WebhookEvent enum declares 14 events, but only accounting journal events have Laravel event classes. Invoice/customer/expense events must be dispatched manually from action classes — verify that every action dispatches the corresponding webhook event.",
+        "title": "Webhook delivery coverage by event family",
+        "description": "Invoice creation, finalization, payment recording, and cancellation create signed deliveries for subscribed endpoints after commit. Other event families require separate qualification.",
         "status": "uncertain"
       }
     ],

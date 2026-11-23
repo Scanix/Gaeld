@@ -5,10 +5,13 @@ namespace App\Http\Middleware\Api;
 use App\Domains\Api\Exceptions\ApiIdempotencyConflictException;
 use App\Domains\Api\Models\PersonalAccessToken;
 use App\Domains\Api\Services\ApiIdempotencyService;
+use App\Domains\Contacts\Models\Contact;
+use App\Domains\Invoicing\Models\Invoice;
 use App\Domains\Organizations\Services\CurrentOrganization;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -55,6 +58,7 @@ class HandleApiIdempotency
         }
 
         if ($reservation->replay) {
+            $this->authorizeDocumentReplay($request);
             $this->logOutcome($request, $reservation->record->response_status ?? 200, true, $startedAt);
 
             return $this->idempotency->replay($reservation);
@@ -79,11 +83,23 @@ class HandleApiIdempotency
         }
     }
 
+    private function authorizeDocumentReplay(Request $request): void
+    {
+        if ($request->routeIs('api.contacts.store', 'api.customers.store', 'api.invoices.store')) {
+            Gate::authorize('create', $request->routeIs('api.invoices.store') ? Invoice::class : Contact::class);
+        } elseif ($request->routeIs('api.contacts.update', 'api.customers.update', 'api.invoices.update')) {
+            $record = $request->route('contact') ?? $request->route('invoice');
+            abort_unless($record instanceof Contact || $record instanceof Invoice, 404);
+            Gate::authorize('update', $record);
+        }
+    }
+
     private function isHandledByDomainController(Request $request): bool
     {
         $routeName = (string) ($request->route()?->getName() ?? '');
 
-        return str_starts_with($routeName, 'api.journal-entries.')
+        return $request->routeIs('api.contacts.upsert', 'api.customers.upsert', 'api.invoices.upsert')
+            || str_starts_with($routeName, 'api.journal-entries.')
             || $routeName === 'api.journal-entries.store'
             || $routeName === 'api.bank-accounts.import-camt053'
             || in_array($routeName, [

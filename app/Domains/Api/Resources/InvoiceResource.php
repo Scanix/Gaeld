@@ -15,6 +15,8 @@ class InvoiceResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'external_source' => $this->external_source,
+            'external_id' => $this->external_id,
             'id' => $this->id,
             'number' => $this->number,
             'status' => $this->status->value,
@@ -30,6 +32,9 @@ class InvoiceResource extends JsonResource
             'currency' => $this->currency,
             'notes' => $this->notes,
             'payment_terms' => $this->payment_terms,
+            'customer_reference' => $this->customer_reference,
+            'purchase_order_reference' => $this->purchase_order_reference,
+            'delivery_reference' => $this->delivery_reference,
             'amount_paid' => $this->amountPaid(),
             'amount_due' => $this->amountDue(),
             'lines' => InvoiceLineResource::collection($this->whenLoaded('lines')),

@@ -63,6 +63,48 @@ class InvoicePdfRendererTest extends TestCase
         $this->assertEquals(['x' => 120.0, 'y' => 50.0], $tcpdf->positions[1]);
     }
 
+    public function test_prints_supplied_commercial_references_with_the_invoice_locale(): void
+    {
+        $invoice = new Invoice([
+            'issue_date' => '2026-11-23',
+            'customer_reference' => 'DEPT-17',
+            'purchase_order_reference' => 'PO-23',
+            'delivery_reference' => 'SHIP-12',
+        ]);
+        $invoice->setRelation('customer', null);
+        $invoice->setAttribute('external_id', 'SYNC-ONLY-123');
+        $organization = new Organization(['name' => 'Sender GmbH']);
+        $pdf = new class extends TCPDF
+        {
+            /** @var list<string> */
+            public array $printed = [];
+
+            public function MultiCell($w, $h, $txt, $border = 0, $align = 'J', $fill = false, $ln = 1, $x = null, $y = null, $reseth = true, $stretch = 0, $ishtml = false, $autopadding = true, $maxh = 0, $valign = 'T', $fitcell = false)
+            {
+                $this->printed[] = (string) $txt;
+
+                return parent::MultiCell($w, $h, $txt, $border, $align, $fill, $ln, $x, $y, $reseth, $stretch, $ishtml, $autopadding, $maxh, $valign, $fitcell);
+            }
+        };
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $renderer = app(InvoicePdfRenderer::class);
+        foreach (['de', 'en', 'fr', 'it'] as $locale) {
+            $pdf->AddPage();
+            $pdf->printed = [];
+            $renderer->setLocale($locale)->renderInvoiceHeader($pdf, $invoice, $organization);
+            foreach (['customer_reference', 'purchase_order_reference', 'delivery_reference'] as $field) {
+                $this->assertContains(__('app.pdf_'.$field, [], $locale).': '.$invoice->getAttribute($field), $pdf->printed);
+            }
+            $this->assertStringNotContainsString('SYNC-ONLY-123', implode(' ', $pdf->printed));
+        }
+        $invoice->delivery_reference = null;
+        $pdf->AddPage();
+        $pdf->printed = [];
+        $renderer->setLocale('en')->renderInvoiceHeader($pdf, $invoice, $organization);
+        $this->assertStringNotContainsString('Delivery reference', implode(' ', $pdf->printed));
+    }
+
     public function test_constrains_a_portrait_logo_before_rendering_the_sender_address(): void
     {
         Storage::fake('local');

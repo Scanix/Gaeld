@@ -2,6 +2,7 @@
 
 namespace App\Domains\Api\Requests;
 
+use App\Domains\Api\Support\ExternalReference;
 use App\Domains\Contacts\Enums\ContactType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -19,6 +20,7 @@ class ContactApiRequest extends FormRequest
     public function rules(): array
     {
         return [
+            ...ExternalReference::rules($this),
             'type' => ['nullable', Rule::in(array_column(ContactType::cases(), 'value'))],
             'name' => [$this->isMethod('POST') ? 'required' : 'sometimes', 'string', 'max:255'],
             'salutation' => ['nullable', 'string', 'max:50'],

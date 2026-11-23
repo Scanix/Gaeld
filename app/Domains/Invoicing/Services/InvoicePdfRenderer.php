@@ -2,6 +2,7 @@
 
 namespace App\Domains\Invoicing\Services;
 
+use App\Domains\Invoicing\DTOs\InvoicePayloadData;
 use App\Domains\Invoicing\Enums\InvoiceLineType;
 use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Enums\InvoiceType;
@@ -181,6 +182,13 @@ class InvoicePdfRenderer
         $metaLines[] = $this->t('pdf_currency').': '.($invoice->currency ?? 'CHF');
 
         $tcpdf->Cell(0, 5, implode('    ', $metaLines), 0, 1);
+
+        foreach (InvoicePayloadData::COMMERCIAL_REFERENCE_FIELDS as $field) {
+            $reference = $invoice->getAttribute($field);
+            if (is_string($reference) && $reference !== '') {
+                $tcpdf->MultiCell(0, 4, $this->t('pdf_'.$field).': '.$reference, 0, 'L');
+            }
+        }
 
         if ($invoice->qr_reference) {
             $tcpdf->SetFont('Helvetica', '', 8);

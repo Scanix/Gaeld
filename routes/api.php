@@ -9,6 +9,7 @@ use App\Domains\Api\Controllers\ContactApiController;
 use App\Domains\Api\Controllers\ExpenseApiController;
 use App\Domains\Api\Controllers\InvoiceApiController;
 use App\Domains\Api\Controllers\InvoicePdfApiController;
+use App\Domains\Api\Controllers\InvoiceReferenceDataApiController;
 use App\Domains\Api\Controllers\JournalEntryApiController;
 use App\Domains\Api\Controllers\OrgTokenController;
 use App\Domains\Api\Controllers\WebhookApiController;
@@ -37,7 +38,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/', ApiInfoController::class)->name('api.info');
 });
 
-Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOrgTokenActivity::class, 'feature:api_access', 'throttle:api'])->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum', 'api-org', 'feature:api_access', 'throttle:api', LogOrgTokenActivity::class, HandleApiIdempotency::class])->prefix('v1')->group(function () {
 
     // Personal token management (user's own tokens)
     Route::get('/tokens', [ApiTokenController::class, 'index'])->name('api.tokens.index');
@@ -50,10 +51,15 @@ Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOr
     Route::delete('/org-tokens/{token}', [OrgTokenController::class, 'destroy'])->name('api.org-tokens.destroy');
 
     // Reference data
+    Route::get('/vat-rates', [InvoiceReferenceDataApiController::class, 'vatRates'])->name('api.vat-rates.index');
+    Route::get('/vat-rates/{vatRate}', [InvoiceReferenceDataApiController::class, 'vatRate'])->whereUuid('vatRate')->name('api.vat-rates.show');
+    Route::get('/invoice-catalog-items', [InvoiceReferenceDataApiController::class, 'catalogItems'])->name('api.invoice-catalog-items.index');
+    Route::get('/invoice-catalog-items/{catalogItem}', [InvoiceReferenceDataApiController::class, 'catalogItem'])->whereUuid('catalogItem')->name('api.invoice-catalog-items.show');
     Route::get('/meta/abilities', [ApiTokenController::class, 'abilities'])->name('api.meta.abilities');
     Route::get('/meta/webhook-events', [ApiTokenController::class, 'webhookEvents'])->name('api.meta.webhook-events');
 
     // Invoices
+    Route::post('/invoices/upsert', [InvoiceApiController::class, 'upsert'])->name('api.invoices.upsert');
     Route::apiResource('invoices', InvoiceApiController::class)->names([
         'index' => 'api.invoices.index',
         'show' => 'api.invoices.show',
@@ -86,6 +92,8 @@ Route::middleware(['auth:sanctum', 'api-org', HandleApiIdempotency::class, LogOr
     Route::post('/expenses/{expense}/cancel', [ExpenseApiController::class, 'cancel'])->name('api.expenses.cancel');
 
     // Contacts
+    Route::post('/contacts/upsert', [ContactApiController::class, 'upsert'])->name('api.contacts.upsert');
+    Route::post('/customers/upsert', [ContactApiController::class, 'upsert'])->name('api.customers.upsert');
     Route::apiResource('contacts', ContactApiController::class)->names([
         'index' => 'api.contacts.index',
         'show' => 'api.contacts.show',

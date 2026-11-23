@@ -17,13 +17,31 @@ class UpdateInvoiceAction
         private SyncInvoiceLinesAction $syncInvoiceLines,
     ) {}
 
-    public function execute(Invoice $invoice, UpdateInvoiceData $data): Invoice
+    public function execute(Invoice $invoice, UpdateInvoiceData $data, bool $syncLines = true): Invoice
+    {
+        if ($data->commercialReferences === []) {
+            return $this->updateDraft($invoice, $data, $syncLines);
+        }
+
+        return $invoice->getConnection()->transaction(function () use ($invoice, $data, $syncLines) {
+            $locked = Invoice::query()->where('organization_id', $invoice->organization_id)->lockForUpdate()->findOrFail($invoice->id);
+
+            if ($locked->archived_at !== null) {
+                throw new InvalidInvoiceStateException('Archived invoices cannot be updated.');
+            }
+
+            return $this->updateDraft($locked, $data, $syncLines);
+        });
+    }
+
+    private function updateDraft(Invoice $invoice, UpdateInvoiceData $data, bool $syncLines): Invoice
     {
         if (! $invoice->status->isEditable()) {
             throw new InvalidInvoiceStateException('Only draft invoices can be updated.');
         }
 
         $invoiceData = [
+            ...($data->externalSource !== null ? ['external_source' => $data->externalSource, 'external_id' => $data->externalId] : []),
             'customer_id' => $data->customerId,
             'number' => $data->number,
             'issue_date' => $data->issueDate,
@@ -31,6 +49,7 @@ class UpdateInvoiceAction
             'currency' => $data->currency,
             'notes' => $data->notes,
             'payment_terms' => $data->paymentTerms,
+            ...$data->commercialReferences,
         ];
 
         $organizationId = $invoice->getAttribute('organization_id');
@@ -51,6 +70,10 @@ class UpdateInvoiceAction
         }
 
         $invoice->update($invoiceData);
+
+        if (! $syncLines) {
+            return $invoice->load('lines');
+        }
 
         if ($data->taxTreatment->appliesSwissVat()) {
             $this->syncInvoiceLines->replace($invoice, $data->lines);

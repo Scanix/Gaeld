@@ -2,6 +2,7 @@
 
 namespace App\Domains\Api\Requests;
 
+use App\Domains\Api\Support\ExternalReference;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Invoicing\Enums\InvoiceTaxTreatment;
 use App\Domains\Invoicing\Models\Invoice;
@@ -25,6 +26,7 @@ class UpdateInvoiceApiRequest extends FormRequest
         $orgId = $org->isBound() ? $org->id() : 0;
 
         return [
+            ...ExternalReference::rules($this),
             'customer_id' => [
                 'sometimes',
                 'uuid',
@@ -62,6 +64,9 @@ class UpdateInvoiceApiRequest extends FormRequest
             ],
             'notes' => 'nullable|string',
             'payment_terms' => 'nullable|string',
+            'customer_reference' => ['nullable', 'string', 'max:120'],
+            'purchase_order_reference' => ['nullable', 'string', 'max:120'],
+            'delivery_reference' => ['nullable', 'string', 'max:120'],
             'lines' => 'sometimes|array|min:1',
             'lines.*.description' => 'required|string',
             'lines.*.quantity' => 'required|numeric|min:0.01',

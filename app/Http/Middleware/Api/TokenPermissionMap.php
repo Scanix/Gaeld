@@ -4,11 +4,13 @@ namespace App\Http\Middleware\Api;
 
 use App\Domains\Accounting\Models\Account;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Api\Models\Webhook;
 use App\Domains\Banking\Models\BankAccount;
 use App\Domains\Contacts\Models\Contact;
 use App\Domains\Expenses\Models\Expense;
 use App\Domains\Invoicing\Models\Invoice;
+use App\Domains\Invoicing\Models\InvoiceCatalogItem;
 use App\Domains\Organizations\Enums\Permission;
 use App\Domains\Organizations\Models\Organization;
 
@@ -140,6 +142,7 @@ final class TokenPermissionMap
                 'view' => Permission::InvoicingView,
                 'create' => Permission::InvoicingCreate,
                 'update' => Permission::InvoicingEdit,
+                'editExternalReference' => Permission::InvoicingEdit,
                 'delete' => Permission::InvoicingDelete,
                 'finalize' => Permission::InvoicingFinalize,
                 'recordPayment' => Permission::InvoicingRecordPayment,
@@ -160,6 +163,14 @@ final class TokenPermissionMap
             Account::class => [
                 'viewAny' => Permission::AccountingView,
                 'view' => Permission::AccountingView,
+            ],
+            VatRate::class => [
+                'viewAny' => Permission::AccountingView,
+                'view' => Permission::AccountingView,
+            ],
+            InvoiceCatalogItem::class => [
+                'viewAny' => Permission::InvoicingView,
+                'view' => Permission::InvoicingView,
             ],
             JournalEntry::class => [
                 'viewAny' => Permission::AccountingView,

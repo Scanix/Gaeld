@@ -15,6 +15,18 @@ updates:
       - "php"
     commit-message:
       prefix: "deps(composer)"
+    groups:
+      composer-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      composer-compatible:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # npm (Vite/frontend assets)
   - package-ecosystem: "npm"
@@ -28,6 +40,18 @@ updates:
       - "javascript"
     commit-message:
       prefix: "deps(npm)"
+    groups:
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      npm-compatible:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
@@ -41,3 +65,11 @@ updates:
       - "ci"
     commit-message:
       prefix: "deps(actions)"
+    groups:
+      actions-compatible:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"

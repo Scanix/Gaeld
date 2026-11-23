@@ -5,6 +5,12 @@ GitLab CE mirror, and the private Enterprise Edition (EE) plugin. It prepares
 release commits and commands locally; it does not push or create tags by
 itself.
 
+## v3.10.0 integration API
+
+Apply the new nullable contact and invoice fields with the normal Laravel migrations. Existing invoices and stored archive documents retain their original data. Review the draft-invoice and soft-delete rules before switching an integration to the upsert routes. Customers migrating an existing integration can continue using the original create and update endpoints.
+
+Run the integration journey on the release commit with the upgraded dependencies. It creates a contact, reads catalogue and VAT defaults, creates and updates a draft, downloads a Swiss QR invoice and verifies all four signed invoice events. Record the exact CE and EE revisions, full test results, production build, package-boundary checks, dependency audits and code/secret scan results with the published artifacts.
+
 ## v3.9.0 MCP and Accounting Release
 
 This release includes the changes committed on public `main` after `v3.8.28`,
