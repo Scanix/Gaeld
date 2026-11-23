@@ -53,6 +53,32 @@ jobs:
           docker run --rm --platform linux/arm64 --network none --entrypoint tar "$APP" --hard-dereference -czhf - -C /var/www/html . > "$RUNNER_TEMP/exported-for-diagnostic.tar.gz"
           gh release download v3.9.0 --repo Scanix/Gaeld --pattern gaeld-ce-v3.9.0.tar.gz --dir "$RUNNER_TEMP"
           test "$(sha256sum "$RUNNER_TEMP/gaeld-ce-v3.9.0.tar.gz" | cut -d' ' -f1)" = "$BASELINE_SHA"
+          python3 - <<'PYIN'
+          import json, os, subprocess
+          for variable in ('APP','WEB','PG','REDIS'):
+              ref=os.environ[variable]
+              def fetch(*args):return json.loads(subprocess.check_output(['docker',*args]))
+              index=fetch('buildx','imagetools','inspect',ref,'--raw')
+              children=[m['digest'] for m in index['manifests'] if m.get('platform',{}).get('os')=='linux' and m['platform'].get('architecture')=='arm64']
+              assert len(children)==1
+              child=fetch('buildx','imagetools','inspect',ref.partition('@')[0]+'@'+children[0],'--raw')
+              local=fetch('image','inspect',ref)[0]
+              assert local['Os']=='linux' and local['Architecture']=='arm64' and local['Id']==child['config']['digest']
+          PYIN
+          mkdir "$RUNNER_TEMP/native-cli"
+          export QA_REAL_DOCKER="$(command -v docker)"
+          cat > "$RUNNER_TEMP/native-cli/docker" <<'PYWRAPPER'
+          #!/usr/bin/env python3
+          import os,sys
+          args=sys.argv[1:]
+          if '--platform' in args and (args[:2]==['image','inspect'] or args[:1]==['save']):
+              i=args.index('--platform')
+              assert args[i+1]=='linux/arm64'
+              del args[i:i+2]
+          os.execv(os.environ['QA_REAL_DOCKER'],[os.environ['QA_REAL_DOCKER'],*args])
+          PYWRAPPER
+          chmod +x "$RUNNER_TEMP/native-cli/docker"
+          export PATH="$RUNNER_TEMP/native-cli:$PATH"
           df -h "$RUNNER_TEMP" > "$RUNNER_TEMP/diagnostic/free-before-adoption.txt"
           python3 candidate/tests/distribution/adoption_rehearsal.py --candidate "$PWD/candidate" --version "$VERSION" --platform linux/arm64 --app-image "$APP" --web-image "$WEB" --postgres-image "$PG" --redis-image "$REDIS" --baseline-version 3.9.0 --baseline-image gaeld-native-legacy:3.9.0-arm64 --baseline-archive "$RUNNER_TEMP/gaeld-ce-v3.9.0.tar.gz" --baseline-sha256 "$BASELINE_SHA" --source-artifact "$RUNNER_TEMP/exported-for-diagnostic.tar.gz" --report "$RUNNER_TEMP/diagnostic/adoption.json"
       - name: Record final runner capacity
