@@ -53,8 +53,9 @@ def main():
     required = {(previous, platform, 'git') for previous in allowed for platform in ('linux/amd64', 'linux/arm64')}
     if not required.issubset(observed):
         raise ValueError('The adoption matrix is missing a supported Git baseline or Docker architecture.')
-    if not any(kind == 'archive' for _, _, kind in observed):
-        raise ValueError('A published source-archive adoption rehearsal is required.')
+    required.update(('3.9.0', platform, 'archive') for platform in ('linux/amd64', 'linux/arm64'))
+    if observed != required or len(evidence) != len(required):
+        raise ValueError('The published v3.9.0 archive must pass on each architecture, with one receipt per required route.')
     compatible_ee = json.loads(args.compatible_ee_versions)
     if not isinstance(compatible_ee, list) or not all(re.fullmatch(r'\d+\.\d+\.\d+(?:-rc\.\d+)?', item) for item in compatible_ee):
         raise ValueError('EE versions must be exact')

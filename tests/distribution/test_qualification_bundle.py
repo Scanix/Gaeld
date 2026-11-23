@@ -22,7 +22,7 @@ class QualificationBundleTest(unittest.TestCase):
             arguments = (root, version, commit, "refs/heads/release/v" + version, "1234", "1", images)
             initial = build_inventory(*arguments, source_only=True)
             self.assertEqual({source.name}, set(initial["files"]))
-            for name in ("provenance.json", "sbom.spdx.json"):
+            for name in ("provenance.json", "sbom.spdx.json", "native-runtime.json"):
                 (root / name).write_text("{}")
             inventory = build_inventory(*arguments)
             self.assertEqual(initial["candidate_images"], inventory["candidate_images"])

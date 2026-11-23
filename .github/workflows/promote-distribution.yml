@@ -54,8 +54,9 @@ jobs:
           name=$(jq -r .name "$RUNNER_TEMP/artifact.json")
           prefix="managed-ce-$RELEASE_VERSION-$run_id-"
           [[ "$name" == "$prefix"* ]]
-          attempt=${name#"$prefix"}
-          [[ "$attempt" =~ ^[1-9][0-9]*$ ]]
+          suffix=${name#"$prefix"}
+          [[ "$suffix" =~ ^([1-9][0-9]*)(-qualified-[1-9][0-9]*)?$ ]]
+          attempt=${BASH_REMATCH[1]}
           expected=$(jq -r '.digest' "$RUNNER_TEMP/artifact.json")
           [[ "$expected" =~ ^sha256:[a-f0-9]{64}$ ]]
           gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip" > "$RUNNER_TEMP/qualified.zip"

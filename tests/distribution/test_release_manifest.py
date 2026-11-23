@@ -34,7 +34,8 @@ class ReleaseManifestTest(unittest.TestCase):
                        'checks': dict.fromkeys(CHECKS, True)}
             receipts = [dict(receipt, baseline_version=previous, source_kind='git', platform=arch)
                         for previous in SAIL_RELEASES for arch in ('linux/amd64', 'linux/arm64')]
-            receipts.append(dict(receipts[0], source_kind='archive'))
+            receipts.extend(dict(receipt, baseline_version='3.9.0', source_kind='archive', platform=arch)
+                            for arch in ('linux/amd64', 'linux/arm64'))
             (root / 'adoption.json').write_text(json.dumps(receipts))
             command = [sys.executable, str(BUILDER), '--version', '3.11.0-rc.2', '--commit', 'a' * 40,
                        '--source', str(root / 'source.tar.gz'), '--allowed-from', json.dumps(SAIL_RELEASES),
@@ -56,6 +57,10 @@ class ReleaseManifestTest(unittest.TestCase):
             result = subprocess.run(command, capture_output=True, cwd=root)
             self.assertNotEqual(0, result.returncode)
             self.assertIn(b'missing a supported Git baseline', result.stderr)
+            (root / 'adoption.json').write_text(json.dumps(receipts[:-1]))
+            result = subprocess.run(command, capture_output=True, cwd=root)
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn(b'archive must pass on each architecture', result.stderr)
             receipts[0]['checks']['restore'] = False
             (root / 'adoption.json').write_text(json.dumps(receipts))
             result = subprocess.run(command, capture_output=True, cwd=root)
