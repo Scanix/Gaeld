@@ -30,11 +30,12 @@ the identity is never included in those backups.
 
 ## Install
 
-The `gaeld` entry point and `scripts/distribution` must remain together. Replace
-the example version with the exact approved release; floating tags are refused.
+Keep the `gaeld` entry point and `scripts/distribution` together. Set
+`GAELD_RELEASE_VERSION` to the exact approved release number, without the
+leading `v`, before running either installation or adoption.
 
 ```sh
-./gaeld install --to 3.11.0-rc.2 --mode docker --root /srv/gaeld \
+./gaeld install --to "${GAELD_RELEASE_VERSION:?Set GAELD_RELEASE_VERSION}" --mode docker --root /srv/gaeld \
   --trust-key /trusted/gaeld-release.pub \
   --backup-recipient AGE_RECIPIENT \
   --identity-file /secure/gaeld-recovery.key
@@ -72,8 +73,8 @@ The installer does not publish a server directly to the internet.
 The adoption command recognizes clean, exactly tagged CE Sail installations at v3.8.28, v3.9.0 and v3.10.0. The target's signed manifest must include the installed version in its tested upgrade paths. Keep a copy of the release verification key and recovery identity outside both installations.
 
 ```sh
-python3 scripts/distribution/adopt.py \
-  --source /existing/gaeld-ce --root /srv/gaeld --to 3.11.0-rc.2 \
+./gaeld adopt \
+  --source /existing/gaeld-ce --root /srv/gaeld --to "${GAELD_RELEASE_VERSION:?Set GAELD_RELEASE_VERSION}" \
   --trust-key /trusted/gaeld-release.pub \
   --backup-recipient AGE_RECIPIENT \
   --identity-file /secure/gaeld-recovery.key
