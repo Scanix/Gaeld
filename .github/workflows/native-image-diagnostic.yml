@@ -18,18 +18,18 @@ jobs:
           - {runner: ubuntu-24.04, arch: amd64, machine: x86_64}
           - {runner: ubuntu-24.04-arm, arch: arm64, machine: aarch64}
     env:
-      CANDIDATE: f57fa65579bd1cf0c01234f6d63aac434b750a8b
-      VERSION: 3.11.0-rc.3
-      APP: ghcr.io/scanix/gaeld@sha256:ec72a043699262042cad4e6228502524b187d5bf71b9875cbf3922c38eb95d35
-      WEB: ghcr.io/scanix/gaeld-web@sha256:a0ee03c74022025d50de4b6d8ca56724f4965fa458337d429b993b010721adad
-      PG: docker.io/library/postgres@sha256:e8a07d2c7579b038938cdba6c539e580e5001caf9ea203d397b5cc83e76bd938
-      REDIS: docker.io/library/redis@sha256:8da19c7399dca900c6822a1cf30f9d2285585e2c4b457ff4095b0f4500054d3f
+      CANDIDATE: 789fb02ecdbad2339794f2b655c3fd7f2f0e0098
+      VERSION: 3.11.0-rc.4
+      APP: ghcr.io/scanix/gaeld@sha256:ab561a46b863751ebc4472c004def452d65478e21c011467c6790fd1fb39edd4
+      WEB: ghcr.io/scanix/gaeld-web@sha256:509554d79693992f7a59a0815e934cb5d13ef13439d18489e5072b0d60c32509
+      PG: docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175
+      REDIS: docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe
       NATIVE_ARCH: ${{ matrix.arch }}
       NATIVE_MACHINE: ${{ matrix.machine }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: f57fa65579bd1cf0c01234f6d63aac434b750a8b
+          ref: 789fb02ecdbad2339794f2b655c3fd7f2f0e0098
           persist-credentials: false
       - name: Verify native CPU and four immutable images
         run: |
