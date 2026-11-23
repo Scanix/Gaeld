@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
 use ZipArchive;
@@ -149,6 +150,61 @@ class ArchivePackageTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Required original document is missing');
         $service->prepare($package);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function materialChangesAfterMissingOriginal(): array
+    {
+        return [
+            'recovered original' => ['recovery'],
+            'changed accounts' => ['accounting'],
+            'operator retry' => ['operator'],
+            'new control issue' => ['control'],
+        ];
+    }
+
+    #[DataProvider('materialChangesAfterMissingOriginal')]
+    public function test_failed_capture_deduplicates_automated_observations_and_preserves_history(string $change): void
+    {
+        $path = 'receipts/'.$this->organization->id.'/missing.pdf';
+        Expense::factory()->for($this->organization)->create(['date' => '2026-09-01', 'receipt_path' => $path]);
+        $service = app(ArchivePackageService::class);
+        $package = $service->request($this->organization, $this->year);
+        $originalHash = $package->snapshot_sha256;
+        $job = new ProcessArchivePackage($package->id);
+        try {
+            $job->handle($service);
+            $this->fail('The missing receipt must remain an incident.');
+        } catch (\RuntimeException $exception) {
+            $this->assertStringContainsString('Required original document is missing:', $exception->getMessage());
+            $job->failed($exception);
+        }
+
+        $this->artisan('archive:check', ['--organization' => $this->organization->id])->assertFailed();
+        $this->assertSame($package->id, $service->request($this->organization, $this->year)->id);
+        $this->assertDatabaseCount('archive_outbox', 1);
+        $this->assertSame('failed', $package->refresh()->state);
+        $this->assertNull($package->manifest_sha256);
+        $this->assertDatabaseHas('archive_access_events', ['action' => 'control.daily', 'organization_id' => $this->organization->id]);
+
+        match ($change) {
+            'recovery' => Storage::disk('local')->put($path, 'recovered receipt'),
+            'accounting' => Account::where('code', '1020')->update(['name' => 'Changed bank account']),
+            'operator' => app(ArchiveAccessLog::class)->record($this->organization->id, $package->id, 'package.retry_requested'),
+            'control' => app(ArchiveAccessLog::class)->record($this->organization->id, null, 'control.daily', metadata: [
+                'issues' => ['Unprepared package: '.$package->id, 'An additional archive issue'],
+            ]),
+        };
+        $next = $service->request($this->organization, $this->year);
+        $this->assertSame(2, $next->version);
+        $this->assertSame($originalHash, $package->refresh()->snapshot_sha256);
+        $this->assertSame('failed', $package->state);
+        $events = array_column($next->snapshot['archive_access_events'], 'action');
+        $this->assertContains('package.failed', $events);
+        $this->assertContains('control.daily', $events);
+        if ($change === 'recovery') {
+            $this->assertSame('prepared', $service->prepare($next)->state);
+        }
     }
 
     public function test_retention_extension_does_not_change_partial_artifacts_during_resume(): void
@@ -289,6 +345,26 @@ class ArchivePackageTest extends TestCase
         }
         $this->expectException(\LogicException::class);
         $package->update(['retention_until' => now()]);
+    }
+
+    public function test_daily_capture_preserves_soft_deleted_organizations_without_restoring_them(): void
+    {
+        $this->travelTo($this->year->start_date->copy()->addDay());
+        $this->organization->delete();
+
+        $this->artisan('archive:capture', [
+            '--organization' => $this->organization->id,
+            '--fiscal-year' => $this->year->id,
+        ])->assertSuccessful();
+
+        $package = ArchivePackage::withoutGlobalScopes()->sole();
+        $this->assertSame($this->organization->id, $package->organization_id);
+        $this->assertSame($this->year->id, $package->fiscal_year_id);
+        $this->assertSame('native', $package->provenance);
+        $this->assertSame('pending', $package->state);
+        $this->assertCount(2, $package->snapshot['transaction_lines']);
+        $this->assertSame($package->id, ArchiveOutbox::query()->sole()->archive_package_id);
+        $this->assertSoftDeleted($this->organization);
     }
 
     public function test_historical_backfill_records_honest_provenance_and_resumes(): void

@@ -23,7 +23,7 @@ class CaptureArchivePackages extends Command
         $years->orderBy('id')->chunkById(100, function ($years) use ($packages, &$failures): void {
             foreach ($years as $year) {
                 try {
-                    $organization = Organization::findOrFail($year->organization_id);
+                    $organization = Organization::withTrashed()->findOrFail($year->organization_id);
                     $package = $packages->request($organization, $year, provenance: $this->option('historical') ? 'historical_backfill' : 'native', archivalPdf: (bool) $this->option('archival-pdf') || (bool) config('archiving.proofs_enabled'));
                     $this->line($package->id.' '.$package->state.' v'.$package->version);
                 } catch (\Throwable $exception) {
