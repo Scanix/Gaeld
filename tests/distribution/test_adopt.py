@@ -95,6 +95,8 @@ class SailAdoptionTest(unittest.TestCase):
         (source / '.pnpm-store/v11/index.db').write_bytes(b'package manager cache')
         (source / 'storage/inertia-devtools').mkdir()
         (source / 'storage/inertia-devtools/01M84HDJSRERMH86GM8SMB3FSG.json').write_text('{}')
+        (source / 'storage/inertia-devtools/_meta.json').write_text('{}')
+        (source / 'storage/inertia-devtools/_last_prune').write_text('0')
         expected = manage.digest(archive)
         self.assertEqual(('3.9.0', self.git('rev-parse', 'HEAD').strip()), adopt.archived_source(source, archive, expected))
         with self.assertRaisesRegex(manage.OperationError, 'checksum'):

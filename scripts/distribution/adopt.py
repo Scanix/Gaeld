@@ -21,7 +21,7 @@ SAIL_RELEASES = ('3.8.28', '3.9.0', '3.10.0')
 
 
 def inertia_debug_record(relative):
-    return re.fullmatch(r'storage/inertia-devtools/[0-9A-HJKMNP-TV-Z]{26}\.json', relative) is not None
+    return re.fullmatch(r'storage/inertia-devtools/(?:[0-9A-HJKMNP-TV-Z]{26}\.json|_meta\.json|_last_prune)', relative) is not None
 
 
 def archived_source(source, archive, expected_digest):
