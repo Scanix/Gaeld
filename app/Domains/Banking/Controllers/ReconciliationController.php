@@ -3,8 +3,10 @@
 namespace App\Domains\Banking\Controllers;
 
 use App\Domains\Accounting\Constants\AccountCode;
+use App\Domains\Accounting\DTOs\JournalEntryAttachmentData;
 use App\Domains\Accounting\Enums\AccountType;
 use App\Domains\Accounting\Models\JournalEntry;
+use App\Domains\Accounting\Models\JournalEntryAttachment;
 use App\Domains\Accounting\Queries\AccountQuery;
 use App\Domains\Banking\Actions\UnreconcileTransactionAction;
 use App\Domains\Banking\Exceptions\AlreadyReconciledException;
@@ -34,6 +36,8 @@ use App\Support\FeatureFlag;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -101,6 +105,8 @@ class ReconciliationController extends Controller
             ->paginate(config('accounting.pagination.reconciliation'))
             ->withQueryString();
 
+        $this->shareJournalAttachments($transactions);
+
         // Only generate suggestions for unreconciled transactions on the current page
         // to avoid N+1 query storms across already-reconciled items
         $unreconciledOnPage = collect($transactions->items())
@@ -160,6 +166,40 @@ class ReconciliationController extends Controller
                 'auto_reconciliation' => FeatureFlag::enabled('auto_reconciliation'),
             ],
         ]);
+    }
+
+    /** @param LengthAwarePaginator<int, BankTransaction> $transactions */
+    private function shareJournalAttachments(LengthAwarePaginator $transactions): void
+    {
+        $entries = $transactions->getCollection()
+            ->map(fn (BankTransaction $transaction) => $transaction->journalEntry)
+            ->filter(fn (?JournalEntry $entry) => $entry !== null && Gate::allows('view', $entry))
+            ->keyBy('id');
+
+        if ($entries->isEmpty()) {
+            return;
+        }
+
+        $attachmentsByEntry = JournalEntryAttachment::query()
+            ->whereIn('journal_entry_id', $entries->keys())
+            ->with('user:id,name')
+            ->oldest()
+            ->orderBy('id')
+            ->get()
+            ->groupBy('journal_entry_id');
+
+        foreach ($transactions->items() as $transaction) {
+            $entry = $transaction->journalEntry;
+
+            if ($entry !== null && $entries->has($entry->id)) {
+                $entry->setAttribute('attachments', JournalEntryAttachmentData::forEntry(
+                    $entry,
+                    $attachmentsByEntry->get($entry->id, []),
+                    false,
+                ));
+                $entry->setAttribute('show_url', route('accounting.journal-entries.show', $entry));
+            }
+        }
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Accounting\Controllers;
 
+use App\Domains\Accounting\DTOs\JournalEntryAttachmentData;
 use App\Domains\Accounting\DTOs\JournalEntryData;
 use App\Domains\Accounting\DTOs\JournalLineData;
 use App\Domains\Accounting\Enums\AccountType;
@@ -22,6 +23,7 @@ use App\Support\PdfExportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -105,8 +107,19 @@ class AccountingController extends Controller
     {
         $this->authorize('view', $journalEntry);
 
+        $attachments = $journalEntry->attachments()->with('user:id,name')->oldest()->orderBy('id')->get();
+
         return Inertia::render('Accounting/JournalEntryShow', [
             'entry' => $journalEntry->load('lines.account'),
+            'attachments' => JournalEntryAttachmentData::forEntry(
+                $journalEntry,
+                $attachments,
+                Gate::allows('withdrawAttachment', $journalEntry),
+            ),
+            'uploadAttachmentUrl' => Gate::allows('addAttachment', $journalEntry)
+                ? route('accounting.journal-entries.attachments.store', $journalEntry)
+                : null,
+            'attachmentMaxSizeKb' => (int) config('uploads.max_size.document'),
         ]);
     }
 

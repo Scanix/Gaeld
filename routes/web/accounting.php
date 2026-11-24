@@ -8,6 +8,7 @@ use App\Domains\Accounting\Controllers\ConsolidationController;
 use App\Domains\Accounting\Controllers\CostCenterController;
 use App\Domains\Accounting\Controllers\ExchangeRateController;
 use App\Domains\Accounting\Controllers\FiscalYearsController;
+use App\Domains\Accounting\Controllers\JournalEntryAttachmentController;
 use App\Domains\Accounting\Controllers\LegalArchiveController;
 use App\Domains\Accounting\Controllers\LettrageController;
 use App\Domains\Accounting\Controllers\OpeningBalancesController;
@@ -107,6 +108,13 @@ Route::put('/accounting/journal-entries/{journalEntry}', [AccountingController::
 Route::post('/accounting/journal-entries/{journalEntry}/post', [AccountingController::class, 'postJournalEntry'])->name('accounting.journal-entries.post');
 Route::post('/accounting/journal-entries/{journalEntry}/reverse', [AccountingController::class, 'reverseJournalEntry'])->name('accounting.journal-entries.reverse');
 Route::delete('/accounting/journal-entries/{journalEntry}', [AccountingController::class, 'destroyJournalEntry'])->name('accounting.journal-entries.destroy');
+Route::prefix('/accounting/journal-entries/{journalEntry}/attachments')->name('accounting.journal-entries.attachments.')
+    ->scopeBindings()->controller(JournalEntryAttachmentController::class)->group(function (): void {
+        Route::post('/', 'store')->name('store');
+        Route::get('/{attachment}', 'show')->name('show');
+        Route::get('/{attachment}/download', 'download')->name('download');
+        Route::delete('/{attachment}', 'destroy')->name('destroy');
+    });
 
 // Opening balances (PR #30)
 Route::get('/accounting/opening-balances', [OpeningBalancesController::class, 'index'])->name('accounting.opening-balances.index');

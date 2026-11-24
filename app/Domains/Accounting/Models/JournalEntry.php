@@ -79,6 +79,20 @@ class JournalEntry extends Model
         return $this->hasMany(TransactionLine::class);
     }
 
+    /** @return HasMany<JournalEntryAttachment, $this> */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(JournalEntryAttachment::class);
+    }
+
+    public function attachmentFiscalYear(bool $lock = false): ?FiscalYear
+    {
+        return FiscalYear::query()->where('organization_id', $this->organization_id)
+            ->forDate($this->date->toDateString())
+            ->when($lock, fn ($query) => $query->lockForUpdate())
+            ->first();
+    }
+
     /** @return BelongsTo<User, $this> */
     public function vatPeriodLockedBy(): BelongsTo
     {
