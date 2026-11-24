@@ -120,6 +120,24 @@ class ArchiveProofTest extends TestCase
         (new OpenSslManifestSigner($runner))->sign($this->directory.'/package/manifest.json', $this->directory.'/package/evidence');
     }
 
+    public function test_timestamp_generation_time_preserves_utc_and_orders_fractions_within_one_second(): void
+    {
+        $verifier = (new StandaloneArchiveVerifier)->verifier();
+        $parse = new \ReflectionMethod($verifier, 'generationTime');
+        $whole = $parse->invoke($verifier, 'Time stamp: Apr  7 04:03:02 2026 GMT');
+        $early = $parse->invoke($verifier, 'Time stamp: Apr  7 04:03:02.000000005 2026 GMT');
+        $late = $parse->invoke($verifier, 'Time stamp: Apr  7 04:03:02.5110 2026 GMT');
+
+        $this->assertSame('2026-04-07T04:03:02+00:00', $whole['utc']);
+        $this->assertSame('2026-04-07T04:03:02.000000005+00:00', $early['utc']);
+        $this->assertSame('2026-04-07T04:03:02.511+00:00', $late['utc']);
+        $this->assertSame($whole['second'], $early['second']);
+        $this->assertTrue(strcmp($whole['utc'], $early['utc']) < 0 && strcmp($early['utc'], $late['utc']) < 0);
+
+        $this->expectException(RuntimeException::class);
+        $parse->invoke($verifier, 'Time stamp: Apr 31 04:03:02.511 2026 GMT');
+    }
+
     public function test_real_timestamp_binds_signature_and_is_reused_without_new_request(): void
     {
         $this->configureProofCertificates($this->directory);

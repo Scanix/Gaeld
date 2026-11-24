@@ -98,6 +98,8 @@ class ProofProfileIntegrationTest extends TestCase
         Http::assertSentCount(1);
         $output = $runner->run([PHP_BINARY, base_path('scripts/archive-verifier/verify.php'), '--directory='.$package, '--signer-trust='.config('archiving.signing.trust_store'), '--tsa-trust='.config('archiving.timestamp.trust_store'), '--signer-fingerprint='.config('archiving.signing.allowed_fingerprint'), '--expected-manifest-sha256='.$result['manifest_sha256'], '--verapdf='.config('archiving.pdfa.verapdf')]);
         $this->assertTrue(json_decode($output, true)['valid']);
+        // An RFC 3161 service may timestamp a renewal more precisely than the original.
+        file_put_contents($this->directory.'/certificates/tsa.cnf', "clock_precision_digits = 6\n", FILE_APPEND);
         $renewal = (new RenewArchiveEvidence($verifier, $authority, $storage))->renew($package, gmdate('Ymd\THis\Z').'-aabbccdd', $manifest['retention_until'], $result['manifest_sha256']);
         $this->assertSame(1, $renewal['verification']['renewals_checked']);
         $this->assertSame($signature, file_get_contents($package.'/evidence/manifest.p7s'));

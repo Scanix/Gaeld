@@ -105,11 +105,11 @@ final class Verifier
         $signer = $this->temporary('gaeld-verify-cert-');
         $chain = $this->temporary('gaeld-verify-chain-');
         try {
-            $this->run([$openssl, 'cms', '-verify', '-binary', '-cades', '-inform', 'DER', '-in', $signature, '-content', $this->path($directory, 'manifest.json'), '-CAfile', $signerTrust, '-no-CApath', '-no-CAstore', '-purpose', 'any', '-attime', (string) $timestamp, '-signer', $signer, '-certsout', $chain, '-out', '/dev/null']);
+            $this->run([$openssl, 'cms', '-verify', '-binary', '-cades', '-inform', 'DER', '-in', $signature, '-content', $this->path($directory, 'manifest.json'), '-CAfile', $signerTrust, '-no-CApath', '-no-CAstore', '-purpose', 'any', '-attime', (string) $timestamp['second'], '-signer', $signer, '-certsout', $chain, '-out', '/dev/null']);
             if (! in_array(openssl_x509_fingerprint($this->read($signer), 'sha256'), $fingerprints, true)) {
                 throw new RuntimeException('The signer identity does not match the external trust policy.');
             }
-            $this->run([$openssl, 'verify', '-CAfile', $signerTrust, '-no-CApath', '-no-CAstore', '-untrusted', $chain, '-CRLfile', $this->path($directory, 'evidence/signer.crl.pem'), '-crl_check_all', '-attime', (string) $timestamp, '-purpose', 'any', $signer]);
+            $this->run([$openssl, 'verify', '-CAfile', $signerTrust, '-no-CApath', '-no-CAstore', '-untrusted', $chain, '-CRLfile', $this->path($directory, 'evidence/signer.crl.pem'), '-crl_check_all', '-attime', (string) $timestamp['second'], '-purpose', 'any', $signer]);
         } finally {
             @unlink($signer);
             @unlink($chain);
@@ -125,9 +125,9 @@ final class Verifier
         if ($reports === 0) {
             throw new RuntimeException('The preservation profile requires validated PDF/A accounting reports.');
         }
-        $renewals = $this->verifyRenewals($directory, $tsaTrust, $timestamp);
+        $renewals = $this->verifyRenewals($directory, $tsaTrust, $timestamp['utc']);
 
-        return ['valid' => true, 'profile' => 'gaeld-sealed-package/1.0.0', 'package_id' => $manifest['package_id'], 'organization_id' => $manifest['organization_id'], 'manifest_sha256' => $this->hash($directory.'/manifest.json'), 'files_checked' => count($manifest['files']), 'pdfa_reports_checked' => $reports, 'timestamp' => gmdate(DATE_ATOM, $timestamp), 'latest_timestamp' => gmdate(DATE_ATOM, $renewals['latest_timestamp']), 'renewals_checked' => $renewals['count'], 'inventory_pinned' => $expectedManifestHash !== null, 'storage_protection_checked' => false, 'latest_evidence_pinned' => false];
+        return ['valid' => true, 'profile' => 'gaeld-sealed-package/1.0.0', 'package_id' => $manifest['package_id'], 'organization_id' => $manifest['organization_id'], 'manifest_sha256' => $this->hash($directory.'/manifest.json'), 'files_checked' => count($manifest['files']), 'pdfa_reports_checked' => $reports, 'timestamp' => $timestamp['utc'], 'latest_timestamp' => $renewals['latest_timestamp'], 'renewals_checked' => $renewals['count'], 'inventory_pinned' => $expectedManifestHash !== null, 'storage_protection_checked' => false, 'latest_evidence_pinned' => false];
     }
 
     /** @param array<string, mixed> $manifest */
@@ -256,16 +256,32 @@ final class Verifier
         return $path;
     }
 
-    private function verifyTimestamp(string $directory, string $prefix, string $source, string $trust): int
+    /** @return array{second: int, utc: string} */
+    private function generationTime(string $description): array
+    {
+        if (! preg_match('/^Time stamp: ([A-Z][a-z]{2} +[0-9]{1,2} [0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.([0-9]+))? ([0-9]{4}) GMT\r?$/m', $description, $parts)) {
+            throw new RuntimeException('The timestamp response has no usable generation time.');
+        }
+        $time = DateTimeImmutable::createFromFormat('!M j H:i:s Y T', $parts[1].' '.$parts[3].' GMT');
+        if ($time === false || DateTimeImmutable::getLastErrors() !== false) {
+            throw new RuntimeException('The timestamp response has an invalid generation time.');
+        }
+        // OpenSSL certificate validation takes whole seconds. Keep the signed fraction
+        // separately for reporting and chronological checks on successive renewals.
+        $fraction = rtrim($parts[2], '0');
+        $utc = $time->format('Y-m-d\TH:i:s').($fraction === '' ? '' : '.'.$fraction).'+00:00';
+
+        return ['second' => $time->getTimestamp(), 'utc' => $utc];
+    }
+
+    /** @return array{second: int, utc: string} */
+    private function verifyTimestamp(string $directory, string $prefix, string $source, string $trust): array
     {
         $openssl = $this->options['openssl'] ?? 'openssl';
         $response = $this->path($directory, $prefix.'.tsr');
         $description = $this->run([$openssl, 'ts', '-reply', '-in', $response, '-text']);
-        if (! preg_match('/^Time stamp: (.+)$/m', $description, $matches)) {
-            throw new RuntimeException('The timestamp response has no usable generation time.');
-        }
-        $time = (new DateTimeImmutable(trim($matches[1])))->getTimestamp();
-        if ($time > time() + 300) {
+        $time = $this->generationTime($description);
+        if ($time['second'] > time() + 300) {
             throw new RuntimeException('The timestamp is in the future.');
         }
         $bundle = $this->temporary('gaeld-verifier-trust-');
@@ -279,7 +295,7 @@ final class Verifier
             if (file_put_contents($bundle, $trustBundle, LOCK_EX) !== strlen($trustBundle)) {
                 throw new RuntimeException('Unable to write the complete timestamp trust bundle.');
             }
-            $arguments = [$openssl, 'ts', '-verify', '-in', $response, '-CAfile', $bundle, '-CApath', $emptyTrust, '-CAstore', $emptyTrust, '-crl_check_all', '-attime', (string) $time];
+            $arguments = [$openssl, 'ts', '-verify', '-in', $response, '-CAfile', $bundle, '-CApath', $emptyTrust, '-CAstore', $emptyTrust, '-crl_check_all', '-attime', (string) $time['second']];
             if (is_file($directory.'/'.$prefix.'.chain.pem')) {
                 $arguments = [...$arguments, '-untrusted', $this->path($directory, $prefix.'.chain.pem')];
             }
@@ -316,8 +332,8 @@ final class Verifier
         }
     }
 
-    /** @return array{count: int, latest_timestamp: int} */
-    private function verifyRenewals(string $directory, string $trust, int $previousTime): array
+    /** @return array{count: int, latest_timestamp: string} */
+    private function verifyRenewals(string $directory, string $trust, string $previousTime): array
     {
         $renewals = glob($directory.'/evidence/renewals/*/index.json') ?: [];
         sort($renewals, SORT_STRING);
@@ -346,8 +362,8 @@ final class Verifier
                 throw new RuntimeException('Renewal does not cover all preceding package evidence.');
             }
             $prefix = substr($index, strlen(rtrim($directory, '/')) + 1, -strlen('index.json')).'renewal';
-            $time = $this->verifyTimestamp($directory, $prefix, $index, $trust);
-            if ($time < $previousTime) {
+            $time = $this->verifyTimestamp($directory, $prefix, $index, $trust)['utc'];
+            if (strcmp($time, $previousTime) < 0) {
                 throw new RuntimeException('Archive evidence renewals are not chronological.');
             }
             $previousTime = $time;
