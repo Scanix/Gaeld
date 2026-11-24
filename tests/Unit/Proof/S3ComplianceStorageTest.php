@@ -47,6 +47,17 @@ class S3ComplianceStorageTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_storage_commands_disable_http_redirects(): void
+    {
+        config(['archiving.s3.endpoint' => 'https://storage.example.test']);
+        // Inspect the real SDK command options without sending archive data.
+        $client = (new \ReflectionMethod(S3ComplianceStorage::class, 'client'))->invoke(new S3ComplianceStorage);
+        foreach (['GetObject', 'PutObject', 'PutObjectRetention'] as $operation) {
+            $options = $client->getCommand($operation)['@http'];
+            $this->assertFalse($options['allow_redirects'] ?? null, $operation);
+        }
+    }
+
     public function test_deposit_retains_versions_checks_bytes_and_publishes_independent_catalog(): void
     {
         $storage = $this->storage();

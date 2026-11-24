@@ -288,7 +288,7 @@ class S3ComplianceStorage implements ProtectedArchiveStorage
         if ($this->client !== null) {
             return $this->client;
         }
-        $options = ['version' => '2006-03-01', 'region' => config('archiving.s3.region'), 'use_path_style_endpoint' => (bool) config('archiving.s3.use_path_style_endpoint'), 'http' => ['connect_timeout' => 10, 'timeout' => 120], 'retries' => 0];
+        $options = ['version' => '2006-03-01', 'region' => config('archiving.s3.region'), 'use_path_style_endpoint' => (bool) config('archiving.s3.use_path_style_endpoint'), 'http' => ['allow_redirects' => false, 'connect_timeout' => 10, 'timeout' => 120], 'retries' => 0];
         if (config('archiving.s3.tls_ca_bundle')) {
             $options['http']['verify'] = EvidenceFiles::required((string) config('archiving.s3.tls_ca_bundle'));
         }
