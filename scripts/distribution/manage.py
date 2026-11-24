@@ -510,9 +510,11 @@ class Installation:
             (self.meta / 'runtime/scheduler').unlink(missing_ok=True)
             self.compose('up', '-d', '--wait', '--wait-timeout', '120', 'app', 'web', 'horizon', 'scheduler', target=target)
         else:
+            self.configure_native_web(target)
             self.runner(['systemctl', 'start', 'gaeld-fpm', 'gaeld-web', 'gaeld-horizon', 'gaeld-scheduler'])
             for service in ('gaeld-fpm', 'gaeld-web', 'gaeld-horizon', 'gaeld-scheduler'):
                 self.runner(['systemctl', 'is-active', '--quiet', service])
+            self.verify_native_socket()
             for attempt in range(10):
                 if Path('/run/gaeld/scheduler').exists():
                     break
@@ -827,6 +829,8 @@ $gaeld_restore_guard$;
         self.artisan('gaeld:doctor')
         if self.state['mode'] == 'docker':
             self.compose('ps', '--all')
+        else:
+            self.verify_native_socket()
 
     def install(self, target, release_url, trust_key, mode, recipient, url, port, environment_file=None):
         if self.state or (self.shared / '.env').exists():
@@ -936,6 +940,38 @@ $gaeld_restore_guard$;
             if expected not in content or properties.get('DropInPaths'):
                 raise OperationError('Native service ' + unit + ' belongs to another installation. Use a dedicated host; existing services will not be overwritten.')
 
+    def configure_native_web(self, target):
+        self.preflight_native_services()
+        release = self.release_dir(target)
+        inventory = read_json(self.meta / 'releases' / (release.name + '.files.json'))
+        configs = {}
+        for name in ('fpm.conf', 'nginx-native.conf'):
+            relative = 'docker/production/' + name
+            content = (release / relative).read_bytes()
+            if hashlib.sha256(content).hexdigest() != inventory.get(relative):
+                raise OperationError('Native service configuration differs from the verified release: ' + name)
+            configs[name] = content.decode().replace('@ROOT@', str(self.root)).replace('@PORT@', str(self.state.get('port', 8080)))
+        fpm, nginx = configs['fpm.conf'], configs['nginx-native.conf']
+
+        # Backups can restore an earlier signed release whose templates use loopback.
+        legacy_listener = 'listen = 127.0.0.1:9074'
+        if legacy_listener in fpm.splitlines():
+            fpm = fpm.replace(legacy_listener, 'listen = /run/gaeld-fpm.sock\nlisten.owner = www-data\nlisten.group = www-data\nlisten.mode = 0600')
+            nginx = nginx.replace('fastcgi_pass 127.0.0.1:9074;', 'fastcgi_pass unix:/run/gaeld-fpm.sock;')
+
+        write_private_file(self.meta / 'fpm.conf', fpm.encode())
+        write_private_file(self.meta / 'nginx-native.conf', nginx.encode())
+
+    def verify_native_socket(self):
+        import pwd
+
+        try:
+            status = Path('/run/gaeld-fpm.sock').lstat()
+        except FileNotFoundError as error:
+            raise OperationError('Managed PHP-FPM socket is missing.') from error
+        if not stat.S_ISSOCK(status.st_mode) or stat.S_IMODE(status.st_mode) != 0o600 or status.st_uid != pwd.getpwnam('www-data').pw_uid:
+            raise OperationError('Managed PHP-FPM socket must be owned by www-data with mode 0600.')
+
     def install_native_services(self):
         self.preflight_native_services()
         self.runner(['id', 'www-data'])
@@ -944,9 +980,6 @@ $gaeld_restore_guard$;
             template = (self.release_dir() / f'docker/production/gaeld-{service}.service').read_text()
             content = template.replace('@ROOT@', str(self.root))
             Path(f'/etc/systemd/system/gaeld-{service}.service').write_text(content)
-        for name in ('fpm.conf', 'nginx-native.conf'):
-            source = self.release_dir() / 'docker/production' / name
-            (self.meta / name).write_text(source.read_text().replace('@ROOT@', str(self.root)).replace('@PORT@', str(self.state['port'])))
         self.runner(['systemctl', 'daemon-reload'])
         self.runner(['systemctl', 'enable', 'gaeld-fpm', 'gaeld-web', 'gaeld-horizon', 'gaeld-scheduler'])
 
