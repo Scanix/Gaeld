@@ -101,7 +101,7 @@ class ReleaseManifestTest(unittest.TestCase):
                      'signoffs': {role: 'a' * 64 for role in ('operations', 'accounting', 'legal')}}
             images = {key: reference + '@sha256:' + 'e' * 64 for key, reference in
                       {'app': 'ghcr.io/scanix/gaeld', 'web': 'ghcr.io/scanix/gaeld-web',
-                       'postgres': 'docker.io/library/postgres', 'redis': 'docker.io/library/redis'}.items()}
+                       'postgres': 'docker.io/library/postgres', 'redis': 'ghcr.io/scanix/gaeld-redis'}.items()}
             receipt = {'ce_commit': current, 'ce_version': '3.13.0', 'boundary_contract': '1.0.0',
                        'status': 'passed', 'ee_versions': [package['version']],
                        'source_sha256': sha256(source), 'candidate_images': images,

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Spreadsheet imports now check every workbook entry before the importer reads it.
 - Native Linux installations connect Nginx to PHP-FPM through a socket restricted to the web service. Start an upgrade from an older native installation with the new signed launcher as described in the [managed installation guide](docs/ce-managed-installation.md).
+- Managed Docker installations use Redis 7.4.12 with the Alpine OpenSSL and zlib updates. Start the update from v3.11.0 or v3.12.0 with the signed v3.12.1 launcher. The new Redis image is published as `ghcr.io/scanix/gaeld-redis` with build provenance.
 - The passkey verifier uses WebAuthn Framework 5.3.13 for registration and sign-in.
 
 ## [3.12.0]

@@ -8,7 +8,7 @@ import re
 import subprocess
 
 from adopt import SAIL_RELEASES
-from manage import EE_ACCEPTANCE_KEY_SHA256, RELEASE_KEY_SHA256, version as version_order
+from manage import EE_ACCEPTANCE_KEY_SHA256, RELEASE_KEY_SHA256, build_image_repositories, supports_managed_redis, version as version_order
 from verify_adoption_receipt import verify as verify_adoption_receipt
 
 
@@ -186,10 +186,8 @@ def main():
     for value in (args.app_digest, args.web_digest, args.postgres_digest, args.redis_digest):
         if not re.fullmatch(r'sha256:[0-9a-f]{64}', value):
             raise ValueError('Every image must use an immutable OCI digest')
-    images = {'app': 'ghcr.io/scanix/gaeld@' + args.app_digest,
-              'web': 'ghcr.io/scanix/gaeld-web@' + args.web_digest,
-              'postgres': 'docker.io/library/postgres@' + args.postgres_digest,
-              'redis': 'docker.io/library/redis@' + args.redis_digest}
+    images = {role: repo + '@' + getattr(args, role + '_digest')
+              for role, repo in build_image_repositories(args.version).items()}
     allowed = json.loads(args.allowed_from)
     compatible_ee = json.loads(args.compatible_ee_versions)
     if not isinstance(compatible_ee, list) or not all(re.fullmatch(r'\d+\.\d+\.\d+(?:-rc\.\d+)?', item) for item in compatible_ee):
@@ -228,6 +226,8 @@ def main():
               'provenance': {'url': base + Path(args.provenance).name, 'sha256': sha256(args.provenance)},
               'sbom': {'url': base + Path(args.sbom).name, 'sha256': sha256(args.sbom)},
               acceptance_name: {'url': base + Path(acceptance_file).name, 'sha256': sha256(acceptance_file)}}
+    if supports_managed_redis(args.version):
+        result['redis_distribution'] = 'gaeld'
     if compatible_ee:
         result['ee_acceptance'] = {'url': base + Path(args.ee_receipt).name, 'sha256': sha256(args.ee_receipt)}
     Path(args.output).write_text(json.dumps(result, sort_keys=True, indent=2) + '\n')

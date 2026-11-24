@@ -70,7 +70,11 @@ jobs:
           gh attestation verify release/qualification-inputs.json --bundle release/qualification-provenance.jsonl "${verification[@]}"
           gh attestation verify "release/gaeld-ce-$RELEASE_VERSION.tar.gz" --bundle release/provenance.json "${verification[@]}"
           BUILD_RUN="$run_id" BUILD_ATTEMPT="$attempt" BUILD_REF="$build_ref" python3 scripts/distribution/qualification_bundle.py verify release
-          for name in app web; do
+          attested_roles=(app web)
+          if jq -e '.candidate_images.redis | startswith("ghcr.io/scanix/gaeld-redis@sha256:")' release/qualification-inputs.json > /dev/null; then
+            attested_roles+=(redis)
+          fi
+          for name in "${attested_roles[@]}"; do
             image=$(jq -r --arg name "$name" '.candidate_images[$name]' release/qualification-inputs.json)
             gh attestation verify "oci://$image" "${verification[@]}"
           done

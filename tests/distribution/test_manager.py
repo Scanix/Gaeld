@@ -189,6 +189,53 @@ class ManagerTest(unittest.TestCase):
         with self.assertRaisesRegex(manager.OperationError, 'test key'):
             manager.verify_release(self.root, release['version'], public, policy)
 
+    @unittest.skipUnless(shutil.which('openssl'), 'OpenSSL is required')
+    def test_redis_transition_preserves_signed_predecessors_and_operator_repositories(self):
+        private = self.root / 'signing.key'
+        public = self.root / 'signing.pub'
+        subprocess.run(['openssl', 'genpkey', '-algorithm', 'ED25519', '-out', private], check=True, capture_output=True)
+        subprocess.run(['openssl', 'pkey', '-in', private, '-pubout', '-out', public], check=True, capture_output=True)
+        def verify(release, policy=None):
+            manager.write_json(self.root / 'release.json', release)
+            subprocess.run(['openssl', 'pkeyutl', '-sign', '-inkey', private, '-rawin', '-in', self.root / 'release.json',
+                            '-out', self.root / 'release.json.sig'], check=True, capture_output=True)
+            return manager.verify_release(self.root, release['version'], public, policy)
+
+        historical = self.release('3.12.0')
+        current = self.release('3.12.1-rc.4')
+        fingerprint = '@sha256:' + 'd' * 64
+        current['images']['redis'] = manager.MANAGED_REDIS_REPOSITORY + fingerprint
+        with patch.object(manager, 'RELEASE_KEY_SHA256', manager.digest(public)):
+            self.assertEqual(historical, verify(historical))
+            with self.assertRaisesRegex(manager.OperationError, 'trust policy'):
+                verify(current)
+            current['redis_distribution'] = 'gaeld'
+            self.assertEqual(current, verify(current))
+            historical['redis_distribution'] = 'gaeld'
+            with self.assertRaisesRegex(manager.OperationError, 'Unsupported Redis'):
+                verify(historical)
+            current['images']['redis'] = 'other.test/redis' + fingerprint
+            with self.assertRaisesRegex(manager.OperationError, 'trust policy'):
+                verify(current)
+
+        policy = {'schema': 1, 'channel': 'rehearsal', 'release_origin': 'https://example.test',
+                  'release_key_sha256': manager.digest(public), 'images': dict(manager.OFFICIAL_IMAGES)}
+        current['channel'] = 'rehearsal'
+        with self.assertRaisesRegex(manager.OperationError, 'must pin'):
+            verify(current, policy)
+        policy['managed_redis_repository'] = 'local.test/gaeld-redis'
+        manager.write_json(self.root / 'policy.json', policy)
+        self.assertEqual(policy, manager.distribution_policy(self.root / 'policy.json'))
+        current['images']['redis'] = policy['managed_redis_repository'] + fingerprint
+        self.assertEqual(current, verify(current, policy))
+        historical.pop('redis_distribution')
+        historical['channel'] = 'rehearsal'
+        self.assertEqual(historical, verify(historical, policy))
+        policy['managed_redis_repository'] = policy['images']['web']
+        manager.write_json(self.root / 'policy.json', policy)
+        with self.assertRaisesRegex(manager.OperationError, 'distinct'):
+            manager.distribution_policy(self.root / 'policy.json')
+
     def test_rejects_insecure_download_without_request(self):
         with patch.object(manager.urllib.request, 'urlopen') as request:
             with self.assertRaises(manager.OperationError):
