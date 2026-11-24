@@ -244,6 +244,19 @@ class GaeldDoctorCommand extends Command
 
     private function checkManagedRuntime(): void
     {
+        // Earlier native launchers call this command before reopening a newly updated release.
+        $root = dirname(base_path(), 2);
+        if (is_file(base_path('release.json')) && is_dir($root.'/.gaeld')
+            && realpath($root.'/current') === base_path()
+            && is_link(base_path('.env')) && readlink(base_path('.env')) === $root.'/shared/.env') {
+            $socket = '/run/gaeld-fpm.sock';
+            $account = function_exists('posix_getpwnam') ? posix_getpwnam('www-data') : false;
+            if (! is_array($account) || ! file_exists($socket) || filetype($socket) !== 'socket'
+                || (fileperms($socket) & 0777) !== 0600 || fileowner($socket) !== $account['uid']) {
+                $this->errors[] = 'Native PHP-FPM requires a private socket. Use the corrected managed launcher and the verified recovery backup before reopening this installation.';
+            }
+        }
+
         if (! config('distribution.managed')) {
             return;
         }
