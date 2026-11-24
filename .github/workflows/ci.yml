@@ -109,19 +109,17 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        include:
-          # Feature tests split into 2 balanced groups to stay under 120s timeout
-          - name: 'Feature (Group 1)'
-            test-paths: 'tests/Feature/Accounting tests/Feature/Migration tests/Feature/Console'
-          - name: 'Feature (Group 2)'
-            test-paths: 'tests/Feature/Organizations tests/Feature/Invoicing tests/Feature/Api tests/Feature/Mcp tests/Feature/EditionBoundary tests/Feature/Reporting tests/Feature/Expenses tests/Feature/Banking tests/Feature/Users tests/Feature/Payroll tests/Feature/Contacts tests/Feature/Auth tests/Feature/Assets tests/Feature/Seeders tests/Feature/Security tests/Feature/Dashboard tests/Feature/Billing tests/Feature/SaasAdmin'
-          # Non-Feature suites
-          - name: 'Unit'
-            test-paths: 'tests/Unit'
-          - name: 'Security'
-            test-paths: 'tests/Security'
-          - name: 'Performance'
-            test-paths: 'tests/Performance'
+        name: ['Feature (Group 1)', 'Feature (Group 2)', Unit, Security, Performance]
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: testing
+      DB_USERNAME: gaeld
+      DB_PASSWORD: password
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
 
     services:
       postgres:
@@ -191,33 +189,59 @@ jobs:
         run: pnpm build
 
       - name: Run migrations
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_DATABASE: testing
-          DB_USERNAME: gaeld
-          DB_PASSWORD: password
-          REDIS_HOST: 127.0.0.1
-          REDIS_PORT: 6379
         run: php artisan migrate --force
 
-      - name: Run ${{ matrix.name }} tests
+      - name: Run ${{ matrix.name }} PHPUnit tests
+        if: matrix.name != 'Performance'
         env:
-          DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_DATABASE: testing
-          DB_USERNAME: gaeld
-          DB_PASSWORD: password
-          REDIS_HOST: 127.0.0.1
-          REDIS_PORT: 6379
+          SUITE: ${{ matrix.name }}
           APP_DEBUG: true
           SESSION_DRIVER: array
-        run: vendor/bin/phpunit --configuration phpunit.xml ${{ matrix.test-paths }}
+        run: |
+          case "$SUITE" in
+            'Feature (Group 1)'|'Feature (Group 2)')
+              paths=()
+              for path in tests/Feature/*; do
+                [[ -d "$path" || "$path" == *Test.php ]] || continue
+                case "${path##*/}" in
+                  Accounting|Migration|Console) group='Feature (Group 1)' ;;
+                  *) group='Feature (Group 2)' ;;
+                esac
+                [[ "$group" != "$SUITE" ]] || paths+=("$path")
+              done
+              ;;
+            *) paths=("tests/$SUITE") ;;
+          esac
+          (( ${#paths[@]} > 0 ))
+          vendor/bin/phpunit --configuration phpunit.xml --fail-on-empty-test-suite --log-junit junit.xml "${paths[@]}"
+
+      - name: Run authenticated k6 dashboard smoke
+        if: matrix.name == 'Performance'
+        env:
+          APP_URL: http://127.0.0.1:18765
+          MAIL_MAILER: array
+          QUEUE_CONNECTION: sync
+        run: |
+          php artisan db:seed --force
+          organization=$(PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" \
+            -XAt -v ON_ERROR_STOP=1 -c "SELECT id FROM organizations WHERE name='Demo GmbH'")
+          test -n "$organization"
+          token=$(php artisan gaeld:token "$organization" --name=ci-dashboard --expires-in-days=1 \
+            --abilities=accounts:read --abilities=customers:read --abilities=invoices:read --abilities=expenses:read --no-ansi)
+          K6_API_TOKEN=$(awk '$1 == "Token" { print $NF }' <<<"$token")
+          test -n "$K6_API_TOKEN"
+          export K6_API_TOKEN
+          php artisan serve --host=127.0.0.1 --port=18765 >"$RUNNER_TEMP/dashboard-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          curl --fail --retry 15 --retry-delay 1 --retry-connrefused "$APP_URL/up"
+          docker run --rm --network host -v "$PWD/tests/Performance:/tests:ro" \
+            -e K6_BASE_URL="$APP_URL" -e K6_API_TOKEN \
+            grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276 \
+            run /tests/dashboard-smoke.js
 
       - name: Upload test results
-        if: always()
+        if: always() && matrix.name != 'Performance'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: test-results-${{ matrix.name }}
