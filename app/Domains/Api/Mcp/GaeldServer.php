@@ -9,8 +9,12 @@ use App\Domains\Api\Mcp\Tools\GetInvoice;
 use App\Domains\Api\Mcp\Tools\GetProfitAndLoss;
 use App\Domains\Api\Mcp\Tools\ListExpenses;
 use App\Domains\Api\Mcp\Tools\ListInvoices;
+use Laravel\Mcp\Enums\ProtocolVersion;
 use Laravel\Mcp\Server;
+use Laravel\Mcp\Server\ServerContext;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Transport\JsonRpcRequest;
+use Laravel\Mcp\Transport\JsonRpcResponse;
 
 class GaeldServer extends Server
 {
@@ -29,4 +33,19 @@ class GaeldServer extends Server
         ListInvoices::class, GetInvoice::class, ListExpenses::class, GetExpense::class,
         GetProfitAndLoss::class, GetBalanceSheet::class, GetAgingReport::class,
     ];
+
+    /** @return iterable<JsonRpcResponse>|JsonRpcResponse */
+    protected function runMethodHandle(JsonRpcRequest $request, ServerContext $context): iterable|JsonRpcResponse
+    {
+        $response = parent::runMethodHandle($request, $context);
+
+        // The public HTTP server already supported this initialize revision before MCP 1.x.
+        if ($request->method === 'initialize' && $request->isLegacy()
+            && $request->get('protocolVersion') === ProtocolVersion::V2024_11_05->value
+            && $response instanceof JsonRpcResponse && isset($response->content['result']['protocolVersion'])) {
+            $response->content['result']['protocolVersion'] = ProtocolVersion::V2024_11_05->value;
+        }
+
+        return $response;
+    }
 }

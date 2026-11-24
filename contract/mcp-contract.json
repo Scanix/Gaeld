@@ -9,6 +9,10 @@
   "license": "AGPL-3.0-or-later",
   "transport": "streamable-http",
   "endpoint": "/mcp",
+  "protocol_versions": {
+    "server/discover": ["2026-07-28"],
+    "initialize": ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"]
+  },
   "authentication": "organization-scoped-personal-bearer-token",
   "installation_flags": ["mcp_access", "api_access"],
   "enabled_by_default": false,
