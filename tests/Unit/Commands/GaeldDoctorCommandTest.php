@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Commands;
 
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -34,6 +35,41 @@ class GaeldDoctorCommandTest extends TestCase
         $this->artisan('gaeld:doctor')
             ->assertSuccessful()
             ->expectsOutputToContain('All checks passed');
+    }
+
+    public function test_legacy_native_launcher_cannot_reopen_an_installation_without_a_private_socket(): void
+    {
+        if (file_exists('/run/gaeld-fpm.sock')) {
+            $this->markTestSkipped('This machine already has a managed native PHP-FPM socket.');
+        }
+
+        $files = new Filesystem;
+        $original = base_path();
+        $root = sys_get_temp_dir().'/gaeld-native-doctor-'.bin2hex(random_bytes(8));
+        $release = $root.'/releases/fixture';
+
+        try {
+            $files->ensureDirectoryExists($root.'/.gaeld', 0700);
+            $files->ensureDirectoryExists($root.'/shared', 0700);
+            $files->ensureDirectoryExists($release, 0700);
+            $files->put($root.'/shared/.env', '');
+            symlink($root.'/shared/.env', $release.'/.env');
+            symlink($release, $root.'/current');
+            $this->app->setBasePath($release);
+            config()->set('distribution.managed', false);
+
+            // A source installation can use shared environment files and a current symlink too.
+            $this->artisan('gaeld:doctor')
+                ->doesntExpectOutputToContain('Use the corrected managed launcher');
+
+            $files->put($release.'/release.json', '{}');
+            $this->artisan('gaeld:doctor')
+                ->assertFailed()
+                ->expectsOutputToContain('Use the corrected managed launcher');
+        } finally {
+            $this->app->setBasePath($original);
+            $files->deleteDirectory($root);
+        }
     }
 
     public function test_warns_when_https_app_url_has_no_trusted_proxies(): void
