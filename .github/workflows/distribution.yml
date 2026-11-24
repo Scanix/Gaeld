@@ -109,6 +109,25 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Redis with the Alpine security updates on both platforms
+        if: needs.metadata.outputs.managed_redis == 'true'
+        id: redis
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: docker/production
+          file: docker/production/redis.Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/scanix/gaeld-redis:candidate-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          provenance: mode=max
+          sbom: true
+      - name: Sign Redis provenance with the release workflow identity
+        if: needs.metadata.outputs.managed_redis == 'true'
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-name: ghcr.io/scanix/gaeld-redis
+          subject-digest: ${{ steps.redis.outputs.digest }}
+          push-to-registry: true
       - name: Build immutable multiarch application with SBOM and provenance
         id: app
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
@@ -133,25 +152,6 @@ jobs:
           tags: ghcr.io/scanix/gaeld-web:candidate-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
           provenance: mode=max
           sbom: true
-      - name: Build Redis with the Alpine security updates on both platforms
-        if: needs.metadata.outputs.managed_redis == 'true'
-        id: redis
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
-        with:
-          context: docker/production
-          file: docker/production/redis.Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ghcr.io/scanix/gaeld-redis:candidate-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
-          provenance: mode=max
-          sbom: true
-      - name: Sign Redis provenance with the release workflow identity
-        if: needs.metadata.outputs.managed_redis == 'true'
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
-        with:
-          subject-name: ghcr.io/scanix/gaeld-redis
-          subject-digest: ${{ steps.redis.outputs.digest }}
-          push-to-registry: true
       - name: Sign application provenance with the release workflow identity
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
