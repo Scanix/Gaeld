@@ -64,6 +64,14 @@ environment and provider secret files as sensitive. APP_KEY is generated only
 for a genuinely new managed Docker installation. An existing missing key must
 be restored, never replaced.
 
+Before updating an existing native v3.11 or v3.12 installation, refresh the operator's
+`gaeld` launcher and its accompanying `scripts/distribution` from the verified
+corrected release. Run update and recovery with this launcher. It regenerates the
+PHP-FPM and nginx configuration, including when restoring an older signed backup.
+The native web server connects to `/run/gaeld-fpm.sock` as `www-data` with mode
+0600. If an old launcher stops during the health check, use the corrected launcher
+to restore the verified pre-update backup, then update again. Run `./gaeld doctor --root /srv/gaeld` to check the installed socket.
+
 The web listener binds to localhost by default. Configure and validate your
 HTTPS reverse proxy or private access solution before granting remote access.
 The installer does not publish a server directly to the internet.
