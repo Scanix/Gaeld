@@ -9,7 +9,7 @@ import unittest
 BUILDER = Path(__file__).resolve().parents[2] / 'scripts/distribution/release_manifest.py'
 sys.path.insert(0, str(BUILDER.parent))
 from adopt import SAIL_RELEASES
-from release_manifest import (HOSTED_CHECKS, PRESERVATION_CHECKS, verify_archive_upgrade,
+from release_manifest import (HOSTED_CHECKS, PRESERVATION_CHECKS, main, verify_archive_upgrade,
                               verify_preservation_acceptance, verify_preservation_candidate)
 from unittest.mock import patch
 from verify_adoption_receipt import CHECKS, sha256
@@ -59,14 +59,20 @@ class ReleaseManifestTest(unittest.TestCase):
             checks = dict.fromkeys(('capture', 'deduplication', 'missing_source_incident', 'retry', 'export',
                                     'access_controls', 'existing_rows_unchanged', 'existing_files_unchanged',
                                     'recovery_rows_unchanged', 'recovery_files_unchanged'), True)
-            row = {'baseline_version': '3.12.0', 'baseline_commit': previous, 'checks': checks}
+            row = {'baseline_version': '3.12.0', 'baseline_commit': previous, 'candidate_version': '3.13.0',
+                   'candidate_commit': current, 'checks': checks}
             package = {'version': '2.10.2', 'commit': 'c' * 40, 'content_sha256': 'd' * 64}
             proof = {'profile': 'gaeld-sealed-package/1.0.0', 'provider': 'gaeld-hosted', 'qualification_only': False,
                      'status': 'passed', 'baseline_commit': previous, 'released_candidate': '3.13.0-rc.6',
                      'evidence_sha256': 'e' * 64, 'provider_profile_sha256': 'f' * 64,
                      'checks': dict.fromkeys(PRESERVATION_CHECKS + HOSTED_CHECKS, True),
                      'signoffs': {role: 'a' * 64 for role in ('operations', 'accounting', 'legal')}}
-            receipt = {'source_sha256': sha256(source), 'candidate_images': {'app': 'current'},
+            images = {key: reference + '@sha256:' + 'e' * 64 for key, reference in
+                      {'app': 'ghcr.io/scanix/gaeld', 'web': 'ghcr.io/scanix/gaeld-web',
+                       'postgres': 'docker.io/library/postgres', 'redis': 'docker.io/library/redis'}.items()}
+            receipt = {'ce_commit': current, 'ce_version': '3.13.0', 'boundary_contract': '1.0.0',
+                       'status': 'passed', 'ee_versions': [package['version']],
+                       'source_sha256': sha256(source), 'candidate_images': images,
                        'baseline_source_sha256': 'd' * 64, 'baseline_images': {'app': 'previous'},
                        'ee_packages': [package], 'archive_upgrades': [dict(row, edition='CE'), dict(
                            row, edition='EE', ee_version=package['version'], ee_commit=package['commit'],
@@ -74,21 +80,41 @@ class ReleaseManifestTest(unittest.TestCase):
 
             def verify(data):
                 target.write_text(json.dumps(data))
-                verify_preservation_acceptance(args, ['3.12.0'], {'app': 'current'}, [package['version']])
+                verify_preservation_acceptance(args, ['3.12.0'], images, [package['version']])
 
             def commit_for_tag(argv, **kwargs):
                 return previous if argv[-1] == 'refs/tags/v3.12.0^{commit}' else current
 
             with (patch('release_manifest.subprocess.check_output', side_effect=commit_for_tag),
                   patch('release_manifest.RELEASE_PUBLIC_KEY', public),
-                  patch('release_manifest.RELEASE_KEY_SHA256', sha256(public))):
+                  patch('release_manifest.RELEASE_KEY_SHA256', sha256(public)),
+                  patch('release_manifest.EE_ACCEPTANCE_KEY_SHA256', sha256(public))):
                 verify(receipt)
+                signature = root / 'receipt.sig'
+                subprocess.run(['openssl', 'pkeyutl', '-sign', '-inkey', key, '-rawin', '-in', target,
+                                '-out', signature], check=True)
+                manifest = root / 'stable-manifest.json'
+                cli = [str(BUILDER), '--version', args.version, '--commit', args.commit, '--source', str(source),
+                       '--provenance', str(source), '--sbom', str(source), '--output', str(manifest),
+                       '--compatible-ee-versions', json.dumps([package['version']]), '--allowed-from', '["3.12.0"]',
+                       '--ee-receipt', str(target), '--ee-receipt-key', str(public),
+                       '--ee-receipt-signature', str(signature), '--baseline-manifest', str(baseline)]
+                for role in images:
+                    cli.extend(['--' + role + '-digest', 'sha256:' + 'e' * 64])
+                with patch.object(sys, 'argv', cli):
+                    main()
+                    self.assertEqual(sha256(target), json.loads(manifest.read_text())['preservation_acceptance']['sha256'])
+                    target.write_bytes(target.read_bytes() + b' ')
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        main()
                 cases = [
                     (dict(receipt, preservation_acceptance=None), 'hosted provider'),
                     (dict(receipt, preservation_acceptance=dict(proof, qualification_only=True)), 'hosted provider'),
                     (dict(receipt, preservation_acceptance=dict(proof, signoffs={'operations': 'a' * 64})), 'sign-offs'),
                     (dict(receipt, preservation_acceptance=dict(proof, checks=dict(proof['checks'], latest_renewal=False))), 'incomplete'),
                     (dict(receipt, baseline_source_sha256='e' * 64), 'signed predecessor'),
+                    (dict(receipt, archive_upgrades=[dict(row, edition='CE', candidate_commit='d' * 40),
+                                                     receipt['archive_upgrades'][1]]), 'stable build'),
                     (dict(receipt, archive_upgrades=[dict(row, edition='CE')]), 'missing an exact'),
                     (dict(receipt, source_sha256='0' * 64), 'exact source'),
                     (dict(receipt, candidate_images={'app': 'different'}), 'exact source'),
@@ -96,10 +122,9 @@ class ReleaseManifestTest(unittest.TestCase):
                 for data, message in cases:
                     with self.subTest(message=message), self.assertRaisesRegex(ValueError, message):
                         verify(data)
-                args.commit = 'c' * 40
-                with self.assertRaisesRegex(ValueError, 'stable source commit'):
+                with (patch('release_manifest.subprocess.check_output', side_effect=[previous, 'c' * 40]),
+                      self.assertRaisesRegex(ValueError, 'stable source commit')):
                     verify(receipt)
-                args.commit = current
                 baseline.write_bytes(baseline.read_bytes() + b' ')
                 with self.assertRaises(subprocess.CalledProcessError):
                     verify(receipt)

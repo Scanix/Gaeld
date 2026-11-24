@@ -128,6 +128,9 @@ def verify_preservation_acceptance(args, allowed, images, ee):
         raise ValueError('Stable publication requires Gäld hosted provider acceptance.')
 
     verify_archive_upgrade(args, allowed, images, ee, predecessor='3.12.0')
+    if any(row.get('candidate_commit') != args.commit or row.get('candidate_version') != args.version
+           for row in receipt['archive_upgrades']):
+        raise ValueError('Each restored installation must identify the stable build.')
     if proof.get('baseline_commit') != json.loads(Path(args.baseline_manifest).read_text())['commit']:
         raise ValueError('Preservation acceptance has a different predecessor.')
     rc = proof.get('released_candidate', '')
