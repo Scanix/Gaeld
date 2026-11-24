@@ -1,0 +1,582 @@
+{
+  "allowed_from": [
+    "3.11.0",
+    "3.12.0"
+  ],
+  "archive_paths": {
+    "3.11.0": {
+      "archive_upgrades": [
+        {
+          "authenticated_http_after_restore": true,
+          "backup_sha256": "f42efd39c7ea38fbceb1e775e535408ce80562706dd8776ffa24fb699ca527d5",
+          "baseline_commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+          "baseline_files": 9,
+          "baseline_rows": 840,
+          "baseline_tables": 67,
+          "baseline_version": "3.11.0",
+          "candidate_commit": "8a6c135eb4a3a2692ad874e868a10add7b844f38",
+          "candidate_version": "3.12.1",
+          "checks": {
+            "access_controls": true,
+            "capture": true,
+            "deduplication": true,
+            "existing_files_unchanged": true,
+            "existing_rows_unchanged": true,
+            "export": true,
+            "missing_source_incident": true,
+            "recovery_files_unchanged": true,
+            "recovery_rows_unchanged": true,
+            "retry": true
+          },
+          "edition": "CE",
+          "elapsed_seconds": 301.6,
+          "operator_policy_sha256": "2720ce091529aed8bfc1fc79ff08b6d33b25e710262f0e07663e56533ad76cf6",
+          "recovery_inventory_sha256": "87c25ab3b4f78527c5fd55dd75e03c35890d6b0caf0fb797f7648676cde823d8",
+          "redis_repository_transition": {
+            "candidate_image": "ghcr.io/scanix/gaeld-redis@sha256:0cfa1df507664a6c4603533aa0444cdf62e0a84707a7772dfc0efe7d52c59724",
+            "candidate_store_sha256": "b4619a19bfbc832680978f028093a93babe4311d828bcd18dc9ee54039491167",
+            "predecessor_image": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+            "predecessor_store_sha256": "b4619a19bfbc832680978f028093a93babe4311d828bcd18dc9ee54039491167",
+            "redis_fixture_sha256": "4db39af0dfcf8a2fcbea726b0bc32560e64c988c25479bf6d372fa0ddf13c9ee",
+            "restored_into_distinct_volumes": true,
+            "restored_store_sha256": "09d78aed0f543ae30b4c1745a3de4419801f44dff983ff4645c5c159aa4a0fc9"
+          },
+          "rehearsal_trust_channel": true,
+          "restored_files": 119,
+          "restored_rows": 1575,
+          "restored_tables": 72,
+          "scheduled_capture_regressions": {
+            "failed_original_scheduled_deduplication": true,
+            "recovered_original_creates_prepared_successor": true,
+            "soft_deleted_native_capture": true,
+            "soft_deleted_outbox_records": 1,
+            "soft_deleted_transaction_lines": 2,
+            "unchanged_failed_recaptures": 2
+          },
+          "separate_empty_restore_database": true,
+          "web_invoice_originals": {
+            "authenticated_create_download": true,
+            "authenticated_replacement_download": true,
+            "first_package_unchanged_after_replacement": true,
+            "first_pdf_in_original_package": true,
+            "first_pdf_sha256": "d650e5dfc9385ed7494e6d0b4647abc6cc4ed092f44fd643893273fdf1e3d5df",
+            "legacy_unlinked_file_preserved": true,
+            "legacy_unlinked_file_sha256": "fd6c3b224f9950966f39941f3d13c3ffe22d0dc765890adb75f2c0d1b571a212",
+            "queued_capture_survived_replacement": true,
+            "replacement_pdf_in_successor_package": true,
+            "replacement_pdf_sha256": "349f25302f987e459e43d5102db63ed79344cf46b48767e4b4ed4bc0a487eaec",
+            "restored_download_and_both_archives": true,
+            "versioned_originals_present_in_successor": true
+          }
+        },
+        {
+          "authenticated_http_after_restore": true,
+          "backup_sha256": "56b97818138464e05045d23e5d894ed20f2852d20f04677af53311ee2fc668aa",
+          "baseline_commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+          "baseline_ee_package": {
+            "commit": "c10fa0ebd3f8811261fe93d1c2bdbb6f83c639d3",
+            "content_sha256": "6c3353309f2521552befc8c2367be0e8649735d96d1866697888c1d72115c98f",
+            "version": "2.10.1"
+          },
+          "baseline_files": 9,
+          "baseline_rows": 875,
+          "baseline_tables": 85,
+          "baseline_version": "3.11.0",
+          "candidate_commit": "8a6c135eb4a3a2692ad874e868a10add7b844f38",
+          "candidate_version": "3.12.1",
+          "checks": {
+            "access_controls": true,
+            "capture": true,
+            "deduplication": true,
+            "existing_files_unchanged": true,
+            "existing_rows_unchanged": true,
+            "export": true,
+            "missing_source_incident": true,
+            "recovery_files_unchanged": true,
+            "recovery_rows_unchanged": true,
+            "retry": true
+          },
+          "edition": "EE",
+          "ee_commit": "e61c2533263084f98aedba31b73fc4af7154887b",
+          "ee_content_sha256": "9d1ba467c613e7ca717aa87467600697cc15434ba69ed851646c1073ab6375d0",
+          "ee_version": "2.10.2",
+          "elapsed_seconds": 327.27,
+          "operator_policy_sha256": "63cbf092fadb10a1fa278e4dec9d44bdf402f30e530f59861bb876ae35d31fab",
+          "recovery_inventory_sha256": "30c5ce51de8bd00d84acc2980c5749a72765a0f121b931ff521ad3cc89177ec6",
+          "redis_repository_transition": {
+            "candidate_image": "ghcr.io/scanix/gaeld-redis@sha256:0cfa1df507664a6c4603533aa0444cdf62e0a84707a7772dfc0efe7d52c59724",
+            "candidate_store_sha256": "6cc5c4efad14bd824663d8d348edd226dd60c9d8a2fa7b090f4890172b976f54",
+            "predecessor_image": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+            "predecessor_store_sha256": "6cc5c4efad14bd824663d8d348edd226dd60c9d8a2fa7b090f4890172b976f54",
+            "redis_fixture_sha256": "9a4f8cdee6f9352f829cbfc36877e45e1a474440f481b57d83396c2a05dcdd6a",
+            "restored_into_distinct_volumes": true,
+            "restored_store_sha256": "a4717cadf507223c92d5e17304c1a5665bf22705ce21fe28ede15421d4efad95"
+          },
+          "rehearsal_trust_channel": true,
+          "restored_files": 119,
+          "restored_rows": 1611,
+          "restored_tables": 90,
+          "scheduled_capture_regressions": {
+            "failed_original_scheduled_deduplication": true,
+            "recovered_original_creates_prepared_successor": true,
+            "soft_deleted_native_capture": true,
+            "soft_deleted_outbox_records": 1,
+            "soft_deleted_transaction_lines": 2,
+            "unchanged_failed_recaptures": 2
+          },
+          "separate_empty_restore_database": true,
+          "web_invoice_originals": {
+            "authenticated_create_download": true,
+            "authenticated_replacement_download": true,
+            "first_package_unchanged_after_replacement": true,
+            "first_pdf_in_original_package": true,
+            "first_pdf_sha256": "d650e5dfc9385ed7494e6d0b4647abc6cc4ed092f44fd643893273fdf1e3d5df",
+            "legacy_unlinked_file_preserved": true,
+            "legacy_unlinked_file_sha256": "fd6c3b224f9950966f39941f3d13c3ffe22d0dc765890adb75f2c0d1b571a212",
+            "queued_capture_survived_replacement": true,
+            "replacement_pdf_in_successor_package": true,
+            "replacement_pdf_sha256": "349f25302f987e459e43d5102db63ed79344cf46b48767e4b4ed4bc0a487eaec",
+            "restored_download_and_both_archives": true,
+            "versioned_originals_present_in_successor": true
+          }
+        }
+      ],
+      "baseline_images": {
+        "app": "ghcr.io/scanix/gaeld@sha256:04cc242f785fcca89d01f34eb44abdc4cc4a9ab1d67d130c413e4c63ef9d0f28",
+        "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+        "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+        "web": "ghcr.io/scanix/gaeld-web@sha256:5a31e9ec07d2d1fdf80e201157f4d11e000e9ee17d618ded077b06c68e63472b"
+      },
+      "baseline_source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+      "published_baseline": {
+        "commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+        "images": {
+          "app": "ghcr.io/scanix/gaeld@sha256:04cc242f785fcca89d01f34eb44abdc4cc4a9ab1d67d130c413e4c63ef9d0f28",
+          "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+          "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+          "web": "ghcr.io/scanix/gaeld-web@sha256:5a31e9ec07d2d1fdf80e201157f4d11e000e9ee17d618ded077b06c68e63472b"
+        },
+        "manifest_sha256": "f439bf064144ce675c6161c4fc891388be9357329e3335701a933a251928c26d",
+        "release_key_sha256": "a8fc25a937ba95210f64d75ae361ce20ed30c828b3712990c958f93224a3653c",
+        "signature_sha256": "cfa64f0d8588865bb23d613a4202cea887ec6cc7f0cedbf711b56777621cb46c",
+        "signed_tag_object": "72c6f90e785ef06e5fb118b353e2c885f7ab6722",
+        "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+        "tag": "v3.11.0",
+        "tag_signature_verified_by_github": true,
+        "version": "3.11.0"
+      },
+      "published_ee_baseline": {
+        "acceptance_sha256": "0c8148935198e30a67de5c84598d2fb80b4f52002fddcd1583e595fa738a9f47",
+        "ce_commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+        "ce_version": "3.11.0",
+        "commit": "c10fa0ebd3f8811261fe93d1c2bdbb6f83c639d3",
+        "content_sha256": "6c3353309f2521552befc8c2367be0e8649735d96d1866697888c1d72115c98f",
+        "key_sha256": "81c9d5e200e21fd0d6f0df020a5be0f97b31215d6237899e29e708fb56bf8f4c",
+        "registry_zip_sha256": "29c46a7927fc9495fc105e17d8ec0173c7011b00140188b5803866e23c06078d",
+        "signature_sha256": "b96393e5dbbf0f4b8bffa105af920ca35ad6363b97450c3e44835d884a92a7ad",
+        "tag_object": "a95bff579d909514dd930f2c5bbe31a3787cf75d",
+        "version": "2.10.1"
+      }
+    },
+    "3.12.0": {
+      "archive_upgrades": [
+        {
+          "authenticated_http_after_restore": true,
+          "backup_sha256": "895b15521eca0f80260c2903f94ef475d2787f51d50246dbe8c900c967452949",
+          "baseline_commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+          "baseline_files": 51,
+          "baseline_rows": 1021,
+          "baseline_tables": 72,
+          "baseline_version": "3.12.0",
+          "candidate_commit": "8a6c135eb4a3a2692ad874e868a10add7b844f38",
+          "candidate_version": "3.12.1",
+          "checks": {
+            "access_controls": true,
+            "capture": true,
+            "deduplication": true,
+            "existing_files_unchanged": true,
+            "existing_rows_unchanged": true,
+            "export": true,
+            "missing_source_incident": true,
+            "recovery_files_unchanged": true,
+            "recovery_rows_unchanged": true,
+            "retry": true,
+            "rollback_login_and_data": true,
+            "rollback_to_predecessor": true
+          },
+          "code_rollback": {
+            "authenticated_http": true,
+            "candidate_redis_image": "ghcr.io/scanix/gaeld-redis@sha256:0cfa1df507664a6c4603533aa0444cdf62e0a84707a7772dfc0efe7d52c59724",
+            "commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+            "database_restore_during_rollback": false,
+            "downloaded_predecessor_and_candidate_originals": true,
+            "frozen_data_sha256": "a6660584ea8a616c6f9f16a7a1aa30536f6e1b4b47d77185dfc8f285ce33c644",
+            "operator_policy_sha256": "33fd802ab465f1bba66cfe73b1065072df69935b36e9d1142076fe46341eda11",
+            "persistent_storage_sha256": "d65f95e1bd6394f36d64d451c93eb48f1f9fb4c78b0e42e9fe6adf4ec93dd5ec",
+            "rollback_redis_image": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+            "running_version": "3.12.0",
+            "same_database_and_redis": true,
+            "shared_data_unchanged": true
+          },
+          "edition": "CE",
+          "elapsed_seconds": 449.09,
+          "managed_installation_path": "managed CE update",
+          "operator_policy_sha256": "33fd802ab465f1bba66cfe73b1065072df69935b36e9d1142076fe46341eda11",
+          "recovery_inventory_sha256": "0b272b23310018796c247a5325197ab97b502e52f5f33e801e9eb9d4b0824f21",
+          "redis_repository_transition": {
+            "candidate_image": "ghcr.io/scanix/gaeld-redis@sha256:0cfa1df507664a6c4603533aa0444cdf62e0a84707a7772dfc0efe7d52c59724",
+            "candidate_store_sha256": "d65f95e1bd6394f36d64d451c93eb48f1f9fb4c78b0e42e9fe6adf4ec93dd5ec",
+            "predecessor_image": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+            "predecessor_store_sha256": "d65f95e1bd6394f36d64d451c93eb48f1f9fb4c78b0e42e9fe6adf4ec93dd5ec",
+            "redis_fixture_sha256": "3297810211d664a0a49a4f2b92ba0b9e3c14aaa6897dd9f88be8aaaf9b3b068b",
+            "restored_into_distinct_volumes": true,
+            "restored_store_sha256": "d2e2ec31254bd1206b42bca8db10578aa7af159df8b885722f646ce220d70d0f",
+            "rollback_store_sha256": "d65f95e1bd6394f36d64d451c93eb48f1f9fb4c78b0e42e9fe6adf4ec93dd5ec"
+          },
+          "rehearsal_trust_channel": true,
+          "restored_files": 161,
+          "restored_rows": 1754,
+          "restored_tables": 72,
+          "scheduled_capture_regressions": {
+            "failed_original_scheduled_deduplication": true,
+            "recovered_original_creates_prepared_successor": true,
+            "soft_deleted_native_capture": true,
+            "soft_deleted_outbox_records": 1,
+            "soft_deleted_transaction_lines": 2,
+            "unchanged_failed_recaptures": 2
+          },
+          "separate_empty_restore_database": true,
+          "web_invoice_originals": {
+            "authenticated_create_download": true,
+            "authenticated_replacement_download": true,
+            "first_package_unchanged_after_replacement": true,
+            "first_pdf_in_original_package": true,
+            "first_pdf_sha256": "d650e5dfc9385ed7494e6d0b4647abc6cc4ed092f44fd643893273fdf1e3d5df",
+            "predecessor_linked_originals": {
+              "both_manifests_verified_after_restore": true,
+              "both_manifests_verified_on_upgraded_runtime": true,
+              "first": {
+                "manifest_sha256": "d555cacf1867b2256eaec08d250d48c9f14cc4fc88b10c72efa04c80a27393e3",
+                "package": "94228def-c727-43a0-b23c-c77997e565c7",
+                "pdf_sha256": "d650e5dfc9385ed7494e6d0b4647abc6cc4ed092f44fd643893273fdf1e3d5df"
+              },
+              "invoice_route": "/invoices/01a20dff-ddbe-7c87-8c1e-2cf500968994",
+              "replacement": {
+                "manifest_sha256": "965e2003496346a26abb2236e40cf75821967aecdccd385a563646c94b00f80a",
+                "package": "77accd20-0e7c-4884-b879-9845e85c96be",
+                "pdf_sha256": "349f25302f987e459e43d5102db63ed79344cf46b48767e4b4ed4bc0a487eaec"
+              },
+              "version": "3.12.0"
+            },
+            "queued_capture_survived_replacement": true,
+            "replacement_pdf_in_successor_package": true,
+            "replacement_pdf_sha256": "349f25302f987e459e43d5102db63ed79344cf46b48767e4b4ed4bc0a487eaec",
+            "restored_download_and_both_archives": true,
+            "versioned_originals_present_in_successor": true
+          }
+        },
+        {
+          "authenticated_http_after_restore": true,
+          "backup_sha256": "0caf46a6076942d18b95b4e6d5f6fb3f00da2256054c38fa63696cac3721d5e8",
+          "baseline_commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+          "baseline_ee_package": {
+            "commit": "e61c2533263084f98aedba31b73fc4af7154887b",
+            "content_sha256": "9d1ba467c613e7ca717aa87467600697cc15434ba69ed851646c1073ab6375d0",
+            "version": "2.10.2"
+          },
+          "baseline_files": 51,
+          "baseline_rows": 1057,
+          "baseline_tables": 90,
+          "baseline_version": "3.12.0",
+          "candidate_commit": "8a6c135eb4a3a2692ad874e868a10add7b844f38",
+          "candidate_version": "3.12.1",
+          "checks": {
+            "access_controls": true,
+            "capture": true,
+            "deduplication": true,
+            "existing_files_unchanged": true,
+            "existing_rows_unchanged": true,
+            "export": true,
+            "missing_source_incident": true,
+            "recovery_files_unchanged": true,
+            "recovery_rows_unchanged": true,
+            "retry": true,
+            "rollback_login_and_data": true,
+            "rollback_to_predecessor": true
+          },
+          "code_rollback": {
+            "authenticated_http": true,
+            "candidate_redis_image": "ghcr.io/scanix/gaeld-redis@sha256:0cfa1df507664a6c4603533aa0444cdf62e0a84707a7772dfc0efe7d52c59724",
+            "commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+            "database_restore_during_rollback": false,
+            "downloaded_predecessor_and_candidate_originals": true,
+            "frozen_data_sha256": "c5b2acdc9e454fc1d471ecd79f4f0ffa45fd1625cc263c954d2b4db4e090c00a",
+            "operator_policy_sha256": "895ea4b66dc4321199ffb22e5c531a502c7d12daf98870e30fc59becb77dbcb2",
+            "persistent_storage_sha256": "7c07a33294dae6801bfacf8075e5581a83235eae8592ff690528d54c35eb277b",
+            "rollback_redis_image": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+            "running_version": "3.12.0",
+            "same_database_and_redis": true,
+            "shared_data_unchanged": true
+          },
+          "edition": "EE",
+          "ee_commit": "e61c2533263084f98aedba31b73fc4af7154887b",
+          "ee_content_sha256": "9d1ba467c613e7ca717aa87467600697cc15434ba69ed851646c1073ab6375d0",
+          "ee_version": "2.10.2",
+          "elapsed_seconds": 459.46,
+          "managed_installation_path": "verified CE staging and private paired activation",
+          "operator_policy_sha256": "895ea4b66dc4321199ffb22e5c531a502c7d12daf98870e30fc59becb77dbcb2",
+          "recovery_inventory_sha256": "02364a285bfc1adf8e756af6eaf06a013a66872d98e167f6bf86f469a2c50299",
+          "redis_repository_transition": {
+            "candidate_image": "ghcr.io/scanix/gaeld-redis@sha256:0cfa1df507664a6c4603533aa0444cdf62e0a84707a7772dfc0efe7d52c59724",
+            "candidate_store_sha256": "7c07a33294dae6801bfacf8075e5581a83235eae8592ff690528d54c35eb277b",
+            "predecessor_image": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+            "predecessor_store_sha256": "7c07a33294dae6801bfacf8075e5581a83235eae8592ff690528d54c35eb277b",
+            "redis_fixture_sha256": "06af83214d3a94af10536aa2d29534b91f76413390ae9999ecf7380494d52a0c",
+            "restored_into_distinct_volumes": true,
+            "restored_store_sha256": "a7485b59ad20ad34d0ac7f010eeafc283e4ccc7212f4fb4d2ece0d7cb87e8789",
+            "rollback_store_sha256": "7c07a33294dae6801bfacf8075e5581a83235eae8592ff690528d54c35eb277b"
+          },
+          "rehearsal_trust_channel": true,
+          "restored_files": 161,
+          "restored_rows": 1791,
+          "restored_tables": 90,
+          "scheduled_capture_regressions": {
+            "failed_original_scheduled_deduplication": true,
+            "recovered_original_creates_prepared_successor": true,
+            "soft_deleted_native_capture": true,
+            "soft_deleted_outbox_records": 1,
+            "soft_deleted_transaction_lines": 2,
+            "unchanged_failed_recaptures": 2
+          },
+          "separate_empty_restore_database": true,
+          "web_invoice_originals": {
+            "authenticated_create_download": true,
+            "authenticated_replacement_download": true,
+            "first_package_unchanged_after_replacement": true,
+            "first_pdf_in_original_package": true,
+            "first_pdf_sha256": "d650e5dfc9385ed7494e6d0b4647abc6cc4ed092f44fd643893273fdf1e3d5df",
+            "predecessor_linked_originals": {
+              "both_manifests_verified_after_restore": true,
+              "both_manifests_verified_on_upgraded_runtime": true,
+              "first": {
+                "manifest_sha256": "a23ad537a5399fef22b7f5cd0426a6b54d17db1d38620e041945819ccfb7de31",
+                "package": "b1ca2ffd-4271-4ea6-94f4-98be35846005",
+                "pdf_sha256": "d650e5dfc9385ed7494e6d0b4647abc6cc4ed092f44fd643893273fdf1e3d5df"
+              },
+              "invoice_route": "/invoices/01a20e2e-b96e-7fba-9574-a302a045ffcd",
+              "replacement": {
+                "manifest_sha256": "908f898d57bbf92057b977bdd387a8a3751a5e1f5cc8db21032f582cacad93ba",
+                "package": "f8c4757a-67b3-4c13-983a-8fdda987f653",
+                "pdf_sha256": "349f25302f987e459e43d5102db63ed79344cf46b48767e4b4ed4bc0a487eaec"
+              },
+              "version": "3.12.0"
+            },
+            "queued_capture_survived_replacement": true,
+            "replacement_pdf_in_successor_package": true,
+            "replacement_pdf_sha256": "349f25302f987e459e43d5102db63ed79344cf46b48767e4b4ed4bc0a487eaec",
+            "restored_download_and_both_archives": true,
+            "versioned_originals_present_in_successor": true
+          }
+        }
+      ],
+      "baseline_images": {
+        "app": "ghcr.io/scanix/gaeld@sha256:dfc2a43a459b91e0b90e339088bc4770b34a7c8f7cb25b6c099f85859080a929",
+        "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+        "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+        "web": "ghcr.io/scanix/gaeld-web@sha256:1d4dd9e11dec0e3934038ab9e437921c21484f0287c254d2c08872b6a8ed5ab9"
+      },
+      "baseline_source_sha256": "5199262223aac7530b176972ab4696bf1b2d25e8e24ac71006fb28586b7d1d2c",
+      "published_baseline": {
+        "commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+        "images": {
+          "app": "ghcr.io/scanix/gaeld@sha256:dfc2a43a459b91e0b90e339088bc4770b34a7c8f7cb25b6c099f85859080a929",
+          "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+          "redis": "docker.io/library/redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+          "web": "ghcr.io/scanix/gaeld-web@sha256:1d4dd9e11dec0e3934038ab9e437921c21484f0287c254d2c08872b6a8ed5ab9"
+        },
+        "manifest_sha256": "fc3f43b83fb09ff47cd948ee929793f688af99362d5174860d494d97196f7eaf",
+        "release_key_sha256": "a8fc25a937ba95210f64d75ae361ce20ed30c828b3712990c958f93224a3653c",
+        "signature_sha256": "869592b660072fa97a7c28fb65aa4ffcc376d35de8d05e27ca1aa4a24851a587",
+        "signed_tag_object": "c0846907d109cf99cc9ea94e1f0ddbaeacca5540",
+        "source_sha256": "5199262223aac7530b176972ab4696bf1b2d25e8e24ac71006fb28586b7d1d2c",
+        "tag": "v3.12.0",
+        "tag_signature_verified_by_github": true,
+        "version": "3.12.0"
+      },
+      "published_ee_baseline": {
+        "acceptance_sha256": "8c5599a61eb4c5c9721781d05d2932e88e290e4157e405eefcfc16dbc8fae343",
+        "ce_commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+        "ce_version": "3.12.0",
+        "commit": "e61c2533263084f98aedba31b73fc4af7154887b",
+        "content_sha256": "9d1ba467c613e7ca717aa87467600697cc15434ba69ed851646c1073ab6375d0",
+        "key_sha256": "81c9d5e200e21fd0d6f0df020a5be0f97b31215d6237899e29e708fb56bf8f4c",
+        "registry_zip_sha256": "a84b32d8d14ace9696a9e7dc9b03872ec8b4be87c153ec616ccb339aa9b8e9ef",
+        "signature_sha256": "d0f36ea2acd7502002e3f651611c36399b9f19f1c2a3bba8202147609fdf1df9",
+        "tag_object": "b2c788476ad5790ab7a608a7a12a4e919dbc3fb8",
+        "version": "2.10.2"
+      }
+    }
+  },
+  "boundary_contract": "1.0.0",
+  "candidate_images": {
+    "app": "ghcr.io/scanix/gaeld@sha256:7c06cd3abf89ffd8ab18844af62d2fc10783972033714982a440e3b0b09ae32c",
+    "postgres": "docker.io/library/postgres@sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175",
+    "redis": "ghcr.io/scanix/gaeld-redis@sha256:0cfa1df507664a6c4603533aa0444cdf62e0a84707a7772dfc0efe7d52c59724",
+    "web": "ghcr.io/scanix/gaeld-web@sha256:9d97d949986a84f5fd6af1e9212b119342c2ea6472ec194d3b325c1ad4a9fb35"
+  },
+  "ce_commit": "8a6c135eb4a3a2692ad874e868a10add7b844f38",
+  "ce_version": "3.12.1",
+  "ee_packages": [
+    {
+      "commit": "e61c2533263084f98aedba31b73fc4af7154887b",
+      "content_sha256": "9d1ba467c613e7ca717aa87467600697cc15434ba69ed851646c1073ab6375d0",
+      "registry_zip_sha256": "a84b32d8d14ace9696a9e7dc9b03872ec8b4be87c153ec616ccb339aa9b8e9ef",
+      "tag_object": "b2c788476ad5790ab7a608a7a12a4e919dbc3fb8",
+      "version": "2.10.2"
+    }
+  ],
+  "ee_versions": [
+    "2.10.2"
+  ],
+  "existing_passkeys": {
+    "baseline": "3.12.0",
+    "evidence_sha256": "81c8781db57525e0f22ff7f72a106fd5859d51ee394a79b3fad1f6f3be207ba7",
+    "qualified_artifact_id": 14930157905,
+    "status": "passed"
+  },
+  "installed_image_security": {
+    "evidence_sha256": "b1da1c6dacef3ee6fc9282fbfc5a4bf58cb3cbbe258cd54676d1893312998e08",
+    "qualified_artifact_id": 14930157905
+  },
+  "native_systemd": {
+    "checks": {
+      "3.11.0": {
+        "artifact_id": 14930157905,
+        "sha256": "adf700039eff8ac509086a8766b93ec99f5045369dfc95c95cce5a1ce542de45",
+        "source_sha256": "b9c089b28563812413edc4bafbd2c7893deff201fe360776b29599b83bb2be5c",
+        "status": "passed"
+      },
+      "3.12.0": {
+        "artifact_id": 14930157905,
+        "sha256": "2f6ead5d8ee024b422f2a126da2c744073f150ea42e4488706b0c37bee86426b",
+        "source_sha256": "b9c089b28563812413edc4bafbd2c7893deff201fe360776b29599b83bb2be5c",
+        "status": "passed"
+      },
+      "fresh": {
+        "artifact_id": 14930157905,
+        "sha256": "7c009a2bb12d431c821feed1b1c80d33d428d778351eff8ed461377554f64d14",
+        "source_sha256": "b9c089b28563812413edc4bafbd2c7893deff201fe360776b29599b83bb2be5c",
+        "status": "passed"
+      }
+    },
+    "host": "Ubuntu 24.04 ARM64"
+  },
+  "prepublication_manifests": "ephemeral isolated rehearsal trust; public and private release signatures are separate",
+  "qualification_artifacts": {
+    "3.11.0": {
+      "exercised": [
+        {
+          "artifact_id": 14860024679,
+          "artifact_kind": "qualified",
+          "artifact_sha256": "sha256:6dcdd035799f4025051f694f74819d126877ccf738c2c2c507bd06728da8bcb4",
+          "build_attempt": 1,
+          "build_ref": "refs/heads/release/v3.11.0",
+          "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45251261459",
+          "commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+          "inventory_sha256": "39a024651fdd76b82863c4118c80e7e3db060e57b57172d2eb3ade1a9e756575",
+          "qualification_attempt": 2,
+          "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+          "version": "3.11.0"
+        }
+      ],
+      "qualified": {
+        "artifact_id": 14860024679,
+        "artifact_kind": "qualified",
+        "artifact_sha256": "sha256:6dcdd035799f4025051f694f74819d126877ccf738c2c2c507bd06728da8bcb4",
+        "build_attempt": 1,
+        "build_ref": "refs/heads/release/v3.11.0",
+        "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45251261459",
+        "commit": "94a8282a4ff5cf9695202acd37a1b5baf6f313de",
+        "inventory_sha256": "39a024651fdd76b82863c4118c80e7e3db060e57b57172d2eb3ade1a9e756575",
+        "qualification_attempt": 2,
+        "source_sha256": "08011477e9e2bf22f5a75a4b2468ec5f6eb219ba33c187fe2994db9c2fddab06",
+        "version": "3.11.0"
+      }
+    },
+    "3.12.0": {
+      "exercised": [
+        {
+          "artifact_id": 14869414445,
+          "artifact_kind": "qualified",
+          "artifact_sha256": "sha256:4e5b6945156a628e4ec7be9da0c4974e9318634f4b7825e43c1ba57487c0cfb1",
+          "build_attempt": 1,
+          "build_ref": "refs/heads/release/v3.12.0",
+          "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45278838131",
+          "commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+          "inventory_sha256": "1f4d5422db09cf3d73de0af74799a1ae6ddad4420552736c7b14c2ae27e38bbc",
+          "qualification_attempt": 1,
+          "source_sha256": "5199262223aac7530b176972ab4696bf1b2d25e8e24ac71006fb28586b7d1d2c",
+          "version": "3.12.0"
+        }
+      ],
+      "qualified": {
+        "artifact_id": 14869414445,
+        "artifact_kind": "qualified",
+        "artifact_sha256": "sha256:4e5b6945156a628e4ec7be9da0c4974e9318634f4b7825e43c1ba57487c0cfb1",
+        "build_attempt": 1,
+        "build_ref": "refs/heads/release/v3.12.0",
+        "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45278838131",
+        "commit": "f65d256114dea9e3a22025e0430f97eb3856e1c7",
+        "inventory_sha256": "1f4d5422db09cf3d73de0af74799a1ae6ddad4420552736c7b14c2ae27e38bbc",
+        "qualification_attempt": 1,
+        "source_sha256": "5199262223aac7530b176972ab4696bf1b2d25e8e24ac71006fb28586b7d1d2c",
+        "version": "3.12.0"
+      }
+    },
+    "3.12.1": {
+      "early": {
+        "artifact_id": 14930526825,
+        "artifact_kind": "early",
+        "artifact_sha256": "sha256:64f786ca76acbae69fcc9555134acb991e86143527f69e3e180272957cabdc24",
+        "build_attempt": 1,
+        "build_ref": "refs/heads/release/v3.12.1",
+        "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45406793402",
+        "commit": "8a6c135eb4a3a2692ad874e868a10add7b844f38",
+        "inventory_sha256": "bab756e33246a3699f0589ef1603804fc3d6c246801f9b99c510156bef7f433f",
+        "qualification_attempt": 1,
+        "source_sha256": "b9c089b28563812413edc4bafbd2c7893deff201fe360776b29599b83bb2be5c",
+        "version": "3.12.1"
+      },
+      "exercised": [
+        {
+          "artifact_id": 14930157905,
+          "artifact_kind": "qualified",
+          "artifact_sha256": "sha256:ec3a9b6cfb4bc6e6cea98cd0feb9a8b6d599bb658f912a645d1c15046778c9ce",
+          "build_attempt": 1,
+          "build_ref": "refs/heads/release/v3.12.1",
+          "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45406793402",
+          "commit": "8a6c135eb4a3a2692ad874e868a10add7b844f38",
+          "inventory_sha256": "b0d8d00ad35e813d6a050c363bc9056b3b958062fb43de47e1d04e224e487204",
+          "qualification_attempt": 1,
+          "source_sha256": "b9c089b28563812413edc4bafbd2c7893deff201fe360776b29599b83bb2be5c",
+          "version": "3.12.1"
+        }
+      ],
+      "qualified": {
+        "artifact_id": 14930157905,
+        "artifact_kind": "qualified",
+        "artifact_sha256": "sha256:ec3a9b6cfb4bc6e6cea98cd0feb9a8b6d599bb658f912a645d1c15046778c9ce",
+        "build_attempt": 1,
+        "build_ref": "refs/heads/release/v3.12.1",
+        "build_run": "https://github.com/Scanix/Gaeld/actions/runs/45406793402",
+        "commit": "8a6c135eb4a3a2692ad874e868a10add7b844f38",
+        "inventory_sha256": "b0d8d00ad35e813d6a050c363bc9056b3b958062fb43de47e1d04e224e487204",
+        "qualification_attempt": 1,
+        "source_sha256": "b9c089b28563812413edc4bafbd2c7893deff201fe360776b29599b83bb2be5c",
+        "version": "3.12.1"
+      }
+    }
+  },
+  "source_sha256": "b9c089b28563812413edc4bafbd2c7893deff201fe360776b29599b83bb2be5c",
+  "status": "passed"
+}
