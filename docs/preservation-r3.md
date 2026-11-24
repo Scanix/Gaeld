@@ -168,6 +168,23 @@ Offline verification does not establish the current remote Object Lock settings
 or prove that no other package was deleted. A manifest hash remains unchanged across renewals: the offline result explicitly reports `latest_evidence_pinned: false`. It validates the evidence supplied, without establishing that it is the newest retained evidence set. Use the independently retained protected catalog and
 `archive:check` for remote completeness and retention checks.
 
+### Recovering a complete inventory
+
+After a successful global control, run `php artisan archive:inventory --no-ansi` with read access to the protected store. It lists every protected catalog version, including earlier deposits, renewals and holds. Save its successful output as a new private checkpoint. Retain its timestamp and SHA-256 digest with the backup operator in a location controlled separately from the recovery copy. Advance the checkpoint after new custody events and verify that the secondary copy has every referenced version before recording coverage through that checkpoint.
+
+Copy the raw catalog bytes and package objects by **exact object key and version ID**. The checkpoint lists the catalog references. Each catalog lists its object references. Preserve the key paths below the recovery directory, even when a delete marker hides an older version from ordinary listing. The recovery copy contains private records and requires the same access and encryption protections as the primary.
+
+With the primary unavailable, compare the restored bytes to the independently retained checkpoint:
+
+```sh
+php scripts/archive-verifier/verify-inventory.php \
+  --directory=/recovery/object-keys \
+  --checkpoint=/controls/checkpoint.json \
+  --expected-checkpoint-sha256=INDEPENDENTLY_RECORDED_SHA256
+```
+
+A successful result covers the catalog and object versions in that checkpoint, including renewals published by its observation time. Compare that time with the recovery objective. Run the package verifier separately with external trust anchors and use the storage API to verify the current retention and legal holds.
+
 ## Annual recovery and written control
 
 Recover the complete company inventory on a separate environment, read every

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Proof;
 
+use App\Domains\Accounting\Proof\Contracts\ProtectedArchiveStorage;
 use App\Domains\Accounting\Proof\S3ComplianceStorage;
 use Aws\CommandInterface;
 use Aws\Exception\AwsException;
@@ -10,8 +11,10 @@ use Aws\Result;
 use Aws\S3\S3Client;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
+use Symfony\Component\Process\Process;
 use Tests\Support\ArchiveProofFixtures;
 use Tests\TestCase;
 
@@ -146,6 +149,52 @@ class S3ComplianceStorageTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('omits evidence already recorded');
         $storage->verify($this->directory.'/older-copy', $original);
+    }
+
+    public function test_offline_checkpoint_detects_a_missing_tenant_and_an_older_renewal(): void
+    {
+        $storage = $this->storage();
+        $this->app->instance(ProtectedArchiveStorage::class, $storage);
+        $this->assertSame(1, Artisan::call('archive:inventory'));
+        $storage->deposit($this->directory.'/package', '2038-01-01T00:00:00Z');
+        mkdir($this->directory.'/package/evidence');
+        file_put_contents($this->directory.'/package/evidence/renewal.bin', 'new renewal');
+        $renewed = $storage->deposit($this->directory.'/package', '2038-01-01T00:00:00Z');
+        $second = $this->fixtureManifest($this->directory.'/second');
+        $second['organization_id'] = 'organization-two';
+        file_put_contents($this->directory.'/second/manifest.json', json_encode($second, JSON_THROW_ON_ERROR));
+        $other = $storage->deposit($this->directory.'/second', '2038-01-01T00:00:00Z');
+        $this->assertSame(0, Artisan::call('archive:inventory'));
+        $checkpoint = Artisan::output();
+        $snapshot = $this->directory.'/checkpoint.json';
+        file_put_contents($snapshot, $checkpoint);
+        $root = $this->directory.'/recovery';
+        foreach ($this->objects as $key => $object) {
+            File::ensureDirectoryExists(dirname($root.'/'.$key));
+            file_put_contents($root.'/'.$key, $object['body']);
+        }
+        $verify = new Process([PHP_BINARY, base_path('scripts/archive-verifier/verify-inventory.php'),
+            '--directory='.$root, '--checkpoint='.$snapshot, '--expected-checkpoint-sha256='.hash('sha256', $checkpoint)]);
+        $verify->mustRun();
+        $result = json_decode($verify->getOutput(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(2, $result['organizations']);
+        $this->assertSame(3, $result['catalog_versions']);
+        $this->assertFalse($result['live_storage_protection_checked']);
+
+        $renewalFile = $root.'/'.$renewed['catalog']['key'];
+        unlink($renewalFile);
+        $this->assertSame(1, $verify->run());
+        file_put_contents($renewalFile, $this->objects[$renewed['catalog']['key']]['body']);
+        $renewalObject = collect($renewed['objects'])->firstWhere('path', 'evidence/renewal.bin');
+        file_put_contents($root.'/'.$renewalObject['key'], 'old renewal');
+        $this->assertSame(1, $verify->run());
+        file_put_contents($root.'/'.$renewalObject['key'], 'new renewal');
+        File::deleteDirectory($root.'/archive/organization-two');
+        $this->assertSame(1, $verify->run());
+        unlink($root.'/'.$other['catalog']['key']);
+        file_put_contents($snapshot, $checkpoint.' ');
+        $this->assertSame(1, $verify->run());
+        $this->assertStringContainsString('independently retained digest', $verify->getErrorOutput());
     }
 
     private function storage(): S3ComplianceStorage

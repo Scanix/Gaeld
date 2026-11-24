@@ -14,6 +14,7 @@ use App\Domains\Accounting\Proof\StandaloneArchiveVerifier;
 use Aws\Exception\AwsException;
 use Aws\S3\S3Client;
 use Dompdf\Dompdf;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
 use Tests\TestCase;
@@ -154,6 +155,22 @@ class NetworkProofProfileTest extends TestCase
         $independent = json_decode($runner->run($independentArguments), true, 512, JSON_THROW_ON_ERROR);
         $this->assertTrue($independent['valid']);
         $this->assertFalse($independent['storage_protection_checked']);
+        $this->assertSame(0, Artisan::call('archive:inventory'));
+        $checkpoint = Artisan::output();
+        $checkpointPath = $directory.'/checkpoint.json';
+        EvidenceFiles::writeOnce($checkpointPath, $checkpoint);
+        $recoveryRoot = $directory.'/recovered-object-keys';
+        foreach ($storage->inventory() as $entry) {
+            foreach ([$entry['catalog'], ...$entry['objects']] as $saved) {
+                $bytes = (string) $client->getObject(['Bucket' => $this->settings['bucket'], 'Key' => $saved['key'], 'VersionId' => $saved['version_id']])['Body'];
+                EvidenceFiles::writeOnce($recoveryRoot.'/'.$saved['key'], $bytes);
+            }
+        }
+        $checkpointResult = json_decode($runner->run([PHP_BINARY, base_path('scripts/archive-verifier/verify-inventory.php'),
+            '--directory='.$recoveryRoot, '--checkpoint='.$checkpointPath, '--expected-checkpoint-sha256='.hash('sha256', $checkpoint)]), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertTrue($checkpointResult['valid']);
+        $this->assertGreaterThanOrEqual(3, $checkpointResult['catalog_versions']);
+        $independent['recovered_inventory'] = $checkpointResult;
         foreach (['reports/journal.pdf', 'manifest.json', 'evidence/manifest.p7s', 'evidence/manifest.tsr'] as $path) {
             $copy = $directory.'/tampered-'.hash('sha256', $path);
             File::copyDirectory($recovered, $copy);
