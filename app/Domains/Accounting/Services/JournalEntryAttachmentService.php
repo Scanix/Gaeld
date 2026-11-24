@@ -100,8 +100,8 @@ class JournalEntryAttachmentService
         DB::transaction(function () use ($entry, $attachment, $actor): void {
             $entry = $this->lockedEntry($entry);
             $entry->attachmentFiscalYear(lock: true);
-            Gate::forUser($actor)->authorize('withdrawAttachment', $entry);
             $link = $entry->attachments()->where('organization_id', $entry->organization_id)->findOrFail($attachment->id);
+            Gate::forUser($actor)->authorize('delete', $link->setRelation('journalEntry', $entry));
             $link->delete();
             $this->log($entry, $link, $actor, 'withdrawn');
         });
@@ -109,8 +109,8 @@ class JournalEntryAttachmentService
 
     public function read(JournalEntry $entry, JournalEntryAttachment $attachment, User $actor, bool $download): string
     {
-        Gate::forUser($actor)->authorize('view', $entry);
         $active = $entry->attachments()->where('organization_id', $entry->organization_id)->findOrFail($attachment->id);
+        Gate::forUser($actor)->authorize('view', $active->setRelation('journalEntry', $entry));
         $bytes = $this->originalBytes($entry, $active);
         $this->log($entry, $active, $actor, $download ? 'downloaded' : 'viewed');
 
