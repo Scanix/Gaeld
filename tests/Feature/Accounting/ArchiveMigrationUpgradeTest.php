@@ -21,6 +21,8 @@ class ArchiveMigrationUpgradeTest extends TestCase
 
     private const PRESERVATION_MIGRATION = '2026_11_04_193239_create_archive_packages_and_outbox_tables.php';
 
+    private const JOURNAL_ATTACHMENT_MIGRATION = '2026_11_24_220000_create_journal_entry_attachments_table.php';
+
     protected function beforeRefreshingDatabase(): void
     {
         $this->assertTrue(app()->environment('testing'));
@@ -30,7 +32,9 @@ class ArchiveMigrationUpgradeTest extends TestCase
     /** @return array<string, mixed> */
     protected function migrateFreshUsing(): array
     {
-        $existing = array_values(array_filter(glob(database_path('migrations/*.php')), fn (string $path): bool => basename($path) !== self::PRESERVATION_MIGRATION));
+        $existing = array_values(array_filter(glob(database_path('migrations/*.php')), fn (string $path): bool => ! in_array(
+            basename($path), [self::PRESERVATION_MIGRATION, self::JOURNAL_ATTACHMENT_MIGRATION], true,
+        )));
 
         return ['--realpath' => true, '--path' => $existing, '--force' => true];
     }
@@ -40,6 +44,7 @@ class ArchiveMigrationUpgradeTest extends TestCase
         $this->assertSame(0, DB::transactionLevel());
         $this->assertFalse(Schema::hasTable('archive_packages'));
         $this->assertFalse(Schema::hasTable('issued_document_files'));
+        $this->assertFalse(Schema::hasTable('journal_entry_attachments'));
         Storage::fake('local');
         $organization = Organization::factory()->create(['id' => '11111111-1111-4111-8111-111111111111']);
         $year = FiscalYear::factory()->for($organization)->create([
@@ -90,7 +95,12 @@ class ArchiveMigrationUpgradeTest extends TestCase
         $encrypted = Crypt::encryptString('Legacy encrypted data must remain readable');
 
         $this->artisan('migrate', [
-            '--realpath' => true, '--path' => database_path('migrations/'.self::PRESERVATION_MIGRATION), '--force' => true,
+            '--realpath' => true,
+            '--path' => [
+                database_path('migrations/'.self::PRESERVATION_MIGRATION),
+                database_path('migrations/'.self::JOURNAL_ATTACHMENT_MIGRATION),
+            ],
+            '--force' => true,
         ])->assertSuccessful();
 
         foreach ($before as $table => $rows) {
@@ -102,6 +112,7 @@ class ArchiveMigrationUpgradeTest extends TestCase
         $this->assertSame(hash('sha256', $archiveBytes), hash('sha256', Storage::disk('local')->get($archivePath)));
         $this->assertTrue(Schema::hasTable('archive_packages'));
         $this->assertTrue(Schema::hasTable('issued_document_files'));
+        $this->assertDatabaseCount('journal_entry_attachments', 0);
 
         foreach ([
             fn () => DB::table('transaction_lines')->where('journal_entry_id', $entryId)->update(['debit' => '9999.00']),
