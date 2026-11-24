@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import socket
 import subprocess
 import sys
 import tarfile
@@ -313,6 +314,58 @@ class ManagerTest(unittest.TestCase):
                 with self.assertRaisesRegex(manager.OperationError, 'system or template'):
                     self.installation.postgres('psql')
                 runner.assert_not_called()
+
+    def test_native_restart_renders_the_same_private_socket_for_new_and_restored_legacy_releases(self):
+        templates = MODULE.parents[2] / 'docker/production'
+        expected_fpm = (templates / 'fpm.conf').read_text()
+        expected_nginx = (templates / 'nginx-native.conf').read_text()
+        private_listener = 'listen = /run/gaeld-fpm.sock\nlisten.owner = www-data\nlisten.group = www-data\nlisten.mode = 0600'
+        self.assertIn(private_listener, expected_fpm)
+        self.assertIn('fastcgi_pass unix:/run/gaeld-fpm.sock;', expected_nginx)
+        self.installation.state['port'] = 18281
+        with patch.object(self.installation, 'preflight_native_services'):
+            for target in ('3.12.1', '3.11.0'):
+                with self.subTest(target=target):
+                    directory = self.installation.release_dir(target) / 'docker/production'
+                    directory.mkdir(parents=True)
+                    fpm, nginx = expected_fpm, expected_nginx
+                    if target == '3.11.0':
+                        fpm = fpm.replace(private_listener, 'listen = 127.0.0.1:9074')
+                        nginx = nginx.replace('unix:/run/gaeld-fpm.sock', '127.0.0.1:9074')
+                    (directory / 'fpm.conf').write_text(fpm)
+                    (directory / 'nginx-native.conf').write_text(nginx)
+                    inventory = self.installation.source_inventory(self.installation.release_dir(target))
+                    manager.write_json(self.installation.meta / 'releases' / (target + '.files.json'), inventory)
+                    self.installation.configure_native_web(target)
+                    self.assertEqual(expected_fpm.replace('@ROOT@', str(self.installation.root)), (self.installation.meta / 'fpm.conf').read_text())
+                    self.assertEqual(expected_nginx.replace('@ROOT@', str(self.installation.root)).replace('@PORT@', '18281'),
+                                     (self.installation.meta / 'nginx-native.conf').read_text())
+                    (directory / 'nginx-native.conf').write_text('modified')
+                    with self.assertRaisesRegex(manager.OperationError, 'differs from the verified release'):
+                        self.installation.configure_native_web(target)
+
+    def test_native_socket_health_checks_type_owner_and_permissions(self):
+        import pwd
+        from types import SimpleNamespace
+        path = self.root / 'fpm.sock'
+        with socket.socket(socket.AF_UNIX) as listener, patch.object(manager, 'Path', return_value=path), \
+                patch.object(pwd, 'getpwnam', return_value=SimpleNamespace(pw_uid=os.getuid())):
+            with self.assertRaisesRegex(manager.OperationError, 'missing'):
+                self.installation.verify_native_socket()
+            path.touch(mode=0o600)
+            with self.assertRaisesRegex(manager.OperationError, 'mode 0600'):
+                self.installation.verify_native_socket()
+            path.unlink()
+            listener.bind(str(path))
+            path.chmod(0o600)
+            self.installation.verify_native_socket()
+            path.chmod(0o660)
+            with self.assertRaisesRegex(manager.OperationError, 'mode 0600'):
+                self.installation.verify_native_socket()
+            path.chmod(0o600)
+            with patch.object(pwd, 'getpwnam', return_value=SimpleNamespace(pw_uid=os.getuid()+1)):
+                with self.assertRaisesRegex(manager.OperationError, 'owned by www-data'):
+                    self.installation.verify_native_socket()
 
     def test_native_empty_host_accepts_explicit_not_found_with_exit_one(self):
         completed = subprocess.CompletedProcess([], 1, stdout='LoadState=not-found\nFragmentPath=\nDropInPaths=\n', stderr='')

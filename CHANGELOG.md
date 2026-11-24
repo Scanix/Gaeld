@@ -5,6 +5,12 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.12.1]
+
+- Spreadsheet imports now check every workbook entry before the importer reads it.
+- Native Linux installations connect Nginx to PHP-FPM through a socket restricted to the web service. Start an upgrade from an older native installation with the new signed launcher as described in the [managed installation guide](docs/ce-managed-installation.md).
+- The passkey verifier uses WebAuthn Framework 5.3.13 for registration and sign-in.
+
 ## [3.12.0]
 
 ### Accounting archive packages
