@@ -96,23 +96,27 @@ jobs:
           ee_versions=$(jq -ce '.ee_versions | select(type=="array" and length>0)' release/ee-acceptance.json)
           allowed=$(jq -ce '.allowed_from | select(type=="array" and length>0)' release/ee-acceptance.json)
           arguments=()
-          predecessor=''
-          case "$RELEASE_VERSION" in
-            3.12.0|3.12.0-rc.*) predecessor=v3.11.0 ;;
+          case "${RELEASE_VERSION%%-*}" in
+            3.12.0) predecessors=(3.11.0) ;;
+            3.12.1) predecessors=(3.11.0 3.12.0) ;;
             3.13.0)
-              predecessor=v3.12.0
-              rc=$(jq -er '.preservation_acceptance.released_candidate | select(test("^3\\.13\\.0-rc\\.[1-9][0-9]*$"))' release/ee-acceptance.json)
-              gh release view "v$rc" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease,publishedAt \
-                | jq -e '.isDraft == false and .isPrerelease == true and .publishedAt != null'
-              test "$(git rev-parse "refs/tags/v$rc^{commit}")" = "$GITHUB_SHA"
+              predecessors=()
+              if [[ "$RELEASE_VERSION" == 3.13.0 ]]; then
+                predecessors=(3.12.0)
+                rc=$(jq -er '.preservation_acceptance.released_candidate | select(test("^3\\.13\\.0-rc\\.[1-9][0-9]*$"))' release/ee-acceptance.json)
+                gh release view "v$rc" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease,publishedAt \
+                  | jq -e '.isDraft == false and .isPrerelease == true and .publishedAt != null'
+                test "$(git rev-parse "refs/tags/v$rc^{commit}")" = "$GITHUB_SHA"
+              fi
               ;;
+            *) predecessors=() ;;
           esac
-          if [[ -n "$predecessor" ]]; then
-            baseline="$RUNNER_TEMP/signed-predecessor"
+          for version in "${predecessors[@]}"; do
+            baseline="$RUNNER_TEMP/signed-predecessor-$version"
             mkdir "$baseline"
-            gh release download "$predecessor" --repo "$GITHUB_REPOSITORY" --dir "$baseline" --pattern release.json --pattern release.json.sig
+            gh release download "v$version" --repo "$GITHUB_REPOSITORY" --dir "$baseline" --pattern release.json --pattern release.json.sig
             arguments+=(--baseline-manifest "$baseline/release.json")
-          fi
+          done
           if [[ -f release/adoption-acceptance.json ]]; then arguments+=(--adoption-receipt release/adoption-acceptance.json); fi
           for name in app web postgres redis; do
             image=$(jq -r --arg name "$name" '.candidate_images[$name]' release/qualification-inputs.json)

@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Verify exports on an independent machine using trusted certificate material and the expected inventory. Existing v3.12.0 archives retain their original content and capture dates.
 - The first-party preservation profile is for enrolled hosted organizations under a separate agreement. Self-hosted operators configure their own keys, storage and timestamp service.
 
+## [3.12.1]
+
+- Spreadsheet imports now check every workbook entry before the importer reads it.
+- Native Linux installations connect Nginx to PHP-FPM through a socket restricted to the web service. Start an upgrade from an older native installation with the new signed launcher as described in the [managed installation guide](docs/ce-managed-installation.md).
+- The passkey verifier uses WebAuthn Framework 5.3.13 for registration and sign-in.
+
 ## [3.12.0]
 
 ### Accounting archive packages
