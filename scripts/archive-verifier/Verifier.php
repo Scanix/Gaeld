@@ -246,6 +246,26 @@ final class Verifier
         return $output;
     }
 
+    public function writeTimestampRevocationStore(string $path, string $destination): void
+    {
+        // The archive may provide revocation lists, while the operator supplies trusted certificates.
+        $pem = '~^-----BEGIN X509 CRL-----\r?\n[A-Za-z0-9+/=\r\n]++^-----END X509 CRL-----\r?$~m';
+        $remainder = preg_replace($pem, '', $this->read($path), -1, $expected);
+        if ($remainder === null || $expected === 0 || trim($remainder, " \t\r\n") !== '') {
+            throw new RuntimeException('Timestamp revocation evidence must contain only X.509 CRLs.');
+        }
+
+        // OpenSSL decodes each object and emits only objects of the requested type.
+        $decoded = $this->run([$this->options['openssl'] ?? 'openssl', 'storeutl', '-crls', $path]);
+        if (preg_match_all($pem, $decoded, $lists) !== $expected) {
+            throw new RuntimeException('Unable to decode every timestamp revocation list.');
+        }
+        $contents = implode("\n", $lists[0])."\n";
+        if (file_put_contents($destination, $contents, LOCK_EX) !== strlen($contents)) {
+            throw new RuntimeException('Unable to write the timestamp revocation store.');
+        }
+    }
+
     private function externalTrust(string $directory, string $key): string
     {
         $path = realpath($this->options[$key] ?? '');
@@ -284,25 +304,22 @@ final class Verifier
         if ($time['second'] > time() + 300) {
             throw new RuntimeException('The timestamp is in the future.');
         }
-        $bundle = $this->temporary('gaeld-verifier-trust-');
-        $emptyTrust = $bundle.'.empty';
+        $revocations = $this->temporary('gaeld-verifier-crls-');
+        $emptyTrust = $revocations.'.empty';
         if (! @mkdir($emptyTrust, 0700)) {
-            @unlink($bundle);
+            @unlink($revocations);
             throw new RuntimeException('Unable to create the isolated timestamp trust directory.');
         }
         try {
-            $trustBundle = $this->read($trust)."\n".$this->read($this->path($directory, $prefix.'.crl.pem'));
-            if (file_put_contents($bundle, $trustBundle, LOCK_EX) !== strlen($trustBundle)) {
-                throw new RuntimeException('Unable to write the complete timestamp trust bundle.');
-            }
-            $arguments = [$openssl, 'ts', '-verify', '-in', $response, '-CAfile', $bundle, '-CApath', $emptyTrust, '-CAstore', $emptyTrust, '-crl_check_all', '-attime', (string) $time['second']];
+            $this->writeTimestampRevocationStore($this->path($directory, $prefix.'.crl.pem'), $revocations);
+            $arguments = [$openssl, 'ts', '-verify', '-in', $response, '-CAfile', $trust, '-CApath', $emptyTrust, '-CAstore', $revocations, '-crl_check_all', '-attime', (string) $time['second']];
             if (is_file($directory.'/'.$prefix.'.chain.pem')) {
                 $arguments = [...$arguments, '-untrusted', $this->path($directory, $prefix.'.chain.pem')];
             }
             $this->run([...$arguments, '-data', $source]);
             $this->run([...$arguments, '-queryfile', $this->path($directory, $prefix.'.tsq')]);
         } finally {
-            @unlink($bundle);
+            @unlink($revocations);
             @rmdir($emptyTrust);
         }
 

@@ -138,6 +138,36 @@ class ArchiveProofTest extends TestCase
         $parse->invoke($verifier, 'Time stamp: Apr 31 04:03:02.511 2026 GMT');
     }
 
+    public function test_timestamp_store_accepts_multiple_crls_and_rejects_unrelated_input(): void
+    {
+        $this->configureProofCertificates($this->directory);
+        $list = file_get_contents($this->directory.'/certificates/ca.crl.pem');
+        $input = $this->directory.'/revocations.pem';
+        $output = $this->directory.'/decoded-crls.pem';
+        $verifier = (new StandaloneArchiveVerifier)->verifier();
+
+        file_put_contents($input, str_replace("\n", "\r\n", $list)."\n".$list);
+        $verifier->writeTimestampRevocationStore($input, $output);
+        $this->assertSame($list.$list, file_get_contents($output));
+
+        file_put_contents($input, $list."fixture notes\n");
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('only X.509 CRLs');
+        $verifier->writeTimestampRevocationStore($input, $output);
+    }
+
+    public function test_a_certificate_is_not_valid_input_for_the_revocation_store(): void
+    {
+        $this->configureProofCertificates($this->directory);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('only X.509 CRLs');
+
+        (new StandaloneArchiveVerifier)->verifier()->writeTimestampRevocationStore(
+            $this->directory.'/certificates/ca.pem',
+            $this->directory.'/decoded-crls.pem',
+        );
+    }
+
     public function test_real_timestamp_binds_signature_and_is_reused_without_new_request(): void
     {
         $this->configureProofCertificates($this->directory);

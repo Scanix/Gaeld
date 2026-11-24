@@ -112,25 +112,22 @@ class Rfc3161TimestampAuthority implements TimestampAuthority
 
     private function verify(string $source, string $query, string $response, string $trust, string $crl): void
     {
-        $bundle = EvidenceFiles::temporary('gaeld-ts-trust-');
-        $emptyTrust = $bundle.'.empty';
+        $revocations = EvidenceFiles::temporary('gaeld-ts-crls-');
+        $emptyTrust = $revocations.'.empty';
         if (! @mkdir($emptyTrust, 0700)) {
-            @unlink($bundle);
+            @unlink($revocations);
             throw new RuntimeException('Unable to create the isolated timestamp trust directory.');
         }
         try {
-            $trustBundle = EvidenceFiles::read($trust)."\n".EvidenceFiles::read($crl);
-            if (file_put_contents($bundle, $trustBundle, LOCK_EX) !== strlen($trustBundle)) {
-                throw new RuntimeException('Unable to write the complete timestamp trust bundle.');
-            }
-            $arguments = [(string) config('archiving.openssl'), 'ts', '-verify', '-in', $response, '-CAfile', $bundle, '-CApath', $emptyTrust, '-CAstore', $emptyTrust, '-crl_check_all'];
+            (new StandaloneArchiveVerifier)->verifier()->writeTimestampRevocationStore($crl, $revocations);
+            $arguments = [(string) config('archiving.openssl'), 'ts', '-verify', '-in', $response, '-CAfile', $trust, '-CApath', $emptyTrust, '-CAstore', $revocations, '-crl_check_all'];
             if (config('archiving.timestamp.chain')) {
                 $arguments = [...$arguments, '-untrusted', EvidenceFiles::required((string) config('archiving.timestamp.chain'))];
             }
             $this->runner->run([...$arguments, '-data', $source]);
             $this->runner->run([...$arguments, '-queryfile', $query]);
         } finally {
-            @unlink($bundle);
+            @unlink($revocations);
             @rmdir($emptyTrust);
         }
     }
