@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Proof;
 
 use App\Domains\Accounting\Proof\Contracts\ProtectedArchiveStorage;
+use App\Domains\Accounting\Services\ArchivePackageService;
 use Aws\Exception\AwsException;
 use Aws\S3\S3Client;
 use Aws\S3\S3ClientInterface;
@@ -104,9 +105,12 @@ class S3ComplianceStorage implements ProtectedArchiveStorage
             throw new RuntimeException('The archive is missing its protected catalog record.');
         }
         $catalog = $receipt['catalog'];
-        unset($receipt['catalog']);
-        $payload = json_encode($receipt, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-        if (! hash_equals($catalog['sha256'], hash('sha256', $payload))) {
+        $history = $this->inventory($receipt['organization_id']);
+        $stored = collect($history)->first(fn (array $entry): bool => $entry['catalog']['key'] === $catalog['key']
+            && $entry['catalog']['version_id'] === $catalog['version_id']);
+        // Inventory authenticates the original object bytes. jsonb preserves the content of
+        // the local receipt, but can reorder map keys when Eloquent reads it from PostgreSQL.
+        if ($stored === null || ArchivePackageService::json($stored) !== ArchivePackageService::json($receipt)) {
             throw new RuntimeException('The catalog does not match the retained package receipt.');
         }
         $this->verifyObject($receipt['bucket'], $catalog, new DateTimeImmutable($receipt['retention_until']), $receipt['legal_hold'] ?? null);
@@ -114,7 +118,7 @@ class S3ComplianceStorage implements ProtectedArchiveStorage
         foreach ($receipt['objects'] as $object) {
             $retainedVersions[$object['key']."\0".$object['version_id']] = $object['sha256'];
         }
-        foreach ($this->inventory($receipt['organization_id']) as $historical) {
+        foreach ($history as $historical) {
             if ($historical['package_id'] !== $receipt['package_id'] || $historical['manifest_sha256'] !== $receipt['manifest_sha256']) {
                 continue;
             }

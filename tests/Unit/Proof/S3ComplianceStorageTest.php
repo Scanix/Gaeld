@@ -4,6 +4,7 @@ namespace Tests\Unit\Proof;
 
 use App\Domains\Accounting\Proof\Contracts\ProtectedArchiveStorage;
 use App\Domains\Accounting\Proof\S3ComplianceStorage;
+use App\Domains\Accounting\Services\ArchivePackageService;
 use Aws\CommandInterface;
 use Aws\Exception\AwsException;
 use Aws\MockHandler;
@@ -61,6 +62,21 @@ class S3ComplianceStorageTest extends TestCase
         $again = $storage->deposit($this->directory.'/package', '2038-01-01T00:00:00Z');
         $this->assertSame($receipt, $again);
         $this->assertSame(3, count(array_filter($this->calls, fn (string $call): bool => $call === 'PutObject')));
+    }
+
+    public function test_database_key_reordering_preserves_the_original_immutable_catalog_binding(): void
+    {
+        $storage = $this->storage();
+        $receipt = $storage->deposit($this->directory.'/package', '2038-01-01T00:00:00Z');
+        // A jsonb round trip may reorder JSON object keys, including those nested inside lists.
+        $persisted = json_decode(ArchivePackageService::json($receipt), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertNotSame($receipt, $persisted);
+        $storage->verify($this->directory.'/package', $persisted);
+
+        $persisted['schema_version'] = '1.0.1';
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('catalog does not match');
+        $storage->verify($this->directory.'/package', $persisted);
     }
 
     public function test_uncertain_successful_put_is_reconciled_without_a_second_version(): void
