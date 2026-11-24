@@ -9,3 +9,14 @@ a67725ab6a6c24776eb7215b09eaf05f863d608b:RELEASE.md:generic-api-key:35
 # The signed v3.12 compatibility receipts identify the v3.11 release public key by its SHA-256 digest.
 790dd21b0fc7b73910f8cb8378a1c44f156d258d:v3.12.0-rc.6/f65d256114dea9e3a22025e0430f97eb3856e1c7/ee-acceptance.json:generic-api-key:12
 36f92d50aaac0b43812a20fefa7b58fa23ffc8e0:v3.12.0/f65d256114dea9e3a22025e0430f97eb3856e1c7/ee-acceptance.json:generic-api-key:12
+
+# Signed v3.12.1-rc.4 and v3.12.1 compatibility receipts contain the SHA-256
+# fingerprints of docs/keys/release.pub and docs/keys/ee-acceptance.pub.
+352a21d6ebd86dd03b95e76b2dadac5f556834fc:v3.12.1-rc.4/8a6c135eb4a3a2692ad874e868a10add7b844f38/ee-acceptance.json:generic-api-key:160
+352a21d6ebd86dd03b95e76b2dadac5f556834fc:v3.12.1-rc.4/8a6c135eb4a3a2692ad874e868a10add7b844f38/ee-acceptance.json:generic-api-key:174
+352a21d6ebd86dd03b95e76b2dadac5f556834fc:v3.12.1-rc.4/8a6c135eb4a3a2692ad874e868a10add7b844f38/ee-acceptance.json:generic-api-key:398
+352a21d6ebd86dd03b95e76b2dadac5f556834fc:v3.12.1-rc.4/8a6c135eb4a3a2692ad874e868a10add7b844f38/ee-acceptance.json:generic-api-key:412
+b155da89b347c9f4308b0e6c187c15eaff5d2d16:v3.12.1/8a6c135eb4a3a2692ad874e868a10add7b844f38/ee-acceptance.json:generic-api-key:160
+b155da89b347c9f4308b0e6c187c15eaff5d2d16:v3.12.1/8a6c135eb4a3a2692ad874e868a10add7b844f38/ee-acceptance.json:generic-api-key:174
+b155da89b347c9f4308b0e6c187c15eaff5d2d16:v3.12.1/8a6c135eb4a3a2692ad874e868a10add7b844f38/ee-acceptance.json:generic-api-key:398
+b155da89b347c9f4308b0e6c187c15eaff5d2d16:v3.12.1/8a6c135eb4a3a2692ad874e868a10add7b844f38/ee-acceptance.json:generic-api-key:412
