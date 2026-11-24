@@ -92,7 +92,7 @@ jobs:
           sudo apt-get install -y age
           python3 -m unittest discover -s tests/distribution -v
       - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Select reviewed database image digests for tests and release
         id: databases
         run: |
@@ -100,14 +100,14 @@ jobs:
           # PostgreSQL 16.16 and Redis 7.4.12, reviewed on 2026-11-23.
           echo 'postgres=sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175' >> "$GITHUB_OUTPUT"
           echo 'redis=sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe' >> "$GITHUB_OUTPUT"
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build immutable multiarch application with SBOM and provenance
         id: app
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: docker/production/Dockerfile
@@ -119,7 +119,7 @@ jobs:
           sbom: true
       - name: Build immutable multiarch web image with SBOM and provenance
         id: web
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: docker/production/Dockerfile
@@ -130,13 +130,13 @@ jobs:
           provenance: mode=max
           sbom: true
       - name: Sign application provenance with the release workflow identity
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-name: ghcr.io/scanix/gaeld
           subject-digest: ${{ steps.app.outputs.digest }}
           push-to-registry: true
       - name: Sign web provenance with the release workflow identity
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-name: ghcr.io/scanix/gaeld-web
           subject-digest: ${{ steps.web.outputs.digest }}
@@ -272,7 +272,7 @@ jobs:
           digest-mismatch: error
       - name: Verify every native architecture and upgrade case
         run: python3 scripts/distribution/qualify_native.py collect release "$RUNNER_TEMP/native-receipts"
-      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         id: provenance
         with:
           subject-path: release/*.tar.gz
@@ -280,7 +280,7 @@ jobs:
         env:
           BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
         run: cp "$BUNDLE" release/provenance.json
-      - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+      - uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           image: ghcr.io/scanix/gaeld@${{ needs.build.outputs.app }}
           format: spdx-json
@@ -288,7 +288,7 @@ jobs:
           upload-artifact: false
       - name: Bind qualification to the built candidate
         run: python3 scripts/distribution/qualification_bundle.py create release
-      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         id: qualification
         with:
           subject-path: release/qualification-inputs.json
