@@ -39,6 +39,7 @@ k6 run --vus 50 --duration 2m tests/Performance/invoice-crud.js
 |--------|-------------|------------|
 | `invoice-crud.js` | Invoice create/read/update/delete cycle | < 500ms |
 | `ledger-posting.js` | Journal entry posting with 2–100 lines | < 1s |
+| `dashboard-smoke.js` | CI smoke on a seeded organization. Warms the API, then checks three authenticated reads per endpoint. | < 300ms |
 | `dashboard.js` | Dashboard aggregation queries | < 300ms |
 | `bank-import.js` | Bank transaction import (500 txns) | < 5s |
 | `full-suite.js` | All scenarios combined under load | per-scenario |
