@@ -50,6 +50,7 @@ class ArchivePackageController extends Controller
                 ]),
             'fiscalYears' => FiscalYear::query()->where('organization_id', $organization->id())
                 ->orderByDesc('start_date')->get(['id', 'name', 'start_date', 'end_date']),
+            'canRequestProof' => $this->packages->canRequestProof($organization->id()),
             'canManage' => $request->user()->can('create', ArchivePackage::class),
             'summary' => [
                 'pending' => (clone $query)->whereIn('state', ['pending', 'preparing', 'validated', 'sealing', 'sealed', 'depositing', 'deposited'])->count(),

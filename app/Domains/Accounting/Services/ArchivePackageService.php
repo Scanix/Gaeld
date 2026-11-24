@@ -10,6 +10,9 @@ use App\Domains\Accounting\Proof\PdfArchivalConverter;
 use App\Domains\Accounting\Proof\StandaloneArchiveVerifier;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
+use App\Support\Contracts\ArchiveCustodyEnrollment;
+use App\Support\FeatureFlag;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -26,7 +29,21 @@ class ArchivePackageService implements ArchivePackageBuilder
         private readonly ArchiveAccessLog $audit,
     ) {}
 
-    public function request(Organization $organization, FiscalYear $year, ?User $actor = null, string $provenance = 'native', bool $archivalPdf = false): ArchivePackage
+    public function canRequestProof(string $organizationId): bool
+    {
+        return ! FeatureFlag::isSaas() || $this->enrollmentId($organizationId) !== null;
+    }
+
+    private function enrollmentId(string $organizationId): ?string
+    {
+        if (! config('archiving.proofs_enabled') || ! app()->bound(ArchiveCustodyEnrollment::class)) {
+            return null;
+        }
+
+        return app(ArchiveCustodyEnrollment::class)->activeId($organizationId);
+    }
+
+    public function request(Organization $organization, FiscalYear $year, ?User $actor = null, string $provenance = 'native', ?bool $archivalPdf = false): ArchivePackage
     {
         if ($year->organization_id !== $organization->id || ! in_array($provenance, ['native', 'historical_backfill'], true)) {
             throw new \InvalidArgumentException('Invalid archive scope or provenance.');
@@ -35,19 +52,31 @@ class ArchivePackageService implements ArchivePackageBuilder
         return DB::transaction(function () use ($organization, $year, $actor, $provenance, $archivalPdf): ArchivePackage {
             Organization::withoutGlobalScopes()->whereKey($organization->id)->lockForUpdate()->firstOrFail();
             $year = FiscalYear::withoutGlobalScopes()->where('organization_id', $organization->id)->whereKey($year->id)->lockForUpdate()->firstOrFail();
+            $wantsProof = $archivalPdf ?? (bool) config('archiving.proofs_enabled');
+            $enrollmentId = null;
+            if ($wantsProof && FeatureFlag::isSaas()) {
+                $enrollmentId = $this->enrollmentId($organization->id);
+                if ($archivalPdf === true && $enrollmentId === null) {
+                    throw new AuthorizationException('This organization is not enrolled for archive custody.');
+                }
+                $wantsProof = $enrollmentId !== null;
+            }
             $snapshot = $this->snapshots->capture($organization, $year);
             $snapshot['original_sources'] = $this->sources($snapshot, $organization->id);
+            if ($enrollmentId !== null) {
+                $snapshot['custody_enrollment'] = [['id' => $enrollmentId, 'organization_id' => $organization->id]];
+            }
             $snapshotHash = hash('sha256', self::json($snapshot));
             $latest = ArchivePackage::withoutGlobalScopes()->where('organization_id', $organization->id)
                 ->where('fiscal_year_id', $year->id)->orderByDesc('version')->first();
-            if ($latest && $latest->provenance === $provenance && $latest->archival_pdf === $archivalPdf
+            if ($latest && $latest->provenance === $provenance && $latest->archival_pdf === $wantsProof
                 && ($latest->snapshot_sha256 === $snapshotHash || $this->isRepeatedMissingOriginal($latest, $snapshot))) {
                 return $latest;
             }
             $id = (string) Str::uuid();
             $package = ArchivePackage::create([
                 'id' => $id, 'organization_id' => $organization->id, 'fiscal_year_id' => $year->id,
-                'version' => ($latest->version ?? 0) + 1, 'provenance' => $provenance, 'archival_pdf' => $archivalPdf,
+                'version' => ($latest->version ?? 0) + 1, 'provenance' => $provenance, 'archival_pdf' => $wantsProof,
                 'snapshot' => $snapshot, 'snapshot_sha256' => $snapshotHash,
                 'package_path' => "archives/packages/{$organization->id}/{$id}", 'captured_at' => now(),
                 'retention_until' => $year->end_date->copy()->endOfDay()->addYears(10),

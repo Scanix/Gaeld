@@ -9,7 +9,8 @@ use App\Domains\Users\Models\User;
 
 interface ArchivePackageBuilder
 {
-    public function request(Organization $organization, FiscalYear $year, ?User $actor = null, string $provenance = 'native', bool $archivalPdf = false): ArchivePackage;
+    /** A null proof selection uses the automatic capture policy. */
+    public function request(Organization $organization, FiscalYear $year, ?User $actor = null, string $provenance = 'native', ?bool $archivalPdf = false): ArchivePackage;
 
     public function prepare(ArchivePackage $package, bool $archivalPdf = false): ArchivePackage;
 

@@ -29,6 +29,8 @@ class ArchiveRenewCommandTest extends TestCase
     public function test_due_renewal_preserves_existing_proofs_and_protects_new_evidence_under_hold(): void
     {
         $package = $this->package();
+        // Existing custody and holds continue even when no new hosted enrollment is active.
+        config(['features.saas' => true]);
         $package->update(['legal_hold' => true]);
         $next = now()->addDays(300)->toIso8601String();
         $result = ['verification' => ['valid' => true], 'storage' => ['objects' => ['new']], 'next_renewal_at' => $next];

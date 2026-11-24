@@ -6,8 +6,10 @@ use App\Domains\Accounting\Models\ArchivePackage;
 use App\Domains\Accounting\Proof\Contracts\ArchiveProofVerifier;
 use App\Domains\Accounting\Proof\Contracts\ProtectedArchiveStorage;
 use App\Domains\Accounting\Proof\ProofPipeline;
+use App\Support\FeatureFlag;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Throwable;
 
 class ArchiveProofService
@@ -45,6 +47,12 @@ class ArchiveProofService
                 $package->update(['state' => 'verified', 'failure' => null]);
 
                 return $package->refresh();
+            }
+            // Retries carry the obligation accepted at capture, even after enrollment ends.
+            $enrollment = $package->snapshot['custody_enrollment'][0] ?? [];
+            if (FeatureFlag::isSaas() && (($enrollment['organization_id'] ?? null) !== $package->organization_id
+                || ! Str::isUuid($enrollment['id'] ?? null))) {
+                throw new \LogicException('This package has no recorded archive custody enrollment.');
             }
             $package->update(['state' => 'sealing', 'failure' => null]);
             $result = $this->pipeline->process($directory, $package->retention_until->toIso8601String(), function (string $stage) use ($package): void {

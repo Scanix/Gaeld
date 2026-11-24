@@ -46,6 +46,8 @@ public AWS SDK. The production image must contain the validated versions of
 Ghostscript and veraPDF recorded in its release inventory. Report conversion
 targets PDF/A-2b and must pass veraPDF before a manifest is signed.
 
+For shared hosted installations, new custody requires an active, operator-recorded enrollment for the organization and an enabled proof profile. An ordinary subscription or tenant-controlled setting cannot authorize custody. Capture and year-end closing still prepare ordinary content packages for other organizations. Explicit seal requests require enrollment. The opaque enrollment ID is frozen with the admitted snapshot so retries can finish the accepted obligation after enrollment ends. Existing deposits, holds, verification, renewal and export remain available. Review legacy pending seal requests individually before admitting a new capture. Self-hosted operators continue to use their own keys and storage.
+
 Configure the following through the installation's protected environment. Use
 paths readable by the worker; never put private keys in a source checkout or in
 the archive package. In Docker, operator files can be mounted from

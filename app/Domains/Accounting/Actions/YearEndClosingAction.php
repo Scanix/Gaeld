@@ -173,7 +173,7 @@ class YearEndClosingAction
                 'organization_id' => $orgId, 'name' => (string) $year, 'start_date' => $from, 'end_date' => $to,
                 'status' => FiscalYearStatus::Closed, 'locked_at' => now(), 'locked_by_user_id' => $actingUser->id,
             ]);
-            $this->packages->request($org, $capturePeriod, $actingUser, archivalPdf: (bool) config('archiving.proofs_enabled'));
+            $this->packages->request($org, $capturePeriod, $actingUser, archivalPdf: null);
         });
 
         Log::info('Year-end closing completed', [
