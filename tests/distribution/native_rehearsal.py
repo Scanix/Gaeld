@@ -143,6 +143,11 @@ def main():
         "redis_major": 7,
         "images": images,
     }
+    repositories = {role: reference.split("@")[0] for role, reference in images.items()}
+    managed_redis = repositories["redis"] == "ghcr.io/scanix/gaeld-redis"
+    if managed_redis:
+        manifest["redis_distribution"] = "gaeld"
+        repositories["redis"] = "docker.io/library/redis"
     for role, name in [("source", source.name), ("provenance", "provenance.json"), ("sbom", "sbom.json")]:
         manifest[role] = {"url": origin + "/v" + args.version + "/" + name, "sha256": digest(release / name)}
     write(release / "release.json", manifest)
@@ -166,7 +171,8 @@ def main():
             "channel": "rehearsal",
             "release_origin": origin,
             "release_key_sha256": digest(pub),
-            "images": {role: reference.split("@")[0] for role, reference in images.items()},
+            "images": repositories,
+            **({"managed_redis_repository": "ghcr.io/scanix/gaeld-redis"} if managed_redis else {}),
         },
     )
     identity = work / "recovery.agekey"

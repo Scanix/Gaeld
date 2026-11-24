@@ -11,7 +11,8 @@ import subprocess
 import sys
 
 from docker_platform import inspect_image
-from qualification_bundle import IMAGES, digest
+from qualification_bundle import digest
+from manage import build_image_repositories
 from verify_adoption_receipt import verify
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -57,9 +58,9 @@ def ensure_native(arch):
             "The Docker engine is running on a different architecture.")
 
 
-def pull_images(images, arch):
+def pull_images(images, arch, version):
     qualified = {}
-    for role, repo in IMAGES.items():
+    for role, repo in build_image_repositories(version).items():
         image = images[role]
         require(re.fullmatch(re.escape(repo) + r"@sha256:[0-9a-f]{64}", image), "Unexpected image: " + role)
         index = json.loads(output("docker", "buildx", "imagetools", "inspect", image, "--raw"))
@@ -116,7 +117,13 @@ def run_case(directory, destination, row):
     arch, kind, baseline = row["arch"], row["kind"], row["baseline"]
     ensure_native(arch)
     require(output("git", "rev-parse", "HEAD") == data["commit"], "Candidate checkout differs from the build.")
-    qualified = pull_images(data["candidate_images"], arch)
+    qualified = pull_images(data["candidate_images"], arch, data["version"])
+    redis = data["candidate_images"]["redis"]
+    if redis.startswith("ghcr.io/scanix/gaeld-redis@"):
+        run("docker", "run", "--rm", "--network", "none", "--platform", "linux/" + arch,
+            "--entrypoint", "sh", redis, "-ec",
+            "apk info -e 'libssl3=3.5.9-r1' 'libcrypto3=3.5.9-r1' 'zlib=1.4-r0'; redis-server --version | grep -F 'v=7.4.12 '")
+
     image_args = [part for role, image in data["candidate_images"].items() for part in ("--" + role + "-image", image)]
     common = ["--version", data["version"], "--platform", "linux/" + arch, *image_args]
     destination.mkdir(parents=True, exist_ok=True)

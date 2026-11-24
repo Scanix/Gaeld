@@ -182,6 +182,13 @@ The failed managed installation remains stopped until explicitly recovered.
 ./gaeld update --root /srv/gaeld --to APPROVED_NEXT_VERSION
 ```
 
+For the update from v3.11.0 or v3.12.0 to v3.12.1, run these commands
+from the verified v3.12.1 checkout. Keep the installed root and its enrolled
+public key. The v3.12.1 launcher recognizes the Gäld Redis image that carries
+Alpine's OpenSSL and zlib updates and the Docker Official Redis image used by the
+previous release. Both image references are pinned by digest in their signed
+manifests. Use the same v3.12.1 launcher when restoring the predecessor backup.
+
 Replace `APPROVED_NEXT_VERSION` with an exact published version whose signed
 manifest permits your current version. Release manifests may record exact
 tested CE/EE pairs backed by signed acceptance receipts. The public installer

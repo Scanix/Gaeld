@@ -6,11 +6,34 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/distribution"))
+from manage import MANAGED_REDIS_REPOSITORY, build_image_repositories
 from qualification_bundle import build_inventory, IMAGES
 from verify_promotion import verify_qualification
 
 
 class QualificationBundleTest(unittest.TestCase):
+    def test_managed_redis_is_bound_to_the_patch_inventory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            version = "3.12.1-rc.4"
+            (root / ("gaeld-ce-" + version + ".tar.gz")).write_bytes(b"patch")
+            args = (root, version, "a" * 40, "refs/heads/release/v" + version, "12", "1")
+            images = {role: repo + "@sha256:" + "b" * 64 for role, repo in IMAGES.items()}
+            with self.assertRaisesRegex(ValueError, "image repository"):
+                build_inventory(*args, images, source_only=True)
+            images["redis"] = "ghcr.io/scanix/gaeld-redis@sha256:" + "d" * 64
+            self.assertEqual(images, build_inventory(*args, images, source_only=True)["candidate_images"])
+
+    def test_preservation_candidates_keep_their_original_redis_repository(self):
+        for version, expected in (
+            ("3.13.0-rc.9", IMAGES["redis"]),
+            ("3.13.0-rc.10", IMAGES["redis"]),
+            ("3.13.0-rc.11", MANAGED_REDIS_REPOSITORY),
+            ("3.13.0", MANAGED_REDIS_REPOSITORY),
+        ):
+            with self.subTest(version=version):
+                self.assertEqual(expected, build_image_repositories(version)["redis"])
+
     def test_candidate_digest_and_ee_identity_survive_promotion_without_rebuilding(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
