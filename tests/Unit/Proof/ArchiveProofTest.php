@@ -124,9 +124,9 @@ class ArchiveProofTest extends TestCase
     {
         $verifier = (new StandaloneArchiveVerifier)->verifier();
         $parse = new \ReflectionMethod($verifier, 'generationTime');
-        $whole = $parse->invoke($verifier, 'Time stamp: Apr  7 04:03:02 2026 GMT');
-        $early = $parse->invoke($verifier, 'Time stamp: Apr  7 04:03:02.000000005 2026 GMT');
-        $late = $parse->invoke($verifier, 'Time stamp: Apr  7 04:03:02.5110 2026 GMT');
+        $whole = $parse->invoke($verifier, "Version: 1\nTime stamp: Apr  7 04:03:02 2026 GMT");
+        $early = $parse->invoke($verifier, "Version: 1\nTime stamp: Apr  7 04:03:02.000000005 2026 GMT");
+        $late = $parse->invoke($verifier, "Version: 1\nTime stamp: Apr  7 04:03:02.5110 2026 GMT");
 
         $this->assertSame('2026-04-07T04:03:02+00:00', $whole['utc']);
         $this->assertSame('2026-04-07T04:03:02.000000005+00:00', $early['utc']);
@@ -135,7 +135,37 @@ class ArchiveProofTest extends TestCase
         $this->assertTrue(strcmp($whole['utc'], $early['utc']) < 0 && strcmp($early['utc'], $late['utc']) < 0);
 
         $this->expectException(RuntimeException::class);
-        $parse->invoke($verifier, 'Time stamp: Apr 31 04:03:02.511 2026 GMT');
+        $parse->invoke($verifier, "Version: 1\nTime stamp: Apr 31 04:03:02.511 2026 GMT");
+    }
+
+    public function test_generation_time_accepts_only_the_token_view_of_an_issued_response(): void
+    {
+        $this->configureProofCertificates($this->directory);
+        $runner = new ProcessRunner;
+        $source = $this->directory.'/document';
+        $query = $this->directory.'/request.tsq';
+        $response = $this->directory.'/response.tsr';
+        file_put_contents($source, 'Timestamp qualification');
+        $runner->run(['openssl', 'ts', '-query', '-data', $source, '-sha256', '-cert', '-out', $query]);
+        $runner->run(['openssl', 'ts', '-reply', '-config', $this->directory.'/certificates/tsa.cnf', '-queryfile', $query, '-out', $response]);
+
+        $verifier = (new StandaloneArchiveVerifier)->verifier();
+        $parse = new \ReflectionMethod($verifier, 'generationTime');
+        $reply = ['openssl', 'ts', '-reply', '-in', $response, '-text'];
+        $issued = $parse->invoke($verifier, $runner->run([...$reply, '-token_out']));
+        $this->assertGreaterThan(0, $issued['second']);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('no unambiguous generation time');
+        $parse->invoke($verifier, $runner->run($reply));
+    }
+
+    public function test_generation_time_requires_a_timestamp_in_the_token_view(): void
+    {
+        $verifier = (new StandaloneArchiveVerifier)->verifier();
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('no unambiguous generation time');
+        (new \ReflectionMethod($verifier, 'generationTime'))->invoke($verifier, 'Version: 1');
     }
 
     public function test_timestamp_store_accepts_multiple_crls_and_rejects_unrelated_input(): void

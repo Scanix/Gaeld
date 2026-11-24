@@ -277,9 +277,12 @@ final class Verifier
     }
 
     /** @return array{second: int, utc: string} */
-    private function generationTime(string $description): array
+    private function generationTime(string $tokenInfo): array
     {
-        if (! preg_match('/^Time stamp: ([A-Z][a-z]{2} +[0-9]{1,2} [0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.([0-9]+))? ([0-9]{4}) GMT\r?$/m', $description, $parts)) {
+        if (! str_starts_with($tokenInfo, 'Version: ') || preg_match_all('/^Time stamp: ([^\r\n]*)\r?$/m', $tokenInfo, $fields) !== 1) {
+            throw new RuntimeException('The timestamp token has no unambiguous generation time.');
+        }
+        if (! preg_match('/\A([A-Z][a-z]{2} +[0-9]{1,2} [0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.([0-9]+))? ([0-9]{4}) GMT\z/', $fields[1][0], $parts)) {
             throw new RuntimeException('The timestamp response has no usable generation time.');
         }
         $time = DateTimeImmutable::createFromFormat('!M j H:i:s Y T', $parts[1].' '.$parts[3].' GMT');
@@ -299,8 +302,9 @@ final class Verifier
     {
         $openssl = $this->options['openssl'] ?? 'openssl';
         $response = $this->path($directory, $prefix.'.tsr');
-        $description = $this->run([$openssl, 'ts', '-reply', '-in', $response, '-text']);
-        $time = $this->generationTime($description);
+        // With -token_out, OpenSSL prints only TSTInfo. The complete response is verified below.
+        $tokenInfo = $this->run([$openssl, 'ts', '-reply', '-in', $response, '-token_out', '-text']);
+        $time = $this->generationTime($tokenInfo);
         if ($time['second'] > time() + 300) {
             throw new RuntimeException('The timestamp is in the future.');
         }
