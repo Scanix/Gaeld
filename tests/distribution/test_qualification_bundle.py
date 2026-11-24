@@ -11,6 +11,18 @@ from verify_promotion import verify_qualification
 
 
 class QualificationBundleTest(unittest.TestCase):
+    def test_managed_redis_is_bound_to_the_patch_inventory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            version = "3.12.1-rc.4"
+            (root / ("gaeld-ce-" + version + ".tar.gz")).write_bytes(b"patch")
+            args = (root, version, "a" * 40, "refs/heads/release/v" + version, "12", "1")
+            images = {role: repo + "@sha256:" + "b" * 64 for role, repo in IMAGES.items()}
+            with self.assertRaisesRegex(ValueError, "image repository"):
+                build_inventory(*args, images, source_only=True)
+            images["redis"] = "ghcr.io/scanix/gaeld-redis@sha256:" + "d" * 64
+            self.assertEqual(images, build_inventory(*args, images, source_only=True)["candidate_images"])
+
     def test_candidate_digest_and_ee_identity_survive_promotion_without_rebuilding(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

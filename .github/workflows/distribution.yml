@@ -27,6 +27,7 @@ jobs:
     outputs:
       version: ${{ steps.ref.outputs.version }}
       matrix: ${{ steps.ref.outputs.matrix }}
+      managed_redis: ${{ steps.ref.outputs.managed_redis }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -47,6 +48,7 @@ jobs:
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
           [[ "$GITHUB_REF" == "refs/tags/v$version" || "$GITHUB_REF" == "refs/heads/release/v$version" ]]
           printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          PYTHONPATH=scripts/distribution python3 -c 'import sys; from manage import supports_managed_redis; print("managed_redis=" + str(supports_managed_redis(sys.argv[1])).lower())' "$version" >> "$GITHUB_OUTPUT"
 
           printf 'matrix=%s\n' "$(python3 scripts/distribution/qualify_native.py matrix "$version")" >> "$GITHUB_OUTPUT"
 
@@ -65,7 +67,7 @@ jobs:
       app: ${{ steps.app.outputs.digest }}
       web: ${{ steps.web.outputs.digest }}
       postgres: ${{ steps.databases.outputs.postgres }}
-      redis: ${{ steps.databases.outputs.redis }}
+      redis: ${{ steps.redis.outputs.digest || steps.databases.outputs.redis }}
     permissions:
       contents: read
       packages: write
@@ -94,12 +96,13 @@ jobs:
           python3 -m unittest discover -s tests/distribution -v
       - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - name: Select reviewed database image digests for tests and release
+      - name: Select the reviewed PostgreSQL image digest for tests and release
         id: databases
         run: |
           printf 'attempt=%s\n' "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
-          # PostgreSQL 16.16 and Redis 7.4.12, reviewed on 2026-11-23.
+          # PostgreSQL 16.16, reviewed on 2026-11-23.
           echo 'postgres=sha256:ce3efec6bc404f6b15ebf5d9bed6b45a9d4655aea238d7dacc3467ccb05a1175' >> "$GITHUB_OUTPUT"
+          # Retained for reproducing releases before the managed Redis transition.
           echo 'redis=sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe' >> "$GITHUB_OUTPUT"
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
@@ -130,6 +133,25 @@ jobs:
           tags: ghcr.io/scanix/gaeld-web:candidate-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
           provenance: mode=max
           sbom: true
+      - name: Build Redis with the Alpine security updates on both platforms
+        if: needs.metadata.outputs.managed_redis == 'true'
+        id: redis
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: docker/production
+          file: docker/production/redis.Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/scanix/gaeld-redis:candidate-${{ needs.metadata.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          provenance: mode=max
+          sbom: true
+      - name: Sign Redis provenance with the release workflow identity
+        if: needs.metadata.outputs.managed_redis == 'true'
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-name: ghcr.io/scanix/gaeld-redis
+          subject-digest: ${{ steps.redis.outputs.digest }}
+          push-to-registry: true
       - name: Sign application provenance with the release workflow identity
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
@@ -147,7 +169,7 @@ jobs:
           APP_DIGEST: ${{ steps.app.outputs.digest }}
           WEB_DIGEST: ${{ steps.web.outputs.digest }}
           POSTGRES_DIGEST: ${{ steps.databases.outputs.postgres }}
-          REDIS_DIGEST: ${{ steps.databases.outputs.redis }}
+          REDIS_DIGEST: ${{ steps.redis.outputs.digest || steps.databases.outputs.redis }}
           RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
         run: |
           set -euo pipefail

@@ -8,12 +8,7 @@ import os
 from pathlib import Path
 import re
 
-IMAGES = {
-    "app": "ghcr.io/scanix/gaeld",
-    "web": "ghcr.io/scanix/gaeld-web",
-    "postgres": "docker.io/library/postgres",
-    "redis": "docker.io/library/redis",
-}
+from manage import build_image_repositories, OFFICIAL_IMAGES as IMAGES
 
 
 def digest(file):
@@ -26,8 +21,9 @@ def build_inventory(root, version, commit, source_ref, run, attempt, images, *, 
         raise ValueError("An exact version and source commit are required.")
     if source_ref not in ("refs/tags/v" + version, "refs/heads/release/v" + version):
         raise ValueError("The build must use the corresponding release branch or tag.")
-    if set(images) != set(IMAGES) or not all(
-        re.fullmatch(re.escape(repo) + r"@sha256:[a-f0-9]{64}", images[key]) for key, repo in IMAGES.items()
+    expected = build_image_repositories(version)
+    if set(images) != set(expected) or not all(
+        re.fullmatch(re.escape(repo) + r"@sha256:[a-f0-9]{64}", images[key]) for key, repo in expected.items()
     ):
         raise ValueError("Unexpected image repository or digest.")
     required = ["gaeld-ce-" + version + ".tar.gz"]
@@ -58,7 +54,7 @@ def main():
     env = os.environ
     if args.mode != "verify":
         images = {
-            name: repository + "@" + env[name.upper() + "_DIGEST"] for name, repository in IMAGES.items()
+            name: repository + "@" + env[name.upper() + "_DIGEST"] for name, repository in build_image_repositories(env["RELEASE_VERSION"]).items()
         }
         data = build_inventory(
             root,

@@ -210,6 +210,17 @@ EE_ACCEPTANCE_KEY_SHA256 = '81c9d5e200e21fd0d6f0df020a5be0f97b31215d6237899e29e7
 
 OFFICIAL_IMAGES = {'app': 'ghcr.io/scanix/gaeld', 'web': 'ghcr.io/scanix/gaeld-web',
                    'postgres': 'docker.io/library/postgres', 'redis': 'docker.io/library/redis'}
+MANAGED_REDIS_REPOSITORY = 'ghcr.io/scanix/gaeld-redis'
+
+
+def supports_managed_redis(release_version):
+    return version(release_version) >= version('3.12.1-rc.4')
+
+
+def build_image_repositories(release_version):
+    if supports_managed_redis(release_version):
+        return {**OFFICIAL_IMAGES, 'redis': MANAGED_REDIS_REPOSITORY}
+    return OFFICIAL_IMAGES
 
 
 def origin(url):
@@ -230,6 +241,11 @@ def distribution_policy(path):
     images = policy.get('images', {})
     if set(images) != set(OFFICIAL_IMAGES) or any(not isinstance(value, str) or not re.fullmatch(r'[a-z0-9.-]+(?::[0-9]+)?/[a-z0-9._/-]+', value) or '..' in value for value in images.values()):
         raise OperationError('The rehearsal policy must specify one exact OCI repository per service.')
+    managed = policy.get('managed_redis_repository')
+    if 'managed_redis_repository' in policy and (
+            not isinstance(managed, str) or not re.fullmatch(r'[a-z0-9.-]+(?::[0-9]+)?/[a-z0-9._/-]+', managed)
+            or '..' in managed or managed in images.values()):
+        raise OperationError('Pin a distinct, exact repository for managed Redis in the rehearsal policy.')
     if len(set(images.values())) != 4:
         raise OperationError('The four rehearsal image repositories must be distinct.')
     return policy
@@ -259,6 +275,12 @@ def verify_release(directory, expected_version, trust_key, policy=None):
         raise OperationError('A rehearsal release requires an independently supplied distribution policy.')
     elif digest(trust_key) != RELEASE_KEY_SHA256:
         raise OperationError('The public release signing key fingerprint differs from the pinned project key.')
+    if 'redis_distribution' in release:
+        if release['redis_distribution'] != 'gaeld' or not supports_managed_redis(expected_version):
+            raise OperationError('Unsupported Redis distribution for the requested release.')
+        if policy and not policy.get('managed_redis_repository'):
+            raise OperationError('The installed rehearsal policy must pin the managed Redis repository.')
+        repositories = {**repositories, 'redis': policy['managed_redis_repository'] if policy else MANAGED_REDIS_REPOSITORY}
     for image, repository in repositories.items():
         if not re.fullmatch(re.escape(repository) + r'@sha256:[a-f0-9]{64}', release.get('images', {}).get(image, '')):
             raise OperationError('Release image repository or immutable digest does not match the operator trust policy: ' + image)
