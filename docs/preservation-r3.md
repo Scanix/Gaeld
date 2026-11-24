@@ -213,4 +213,17 @@ Protocol references: [CMS](https://docs.openssl.org/3.5/man1/openssl-cms/),
 
 ## Release qualification
 
-The native staging laboratory uses synthetic historical financial data, separate test signer/TSA/TLS CAs, an HTTPS OpenSSL RFC 3161 service and a source-built MinIO server with Compliance retention. Test authorities are never configured as production trust anchors. This validates only the recorded laboratory profile; it does not qualify SwissSign, AWS, Exoscale or another commercial service. Preserve exact commit, source digest, binaries, test reports, independent recovery results and the CE/EE pair in the release dossier. Before stable publication, validate the selected commercial services, operational procedures and accounting/legal review required by the release plan.
+The staging laboratory uses synthetic records, separate test signer/TSA/TLS roots, an HTTPS RFC 3161 service and an S3-compatible server with Compliance retention. Its reports qualify the tested source, images and laboratory configuration. Keep its signing keys and test trust anchors out of customer installations.
+
+The first stable profile covers Gäld-operated storage, document signing and timestamping for participating hosted organizations. Self-hosted installations use their own provider configuration and keys. A hosted organization enrolls under a separate custody agreement. Keep ordinary archive capture available to other organizations. Record retention, recovery and access obligations that continue when enrollment ends.
+
+For stable acceptance, verify the signed v3.12.0 predecessor and populated CE and EE upgrades using the exact source, images and Enterprise package digests. Exercise hosted enrollment, clock failure, signer and TSA key rotation and revocation, legal holds and retention. Recover all expected organizations, packages and renewals on an independent machine with the primary site unavailable. Compare against the independently retained current catalog, record elapsed time and recoverable data age, and verify a customer's export with public trust material. Operations, accounting and legal reviewers approve the profile and customer wording. Keep the profile, reports and signed reviews in the private release dossier.
+
+The signed acceptance receipt identifies the build, predecessor, exact packages and upgrade results. For a candidate the receipt carries `preservation_qualification`. For stable v3.13.0 it carries `preservation_acceptance` with the following fields:
+
+- `profile` is `gaeld-sealed-package/1.0.0`, `provider` is `gaeld-hosted`, `qualification_only` is false and `status` is `passed`.
+- `baseline_commit` identifies the signed v3.12.0 predecessor and `released_candidate` names the published RC from the stable commit, without its leading `v`.
+- `provider_profile_sha256` and `evidence_sha256` bind the approved provider profile and qualification dossier. `signoffs` contains SHA-256 digests of the retained operations, accounting and legal reviews under `operations`, `accounting` and `legal`.
+- `checks` records the individual provider, recovery, upgrade and compatibility checks required by the release manifest verifier. Use separate exact-build stable evidence when source archives or image digests differ from the candidate artifacts.
+
+Verify the signed release manifest and checksums when downloading. Retain every prior candidate and its evidence.

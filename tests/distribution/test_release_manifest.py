@@ -9,7 +9,8 @@ import unittest
 BUILDER = Path(__file__).resolve().parents[2] / 'scripts/distribution/release_manifest.py'
 sys.path.insert(0, str(BUILDER.parent))
 from adopt import SAIL_RELEASES
-from release_manifest import verify_archive_upgrade, verify_preservation_candidate
+from release_manifest import (HOSTED_CHECKS, PRESERVATION_CHECKS, verify_archive_upgrade,
+                              verify_preservation_acceptance, verify_preservation_candidate)
 from unittest.mock import patch
 from verify_adoption_receipt import CHECKS, sha256
 
@@ -37,6 +38,71 @@ class ReleaseManifestTest(unittest.TestCase):
                 path.write_text(json.dumps(receipt))
                 with self.assertRaisesRegex(ValueError, 'incomplete'):
                     verify_preservation_candidate(args, ['3.12.0'], {}, ['2.10.1'])
+
+    def test_stable_preservation_requires_signed_predecessor_release_pair_and_reviewed_hosted_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'source.tar.gz'
+            source.write_bytes(b'stable test fixture')
+            previous, current = 'a' * 40, 'b' * 40
+            baseline = root / 'release.json'
+            baseline.write_text(json.dumps({'version': '3.12.0', 'edition': 'ce', 'commit': previous,
+                                            'source': {'sha256': 'd' * 64}, 'images': {'app': 'previous'}}))
+            key, public = root / 'fixture.key', root / 'fixture.pub'
+            subprocess.run(['openssl', 'genpkey', '-algorithm', 'ED25519', '-out', key], check=True)
+            subprocess.run(['openssl', 'pkey', '-in', key, '-pubout', '-out', public], check=True)
+            subprocess.run(['openssl', 'pkeyutl', '-sign', '-inkey', key, '-rawin', '-in', baseline,
+                            '-out', root / 'release.json.sig'], check=True)
+            target = root / 'receipt.json'
+            args = SimpleNamespace(version='3.13.0', commit=current, source=source, ee_receipt=target,
+                                   ee_receipt_signature='fixture', ee_receipt_key='fixture', baseline_manifest=baseline)
+            checks = dict.fromkeys(('capture', 'deduplication', 'missing_source_incident', 'retry', 'export',
+                                    'access_controls', 'existing_rows_unchanged', 'existing_files_unchanged',
+                                    'recovery_rows_unchanged', 'recovery_files_unchanged'), True)
+            row = {'baseline_version': '3.12.0', 'baseline_commit': previous, 'checks': checks}
+            package = {'version': '2.10.2', 'commit': 'c' * 40, 'content_sha256': 'd' * 64}
+            proof = {'profile': 'gaeld-sealed-package/1.0.0', 'provider': 'gaeld-hosted', 'qualification_only': False,
+                     'status': 'passed', 'baseline_commit': previous, 'released_candidate': '3.13.0-rc.6',
+                     'evidence_sha256': 'e' * 64, 'provider_profile_sha256': 'f' * 64,
+                     'checks': dict.fromkeys(PRESERVATION_CHECKS + HOSTED_CHECKS, True),
+                     'signoffs': {role: 'a' * 64 for role in ('operations', 'accounting', 'legal')}}
+            receipt = {'source_sha256': sha256(source), 'candidate_images': {'app': 'current'},
+                       'baseline_source_sha256': 'd' * 64, 'baseline_images': {'app': 'previous'},
+                       'ee_packages': [package], 'archive_upgrades': [dict(row, edition='CE'), dict(
+                           row, edition='EE', ee_version=package['version'], ee_commit=package['commit'],
+                           ee_content_sha256=package['content_sha256'])], 'preservation_acceptance': proof}
+
+            def verify(data):
+                target.write_text(json.dumps(data))
+                verify_preservation_acceptance(args, ['3.12.0'], {'app': 'current'}, [package['version']])
+
+            def commit_for_tag(argv, **kwargs):
+                return previous if argv[-1] == 'refs/tags/v3.12.0^{commit}' else current
+
+            with (patch('release_manifest.subprocess.check_output', side_effect=commit_for_tag),
+                  patch('release_manifest.RELEASE_PUBLIC_KEY', public),
+                  patch('release_manifest.RELEASE_KEY_SHA256', sha256(public))):
+                verify(receipt)
+                cases = [
+                    (dict(receipt, preservation_acceptance=None), 'hosted provider'),
+                    (dict(receipt, preservation_acceptance=dict(proof, qualification_only=True)), 'hosted provider'),
+                    (dict(receipt, preservation_acceptance=dict(proof, signoffs={'operations': 'a' * 64})), 'sign-offs'),
+                    (dict(receipt, preservation_acceptance=dict(proof, checks=dict(proof['checks'], latest_renewal=False))), 'incomplete'),
+                    (dict(receipt, baseline_source_sha256='e' * 64), 'signed predecessor'),
+                    (dict(receipt, archive_upgrades=[dict(row, edition='CE')]), 'missing an exact'),
+                    (dict(receipt, source_sha256='0' * 64), 'exact source'),
+                    (dict(receipt, candidate_images={'app': 'different'}), 'exact source'),
+                ]
+                for data, message in cases:
+                    with self.subTest(message=message), self.assertRaisesRegex(ValueError, message):
+                        verify(data)
+                args.commit = 'c' * 40
+                with self.assertRaisesRegex(ValueError, 'stable source commit'):
+                    verify(receipt)
+                args.commit = current
+                baseline.write_bytes(baseline.read_bytes() + b' ')
+                with self.assertRaises(subprocess.CalledProcessError):
+                    verify(receipt)
 
     def test_archive_receipt_binds_both_editions_to_the_same_predecessor_and_complete_recovery(self):
         with tempfile.TemporaryDirectory() as directory:
