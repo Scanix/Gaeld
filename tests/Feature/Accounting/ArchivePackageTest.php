@@ -95,6 +95,48 @@ class ArchivePackageTest extends TestCase
         $this->assertTrue($service->verify($package)['valid']);
     }
 
+    public function test_failed_zip_finalization_removes_only_the_export_and_allows_retry(): void
+    {
+        $disk = Storage::disk('local');
+        $source = 'receipts/'.$this->organization->id.'/original.txt';
+        $disk->put($source, 'Original receipt');
+        Expense::factory()->for($this->organization)->create(['date' => '2026-08-01', 'receipt_path' => $source]);
+        $service = app(ArchivePackageService::class);
+        $package = $service->request($this->organization, $this->year, $this->user);
+        $service->prepare($package);
+        $manifest = $package->fresh()->manifest_sha256;
+
+        $writer = new class extends ZipArchive
+        {
+            public int $closeCalls = 0;
+
+            public function close(): bool
+            {
+                $this->closeCalls++;
+                parent::close();
+
+                return false;
+            }
+        };
+        $this->app->instance(ZipArchive::class, $writer);
+        try {
+            $service->export($package);
+            $this->fail('The simulated finalization error must be reported.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('Cannot finish archive export.', $exception->getMessage());
+        } finally {
+            $this->app->forgetInstance(ZipArchive::class);
+        }
+
+        $this->assertSame(1, $writer->closeCalls);
+        $this->assertSame([], $disk->files('archives/exports'));
+        $this->assertSame('Original receipt', $disk->get($source));
+        $this->assertSame($manifest, $package->fresh()->manifest_sha256);
+        $this->assertTrue($service->verify($package)['valid']);
+        $retry = $service->export($package);
+        $this->assertFileExists($retry);
+    }
+
     public function test_package_includes_versioned_instructions_policy_and_frozen_control_reports(): void
     {
         $audit = app(ArchiveAccessLog::class);

@@ -279,7 +279,7 @@ class ArchivePackageService implements ArchivePackageBuilder
         $manifest = json_decode($disk->get($package->package_path.'/manifest.json'), true, 512, JSON_THROW_ON_ERROR);
         $disk->makeDirectory('archives/exports');
         $target = $disk->path('archives/exports/'.Str::uuid().'.zip');
-        $zip = new ZipArchive;
+        $zip = app(ZipArchive::class);
         if ($zip->open($target, ZipArchive::CREATE | ZipArchive::EXCL) !== true) {
             throw new \RuntimeException('Cannot create archive export.');
         }
@@ -293,7 +293,9 @@ class ArchivePackageService implements ArchivePackageBuilder
                 throw new \RuntimeException('Cannot finish archive export.');
             }
         } catch (\Throwable $exception) {
-            @$zip->close();
+            if ($zip->filename !== '') {
+                @$zip->close();
+            }
             @unlink($target);
             throw $exception;
         }
