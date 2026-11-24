@@ -16,6 +16,38 @@ from verify_adoption_receipt import CHECKS, sha256
 
 
 class ReleaseManifestTest(unittest.TestCase):
+    def test_preservation_patch_predecessor_requires_both_signed_manifests_and_both_edition_paths(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'archive.tar.gz'
+            source.write_bytes(b'qualification')
+            receipt = root / 'acceptance.json'
+            pair = ['2.10.2']
+            baselines = ['3.12.0', '3.12.1']
+            args = SimpleNamespace(version='3.13.0-rc.10', commit='c' * 40, source=source,
+                                   ee_receipt=receipt, ee_receipt_signature='receipt.sig', ee_receipt_key='key',
+                                   baseline_manifest=[root / version / 'release.json' for version in baselines])
+            paths = {version: {'baseline_version': version} for version in baselines}
+            record = {'source_sha256': sha256(source), 'candidate_images': {}, 'archive_paths': paths,
+                      'preservation_qualification': {'profile': 'gaeld-sealed-package/1.0.0',
+                      'baseline_commit': 'a' * 40, 'status': 'passed', 'qualification_only': True,
+                      'evidence_sha256': 'b' * 64, 'checks': dict.fromkeys(PRESERVATION_CHECKS, True)}}
+            receipt.write_text(json.dumps(record))
+            with (patch('release_manifest.subprocess.check_output', return_value='a' * 40),
+                  patch('release_manifest.verify_archive_predecessor') as verify):
+                verify_preservation_candidate(args, baselines, {}, pair)
+                self.assertEqual(
+                    [(args, version, manifest, paths[version], pair, {}) for version, manifest in
+                     zip(baselines, args.baseline_manifest, strict=True)],
+                    [call.args for call in verify.call_args_list])
+                args.baseline_manifest.pop()
+                with self.assertRaisesRegex(ValueError, 'every supported upgrade path'):
+                    verify_preservation_candidate(args, baselines, {}, pair)
+                paths.pop('3.12.1')
+                receipt.write_text(json.dumps(record))
+                with self.assertRaisesRegex(ValueError, 'both published upgrade paths'):
+                    verify_preservation_candidate(args, baselines, {}, pair)
+
     def test_preservation_qualification_excludes_stable_and_requires_independent_recovery(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -114,7 +146,7 @@ class ReleaseManifestTest(unittest.TestCase):
                     (dict(receipt, preservation_acceptance=dict(proof, checks=dict(proof['checks'], latest_renewal=False))), 'incomplete'),
                     (dict(receipt, baseline_source_sha256='e' * 64), 'signed predecessor'),
                     (dict(receipt, archive_upgrades=[dict(row, edition='CE', candidate_commit='d' * 40),
-                                                     receipt['archive_upgrades'][1]]), 'stable build'),
+                                                     receipt['archive_upgrades'][1]]), 'preservation build'),
                     (dict(receipt, archive_upgrades=[dict(row, edition='CE')]), 'missing an exact'),
                     (dict(receipt, source_sha256='0' * 64), 'exact source'),
                     (dict(receipt, candidate_images={'app': 'different'}), 'exact source'),

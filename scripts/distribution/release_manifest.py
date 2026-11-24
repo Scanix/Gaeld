@@ -13,6 +13,7 @@ from verify_adoption_receipt import verify as verify_adoption_receipt
 
 
 RELEASE_PUBLIC_KEY = Path(__file__).resolve().parents[2] / 'docs/keys/release.pub'
+PRESERVATION_BASELINES = ['3.12.0', '3.12.1']
 
 
 def sha256(path):
@@ -48,7 +49,7 @@ def verify_archive_upgrade(args, allowed, images, ee):
     baselines = {
         '3.12.0': ['3.11.0'],
         '3.12.1': ['3.11.0', '3.12.0'],
-        '3.13.0': ['3.12.0'],
+        '3.13.0': ['3.12.0'] if allowed == ['3.12.0'] else PRESERVATION_BASELINES,
     }[stage]
     if allowed != baselines or not ee:
         raise ValueError('Archive packages require the qualified predecessor releases and a verified EE pair.')
@@ -57,10 +58,10 @@ def verify_archive_upgrade(args, allowed, images, ee):
     receipt = json.loads(Path(args.ee_receipt).read_text())
     if receipt.get('source_sha256') != sha256(args.source) or receipt.get('candidate_images') != images:
         raise ValueError('Archive qualification must cover the exact source bytes and images.')
-    if stage == '3.12.1':
+    if len(baselines) > 1:
         paths = receipt.get('archive_paths')
         if not isinstance(paths, dict) or set(paths) != set(baselines):
-            raise ValueError('Patch qualification requires both published upgrade paths.')
+            raise ValueError('Qualification requires both published upgrade paths.')
     else:
         paths = {baselines[0]: receipt}
     manifests = args.baseline_manifest
@@ -89,14 +90,14 @@ def verify_archive_predecessor(args, version, manifest, evidence, ee, packages):
     tested = set()
     checks = ('capture', 'deduplication', 'missing_source_incident', 'retry', 'export', 'access_controls',
               'existing_rows_unchanged', 'existing_files_unchanged', 'recovery_rows_unchanged', 'recovery_files_unchanged')
-    patch = args.version.split('-')[0] == '3.12.1'
-    if patch and version == '3.12.0':
+    stage = args.version.split('-')[0]
+    if stage == '3.12.1' and version == '3.12.0':
         checks += ('rollback_to_predecessor', 'rollback_login_and_data')
     for row in attempts:
         if not isinstance(row, dict) or row.get('baseline_version') != version or row.get('baseline_commit') != previous:
             raise ValueError('Archive upgrades require the signed predecessor commit.')
-        if patch and (row.get('candidate_version') != args.version or row.get('candidate_commit') != args.commit):
-            raise ValueError('The upgrade row does not cover the exact patch target.')
+        if stage in ('3.12.1', '3.13.0') and (row.get('candidate_version') != args.version or row.get('candidate_commit') != args.commit):
+            raise ValueError('An upgrade row does not identify the exact patch target or preservation build.')
         if not isinstance(row.get('checks'), dict) or any(row['checks'].get(check) is not True for check in checks):
             raise ValueError('Archive upgrade or recovery evidence is incomplete.')
         edition = row.get('edition')
@@ -124,11 +125,13 @@ HOSTED_CHECKS = ('tenant_enrollment', 'clock_failure', 'key_rotation_and_revocat
 def verify_preservation_candidate(args, allowed, images, ee):
     if not re.fullmatch(r'3\.13\.0-rc\.[1-9][0-9]*', args.version):
         raise ValueError('The preservation profile is in qualification. Stable publication requires provider, operational and accounting/legal approval.')
-    if allowed != ['3.12.0'] or not ee or not args.ee_receipt:
+    if allowed not in (['3.12.0'], PRESERVATION_BASELINES) or not ee or not args.ee_receipt:
         raise ValueError('Preservation qualification requires the archive predecessor and the signed exact EE pair.')
     receipt = json.loads(Path(args.ee_receipt).read_text())
     if receipt.get('source_sha256') != sha256(args.source) or receipt.get('candidate_images') != images:
         raise ValueError('Preservation qualification must cover the selected source artifact and images.')
+    if allowed == PRESERVATION_BASELINES:
+        verify_archive_upgrade(args, allowed, images, ee)
     proof = receipt.get('preservation_qualification', {})
     previous = subprocess.check_output(['git', 'rev-parse', 'refs/tags/v3.12.0^{commit}'], text=True).strip()
     if (proof.get('baseline_commit') != previous or proof.get('profile') != 'gaeld-sealed-package/1.0.0'
@@ -150,9 +153,6 @@ def verify_preservation_acceptance(args, allowed, images, ee):
         raise ValueError('Stable publication requires Gäld hosted provider acceptance.')
 
     verify_archive_upgrade(args, allowed, images, ee)
-    if any(row.get('candidate_commit') != args.commit or row.get('candidate_version') != args.version
-           for row in receipt['archive_upgrades']):
-        raise ValueError('Each restored installation must identify the stable build.')
     if proof.get('baseline_commit') != json.loads(Path(args.baseline_manifest[0]).read_text())['commit']:
         raise ValueError('Preservation acceptance has a different predecessor.')
     rc = proof.get('released_candidate', '')
