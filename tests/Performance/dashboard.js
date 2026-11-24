@@ -16,6 +16,12 @@ export const options = {
   },
 };
 
+function loadedCollection(response) {
+  return response.status === 200
+    && response.headers['Content-Type']?.includes('application/json')
+    && Array.isArray(response.json('data'));
+}
+
 export default function () {
   const params = apiHeaders();
 
@@ -23,25 +29,25 @@ export default function () {
     ...params,
     tags: { name: 'accounts_list' },
   });
-  check(accounts, { 'accounts loaded': (r) => r.status === 200 });
+  check(accounts, { 'accounts loaded': loadedCollection });
 
   const customers = http.get(apiUrl('/customers?per_page=50'), {
     ...params,
     tags: { name: 'customers_list' },
   });
-  check(customers, { 'customers loaded': (r) => r.status === 200 });
+  check(customers, { 'customers loaded': loadedCollection });
 
   const invoices = http.get(apiUrl('/invoices?per_page=25'), {
     ...params,
     tags: { name: 'invoices_list' },
   });
-  check(invoices, { 'invoices loaded': (r) => r.status === 200 });
+  check(invoices, { 'invoices loaded': loadedCollection });
 
   const expenses = http.get(apiUrl('/expenses?per_page=25'), {
     ...params,
     tags: { name: 'expenses_list' },
   });
-  check(expenses, { 'expenses loaded': (r) => r.status === 200 });
+  check(expenses, { 'expenses loaded': loadedCollection });
 
   sleep(0.5);
 }
