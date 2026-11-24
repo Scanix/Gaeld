@@ -47,10 +47,15 @@ class BexioParserTest extends TestCase
         $writer->addRow(Row::fromValues(['Contact no.', 'Company name', 'City']));
         $writer->addRow(Row::fromValues(['42', 'Vérification SA', 'Genève']));
         $writer->close();
+
+        $zip = new \ZipArchive;
+        $this->assertTrue($zip->open($file->getPathname()));
+        $this->assertTrue($zip->addEmptyDir('xl/media'));
+        $this->assertTrue($zip->close());
+
         $this->assertSame(DataType::Contacts, $this->parser->detectDataType($file));
         $this->assertSame('Vérification SA', $this->parser->parse($file, DataType::Contacts)->sole()->name);
 
-        $zip = new \ZipArchive;
         $this->assertTrue($zip->open($file->getPathname()));
         $part = '<?xml version="1.0" encoding="UTF-16"?><!DOCTYPE note><note/>';
         $zip->addFromString('xl/alternate-part.dat', "\xff\xfe".mb_convert_encoding($part, 'UTF-16LE', 'UTF-8'));

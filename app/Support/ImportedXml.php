@@ -57,16 +57,12 @@ final class ImportedXml
             throw new InvalidImportedXml('The workbook could not be opened.');
         }
         try {
-            // Workbook relationships can point to parts with arbitrary names.
-            // Inspect the prolog of each part without unpacking worksheets or media.
+            // Read every entry by index. Its name cannot establish whether it contains XML.
             if ($zip->numFiles > 16384) {
                 throw new InvalidImportedXml('The workbook has too many parts.');
             }
             $inspected = 0;
             for ($index = 0; $index < $zip->numFiles; $index++) {
-                if (str_ends_with((string) $zip->getNameIndex($index), '/')) {
-                    continue;
-                }
                 $stream = $zip->getStreamIndex($index);
                 if ($stream === false) {
                     throw new InvalidImportedXml('A workbook part could not be read.');
