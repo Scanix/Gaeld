@@ -1,6 +1,7 @@
 <script setup>
-import { useForm, router } from '@inertiajs/vue3'
+import { Link, useForm, router } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
+import JournalEntryAttachmentList from '@/Components/JournalEntryAttachmentList.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
 import CardTitle from '@/Components/UI/CardTitle.vue'
@@ -318,16 +319,16 @@ const currentSuggestions = computed(() => {
   return suggestionsSafe.value[matchingTransaction.value.id] || { invoices: [], expenses: [] }
 })
 
-const justificationMissingCount = computed(() => {
-  const txs = transactionsSafe.value?.data ?? []
-  return txs.filter(
-    tx => tx.is_reconciled
-      && (
-        (!tx.matched_invoice && !tx.matched_expense && !tx.vat_settlement_journal_entry_id)
-        || (tx.matched_expense && !tx.matched_expense.receipt_path)
-      ),
-  ).length
-})
+function missingJustification(tx) {
+  return tx.is_reconciled
+    && !tx.journal_entry?.attachments?.length
+    && (
+      (!tx.matched_invoice && !tx.matched_expense && !tx.vat_settlement_journal_entry_id)
+      || (tx.matched_expense && !tx.matched_expense.receipt_path)
+    )
+}
+
+const justificationMissingCount = computed(() => (transactionsSafe.value?.data ?? []).filter(missingJustification).length)
 </script>
 
 <template>
@@ -406,14 +407,14 @@ const justificationMissingCount = computed(() => {
             v-for="tx in transactionsSafe.data"
             :key="tx.id"
             :class="[
-              'flex items-start justify-between rounded-lg border p-4 transition-colors',
+              'flex flex-col gap-3 rounded-lg border p-4 transition-colors sm:flex-row sm:items-start sm:justify-between',
               tx.is_reconciled
                 ? 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950'
                 : 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]',
             ]"
           >
             <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1">
+              <div class="mb-1 flex flex-wrap items-center gap-2">
                 <Badge :variant="tx.type === 'credit' ? 'default' : 'secondary'">
                   {{ tx.type === 'credit' ? '↓ IN' : '↑ OUT' }}
                 </Badge>
@@ -454,17 +455,21 @@ const justificationMissingCount = computed(() => {
                 >
                   <Paperclip class="h-3 w-3" />
                 </a>
-                <Badge
-                  v-else
-                  variant="outline"
-                  class="border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                  :title="t('justification_missing_help')"
-                >
-                  <AlertTriangle class="mr-1 h-3 w-3" /> {{ t('justification_missing') }}
-                </Badge>
+              </div>
+              <div v-if="tx.journal_entry?.show_url" class="mt-2 space-y-1">
+                <Link :href="tx.journal_entry.show_url" class="inline-flex items-center gap-1 text-xs font-medium text-[hsl(var(--primary))] underline-offset-4 hover:underline">
+                  <Link2 aria-hidden="true" class="size-3" /> {{ t('journal_entry') }}
+                  <span v-if="tx.journal_entry.reference">{{ tx.journal_entry.reference }}</span>
+                </Link>
+                <details v-if="tx.journal_entry.attachments?.length">
+                  <summary class="cursor-pointer text-sm font-medium">
+                    {{ t('journal_attachments') }} ({{ tx.journal_entry.attachments.length }})
+                  </summary>
+                  <JournalEntryAttachmentList :attachments="tx.journal_entry.attachments" />
+                </details>
               </div>
               <Badge
-                v-if="tx.is_reconciled && !tx.matched_invoice && !tx.matched_expense && !tx.vat_settlement_journal_entry_id"
+                v-if="missingJustification(tx)"
                 variant="outline"
                 class="mt-2 border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
                 :title="t('justification_missing_help')"
@@ -519,7 +524,7 @@ const justificationMissingCount = computed(() => {
               </div>
             </div>
 
-            <div class="flex items-center gap-3 ml-4">
+            <div class="flex flex-wrap items-center gap-3 sm:justify-end">
               <span :class="[
                 'text-lg font-semibold tabular-nums',
                 tx.type === 'credit' ? 'text-green-600' : 'text-red-600',

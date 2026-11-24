@@ -6,6 +6,7 @@ use App\Domains\Accounting\Contracts\ArchivePackageBuilder;
 use App\Domains\Accounting\Models\ArchiveOutbox;
 use App\Domains\Accounting\Models\ArchivePackage;
 use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Accounting\Models\JournalEntryAttachment;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Carbon;
@@ -38,6 +39,9 @@ class ArchivePackageService implements ArchivePackageBuilder
             $year = FiscalYear::withoutGlobalScopes()->where('organization_id', $organization->id)->whereKey($year->id)->lockForUpdate()->firstOrFail();
             $snapshot = $this->snapshots->capture($organization, $year);
             $snapshot['original_sources'] = $this->sources($snapshot, $organization->id);
+            if (isset($snapshot['journal_entry_attachments'])) {
+                $snapshot['journal_entry_attachments'] = $this->indexJournalAttachments($snapshot);
+            }
             $snapshotHash = hash('sha256', self::json($snapshot));
             $latest = ArchivePackage::withoutGlobalScopes()->where('organization_id', $organization->id)
                 ->where('fiscal_year_id', $year->id)->orderByDesc('version')->first();
@@ -317,6 +321,9 @@ class ArchivePackageService implements ArchivePackageBuilder
     private function readme(ArchivePackage $package): string
     {
         $capturedAt = $package->captured_at->toIso8601String();
+        $journalIndex = isset($package->snapshot['journal_entry_attachments'])
+            ? "\ndata/journal_entry_attachments.csv links each supporting document to its journal_entry_id and entry_reference. Open package_path from the root of the extracted package. deleted_at records withdrawal of a link."
+            : '';
 
         return <<<TEXT
 Gäld conservation package — instructions version 1.0.0
@@ -333,7 +340,7 @@ READING THE PACKAGE
 manifest.json identifies this version and lists every preserved content file with its byte size and SHA-256 digest.
 data/snapshot.json is the frozen accounting dataset. Decimal amounts are strings; preserve exact decimal arithmetic when reusing them.
 data/statements.json contains readable statement values; reports/ contains the journal, balance sheet and income statement PDFs.
-originals/ preserves source-document bytes. A generated report is not a replacement for a missing original document.
+originals/ preserves source-document bytes. A generated report is not a replacement for a missing original document.{$journalIndex}
 data/archive_access_events.csv and the archive_access_events array in data/snapshot.json contain access records and control.daily/control.annual reports known at capture. Empty datasets have no CSV. journal_events records accounting changes.
 retention-policy.json contains the versioned retention policy and operating responsibilities. Later checks, extensions or legal holds are recorded separately and do not rewrite this package.
 
@@ -386,6 +393,34 @@ TEXT;
         }
 
         return $sources;
+    }
+
+    /**
+     * @param  array<string, mixed>  $snapshot
+     * @return list<array<string, mixed>>
+     */
+    private function indexJournalAttachments(array $snapshot): array
+    {
+        $references = array_column($snapshot['journal_entries'], 'reference', 'id');
+        $issued = array_column($snapshot['issued_document_files'], null, 'id');
+        $sources = array_column(array_filter($snapshot['original_sources'], fn (array $source) => $source['type'] === 'issued_document'), null, 'id');
+
+        $index = [];
+        foreach ($snapshot['journal_entry_attachments'] as $attachment) {
+            $id = $attachment['issued_document_file_id'];
+            $file = $issued[$id] ?? null;
+            $source = $sources[$id] ?? null;
+            if ($file === null || $source === null || $file['document_type'] !== JournalEntryAttachment::DOCUMENT_TYPE
+                || $file['document_id'] !== $attachment['journal_entry_id'] || $file['checksum_sha256'] !== $attachment['checksum_sha256']
+                || ($source['size'] !== null && $source['size'] !== (int) $attachment['size_bytes'])) {
+                throw new \RuntimeException('Journal supporting document does not match its issued original: '.$attachment['id']);
+            }
+            $attachment['entry_reference'] = $references[$attachment['journal_entry_id']];
+            $attachment['package_path'] = $source['package_path'];
+            $index[] = $attachment;
+        }
+
+        return $index;
     }
 
     private function assertSafePath(string $path): void

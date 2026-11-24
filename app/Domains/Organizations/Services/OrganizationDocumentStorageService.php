@@ -16,13 +16,13 @@ final class OrganizationDocumentStorageService
         private readonly OrganizationQuotaResolver $quotaResolver,
     ) {}
 
-    public function reserve(Organization $organization, int $bytes): void
+    public function reserve(Organization $organization, int $bytes, string $field = 'document'): void
     {
         if ($bytes < 0) {
             throw new \InvalidArgumentException('File size cannot be negative.');
         }
 
-        DB::transaction(function () use ($organization, $bytes): void {
+        DB::transaction(function () use ($organization, $bytes, $field): void {
             $this->ensureUsageRow($organization);
             $usage = OrganizationDocumentStorageUsage::query()
                 ->where('organization_id', $organization->id)
@@ -32,7 +32,7 @@ final class OrganizationDocumentStorageService
 
             if ($limit !== -1 && $usage->bytes_used + $bytes > $limit) {
                 throw ValidationException::withMessages([
-                    'document' => [__('app.document_storage_limit_reached')],
+                    $field => [__('app.document_storage_limit_reached')],
                 ]);
             }
 
@@ -77,11 +77,7 @@ final class OrganizationDocumentStorageService
 
         DB::transaction(function () use ($organization, $path, $disk): void {
             Organization::withoutGlobalScopes()->whereKey($organization->id)->lockForUpdate()->firstOrFail();
-            $retained = DB::table('archive_source_files')->where('organization_id', $organization->id)->where('source_path', $path)->exists()
-                || DB::table('issued_document_files')->where('organization_id', $organization->id)->where('storage_path', $path)->exists()
-                || DB::table('expenses')->where('organization_id', $organization->id)->where('receipt_path', $path)->whereNotNull('archived_at')->exists()
-                || DB::table('invoices')->where('organization_id', $organization->id)->where('justificatif_path', $path)->whereNotNull('archived_at')->exists();
-            if ($retained) {
+            if ($this->isRetained($organization, $path)) {
                 return;
             }
             $storage = Storage::disk($disk);
@@ -91,6 +87,14 @@ final class OrganizationDocumentStorageService
             }
             $this->release($organization, $bytes);
         });
+    }
+
+    public function isRetained(Organization $organization, string $path): bool
+    {
+        return DB::table('archive_source_files')->where('organization_id', $organization->id)->where('source_path', $path)->exists()
+            || DB::table('issued_document_files')->where('organization_id', $organization->id)->where('storage_path', $path)->exists()
+            || DB::table('expenses')->where('organization_id', $organization->id)->where('receipt_path', $path)->whereNotNull('archived_at')->exists()
+            || DB::table('invoices')->where('organization_id', $organization->id)->where('justificatif_path', $path)->whereNotNull('archived_at')->exists();
     }
 
     private function ensureUsageRow(Organization $organization): void
