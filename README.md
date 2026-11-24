@@ -160,7 +160,9 @@ organization must have both the dedicated `mcp_access` entitlement and API
 access. MCP is included in Team and in an unexpired Team trial, not Cloud Free,
 Solo or a Solo trial. A global flag cannot bypass the subscription check.
 The same server remains available in self-hosted CE without an EE subscription.
-Bearer-token clients are supported; OAuth onboarding is separate work.
+Bearer-token clients can use the 2026-07-28 discovery handshake or initialize with
+2025-11-25, 2025-06-18, 2025-03-26, or 2024-11-05 on the same HTTP endpoint.
+OAuth onboarding is separate work.
 
 Every request checks the current organization and subscription again, including
 requests in an existing MCP session. A scheduled cancellation retains access

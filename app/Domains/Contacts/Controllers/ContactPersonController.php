@@ -76,10 +76,14 @@ class ContactPersonController extends Controller
 
     private function resolveParent(string $type, string $id): Model
     {
-        return match ($type) {
-            'contacts' => Contact::withoutGlobalScopes()->findOrFail($id),
-            default => abort(404),
-        };
+        abort_unless($type === 'contacts', 404);
+
+        $legacyId = filter_var(ltrim($id, '0'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($legacyId !== false) {
+            return Contact::findOrFail($legacyId);
+        }
+
+        return (new Contact)->resolveRouteBinding($id) ?? abort(404);
     }
 
     private function authorizeParent(string $ability, Model $parent): void
