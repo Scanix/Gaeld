@@ -6,6 +6,7 @@ use App\Domains\Accounting\Contracts\ArchivePackageBuilder;
 use App\Domains\Accounting\Models\ArchiveOutbox;
 use App\Domains\Accounting\Models\ArchivePackage;
 use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Accounting\Models\JournalEntryAttachment;
 use App\Domains\Accounting\Proof\PdfArchivalConverter;
 use App\Domains\Accounting\Proof\StandaloneArchiveVerifier;
 use App\Domains\Organizations\Models\Organization;
@@ -63,6 +64,9 @@ class ArchivePackageService implements ArchivePackageBuilder
             }
             $snapshot = $this->snapshots->capture($organization, $year);
             $snapshot['original_sources'] = $this->sources($snapshot, $organization->id);
+            if (isset($snapshot['journal_entry_attachments'])) {
+                $snapshot['journal_entry_attachments'] = $this->indexJournalAttachments($snapshot);
+            }
             if ($enrollmentId !== null) {
                 $snapshot['custody_enrollment'] = [['id' => $enrollmentId, 'organization_id' => $organization->id]];
             }
@@ -332,7 +336,7 @@ class ArchivePackageService implements ArchivePackageBuilder
         $manifest = json_decode($disk->get($package->package_path.'/manifest.json'), true, 512, JSON_THROW_ON_ERROR);
         $disk->makeDirectory('archives/exports');
         $target = $disk->path('archives/exports/'.Str::uuid().'.zip');
-        $zip = new ZipArchive;
+        $zip = app(ZipArchive::class);
         if ($zip->open($target, ZipArchive::CREATE | ZipArchive::EXCL) !== true) {
             throw new \RuntimeException('Cannot create archive export.');
         }
@@ -351,7 +355,9 @@ class ArchivePackageService implements ArchivePackageBuilder
                 throw new \RuntimeException('Cannot finish archive export.');
             }
         } catch (\Throwable $exception) {
-            @$zip->close();
+            if ($zip->filename !== '') {
+                @$zip->close();
+            }
             @unlink($target);
             throw $exception;
         }
@@ -374,6 +380,9 @@ class ArchivePackageService implements ArchivePackageBuilder
     {
         $profile = $package->archival_pdf ? 'PDF/A-2b; a complete signature, timestamp and protected-storage receipt are required.' : 'Ordinary PDF; content integrity only, without an archival proof claim.';
         $capturedAt = $package->captured_at->toIso8601String();
+        $journalIndex = isset($package->snapshot['journal_entry_attachments'])
+            ? "\ndata/journal_entry_attachments.csv links each supporting document to its journal_entry_id and entry_reference. Open package_path from the root of the extracted package. deleted_at records withdrawal of a link."
+            : '';
 
         return <<<TEXT
 Gäld conservation package — instructions version 1.0.0
@@ -390,7 +399,7 @@ READING THE PACKAGE
 manifest.json identifies this version and lists every preserved content file with its byte size and SHA-256 digest.
 data/snapshot.json is the frozen accounting dataset. Decimal amounts are strings; preserve exact decimal arithmetic when reusing them.
 data/statements.json contains readable statement values; reports/ contains the journal, balance sheet and income statement PDFs.
-originals/ preserves source-document bytes. A generated report is not a replacement for a missing original document.
+originals/ preserves source-document bytes. A generated report is not a replacement for a missing original document.{$journalIndex}
 data/archive_access_events.csv and the archive_access_events array in data/snapshot.json contain access records and control.daily/control.annual reports known at capture. Empty datasets have no CSV. journal_events records accounting changes.
 retention-policy.json contains the versioned retention policy and operating responsibilities. Later checks, extensions or legal holds are recorded separately and do not rewrite this package.
 evidence/ is reserved for append-only signature, timestamp, storage and renewal evidence. These files are outside the initial manifest to avoid circular references; their separate proof chain must also be verified.
@@ -448,6 +457,34 @@ TEXT;
         }
 
         return $sources;
+    }
+
+    /**
+     * @param  array<string, mixed>  $snapshot
+     * @return list<array<string, mixed>>
+     */
+    private function indexJournalAttachments(array $snapshot): array
+    {
+        $references = array_column($snapshot['journal_entries'], 'reference', 'id');
+        $issued = array_column($snapshot['issued_document_files'], null, 'id');
+        $sources = array_column(array_filter($snapshot['original_sources'], fn (array $source) => $source['type'] === 'issued_document'), null, 'id');
+
+        $index = [];
+        foreach ($snapshot['journal_entry_attachments'] as $attachment) {
+            $id = $attachment['issued_document_file_id'];
+            $file = $issued[$id] ?? null;
+            $source = $sources[$id] ?? null;
+            if ($file === null || $source === null || $file['document_type'] !== JournalEntryAttachment::DOCUMENT_TYPE
+                || $file['document_id'] !== $attachment['journal_entry_id'] || $file['checksum_sha256'] !== $attachment['checksum_sha256']
+                || ($source['size'] !== null && $source['size'] !== (int) $attachment['size_bytes'])) {
+                throw new \RuntimeException('Journal supporting document does not match its issued original: '.$attachment['id']);
+            }
+            $attachment['entry_reference'] = $references[$attachment['journal_entry_id']];
+            $attachment['package_path'] = $source['package_path'];
+            $index[] = $attachment;
+        }
+
+        return $index;
     }
 
     private function assertSafePath(string $path): void

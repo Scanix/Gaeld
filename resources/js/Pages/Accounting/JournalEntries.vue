@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { router, useForm } from '@inertiajs/vue3'
+import { Link, router, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Components/AppLayout.vue'
 import Card from '@/Components/UI/Card.vue'
 import CardHeader from '@/Components/UI/CardHeader.vue'
@@ -202,7 +202,9 @@ function doDelete() {
           </template>
           <template #cell-reference="{ value, row }">
             <span class="inline-flex items-center gap-2">
-              {{ value }}
+              <Link :href="`/accounting/journal-entries/${row.id}`" class="font-medium text-[hsl(var(--primary))] underline-offset-4 hover:underline">
+                {{ value || t('journal_entry') }}
+              </Link>
               <Badge v-if="row.type === 'historical_summary'" variant="secondary">{{ t('historical_summary_badge') }}</Badge>
             </span>
           </template>

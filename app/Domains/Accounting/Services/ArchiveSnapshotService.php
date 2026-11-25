@@ -3,6 +3,7 @@
 namespace App\Domains\Accounting\Services;
 
 use App\Domains\Accounting\Models\FiscalYear;
+use App\Domains\Accounting\Models\JournalEntryAttachment;
 use App\Domains\Organizations\Models\Organization;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,10 @@ final class ArchiveSnapshotService
         $from = $period->start_date->toDateString();
         $to = $period->end_date->toDateString();
         $entries = fn (): Builder => DB::table('journal_entries')->where('organization_id', $org)->where('is_posted', true)->where('date', '<=', $to);
+        $periodEntries = fn (): Builder => $entries()->where('date', '>=', $from);
+        // Retain withdrawn links alongside their originals once the entry is posted.
+        $journalAttachments = fn (): Builder => DB::table('journal_entry_attachments')->where('organization_id', $org)
+            ->whereIn('journal_entry_id', $periodEntries()->select('id'));
         $invoices = fn (): Builder => DB::table('invoices')->where('organization_id', $org)->whereBetween('issue_date', [$from, $to]);
         $expenses = fn (): Builder => DB::table('expenses')->where('organization_id', $org)->whereBetween('date', [$from, $to]);
         $bankAccounts = fn (): Builder => DB::table('bank_accounts')->where('organization_id', $org);
@@ -34,6 +39,7 @@ final class ArchiveSnapshotService
             'fiscal_year' => DB::table('fiscal_years')->where('id', $period->id),
             'accounts' => DB::table('accounts')->where('organization_id', $org),
             'journal_entries' => $entries(),
+            'journal_entry_attachments' => $journalAttachments(),
             'transaction_lines' => DB::table('transaction_lines')->whereIn('journal_entry_id', $entries()->select('id')),
             'invoices' => $invoices(),
             'invoice_lines' => DB::table('invoice_lines')->whereIn('invoice_id', $invoices()->select('id')),
@@ -50,17 +56,20 @@ final class ArchiveSnapshotService
             'depreciation_entries' => DB::table('depreciation_entries')->whereIn('fixed_asset_id', $assets()->select('id'))->where('period_date', '<=', $to),
             'tax_declarations' => DB::table('tax_declarations')->where('organization_id', $org)->whereBetween('fiscal_year', [$period->start_date->year, $period->end_date->year]),
             'salary_slips' => $salarySlips(),
-            'vat_entries' => DB::table('vat_entries')->whereIn('journal_entry_id', $entries()->where('date', '>=', $from)->select('id')),
+            'vat_entries' => DB::table('vat_entries')->whereIn('journal_entry_id', $periodEntries()->select('id')),
             'vat_rates' => DB::table('vat_rates')->where('organization_id', $org),
             'legal_archives' => DB::table('legal_archives')->where('organization_id', $org)
                 ->where(fn (Builder $query) => $query->where('fiscal_year_id', $period->id)->orWhere(fn (Builder $legacy) => $legacy->whereNull('fiscal_year_id')->where('fiscal_year', $period->start_date->year))),
             'issued_document_files' => DB::table('issued_document_files')->where('organization_id', $org)
-                ->where(fn (Builder $query) => $query->where('fiscal_year_id', $period->id)
+                ->where(fn (Builder $query) => $query->where(fn (Builder $issued) => $issued->where('fiscal_year_id', $period->id)->where('document_type', '!=', JournalEntryAttachment::DOCUMENT_TYPE))
+                    ->orWhere(fn (Builder $issued) => $issued->where('document_type', JournalEntryAttachment::DOCUMENT_TYPE)->whereIn('id', $journalAttachments()->select('issued_document_file_id')))
                     ->orWhere(fn (Builder $legacy) => $legacy->whereNull('fiscal_year_id')->whereIn('document_type', ['invoice_pdf', 'supporting_invoice'])->whereIn('document_id', $invoices()->selectRaw('id::text')))
                     ->orWhere(fn (Builder $legacy) => $legacy->whereNull('fiscal_year_id')->where('document_type', 'supporting_expense')->whereIn('document_id', $expenses()->selectRaw('id::text')))
                     ->orWhere(fn (Builder $legacy) => $legacy->whereNull('fiscal_year_id')->where('document_type', 'salary_slip_pdf')->whereIn('document_id', $salarySlips()->selectRaw('id::text')))),
             'archive_access_events' => DB::table('archive_access_events')->where('organization_id', $org)
-                ->whereNotIn('action', ['package.requested', 'package.prepared']),
+                ->whereNotIn('action', ['package.requested', 'package.prepared'])
+                ->where(fn (Builder $events) => $events->whereRaw('NOT starts_with(action, ?)', ['journal_attachment.'])
+                    ->orWhereIn('metadata->journal_entry_id', $periodEntries()->selectRaw('id::text'))),
             'journal_events' => DB::table('journal_events')->where('organization_id', $org)->whereIn('journal_entry_id', $entries()->select('id')),
         ];
 
@@ -74,6 +83,12 @@ final class ArchiveSnapshotService
         }
         $record = DB::selectOne('SELECT jsonb_build_object('.implode(', ', $parts).')::text AS snapshot', $bindings);
 
-        return json_decode($record->snapshot, true, 512, JSON_THROW_ON_ERROR | JSON_BIGINT_AS_STRING);
+        $snapshot = json_decode($record->snapshot, true, 512, JSON_THROW_ON_ERROR | JSON_BIGINT_AS_STRING);
+        if ($snapshot['journal_entry_attachments'] === []) {
+            // Preserve the existing snapshot hash for periods without journal supporting documents.
+            unset($snapshot['journal_entry_attachments']);
+        }
+
+        return $snapshot;
     }
 }
