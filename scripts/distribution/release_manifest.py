@@ -13,6 +13,7 @@ from verify_adoption_receipt import verify as verify_adoption_receipt
 
 
 RELEASE_PUBLIC_KEY = Path(__file__).resolve().parents[2] / 'docs/keys/release.pub'
+PRESERVATION_BASELINES = ['3.12.0', '3.12.1']
 
 
 def sha256(path):
@@ -45,7 +46,11 @@ def verify_installer(args, allowed, images):
 
 def verify_archive_upgrade(args, allowed, images, ee):
     stage = args.version.split('-')[0]
-    baselines = ['3.11.0', '3.12.0'] if stage == '3.12.1' else ['3.11.0']
+    baselines = {
+        '3.12.0': ['3.11.0'],
+        '3.12.1': ['3.11.0', '3.12.0'],
+        '3.13.0': ['3.12.0'] if allowed == ['3.12.0'] else PRESERVATION_BASELINES,
+    }[stage]
     if allowed != baselines or not ee:
         raise ValueError('Archive packages require the qualified predecessor releases and a verified EE pair.')
     if not all((args.ee_receipt, args.ee_receipt_signature, args.ee_receipt_key)):
@@ -53,12 +58,12 @@ def verify_archive_upgrade(args, allowed, images, ee):
     receipt = json.loads(Path(args.ee_receipt).read_text())
     if receipt.get('source_sha256') != sha256(args.source) or receipt.get('candidate_images') != images:
         raise ValueError('Archive qualification must cover the exact source bytes and images.')
-    if stage == '3.12.1':
+    if len(baselines) > 1:
         paths = receipt.get('archive_paths')
         if not isinstance(paths, dict) or set(paths) != set(baselines):
-            raise ValueError('Patch qualification requires both published upgrade paths.')
+            raise ValueError('Qualification requires both published upgrade paths.')
     else:
-        paths = {'3.11.0': receipt}
+        paths = {baselines[0]: receipt}
     manifests = args.baseline_manifest
     if not manifests or len(manifests) != len(baselines):
         raise ValueError('A signed predecessor manifest is required for every supported upgrade path.')
@@ -85,14 +90,14 @@ def verify_archive_predecessor(args, version, manifest, evidence, ee, packages):
     tested = set()
     checks = ('capture', 'deduplication', 'missing_source_incident', 'retry', 'export', 'access_controls',
               'existing_rows_unchanged', 'existing_files_unchanged', 'recovery_rows_unchanged', 'recovery_files_unchanged')
-    patch = args.version.split('-')[0] == '3.12.1'
-    if patch and version == '3.12.0':
+    stage = args.version.split('-')[0]
+    if stage == '3.12.1' and version == '3.12.0':
         checks += ('rollback_to_predecessor', 'rollback_login_and_data')
     for row in attempts:
         if not isinstance(row, dict) or row.get('baseline_version') != version or row.get('baseline_commit') != previous:
             raise ValueError('Archive upgrades require the signed predecessor commit.')
-        if patch and (row.get('candidate_version') != args.version or row.get('candidate_commit') != args.commit):
-            raise ValueError('The upgrade row does not cover the exact patch target.')
+        if stage in ('3.12.1', '3.13.0') and (row.get('candidate_version') != args.version or row.get('candidate_commit') != args.commit):
+            raise ValueError('An upgrade row does not identify the exact patch target or preservation build.')
         if not isinstance(row.get('checks'), dict) or any(row['checks'].get(check) is not True for check in checks):
             raise ValueError('Archive upgrade or recovery evidence is incomplete.')
         edition = row.get('edition')
@@ -109,6 +114,60 @@ def verify_archive_predecessor(args, version, manifest, evidence, ee, packages):
             raise ValueError('The archive receipt contains an unrecognized edition pair.')
     if tested != {'CE', *ee} or len(attempts) != len(tested):
         raise ValueError('Archive evidence is missing an exact CE or EE upgrade path.')
+
+
+PRESERVATION_CHECKS = ('pdfa_2b', 'cms_signature', 'rfc3161_https', 'compliance_retention', 'renewal',
+                       'independent_recovery', 'prior_archive_continuity', 'ce_ee_compatibility')
+HOSTED_CHECKS = ('tenant_enrollment', 'clock_failure', 'key_rotation_and_revocation', 'retention_and_hold_controls',
+                 'primary_site_loss', 'inventory_completeness', 'latest_renewal', 'customer_offline_export')
+
+
+def verify_preservation_candidate(args, allowed, images, ee):
+    if not re.fullmatch(r'3\.13\.0-rc\.[1-9][0-9]*', args.version):
+        raise ValueError('The preservation profile is in qualification. Stable publication requires provider, operational and accounting/legal approval.')
+    if allowed not in (['3.12.0'], PRESERVATION_BASELINES) or not ee or not args.ee_receipt:
+        raise ValueError('Preservation qualification requires the archive predecessor and the signed exact EE pair.')
+    receipt = json.loads(Path(args.ee_receipt).read_text())
+    if receipt.get('source_sha256') != sha256(args.source) or receipt.get('candidate_images') != images:
+        raise ValueError('Preservation qualification must cover the selected source artifact and images.')
+    if allowed == PRESERVATION_BASELINES:
+        verify_archive_upgrade(args, allowed, images, ee)
+    proof = receipt.get('preservation_qualification', {})
+    previous = subprocess.check_output(['git', 'rev-parse', 'refs/tags/v3.12.0^{commit}'], text=True).strip()
+    if (proof.get('baseline_commit') != previous or proof.get('profile') != 'gaeld-sealed-package/1.0.0'
+            or proof.get('status') != 'passed' or proof.get('qualification_only') is not True
+            or not re.fullmatch(r'[a-f0-9]{64}', proof.get('evidence_sha256', ''))):
+        raise ValueError('The signed proof profile must identify its exact predecessor and qualification report.')
+    if any(proof.get('checks', {}).get(name) is not True for name in PRESERVATION_CHECKS):
+        raise ValueError('Preservation qualification checks are incomplete.')
+
+
+def verify_preservation_acceptance(args, allowed, images, ee):
+    if not args.ee_receipt:
+        raise ValueError('Stable publication requires a signed first-party acceptance receipt.')
+    receipt = json.loads(Path(args.ee_receipt).read_text())
+    proof = receipt.get('preservation_acceptance', {})
+    if (args.version != '3.13.0' or not isinstance(proof, dict) or proof.get('profile') != 'gaeld-sealed-package/1.0.0'
+            or proof.get('provider') != 'gaeld-hosted' or proof.get('qualification_only') is not False
+            or proof.get('status') != 'passed'):
+        raise ValueError('Stable publication requires Gäld hosted provider acceptance.')
+
+    verify_archive_upgrade(args, allowed, images, ee)
+    if proof.get('baseline_commit') != json.loads(Path(args.baseline_manifest[0]).read_text())['commit']:
+        raise ValueError('Preservation acceptance has a different predecessor.')
+    rc = proof.get('released_candidate', '')
+    if not re.fullmatch(r'3\.13\.0-rc\.[1-9][0-9]*', rc):
+        raise ValueError('A published preservation candidate is required.')
+    rc_commit = subprocess.check_output(['git', 'rev-parse', f'refs/tags/v{rc}^{{commit}}'], text=True).strip()
+    if rc_commit != args.commit:
+        raise ValueError('The published candidate must have the stable source commit.')
+
+    if any(proof.get('checks', {}).get(check) is not True for check in PRESERVATION_CHECKS + HOSTED_CHECKS):
+        raise ValueError('First-party preservation acceptance checks are incomplete.')
+    digests = [proof.get(key) for key in ('evidence_sha256', 'provider_profile_sha256')]
+    digests.extend(proof.get('signoffs', {}).get(role) for role in ('operations', 'accounting', 'legal'))
+    if not all(isinstance(value, str) and re.fullmatch(r'[0-9a-f]{64}', value) for value in digests):
+        raise ValueError('Acceptance must bind the profile, evidence and all three private sign-offs.')
 
 
 def main():
@@ -140,6 +199,12 @@ def main():
     elif stage in ('3.12.0', '3.12.1'):
         verify_archive_upgrade(args, allowed, images, compatible_ee)
         acceptance_name, acceptance_file = 'archive_upgrade_acceptance', args.ee_receipt
+    elif args.version == '3.13.0':
+        verify_preservation_acceptance(args, allowed, images, compatible_ee)
+        acceptance_name, acceptance_file = 'preservation_acceptance', args.ee_receipt
+    elif stage == '3.13.0':
+        verify_preservation_candidate(args, allowed, images, compatible_ee)
+        acceptance_name, acceptance_file = 'preservation_qualification', args.ee_receipt
     else:
         raise ValueError('A qualified release stage and its matching acceptance evidence are required.')
     if compatible_ee:

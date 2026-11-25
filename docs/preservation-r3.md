@@ -1,0 +1,248 @@
+# Accounting preservation
+
+This module belongs to the public CE core. CE and EE use the same archive format,
+connectors, verification tools and controls. No subscription is required for
+preservation, reading or export. Operator certificates and storage accounts are
+configured independently of Gäld subscriptions.
+
+R3 is a release candidate. Existing R2 content packages remain readable and are never rewritten or retroactively sealed. Request a new version to select the proof profile.
+
+The implemented profile is `gaeld-sealed-package/1.0.0`; its package format is
+`1.0.0`. These versions are independent of the CE/EE boundary contract `1.0.0`.
+Software tests establish technical behaviour, not a general GeBüV certification.
+Before relying on this profile, validate the deployed storage, trust services,
+procedures and responsibilities with the organization's fiduciary and legal reviewer.
+
+## Packages and originals
+
+A package has an immutable UUID, company UUID, exact financial-year UUID and
+version. Its snapshot contains full journal lines, frozen reference data,
+document relationships, structured exports and readable reports. Uploaded
+supporting documents and issued PDFs are versioned separately. Original bytes
+are retained unchanged; PDF/A conversion only applies to generated reports.
+
+Closing commits a consistent snapshot and PostgreSQL outbox entry. Workers
+prepare files after commit. The dispatcher recovers outstanding work even after
+loss of the Redis queue. Preparation and proof operations use PostgreSQL locks;
+retries use the same captured data and preserve previously written bytes.
+
+The states distinguish pending, preparation, prepared, sealing, deposited,
+verified and incident. **Prepared does not mean sealed.** A missing original or
+invalid proof prevents success. Missing provider configuration remains visible
+as an incident. Generating a new version does not repair a lost original.
+
+Historical UUIDs, files, hashes and dates are preserved. Backfill is labelled
+`historical_backfill` and establishes a new capture date, not a retrospective
+proof of authenticity. Existing individual archive downloads remain available.
+
+The default minimum retention ends ten years after the financial year ends.
+Operators can extend it or apply a legal hold. These releases contain no legal
+archive purge command. Backup rotation is independent of legal retention.
+
+## Configure the proof profile
+
+Runtime requirements: PostgreSQL, OpenSSL 3, Ghostscript, veraPDF, PHP DOM and the
+public AWS SDK. The production image must contain the validated versions of
+Ghostscript and veraPDF recorded in its release inventory. Report conversion
+targets PDF/A-2b and must pass veraPDF before a manifest is signed.
+
+For shared hosted installations, new custody requires an active, operator-recorded enrollment for the organization and an enabled proof profile. An ordinary subscription or tenant-controlled setting cannot authorize custody. Capture and year-end closing still prepare ordinary content packages for other organizations. Explicit seal requests require enrollment. The opaque enrollment ID is frozen with the admitted snapshot so retries can finish the accepted obligation after enrollment ends. Existing deposits, holds, verification, renewal and export remain available. Review legacy pending seal requests individually before admitting a new capture. Self-hosted operators continue to use their own keys and storage.
+
+Configure the following through the installation's protected environment. Use
+paths readable by the worker; never put private keys in a source checkout or in
+the archive package. In Docker, operator files can be mounted from
+`shared/secrets` at `/run/gaeld-secrets`.
+
+```dotenv
+ARCHIVE_PROOFS_ENABLED=true
+ARCHIVE_SIGNING_CERTIFICATE=/run/gaeld-secrets/signer.pem
+ARCHIVE_SIGNING_PRIVATE_KEY=/run/gaeld-secrets/signer-key.pem
+ARCHIVE_SIGNING_PASSPHRASE_FILE=/run/gaeld-secrets/signer-passphrase
+ARCHIVE_SIGNING_CHAIN=/run/gaeld-secrets/signer-chain.pem
+ARCHIVE_SIGNING_TRUST_STORE=/run/gaeld-secrets/signer-ca.pem
+ARCHIVE_SIGNING_CRL=/run/gaeld-secrets/signer-crls.pem
+ARCHIVE_SIGNING_FINGERPRINT=
+ARCHIVE_TIMESTAMP_URL=
+ARCHIVE_TIMESTAMP_TRUST_STORE=/run/gaeld-secrets/tsa-ca.pem
+ARCHIVE_TIMESTAMP_CHAIN=/run/gaeld-secrets/tsa-chain.pem
+ARCHIVE_TIMESTAMP_CRL=/run/gaeld-secrets/tsa-crls.pem
+ARCHIVE_S3_REGION=eu-central-1
+ARCHIVE_S3_BUCKET=
+ARCHIVE_S3_ACCESS_KEY=
+ARCHIVE_S3_SECRET_KEY=
+```
+
+Fill the empty values with the operator's selected services. The signing
+fingerprint is an independently approved certificate SHA-256 fingerprint;
+comma-separated old and current fingerprints support deliberate rotation.
+Custom S3 endpoints and path-style addressing are configured in
+`config/archiving.php`. Timestamp authentication supports no authentication, Bearer, or Basic over verified HTTPS. Configure only one method. Prefer `ARCHIVE_TIMESTAMP_TOKEN_FILE` for Bearer, or both `ARCHIVE_TIMESTAMP_USERNAME_FILE` and `ARCHIVE_TIMESTAMP_PASSWORD_FILE` for Basic; these files stay outside packages and source control. `ARCHIVE_TIMESTAMP_TOKEN` remains available for existing installations. Credentials embedded in the URL are rejected. Provider error bodies and authentication values are not retained in exceptions.
+
+`ARCHIVE_TIMESTAMP_CA_BUNDLE` and `ARCHIVE_S3_CA_BUNDLE` optionally select an explicit TLS CA bundle; verification is never disabled. These TLS roots are distinct from the independently approved signing and timestamp trust policies. Set `ARCHIVE_GHOSTSCRIPT_BINARY`, `ARCHIVE_VERAPDF_BINARY` and `ARCHIVE_ICC_PROFILE` for a native installation.
+
+The bucket must support versioning and Object Lock **Compliance** mode.
+Deposit checks capabilities, writes retention and reads it back before reporting
+verified protection. Enabling the profile alone does not validate a provider.
+Governance mode is not accepted. Keep IAM permissions restricted to the
+installation prefix, including version reads, retention, legal holds and
+inventory listing. A protected catalog records package identities, hashes and
+object versions so a missing local package or substitution can be detected. Online verification requires the current receipt to cover every evidence version recorded in prior protected catalogs for that package; rolling back both local evidence and its receipt cannot hide a recorded renewal. Retention extensions and legal holds cover all historical catalog versions as well as the current object inventory.
+An unfiltered `archive:check` also compares all protected company identities
+with the local company catalog, including when preservation is disabled but a
+storage bucket remains configured. This detects disappearance of an entire
+company. These global reports are retained under
+`storage/app/private/preservation-controls/global` on the default local disk;
+include them in backup and annual control exports. An organization-scoped check
+only establishes completeness for that organization.
+
+The manifest is signed with detached CMS; RFC 3161 timestamps cover the signed
+evidence. Certificates, validation results and renewals remain available with
+the package. Existing evidence is never overwritten during renewal. Keep trust
+anchors and the expected inventory independently of the package itself.
+
+The operator supplies current CRL bundles for the full signer and timestamp
+certificate chains and must refresh them before their validity expires. New
+signatures and timestamps reject expired or revoked certificates. Historical
+verification uses the trusted timestamp generation time and the preserved CRLs;
+expiry after a valid timestamp does not by itself invalidate historical proof.
+Keep historical trust anchors and approved signer fingerprints available when
+rotating certificates. Renewal deadlines use the most recent trusted timestamp,
+the configured renewal interval and a margin before certificate expiry.
+
+## Commands and user interface
+
+The Accounting menu exposes preservation to users with accounting read rights.
+Preparing and resuming packages requires the closing permission. Company
+boundaries apply to every UUID action. Accesses and controls use a dedicated
+append-only audit table, separate from expiring technical logs.
+
+Run these Artisan commands through the installation's application service
+(through `vendor/bin/sail artisan` in development):
+
+```text
+archive:capture --organization=ORG_UUID --fiscal-year=YEAR_UUID --archival-pdf
+archive:dispatch
+archive:package prepare PACKAGE_UUID
+archive:package inspect PACKAGE_UUID
+archive:package verify PACKAGE_UUID
+archive:package export PACKAGE_UUID --output=/exports/new-package.zip
+archive:package resume PACKAGE_UUID
+archive:backfill --organization=ORG_UUID --fiscal-year=YEAR_UUID
+archive:retain PACKAGE_UUID --until=2047-12-31 --reason="Approved extended retention"
+archive:retain PACKAGE_UUID --hold --reason="Pending litigation review"
+archive:renew PACKAGE_UUID
+archive:renew --due
+archive:check --organization=ORG_UUID
+```
+
+`archive:capture` without a company/year filter visits all eligible financial
+years. Capture deduplicates unchanged snapshots. Backfill can be restarted;
+already captured work retains its identity. The outbox is the persistent
+progress record. Preparation and export failures return non-zero status.
+
+The scheduler dispatches pending work every minute, captures daily at 00:15,
+checks daily at 04:00 and renews due evidence at 04:30, in the application time
+zone. Annual control is scheduled on 15 January. The `archives` Horizon
+supervisor has a 30-minute timeout and a longer queue retry interval; keep the
+deployment drain period at least 35 minutes.
+
+## Independent verification
+
+Copy `scripts/archive-verifier/` and the exported package to a separate machine.
+Extract the ZIP without accepting unsafe paths or symbolic links. The verifier
+requires no Gäld database, Composer installation or EE account.
+
+```sh
+php scripts/archive-verifier/verify.php \
+  --directory=/recovery/package \
+  --signer-trust=/trusted/signer-ca.pem \
+  --tsa-trust=/trusted/tsa-ca.pem \
+  --signer-fingerprint=APPROVED_CERTIFICATE_SHA256 \
+  --expected-manifest-sha256=INDEPENDENT_INVENTORY_SHA256 \
+  --verapdf=/opt/verapdf/verapdf
+```
+
+The result distinguishes content integrity, proof validation and inventory
+pinning. `--integrity-only` checks files without claiming the proof profile.
+Offline verification does not establish the current remote Object Lock settings
+or prove that no other package was deleted. A manifest hash remains unchanged across renewals: the offline result explicitly reports `latest_evidence_pinned: false`. It validates the evidence supplied, without establishing that it is the newest retained evidence set. Use the independently retained protected catalog and
+`archive:check` for remote completeness and retention checks.
+
+### Recovering a complete inventory
+
+After a successful global control, run `php artisan archive:inventory --no-ansi` with read access to the protected store. It lists every protected catalog version, including earlier deposits, renewals and holds. Save its successful output as a new private checkpoint. Retain its timestamp and SHA-256 digest with the backup operator in a location controlled separately from the recovery copy. Advance the checkpoint after new custody events and verify that the secondary copy has every referenced version before recording coverage through that checkpoint.
+
+Copy the raw catalog bytes and package objects by **exact object key and version ID**. The checkpoint lists the catalog references. Each catalog lists its object references. Preserve the key paths below the recovery directory, even when a delete marker hides an older version from ordinary listing. The recovery copy contains private records and requires the same access and encryption protections as the primary.
+
+With the primary unavailable, compare the restored bytes to the independently retained checkpoint:
+
+```sh
+php scripts/archive-verifier/verify-inventory.php \
+  --directory=/recovery/object-keys \
+  --checkpoint=/controls/checkpoint.json \
+  --expected-checkpoint-sha256=INDEPENDENTLY_RECORDED_SHA256
+```
+
+A successful result covers the catalog and object versions in that checkpoint, including renewals published by its observation time. Compare that time with the recovery objective. Run the package verifier separately with external trust anchors and use the storage API to verify the current retention and legal holds.
+
+## Annual recovery and written control
+
+Recover the complete company inventory on a separate environment, read every
+report and supporting document, run independent verification against the
+externally retained hashes and record the outcome. The annual command requires
+an operator-supplied recovery report to claim completion:
+
+```json
+{
+  "environment": "independent-recovery-workstation",
+  "operator": "Responsible operator",
+  "completed_at": "2027-01-10T10:00:00Z",
+  "packages": {"PACKAGE_UUID": "EXPECTED_MANIFEST_SHA256"}
+}
+```
+
+```text
+archive:check --annual --organization=ORG_UUID --recovery-report=/controls/recovery.json
+```
+
+The report must be recent and name a different environment. Its human recovery
+attestation is explicitly labelled as supplied by the operator. Without it,
+the scheduled annual check records an incomplete control, not a successful
+independent restoration. Reports are retained in the preservation audit log and
+included in subsequent captures.
+
+Assign an owner for provider credentials and renewal, a backup operator and a
+fiduciary responsible for accounting completeness. Record who may prepare,
+download, extend retention and release holds. Review incidents daily and access
+rights after staff changes. Retain provider incident records and annual review
+sign-off alongside the control report.
+
+## Backup and recovery distinction
+
+`gaeld backup` creates a coherent encrypted operational recovery set. Time
+Machine or Proton Drive may copy the **completed** backup and its receipt.
+Neither a live database volume copy nor file synchronisation substitutes for
+the protected archive inventory. Keep the age recovery key separately, with an
+off-site copy; losing APP_KEY or the backup key can make recovery impossible.
+
+Protocol references: [CMS](https://docs.openssl.org/3.5/man1/openssl-cms/),
+[RFC 3161](https://docs.openssl.org/3.5/man1/openssl-ts/),
+[veraPDF](https://docs.verapdf.org/validation/),
+[Object Lock](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html).
+
+## Release qualification
+
+The staging laboratory uses synthetic records, separate test signer/TSA/TLS roots, an HTTPS RFC 3161 service and an S3-compatible server with Compliance retention. Its reports qualify the tested source, images and laboratory configuration. Keep its signing keys and test trust anchors out of customer installations.
+
+The first stable profile covers Gäld-operated storage, document signing and timestamping for participating hosted organizations. Self-hosted installations use their own provider configuration and keys. A hosted organization enrolls under a separate custody agreement. Keep ordinary archive capture available to other organizations. Record retention, recovery and access obligations that continue when enrollment ends.
+
+For stable acceptance, verify the signed v3.12.0 predecessor and populated CE and EE upgrades using the exact source, images and Enterprise package digests. Exercise hosted enrollment, clock failure, signer and TSA key rotation and revocation, legal holds and retention. Recover all expected organizations, packages and renewals on an independent machine with the primary site unavailable. Compare against the independently retained current catalog, record elapsed time and recoverable data age, and verify a customer's export with public trust material. Operations, accounting and legal reviewers approve the profile and customer wording. Keep the profile, reports and signed reviews in the private release dossier.
+
+The signed acceptance receipt identifies the build, predecessor, exact packages and upgrade results. For a candidate the receipt carries `preservation_qualification`. For stable v3.13.0 it carries `preservation_acceptance` with the following fields:
+
+- `profile` is `gaeld-sealed-package/1.0.0`, `provider` is `gaeld-hosted`, `qualification_only` is false and `status` is `passed`.
+- `baseline_commit` identifies the signed v3.12.0 predecessor and `released_candidate` names the published RC from the stable commit, without its leading `v`.
+- `provider_profile_sha256` and `evidence_sha256` bind the approved provider profile and qualification dossier. `signoffs` contains SHA-256 digests of the retained operations, accounting and legal reviews under `operations`, `accounting` and `legal`.
+- `checks` records the individual provider, recovery, upgrade and compatibility checks required by the release manifest verifier. Use separate exact-build stable evidence when source archives or image digests differ from the candidate artifacts.
+
+Verify the signed release manifest and checksums when downloading. Retain every prior candidate and its evidence.

@@ -11,9 +11,11 @@ use App\Domains\Accounting\Models\JournalEntry;
 use App\Domains\Accounting\Services\ArchivePackageService;
 use App\Domains\Accounting\Services\JournalEntryAttachmentService;
 use App\Domains\Accounting\Services\LedgerService;
+use App\Support\Contracts\ArchiveCustodyEnrollment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use TCPDF;
 use Tests\TestCase;
 use Tests\Traits\WithAuthenticatedOrganization;
@@ -95,6 +97,31 @@ class JournalEntryAttachmentArchiveTest extends TestCase
         $this->assertSame($manifestHash, $archives->prepare($captured)->manifest_sha256);
         $this->assertTrue($archives->verify($before)['valid']);
         $this->assertSame($beforeManifest, $before->fresh()->manifest_sha256);
+    }
+
+    public function test_hosted_proof_capture_binds_the_journal_original_and_custody_enrollment_in_one_snapshot(): void
+    {
+        config(['features.saas' => true, 'archiving.proofs_enabled' => true]);
+        $year = FiscalYear::factory()->for($this->organization)->create(['start_date' => '2026-01-01', 'end_date' => '2026-12-31']);
+        $entry = $this->draft('JOURNAL-PROOF');
+        $bytes = $this->pdf('Posted journal original');
+        $attachment = app(JournalEntryAttachmentService::class)->add($entry, UploadedFile::fake()->createWithContent('original.pdf', $bytes), $this->user)['attachment'];
+        app(LedgerService::class)->postDraft($entry);
+        $enrollment = (string) Str::uuid();
+        $this->mock(ArchiveCustodyEnrollment::class)->shouldReceive('activeId')->with($this->organization->id)->andReturn($enrollment);
+
+        $packages = app(ArchivePackageService::class);
+        $package = $packages->request($this->organization, $year, archivalPdf: true);
+        $snapshot = $package->snapshot;
+        $this->assertSame($enrollment, $snapshot['custody_enrollment'][0]['id']);
+        $this->assertSame($this->organization->id, $snapshot['custody_enrollment'][0]['organization_id']);
+        $link = $snapshot['journal_entry_attachments'][0];
+        $this->assertSame($attachment->id, $link['id']);
+        $this->assertSame($entry->reference, $link['entry_reference']);
+        $this->assertSame($snapshot['original_sources'][0]['package_path'], $link['package_path']);
+        $this->assertSame(hash('sha256', $bytes), $link['checksum_sha256']);
+        $this->assertSame(hash('sha256', ArchivePackageService::json($snapshot)), $package->snapshot_sha256);
+        $this->assertSame($package->id, $packages->request($this->organization, $year, archivalPdf: true)->id);
     }
 
     public function test_capture_excludes_other_tenants_years_and_originals_left_by_deleted_drafts(): void

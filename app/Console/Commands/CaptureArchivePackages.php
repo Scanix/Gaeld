@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 
 class CaptureArchivePackages extends Command
 {
-    protected $signature = 'archive:capture {--organization=} {--fiscal-year=} {--archival-pdf : Unsupported in R2; fails without creating a package} {--historical : Mark this as an explicit historical backfill}';
+    protected $signature = 'archive:capture {--organization=} {--fiscal-year=} {--archival-pdf : Convert and independently seal the package} {--historical : Mark this as an explicit historical backfill}';
 
     protected $description = 'Capture consistent accounting evidence and enqueue preparation, deduplicating unchanged snapshots';
 
@@ -24,7 +24,7 @@ class CaptureArchivePackages extends Command
             foreach ($years as $year) {
                 try {
                     $organization = Organization::withTrashed()->findOrFail($year->organization_id);
-                    $package = $packages->request($organization, $year, provenance: $this->option('historical') ? 'historical_backfill' : 'native', archivalPdf: (bool) $this->option('archival-pdf') || (bool) config('archiving.proofs_enabled'));
+                    $package = $packages->request($organization, $year, provenance: $this->option('historical') ? 'historical_backfill' : 'native', archivalPdf: $this->option('archival-pdf') ? true : null);
                     $this->line($package->id.' '.$package->state.' v'.$package->version);
                 } catch (\Throwable $exception) {
                     $failures++;

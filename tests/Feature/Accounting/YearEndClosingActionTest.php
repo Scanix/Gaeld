@@ -16,7 +16,10 @@ use App\Domains\Accounting\Models\VatEntry;
 use App\Domains\Accounting\Models\VatRate;
 use App\Domains\Organizations\Models\Organization;
 use App\Domains\Users\Models\User;
+use App\Support\Contracts\ArchiveCustodyEnrollment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 use Tests\Traits\CreatesAccountingFixtures;
 
@@ -69,8 +72,16 @@ class YearEndClosingActionTest extends TestCase
         ];
     }
 
-    public function test_closing_transfers_pl_balances_to_result_account(): void
+    #[TestWith([null])]
+    #[TestWith([true])]
+    #[TestWith([false])]
+    public function test_closing_transfers_pl_balances_to_result_account(?bool $hostedEnrollment): void
     {
+        if ($hostedEnrollment !== null) {
+            config(['features.saas' => true, 'archiving.proofs_enabled' => true]);
+            $this->mock(ArchiveCustodyEnrollment::class)->shouldReceive('activeId')->once()
+                ->with($this->organization->id)->andReturn($hostedEnrollment ? (string) Str::uuid() : null);
+        }
         $orgId = $this->organization->id;
 
         $bank = Account::where('organization_id', $orgId)->where('code', '1020')->first();
@@ -128,6 +139,7 @@ class YearEndClosingActionTest extends TestCase
         $this->organization->refresh();
         $this->assertTrue($this->organization->isFiscalYearClosed(2025));
         $this->assertDatabaseCount('archive_packages', 1);
+        $this->assertDatabaseHas('archive_packages', ['organization_id' => $orgId, 'archival_pdf' => $hostedEnrollment === true]);
         $this->assertDatabaseCount('archive_outbox', 1);
         $this->assertDatabaseCount('legal_archives', 0);
     }

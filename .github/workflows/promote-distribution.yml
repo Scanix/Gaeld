@@ -103,6 +103,20 @@ jobs:
           case "${RELEASE_VERSION%%-*}" in
             3.12.0) predecessors=(3.11.0) ;;
             3.12.1) predecessors=(3.11.0 3.12.0) ;;
+            3.13.0)
+              predecessors=()
+              if [[ "$allowed" == '["3.12.0","3.12.1"]' ]]; then
+                predecessors=(3.12.0 3.12.1)
+              elif [[ "$RELEASE_VERSION" == 3.13.0 ]]; then
+                predecessors=(3.12.0)
+              fi
+              if [[ "$RELEASE_VERSION" == 3.13.0 ]]; then
+                rc=$(jq -er '.preservation_acceptance.released_candidate | select(test("^3\\.13\\.0-rc\\.[1-9][0-9]*$"))' release/ee-acceptance.json)
+                gh release view "v$rc" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease,publishedAt \
+                  | jq -e '.isDraft == false and .isPrerelease == true and .publishedAt != null'
+                test "$(git rev-parse "refs/tags/v$rc^{commit}")" = "$GITHUB_SHA"
+              fi
+              ;;
             *) predecessors=() ;;
           esac
           for version in "${predecessors[@]}"; do

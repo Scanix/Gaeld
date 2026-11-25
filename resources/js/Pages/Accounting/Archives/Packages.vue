@@ -8,10 +8,10 @@ import Badge from '@/Components/UI/Badge.vue'
 import { useTranslations } from '@/lib/useTranslations'
 import { useFormatters } from '@/lib/useFormatters'
 
-defineProps({ packages: Object, fiscalYears: Array, canManage: Boolean, summary: Object })
+defineProps({ packages: Object, fiscalYears: Array, canManage: Boolean, canRequestProof: Boolean, summary: Object })
 const { t } = useTranslations()
 const { formatDate } = useFormatters()
-const form = useForm({ fiscal_year_id: '' })
+const form = useForm({ fiscal_year_id: '', archival_pdf: false })
 usePoll(15000, { only: ['packages', 'summary'] })
 
 function prepare() {
@@ -53,8 +53,12 @@ function action(id, operation) {
               </select>
               <p v-if="form.errors.fiscal_year_id" role="alert" class="mt-1 text-sm text-red-600">{{ form.errors.fiscal_year_id }}</p>
             </div>
+            <label v-if="canRequestProof" class="flex items-center gap-2 py-2 text-sm">
+              <input v-model="form.archival_pdf" type="checkbox" class="rounded border-[hsl(var(--border))]">
+              {{ t('conservation_seal_requested') }}
+            </label>
             <Button type="submit" :disabled="form.processing || !form.fiscal_year_id">{{ t('conservation_prepare') }}</Button>
-            <p class="w-full text-xs text-[hsl(var(--muted-foreground))]">{{ t('conservation_content_note') }}</p>
+            <p v-if="canRequestProof" class="w-full text-xs text-[hsl(var(--muted-foreground))]">{{ t('conservation_seal_note') }}</p>
           </form>
         </CardContent>
       </Card>

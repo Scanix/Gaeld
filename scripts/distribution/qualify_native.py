@@ -191,6 +191,9 @@ def collect(directory, reports):
                     for k in ("platform_manifest", "config")), "Missing native image identity.")
         if row["kind"] == "smoke":
             require(report["status"] == "passed" and report["checks"] == ["install", "login", "drain"], "Failed runtime checks.")
+            if data["version"].split("-")[0] == "3.13.0":
+                require(report.get("preservation_runtime") == {"conversion": "passed", "validator": "veraPDF", "profile": "PDF/A-2b"},
+                        "The native preservation PDF/A-2b conversion result is missing.")
             runtime.append(report)
         else:
             verify(report, version=data["version"], commit=data["commit"], source=source, images=data["candidate_images"],

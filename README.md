@@ -45,6 +45,8 @@ Gäld covers the full accounting workflow for a small Swiss business:
 
 ## Getting started
 
+The v3.13 preservation candidate adds PDF/A-2b validation, detached CMS signatures, RFC 3161 timestamps, protected storage, independent verification and renewal. The profile is in qualification. Provider acceptance, operational ownership and accounting/legal review remain open. [Preservation guide](docs/preservation-r3.md)
+
 Archive fiscal-year records and original supporting documents by company. Each dated package includes an inventory with hashes and can be exported for recovery. [Archive package operating guide](docs/preservation-r2.md)
 
 Install self-hosted CE on Linux Docker, Apple Silicon Docker or a dedicated Ubuntu 24.04 LTS ARM64 host using systemd. Existing CE Sail installations on v3.8.28, v3.9.0 and v3.10.0 can adopt the managed Docker setup. [Managed installation and recovery](docs/ce-managed-installation.md)

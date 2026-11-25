@@ -5,6 +5,14 @@ All notable changes to Gäld are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.13.0]
+
+### Accounting preservation
+
+- Optionally seal accounting archive packages with validated PDF/A-2b reports, CMS signatures and RFC 3161 timestamps. Retain originals, proof renewals and a versioned protected catalog.
+- Verify exports on an independent machine using trusted certificate material and the expected inventory. Existing v3.12.0 archives retain their original content and capture dates.
+- The first-party preservation profile is for enrolled hosted organizations under a separate agreement. Self-hosted operators configure their own keys, storage and timestamp service.
+
 ## [3.12.1]
 
 - Spreadsheet imports now check every workbook entry before the importer reads it.

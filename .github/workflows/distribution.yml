@@ -250,6 +250,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/distribution/qualify_native.py run "$RUNNER_TEMP/qualified" "$RUNNER_TEMP/receipts"
+      - name: Validate a real PDF/A-2b conversion on this native CPU
+        if: matrix.kind == 'smoke' && startsWith(needs.metadata.outputs.version, '3.13.0')
+        run: |
+          set -euo pipefail
+          image="ghcr.io/scanix/gaeld@$APP_DIGEST"
+          platform="linux/$NATIVE_ARCH"
+          docker run --rm --platform "$platform" --entrypoint sh "$image" -ec 'gs --version; java -version; /opt/verapdf/verapdf --version; test -r /usr/share/color/icc/ghostscript/srgb.icc'
+          docker run --rm -i --platform "$platform" --entrypoint php \
+            -e APP_ENV=testing -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+            -e CACHE_STORE=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=sync -e PLUGINS_ENABLED=false \
+            "$image" < tests/distribution/preservation_runtime.php
+          receipt="$RUNNER_TEMP/receipts/$NATIVE_CASE.json"
+          jq '.preservation_runtime = {conversion: "passed", validator: "veraPDF", profile: "PDF/A-2b"}' "$receipt" > "$receipt.tmp"
+          mv "$receipt.tmp" "$receipt"
       - name: Retain the native platform receipt
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
